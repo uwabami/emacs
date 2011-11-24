@@ -6,7 +6,7 @@
 	url = git://orgmode.org/org-mode.git
 [submodule "site-lisp/muse-el"]
 	path = site-lisp/muse-el
-	url = git://repo.or.cz/muse-el.git
+	url = http://repo.or.cz/r/muse-el.git
 [submodule "site-lisp/calfw"]
 	path = site-lisp/calfw
 	url = https://github.com/kiwanami/emacs-calfw.git

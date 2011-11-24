@@ -1,0 +1,15 @@
+[submodule "site-lisp/auto-complete-el"]
+	path = site-lisp/auto-complete-el
+	url = git://github.com/m2ym/auto-complete.git
+[submodule "site-lisp/org-mode"]
+	path = site-lisp/org-mode
+	url = git://orgmode.org/org-mode.git
+[submodule "site-lisp/muse-el"]
+	path = site-lisp/muse-el
+	url = git://repo.or.cz/muse-el.git
+[submodule "site-lisp/calfw"]
+	path = site-lisp/calfw
+	url = https://github.com/kiwanami/emacs-calfw.git
+[submodule "site-lisp/magit"]
+	path = site-lisp/magit
+	url = git://github.com/jdhuntington/magit.git

@@ -1,4 +1,4 @@
-.org-id-locations
+.org-*
 *.elc
 site-start.d/*.el
 site-start.d/*.elc

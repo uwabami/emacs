@@ -2,3 +2,4 @@
 *.elc
 site-start.d/*.el
 site-start.d/*.elc
+site-start.d/sitemap.org

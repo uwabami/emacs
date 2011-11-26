@@ -1,6 +1,6 @@
 # -*- mode: makefile -*-
-include $(HOME)/.emacs.d/Mkinclude
 __ALLSRC__    := $(wildcard *.el)
+include $(HOME)/.emacs.d/Mkinclude
 TARGET_DIR		:= site-lisp auto-install site-start.d
 
 all: TARGET $(ELCFiles)

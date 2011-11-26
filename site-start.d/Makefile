@@ -1,14 +1,18 @@
 include $(HOME)/.emacs.d/Mkinclude
-BATCH		:= $(EMACS) --batch -l $(HOME)/.emacs.d/init.el --no-site-file -L
-__ALL_SRC__	:= $(wildcard *.org)
-ORG_FILES	:= $(__ALL_SRC__:%v.org=)
-EL_FILES	:= $(ORG_FILES:%.org=%.el)
+EXCLUDE		:= 10frame.org
+BATCH		:= $(EMACS) --batch -l $(HOME)/.emacs.d/init.el
+__ALL_SRC__ := $(filter-out $(EXCLUDE), $(wildcard *.org))
+ORGFILES	:= $(__ALL_SRC__:%v.org=)
+ELFILES		:= $(ORGFILES:%.org=%.el)
+ELCFILES	:= $(ORGFILES:%.org=%.elc)
 
-all: $(EL_FILES)
+all: $(ELCFILES)
 
-%.el: %.org
-	@$(BATCH) \
-	 --eval '(mapc (lambda (x) (org-babel-load-file (symbol-name x))) (quote ($<)))'
+%.elc: %.org
+	@$(BATCH) --eval '(mapc (lambda (x) (my:org-babel-tangle-and-compile-file (symbol-name x))) (quote ($(CURDIR)/$<)))'
 
 clean:
-	rm -f $(EL_FILES)
+	rm -f $(ELCFILES)
+
+distclean: clean
+	rm -f $(ELFILES)

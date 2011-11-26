@@ -2,7 +2,7 @@
 ;;; init.el
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2011/11/26 07:20:31$
+;; $Lastupdate: 2011/11/26 08:48:47$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -100,8 +100,23 @@
 ;; Emacs の設定は org-mode で記述.
 ;;
 (require 'org-install)
-(defun my:org-babel-load-file (file)
-  "byte-compile exported el file after ob-tangle. originally ob-tangle.el"
+;;
+;; ob-tangl より自分用に幾つか関数を設定
+;;
+;; - my:org-babel-tangle-and-compile-file
+;;   指定された org ファイルから emacs-lisp を export して
+;;   byte-compile する.
+;;   - Make から呼ぶ事も想定しているので load はしない.
+;;
+;; - my:org-babel-load-file
+;;   my:org-babel-tangle-and-comile-file してから load する
+;;
+;; - my:org-load-file
+;;   my:org-babel-load-file の際にディレクトリ名を省略(決め打ち)
+;;
+(defun my:org-babel-tangle-and-compile-file (file)
+  "export emacs-lisp and byte-compile from org files (not load).
+   originally ob-tangle.el"
   (interactive "fFile to load: ")
   (flet ((age (file)
               (float-time
@@ -115,16 +130,20 @@
       (unless (and (file-exists-p compiled-file)
                    (> (age file) (age compiled-file)))
         (org-babel-tangle-file file exported-file "emacs-lisp")
-        (byte-compile-file exported-file))
-      (load base-name))))
-;;
-;; 設定ファイル集を読み込むディレクトリを site-start.d に決め打ち
-;;
+        (byte-compile-file exported-file)))))
+
+(defun my:org-babel-load-file (file)
+  "load after byte-compile"
+  (interactive "fFile to load: ")
+  (my:org-babel-tangle-and-compile-file file)
+  (load (file-name-sans-extension file)))
+
 (defvar org-settings-dir (concat user-emacs-directory "site-start.d/"))
-(defun my:org-load-file (file)
+(defun my:load-org-file (file)
   "org-settings-dir 以下から my-org-babel-load-file"
   (my:org-babel-load-file (expand-file-name file org-settings-dir)))
-(my:org-load-file "00startup.org")
+;; 読み込み
+(my:load-org-file "00startup.org")
 ;; ------------------------------------
 ;;; calculate bootup time/ スピード狂に捧ぐ.
 ;;

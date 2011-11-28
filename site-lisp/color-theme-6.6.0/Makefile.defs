@@ -1,7 +1,7 @@
 # -*- Makefile -*-
 EMACS    = emacs
 SITEFLAG = --no-site-file
-OPTIONCOMPILE = -q --no-site-file --batch
+OPTIONCOMPILE = -q --no-site-file --batch -L .
 
 # XEmacs users will probably want the following settings.
 #EMACS    = xemacs

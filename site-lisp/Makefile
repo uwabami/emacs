@@ -1,11 +1,11 @@
 TARGET_DIR	:= $(subst ./, ,$(shell find . -maxdepth 1 -mindepth 1 -type d))
-EXCLUDE		:= calfw markdown-mode
+EXCLUDE		:= calfw markdown-mode 
 TARGET_DIRS	:= $(filter-out $(EXCLUDE),$(TARGET_DIR))
 include $(HOME)/.emacs.d/Mkinclude
 
 all: TARGET
 
-TARGET: 00build-stamp
+TARGET: 00build-stamp 
 
 00build-stamp:
 	@for d in $(TARGET_DIRS) ;\

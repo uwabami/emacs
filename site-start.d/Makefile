@@ -1,5 +1,5 @@
 include $(HOME)/.emacs.d/Mkinclude
-EXCLUDE		:= 10frame.org
+EXCLUDE		:= 10frame.org sitemap.org
 BATCH		:= $(EMACS) --batch -l $(HOME)/.emacs.d/init.el
 __ALL_SRC__ := $(filter-out $(EXCLUDE), $(wildcard *.org))
 ORGFILES	:= $(__ALL_SRC__:%v.org=)

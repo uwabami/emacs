@@ -1,0 +1,58 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+# init-migemo.org
+#+begin_quote
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# $Lastupdate: 2011/11/28 10:45:53$
+#
+# Author: Youhei SASAKI <uwabami@gfd-dennou.org>
+# License: MIT
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#+end_quote
+#+SETUPFILE: ~/.emacs.d/template/org/level-2.org
+#+INCLUDE: ~/.emacs.d/template/org/menu-level-2.org
+#+TITLE: 04. migemo の設定
+#Code:
+
+** 設定
+凝った事していないけど.
+*** ユーザ辞書を使わない
+#+begin_src emacs-lisp
+(setq migemo-user-dictionary nil)
+(setq migemo-regex-dictionary nil)
+#+end_src
+*** キャッシュ機能を利用する
+#+begin_src emacs-lisp
+(setq migemo-use-pattern-alist t)
+(setq migemo-use-frequent-pattern-alist t)
+(setq migemo-pattern-alist-length 2048)
+#+end_src
+*** 読み込み
+#+begin_src emacs-lisp
+;; (require 'migemo)
+(setq migemo-command "/usr/bin/cmigemo")
+(setq migemo-options '("-q" "--emacs"))
+(setq migemo-dictionary "/usr/share/cmigemo/utf-8/migemo-dict")
+(setq migemo-coding-system 'utf-8-unix)
+(load-library "migemo")
+(migemo-init)
+#+end_src

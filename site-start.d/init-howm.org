@@ -1,0 +1,117 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#init-howm.org
+#+begin_quote
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# $Lastupdate: 2011/11/16 13:59:53$
+#
+# Author: Youhei SASAKI <uwabami@gfd-dennou.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#+end_quote
+#Code:
+#+TITLE: howm の設定
+#+OPTIONS: toc:2 num:nil ^:nil
+
+** load-path の確認
+#+begin_src emacs-lisp
+(when (not (locate-library "howm"))
+  (add-to-load-path "site-lisp/howm"))
+(when (not (locate-library "elscreen-howm"))
+  (add-to-load-path "site-lisp/elscreen"))
+#+end_src
+
+** TODO ドキュメント書く
+#+begin_src emacs-lisp
+;; -----------------------------------------------------------
+;;; [howm]
+;; 初期設定
+(add-hook 'org-mode-hook 'howm-mode)
+;; 拡張子が .org のファイルは org-mode + howm で開く
+(add-to-list 'auto-mode-alist '("\\.org" . org-mode))
+;; 拡張子が .howm のファイルも org-mode + howm で開く
+(add-to-list 'auto-mode-alist '("\\.howm$" . org-mode))
+;; goto, come-frome の記号の変更
+(setq howm-ref-header "==>")
+(setq howm-keyword-header "<==")
+;; ディレクトリ -> org に揃える.
+(setq howm-directory "~/Documents/Dropbox/org")
+(setq howm-file-name-format "%Y%m%d-%H%M%S.howm")
+(setq howm-keyword-file "~/Documents/Dropbox/org/.howm-keys")
+(setq howm-keyword-case-fold-search t)
+(setq howm-list-title nil)
+(setq howm-menu-refresh-after-save nil)
+(setq howm-refresh-after-save nil)
+;; title header を org に揃える
+(setq howm-view-title-header "*")
+;; (setq dired-bind-jump nil)
+;; \C-x\C-z を使う -> org-mode と被るから.
+(global-unset-key "\C-x\C-z")
+(setq howm-prefix "\C-x\C-z")
+;; 一覧表示の順序
+(setq howm-prepend t)
+;; 以下は決まり文句
+(setq howm-menu-top nil)
+(setq howm-menu-lang 'ja)
+(setq howm-history-file "~/Documents/Dropbox/org/.howm-history")
+(setq howm-menu-file "~/Documents/Dropbox/org/.howm-menu")
+(require 'howm)
+(set-face-foreground 'howm-mode-title-face "turquoise") ;; タイトル色
+(set-face-foreground 'howm-mode-keyword-face "yellow") ;; <<<
+(set-face-foreground 'howm-mode-ref-face "yellow") ;; >>>
+(set-face-foreground 'action-lock-face "cyan") ;; 下線文字
+(set-face-underline-p 'action-lock-face t) ;; 下線は文字と同色
+(set-face-underline-p 'action-lock-face "cyan") ;; 下線
+;; howm のテンプレートのカスタマイズ
+(setq howm-template-date-format "[%Y-%m-%d %H:%M:%S]")
+(setq howm-template-file-format "==>%s")
+(setq howm-template "%date%file\n* %cursor\n\n")
+;; \C-x m で howm-create(clmemo 風)
+(define-key ctl-x-map "m" 'howm-create)
+;; 全文検索の対象ディレクトリ<- 追加しない
+(setq howm-search-other-dir nil)
+;; 検索対象除外ファイル
+;; (setq howm-excluded-file-regexp
+;;       "/\\.#\\|[~#]$\\|\\.bak$\\|/CVS/\\|\\.doc$\\|\\.pdf$\\|\\.ppt$\\|\\.xls\\|\\.howm-menu\\|.howm-keys$|\\.png$\\|\\.gif$\\|\\.tif$\\|\\.tiff$\\|\\.jpg\\|\\.jpeg")
+;; (setq howm-view-use-grep nil)
+;; grep の設定
+(setq howm-view-grep-command "egrep")
+(setq howm-view-fgrep-command "fgrep")
+(setq howm-view-grep-extended-option nil)
+(setq howm-view-grep-fixed-option nil)
+(setq howm-view-grep-file-stdin-option nil)
+;; ;; 「最近のメモ」一覧時にタイトル表示
+(setq howm-list-recent-title t)
+;; ;; 「最近のメモ」の表示件数
+(setq howm-menu-recent-num 20)
+;;  ToDo で完了(.) は表示しない
+(setq howm-todo-menu-types "[-+~!]")
+;; 全メモ一覧時にタイトル表示
+(setq howm-list-all-title t)
+;; メニューを 2 時間キャッシュ
+(setq howm-menu-expiry-hours 2)
+;; RET でファイルを開く際, 一覧バッファを消す.  C-u RET なら残る
+(setq howm-view-summary-persistent nil)
+;; メニューの予定表の表示範囲
+;; 21 日前から3 日後まで
+(setq howm-menu-schedule-days-before 10)
+;; elscreen + howm でバッファを操作.
+(require 'elscreen-howm)
+(eval-after-load "howm-mode"
+  '(progn
+     (define-key howm-mode-map "\C-c\C-c" nil)
+     (define-key howm-mode-map "\C-x\C-z\C-c" 'howm-save-and-kill-buffer/screen)))
+#+end_src
+

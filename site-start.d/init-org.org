@@ -1,0 +1,230 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+# init-org.org
+#+begin_quote
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# $Lastupdate: 2011/11/28 07:58:37$
+#
+# Author: Youhei SASAKI <uwabami@gfd-dennou.org>
+# License: MIT
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#+end_quote
+#+SETUPFILE: ~/.emacs.d/template/org/level-2.org
+#+INCLUDE: ~/.emacs.d/template/org/menu-level-2.org
+#+TITLE: org-mode の設定
+#Code:
+
+** 基本設定
+#+begin_src emacs-lisp
+  (require 'org-install)
+  (require 'org)
+  ;; 打ち切らない.
+  (setq org-startup-truncated nil)
+  ;; ファイルを開いく時は項目を折り畳んだ状態にする
+  (setq org-startup-folded t)
+  ;; フォントロックを有効に
+  (add-hook 'org-mode-hook 'turn-on-font-lock)
+  ;; [HOME] と [END] の再割り当て
+  ;; org.el で beginning-of-line/end-of-line となっているので再定義
+  (define-key org-mode-map [home] 'beginning-of-buffer)
+  (define-key org-mode-map [end] 'end-of-buffer)
+  ;; org のファイルの置き場(デフォルト)
+  ;; (setq org-directory "~/Documents/Dropbox/org/")
+  ;; (org-remember-insinuate)
+  ;; (setq org-default-notes-file (concat org-directory "index.org"))
+  ;; (setq org-remember-templates
+  ;;       '(("Todo" ?t "** TODO %?\n   %i\n   %a\n   %t" nil "Inbox")
+  ;;         ("Bug" ?b "** TODO %?   :bug:\n   %i\n   %a\n   %t" nil "Inbox")
+  ;;         ("Idea" ?i "** %?\n   %i\n   %a\n   %t" nil "New Ideas")
+  ;;         ))
+  ;; ToDo 表記
+  ;; (setq org-todo-keywords
+  ;;       '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)" "SOMEDAY(s)")))
+  ;; (setq org-log-done 'time)
+#+end_src
+** HTML export の設定
+#+begin_src emacs-lisp
+  ;; HTML export の設定
+  (require 'org-html)
+  ;; default の style sheet は使わない
+  (setq org-export-html-style-include-default nil)
+  ;; -----------------------------------------------------------
+  ;;; Website 用の org file の置き場所
+  ;; @see http://orgmode.org/worg/org-tutorials/org-publish-html-tutorial.html
+  (require 'org-publish)
+  ;;
+  ;; バックアップファイルを作成しない
+  (setq make-backup-files nil)
+  ;; cache の置き場所を ~/.emacs.d/.org-timestamps/ に変える
+  (setq org-publish-timestamp-directory (concat user-emacs-directory ".org-timestamps/"))
+  ;; project の設定
+  (setq org-publish-project-alist
+        '(
+          ("emacs-setup"
+           :base-directory "~/.emacs.d/site-start.d/"
+           :exclude ".*\.el|^Makefile|.*\.gpg|sitemap\.org"
+           :base-extension "org"
+           :publishing-directory "~/Public/cc-env/Emacs/"
+           :recursive nil
+           :publish-function org-publish-org-to-html
+           :auto-sitemap t
+           :sitemap-filename "sitemap.org"
+           :sitemap-title "sitemap"
+           :headline-levels 2
+           :auto-preamble t
+           )
+          ("web-org"
+           :base-directory "~/Public/org/src/"
+           :exclude "^menu.*\.org\\|cc-env\\|css\\|img\\|.*\.pdf\\|.*\.tex"
+           :base-extension "org"
+           :publishing-directory "~/Public/"
+           :recursive t
+           :publish-function org-publish-org-to-html
+           :headline-levels 2
+           :html-postamble auto  ;; default
+           :auto-preamble t
+           )
+          ("web"
+           :components ("web-org" "Emacs"))
+          ))
+
+  ;; ;;; insert skelton and export config files
+  ;; ;;
+  ;; ;; @see http://thenybble.de/projects/orgsite.html
+  ;; ;;
+  ;; (defvar my-website-base-dir "~/Public/org/src" "Base directory of Website")
+  ;; (defvar my-website-config-name "export-config-")
+  ;; (setq my-website-base-dir (expand-file-name "~/Public/org/src"))
+  ;; (defun my-repeat-string (str times)
+  ;;   (with-output-to-string
+  ;;     (dotimes (i times)
+  ;;       (princ str))))
+  ;; (defun my-get-nesting-depth (filename basename)
+  ;;   (with-temp-buffer
+  ;;     (insert (file-relative-name filename basename))
+  ;;     (goto-line 0)
+  ;;     (count-matches "/")))
+  ;; (defun my-make-website-conf-path (filename)
+  ;;   (let ((nesting-level (my-get-nesting-depth filename my-website-base-dir)))
+  ;;     (concat (my-repeat-string "../" (+ nesting-level 1))
+  ;;             my-website-config-name (int-to-string nesting-level) ".org")))
+  ;; (define-skeleton my-org-website-skeleton "" "Enter Title: "
+  ;;   "#+TITLE: " str ?\n
+  ;;   "#+SETUPFILE: "
+  ;;   (my-make-website-conf-path (buffer-file-name)) ?\n
+  ;;   "#+INCLUDE: "
+  ;;   (my-make-website-conf-path (buffer-file-name)) ?\n ?\n
+  ;;   "* " _ )
+  ;; (defun my-org-website-insert-skeleton-maybe ()
+  ;;   (if (and (buffer-file-name)
+  ;;            (not (file-remote-p (buffer-file-name)))
+  ;;            (string-match (concat "^" my-website-base-dir)
+  ;;                          (expand-file-name (buffer-file-name))))
+  ;;       (my-org-website-skeleton)))
+  ;; (add-hook 'find-file-hook 'auto-insert)
+  ;; (setq auto-insert-query nil)
+  ;; (setq auto-insert-alist
+  ;;       '((org-mode . my-org-website-insert-skeleton-maybe)))
+#+end_src
+
+** LaTeX export の設定
+#+begin_src emacs-lisp
+;; LaTeX export
+(require 'org-latex)
+(setq org-export-latex-coding-system 'euc-jp-unix)
+(setq org-export-latex-date-format "%Y年%m月%d日")
+;; LaTeX
+(add-to-list 'org-export-latex-classes
+             '("
+jsarticle" "\\documentclass[a4j,12pt]{jsarticle}
+\\usepackage{ascmac}
+\\usepackage{amsmath}
+\\usepackage[varg]{txfonts}
+\\usepackage{natbib}
+\\usepackage{Dennou6}"
+               ("\\section{%s}" . "\\section*{%s}")
+               ("\\subsection{%s}" . "\\subsection*{%s}")
+               ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+               ("\\paragraph{%s}" . "\\paragraph*{%s}")
+               ("\\subparagraph{%s}" . "\\subparagraph*{%s}"))
+             )
+(setq org-export-latex-default-class "jsarticle")
+;; LaTeX-Beamer export
+(require 'org-beamer)
+;; デフォルトのヘッドラインレベル -> 2
+(setq org-beamer-frame-level 2)
+;; frame のオプション
+(setq org-beamer-frame-default-options "[fragile]")
+(setq org-latex-to-pdf-process
+ '("latexmk -pdfdvi %b" "latexmk -pdfdvi %b"))
+(setq org-export-with-sub-superscripts nil)
+(require 'ob-ditaa)
+#+end_src
+** export-generic の設定
+
+#+begin_src emacs-lisp
+  (when (not (locate-library "org-export-generic"))
+    (add-to-load-path "site-lisp/org-mode/contrib/lisp/")
+    (eval-when-compile (add-to-load-path "site-lisp/org-mode/contrib/lisp/")))
+  (require 'org-export-generic)
+  ;; (org-set-generic-type
+  ;;  "Markdown"
+  ;;  '(
+  ;;    :file-suffix ".md"
+  ;;                 :key-binding ?m
+  ;;                 :title-format "%s\n"
+  ;;                 :title-suffix ?=
+  ;;                 :body-header-section-numbers t
+  ;;                 :body-header-section-number-format "%s) "
+  ;;                 :body-section-header-prefix  ("\n# " "\n## " "\n### " "\n#### " "\n##### ")
+  ;;                 :body-section-header-format  "%s"
+  ;;                 :body-section-header-suffix "\n"
+  ;;                 :todo-keywords-export t
+  ;;                 :body-line-format "  %s\n"
+  ;;                 :body-tags-export    t
+  ;;                 :body-tags-prefix    " <tags>"
+  ;;                 :body-tags-suffix    "</tags>\n"
+  ;;                 ;;:body-section-prefix   "<secprefix>\n"
+  ;;                 ;;:body-section-suffix   "</secsuffix>\n"
+  ;;                 :body-line-export-preformated    t
+  ;;                 :body-line-fixed-prefix  "<pre>\n"
+  ;;                 :body-line-fixed-suffix  "\n</pre>\n"
+  ;;                 :body-line-fixed-format  "%s\n"
+  ;;                 :body-list-prefix    "\n"
+  ;;                 :body-list-suffix    "\n"
+  ;;                 :body-list-format    "  * %s\n"
+  ;;                 ;;:body-number-list-prefix   "<ol>\n"
+  ;;                 ;;:body-number-list-suffix   "</ol>\n"
+  ;;                 ;;:body-number-list-format   "<li>%s</li>\n"
+  ;;                 ;;:body-number-list-leave-number t
+  ;;                 :body-list-checkbox-todo "[_] "
+  ;;                 :body-list-checkbox-todo-end ""
+  ;;                 :body-list-checkbox-done "[X] "
+  ;;                 :body-list-checkbox-done-end ""
+  ;;                 :body-line-format    "%s"
+  ;;                 :body-line-wrap  75
+  ;;                 :body-text-prefix    ""
+  ;;                 :body-text-suffix    ""
+  ;;                 ))
+
+
+#+end_src

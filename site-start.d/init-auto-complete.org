@@ -1,0 +1,57 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+# init-auto-complete.org
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# $Lastupdate: 2011/11/26 05:49:26$
+#
+# Author: Youhei SASAKI <uwabami@gfd-dennou.org>
+# License:
+# This program is permitted under the principle of "NO WARRANTY" and "NO
+# RESPONSIBILITY". The author shall not be liable for any event arising in
+# any way out of the use of these resources.
+#
+# Redistribution in source and binary forms, with or without modification,
+# is also permitted provided that the above copyright notice, disclaimer
+# and this condition are retained.
+#
+#Code:
+#+TITLE: auto-complete の設定
+#+OPTIONS: toc:2 num:nil ^:nil
+
+** auto-complete の設定
+- load-path の設定: パッケージがある場合はそれを読む
+#+begin_src emacs-lisp
+  (when (not (locate-library "auto-complete"))
+    (add-to-load-path "site-lisp/auto-complete-el")
+    (eval-when-compile
+      (add-to-load-path "site-lisp/auto-complete-el")))
+  (require 'auto-complete)
+  ;; (ac-config-default)
+  ;; デフォルトの補完候補
+  ;(set-default 'ac-sources '(ac-source-abbrev ac-source-words-in-same-mode-buffers ac-source-yasnippet))
+  ;; 対象の全てで補完を有効にする
+  (global-auto-complete-mode t)
+  ;; 自動で起動するのを停止
+  (setq ac-auto-start nil)
+  ;; 起動キーの設定
+  ;;(ac-set-trigger-key "TAB")
+  (define-key ac-mode-map (kbd "M-TAB") 'auto-complete)
+  ;; 補完メニュー表示時のみ C-n/C-p で補完候補を選択
+  (setq ac-use-menu-map t)
+  (define-key ac-menu-map "\C-n" 'ac-next)
+  (define-key ac-menu-map "\C-p" 'ac-previous)
+  (define-key ac-completing-map (kbd "C-m") 'ac-complete)
+  (define-key ac-completing-map (kbd "M-/") 'ac-stop)
+  ;; 待ち時間を長めに取る
+  (setq ac-delay 0.2)
+  ;; 候補の最大件数 デフォルトは 10件
+  (setq ac-candidate-limit nil)
+  ;; 補完候補のソート
+  (setq ac-use-comphist t)
+  ;; クイックヘルプが表示されるとバッファが大きく変更される場合があるので停止
+  (setq ac-use-quick-help nil)
+  ;; 補完推測
+  (setq ac-use-comphist nil)
+  ;; flyspell-mode 用の対策
+  (ac-flyspell-workaround)
+#+end_src

@@ -1,0 +1,36 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#init-tdiary.org
+#+begin_quote
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# $Lastupdate: 2011/11/16 14:00:09$
+#
+# Author: Youhei SASAKI <uwabami@gfd-dennou.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#+end_quote
+#Code:
+#+TITLE: simple-tdiary-mode の設定
+#+OPTIONS: toc:2 num:nil ^:nil
+
+#+begin_src emacs-lisp
+(require 'simple-tdiary-mode)
+(setq simple-tdiary-bin "~/Documents/Dropbox/tdiary/tw.rb")
+(setq simple-tdiary-root "~/Documents/Dropbox/tdiary")
+(setq simple-tdiary-username "uwabami")
+;; \C-x M で simple-tdiary
+(global-set-key (kbd "C-x M") 'simple-tdiary)
+(provide 'init_tdiary-mode)
+#+end_src

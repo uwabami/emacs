@@ -1,0 +1,79 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+# 30wl.org
+#+begin_quote
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# $Lastupdate: 2011/11/28 10:49:58$
+#
+# Author: Youhei SASAKI <uwabami@gfd-dennou.org>
+# License: MIT
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#+end_quote
+#+SETUPFILE: ~/.emacs.d/template/org/level-2.org
+#+INCLUDE: ~/.emacs.d/template/org/menu-level-2.org
+#+TITLE: 06. Wanderlust の設定
+#Code:
+
+** TODO HTML メールの表示[0/1]
+
+- w3m を使う.
+- [ ] w3m-el で外部リンクを踏む際に safe にする設定が良くわからない...Orz
+#+begin_src emacs-lisp
+(when (locate-library "mime-setup")
+  (setq mime-setup-enable-inline-html t)
+  (require 'mime-setup))
+(when (locate-library "w3m-load")
+  (require 'w3m-ems)
+  (require 'w3m-load)
+  (require 'mime-w3m)
+  )
+#+end_src
+
+** デフォルトのメーラを Wanderlust に変更する
+
+#+begin_src emacs-lisp
+(autoload 'wl "wl" "Wanderlust" t)
+(autoload 'wl-other-frame "wl" "Wanderlust on new frame" t)
+(autoload 'wl-draft "wl-draft" "Write draft with Wanderlust." t)
+(if (boundp 'mail-user-agent)
+    (setq mail-user-agent 'wl-user-agent))
+(if (boundp 'read-mail-command)
+  (setq read-mail-command 'wl))
+(if (fboundp 'define-mail-user-agent)
+  (define-mail-user-agent
+    'wl-user-agent
+    'wl-user-agent-compose
+    'wl-draft-send
+    'wl-draft-kill
+    'mail-send-hook))
+#+end_src
+
+** キーバインド. F3 で Wanderlust を起動
+
+#+begin_src emacs-lisp
+(global-set-key [f3] 'wl)
+#+end_src
+
+** Wanderlust 本体の設定は基本外部ファイルで
+#+begin_src emacs-lisp
+(setq wl-init-file "~/.wl/init.gpg")
+#+end_src

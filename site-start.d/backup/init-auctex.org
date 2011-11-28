@@ -1,0 +1,54 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#init-auctex.org
+#+begin_quote
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# $Lastupdate: 2011/08/20 19:36:16$
+#
+# Author: Youhei SASAKI <uwabami@gfd-dennou.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+#+end_quote
+#Code:
+#+TITLE: AUCTeX の設定
+#+OPTIONS: toc:2 num:nil ^:nil
+
+** 読み込み
+#+begin_src emacs-lisp
+(load "auctex.el" nil t t)
+(load "preview-latex.el" nil t t)
+(setq TeX-default-mode 'japanese-latex-mode)
+(setq japanese-TeX-command-default "pTeX")
+(setq japanese-LaTeX-command-default "pLaTeX")
+(setq japanese-LaTeX-default-style "jsarticle")
+(setq TeX-japanese-process-input-coding-system 'euc-jp
+      TeX-japanese-process-output-coding-system 'euc-jp)
+(add-hook 'LaTeX-mode-hook
+          (function (lambda () (outline-minor-mode t))))
+(add-hook 'japanese-latex-mode-hook
+          (function (lambda () (outline-minor-mode t))))
+(add-hook 'TeX-mode-hook
+          (function (lambda () (outline-minor-mode t))))
+#+end_src
+
+** フォント関連
+*** サイズ可変の無効
+#+begin_src emacs-lisp
+(setq font-latex-fontify-sectioning 1.0)
+#+end_src
+*** 上付き, 下付きの無効化
+#+begin_src emacs-lisp
+(setq font-latex-fontify-script nil)
+#+end_src

@@ -2,7 +2,7 @@
 # init-e2wm.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/11/28 18:21:41$
+# $Lastupdate: 2011/11/28 20:19:33$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat

@@ -1,9 +1,8 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
-# 20ddskk.org
-#+begin_quote
+# init-ddskk.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/11/28 16:08:50$
+# $Lastupdate: 2011/11/28 20:19:49$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -27,7 +26,6 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
-#+end_quote
 #+SETUPFILE: ~/.emacs.d/template/org/level-2.org
 #+INCLUDE: ~/.emacs.d/template/org/menu-level-2.org
 #+TITLE: 05. ddskk の設定

@@ -2,7 +2,7 @@
 ;;; init.el
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2011/11/26 08:48:47$
+;; $Lastupdate: 2011/11/28 11:25:38$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -91,9 +91,15 @@
  "auto-install"
  ;; org-mode は常に最新版(Git HEAD)を load する.
  "site-lisp/org-mode/lisp"
- ;; apel は無いと色々絶望的? <- ddskk の apel 依存ってどうなったのかしら
- "site-lisp/apel"
  )
+;; -----------------------------------------------------------
+;;; 良く使う macro の定義
+;;not-locate-library -> add-to-load-path
+(defmacro my:not-locate-library (lib &rest list)
+  `(when (not (locate-library ,(symbol-name lib)))
+     (add-to-load-path ,@list)
+     (eval-when-compile
+       (add-to-load-path ,@list))))
 ;; -----------------------------------------------------------
 ;;; org-babel
 ;;

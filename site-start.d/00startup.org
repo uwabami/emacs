@@ -3,29 +3,34 @@
 #+begin_quote
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/11/28 12:59:24$
+# $Lastupdate: 2011/11/28 18:02:28$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
-# License: GPL-3+
+# License: Expat
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #+end_quote
 #+SETUPFILE: ~/.emacs.d/template/org/level-2.org
 #+INCLUDE: ~/.emacs.d/template/org/menu-level-2.org
 #+TITLE: 01. Emacs の基本設定
-#Code:
 
 * 始めに
 
@@ -220,11 +225,15 @@
   (setq uniquify-buffer-name-style 'post-forward-angle-brackets)
   (setq uniquify-min-dir-content 1)
 #+end_src
-   前回の修正位置を記憶
+   saveplace で前回の修正位置を記憶する
+
+   記憶の保存先を ~/.emacs.d/emacs-places にする
 #+begin_src emacs-lisp
   (require 'saveplace)
   (setq-default save-place t)
-  (setq save-place-file (convert-standard-filename "~/.emacs.d/emacs-places"))
+  (setq save-place-file
+        (convert-standard-filename
+         (concat user-emacs-directory "emacs-places")))
 #+end_src
    tab 幅 4, tab でのインデントはしない
 #+begin_src emacs-lisp
@@ -239,9 +248,9 @@
 #+end_src
    list-buffers の代わりに ibuffer を使用する
 #+begin_src emacs-lisp
-  (require 'ibuffer)
-  (global-set-key (kbd "C-x b") 'ibuffer)
-  (global-set-key (kbd "C-x C-b") 'ibuffer-other-window)
+  ;; (require 'ibuffer)
+  ;; (global-set-key (kbd "C-x b") 'ibuffer)
+  ;; (global-set-key (kbd "C-x C-b") 'ibuffer-other-window)
 #+end_src
    無駄な行末の空白を削除する(Emacs Advent Calendar jp:2010)[fn:4]
 #+begin_src emacs-lisp
@@ -398,98 +407,16 @@
   (require 'epa-file)
   (setq epa-file-cache-passphrase-for-symmetric-encryption t)
 #+end_src
-* 外部elisp の設定
-  以下は Emacs 本体に同梱されていない emacs-lisp や
-  外部ファイルの設定を読み込んでいるモン, など.
-** elscreen
-- emacs 内で GNU screen っぽくする emacs-lisp
-- 残念ながら, Debian squeeze の elscreen にはバグがあり, 起動時にファイル
-  を開けなかったりする.  backport した方が良いかなぁ...
-#+begin_src emacs-lisp
-  (my:not-locate-library elscreen "site-lisp/elscreen")
-  (setq elscreen-prefix-key "\C-o")
-  (if (eq window-system 'x)
-      (setq elscreen-display-tab 6)
-    (setq elscreen-display-tab nil)
-    )
-  (setq elscreen-tab-display-kill-screen nil)
-  (require 'elscreen)
-#+end_src
-** 見た目/フォントなどの設定
-見た目や色に関しては color-theme を使用するようになった. [[file:init-color-theme.org][color-theme の設定]] を参照.
-#+begin_src emacs-lisp
-  (my:load-org-file "init-color-theme.org")
-#+end_src
-GUI 環境でのフォントの設定については [[file:init-frame.org][GUI環境でのフォントとフレームの設定]] を参照.
-#+begin_src emacs-lisp
-  (when window-system (my:load-org-file "init-frame.org"))
-#+end_src
-** [[file:init-migemo.org][migemo の設定]]
-- ローマ字でかなと漢字を incremental search する migemo の設定.
-- 無いと途方に暮れる.
-#+begin_src emacs-lisp
-  (my:load-org-file "init-migemo.org")
-#+end_src
-** [[file:init-ddskk.org][ddskkの設定]]
-   日本語入力には ddskk を使用する.
-#+begin_src emacs-lisp
-  (my:load-org-file "init-ddskk.org")
-#+end_src
-** [[file:init-wl.org][Wanderlustの設定]]
-   MUA の設定. 以前は Mew を使用していたが, 最近は Wanderlust を使用している.
-#+begin_src emacs-lisp
-(when (locate-library "wl")
-  (my:load-org-file "init-wl.org"))
-#+end_src
-** [[file:init-lookup-el.org][lookup-elの設定]]
-#+begin_src emacs-lisp
-(when (locate-library "lookup")
-  (my:load-org-file "init-lookup-el.org"))
-#+end_src
-** muse-mode の設定
-#+begin_src emacs-lisp
-(my:load-org-file "init-muse.org")
-#+end_src
-** org-mode
-#+begin_src emacs-lisp
-(my:load-org-file "init-org.org")
-#+end_src
-** howm-mode
-#+begin_src emacs-lisp
-(my:load-org-file "init-howm.org")
-#+end_src
-** プログラミング言語毎の設定
-#+begin_src emacs-lisp
-(my:load-org-file "init-programing.org")
-#+end_src
-** tdiary
-#+begin_src emacs-lisp
-(when (locate-library "rd-mode")
-  (my:load-org-file "init-tdiary.org"))
-#+end_src
-** AUCTeX
-#+begin_src emacs-lisp
-;; (when (locate-library "tex-site")
-;;   (my:load-org-file "init-auctex.org"))
-#+end_src
-** auto-complete
-#+begin_src emacs-lisp
-(my:load-org-file "init-auto-complete.org")
-#+end_src
-** autoinsert
-#+begin_src emacs-lisp
-(my:load-org-file "init-autoinsert.org")
-#+end_src
-** VC (今ん所 magit だけ)
-#+begin_src emacs-lisp
-  (my:not-locate-library magit "site-lisp/magit")
-  (require 'magit)
-#+end_src
-** auto-install
-#+begin_src emacs-lisp
-(my:load-org-file  "init-auto-install.org")
-#+end_src
 
+* 分割した設定ファイルを読み込む
+** [[file:init-anything.org][anythingの設定]]
+#+begin_src emacs-lisp
+  (my:load-org-file "init-anything.org")
+#+end_src
+** [[file:init-e2wm.org][Emacs内Window管理ツール, e2wm.elの設定]]
+#+begin_src emacs-lisp
+  (my:load-org-file "init-e2wm.org")
+#+end_src
 
 * Footnotes
 

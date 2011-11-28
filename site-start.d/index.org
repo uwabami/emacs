@@ -2,17 +2,29 @@
 # index.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/11/28 13:49:41$
+# $Lastupdate: 2011/11/28 16:06:42$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
-# License:
-# This program is permitted under the principle of "NO WARRANTY" and "NO
-# RESPONSIBILITY". The author shall not be liable for any event arising in
-# any way out of the use of these resources.
+# License: Expat
 #
-# Redistribution in source and binary forms, with or without modification,
-# is also permitted provided that the above copyright notice, disclaimer
-# and this condition are retained.
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #Code:
 #+SETUPFILE: ~/.emacs.d/template/org/level-2.org
@@ -35,6 +47,10 @@ org-babel を用いた Emacs の設定について触れています.
   3. hogehoge.elc を load
 
 するようになっています. 実際の設定ファイルは以下の通りです.
+
+----
+
+- [[http://www.gfd-dennou.org/member/uwabami/cc-env/index.html][Computer memorandum]] へ戻る
 
 #+INCLUDE: sitemap.org
 

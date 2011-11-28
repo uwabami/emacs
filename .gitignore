@@ -9,3 +9,4 @@ emacs-places
 site-lisp/00build-stamp
 site-lisp/color-theme-6.6.0/color-theme-autoloads.el
 site-lisp/ddskk/skk-autoloads.el
+recentf

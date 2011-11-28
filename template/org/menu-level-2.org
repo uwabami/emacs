@@ -1,0 +1,19 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+# menu-level-2.org
+#+HTML: <div id="langnavi">
+#+HTML:  <p> [ Japanese ] </p>
+#+HTML: </div>
+#+HTML: <div id="sitemenu">
+#+HTML:   <ul>
+#+HTML:     <li><a href="../../index.html">Top</a></li>
+#+HTML:     <li><a href="../../work/index.html">Work</a></li>
+#+HTML:     <li><a href="../../software/index.html">Software</a></li>
+#+HTML:     <li><a href="../../cc-env/index.html">Computer</a></li>
+#+HTML:   </ul>
+#+HTML: </div>
+#+HTML: <hr />
+#+HTML: <div id="sitemap">
+#+HTML:  <p> Emacs の設定集 </p>
+#+INCLUDE: ~/.emacs.d/site-start.d/sitemap.org
+#+HTML: </div>
+#+HTML: <div class="outline">

@@ -1,0 +1,2 @@
+(when (not (locate-library "apel-ver"))
+      (add-to-list 'load-path "../apel"))

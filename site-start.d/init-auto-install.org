@@ -2,9 +2,10 @@
 #+begin_quote
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/11/26 05:55:44$
+# $Lastupdate: 2011/11/28 13:14:14$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
+# License: GPL-3+
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,8 +21,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 #+end_quote
+#+SETUPFILE: ~/.emacs.d/template/org/level-2.org
+#+INCLUDE: ~/.emacs.d/template/org/menu-level-2.org
 #+TITLE: auto-install で install した elisp の設定
-#+OPTIONS: toc:2 num:nil ^:nil
 # Code:
 
 ** 基本設定

@@ -1,0 +1,43 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+# index.org
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# $Lastupdate: 2011/11/28 13:49:41$
+#
+# Author: Youhei SASAKI <uwabami@gfd-dennou.org>
+# License:
+# This program is permitted under the principle of "NO WARRANTY" and "NO
+# RESPONSIBILITY". The author shall not be liable for any event arising in
+# any way out of the use of these resources.
+#
+# Redistribution in source and binary forms, with or without modification,
+# is also permitted provided that the above copyright notice, disclaimer
+# and this condition are retained.
+#
+#Code:
+#+SETUPFILE: ~/.emacs.d/template/org/level-2.org
+#+INCLUDE: ~/.emacs.d/template/org/menu-level-2.org
+#+TITLE: 00. Emacs の設定を org で管理する
+
+* 始めに.
+
+org-babel を用いた Emacs の設定について触れています.
+[[http://www.gfd-dennou.org/member/uwabami/cc-env/EmacsBasic.html][Emacsの基本設定]] で触れた通り,
+
+#+begin_src emacs-lisp
+  (my-load-org-file "hogehoge.org")
+#+end_src
+
+と記述するだけで
+
+  1. hogehoge.org の begin_src emacs-lisp ... end_src の部分を hogehoge.el として抽出
+  2. hogehoge.el を byte-compile
+  3. hogehoge.elc を load
+
+するようになっています. 実際の設定ファイルは以下の通りです.
+
+#+INCLUDE: sitemap.org
+
+
+
+

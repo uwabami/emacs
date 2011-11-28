@@ -14,7 +14,9 @@ TARGET: 00build-stamp
 	touch $@
 	
 clean:
+	rm -f 00build-stamp
+
+distclean: clean
 	@for d in $(TARGET_DIRS) ;\
 		do $(MAKE) clean -C $$d ;\
 	done
-	rm -f 00build-stamp

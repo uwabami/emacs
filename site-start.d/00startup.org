@@ -2,7 +2,7 @@
 # 00startup.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/11/28 20:21:02$
+# $Lastupdate: 2011/11/28 22:25:13$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -246,9 +246,9 @@
 #+end_src
    list-buffers の代わりに ibuffer を使用する
 #+begin_src emacs-lisp
-  ;; (require 'ibuffer)
-  ;; (global-set-key (kbd "C-x b") 'ibuffer)
-  ;; (global-set-key (kbd "C-x C-b") 'ibuffer-other-window)
+  (require 'ibuffer)
+  (global-set-key (kbd "C-x b") 'ibuffer)
+  (global-set-key (kbd "C-x C-b") 'ibuffer-other-window)
 #+end_src
    無駄な行末の空白を削除する(Emacs Advent Calendar jp:2010)[fn:4]
 #+begin_src emacs-lisp
@@ -407,13 +407,117 @@
 #+end_src
 
 * 分割した設定ファイルを読み込む
-** [[file:init-anything.org][anythingの設定]]
-#+begin_src emacs-lisp
-  (my:load-org-file "init-anything.org")
-#+end_src
+  以下は Emacs 本体に同梱されていない emacs-lisp や
+  外部ファイルの設定を読み込んでいるモン, など.
 ** [[file:init-e2wm.org][Emacs内Window管理ツール, e2wm.elの設定]]
 #+begin_src emacs-lisp
   (my:load-org-file "init-e2wm.org")
+#+end_src
+
+** elscreen
+
+   - emacs 内で GNU screen っぽくする emacs-lisp
+
+   - 残念ながら, Debian squeeze の elscreen にはバグがあり, 起動時にファ
+     イルを開けなかったりする.  backport した方が良いかなぁ...
+
+#+begin_src emacs-lisp
+  (my:not-locate-library elscreen "site-lisp/elscreen")
+  (setq elscreen-prefix-key "\C-o")
+  (if (eq window-system 'x)
+      (setq elscreen-display-tab 6)
+    (setq elscreen-display-tab nil)
+    )
+  (setq elscreen-tab-display-kill-screen nil)
+  (require 'elscreen)
+#+end_src
+** 見た目/フォントなどの設定
+
+   見た目や色に関しては color-theme を使用するようになった.
+   [[file:init-color-theme.org][color-themeの設定]] を参照.
+
+#+begin_src emacs-lisp
+  (my:load-org-file "init-color-theme.org")
+#+end_src
+
+   GUI 環境でのフォントの設定については
+   [[file:init-frame.org][GUI環境でのフォントとフレームの設定]] を参照.
+
+#+begin_src emacs-lisp
+  (when window-system (my:load-org-file "init-frame.org"))
+#+end_src
+
+** [[file:init-migemo.org][migemo の設定]]
+
+- ローマ字でかなと漢字を incremental search する migemo の設定.
+- 無いと途方に暮れる.
+
+#+begin_src emacs-lisp
+  (my:load-org-file "init-migemo.org")
+#+end_src
+
+** [[file:init-ddskk.org][ddskkの設定]]
+
+   日本語入力には ddskk を使用する.
+
+#+begin_src emacs-lisp
+  (my:load-org-file "init-ddskk.org")
+#+end_src
+
+** MUA の設定
+
+   Wanderlust 愛用中
+#+begin_src emacs-lisp
+  (when (locate-library "wl")
+    (my:load-org-file "init-wl.org"))
+#+end_src
+** [[file:init-lookup-el.org][lookup-elの設定]]
+#+begin_src emacs-lisp
+(when (locate-library "lookup")
+  (my:load-org-file "init-lookup-el.org"))
+#+end_src
+** muse-mode の設定
+#+begin_src emacs-lisp
+(my:load-org-file "init-muse.org")
+#+end_src
+** org-mode
+#+begin_src emacs-lisp
+(my:load-org-file "init-org.org")
+#+end_src
+** howm-mode
+#+begin_src emacs-lisp
+(my:load-org-file "init-howm.org")
+#+end_src
+** プログラミング言語毎の設定
+#+begin_src emacs-lisp
+(my:load-org-file "init-programing.org")
+#+end_src
+** tdiary
+#+begin_src emacs-lisp
+(when (locate-library "rd-mode")
+  (my:load-org-file "init-tdiary.org"))
+#+end_src
+** AUCTeX
+#+begin_src emacs-lisp
+;; (when (locate-library "tex-site")
+;;   (my:load-org-file "init-auctex.org"))
+#+end_src
+** auto-complete
+#+begin_src emacs-lisp
+(my:load-org-file "init-auto-complete.org")
+#+end_src
+** autoinsert
+#+begin_src emacs-lisp
+(my:load-org-file "init-autoinsert.org")
+#+end_src
+** VC (今ん所 magit だけ)
+#+begin_src emacs-lisp
+  (my:not-locate-library magit "site-lisp/magit")
+  (require 'magit)
+#+end_src
+** auto-install
+#+begin_src emacs-lisp
+(my:load-org-file  "init-auto-install.org")
 #+end_src
 
 * Footnotes

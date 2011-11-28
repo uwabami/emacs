@@ -2,7 +2,7 @@
 # init-auto-install.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/11/28 20:20:21$
+# $Lastupdate: 2011/11/28 20:44:40$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -30,7 +30,7 @@
 #+INCLUDE: ~/.emacs.d/template/org/menu-level-2.org
 #+TITLE: auto-install で install した elisp の設定
 
-** 基本設定
+* 基本設定
 - load-path の設定
 #+begin_src emacs-lisp
   (when (not (locate-library "auto-install"))
@@ -49,13 +49,13 @@
 (setq auto-install-directory "~/.emacs.d/auto-install/")
 #+end_src
 
-** auto-async-byte-compile
+* auto-async-byte-compile
 - auto-install した際に自動で byte-compile してくれるので結構良い感じ.
-*** install
+** install
 #+begin_example
 (auto-install-from-emacswiki "auto-async-byte-compile.el")
 #+end_example
-*** 設定
+** 設定
 #+begin_src emacs-lisp
 (require 'auto-async-byte-compile)
 (setq auto-async-byte-compile-exclude-files-regexp "^_")
@@ -64,13 +64,13 @@
           'enable-auto-async-byte-compile-mode)
 #+end_src
 
-** [[http://d.hatena.ne.jp/mooz/20101003/p1][zlc.el で Emacs のミニバッファ補完を zsh ライクに]]
+* [[http://d.hatena.ne.jp/mooz/20101003/p1][zlc.el で Emacs のミニバッファ補完を zsh ライクに]]
 - anything ほどの補完は求めていないので zlc.el が素敵.
-*** install
+** install
 #+begin_example
 (auto-install-from-url "https://github.com/mooz/emacs-zlc/raw/master/zlc.el")
 #+end_example
-*** 設定
+** 設定
 - 補完時に TAB 一つで一つ目の補完候補を選択する
   - 今の所使っていない
 #+begin_src emacs-lisp
@@ -78,37 +78,37 @@
 #+end_src
 - 補完時のキーバインド
 #+begin_src emacs-lisp
-(let ((map minibuffer-local-map))
-  (define-key map (kbd "<backtab>") 'zlc-select-previous)
-  (define-key map (kbd "S-<tab>") 'zlc-select-previous)
-  (define-key map (kbd "C-p") 'zlc-select-previous-vertical)
-  (define-key map (kbd "C-n") 'zlc-select-next-vertical)
-  (define-key map (kbd "C-b") 'zlc-select-previous)
-  (define-key map (kbd "C-f") 'zlc-select-next)
-  (define-key map (kbd "C-c") 'zlc-reset)
-  )
+  (let ((map minibuffer-local-map))
+    (define-key map (kbd "<backtab>") 'zlc-select-previous)
+    (define-key map (kbd "S-<tab>")   'zlc-select-previous)
+    (define-key map (kbd "C-p")       'zlc-select-previous-vertical)
+    (define-key map (kbd "C-n")       'zlc-select-next-vertical)
+    (define-key map (kbd "C-b")       'zlc-select-previous)
+    (define-key map (kbd "C-f")       'zlc-select-next)
+    (define-key map (kbd "C-c")       'zlc-reset)
+    )
 #+end_src
 
-** [[http://d.hatena.ne.jp/tarao/20101011/1286804507][Yet another icompelete]]
+* [[http://d.hatena.ne.jp/tarao/20101011/1286804507][Yet another icompelete]]
 zlc を更に素敵にしてくれる.
-*** install
+** install
 #+begin_example
 (auto-install-from-url "http://github.com/tarao/elisp/raw/master/yaicomplete.el")
 #+end_example
-*** 設定
+** 設定
 #+begin_src emacs-lisp
 (require 'yaicomplete)
 (yaicomplete-mode)
 #+end_src
-** [[http://d.hatena.ne.jp/khiker/20070503/emacs_text_translator][Emacs でテキスト翻訳をする elisp]]. その名も text-translator-el.
+* [[http://d.hatena.ne.jp/khiker/20070503/emacs_text_translator][Emacs でテキスト翻訳をする elisp]]. その名も text-translator-el.
 - 無いと途方に暮れる.
-*** install
+** install
 #+begin_example
 (auto-install-from-emacswiki "text-translator-vars.el")
 (auto-install-from-emacswiki "text-translator-load.el")
 (auto-install-from-emacswiki "text-translator.el")
 #+end_example
-*** 設定
+** 設定
 #+begin_src emacs-lisp
 ;; (require 'text-translator)
 (setq text-translator-proxy-server "localhost")
@@ -116,14 +116,14 @@ zlc を更に素敵にしてくれる.
 (global-set-key "\C-xt" 'text-translator-all-by-auto-selection)
 #+end_src
 
-** [[http://d.hatena.ne.jp/kiwanami/20101008/1286518936][deferred.el]]: 非同期処理用 emacs lisp
+* [[http://d.hatena.ne.jp/kiwanami/20101008/1286518936][deferred.el]]: 非同期処理用 emacs lisp
 慣性スクロールにしか使ってないけれど.
-*** install
+** install
 #+begin_example
 (auto-install-from-url "http://github.com/kiwanami/emacs-deferred/raw/master/deferred.el")
 (auto-install-from-url "http://github.com/kiwanami/emacs-inertial-scroll/raw/master/inertial-scroll.el")
 #+end_example
-*** 設定
+** 設定
 - 実行時に cl が必要なので明示的に require しておく
 #+begin_src emacs-lisp
 (require 'cl)
@@ -145,12 +145,12 @@ zlc を更に素敵にしてくれる.
 (inertias-global-minor-mode 1)
 #+end_src
 
-** その場で色を確認する. 要 popup < auto-complete-el
-*** install
+* その場で色を確認する. 要 popup < auto-complete-el
+** install
 #+begin_example
 (auto-install-from-url "https://gist.github.com/raw/762297/b2a27ccd471a21e30dd82b3adb126b8caed41548/popup-color-at-point.el")
 #+end_example
-*** 設定
+** 設定
 #+begin_src emacs-lisp
 (when (locate-library "popup")
   (require 'popup-color-at-point))

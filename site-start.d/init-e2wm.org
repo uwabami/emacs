@@ -2,7 +2,7 @@
 # init-e2wm.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/11/28 20:19:33$
+# $Lastupdate: 2011/11/28 21:25:04$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -39,6 +39,7 @@
 今のところ読み込んだだけ.
 
 キーバインドなんかも e2wm-config で提供されているものをそのまま使う事にしてみる.
+
 
 #+begin_src emacs-lisp
   (my:not-locate-library window-layout "site-lisp/emacs-window-layout")

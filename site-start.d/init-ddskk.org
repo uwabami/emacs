@@ -2,7 +2,7 @@
 # init-ddskk.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/11/28 20:19:49$
+# $Lastupdate: 2011/11/28 20:35:34$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -31,31 +31,40 @@
 #+TITLE: 05. ddskk の設定
 
 ** Emacs 以外の設定
-- .Xresource 内で xim を無効にしておく
+
+   - .Xresource 内で xim を無効にしておくと,
+     gtk-immodule なんかと衝突しなくてイイ感じ.
+
+   - 以下を ~/.Xresources に追記しておく.
+
 #+begin_example
  ! disable XIM
  Emacs*useXIM: false
 #+end_example
 
 ** load-path の設定
-   ddskk 以前の古い skk が導入されている場合
+
+   ddskk 以前の古い skk が導入されている場合には
    site-lisp 以下の ddskk を load する.
+
 #+begin_src emacs-lisp
-  (when (not (locate-library "skk-sticky"))
-    (add-to-load-path "site-lisp/ddskk"))
+  (my:not-locate-library skk-sticky "site-lisp/ddskk")
 #+end_src
+
 ** 設定ファイルの置き場所の変更
 #+begin_src emacs-lisp
   (setq skk-user-directory  (concat user-emacs-directory "etc/skk"))
 #+end_src
 ** 設定ファイルは自動的に byte-compile
 #+begin_src emacs-lisp
-(setq skk-byte-compile-init-file t)
+  (setq skk-byte-compile-init-file t)
 #+end_src
 ** 読み込み
 #+begin_src emacs-lisp
-(require 'skk-leim)
-(setq default-input-method "japanese-skk")
-(require 'skk-autoloads)
-(require 'skk-cus)
+  (require 'skk-leim)
+  (setq default-input-method "japanese-skk")
+  (require 'skk-autoloads)
+  (require 'skk-cus)
 #+end_src
+
+残りの設定は ~/.emacs.d/etc/skk/init.el で行なう.

@@ -16,3 +16,9 @@
 [submodule "site-lisp/markdown-mode"]
 	path = site-lisp/markdown-mode
 	url = git://jblevins.org/git/markdown-mode.git
+[submodule "site-lisp/color-theme-darkpastel"]
+	path = site-lisp/color-theme-darkpastel
+	url = https://github.com/uwabami/color-theme-darkpastel.git
+[submodule "site-lisp/orgmode-markdown"]
+	path = site-lisp/orgmode-markdown
+	url = git://github.com/alexhenning/ORGMODE-Markdown.git

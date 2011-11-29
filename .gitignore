@@ -1,4 +1,3 @@
-.org-*
 *.elc
 *.dat 
 site-start.d/*.el

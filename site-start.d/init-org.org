@@ -2,7 +2,7 @@
 # init-org.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/11/28 20:18:11$
+# $Lastupdate: 2011/11/29 16:58:09$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -30,36 +30,53 @@
 #+INCLUDE: ~/.emacs.d/template/org/menu-level-2.org
 #+TITLE: org-mode の設定
 
-
 ** 基本設定
+
+   ~/.emacs.d/init.el でも読み込んでいるけれど, ここでも有効にする.
+
 #+begin_src emacs-lisp
   (require 'org-install)
   (require 'org)
   ;; 打ち切らない.
   (setq org-startup-truncated nil)
-  ;; ファイルを開いく時は項目を折り畳んだ状態にする
+  ;; ファイルを開く時は項目を折り畳んだ状態にする
   (setq org-startup-folded t)
   ;; フォントロックを有効に
   (add-hook 'org-mode-hook 'turn-on-font-lock)
-  ;; [HOME] と [END] の再割り当て
-  ;; org.el で beginning-of-line/end-of-line となっているので再定義
-  (define-key org-mode-map [home] 'beginning-of-buffer)
-  (define-key org-mode-map [end] 'end-of-buffer)
-  ;; org のファイルの置き場(デフォルト)
-  ;; (setq org-directory "~/Documents/Dropbox/org/")
-  ;; (org-remember-insinuate)
-  ;; (setq org-default-notes-file (concat org-directory "index.org"))
-  ;; (setq org-remember-templates
-  ;;       '(("Todo" ?t "** TODO %?\n   %i\n   %a\n   %t" nil "Inbox")
-  ;;         ("Bug" ?b "** TODO %?   :bug:\n   %i\n   %a\n   %t" nil "Inbox")
-  ;;         ("Idea" ?i "** %?\n   %i\n   %a\n   %t" nil "New Ideas")
-  ;;         ))
-  ;; ToDo 表記
-  ;; (setq org-todo-keywords
-  ;;       '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)" "SOMEDAY(s)")))
-  ;; (setq org-log-done 'time)
 #+end_src
+
+** キーマップの設定
+
+   デフォルトの org のキーバインドはあまりにも多くのキーバインドを書き換えるので
+   かなりアレ. 必要なモンだけ有効にしておく.
+
+   @see [[http://d.hatena.ne.jp/kitokitoki/20100430/p1][org-mode のデフォルトのキーバインドを無効にして必要なものだけ再定義する]]
+
+#+begin_src emacs-lisp
+  (add-hook 'org-mode-hook
+    (lambda()
+      ;; clear all org-map
+      (setq org-goto-map (make-keymap))
+      (setq org-agenda-mode-map (make-keymap))
+      (setq org-cdlatex-mode-map (make-keymap))
+      (setq org-exit-edit-mode-map (make-keymap))
+      (setq org-goto-local-auto-isearch-map (make-keymap))
+      (setq org-mode-map (make-keymap))
+      (setq org-mouse-map (make-keymap))
+      (setq orgstruct-mode-map (make-keymap))
+      (setq my-org-mode-map (make-keymap))
+      (use-local-map my-org-mode-map)
+      ;; 自分の使いたい機能だけを設定していく
+      (define-key my-org-mode-map (kbd "TAB") 'org-cycle)
+      (define-key my-org-mode-map (kbd "C-c \'") 'org-edit-src-code)
+      (define-key my-org-mode-map (kbd "C-c e") 'org-export)
+  ))
+#+end_src
+
 ** HTML export の設定
+
+   HTML に export する設定. Project の使い方がまだイマイチ
+
 #+begin_src emacs-lisp
   ;; HTML export の設定
   (require 'org-html)
@@ -72,8 +89,8 @@
   ;;
   ;; バックアップファイルを作成しない
   (setq make-backup-files nil)
-  ;; cache の置き場所を ~/.emacs.d/.org-timestamps/ に変える
-  (setq org-publish-timestamp-directory (concat user-emacs-directory ".org-timestamps/"))
+  ;; cache の置き場所を ~/.emacs.d/tmp/org-timestamps/ に変える
+  (setq org-publish-timestamp-directory (concat user-emacs-directory "tmp/org-timestamps/"))
   ;; project の設定
   (setq org-publish-project-alist
         '(
@@ -104,7 +121,6 @@
           ("web"
            :components ("web-org" "Emacs"))
           ))
-
   ;; ;;; insert skelton and export config files
   ;; ;;
   ;; ;; @see http://thenybble.de/projects/orgsite.html
@@ -146,43 +162,43 @@
 
 ** LaTeX export の設定
 #+begin_src emacs-lisp
-;; LaTeX export
-(require 'org-latex)
-(setq org-export-latex-coding-system 'euc-jp-unix)
-(setq org-export-latex-date-format "%Y年%m月%d日")
-;; LaTeX
-(add-to-list 'org-export-latex-classes
-             '("
-jsarticle" "\\documentclass[a4j,12pt]{jsarticle}
-\\usepackage{ascmac}
-\\usepackage{amsmath}
-\\usepackage[varg]{txfonts}
-\\usepackage{natbib}
-\\usepackage{Dennou6}"
-               ("\\section{%s}" . "\\section*{%s}")
-               ("\\subsection{%s}" . "\\subsection*{%s}")
-               ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-               ("\\paragraph{%s}" . "\\paragraph*{%s}")
-               ("\\subparagraph{%s}" . "\\subparagraph*{%s}"))
-             )
-(setq org-export-latex-default-class "jsarticle")
-;; LaTeX-Beamer export
-(require 'org-beamer)
-;; デフォルトのヘッドラインレベル -> 2
-(setq org-beamer-frame-level 2)
-;; frame のオプション
-(setq org-beamer-frame-default-options "[fragile]")
-(setq org-latex-to-pdf-process
- '("latexmk -pdfdvi %b" "latexmk -pdfdvi %b"))
-(setq org-export-with-sub-superscripts nil)
-(require 'ob-ditaa)
+  ;; LaTeX export
+  (require 'org-latex)
+  (setq org-export-latex-coding-system 'euc-jp-unix)
+  (setq org-export-latex-date-format "%Y年%m月%d日")
+  ;; LaTeX
+  (add-to-list 'org-export-latex-classes
+               '("
+  jsarticle" "\\documentclass[a4j,12pt]{jsarticle}
+  \\usepackage{ascmac}
+  \\usepackage{amsmath}
+  \\usepackage[varg]{txfonts}
+  \\usepackage{natbib}
+  \\usepackage{Dennou6}"
+                 ("\\section{%s}" . "\\section*{%s}")
+                 ("\\subsection{%s}" . "\\subsection*{%s}")
+                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                 ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}"))
+               )
+  (setq org-export-latex-default-class "jsarticle")
+  ;; LaTeX-Beamer export
+  (require 'org-beamer)
+  ;; デフォルトのヘッドラインレベル -> 2
+  (setq org-beamer-frame-level 2)
+  ;; frame のオプション
+  (setq org-beamer-frame-default-options "[fragile]")
+  (setq org-latex-to-pdf-process
+   '("latexmk -pdfdvi %b" "latexmk -pdfdvi %b"))
+  (setq org-export-with-sub-superscripts nil)
+  (require 'ob-ditaa)
 #+end_src
 ** export-generic の設定
 
+   うまく使えていないので, 読み込みだけして保留...
+
 #+begin_src emacs-lisp
-  (when (not (locate-library "org-export-generic"))
-    (add-to-load-path "site-lisp/org-mode/contrib/lisp/")
-    (eval-when-compile (add-to-load-path "site-lisp/org-mode/contrib/lisp/")))
+  (my:not-locate-library org-export-generic "site-lisp/org-mode/contrib/lisp")
   (require 'org-export-generic)
   ;; (org-set-generic-type
   ;;  "Markdown"

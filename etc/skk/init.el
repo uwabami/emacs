@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8-unix; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright (C) 2010-2011  Youhei SASAKI
-;; $Lastupdate: 2011/07/14 09:13:26$
+;; $Lastupdate: 2011/11/29 15:39:14$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; Keywords:
@@ -23,27 +23,27 @@
 ;;
 ;;; Commentary:
 ;;
-;; .emacs.d/init.el で (setq skk-user-directory "~/.emacs.d/skk") してい
+;; .emacs.d/init.el で (setq skk-user-directory "~/.emacs.d/etc/skk") してい
 ;; るので, 設定ファイル群は以下の通り.
-;; skk-init-file          ~/.emacs.d/skk/init
-;; skk-jisyo              ~/.emacs.d/skk/jisyo
-;; skk-backup-jisyo       ~/.emacs.d/skk/jisyo.bak
-;; skk-emacs-id-file      ~/.emacs.d/skk/emacs-id
-;; skk-record-file        ~/.emacs.d/skk/record
-;; skk-study-file         ~/.emacs.d/skk/study
-;; skk-study-backup-file  ~/.emacs.d/skk/study.bak
+;; skk-init-file          ~/.emacs.d/etc/skk/init
+;; skk-jisyo              ~/.emacs.d/etc/skk/jisyo
+;; skk-backup-jisyo       ~/.emacs.d/etc/skk/jisyo.bak
+;; skk-emacs-id-file      ~/.emacs.d/etc/skk/emacs-id
+;; skk-record-file        ~/.emacs.d/etc/skk/record
+;; skk-study-file         ~/.emacs.d/etc/skk/study
+;; skk-study-backup-file  ~/.emacs.d/etc/skk/study.bak
 ;;
 ;;; Code:
 (eval-when-compile
  (require 'skk-vars)
  (require 'skk-autoloads)
   )
-;; (setq default-input-method "japanese-skk")
+(setq default-input-method "japanese-skk")
 ;; sticky shift!
 (setq skk-sticky-key ";")
 ;; 日本語表示しない
 (setq skk-japanese-message-and-error nil)
-;; ;; メニューを日本語にしない -> toolbar 非表示だし.
+;; メニューを日本語にしない -> toolbar 非表示だし.
 ;; (setq skk-show-japanese-menu t)
 ;; 注釈の表示
 (setq skk-show-annotation nil)
@@ -80,7 +80,6 @@
   (if (boundp 'skk-inline-show-face)
       (setq
        skk-inline-show-background-color "black")))
-
 ;; Enter で改行しない
 (setq skk-egg-like-newline t)
 ;;"「"を入力したら"」"も自動で挿入

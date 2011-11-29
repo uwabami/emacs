@@ -7,6 +7,7 @@ all: TARGET $(ELCFiles)
 
 update:
 	git submodule foreach 'git checkout master ; git pull origin master; git pull --rebase'
+	rm -f $(HOME)/.emacs.d/site-lisp/00build-stamp
 
 %.elc: %.el
 	@$(EMACS) -l init.el -L $(TARGET_DIR) \

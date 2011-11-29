@@ -2,7 +2,7 @@
 ;;; init.el
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2011/11/28 11:25:38$
+;; $Lastupdate: 2011/11/29 14:58:30$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -149,7 +149,7 @@
   "org-settings-dir 以下から my-org-babel-load-file"
   (my:org-babel-load-file (expand-file-name file org-settings-dir)))
 ;; 読み込み
-(my:load-org-file "00startup.org")
+(my:load-org-file "00init.org")
 ;; ------------------------------------
 ;;; calculate bootup time/ スピード狂に捧ぐ.
 ;;

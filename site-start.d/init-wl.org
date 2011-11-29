@@ -2,7 +2,7 @@
 # init-wl.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/11/28 20:17:49$
+# $Lastupdate: 2011/11/29 15:44:12$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -31,10 +31,11 @@
 #+TITLE: 06. Wanderlust の設定
 
 
-** TODO HTML メールの表示[0/1]
+** TODO HTML メールの表示設定[0/1]
 
-- w3m を使う.
-- [ ] w3m-el で外部リンクを踏む際に safe にする設定が良くわからない...Orz
+   HTMLメールの表示には w3m を使う.
+   - [ ] w3m-el で外部リンクを踏む際に safe にする設定が良くわからない...Orz
+
 #+begin_src emacs-lisp
 (when (locate-library "mime-setup")
   (setq mime-setup-enable-inline-html t)
@@ -72,6 +73,9 @@
 #+end_src
 
 ** Wanderlust 本体の設定は基本外部ファイルで
+
+   epa を有効にて gpg で暗号化
+
 #+begin_src emacs-lisp
 (setq wl-init-file "~/.wl/init.gpg")
 #+end_src

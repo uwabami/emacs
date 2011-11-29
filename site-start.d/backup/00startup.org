@@ -1,8 +1,8 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
-# 00startup.org
+# 00init.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/11/29 14:49:01$
+# $Lastupdate: 2011/11/29 14:58:39$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -584,7 +584,6 @@
   ;; (my:not-locate-library magit "site-lisp/magit")
   ;; (require 'magit)
 #+end_src
-
 
 * Footnotes
 

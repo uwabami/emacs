@@ -2,7 +2,7 @@
 # init-ddskk.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/11/28 20:35:34$
+# $Lastupdate: 2011/11/29 15:32:07$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -32,10 +32,11 @@
 
 ** Emacs 以外の設定
 
-   - .Xresource 内で xim を無効にしておくと,
-     gtk-immodule なんかと衝突しなくてイイ感じ.
+   .Xresource 内で xim を無効にしておくと,
+   gtk-immodule なんかと衝突しなくてイイ感じ.
 
-   - 以下を ~/.Xresources に追記しておく.
+   この場合は,
+   以下を ~/.Xresources に追記しておく.
 
 #+begin_example
  ! disable XIM
@@ -67,4 +68,9 @@
   (require 'skk-cus)
 #+end_src
 
-残りの設定は ~/.emacs.d/etc/skk/init.el で行なう.
+残りの設定は ~/.emacs.d/etc/skk/init.el で行なっている.
+以下, 全文
+
+#+begin_example
+#+INCLUDE: ~/.emacs.d/etc/skk/init.el
+#+end_example

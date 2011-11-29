@@ -2,7 +2,7 @@
 # 00startup.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/11/28 22:25:13$
+# $Lastupdate: 2011/11/29 14:49:01$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -223,15 +223,35 @@
   (setq uniquify-buffer-name-style 'post-forward-angle-brackets)
   (setq uniquify-min-dir-content 1)
 #+end_src
-   saveplace で前回の修正位置を記憶する
 
-   記憶の保存先を ~/.emacs.d/emacs-places にする
+   recentf で最近開いたファイルを記憶する.
+   - recentf に記憶しないファイルを設定しておく.
+   - 記憶の保存先は ~/.emacs.d/tmp/recentf にする
+#+begin_src emacs-lisp
+  (require 'recentf)
+  (recentf-mode 1)
+  (setq recentf-exclude
+        '(
+          "\\~$"
+          "\\.elc$"
+          "\\.dvi$"
+          ".recentf$"
+          ".howm-keys$"
+          "^/var/folders/"
+          "^/tmp/"
+          "^/[^/:]+:"
+          ))
+  (add-hook 'kill-emacs-query-functions 'recentf-cleanup)
+  (setq recentf-save-file "~/.emacs.d/tmp/recentf")
+#+end_src
+   saveplace で前回の修正位置を記憶する.
+   記憶の保存先は ~/.emacs.d/tmp/emacs-places にする
 #+begin_src emacs-lisp
   (require 'saveplace)
   (setq-default save-place t)
   (setq save-place-file
         (convert-standard-filename
-         (concat user-emacs-directory "emacs-places")))
+         (concat user-emacs-directory "tmp/emacs-places")))
 #+end_src
    tab 幅 4, tab でのインデントはしない
 #+begin_src emacs-lisp
@@ -409,17 +429,21 @@
 * 分割した設定ファイルを読み込む
   以下は Emacs 本体に同梱されていない emacs-lisp や
   外部ファイルの設定を読み込んでいるモン, など.
+
+** [[file:init-auto-install.org][auto-install.elとinstallしたelispの設定]]
+#+begin_src emacs-lisp
+  (my:load-org-file  "init-auto-install.org")
+#+end_src
 ** [[file:init-e2wm.org][Emacs内Window管理ツール, e2wm.elの設定]]
 #+begin_src emacs-lisp
-  (my:load-org-file "init-e2wm.org")
+  (when window-system (my:load-org-file "init-e2wm.org"))
 #+end_src
-
 ** elscreen
 
-   - emacs 内で GNU screen っぽくする emacs-lisp
+   emacs 内で GNU screen っぽくする emacs-lisp.
 
-   - 残念ながら, Debian squeeze の elscreen にはバグがあり, 起動時にファ
-     イルを開けなかったりする.  backport した方が良いかなぁ...
+   残念ながら, Debian squeeze の elscreen にはバグがあり, 起動時にファイ
+   ルを開けなかったりする.  backport した方が良いかなぁ...
 
 #+begin_src emacs-lisp
   (my:not-locate-library elscreen "site-lisp/elscreen")
@@ -432,19 +456,63 @@
   (require 'elscreen)
 #+end_src
 ** 見た目/フォントなどの設定
+*** 256 色を出すための設定
 
-   見た目や色に関しては color-theme を使用するようになった.
-   [[file:init-color-theme.org][color-themeの設定]] を参照.
+    ansi-color の方が良いのかな?
 
 #+begin_src emacs-lisp
-  (my:load-org-file "init-color-theme.org")
+  (when (not window-system)
+    (load "term/xterm")
+    (xterm-register-default-colors)
+    (tty-set-up-initial-frame-faces))
 #+end_src
 
-   GUI 環境でのフォントの設定については
-   [[file:init-frame.org][GUI環境でのフォントとフレームの設定]] を参照.
+*** space や tab に色付け
+
+    whitespace-mode の方が良いのかな?
 
 #+begin_src emacs-lisp
-  (when window-system (my:load-org-file "init-frame.org"))
+  (defface my-face-r-1 '((t (:background "gray10"))) nil)
+  (defface my-face-b-1 '((t (:background "gray"))) nil)
+  (defface my-face-b-2 '((t (:background "gray50"))) nil)
+  (defface my-face-u-1 '((t (:foreground "SteelBlue" :underline t))) nil)
+  (defvar my-face-r-1 'my-face-r-1)
+  (defvar my-face-b-1 'my-face-b-1)
+  (defvar my-face-b-2 'my-face-b-2)
+  (defvar my-face-u-1 'my-face-u-1)
+  (defadvice font-lock-mode (before my-font-lock-mode ())
+    (font-lock-add-keywords
+     major-mode
+     '(("\t" 0 my-face-b-2 append)
+       ("　" 0 my-face-b-1 append)
+       ("[ \t]+$" 0 my-face-u-1 append)
+       ;;("[\r]*\n" 0 my-face-r-1 append)
+       )))
+  (ad-enable-advice 'font-lock-mode 'before 'my-font-lock-mode)
+  (ad-activate 'font-lock-mode)
+#+end_src
+
+*** color-theme
+
+    見た目や色に関しては color-theme を使用するようになった.
+#+begin_src emacs-lisp
+  (my:not-locate-library color-theme-autoloads "site-lisp/color-theme-6.6.0")
+  (add-to-load-path "site-lisp/color-theme-darkpastel")
+  (setq color-theme-load-all-themes nil)
+  (setq color-theme-libraries nil)
+  (require 'color-theme-autoloads)
+  (eval-after-load "color-theme-autoloads"
+    '(progn
+      (color-theme-initialize)
+      (require 'color-theme-darkpastel)
+      ))
+  (color-theme-darkpastel)
+#+end_src
+
+*** [[file:init-frame.org][GUI環境でのフォントとフレームの設定]]
+
+#+begin_src emacs-lisp
+   (when window-system (my:load-org-file "init-frame.org"))
 #+end_src
 
 ** [[file:init-migemo.org][migemo の設定]]
@@ -453,7 +521,7 @@
 - 無いと途方に暮れる.
 
 #+begin_src emacs-lisp
-  (my:load-org-file "init-migemo.org")
+;;  (my:load-org-file "init-migemo.org")
 #+end_src
 
 ** [[file:init-ddskk.org][ddskkの設定]]
@@ -461,41 +529,42 @@
    日本語入力には ddskk を使用する.
 
 #+begin_src emacs-lisp
-  (my:load-org-file "init-ddskk.org")
+;;  (my:load-org-file "init-ddskk.org")
 #+end_src
 
 ** MUA の設定
 
    Wanderlust 愛用中
+
 #+begin_src emacs-lisp
   (when (locate-library "wl")
     (my:load-org-file "init-wl.org"))
 #+end_src
 ** [[file:init-lookup-el.org][lookup-elの設定]]
 #+begin_src emacs-lisp
-(when (locate-library "lookup")
-  (my:load-org-file "init-lookup-el.org"))
+  ;; (when (locate-library "lookup")
+  ;;   (my:load-org-file "init-lookup-el.org"))
 #+end_src
 ** muse-mode の設定
 #+begin_src emacs-lisp
-(my:load-org-file "init-muse.org")
+  ;; (my:load-org-file "init-muse.org")
 #+end_src
 ** org-mode
 #+begin_src emacs-lisp
-(my:load-org-file "init-org.org")
+  ;; (my:load-org-file "init-org.org")
 #+end_src
 ** howm-mode
 #+begin_src emacs-lisp
-(my:load-org-file "init-howm.org")
+  ;; (my:load-org-file "init-howm.org")
 #+end_src
 ** プログラミング言語毎の設定
 #+begin_src emacs-lisp
-(my:load-org-file "init-programing.org")
+  ;; (my:load-org-file "init-programing.org")
 #+end_src
 ** tdiary
 #+begin_src emacs-lisp
-(when (locate-library "rd-mode")
-  (my:load-org-file "init-tdiary.org"))
+  ;; (when (locate-library "rd-mode")
+  ;;   (my:load-org-file "init-tdiary.org"))
 #+end_src
 ** AUCTeX
 #+begin_src emacs-lisp
@@ -504,21 +573,18 @@
 #+end_src
 ** auto-complete
 #+begin_src emacs-lisp
-(my:load-org-file "init-auto-complete.org")
+  ;; (my:load-org-file "init-auto-complete.org")
 #+end_src
 ** autoinsert
 #+begin_src emacs-lisp
-(my:load-org-file "init-autoinsert.org")
+  ;; (my:load-org-file "init-autoinsert.org")
 #+end_src
 ** VC (今ん所 magit だけ)
 #+begin_src emacs-lisp
-  (my:not-locate-library magit "site-lisp/magit")
-  (require 'magit)
+  ;; (my:not-locate-library magit "site-lisp/magit")
+  ;; (require 'magit)
 #+end_src
-** auto-install
-#+begin_src emacs-lisp
-(my:load-org-file  "init-auto-install.org")
-#+end_src
+
 
 * Footnotes
 

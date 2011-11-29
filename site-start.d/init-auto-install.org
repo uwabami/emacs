@@ -2,7 +2,7 @@
 # init-auto-install.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/11/28 20:44:40$
+# $Lastupdate: 2011/11/29 14:56:14$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -31,52 +31,91 @@
 #+TITLE: auto-install で install した elisp の設定
 
 * 基本設定
-- load-path の設定
+** load-path の追加
+
+   Debian にはパッケージがある.
+
+   パッケージが無い/使えない環境では.emacs.d/site-lisp/auto-install-elを
+   読みこむ.
+
 #+begin_src emacs-lisp
-  (when (not (locate-library "auto-install"))
-    (add-to-load-path "site-lisp/auto-install-el")
-    (eval-when-compile
-      (add-to-load-path "site-lisp/auto-install-el"))
-    )
+  (my:not-locate-library auto-install "site-lisp/auto-install-el")
   (require 'auto-install)
 #+end_src
-- wget で 取得(proxy も wget に任せる)
+
+** 取得する際のネットワークの設定
+
+   wget で 取得する. proxy も wget に任せるので適宜 ~/.wgetrc を
+   書いておく.
+
+   url-handler での proxy 設定はなんか上手く動かない.
+   なんでかな?
+
 #+begin_src emacs-lisp
-(setq auto-install-use-wget t)
+  (setq auto-install-use-wget t)
+  ;; (setq url-proxy-services '(("http" . "localhost:20080")))
 #+end_src
-- install 先
+
+** install 先の設定
+
+   auto-installでinstallするelispのinstall先は
+   ~/.emacs.d/auto-install/ 以下に.
+
 #+begin_src emacs-lisp
-(setq auto-install-directory "~/.emacs.d/auto-install/")
+  (setq auto-install-directory "~/.emacs.d/auto-install/")
 #+end_src
 
 * auto-async-byte-compile
-- auto-install した際に自動で byte-compile してくれるので結構良い感じ.
+
+  auto-install した際に自動で byte-compile してくれる.
+  他にも, emacs-lisp-mode なファイルを保存するときに,
+  非同期に byte-compile を走らせたりできるので,
+  byte-compile 忘れが無い.
+
+  結構素敵.
+
 ** install
+
+以下のコードを実行する
 #+begin_example
-(auto-install-from-emacswiki "auto-async-byte-compile.el")
+  (auto-install-from-emacswiki "auto-async-byte-compile.el")
 #+end_example
+
 ** 設定
+
+   特に凝った事はしていない.
+
+   - 先頭が "_" で始まるファイルは compile しない
+   - emacs
+
 #+begin_src emacs-lisp
-(require 'auto-async-byte-compile)
-(setq auto-async-byte-compile-exclude-files-regexp "^_")
-(setq auto-async-byte-compile-init-file "~/.emacs.d/COMPILE")
-(add-hook 'emacs-lisp-mode-hook
-          'enable-auto-async-byte-compile-mode)
+  (require 'auto-async-byte-compile)
+  (setq auto-async-byte-compile-exclude-files-regexp "^_")
+  (add-hook 'emacs-lisp-mode-hook
+            'enable-auto-async-byte-compile-mode)
 #+end_src
 
 * [[http://d.hatena.ne.jp/mooz/20101003/p1][zlc.el で Emacs のミニバッファ補完を zsh ライクに]]
-- anything ほどの補完は求めていないので zlc.el が素敵.
+
+  anything ほどの補完は求めていないので zlc.el が素敵.
+
 ** install
 #+begin_example
-(auto-install-from-url "https://github.com/mooz/emacs-zlc/raw/master/zlc.el")
+  (auto-install-from-url "https://github.com/mooz/emacs-zlc/raw/master/zlc.el")
 #+end_example
 ** 設定
-- 補完時に TAB 一つで一つ目の補完候補を選択する
-  - 今の所使っていない
+
+   補完時に TAB 一つで一つ目の補完候補を選択することも可能.
+   最近は使っていないけれど.
+
 #+begin_src emacs-lisp
 ;; (setq zlc-select-completion-immediately t)
 #+end_src
-- 補完時のキーバインド
+
+   補完時のキーバインド.
+
+   zlc-reset がうまく動いてくれないような...
+
 #+begin_src emacs-lisp
   (let ((map minibuffer-local-map))
     (define-key map (kbd "<backtab>") 'zlc-select-previous)
@@ -85,73 +124,99 @@
     (define-key map (kbd "C-n")       'zlc-select-next-vertical)
     (define-key map (kbd "C-b")       'zlc-select-previous)
     (define-key map (kbd "C-f")       'zlc-select-next)
-    (define-key map (kbd "C-c")       'zlc-reset)
+    (define-key map (kbd "C-d")       'zlc-reset)
     )
 #+end_src
 
 * [[http://d.hatena.ne.jp/tarao/20101011/1286804507][Yet another icompelete]]
-zlc を更に素敵にしてくれる.
+
+  zlc を更に素敵にしてくれる.
+
 ** install
 #+begin_example
 (auto-install-from-url "http://github.com/tarao/elisp/raw/master/yaicomplete.el")
 #+end_example
 ** 設定
 #+begin_src emacs-lisp
-(require 'yaicomplete)
-(yaicomplete-mode)
+  (require 'yaicomplete)
+  (yaicomplete-mode)
 #+end_src
+
 * [[http://d.hatena.ne.jp/khiker/20070503/emacs_text_translator][Emacs でテキスト翻訳をする elisp]]. その名も text-translator-el.
-- 無いと途方に暮れる.
+
+  無いと途方に暮れる.
+
 ** install
+
 #+begin_example
-(auto-install-from-emacswiki "text-translator-vars.el")
-(auto-install-from-emacswiki "text-translator-load.el")
-(auto-install-from-emacswiki "text-translator.el")
+  (auto-install-from-emacswiki "text-translator-vars.el")
+  (auto-install-from-emacswiki "text-translator-load.el")
+  (auto-install-from-emacswiki "text-translator.el")
 #+end_example
 ** 設定
 #+begin_src emacs-lisp
-;; (require 'text-translator)
+(require 'text-translator)
 (setq text-translator-proxy-server "localhost")
 (setq text-translator-proxy-port 20080)
 (global-set-key "\C-xt" 'text-translator-all-by-auto-selection)
 #+end_src
 
 * [[http://d.hatena.ne.jp/kiwanami/20101008/1286518936][deferred.el]]: 非同期処理用 emacs lisp
-慣性スクロールにしか使ってないけれど.
+
+  今の所, 慣性スクロールにしか使ってないけれど.
+
 ** install
+
 #+begin_example
 (auto-install-from-url "http://github.com/kiwanami/emacs-deferred/raw/master/deferred.el")
 (auto-install-from-url "http://github.com/kiwanami/emacs-inertial-scroll/raw/master/inertial-scroll.el")
 #+end_example
+
 ** 設定
-- 実行時に cl が必要なので明示的に require しておく
+
+   実行時に cl が必要なので明示的に require しておく
+
 #+begin_src emacs-lisp
-(require 'cl)
-(require 'deferred)
-(require 'inertial-scroll)
-(setq inertias-initial-velocity 50)
-(setq inertias-friction 120)
-(setq inertias-update-time 50)
-(setq inertias-rest-coef 0.2)
-(setq inertias-global-minor-mode-map
-      (inertias-define-keymap
-       '(
-         ;; Scroll keys
-         ("<next>"  . inertias-up)
-         ("<prior>" . inertias-down)
-         ("C-v"     . inertias-up)
-         ("M-v"     . inertias-down)
-         ) inertias-prefix-key))
-(inertias-global-minor-mode 1)
+  (require 'cl)
+  (require 'deferred)
+  (require 'inertial-scroll)
+  (setq inertias-initial-velocity 50)
+  (setq inertias-friction 120)
+  (setq inertias-update-time 50)
+  (setq inertias-rest-coef 0.2)
+  (setq inertias-global-minor-mode-map
+        (inertias-define-keymap
+         '(
+           ;; Scroll keys
+           ("<next>"  . inertias-up)
+           ("<prior>" . inertias-down)
+           ("C-v"     . inertias-up)
+           ("M-v"     . inertias-down)
+           ) inertias-prefix-key))
+  (inertias-global-minor-mode 1)
 #+end_src
 
+* recentf-ext
+** install
+#+begin_example
+  (auto-install-from-emacswiki "recentf-ext.el")
+#+end_example
+
+** 設定
+#+begin_src emacs-lisp
+  ;; 自動クリーニングはしない
+  (setq recentf-auto-cleanup 'never)
+  ;; 履歴の保存量を多少多めに
+  (setq recentf-max-saved-items 10000)
+#+end_src
 * その場で色を確認する. 要 popup < auto-complete-el
 ** install
 #+begin_example
 (auto-install-from-url "https://gist.github.com/raw/762297/b2a27ccd471a21e30dd82b3adb126b8caed41548/popup-color-at-point.el")
 #+end_example
+
 ** 設定
 #+begin_src emacs-lisp
-(when (locate-library "popup")
-  (require 'popup-color-at-point))
+  (my:not-locate-library popup "site-lisp/auto-complete-el")
+  (require 'popup-color-at-point)
 #+end_src

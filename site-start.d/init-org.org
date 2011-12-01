@@ -2,7 +2,7 @@
 # init-org.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/11/29 16:58:09$
+# $Lastupdate: 2011/11/30 13:22:05$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -68,11 +68,12 @@
       (use-local-map my-org-mode-map)
       ;; 自分の使いたい機能だけを設定していく
       (define-key my-org-mode-map (kbd "TAB") 'org-cycle)
+      (define-key my-org-mode-map (kbd "C-c C-c") 'org-toggle-checkbox)
       (define-key my-org-mode-map (kbd "C-c \'") 'org-edit-src-code)
-      (define-key my-org-mode-map (kbd "C-c e") 'org-export)
+      (define-key my-org-mode-map (kbd "C-c C-e") 'org-export)
+      (define-key my-org-mode-map (kbd "C-c C-l") 'org-insert-link)
   ))
 #+end_src
-
 ** HTML export の設定
 
    HTML に export する設定. Project の使い方がまだイマイチ
@@ -182,6 +183,9 @@
                  ("\\subparagraph{%s}" . "\\subparagraph*{%s}"))
                )
   (setq org-export-latex-default-class "jsarticle")
+#+end_src
+** Beamer export の設定
+#+begin_src emacs-lisp
   ;; LaTeX-Beamer export
   (require 'org-beamer)
   ;; デフォルトのヘッドラインレベル -> 2
@@ -198,8 +202,8 @@
    うまく使えていないので, 読み込みだけして保留...
 
 #+begin_src emacs-lisp
-  (my:not-locate-library org-export-generic "site-lisp/org-mode/contrib/lisp")
-  (require 'org-export-generic)
+  ;; (my:not-locate-library org-export-generic "site-lisp/org-mode/contrib/lisp")
+  ;; (require 'org-export-generic)
   ;; (org-set-generic-type
   ;;  "Markdown"
   ;;  '(

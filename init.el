@@ -101,6 +101,9 @@
      (eval-when-compile
        (add-to-load-path ,@list))))
 ;; -----------------------------------------------------------
+;; apel に依存しているモンは結構あるので, 読み込むことに
+(my:not-locate-library emu "site-lisp/apel")
+;; -----------------------------------------------------------
 ;;; org-babel
 ;;
 ;; Emacs の設定は org-mode で記述.

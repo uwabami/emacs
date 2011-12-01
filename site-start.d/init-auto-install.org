@@ -2,7 +2,7 @@
 # init-auto-install.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/11/29 14:56:14$
+# $Lastupdate: 2011/11/30 10:50:49$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -219,4 +219,21 @@
 #+begin_src emacs-lisp
   (my:not-locate-library popup "site-lisp/auto-complete-el")
   (require 'popup-color-at-point)
+#+end_src
+* twittering-mode
+** install
+#+begin_example
+  (auto-install-from-url "https://github.com/hayamiz/twittering-mode/raw/master/twittering-mode.el")
+#+end_example
+** 設定
+#+begin_src emacs-lisp
+  (require 'twittering-mode)
+  (cond
+   (window-system
+    (twittering-icon-mode t))
+   (t
+    (twittering-icon-mode nil)))
+  (setq twittering-timer-interval 300)
+  (setq twittering-use-master-password t)
+  (setq twittering-private-info-file (concat user-emacs-directory "tmp/twittering-mode.gpg"))
 #+end_src

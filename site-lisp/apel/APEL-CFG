@@ -1,0 +1,5 @@
+;;; APEL-CFG --- user customizations for APEL installation. -*-Emacs-Lisp-*-
+;;
+(setq APEL_DIR (concat user-emacs-directory "site-lisp/apel"))
+(setq EMU_DIR  (concat user-emacs-directory "site-lisp/apel"))
+;;; APEL-CFG ends here

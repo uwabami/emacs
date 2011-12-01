@@ -2,7 +2,7 @@
 # 00init.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/11/29 17:21:00$
+# $Lastupdate: 2011/11/30 13:06:15$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -426,8 +426,32 @@
    - Emacs23 からは本体に同梱されているので, require する必要ない.
    - 対称鍵暗号の場合にはパスフレーズをキャッシュしておくようにする.
    - とはいえ, 最近対称鍵暗号は使っていないのであんまり役にたっていない, 気がする...
+
+*** 読み込み
+
 #+begin_src emacs-lisp
   (require 'epa-file)
+#+end_src
+
+*** ターミナル内で起動した時には GPG_AGENT_INFO を無効化する
+
+    公開鍵暗号方式をキャッシュできないので, 保留.
+
+    キャッシュしない仕組み自体は良いと思うのだけれど, いちいち面倒すぎる.
+
+#+begin_src emacs-lisp
+  ;; (defadvice epg--start (around advice-epg-disable-agent activate)
+  ;;   (let ((agent (getenv "GPG_AGENT_INFO")))
+  ;;     (when (not (display-graphic-p))
+  ;;       (setenv "GPG_AGENT_INFO" nil))
+  ;;     ad-do-it
+  ;;     (when (not (display-graphic-p))
+  ;;       (setenv "GPG_AGENT_INFO" agent))))
+#+end_src
+
+*** 対称鍵暗号のキャッシュ
+
+#+begin_src emacs-lisp
   (setq epa-file-cache-passphrase-for-symmetric-encryption t)
 #+end_src
 
@@ -512,17 +536,17 @@
     見た目や色に関しては color-theme を使用するようになった.
 
 #+begin_src emacs-lisp
-  ;; (my:not-locate-library color-theme-autoloads "site-lisp/color-theme-6.6.0")
-  ;; (add-to-load-path "site-lisp/color-theme-darkpastel")
-  ;; (setq color-theme-load-all-themes nil)
-  ;; (setq color-theme-libraries nil)
-  ;; (require 'color-theme-autoloads)
-  ;; (eval-after-load "color-theme-autoloads"
-  ;;   '(progn
-  ;;     (color-theme-initialize)
-  ;;     (require 'color-theme-darkpastel)
-  ;;     ))
-  ;; (color-theme-darkpastel)
+  (my:not-locate-library color-theme-autoloads "site-lisp/color-theme-6.6.0")
+  (add-to-load-path "site-lisp/color-theme-darkpastel")
+  (setq color-theme-load-all-themes nil)
+  (setq color-theme-libraries nil)
+  (require 'color-theme-autoloads)
+  (eval-after-load "color-theme-autoloads"
+    '(progn
+      (color-theme-initialize)
+      (require 'color-theme-darkpastel)
+      ))
+  (color-theme-darkpastel)
 #+end_src
 
 *** [[file:init-frame.org][GUI環境でのフォントとフレームの設定]]
@@ -557,6 +581,19 @@
   (my:load-org-file "init-howm.org")
 #+end_src
 
+** autoinsert
+#+begin_src emacs-lisp
+  (my:load-org-file "init-autoinsert.org")
+#+end_src
+** VC (今ん所 magit だけ)
+#+begin_src emacs-lisp
+  (my:not-locate-library magit "site-lisp/magit")
+  (require 'magit)
+  (require 'dsvn)
+  (autoload 'svn-status "dsvn" "Run `svn status' ." t)
+  (autoload 'svn-update "dsvn" "Run `svn status' ." t)
+#+end_src
+
 ** 以下, コメント
 
 # ** [[file:init-lookup-el.org][lookup-elの設定]]
@@ -582,19 +619,6 @@
 # +begin_src emacs-lisp
 #   ;; (my:load-org-file "init-auto-complete.org")
 # +end_src
-# ** autoinsert
-# +begin_src emacs-lisp
-#   ;; (my:load-org-file "init-autoinsert.org")
-# +end_src
-** VC (今ん所 magit だけ)
-#+begin_src emacs-lisp
-  (my:not-locate-library magit "site-lisp/magit")
-  (require 'magit)
-  (require 'dsvn)
-  (autoload 'svn-status "dsvn" "Run `svn status' ." t)
-  (autoload 'svn-update "dsvn" "Run `svn status' ." t)
-#+end_src
-
 * Footnotes
 
 [fn:1] Emacs23 日本語向け設定例: http://nijino.homelinux.net/emacs/emacs23-ja.html

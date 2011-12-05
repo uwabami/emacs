@@ -2,7 +2,7 @@
 # init-frame.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/11/28 20:19:22$
+# $Lastupdate: 2011/12/02 01:11:27$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat

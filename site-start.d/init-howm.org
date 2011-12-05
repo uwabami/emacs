@@ -3,7 +3,7 @@
 #+begin_quote
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/11/29 16:24:57$
+# $Lastupdate: 2011/12/02 08:36:56$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 #
@@ -25,13 +25,13 @@
 #+TITLE: howm の設定
 #+OPTIONS: toc:2 num:nil ^:nil
 
-** load-path の確認
+* load-path の確認
 #+begin_src emacs-lisp
   (my:not-locate-library howm "site-lisp/howm")
   (my:not-locate-library elscreen-howm "site-lisp/elscreen")
 #+end_src
 
-** TODO ドキュメント書く
+* TODO ドキュメント書く
 #+begin_src emacs-lisp
   ;; -----------------------------------------------------------
   ;;; [howm]

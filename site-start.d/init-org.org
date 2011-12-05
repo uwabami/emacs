@@ -2,7 +2,7 @@
 # init-org.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/11/30 13:22:05$
+# $Lastupdate: 2011/12/05 07:16:43$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -41,10 +41,23 @@
   (setq org-startup-truncated nil)
   ;; ファイルを開く時は項目を折り畳んだ状態にする
   (setq org-startup-folded t)
+  ;; link を return で追う
+  (setq org-retrun-follows-link t)
   ;; フォントロックを有効に
   (add-hook 'org-mode-hook 'turn-on-font-lock)
+  ;; 基本ディレクトリ
+  (setq org-directory "~/Documents/Dropbox/org/")
+  ;; Agenda
+  (setq org-default-notes-file (concat org-directory "remember.org"))
+  (when (locate-library "remember-el")
+    (setq remember-annotation-functions '(org-remember-annotation))
+    (setq remember-handler-functions '(org-remember-handler))
+    (setq org-remember-templates
+          '(("Todo" ?t "** TODO %?\n   %i\n   %a\n   %t" nil "Inbox")
+            ("Bug" ?b "** TODO %?   :bug:\n   %i\n   %a\n   %t" nil "Inbox")
+            ("Idea" ?i "** %?\n   %i\n   %a\n   %t" nil "New Ideas")
+            )))
 #+end_src
-
 ** キーマップの設定
 
    デフォルトの org のキーバインドはあまりにも多くのキーバインドを書き換えるので
@@ -53,26 +66,32 @@
    @see [[http://d.hatena.ne.jp/kitokitoki/20100430/p1][org-mode のデフォルトのキーバインドを無効にして必要なものだけ再定義する]]
 
 #+begin_src emacs-lisp
-  (add-hook 'org-mode-hook
-    (lambda()
-      ;; clear all org-map
-      (setq org-goto-map (make-keymap))
-      (setq org-agenda-mode-map (make-keymap))
-      (setq org-cdlatex-mode-map (make-keymap))
-      (setq org-exit-edit-mode-map (make-keymap))
-      (setq org-goto-local-auto-isearch-map (make-keymap))
-      (setq org-mode-map (make-keymap))
-      (setq org-mouse-map (make-keymap))
-      (setq orgstruct-mode-map (make-keymap))
-      (setq my-org-mode-map (make-keymap))
-      (use-local-map my-org-mode-map)
-      ;; 自分の使いたい機能だけを設定していく
-      (define-key my-org-mode-map (kbd "TAB") 'org-cycle)
-      (define-key my-org-mode-map (kbd "C-c C-c") 'org-toggle-checkbox)
-      (define-key my-org-mode-map (kbd "C-c \'") 'org-edit-src-code)
-      (define-key my-org-mode-map (kbd "C-c C-e") 'org-export)
-      (define-key my-org-mode-map (kbd "C-c C-l") 'org-insert-link)
-  ))
+  ;; (add-hook 'org-mode-hook
+  ;;   (lambda()
+  ;;     ;; clear all org-map
+  ;;     (setq org-goto-map (make-keymap))
+  ;;     (setq org-agenda-mode-map (make-keymap))
+  ;;     (setq org-cdlatex-mode-map (make-keymap))
+  ;;     (setq org-exit-edit-mode-map (make-keymap))
+  ;;     (setq org-goto-local-auto-isearch-map (make-keymap))
+  ;;     (setq org-mode-map (make-keymap))
+  ;;     (setq org-mouse-map (make-keymap))
+  ;;     (setq orgstruct-mode-map (make-keymap))
+  ;;     (setq my-org-mode-map (make-keymap))
+  ;;     (use-local-map my-org-mode-map)
+  ;;     ;; 自分の使いたい機能だけを設定していく
+  ;;     (define-key my-org-mode-map (kbd "TAB") 'org-cycle)
+  ;;     (define-key my-org-mode-map (kbd "C-c C-c") 'org-toggle-checkbox)
+  ;;     (define-key my-org-mode-map (kbd "C-c \'") 'org-edit-src-code)
+  ;;     (define-key my-org-mode-map (kbd "C-c C-e") 'org-export)
+  ;;     (define-key my-org-mode-map (kbd "C-c C-l") 'org-insert-link)
+  ;; ))
+#+end_src
+** MobileOrg の設定
+#+begin_src emacs-lisp
+  (require 'org-mobile)
+  (setq org-mobile-directory "~/Documents/Dropbox/MobileOrg")
+  (setq org-mobile-inbox-for-pull "~/Documents/Dropbox/org/remember.org")
 #+end_src
 ** HTML export の設定
 

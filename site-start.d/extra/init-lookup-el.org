@@ -1,0 +1,61 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+# init-lookup-el.org
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# $Lastupdate: 2011/11/28 20:19:07$
+#
+# Author: Youhei SASAKI <uwabami@gfd-dennou.org>
+# License: Expat
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#+SETUPFILE: ~/.emacs.d/template/org/level-2.org
+#+INCLUDE: ~/.emacs.d/template/org/menu-level-2.org
+#+TITLE: lookup-elの設定
+#Code:
+
+** 読み込み
+#+begin_src emacs-lisp
+  (eval-when-compile (require 'lookup))
+  (autoload 'lookup "lookup" nil t)
+  (autoload 'lookup-region "lookup" nil t)
+  (autoload 'lookup-pattern "lookup" nil t)
+#+end_src
+** キーバインドの設定
+#+begin_src emacs-lisp
+  (global-set-key "\C-cw" 'lookup-pattern)
+  (global-set-key "\C-cW" 'lookup-word)
+#+end_src
+** 検索エージェント, 辞書の設定
+#+begin_src emacs-lisp
+  (setq lookup-search-agents
+       '(
+         (ndeb "/usr/local/share/dict/eijiro" :alias "英辞郎")
+         (ndeb "/usr/local/share/dict/waeijiro" :alias "和英辞郎")
+         (ndeb "/usr/local/share/dict/rikagaku5" :alias "理化学辞典")
+         (ndeb "/usr/local/share/dict/koujien4" :alias "広辞苑")
+         (ndeb "/usr/local/share/dict/wadai5" :alias "研究社 和英大辞典")
+         ;; (ndeb "/usr/local/share/dict/shizenenja" :alias "自然科学系(英和)")
+         ;; (ndeb "/usr/local/share/dict/shizenjaen" :alias "自然科学系(和英)")
+         ;; (ndeb "/usr/local/share/dict/colloc" :alias "研究社 英和活用大辞典")
+         ;; (ndeb "/usr/local/share/dict/eidai6" :alias "研究社 英和大辞典")
+         ;; (ndest "~/Mail/.caskets" :alias "メール全文検索")
+         ))
+#+end_src

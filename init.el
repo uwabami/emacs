@@ -2,7 +2,7 @@
 ;;; init.el
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2011/11/29 14:58:30$
+;; $Lastupdate: 2011/12/02 01:00:30$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -100,9 +100,6 @@
      (add-to-load-path ,@list)
      (eval-when-compile
        (add-to-load-path ,@list))))
-;; -----------------------------------------------------------
-;; apel に依存しているモンは結構あるので, 読み込むことに
-(my:not-locate-library emu "site-lisp/apel")
 ;; -----------------------------------------------------------
 ;;; org-babel
 ;;

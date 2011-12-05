@@ -2,7 +2,7 @@
 # init-auto-install.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/11/30 10:50:49$
+# $Lastupdate: 2011/12/02 09:42:23$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -236,4 +236,14 @@
   (setq twittering-timer-interval 300)
   (setq twittering-use-master-password t)
   (setq twittering-private-info-file (concat user-emacs-directory "tmp/twittering-mode.gpg"))
+#+end_src
+* [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727][パスワード管理ツール id-manager.el]]
+** インストール
+#+begin_example
+  (auto-install-from-url "https://github.com/kiwanami/emacs-id-manager/raw/master/id-manager.el")
+#+end_example
+** 設定
+#+begin_src emacs-lisp
+  ;; (autoload 'id-manager "id-manager" nil t)
+  ;; (global-set-key (kbd "M-7") 'id-manager)
 #+end_src

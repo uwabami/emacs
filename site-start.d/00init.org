@@ -2,7 +2,7 @@
 # 00init.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/11/30 13:06:15$
+# $Lastupdate: 2011/12/03 07:23:17$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -458,6 +458,13 @@
 * 分割した設定ファイルを読み込む
   以下は Emacs 本体に同梱されていない emacs-lisp や
   外部ファイルの設定を読み込んでいるモン, など.
+** apel
+
+   結構いろんな所で apel に依存するモンがある. →今んところ howm だけ?
+#+begin_src emacs-lisp
+  (my:not-locate-library emu "site-lisp/apel")
+#+end_src
+
 ** 日本語入力
 *** Debug 用に mozc も読み込む
 #+begin_src emacs-lisp
@@ -594,6 +601,16 @@
   (autoload 'svn-update "dsvn" "Run `svn status' ." t)
 #+end_src
 
+** AUCTeX
+#+begin_src emacs-lisp
+  (when (locate-library "tex-site")
+    (my:load-org-file "extra/init-auctex.org"))
+#+end_src
+** lookup-elの設定
+#+begin_src emacs-lisp
+(when (locate-library "lookup")
+  (my:load-org-file "extra/init-lookup-el.org"))
+#+end_src 
 ** 以下, コメント
 
 # ** [[file:init-lookup-el.org][lookup-elの設定]]
@@ -609,11 +626,6 @@
 # +begin_src emacs-lisp
 #   ;; (when (locate-library "rd-mode")
 #   ;;   (my:load-org-file "init-tdiary.org"))
-# +end_src
-# ** AUCTeX
-# +begin_src emacs-lisp
-# ;; (when (locate-library "tex-site")
-# ;;   (my:load-org-file "init-auctex.org"))
 # +end_src
 # ** auto-complete
 # +begin_src emacs-lisp

@@ -2,7 +2,7 @@
 #+begin_quote
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/11/26 03:45:15$
+# $Lastupdate: 2011/12/02 16:01:49$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 #
@@ -82,18 +82,18 @@
 ** TODO テンプレートの設定[0/1]
 - [ ] org の場合, ディレクトリに合わせてテンプレートを切り替えたい
 #+begin_src emacs-lisp
-(setq auto-insert-alist
-      (nconc '(
-               ("\\.el$"   . ["template.el"   my-template])
-               ("\\.rb$"   . ["template.rb"   my-template])
-               ("\\.rab$"  . ["template.rab"  my-template])
-               ("\\.zsh$"  . ["template.zsh"  my-template])
-               ("\\.sh$"   . ["template.sh"   my-template])
-               ("\\.f90$"  . ["template.f90"  my-template])
-               ("\\.cpp$"  . ["template.cpp"  my-template])
-               ("\\.tex$"  . ["template.tex"  my-template])
-               ("\\.org$"  . ["template.org"  my-template])
-               ("\\.muse$" . ["template.muse" my-template])
-               ) auto-insert-alist))
+  (setq auto-insert-alist
+        (nconc '(
+                 ("\\.el$"   . ["template.el"   my-template])
+                 ("\\.rb$"   . ["template.rb"   my-template])
+                 ("\\.rab$"  . ["template.rab"  my-template])
+                 ("\\.zsh$"  . ["template.zsh"  my-template])
+                 ("\\.sh$"   . ["template.sh"   my-template])
+                 ("\\.f90$"  . ["template.f90"  my-template])
+                 ("\\.cpp$"  . ["template.cpp"  my-template])
+                 ("\\.tex$"  . ["template.tex"  my-template])
+  ;;               ("\\.org$"  . ["template.org"  my-template])
+                 ("\\.muse$" . ["template.muse" my-template])
+                 ) auto-insert-alist))
 #+end_src
 

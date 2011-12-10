@@ -2,7 +2,7 @@
 # 00init.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/12/03 07:23:17$
+# $Lastupdate: 2011/12/10 00:37:49$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -506,6 +506,38 @@
   (setq elscreen-tab-display-kill-screen nil)
   (require 'elscreen)
 #+end_src
+   zsh 連携用の関数の追加
+   [[http://d.hatena.ne.jp/syohex/20111026/1319606395][cdeを改良]] 参照.
+#+begin_src emacs-lisp
+  (defun elscreen-current-directory ()
+    (let* (current-dir
+           (active-file-name
+            (with-current-buffer
+                (let* ((current-screen (car (elscreen-get-conf-list 'screen-history)))
+                       (property (cadr (assoc current-screen
+                                              (elscreen-get-conf-list 'screen-property)))))
+                  (marker-buffer (nth 2 property)))
+              (progn
+                (setq current-dir (expand-file-name (cadr (split-string (pwd)))))
+                (buffer-file-name)))))
+      (if active-file-name
+          (file-name-directory active-file-name)
+        current-dir)))
+
+  (defun non-elscreen-current-directory ()
+    (let* (current-dir
+           (current-buffer
+            (nth 1 (assoc 'buffer-list
+                          (nth 1 (nth 1 (current-frame-configuration))))))
+           (active-file-name
+            (with-current-buffer current-buffer
+              (progn
+                (setq current-dir (expand-file-name (cadr (split-string (pwd)))))
+                (buffer-file-name)))))
+      (if active-file-name
+          (file-name-directory active-file-name)
+        current-dir)))
+#+end_src
 ** 見た目/フォントなどの設定
 *** 256 色を出すための設定
     ansi-color の方が良いのかな?
@@ -539,21 +571,23 @@
 #+end_src
 
 *** color-theme
-
     見た目や色に関しては color-theme を使用するようになった.
-
 #+begin_src emacs-lisp
   (my:not-locate-library color-theme-autoloads "site-lisp/color-theme-6.6.0")
   (add-to-load-path "site-lisp/color-theme-darkpastel")
+  ;; (add-to-load-path "site-lisp/zenburn-emacs")
   (setq color-theme-load-all-themes nil)
   (setq color-theme-libraries nil)
   (require 'color-theme-autoloads)
+  ;; (require 'color-theme-zenburn)
   (eval-after-load "color-theme-autoloads"
     '(progn
       (color-theme-initialize)
       (require 'color-theme-darkpastel)
+      ;; (require 'color-theme-zenburn)
       ))
   (color-theme-darkpastel)
+  ;; (color-theme-zenburn)
 #+end_src
 
 *** [[file:init-frame.org][GUI環境でのフォントとフレームの設定]]
@@ -610,17 +644,16 @@
 #+begin_src emacs-lisp
 (when (locate-library "lookup")
   (my:load-org-file "extra/init-lookup-el.org"))
-#+end_src 
+#+end_src
+** プログラミング言語毎の設定
+#+begin_src emacs-lisp
+  (my:load-org-file "init-programing.org")
+#+end_src
 ** 以下, コメント
-
 # ** [[file:init-lookup-el.org][lookup-elの設定]]
 # +begin_src emacs-lisp
 #   ;; (when (locate-library "lookup")
 #   ;;   (my:load-org-file "init-lookup-el.org"))
-# +end_src
-# ** プログラミング言語毎の設定
-# +begin_src emacs-lisp
-#   ;; (my:load-org-file "init-programing.org")
 # +end_src
 # ** tdiary
 # +begin_src emacs-lisp

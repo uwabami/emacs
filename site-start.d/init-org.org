@@ -2,7 +2,7 @@
 # init-org.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/12/10 10:08:32$
+# $Lastupdate: 2011/12/14 03:38:46$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -30,10 +30,8 @@
 #+INCLUDE: ~/.emacs.d/template/org/menu-level-2.org
 #+TITLE: org-mode の設定
 
-** 基本設定
-
+* 基本設定
    ~/.emacs.d/init.el でも読み込んでいるけれど, ここでも有効にする.
-
 #+begin_src emacs-lisp
   (require 'org-install)
   (require 'org)
@@ -49,22 +47,19 @@
   (setq org-directory "~/Documents/Dropbox/org/")
   ;; Agenda
   (setq org-default-notes-file (concat org-directory "remember.org"))
-  (when (locate-library "remember-el")
-    (setq remember-annotation-functions '(org-remember-annotation))
-    (setq remember-handler-functions '(org-remember-handler))
-    (setq org-remember-templates
-          '(("Todo" ?t "** TODO %?\n   %i\n   %a\n   %t" nil "Inbox")
-            ("Bug" ?b "** TODO %?   :bug:\n   %i\n   %a\n   %t" nil "Inbox")
-            ("Idea" ?i "** %?\n   %i\n   %a\n   %t" nil "New Ideas")
-            )))
+  ;; (when (locate-library "remember-el")
+  ;;   (setq remember-annotation-functions '(org-remember-annotation))
+  ;;   (setq remember-handler-functions '(org-remember-handler))
+  ;;   (setq org-remember-templates
+  ;;         '(("Todo" ?t "** TODO %?\n   %i\n   %a\n   %t" nil "Inbox")
+  ;;           ("Bug" ?b "** TODO %?   :bug:\n   %i\n   %a\n   %t" nil "Inbox")
+  ;;           ("Idea" ?i "** %?\n   %i\n   %a\n   %t" nil "New Ideas")
+  ;;           )))
 #+end_src
-** キーマップの設定
-
+* COMMENT キーマップの設定
    デフォルトの org のキーバインドはあまりにも多くのキーバインドを書き換えるので
    かなりアレ. 必要なモンだけ有効にしておく.
-
    @see [[http://d.hatena.ne.jp/kitokitoki/20100430/p1][org-mode のデフォルトのキーバインドを無効にして必要なものだけ再定義する]]
-
 #+begin_src emacs-lisp
   ;; (add-hook 'org-mode-hook
   ;;   (lambda()
@@ -87,16 +82,14 @@
   ;;     (define-key my-org-mode-map (kbd "C-c C-l") 'org-insert-link)
   ;; ))
 #+end_src
-** MobileOrg の設定
+* MobileOrg の設定
 #+begin_src emacs-lisp
   (require 'org-mobile)
   (setq org-mobile-directory "~/Documents/Dropbox/MobileOrg")
   (setq org-mobile-inbox-for-pull "~/Documents/Dropbox/org/remember.org")
 #+end_src
-** HTML export の設定
-
+* HTML export の設定
    HTML に export する設定. Project の使い方がまだイマイチ
-
 #+begin_src emacs-lisp
   ;; HTML export の設定
   (require 'org-html)
@@ -180,30 +173,50 @@
   ;;       '((org-mode . my-org-website-insert-skeleton-maybe)))
 #+end_src
 
-** LaTeX export の設定
+* LaTeX export の設定
+** 日本語LaTeX用の設定
+DebianのLaTeXはまだUTF-8を処理できないので, EUC-JPでexportする.
 #+begin_src emacs-lisp
   ;; LaTeX export
   (require 'org-latex)
   (setq org-export-latex-coding-system 'euc-jp-unix)
   (setq org-export-latex-date-format "%Y年%m月%d日")
-  ;; LaTeX
+#+end_src
+** jsarticle classの追加
+#+begin_src emacs-lisp
   (add-to-list 'org-export-latex-classes
-               '("
-  jsarticle" "\\documentclass[a4j,12pt]{jsarticle}
-  \\usepackage{ascmac}
-  \\usepackage{amsmath}
-  \\usepackage[varg]{txfonts}
-  \\usepackage{natbib}
-  \\usepackage{Dennou6}"
+               '("jsarticle"
+                 "\\documentclass{jsarticle}
+[NO-DEFAULT-PACKAGES]
+[PACKAGES]
+[EXTRA]
+"
                  ("\\section{%s}" . "\\section*{%s}")
                  ("\\subsection{%s}" . "\\subsection*{%s}")
                  ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
                  ("\\paragraph{%s}" . "\\paragraph*{%s}")
-                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}"))
-               )
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
   (setq org-export-latex-default-class "jsarticle")
 #+end_src
-** Beamer export の設定
+** [PACKAGES] で読み込まれるスタイルの設定
+#+begin_src emacs-lisp
+  (require 'org-latex)
+  ;; for details, see org.el, 3213 ff., 3265 ff. and org-latex.el.
+  (setq org-export-latex-packages-alist
+    '(
+      ;; ("AUTO"    "inputenc"  t)   ; automatically replaced with a coding system
+      ;; ("T1"   "fontenc"   t)
+      ;; ("deluxe,expert,multi"     "otf"   nil)
+      (""         "amsmath" t)
+      ("varg"     "txfonts" t)
+      ("dvipdfmx"     "graphicx"  t)
+      ("dvipdfmx"     "xcolor"  nil)
+      ("setpagesize=false,dvipdfmx"     "hyperref"  nil)
+      ("longnamesfirst,colon,sort&compress"     "natbib"  nil)
+      ;; ...                                                      ; 適宜追加
+      ))
+#+end_src
+* Beamer export の設定
 #+begin_src emacs-lisp
   ;; LaTeX-Beamer export
   (require 'org-beamer)
@@ -212,11 +225,25 @@
   ;; frame のオプション
   (setq org-beamer-frame-default-options "[fragile]")
   (setq org-latex-to-pdf-process
-   '("latexmk -pdfdvi %b" "latexmk -pdfdvi %b"))
+        '("latexmk -pdfdvi %b"
+          "latexmk -pdfdvi %b"
+          "latexmk -pdfdvi %b"))
   (setq org-export-with-sub-superscripts nil)
-  (require 'ob-ditaa)
 #+end_src
-** export-generic の設定
+* Org-Babel
+#+begin_src emacs-lisp
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '(
+     (ruby       . t)
+     (sh         . t)
+     (emacs-lisp . t)
+     (ditaa      . t)
+     (dot        . t)
+     (R          . t)
+     ))
+#+end_src
+* export-generic の設定
 *** RD への export
 #+begin_src emacs-lisp
   (my:not-locate-library org-export-generic "site-lisp/org-mode/contrib/lisp")

@@ -2,7 +2,7 @@
 # 00init.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/12/10 00:37:49$
+# $Lastupdate: 2011/12/14 03:47:25$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -40,14 +40,12 @@
 
 * 言語の設定
 ** 基本設定
-
    - Emacs23 以降はEmacs内部がUTF-8で記述されるようになったので, 極力
      UTF-8 を使用するようにしています. EUC-JP とかで使用すると稀に祟りが
      あったりするらしいですが...
    - 過去の資源(特に TeX)に関しては, 未だEUC-JP のファイルも多いので注意す
      る必要があります. TeXLive 2011 が Debian に入ったら, 多分全部 UTF-8
      に移行できるんだろうけれど.
-
 #+begin_src emacs-lisp
   (set-language-environment "Japanese")
   (set-language-environment-coding-systems "Japanese")
@@ -57,7 +55,6 @@
   (set-keyboard-coding-system 'utf-8)
   (set-buffer-file-coding-system 'utf-8)
 #+end_src
-
 ** OS 毎の設定
 
    全部 Unix/Linux 環境ならばこういう設定は不要なんでしょうけれど,
@@ -422,33 +419,22 @@
   (global-set-key "\C-c\C-j" 'browse-url-at-point)
 #+end_src
 ** easypg
-
    - Emacs23 からは本体に同梱されているので, require する必要ない.
    - 対称鍵暗号の場合にはパスフレーズをキャッシュしておくようにする.
-   - とはいえ, 最近対称鍵暗号は使っていないのであんまり役にたっていない, 気がする...
-
 *** 読み込み
-
 #+begin_src emacs-lisp
   (require 'epa-file)
 #+end_src
-
-*** ターミナル内で起動した時には GPG_AGENT_INFO を無効化する
-
-    公開鍵暗号方式をキャッシュできないので, 保留.
-
-    キャッシュしない仕組み自体は良いと思うのだけれど, いちいち面倒すぎる.
-
+*** gpg-agent の on/off 切り替え advacie
 #+begin_src emacs-lisp
-  ;; (defadvice epg--start (around advice-epg-disable-agent activate)
-  ;;   (let ((agent (getenv "GPG_AGENT_INFO")))
-  ;;     (when (not (display-graphic-p))
-  ;;       (setenv "GPG_AGENT_INFO" nil))
-  ;;     ad-do-it
-  ;;     (when (not (display-graphic-p))
-  ;;       (setenv "GPG_AGENT_INFO" agent))))
+  (defadvice my:epg-start (around advice-epg-disable-agent activate)
+    (let ((agent (getenv "GPG_AGENT_INFO")))
+      (when (not (display-graphic-p))
+        (setenv "GPG_AGENT_INFO" nil))
+      ad-do-it
+      (when (not (display-graphic-p))
+        (setenv "GPG_AGENT_INFO" agent))))
 #+end_src
-
 *** 対称鍵暗号のキャッシュ
 
 #+begin_src emacs-lisp
@@ -575,19 +561,18 @@
 #+begin_src emacs-lisp
   (my:not-locate-library color-theme-autoloads "site-lisp/color-theme-6.6.0")
   (add-to-load-path "site-lisp/color-theme-darkpastel")
-  ;; (add-to-load-path "site-lisp/zenburn-emacs")
   (setq color-theme-load-all-themes nil)
   (setq color-theme-libraries nil)
   (require 'color-theme-autoloads)
-  ;; (require 'color-theme-zenburn)
   (eval-after-load "color-theme-autoloads"
     '(progn
       (color-theme-initialize)
       (require 'color-theme-darkpastel)
-      ;; (require 'color-theme-zenburn)
       ))
+  (setq solarized-bold nil)
+  (setq solarized-italic nil)
   (color-theme-darkpastel)
-  ;; (color-theme-zenburn)
+
 #+end_src
 
 *** [[file:init-frame.org][GUI環境でのフォントとフレームの設定]]
@@ -649,16 +634,18 @@
 #+begin_src emacs-lisp
   (my:load-org-file "init-programing.org")
 #+end_src
+** tDiary
+** tdiary
+#+begin_src emacs-lisp
+  (when (locate-library "rd-mode")
+    (my:load-org-file "init-tdiary.org"))
+#+end_src
+
 ** 以下, コメント
 # ** [[file:init-lookup-el.org][lookup-elの設定]]
 # +begin_src emacs-lisp
 #   ;; (when (locate-library "lookup")
 #   ;;   (my:load-org-file "init-lookup-el.org"))
-# +end_src
-# ** tdiary
-# +begin_src emacs-lisp
-#   ;; (when (locate-library "rd-mode")
-#   ;;   (my:load-org-file "init-tdiary.org"))
 # +end_src
 # ** auto-complete
 # +begin_src emacs-lisp

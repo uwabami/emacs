@@ -9,6 +9,9 @@ update:
 	git submodule foreach 'git checkout master ; git pull origin master; git pull --rebase'
 	rm -f $(HOME)/.emacs.d/site-lisp/00build-stamp
 
+gc:
+	git submodule foreach 'git gc ; git repack'
+
 %.elc: %.el
 	@$(EMACS) -l init.el -L $(TARGET_DIR) \
 	  -q -no-site-file -batch -f batch-byte-compile $(CURDIR)/$<

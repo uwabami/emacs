@@ -3,7 +3,7 @@
 #+begin_quote
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/12/03 07:22:32$
+# $Lastupdate: 2011/12/11 06:47:41$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 #
@@ -42,7 +42,6 @@
 (add-hook 'TeX-mode-hook
           (function (lambda () (outline-minor-mode t))))
 #+end_src
-
 ** フォント関連
 *** サイズ可変の無効
 #+begin_src emacs-lisp

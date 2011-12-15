@@ -2,7 +2,7 @@
 # init-org.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/12/14 03:38:46$
+# $Lastupdate: 2011/12/14 13:30:05$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -188,7 +188,7 @@ DebianのLaTeXはまだUTF-8を処理できないので, EUC-JPでexportする.
                '("jsarticle"
                  "\\documentclass{jsarticle}
 [NO-DEFAULT-PACKAGES]
-[PACKAGES]
+[NO-PACKAGES]
 [EXTRA]
 "
                  ("\\section{%s}" . "\\section*{%s}")
@@ -197,24 +197,6 @@ DebianのLaTeXはまだUTF-8を処理できないので, EUC-JPでexportする.
                  ("\\paragraph{%s}" . "\\paragraph*{%s}")
                  ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
   (setq org-export-latex-default-class "jsarticle")
-#+end_src
-** [PACKAGES] で読み込まれるスタイルの設定
-#+begin_src emacs-lisp
-  (require 'org-latex)
-  ;; for details, see org.el, 3213 ff., 3265 ff. and org-latex.el.
-  (setq org-export-latex-packages-alist
-    '(
-      ;; ("AUTO"    "inputenc"  t)   ; automatically replaced with a coding system
-      ;; ("T1"   "fontenc"   t)
-      ;; ("deluxe,expert,multi"     "otf"   nil)
-      (""         "amsmath" t)
-      ("varg"     "txfonts" t)
-      ("dvipdfmx"     "graphicx"  t)
-      ("dvipdfmx"     "xcolor"  nil)
-      ("setpagesize=false,dvipdfmx"     "hyperref"  nil)
-      ("longnamesfirst,colon,sort&compress"     "natbib"  nil)
-      ;; ...                                                      ; 適宜追加
-      ))
 #+end_src
 * Beamer export の設定
 #+begin_src emacs-lisp

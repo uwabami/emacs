@@ -1,0 +1,37 @@
+;;; -*-Emacs-Lisp-*-
+
+;; FLIM-MK: installer for FLIM.
+
+;;; Code:
+
+(unless (boundp 'user-emacs-directory)
+  (defvar user-emacs-directory (expand-file-name "~/.emacs.d/")))
+
+(defvar default-load-path load-path)
+
+(when (not (locate-library "apel"))
+  (add-to-list
+   'load-path (expand-file-name "../apel" data-directory)))
+
+(require 'install)
+
+(setq PREFIX "~/.emacs.d/site-lisp")
+
+(setq FLIM_PREFIX "flim")
+
+(defvar LISPDIR "~/.emacs.d/site-lisp")
+
+(defvar VERSION_SPECIFIC_LISPDIR
+  (install-detect-elisp-directory PREFIX nil 'version-specific))
+
+(setq FLIM_DIR (expand-file-name FLIM_PREFIX LISPDIR))
+
+(setq FLIM_VERSION_SPECIFIC_DIR
+      (expand-file-name FLIM_PREFIX VERSION_SPECIFIC_LISPDIR))
+
+(defun compile-flim ()
+  (load-file "FLIM-ELS")
+  (compile-elisp-modules flim-version-specific-modules ".")
+  (compile-elisp-modules flim-modules "."))
+
+;;; FLIM-MK ends here

@@ -1,0 +1,40 @@
+;;; -*-Emacs-Lisp-*-
+
+;; SEMI-MK: installer for SEMI.
+
+;;; Code:
+
+(unless (boundp 'user-emacs-directory)
+  (defvar user-emacs-directory (expand-file-name "~/.emacs.d/")))
+
+(defvar default-load-path load-path)
+
+(when (not (locate-library "apel"))
+  (add-to-list
+   'load-path (expand-file-name "../apel" data-directory))
+  (eval-when-compile
+    (add-to-list
+     'load-path (expand-file-name "../apel" data-directory))))
+
+
+(when (not (locate-library "mime"))
+  (add-to-list
+   'load-path (expand-file-name "../flim" data-directory))
+  (eval-when-compile
+    (add-to-list
+     'load-path (expand-file-name "../flim" data-directory))))
+
+(add-to-list 'load-path
+             (expand-file-name "." data-directory))
+
+(condition-case nil
+    (require 'install)
+  (error (error "Please install APEL 8.7 or later.")))
+
+(defun compile-semi ()
+  (load-file "SEMI-ELS")
+  (compile-elisp-modules semi-modules-to-compile ".")
+  (compile-elisp-module  'mime-setup ".")
+  )
+
+;;; SEMI-MK ends here

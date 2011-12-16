@@ -2,7 +2,7 @@
 # init-auto-complete.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/11/28 20:20:34$
+# $Lastupdate: 2011/12/16 19:21:32$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -30,40 +30,60 @@
 #+INCLUDE: ~/.emacs.d/template/org/menu-level-2.org
 #+TITLE: auto-complete の設定
 
-** auto-complete の設定
-- load-path の設定: パッケージがある場合はそれを読む
+* 読み込み
+   Debian パッケージがある場合はそれを読む
 #+begin_src emacs-lisp
-  (when (not (locate-library "auto-complete"))
-    (add-to-load-path "site-lisp/auto-complete-el")
-    (eval-when-compile
-      (add-to-load-path "site-lisp/auto-complete-el")))
+  (my:not-locate-library auto-complete "site-lisp/auto-complete-el")
   (require 'auto-complete)
-  ;; (ac-config-default)
-  ;; デフォルトの補完候補
-  ;(set-default 'ac-sources '(ac-source-abbrev ac-source-words-in-same-mode-buffers ac-source-yasnippet))
-  ;; 対象の全てで補完を有効にする
+#+end_src
+* 初期設定
+** 全てのモードで補完を有効に
+#+begin_src emacs-lisp
   (global-auto-complete-mode t)
-  ;; 自動で起動するのを停止
+#+end_src
+** 自動起動の停止
+#+begin_src emacs-lisp
   (setq ac-auto-start nil)
-  ;; 起動キーの設定
-  ;;(ac-set-trigger-key "TAB")
+#+end_src
+** キー設定
+    M-Tab に割り当て
+#+begin_src emacs-lisp
   (define-key ac-mode-map (kbd "M-TAB") 'auto-complete)
-  ;; 補完メニュー表示時のみ C-n/C-p で補完候補を選択
+#+end_src
+    補完メニュー表示時には C-n/C-p で選択
+#+begin_src emacs-lisp
   (setq ac-use-menu-map t)
   (define-key ac-menu-map "\C-n" 'ac-next)
   (define-key ac-menu-map "\C-p" 'ac-previous)
   (define-key ac-completing-map (kbd "C-m") 'ac-complete)
   (define-key ac-completing-map (kbd "M-/") 'ac-stop)
-  ;; 待ち時間を長めに取る
+#+end_src
+** 表示関連
+    待ち時間を長めに
+#+begin_src emacs-lisp
   (setq ac-delay 0.2)
-  ;; 候補の最大件数 デフォルトは 10件
-  (setq ac-candidate-limit nil)
-  ;; 補完候補のソート
+#+end_src
+    補完候補をソート
+#+begin_src emacs-lisp
   (setq ac-use-comphist t)
-  ;; クイックヘルプが表示されるとバッファが大きく変更される場合があるので停止
+#+end_src
+    補完候補の表示件数を無制限に(デフォルト10件)
+#+begin_src
+  (setq ac-candidate-limit nil)
+#+end_src
+    クイックヘルプが表示されるとバッファが大きく変更される場合がるので停止
+#+begin_src emacs-lisp
   (setq ac-use-quick-help nil)
-  ;; 補完推測
+#+end_src
+    補完推測
+#+begin_src emacs-lisp
   (setq ac-use-comphist nil)
-  ;; flyspell-mode 用の対策
+#+end_src
+** ヒストリ置き場の変更
+#+begin_src emacs-lisp
+  (setq ac-comphist-file (concat user-emacs-directory "tmp/ac-comphist.dat"))
+#+end_src
+* flyspell-mode 用の work around
+#+begin_src
   (ac-flyspell-workaround)
 #+end_src

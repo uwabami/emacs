@@ -2,29 +2,27 @@
 ;;; init.el
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2011/12/14 04:39:35$
+;; $Lastupdate: 2011/12/16 23:24:01$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
-;; License: Expat
+;; License: GPL-3+
 ;;
-;; Permission is hereby granted, free of charge, to any person obtaining
-;; a copy of this software and associated documentation files (the
-;; "Software"), to deal in the Software without restriction, including
-;; without limitation the rights to use, copy, modify, merge, publish,
-;; distribute, sublicense, and/or sell copies of the Software, and to
-;; permit persons to whom the Software is furnished to do so, subject to
-;; the following conditions:
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 ;;
-;; The above copyright notice and this permission notice shall be
-;; included in all copies or substantial portions of the Software.
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
 ;;
-;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-;; EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-;; MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-;; NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-;; LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-;; OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-;; WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;;
+;;; Comment:
+;;
+;;  org-mode に含まれる ob-tangle を改変しているので GPL-3+ で.
 ;;
 ;;; Code:
 ;; -----------------------------------------------------------
@@ -100,7 +98,7 @@
  )
 ;; -----------------------------------------------------------
 ;;; 良く使う macro の定義
-;;not-locate-library -> add-to-load-path
+;; (not (locate-library "foobar") -> (add-to-load-path "foobar")
 (defmacro my:not-locate-library (lib &rest list)
   `(when (not (locate-library ,(symbol-name lib)))
      (add-to-load-path ,@list)
@@ -113,18 +111,12 @@
 ;;
 (require 'org-install)
 ;;
-;; ob-tangl より自分用に幾つか関数を設定
+;;; ob-tangle より自分用に幾つか関数を設定
 ;;
-;; - my:org-babel-tangle-and-compile-file
-;;   指定された org ファイルから emacs-lisp を export して
-;;   byte-compile する.
-;;   - Make から呼ぶ事も想定しているので load はしない.
+;;; my:org-babel-tangle-and-compile-file
 ;;
-;; - my:org-babel-load-file
-;;   my:org-babel-tangle-and-comile-file してから load する
-;;
-;; - my:org-load-file
-;;   my:org-babel-load-file の際にディレクトリ名を省略(決め打ち)
+;; 指定された org ファイルから emacs-lisp を export してbyte-compile する.
+;; - Make から呼ぶ事も想定しているので load はしない.
 ;;
 (defun my:org-babel-tangle-and-compile-file (file)
   "export emacs-lisp and byte-compile from org files (not load).
@@ -143,13 +135,21 @@
                    (> (age file) (age compiled-file)))
         (org-babel-tangle-file file exported-file "emacs-lisp")
         (byte-compile-file exported-file)))))
-
+;;
+;;; my:org-babel-load-file
+;;
+;; my:org-babel-tangle-and-comile-file してから load する
+;;
 (defun my:org-babel-load-file (file)
   "load after byte-compile"
   (interactive "fFile to load: ")
   (my:org-babel-tangle-and-compile-file file)
   (load (file-name-sans-extension file)))
-
+;;
+;;; my:org-load-file
+;;
+;; my:org-babel-load-file の際にディレクトリ名を決め打ち
+;;
 (defvar org-settings-dir (concat user-emacs-directory "site-start.d/"))
 (defun my:load-org-file (file)
   "org-settings-dir 以下から my-org-babel-load-file"

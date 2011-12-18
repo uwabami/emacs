@@ -1,5 +1,6 @@
 ;;; APEL-CFG --- user customizations for APEL installation. -*-Emacs-Lisp-*-
-;;
+(unless (boundp 'user-emacs-directory)
+  (defvar user-emacs-directory (expand-file-name "~/.emacs.d/")))
 (setq APEL_DIR (concat user-emacs-directory "site-lisp/apel"))
 (setq EMU_DIR  (concat user-emacs-directory "site-lisp/apel"))
 ;;; APEL-CFG ends here

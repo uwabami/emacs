@@ -2,7 +2,7 @@
 # 00init.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/12/16 19:41:18$
+# $Lastupdate: 2011/12/17 00:12:33$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -498,10 +498,15 @@
   (when window-system (my:load-org-file "init-e2wm.org"))
 #+end_src
 ** MUA の設定
-   Wanderlust 愛用中.
+   Wanderlust 愛用中. Wanderlust の無い環境用に gnus も設定しておく.
 #+begin_src emacs-lisp
-  (when (locate-library "wl")
-    (my:load-org-file "init-wl.org"))
+  (my:not-locate-library emu "site-lisp/apel")
+  (my:not-locate-library mime "site-lisp/flim")
+  (my:not-locate-library mime-view "site-lis/semi")
+  (my:not-locate-library mime-w3m "site-lisp/w3m")
+  (my:not-locate-library mmimap "site-lisp/wl/elmo")
+  (my:not-locate-library wl "site-lisp/wl/wl")
+  (my:load-org-file "init-wl.org")
 #+end_src
 ** elscreen
    emacs 内で GNU screen っぽくする emacs-lisp. 残念ながら, Debian

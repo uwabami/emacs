@@ -1,0 +1,72 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+# init-gnus.org
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# $Lastupdate: 2011/12/16 23:23:57$
+#
+# Author: Youhei SASAKI <uwabami@gfd-dennou.org>
+# License: Expat
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#+SETUPFILE: ~/.emacs.d/template/org/level-2.org
+#+INCLUDE: ~/.emacs.d/template/org/menu-level-2.org
+#+TITLE: Gnus の設定
+
+* 読み込み
+#+begin_src emacs-lisp
+(setq gnus-use-mailcrypt nil) ;; mailcrypt は使わない
+(setq gnus-use-sc nil) ;; super-cite も使わない
+(load "gnus-setup") ;; 必須
+(setq mail-user-agent 'gnus-user-agent)
+#+end_src
+* 基本設定
+** ディレクトリ構造
+#+begin_src emacs-lisp
+  (setq nnshimbun-directory (expand-file-name "~/Mail/gnus/"))
+  (setq gnus-home-directory (expand-file-name "~/Mail/"))
+  (setq gnus-directory (expand-file-name "~/Mail/gnus"))
+  (setq message-directory (expand-file-name "~/Mail/gnus"))
+  (setq nnmail-message-id-cache-file (expand-file-name "~/Mail/gnus/.nnmail-cache"))
+#+end_src
+** 日本語ファイル名の取り扱い
+#+begin_src emacs-lisp
+  (defvar my-mime-filename-coding-system-for-decode
+    '(iso-2022-jp japanese-shift-jis japanese-iso-8bit))
+  (defun my-mime-decode-filename (filename)
+    (let ((rest (eword-decode-string filename)))
+      (or (when (and my-mime-filename-coding-system-for-decode
+                     (string= rest filename))
+            (let ((dcs (mapcar (function coding-system-base)
+                               (detect-coding-string filename))))
+              (unless (memq 'emacs-mule dcs)
+                (let ((pcs my-mime-filename-coding-system-for-decode))
+                  (while pcs
+                    (if (memq (coding-system-base (car pcs)) dcs)
+                        (setq rest (decode-coding-string filename (car pcs))
+                              pcs nil)
+                      (setq pcs (cdr pcs))))))))
+          rest)))
+  (eval-after-load "mime"
+    '(defadvice mime-entity-filename (after eword-decode-for-broken-MUA activate)
+       "Decode encoded file name for BROKEN MUA."
+       (when (stringp ad-return-value)
+         (setq ad-return-value (my-mime-decode-filename ad-return-value)))))
+#+end_src

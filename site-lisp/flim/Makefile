@@ -1,6 +1,12 @@
 #
 # Makefile for FLIM.
 #
+UNAME	:= $(shell uname)
+ifeq ($(UNAME), Darwin)
+	EMACS	:= /Applications/MacPorts/Emacs.app/Contents/MacOS/Emacs
+else
+	EMACS	:= /usr/bin/emacs
+endif
 
 PACKAGE = flim
 API	= 1.14
@@ -10,8 +16,7 @@ TAR	= tar
 RM	= /bin/rm -f
 CP	= /bin/cp -p
 
-EMACS	= emacs
-FLAGS   = -batch -q -no-site-file -l FLIM-MK
+FLAGS   = -batch -q -no-site-file -l FLIM-MK -L .
 
 GOMI	= *.elc
 FILES	= README.?? Makefile FLIM-MK FLIM-CFG FLIM-ELS *.el ChangeLog

@@ -3,12 +3,17 @@
 #
 
 VERSION = 10.8
+UNAME   := $(shell uname)
+ifeq ($(UNAME), Darwin)
+        EMACS   := /Applications/MacPorts/Emacs.app/Contents/MacOS/Emacs
+else
+        EMACS   := /usr/bin/emacs
+endif
 
 TAR	= tar
 RM	= /bin/rm -f
 CP	= /bin/cp -p
 
-EMACS	= emacs
 XEMACS	= xemacs
 FLAGS   = -batch -q -no-site-file -l APEL-MK
 

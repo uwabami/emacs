@@ -7,7 +7,7 @@
 (provide 'w3m-load)
 
 ;;;### (autoloads (bookmark-w3m-bookmark-jump) "bookmark-w3m" "bookmark-w3m.el"
-;;;;;;  (20203 23526))
+;;;;;;  (20206 26558))
 ;;; Generated autoloads from bookmark-w3m.el
 
 (autoload 'bookmark-w3m-bookmark-jump "bookmark-w3m" "\
@@ -17,60 +17,8 @@ Default bookmark handler for w3m buffers.
 
 ;;;***
 
-;;;### (autoloads (mew-shimbun-expire mew-shimbun-expire-all mew-shimbun-re-retrieve-all
-;;;;;;  mew-shimbun-re-retrieve mew-shimbun-retrieve-all mew-shimbun-retrieve
-;;;;;;  mew-shimbun-goto-folder mew-shimbun-goto-unseen-folder) "mew-shimbun"
-;;;;;;  "shimbun/mew-shimbun.el" (20203 23535))
-;;; Generated autoloads from shimbun/mew-shimbun.el
-
-(autoload 'mew-shimbun-goto-unseen-folder "mew-shimbun" "\
-Goto folder for SHIMBUN to have a few new messages.
-
-\(fn)" t nil)
-
-(autoload 'mew-shimbun-goto-folder "mew-shimbun" "\
-Goto folder for SHIMBUN.
-If called with '\\[universal-argument]', goto folder to have a few new messages.
-
-\(fn &optional ARGS)" t nil)
-
-(autoload 'mew-shimbun-retrieve "mew-shimbun" "\
-Retrieve articles via SHIMBUN on this folder.
-
-\(fn &optional NEWFLD)" t nil)
-
-(autoload 'mew-shimbun-retrieve-all "mew-shimbun" "\
-Retrieve all articles via SHIMBUN.
-
-\(fn)" t nil)
-
-(autoload 'mew-shimbun-re-retrieve "mew-shimbun" "\
-Re-retrieve this message.
-If called with '\\[universal-argument]', re-retrieve messages marked with
-'mew-shimbun-mark-re-retrieve'.
-
-\(fn &optional ARGS)" t nil)
-
-(autoload 'mew-shimbun-re-retrieve-all "mew-shimbun" "\
-Re-retrieve all messages in this folder.
-If called with '\\[universal-argument]', re-retrieve messages in the region.
-
-\(fn &optional ARG)" t nil)
-
-(autoload 'mew-shimbun-expire-all "mew-shimbun" "\
-Expire all shimbun folder.
-
-\(fn)" t nil)
-
-(autoload 'mew-shimbun-expire "mew-shimbun" "\
-Expire this shimbun folder.
-
-\(fn)" t nil)
-
-;;;***
-
 ;;;### (autoloads (mime-w3m-preview-text/html) "mime-w3m" "mime-w3m.el"
-;;;;;;  (20203 23526))
+;;;;;;  (20206 26558))
 ;;; Generated autoloads from mime-w3m.el
 
 (autoload 'mime-w3m-preview-text/html "mime-w3m" "\
@@ -82,7 +30,7 @@ Not documented
 
 ;;;### (autoloads (gnus-group-make-shimbun-groups gnus-group-make-shimbun-group
 ;;;;;;  gnus-summary-refer-shimbun-article) "nnshimbun" "shimbun/nnshimbun.el"
-;;;;;;  (20203 23535))
+;;;;;;  (20206 26558))
 ;;; Generated autoloads from shimbun/nnshimbun.el
 
 (autoload 'gnus-summary-refer-shimbun-article "nnshimbun" "\
@@ -106,7 +54,7 @@ Create all nnshimbun groups prepared for SERVER.
 ;;;***
 
 ;;;### (autoloads (octet-mime-setup mime-view-octet mime-preview-octet
-;;;;;;  octet-find-file octet-buffer) "octet" "octet.el" (20203 23526))
+;;;;;;  octet-find-file octet-buffer) "octet" "octet.el" (20206 26558))
 ;;; Generated autoloads from octet.el
 
 (autoload 'octet-buffer "octet" "\
@@ -140,7 +88,7 @@ Octet setting for MIME module.
 
 ;;;### (autoloads (w3m-buffer w3m-region w3m-find-file w3m-browse-url
 ;;;;;;  w3m w3m-gohome w3m-goto-url-new-session w3m-goto-url w3m-download
-;;;;;;  w3m-retrieve) "w3m" "w3m.el" (20203 23526))
+;;;;;;  w3m-retrieve) "w3m" "w3m.el" (20206 26558))
 ;;; Generated autoloads from w3m.el
 
 (autoload 'w3m-retrieve "w3m" "\
@@ -286,7 +234,7 @@ See `w3m-region' for the optional arguments.
 ;;;***
 
 ;;;### (autoloads (w3m-antenna w3m-about-antenna) "w3m-antenna" "w3m-antenna.el"
-;;;;;;  (20203 23526))
+;;;;;;  (20206 26558))
 ;;; Generated autoloads from w3m-antenna.el
 
 (autoload 'w3m-about-antenna "w3m-antenna" "\
@@ -304,7 +252,7 @@ Report changes of WEB sites, which is specified in `w3m-antenna-sites'.
 ;;;### (autoloads (w3m-setup-bookmark-menu w3m-about-bookmark w3m-bookmark-view-new-session
 ;;;;;;  w3m-bookmark-view w3m-bookmark-add-current-url-group w3m-bookmark-add-all-urls
 ;;;;;;  w3m-bookmark-add-current-url w3m-bookmark-add-this-url) "w3m-bookmark"
-;;;;;;  "w3m-bookmark.el" (20203 23526))
+;;;;;;  "w3m-bookmark.el" (20206 26558))
 ;;; Generated autoloads from w3m-bookmark.el
 
 (autoload 'w3m-bookmark-add-this-url "w3m-bookmark" "\
@@ -351,8 +299,8 @@ Setup w3m bookmark items in menubar.
 ;;;***
 
 ;;;### (autoloads (w3m-about-cookie w3m-cookie w3m-cookie-get w3m-cookie-set
-;;;;;;  w3m-cookie-shutdown) "w3m-cookie" "w3m-cookie.el" (20203
-;;;;;;  23526))
+;;;;;;  w3m-cookie-shutdown) "w3m-cookie" "w3m-cookie.el" (20206
+;;;;;;  26558))
 ;;; Generated autoloads from w3m-cookie.el
 
 (autoload 'w3m-cookie-shutdown "w3m-cookie" "\
@@ -384,7 +332,7 @@ Make the html contents to display and to enable you to manage cookies.
 ;;;***
 
 ;;;### (autoloads (w3m-dtree w3m-about-dtree) "w3m-dtree" "w3m-dtree.el"
-;;;;;;  (20203 23526))
+;;;;;;  (20206 26558))
 ;;; Generated autoloads from w3m-dtree.el
 
 (autoload 'w3m-about-dtree "w3m-dtree" "\
@@ -400,7 +348,7 @@ If called with 'prefix argument', display all directorys and files.
 
 ;;;***
 
-;;;### (autoloads (w3m-fb-mode) "w3m-fb" "w3m-fb.el" (20203 23526))
+;;;### (autoloads (w3m-fb-mode) "w3m-fb" "w3m-fb.el" (20206 26558))
 ;;; Generated autoloads from w3m-fb.el
 
 (defvar w3m-fb-mode nil "\
@@ -420,8 +368,8 @@ This allows frame-local lists of buffers (tabs).
 
 ;;;***
 
-;;;### (autoloads (w3m-filter) "w3m-filter" "w3m-filter.el" (20203
-;;;;;;  23526))
+;;;### (autoloads (w3m-filter) "w3m-filter" "w3m-filter.el" (20206
+;;;;;;  26558))
 ;;; Generated autoloads from w3m-filter.el
 
 (autoload 'w3m-filter "w3m-filter" "\
@@ -431,8 +379,8 @@ Apply filtering rule of URL against a content in this buffer.
 
 ;;;***
 
-;;;### (autoloads (w3m-fontify-forms) "w3m-form" "w3m-form.el" (20203
-;;;;;;  23526))
+;;;### (autoloads (w3m-fontify-forms) "w3m-form" "w3m-form.el" (20206
+;;;;;;  26558))
 ;;; Generated autoloads from w3m-form.el
 
 (autoload 'w3m-fontify-forms "w3m-form" "\
@@ -446,7 +394,7 @@ Process half-dumped data and fontify forms in this buffer.
 ;;;;;;  w3m-linknum-print-this-url w3m-linknum-edit-this-url w3m-linknum-external-view-this-url
 ;;;;;;  w3m-linknum-save-image w3m-linknum-view-image w3m-linknum-toggle-inline-image
 ;;;;;;  w3m-linknum-follow w3m-go-to-linknum w3m-link-numbering-mode)
-;;;;;;  "w3m-lnum" "w3m-lnum.el" (20203 23526))
+;;;;;;  "w3m-lnum" "w3m-lnum.el" (20206 26558))
 ;;; Generated autoloads from w3m-lnum.el
 
 (autoload 'w3m-link-numbering-mode "w3m-lnum" "\
@@ -532,7 +480,7 @@ If no link under point, activate numbering and ask for one.
 ;;;***
 
 ;;;### (autoloads (w3m-namazu w3m-about-namazu) "w3m-namazu" "w3m-namazu.el"
-;;;;;;  (20203 23526))
+;;;;;;  (20206 26558))
 ;;; Generated autoloads from w3m-namazu.el
 
 (autoload 'w3m-about-namazu "w3m-namazu" "\
@@ -548,7 +496,7 @@ Search indexed files with Namazu.
 ;;;***
 
 ;;;### (autoloads (w3m-perldoc w3m-about-perldoc) "w3m-perldoc" "w3m-perldoc.el"
-;;;;;;  (20203 23526))
+;;;;;;  (20206 26558))
 ;;; Generated autoloads from w3m-perldoc.el
 
 (autoload 'w3m-about-perldoc "w3m-perldoc" "\
@@ -564,7 +512,7 @@ View Perl documents.
 ;;;***
 
 ;;;### (autoloads (w3m-search-uri-replace w3m-search-new-session
-;;;;;;  w3m-search) "w3m-search" "w3m-search.el" (20203 23526))
+;;;;;;  w3m-search) "w3m-search" "w3m-search.el" (20206 26558))
 ;;; Generated autoloads from w3m-search.el
 
 (autoload 'w3m-search "w3m-search" "\
@@ -591,7 +539,7 @@ Generate query string for ENGINE from URI matched by last search.
 
 ;;;### (autoloads (w3m-session-last-crashed-session w3m-session-last-autosave-session
 ;;;;;;  w3m-setup-session-menu w3m-session-select w3m-session-crash-recovery-remove
-;;;;;;  w3m-session-save) "w3m-session" "w3m-session.el" (20203 23526))
+;;;;;;  w3m-session-save) "w3m-session" "w3m-session.el" (20206 26558))
 ;;; Generated autoloads from w3m-session.el
 
 (autoload 'w3m-session-save "w3m-session" "\
@@ -627,7 +575,7 @@ Not documented
 ;;;***
 
 ;;;### (autoloads (w3m-replace-symbol) "w3m-symbol" "w3m-symbol.el"
-;;;;;;  (20203 23526))
+;;;;;;  (20206 26558))
 ;;; Generated autoloads from w3m-symbol.el
 
 (autoload 'w3m-replace-symbol "w3m-symbol" "\
@@ -638,7 +586,7 @@ Not documented
 ;;;***
 
 ;;;### (autoloads (w3m-about-weather w3m-weather) "w3m-weather" "w3m-weather.el"
-;;;;;;  (20203 23526))
+;;;;;;  (20206 26558))
 ;;; Generated autoloads from w3m-weather.el
 
 (autoload 'w3m-weather "w3m-weather" "\

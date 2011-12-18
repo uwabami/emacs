@@ -10,8 +10,8 @@
 (defvar default-load-path load-path)
 
 (when (not (locate-library "apel"))
-  (add-to-list
-   'load-path (expand-file-name "../apel" data-directory)))
+  (setq load-path
+        (cons (concat user-emacs-directory "site-lisp/apel" )load-path)))
 
 (require 'install)
 

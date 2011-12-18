@@ -1,0 +1,34 @@
+;;;							-*- emacs-lisp -*-
+;;; Configuration file for installation.
+
+;; load-path setting example for Mule with SEMI.
+(unless (boundp 'user-emacs-directory)
+  (defvar user-emacs-directory (expand-file-name "~/.emacs.d/")))
+
+(defvar default-load-path load-path)
+(when (not (locate-library "apel"))
+  (setq load-path
+        (cons (concat user-emacs-directory "site-lisp/apel" ) load-path)))
+(when (not (locate-library "std11"))
+  (setq load-path
+        (cons (concat user-emacs-directory "site-lisp/flim" ) load-path)))
+(when (not (locate-library "mime-w3"))
+  (setq load-path
+        (cons (concat user-emacs-directory "site-lisp/semi" ) load-path)))
+
+;; If you want to install utils, uncomment following line.
+(setq wl-install-utils t)
+
+;; Set language for info file ("ja" or "en", both in default).
+;; If you only need manual in English, uncomment following line.
+(setq wl-info-lang "ja")
+
+;; Set language for news file ("ja" or "en", both in default).
+(setq wl-news-lang '("ja" )) ; order sensitive
+
+;; if you want to install wl modules to the subdirectory other than "wl"
+;; under LISPDIR, set following variables.
+(setq WL_PREFIX (concat user-emacs-directory "site-lisp/wl/wl"))
+(setq ELMO_PREFIX (concat user-emacs-directory "site-lisp/wl/elmo"))
+
+

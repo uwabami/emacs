@@ -10,22 +10,13 @@
 (defvar default-load-path load-path)
 
 (when (not (locate-library "apel"))
-  (add-to-list
-   'load-path (expand-file-name "../apel" data-directory))
-  (eval-when-compile
-    (add-to-list
-     'load-path (expand-file-name "../apel" data-directory))))
+  (setq load-path
+        (cons (concat user-emacs-directory "site-lisp/apel" ) load-path)))
 
 
 (when (not (locate-library "mime"))
-  (add-to-list
-   'load-path (expand-file-name "../flim" data-directory))
-  (eval-when-compile
-    (add-to-list
-     'load-path (expand-file-name "../flim" data-directory))))
-
-(add-to-list 'load-path
-             (expand-file-name "." data-directory))
+  (setq load-path
+        (cons (concat user-emacs-directory "site-lisp/flim" )load-path)))
 
 (condition-case nil
     (require 'install)

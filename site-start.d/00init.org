@@ -2,7 +2,7 @@
 # 00init.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/12/19 08:44:08$
+# $Lastupdate: 2011/12/19 14:22:54$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat

@@ -2,7 +2,7 @@
 # init-wl.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/12/19 10:14:16$
+# $Lastupdate: 2011/12/19 10:32:22$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -72,5 +72,5 @@
 * Wanderlust 本体の設定は基本外部ファイルで
    epa を有効にして gpg で暗号化したファイルを読む
 #+begin_src emacs-lisp
-  (setq wl-init-file "~/.wl/init")
+  (setq wl-init-file "~/.wl/init.gpg")
 #+end_src

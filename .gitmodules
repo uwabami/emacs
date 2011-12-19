@@ -25,3 +25,6 @@
 [submodule "site-lisp/emacs-window-layout"]
 	path = site-lisp/emacs-window-layout
 	url = https://github.com/uwabami/emacs-window-layout.git
+[submodule "site-lisp/gnus"]
+	path = site-lisp/gnus
+	url = http://git.gnus.org/gnus.git

@@ -2,7 +2,7 @@
 # init-wl.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/12/12 13:35:18$
+# $Lastupdate: 2011/12/19 10:14:16$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -30,20 +30,25 @@
 #+INCLUDE: ~/.emacs.d/template/org/menu-level-2.org
 #+TITLE: 06. Wanderlust の設定
 
-
-** TODO HTML メールの表示設定[0/1]
+* 読み込み
+#+begin_src emacs-lisp
+  (my:not-locate-library std11 "site-lisp/flim")
+  (my:not-locate-library mime-setup "site-lisp/semi")
+  (my:not-locate-library w3m-ems "site-lisp/w3m")
+  (my:not-locate-library mmimap "site-lisp/wl/elmo")
+  (my:not-locate-library wl "site-lisp/wl/lisp")
+#+end_src
+* TODO HTML メールの表示設定[0/1]
    HTMLメールの表示には w3m を使う.
    - [ ] w3m-el で外部リンクを踏む際に safe にする設定が良くわからない...Orz
 #+begin_src emacs-lisp
-  (when (locate-library "mime-setup")
-    (setq mime-setup-enable-inline-html t)
-    (require 'mime-setup))
-  (when (locate-library "w3m-load")
-    (require 'w3m-ems)
-    (require 'w3m-load)
-    (require 'mime-w3m))
+  (setq mime-setup-enable-inline-html t)
+  (require 'mime-setup)
+  (require 'w3m-ems)
+  (require 'w3m-load)
+  (require 'mime-w3m)
 #+end_src
-** デフォルトのメーラを Wanderlust に変更する
+* デフォルトのメーラを Wanderlust に変更する
 #+begin_src emacs-lisp
   (autoload 'wl "wl" "Wanderlust" t)
   (autoload 'wl-other-frame "wl" "Wanderlust on new frame" t)
@@ -60,12 +65,12 @@
       'wl-draft-kill
       'mail-send-hook))
 #+end_src
-** キーバインド. F3 で Wanderlust を起動
+* キーバインド. F3 で Wanderlust を起動
 #+begin_src emacs-lisp
   (global-set-key [f3] 'wl)
 #+end_src
-** Wanderlust 本体の設定は基本外部ファイルで
+* Wanderlust 本体の設定は基本外部ファイルで
    epa を有効にして gpg で暗号化したファイルを読む
 #+begin_src emacs-lisp
-  (setq wl-init-file "~/.wl/init.gpg")
+  (setq wl-init-file "~/.wl/init")
 #+end_src

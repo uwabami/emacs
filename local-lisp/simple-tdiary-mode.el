@@ -2,7 +2,7 @@
 ;;; simple-tdiary-mode.el
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2011/07/12 21:14:16$
+;; $Lastupdate: 2011/12/20 11:51:46$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;;
@@ -94,6 +94,7 @@ simple-tdiary-toggle-debug-mode を実行する. ")
 (define-key simple-tdiary-mode-map (kbd "C-c C-b") 'simple-tdiary-go-back)
 (define-key simple-tdiary-mode-map (kbd "C-c C-f") 'simple-tdiary-go-forward)
 (define-key simple-tdiary-mode-map (kbd "C-c C-d") 'simple-tdiary-toggle-debug-mode)
+(define-key simple-tdiary-mode-map (kbd "C-c C-q") 'simple-tdiary-exit)
 (define-key simple-tdiary-mode-map (kbd "C-c C-e") 'simple-tdiary-exit)
 
 ;; フック

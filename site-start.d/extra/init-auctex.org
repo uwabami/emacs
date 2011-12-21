@@ -3,7 +3,7 @@
 #+begin_quote
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/12/15 17:01:54$
+# $Lastupdate: 2011/12/20 09:09:19$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 #
@@ -137,6 +137,16 @@
 #+end_src
 
 * BibTeX + Zotexo
+** BibTeX
+   日本語文献用にyomiを追加
+#+begin_src emacs-lisp
+  (setq bibtex-user-optional-fields
+        '(("annote" "Personal annotation (ignored)")
+          ("yomi" "Yomigana")
+          ("location" "where it is (ignored)")
+          ("memo" "Memorundum (ignored)")
+          ))
+#+end_src
 ** RefTeX
 #+begin_src emacs-lisp
   (autoload 'reftex-mode     "reftex" "RefTeX Minor Mode" t)

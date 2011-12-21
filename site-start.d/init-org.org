@@ -2,7 +2,7 @@
 # init-org.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/12/15 17:04:20$
+# $Lastupdate: 2011/12/20 06:26:44$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -103,7 +103,8 @@
   ;; バックアップファイルを作成しない
   (setq make-backup-files nil)
   ;; cache の置き場所を ~/.emacs.d/tmp/org-timestamps/ に変える
-  (setq org-publish-timestamp-directory (concat user-emacs-directory "tmp/org-timestamps/"))
+  (setq org-publish-timestamp-directory
+        (convert-standard-filename (concat user-emacs-directory "tmp/org-timestamps/")))
   ;; project の設定
   (setq org-publish-project-alist
         '(

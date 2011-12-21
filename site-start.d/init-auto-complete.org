@@ -68,7 +68,7 @@
   (setq ac-use-comphist t)
 #+end_src
     補完候補の表示件数を無制限に(デフォルト10件)
-#+begin_src
+#+begin_src emacs-lisp
   (setq ac-candidate-limit nil)
 #+end_src
     クイックヘルプが表示されるとバッファが大きく変更される場合がるので停止
@@ -84,6 +84,6 @@
   (setq ac-comphist-file (concat user-emacs-directory "tmp/ac-comphist.dat"))
 #+end_src
 * flyspell-mode 用の work around
-#+begin_src
+#+begin_src emacs-lisp
   (ac-flyspell-workaround)
 #+end_src

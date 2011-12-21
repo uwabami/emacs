@@ -88,6 +88,13 @@
                            "./"
                            (TeX-current-file-name-master-relative)))
 
+(setq bibtex-user-optional-fields
+      '(("annote" "Personal annotation (ignored)")
+        ("yomi" "Yomigana")
+        ("location" "where it is (ignored)")
+        ("memo" "Memorundum (ignored)")
+        ))
+
 (autoload 'reftex-mode     "reftex" "RefTeX Minor Mode" t)
 (autoload 'turn-on-reftex  "reftex" "RefTeX Minor Mode" nil)
 (autoload 'reftex-citation "reftex-cite" "Make citation" nil)

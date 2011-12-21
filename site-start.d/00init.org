@@ -609,7 +609,7 @@
 #+begin_src emacs-lisp
   (if (or (file-executable-p "/usr/bin/cmigemo")
           (file-executable-p "/usr/bin/migemo"))
-      (my:load-org-file "init-migemo.org"))
+      (my:load-org-file "extra/init-migemo.org"))
 #+end_src
 ** muse-mode の設定
 #+begin_src emacs-lisp

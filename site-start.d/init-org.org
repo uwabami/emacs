@@ -2,7 +2,7 @@
 # init-org.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/12/20 06:26:44$
+# $Lastupdate: 2011/12/22 00:38:59$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -174,6 +174,32 @@
   ;;       '((org-mode . my-org-website-insert-skeleton-maybe)))
 #+end_src
 
+* org2blog
+  tDiaryもorgで書くようになってしまった.
+** 導入
+   org2blog と xml-rpc が必要.
+   前者は github を submodule として登録しておく.
+   後者は emacswiki から.
+#+begin_example
+  (auto-install-from-url "http://www.emacswiki.org/emacs/download/xml-rpc.el")
+#+end_example
+** 設定
+#+begin_src emacs-lisp
+  ;; (when (string-match "daphne" system-name)
+  ;;   (my:not-locate-library org2blog "site-lisp/org2blog")
+  ;;   (require 'org2blog-autoloads)
+  ;;   (require 'netrc)
+  ;;   (setq blog (netrc-machine (netrc-parse "~/.xmlrpc.gpg") "uwabami.junkhub.org" t))
+  ;;   (setq org2blog/wp-blog-alist
+  ;;         '(("log"
+  ;;            :url "http://uwabami.junkhub.org/log/xmlrpc.rb"
+  ;;            :username (netrc-get blog "login")
+  ;;            :password (netrc-get blog "password")
+  ;;            :default-categories ("Emacs")
+  ;;            :default-title "")))
+  ;;   (setq org2blog/wp-use-tags-as-categories t)
+  ;; )
+#+end_src
 * LaTeX export の設定
 ** 日本語LaTeX用の設定
 DebianのLaTeXはまだUTF-8を処理できないので, EUC-JPでexportする.

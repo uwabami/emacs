@@ -2,7 +2,7 @@
 # init-auto-install.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/12/02 09:42:23$
+# $Lastupdate: 2011/12/24 20:43:03$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -129,9 +129,7 @@
 #+end_src
 
 * [[http://d.hatena.ne.jp/tarao/20101011/1286804507][Yet another icompelete]]
-
   zlc を更に素敵にしてくれる.
-
 ** install
 #+begin_example
 (auto-install-from-url "http://github.com/tarao/elisp/raw/master/yaicomplete.el")
@@ -140,25 +138,6 @@
 #+begin_src emacs-lisp
   (require 'yaicomplete)
   (yaicomplete-mode)
-#+end_src
-
-* [[http://d.hatena.ne.jp/khiker/20070503/emacs_text_translator][Emacs でテキスト翻訳をする elisp]]. その名も text-translator-el.
-
-  無いと途方に暮れる.
-
-** install
-
-#+begin_example
-  (auto-install-from-emacswiki "text-translator-vars.el")
-  (auto-install-from-emacswiki "text-translator-load.el")
-  (auto-install-from-emacswiki "text-translator.el")
-#+end_example
-** 設定
-#+begin_src emacs-lisp
-(require 'text-translator)
-(setq text-translator-proxy-server "localhost")
-(setq text-translator-proxy-port 20080)
-(global-set-key "\C-xt" 'text-translator-all-by-auto-selection)
 #+end_src
 
 * [[http://d.hatena.ne.jp/kiwanami/20101008/1286518936][deferred.el]]: 非同期処理用 emacs lisp

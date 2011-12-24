@@ -2,7 +2,7 @@
 # 00init.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/12/19 14:22:54$
+# $Lastupdate: 2011/12/24 20:44:07$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -469,6 +469,16 @@
 ** auto-complete
 #+begin_src emacs-lisp
   (my:load-org-file "init-auto-complete.org")
+#+end_src
+** [[http://d.hatena.ne.jp/khiker/20070503/emacs_text_translator][Emacs でテキスト翻訳をする elisp]]. その名も text-translator-el.
+#+begin_src emacs-lisp
+  (my:not-locate-library text-translator "site-lisp/text-translator-el")
+  (require 'text-translator)
+  (setq text-translator-proxy-server "localhost")
+  (setq text-translator-proxy-port 20080)
+  (global-set-key "\C-xt" 'text-translator-all-by-auto-selection)
+  (require 'text-translator-popup)
+  (setq text-translator-display-function 'text-translator-poupu-display)
 #+end_src
 ** apel
    結構いろんな所で apel に依存するモンがある...と思っていたけれど, 今ん

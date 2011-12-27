@@ -2,7 +2,7 @@
 # 00init.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/12/24 20:44:07$
+# $Lastupdate: 2011/12/27 17:20:09$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -31,13 +31,11 @@
 #+TITLE: Emacs の基本設定
 
 * 始めに
-
   .emacs→~/.emacs.d/init.el ときて, このファイル(00init.org)で
   設定を行なっています.
   ここでは, 基本的に Emacs 本体の設定について記述しています.
   外部 elisp が必要な場合は別ファイルを読み込むようにしていますが
   設定が短かい場合にはこのファイルに記述して終わっていたりします.
-
 * 言語の設定
 ** 基本設定
    Emacs23 以降はEmacs内部がUTF-8で記述されるようになったので, 極力UTF-8
@@ -47,7 +45,7 @@
    過去の資源(特に TeX)に関しては, 未だEUC-JP のファイルも多いので注意す
    る必要があります. TeXLive 2011 が Debian に入ったら, 多分全部 UTF-8に
    移行できるんだろうけれど.
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (set-language-environment "Japanese")
   (set-language-environment-coding-systems "Japanese")
   (prefer-coding-system 'utf-8)
@@ -55,7 +53,7 @@
   (set-terminal-coding-system 'utf-8)
   (set-keyboard-coding-system 'utf-8)
   (set-buffer-file-coding-system 'utf-8)
-#+end_src
+#+END_SRC
 ** OS 毎の設定
 
    全部 Unix/Linux 環境ならばこういう設定は不要なんでしょうけれど,幾つか
@@ -68,7 +66,7 @@
    Windows の場合は残念ながら sjis-dos にしています. とはいえ最近Windows
    使っていないので良く知りません.
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (cond
    (mac-p
     (require 'ucs-normarize)
@@ -84,7 +82,7 @@
     (setq default-file-name-coding-system 'utf-8)
     (setq locale-coding-system 'utf-8))
    )
-#+end_src
+#+END_SRC
 ** cp5022x の設定
 
    既に述べた通り, Emacs23から内部がUTF-8ベースになっています.
@@ -103,22 +101,22 @@
   (auto-install-from-url "http://nijino.homelinux.net/emacs/cp5022x.el")
 #+end_example
 *** 読み込み
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (require 'cp5022x)
-#+end_src
+#+END_SRC
 * 機種依存しない筈の雑多な設定など
 ** ファイル名を指定しない場合はホームディレクトリから起動
    以前(Meadow?)で使っていた時に Cygwin のHOME に移動していないとファイル
    を開くのが大変だったので指定していました. この設定のせいで
    byte-compile 時に CURDIR を指定する必要があったりして面倒なので,
    そのうち消すと思います.
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (cd "~/")
-#+end_src
+#+END_SRC
 ** キーバインドの変更(\C-h -> BS にする, とか)]
    設定しておいて, 結構忘れていたり. とはいえ [home] と [end] は無いと途
    方に暮れます. 鬼軍曹.el [fn:3] とかで強制した方が良いのかもしれません.
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (global-set-key (kbd "C-h")     'backward-delete-char)
   (global-set-key (kbd "C-c M-a") 'align-regexp)
   (global-set-key (kbd "C-c ;")   'comment-region)
@@ -128,23 +126,23 @@
   (global-set-key (kbd "C-c r")   'replace-string)
   (global-set-key [home]          'beginning-of-buffer)
   (global-set-key [end]           'end-of-buffer)
-#+end_src
+#+END_SRC
 ** モードライン関連
    必要に応じて linum-mode を有効にするので
    モードラインにカーソルのある行番号を表示しないように.
    ついでにlinum-mode を有効にした場合の桁表示を 4 桁にしておきます.
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (line-number-mode 0)
   (setq linum-format "%4d ")
-#+end_src
+#+END_SRC
    モードラインにカーソルのある桁番号を表示しない
    (これを見て位置を把握したことは皆無).
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (column-number-mode 0)
-#+end_src
+#+END_SRC
    モードラインのダイエット.
    デフォルトではいろいろ表示しすぎな気がします.
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (setq mode-line-frame-identification " ")
   (setq-default mode-line-format
                 '("-"
@@ -165,77 +163,77 @@
                   ;; (-3 . "%p")
                   "-%-")
                 )
-#+end_src
+#+END_SRC
 ** フレーム, ツールバーなど
    ツールバーは使用しない.
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (tool-bar-mode 0)
-#+end_src
+#+END_SRC
    スクロールバーは使用しない.
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (set-scroll-bar-mode nil)
-#+end_src
+#+END_SRC
    メニューバーを表示しない.
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (menu-bar-mode -1)
-#+end_src
+#+END_SRC
    bell-mode 使用しない
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (setq ring-bell-function 'ignore)
-#+end_src
+#+END_SRC
    startup を表示しない
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (setq inhibit-startup-screen t)
-#+end_src
+#+END_SRC
    ターミナル起動時には \C-x f で画像を表示しない
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (cond
    (window-system
     (setq auto-image-file-mode t))
    (t
     (setq auto-image-file-mode nil)))
-#+end_src
+#+END_SRC
 ** 表示, 編集関連
    カーソルのある行を強調表示...しない(疲れるので止めた)
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (global-hl-line-mode 0)
-#+end_src
+#+END_SRC
    余計な空行/改行を入れない
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (setq next-line-add-newlines nil)
   (put 'set-goal-column 'disabled nil)
-#+end_src
+#+END_SRC
    yes or no を y or n に
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (fset 'yes-or-no-p 'y-or-n-p)
-#+end_src
+#+END_SRC
    選択リージョンに色付け
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (setq transient-mark-mode t)
-#+end_src
+#+END_SRC
    対応する括弧を色付け
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (show-paren-mode t)
-#+end_src
+#+END_SRC
    GUI の場合にタイトルにバッファ名を表示. それ以外の場合には表示しない.
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (cond
     (window-system
       (setq frame-title-format "%b"))
     (t
       (setq frame-title-format nil))
   )
-#+end_src
+#+END_SRC
    ファイル名とともにディレクトリも表示
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (require 'uniquify)
   (setq uniquify-buffer-name-style 'post-forward-angle-brackets)
   (setq uniquify-min-dir-content 1)
-#+end_src
+#+END_SRC
    recentf で最近開いたファイルを記憶する.
    - recentf に記憶しないファイルを設定しておく.
    - 記憶の保存先は ~/.emacs.d/tmp/recentf にする
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (require 'recentf)
   (recentf-mode 1)
   (setq recentf-exclude
@@ -252,46 +250,46 @@
   (setq recentf-auto-cleanup 'never)
   (setq recentf-save-file
         (concat user-emacs-directory "tmp/recentf"))
-#+end_src
+#+END_SRC
    saveplace で前回の修正位置を記憶する.
    記憶の保存先は ~/.emacs.d/tmp/emacs-places にする
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (require 'saveplace)
   (setq-default save-place t)
   (setq save-place-file
         (convert-standard-filename
          (concat user-emacs-directory "tmp/emacs-places")))
-#+end_src
+#+END_SRC
    tab 幅 4, tab でのインデントはしない
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (setq-default tab-width 4)
   (setq-default indent-tabs-mode nil)
-#+end_src
+#+END_SRC
    文字列は 72 文字で折り返し(RFC2822)
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (setq-default fill-column 72)
   (setq paragraph-start '"^\\([ 　・○<\t\n\f]\\|(?[0-9a-zA-Z]+)\\)")
   (setq-default auto-fill-mode nil)
-#+end_src
+#+END_SRC
    list-buffers の代わりに ibuffer を使用する
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (require 'ibuffer)
   (global-set-key (kbd "C-x b") 'ibuffer-other-window)
   (global-set-key (kbd "C-x C-b") 'ibuffer-other-window)
-#+end_src
+#+END_SRC
    無駄な行末の空白を削除する(Emacs Advent Calendar jp:2010)[fn:4]
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (add-hook 'before-save-hook 'delete-trailing-whitespace)
-#+end_src
+#+END_SRC
    script を保存時に自動的に chmod +x する設定.
    以前は設定していたれど, 余計なファイルまで executable になって結構イラっ
    とするので, 最近やめた.
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   ;; (add-hook 'after-save-hook
   ;;           'executable-make-buffer-file-executable-if-script-p)
-#+end_src
+#+END_SRC
    空になったファイルを尋ねずに自動削除
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (if (not (memq 'delete-file-if-no-contents after-save-hook))
     (setq after-save-hook
           (cons 'delete-file-if-no-contents after-save-hook)))
@@ -301,9 +299,9 @@
          (= (point-min) (point-max)))
     (delete-file
      (buffer-file-name (current-buffer)))))
-#+end_src
+#+END_SRC
    scratch を殺さない. 消した場合は再生成する.
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (defun my:make-scratch (&optional arg)
     (interactive)
     (progn
@@ -334,16 +332,16 @@
              (lambda ()
                (unless (member "*scratch*" (my:buffer-name-list))
                  (my:make-scratch 1)))))
-#+end_src
+#+END_SRC
    バックアップを作成しない.
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (setq make-backup-files nil)
   (setq auto-save-default nil)
   (setq auto-save-list-file-name nil)
   (setq auto-save-list-file-prefix nil)
-#+end_src
+#+END_SRC
    alignの設定. @see[[http://handlename.hatenablog.jp/entry/2011/12/11/214923][ align設定用例集]] [fn:5]
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (require 'align)
   (add-to-list 'align-rules-list
                '(ruby-comma-delimiter
@@ -365,21 +363,21 @@
                  (regexp . "\\(\\s-*\\)# => [^#\t\n]")
                  (repeat . nil)
                  (modes  . '(ruby-mode))))
-#+end_src
+#+END_SRC
 ** emacs-server の起動
    既に emacs-server が起動しているならば何もせず,
    起動していない場合には emacs-server を起動する.
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (require 'server)
   (eval-when-compile (require 'server))
   (when (and (functionp 'server-running-p)
              (not (server-running-p)))
     (server-start))
-#+end_src
+#+END_SRC
 ** timestamp の自動更新
    ファイル内に"＄Lastupdate: ＄" (＄は小文字)がある場合には,
    save する度にtimestamp を更新する.
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (require 'time-stamp)
   (add-hook 'before-save-hook 'time-stamp)
   (setq time-stamp-active t)
@@ -387,12 +385,12 @@
   (setq time-stamp-start "$Lastupdate: ")
   (setq time-stamp-format "%04y/%02m/%02d %02H:%02M:%02S")
   (setq time-stamp-end "\\$")
-#+end_src
+#+END_SRC
 ** browse-url[0/1]
    主に Linux の firefox 用. それ以外の環境での browse-url に関しては...ど
    うするかなぁ. やっぱり emacs-w3m を使うようにした方が良いのかな.
    - [ ] emacs-w3m を使う場合と firefox or chromium を使う場合を切り替えたい.
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (require 'browse-url)
   ;; ブラウザの設定 -> (firefox) 用
   (defun browse-url-firefox
@@ -442,15 +440,15 @@
   ;;             (edit-server-start))))
   (setq browse-url-browser-function 'browse-url-firefox)
   (global-set-key "\C-c\C-j" 'browse-url-at-point)
-#+end_src
+#+END_SRC
 ** easypg
    Emacs23 からは本体に同梱されているので require する必要ないけれど, 一応.
 *** 読み込み
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (require 'epa-file)
-#+end_src
+#+END_SRC
 *** gpg-agent の on/off 切り替え advacie
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (defadvice my:epg-start (around advice-epg-disable-agent activate)
     (let ((agent (getenv "GPG_AGENT_INFO")))
       (when (not (display-graphic-p))
@@ -458,66 +456,66 @@
       ad-do-it
       (when (not (display-graphic-p))
         (setenv "GPG_AGENT_INFO" agent))))
-#+end_src
+#+END_SRC
 *** 対称鍵暗号のキャッシュ
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (setq epa-file-cache-passphrase-for-symmetric-encryption t)
-#+end_src
+#+END_SRC
 * 分割した設定ファイルを読み込む
   以下は Emacs 本体に同梱されていない emacs-lisp や
   外部ファイルの設定を読み込んでいるモン, など.
 ** auto-complete
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (my:load-org-file "init-auto-complete.org")
-#+end_src
+#+END_SRC
 ** [[http://d.hatena.ne.jp/khiker/20070503/emacs_text_translator][Emacs でテキスト翻訳をする elisp]]. その名も text-translator-el.
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (my:not-locate-library text-translator "site-lisp/text-translator-el")
   (require 'text-translator)
   (setq text-translator-proxy-server "localhost")
   (setq text-translator-proxy-port 20080)
   (global-set-key "\C-xt" 'text-translator-all-by-auto-selection)
-  (require 'text-translator-popup)
-  (setq text-translator-display-function 'text-translator-poupu-display)
-#+end_src
+  ;; (require 'text-translator-popup)
+  ;; (setq text-translator-display-function 'text-translator-popup-display)
+#+END_SRC
 ** apel
    結構いろんな所で apel に依存するモンがある...と思っていたけれど, 今ん
    ところ howm だけかな? もしかして
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (my:not-locate-library emu "site-lisp/apel")
-#+end_src
+#+END_SRC
 ** 日本語入力
 *** 主にdebug用途だけれど, あれば mozc も読み込む.
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (when (locate-library "mozc")
     (require 'mozc))
-#+end_src
+#+END_SRC
 *** [[file:init-ddskk.org][ddskkの設定]]
     デフォルトの日本語入力には ddskk を使用する.
     外部ファイルで設定
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (my:load-org-file "init-ddskk.org")
-#+end_src
+#+END_SRC
 ** [[file:init-auto-install.org][auto-install.elとinstallしたelispの設定]]
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (my:load-org-file  "init-auto-install.org")
-#+end_src
+#+END_SRC
 ** [[file:init-e2wm.org][Emacs内Window管理ツール, e2wm.elの設定]]
    install したものの, 全然使えていないわけですけど.
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (when window-system (my:load-org-file "init-e2wm.org"))
-#+end_src
+#+END_SRC
 ** MUA の設定
    Wanderlust 愛用中. Wanderlust の無い環境用に gnus も設定しておく.
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   ;; (my:load-org-file "init-gnus.org")
   (my:load-org-file "init-wl.org")
-#+end_src
+#+END_SRC
 ** elscreen
    emacs 内で GNU screen っぽくする emacs-lisp. 残念ながら, Debian
    Squeeze の elscreen にはバグがあり, 起動時にファイルを開けなかったりす
    る.  backport した方が良いかなぁ...
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (my:not-locate-library elscreen "site-lisp/elscreen")
   (setq elscreen-prefix-key "\C-o")
   (if (eq window-system 'x)
@@ -526,10 +524,10 @@
     )
   (setq elscreen-tab-display-kill-screen nil)
   (require 'elscreen)
-#+end_src
+#+END_SRC
    zsh 連携用の関数の追加
    [[http://d.hatena.ne.jp/syohex/20111026/1319606395][cdeを改良]] 参照.
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (defun elscreen-current-directory ()
     (let* (current-dir
            (active-file-name
@@ -558,20 +556,20 @@
       (if active-file-name
           (file-name-directory active-file-name)
         current-dir)))
-#+end_src
+#+END_SRC
 ** 見た目/フォントなどの設定
 *** 256 色を出すための設定
     ansi-color の方が良いのかな?
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (when (not window-system)
     (load "term/xterm")
     (xterm-register-default-colors)
     (tty-set-up-initial-frame-faces))
-#+end_src
+#+END_SRC
 *** space や tab に色付け
     whitespace-mode の方が良いのかな?
     もっさりする, という話もあるので, 悩みドコロ.
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (defface my-face-r-1 '((t (:background "gray10"))) nil)
   (defface my-face-b-1 '((t (:background "gray"))) nil)
   (defface my-face-b-2 '((t (:background "gray50"))) nil)
@@ -590,11 +588,11 @@
        )))
   (ad-enable-advice 'font-lock-mode 'before 'my-font-lock-mode)
   (ad-activate 'font-lock-mode)
-#+end_src
+#+END_SRC
 *** color-theme
     見た目や色に関しては color-theme を使用するようになった.
     今のところ, 自作のテーマである [[https://github.com/uwabami/color-theme-darkpastel][color-theme-darkpastel]] を使用中.
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (my:not-locate-library color-theme-autoloads "site-lisp/color-theme-6.6.0")
   (add-to-load-path "site-lisp/color-theme-darkpastel")
   (setq color-theme-load-all-themes nil)
@@ -608,63 +606,63 @@
   (setq solarized-bold nil)
   (setq solarized-italic nil)
   (color-theme-darkpastel)
-#+end_src
+#+END_SRC
 *** [[file:init-frame.org][GUI環境でのフォントとフレームの設定]]
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (when window-system (my:load-org-file "init-frame.org"))
-#+end_src
+#+END_SRC
 ** [[file:init-migemo.org][migemo の設定]]
    ローマ字でかなと漢字を incremental search する migemo の設定.
    無いと途方に暮れる.
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (if (or (file-executable-p "/usr/bin/cmigemo")
           (file-executable-p "/usr/bin/migemo"))
       (my:load-org-file "extra/init-migemo.org"))
-#+end_src
+#+END_SRC
 ** muse-mode の設定
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
    (my:load-org-file "init-muse.org")
-#+end_src
+#+END_SRC
 ** org-mode
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (my:load-org-file "init-org.org")
-#+end_src
+#+END_SRC
 ** howm-mode
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (my:load-org-file "init-howm.org")
-#+end_src
+#+END_SRC
 ** autoinsert
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (my:load-org-file "init-autoinsert.org")
-#+end_src
+#+END_SRC
 ** VC
    magit と dsvn. とはいえ使いこなせていない...
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (my:not-locate-library magit "site-lisp/magit")
   (require 'magit)
   (require 'dsvn)
   (autoload 'svn-status "dsvn" "Run `svn status' ." t)
   (autoload 'svn-update "dsvn" "Run `svn status' ." t)
-#+end_src
+#+END_SRC
 ** AUCTeX
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (when (locate-library "tex-site")
     (my:load-org-file "extra/init-auctex.org"))
-#+end_src
+#+END_SRC
 ** lookup-elの設定
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (when (locate-library "lookup")
   (my:load-org-file "extra/init-lookup-el.org"))
-#+end_src
+#+END_SRC
 ** プログラミング言語毎の設定
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (my:load-org-file "init-programing.org")
-#+end_src
+#+END_SRC
 ** tDiary
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (when (locate-library "rd-mode")
     (my:load-org-file "init-tdiary.org"))
-#+end_src
+#+END_SRC
 * Footnotes
 
 [fn:1] Emacs23 日本語向け設定例: http://nijino.homelinux.net/emacs/emacs23-ja.html

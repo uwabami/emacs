@@ -29,7 +29,7 @@
 
 ** 利用する shell の確認/設定
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (defun skt:shell ()
   (or (executable-find "zsh")
       (executable-find "bash")
@@ -38,4 +38,4 @@
 (setq shell-file-name (skt:shell))
 (setenv "SHELL" shell-file-name)
 (setq explicit-shell-file-name shell-file-name)
-#+end_src
+#+END_SRC

@@ -41,9 +41,9 @@
 キーバインドなんかも e2wm-config で提供されているものをそのまま使う事にしてみる.
 
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (my:not-locate-library window-layout "site-lisp/emacs-window-layout")
   (my:not-locate-library e2wm-config "site-lisp/emacs-window-manager")
   (require 'e2wm-config)
   (global-set-key (kbd "M-+") 'e2wm:start-management)
-#+end_src
+#+END_SRC

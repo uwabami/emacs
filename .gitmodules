@@ -25,12 +25,6 @@
 [submodule "site-lisp/emacs-window-layout"]
 	path = site-lisp/emacs-window-layout
 	url = https://github.com/uwabami/emacs-window-layout.git
-[submodule "site-lisp/gnus"]
-	path = site-lisp/gnus
-	url = http://git.gnus.org/gnus.git
-[submodule "site-lisp/org2blog"]
-	path = site-lisp/org2blog
-	url = http://github.com/punchagan/org2blog.git
 [submodule "site-lisp/text-translator-el"]
 	path = site-lisp/text-translator-el
 	url = https://github.com/uwabami/text-translator-el.git

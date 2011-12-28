@@ -31,7 +31,7 @@
 
 ** Fortran90[0/1]
 - [ ] f90-mode って fortran2003 とかにも対応してるのか?
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   ;; -----------------------------------------------------------
   ;;; Fortran90
   (setq f90-mode-hook
@@ -67,11 +67,11 @@
         (append '(("\\.f90$" . f90-mode)) auto-mode-alist))
   (setq auto-mode-alist
         (append '(("\\.f95$" . f90-mode)) auto-mode-alist))
-#+end_src
+#+END_SRC
 ** C/C++
 あんまり書く事無いけれどね.
 *** モードの色付けの追加
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (defface font-lock-dbg-face
     '((((class color) (background light)) (:foreground "DeepPink"))
       (((class color) (background dark)) (:foreground "Red3"))
@@ -98,9 +98,9 @@
     :group 'font-lock-highlighting-faces)
   (defvar font-lock-bool-face'font-lock-bool-face
     "Face name to use for boolean operators.")
-#+end_src
+#+END_SRC
 *** 色づけしたいキーワードの設定
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   ;; define
   (defconst bm-additional-constant-keywords
     (cons
@@ -125,9 +125,9 @@
   (defconst bm-operator-keywords
     (cons
      "[|&!<>+-.*/^~%=:?]+" font-lock-bool-face))
-#+end_src
+#+END_SRC
 *** モードに関連付け
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (font-lock-add-keywords
    'c++-mode
    (list
@@ -150,11 +150,11 @@
         (append '(("\\.c$" . c-mode)) auto-mode-alist))
   (setq auto-mode-alist
         (append '(("\\.cpp$" . c++-mode)) auto-mode-alist))
-#+end_src
+#+END_SRC
 
 ** SOMEDAY Ruby
 rinai とか楽しそうだね. そのうち設定したいね.
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
    (autoload 'ruby-mode "ruby-mode"
      "Mode for editing ruby source files" t)
   (remove-hook 'ruby-mode-hook 'ruby-mode-set-encoding)
@@ -189,10 +189,10 @@ rinai とか楽しそうだね. そのうち設定したいね.
           (append '(("\\.rbt$" . rabbit-mode)) auto-mode-alist))
 
     )
-#+end_src
+#+END_SRC
 ** gettext po-mode
    gettext の翻訳関連.
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   ;; -----------------------------------------------------------
   ;;; Gettext Po
   (autoload 'po-mode "po-mode"
@@ -226,17 +226,17 @@ rinai とか楽しそうだね. そのうち設定したいね.
                     (error (buffer-string)))))
             (kill-buffer tmp-buf)
             (delete-file tmp-file)))))
-#+end_src
+#+END_SRC
 ** SOMEDAY sh
 うまく動かないような気がするんだけど...
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (setq auto-mode-alist
       (append '(("\\.\\(sh\\|zsh\\|bash\\|csh\\|tcsh\\)$" .sh-mode))
               auto-mode-alist))
-#+end_src
+#+END_SRC
 ** markdown
    ddskk と相性が悪いので git から持ってきたのを load する
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (add-to-load-path "site-lisp/markdown-mode")
   (autoload 'markdown-mode "markdown-mode"
     "Major mode for editing Markdown files" t)
@@ -244,4 +244,4 @@ rinai とか楽しそうだね. そのうち設定したいね.
         (append '(("\\.md$" . markdown-mode)) auto-mode-alist))
   (setq auto-mode-alist
         (append '(("\\.markdown$" . markdown-mode)) auto-mode-alist))
-#+end_src
+#+END_SRC

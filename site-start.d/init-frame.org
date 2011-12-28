@@ -35,12 +35,12 @@
 ** 背景色の設定
 color-theme では透過色のターミナルで作業することを考えて,
 意図的に背景色を設定していない. なので, ここで設定する.
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (when window-system
     (add-to-list 'default-frame-alist '(background-color . "#242424")))
-#+end_src
+#+END_SRC
 ** [[http://d.hatena.ne.jp/khiker/20090809/emacs_opacity][フレームを半透明にする]]
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (defun my-opacity-change (action)
     (let* ((op
             (frame-parameter
@@ -63,10 +63,10 @@ color-theme では透過色のターミナルで作業することを考えて,
   (when window-system
     (my-opacity-change 90)     ; default の透明度は 85 に
     )
-#+end_src
+#+END_SRC
 ** フォント設定
    Ricty を使用することにする(Ricty の無い環境はとりあえず考えていない).
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (create-fontset-from-ascii-font "Ricty-13.5" nil "ricty")
   (dolist (charset '(
                      unicode
@@ -87,4 +87,4 @@ color-theme では透過色のターミナルで作業することを考えて,
                       nil
                       'prepend)))
   (add-to-list 'default-frame-alist '(font ."fontset-ricty"))
-#+end_src
+#+END_SRC

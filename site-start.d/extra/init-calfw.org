@@ -20,22 +20,22 @@
 
 ** calfw の設定
 - load-path の設定: パッケージがある場合はそれを読む
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (when (not (locate-library "calfw"))
   (add-to-load-path "site-lisp/calfw"))
-#+end_src
+#+END_SRC
 ** 読み込み
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (require 'calfw)
-#+end_src
+#+END_SRC
 ** howm との連携
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (require 'calfw-howm)
 (cfw:install-howm-schedules)
 ;; (define-key howm-mode-map (kbd "M-C") 'cfw:elscreen-open-howm-calendar)
-#+end_src
+#+END_SRC
 ** google calendar との連携
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (require 'calfw-ical)
 (defun my-open-calendar ()
   (interactive)
@@ -45,4 +45,4 @@
    (list
     (cfw:ical-create-source "KUSM" "https://www.google.com/calendar/ical/gnruk9ik9rk6e280saohurk27g%40group.calendar.google.com/public/basic.ics" "Seagreen4"))
 ))
-#+end_src
+#+END_SRC

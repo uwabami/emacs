@@ -36,9 +36,9 @@
 org-babel を用いた Emacs の設定について触れています.
 [[http://www.gfd-dennou.org/member/uwabami/cc-env/EmacsBasic.html][Emacsの基本設定]] で触れた通り,
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (my-load-org-file "hogehoge.org")
-#+end_src
+#+END_SRC
 
 と記述するだけで
 

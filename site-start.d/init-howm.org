@@ -26,13 +26,13 @@
 #+OPTIONS: toc:2 num:nil ^:nil
 
 * load-path の確認
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (my:not-locate-library howm "site-lisp/howm")
   (my:not-locate-library elscreen-howm "site-lisp/elscreen")
-#+end_src
+#+END_SRC
 
 * TODO ドキュメント書く
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   ;; -----------------------------------------------------------
   ;;; [howm]
   ;; 初期設定
@@ -111,5 +111,5 @@
     '(progn
        (define-key howm-mode-map "\C-c\C-c" nil)
        (define-key howm-mode-map "\C-x\C-z\C-c" 'howm-save-and-kill-buffer/screen)))
-#+end_src
+#+END_SRC
 

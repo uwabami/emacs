@@ -31,7 +31,7 @@
   (auto-install-from-url "https://raw.github.com/tdiary/tdiary-contrib/master/util/tdiary-mode/tdiary-mode.el")
 #+end_example
 * 設定
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (require 'tdiary-mode)
   (require 'rd-mode)
   (setq socks-server '("Default" "localhost" "1080" 5))
@@ -49,4 +49,4 @@
   (setq tdiary-text-suffix ".txt")
   (setq tdiary-text-save-p t)
   (setq tdiary-init-file "~/Documents/Dropbox/tdiary/tdiary-mode.gpg")
-#+end_src
+#+END_SRC

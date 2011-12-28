@@ -32,19 +32,19 @@
 #Code:
 
 ** 読み込み
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (eval-when-compile (require 'lookup))
   (autoload 'lookup "lookup" nil t)
   (autoload 'lookup-region "lookup" nil t)
   (autoload 'lookup-pattern "lookup" nil t)
-#+end_src
+#+END_SRC
 ** キーバインドの設定
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (global-set-key "\C-cw" 'lookup-pattern)
   (global-set-key "\C-cW" 'lookup-word)
-#+end_src
+#+END_SRC
 ** 検索エージェント, 辞書の設定
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (setq lookup-search-agents
        '(
          (ndeb "/usr/local/share/dict/eijiro" :alias "英辞郎")
@@ -58,4 +58,4 @@
          ;; (ndeb "/usr/local/share/dict/eidai6" :alias "研究社 英和大辞典")
          ;; (ndest "~/Mail/.caskets" :alias "メール全文検索")
          ))
-#+end_src
+#+END_SRC

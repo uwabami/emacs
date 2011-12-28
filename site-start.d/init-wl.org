@@ -31,25 +31,25 @@
 #+TITLE: 06. Wanderlust の設定
 
 * 読み込み
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (my:not-locate-library std11 "site-lisp/flim")
   (my:not-locate-library mime-setup "site-lisp/semi")
   (my:not-locate-library w3m-ems "site-lisp/w3m")
   (my:not-locate-library mmimap "site-lisp/wl/elmo")
   (my:not-locate-library wl "site-lisp/wl/lisp")
-#+end_src
+#+END_SRC
 * TODO HTML メールの表示設定[0/1]
    HTMLメールの表示には w3m を使う.
    - [ ] w3m-el で外部リンクを踏む際に safe にする設定が良くわからない...Orz
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (setq mime-setup-enable-inline-html t)
   (require 'mime-setup)
   (require 'w3m-ems)
   (require 'w3m-load)
   (require 'mime-w3m)
-#+end_src
+#+END_SRC
 * デフォルトのメーラを Wanderlust に変更する
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (autoload 'wl "wl" "Wanderlust" t)
   (autoload 'wl-other-frame "wl" "Wanderlust on new frame" t)
   (autoload 'wl-draft "wl-draft" "Write draft with Wanderlust." t)
@@ -64,13 +64,13 @@
       'wl-draft-send
       'wl-draft-kill
       'mail-send-hook))
-#+end_src
+#+END_SRC
 * キーバインド. F3 で Wanderlust を起動
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (global-set-key [f3] 'wl)
-#+end_src
+#+END_SRC
 * Wanderlust 本体の設定は基本外部ファイルで
    epa を有効にして gpg で暗号化したファイルを読む
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (setq wl-init-file "~/.wl/init.gpg")
-#+end_src
+#+END_SRC

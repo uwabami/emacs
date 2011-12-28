@@ -32,30 +32,30 @@
 
 ** よくある設定
 *** 初期設定
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (require 'autoinsert)
 (auto-insert-mode 1)
-#+end_src
+#+END_SRC
 *** insert 時に問い合わせない
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (setq auto-insert-query nil)
-#+end_src
+#+END_SRC
 *** テンプレートディレクトリの設定
 - テンプレートとなるファイルがあるディレクトリ
 - 末尾に"/"が必要なので注意
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (setq auto-insert-directory "~/.emacs.d/template/")
-#+end_src
+#+END_SRC
 *** add-hook
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (add-hook 'find-file-hooks 'auto-insert)
-#+end_src
+#+END_SRC
 
 ** テンプレート内の置換変数の設定/置換関数の定義
 *** 置換する変数
 - author, email, file名 を展開する
 - user-full-name, user-mail-address を設定しておくこと
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (defvar my-template-replacements-alist
   '(("%file%" .
      (lambda()
@@ -66,9 +66,9 @@
      (lambda()
        (file-name-sans-extension (file-name-nondirectory (buffer-file-name)))))
     ))
-#+end_src
+#+END_SRC
 *** 置換関数
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (defun my-template ()
   (time-stamp)
   (mapc #'(lambda(c)
@@ -78,10 +78,10 @@
            my-template-replacements-alist)
   (goto-char (point-max))
   (message "done."))
-#+end_src
+#+END_SRC
 ** TODO テンプレートの設定[0/1]
 - [ ] org の場合, ディレクトリに合わせてテンプレートを切り替えたい
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (setq auto-insert-alist
         (nconc '(
                  ("\\.el$"   . ["template.el"   my-template])
@@ -95,5 +95,5 @@
   ;;               ("\\.org$"  . ["template.org"  my-template])
                  ("\\.muse$" . ["template.muse" my-template])
                  ) auto-insert-alist))
-#+end_src
+#+END_SRC
 

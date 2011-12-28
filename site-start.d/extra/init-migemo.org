@@ -34,20 +34,20 @@
    凝った事していないけど.
 
 *** ユーザ辞書を使わない
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (setq migemo-user-dictionary nil)
   (setq migemo-regex-dictionary nil)
-#+end_src
+#+END_SRC
 *** キャッシュ機能を利用する
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (setq migemo-use-pattern-alist t)
   (setq migemo-pattern-alist-file (concat user-emacs-directory "tmp/migemo-pattern"))
   (setq migemo-use-frequent-pattern-alist t)
   (setq migemo-frequent-pattern-alist-file (concat user-emacs-directory "tmp/migemo-frequent"))
   (setq migemo-pattern-alist-length 2048)
-#+end_src
+#+END_SRC
 *** 読み込み
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (cond
    ((file-executable-p "/usr/bin/cmigemo")
     (setq migemo-command "/usr/bin/cmigemo")
@@ -60,4 +60,4 @@
     )
   (load-library "migemo")
   (migemo-init)
-#+end_src
+#+END_SRC

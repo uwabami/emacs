@@ -48,25 +48,25 @@
    ddskk 以前の古い skk が導入されている場合には
    site-lisp 以下の ddskk を load する.
 
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (my:not-locate-library skk-sticky "site-lisp/ddskk")
-#+end_src
+#+END_SRC
 
 ** 設定ファイルの置き場所の変更
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (setq skk-user-directory  (concat user-emacs-directory "etc/skk"))
-#+end_src
+#+END_SRC
 ** 設定ファイルは自動的に byte-compile
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (setq skk-byte-compile-init-file t)
-#+end_src
+#+END_SRC
 ** 読み込み
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (require 'skk-leim)
   (setq default-input-method "japanese-skk")
   (require 'skk-autoloads)
   (require 'skk-cus)
-#+end_src
+#+END_SRC
 
 残りの設定は ~/.emacs.d/etc/skk/init.el で行なっている.
 以下, 全文

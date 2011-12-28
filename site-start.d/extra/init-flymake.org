@@ -20,19 +20,19 @@
 
 ** 基本設定
 *** require
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (require 'flymake)
-#+end_src
+#+END_SRC
 *** GUI はいらない
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (setq flymake-gui-warnings-enabled nil)
-#+end_src
+#+END_SRC
 *** 全てのファイルで flymake を有効化
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (add-hook 'find-file-hook 'flymake-find-file-hook)
-#+end_src
+#+END_SRC
 ** 基本となる呼出関数
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (defun flymake-simple-generic-init (cmd &optional opts)
   (let* ((temp-file  (flymake-init-create-temp-buffer-copy
                       'flymake-create-temp-inplace))
@@ -40,9 +40,9 @@
                       temp-file
                       (file-name-directory buffer-file-name))))
     (list cmd (append opts (list local-file)))))
-#+end_src
+#+END_SRC
 ** Makefile の有無による呼出の分岐
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (defun flymake-simple-make-or-generic-init (cmd &optional opts)
   (if (file-exists-p "Makefile")
       (flymake-simple-make-init)
@@ -56,10 +56,10 @@
 (defun flymake-fortran-init ()
   (flymake-simple-make-or-generic-init
    "gfortran" '("-Wall" "-Wextra" "-pedantic" "-fsyntax-only")))
-#+end_src
+#+END_SRC
 ** 対象の追加
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (push '("\\.[cC]\\'" flymake-c-init) flymake-allowed-file-name-masks)
 (push '("\\.\\(?:cc\|cpp\|CC\|CPP\\)\\'" flymake-cc-init) flymake-allowed-file-name-masks)
 (push '("\\.\\(?:f\|f90\\)\\'" flymake-fortran-init) flymake-allowed-file-name-masks)
-#+end_src
+#+END_SRC

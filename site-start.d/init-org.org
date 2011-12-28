@@ -32,7 +32,7 @@
 
 * 基本設定
    ~/.emacs.d/init.el でも読み込んでいるけれど, ここでも有効にする.
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (require 'org-install)
   (require 'org)
   ;; 打ち切らない.
@@ -55,12 +55,12 @@
   ;;           ("Bug" ?b "** TODO %?   :bug:\n   %i\n   %a\n   %t" nil "Inbox")
   ;;           ("Idea" ?i "** %?\n   %i\n   %a\n   %t" nil "New Ideas")
   ;;           )))
-#+end_src
+#+END_SRC
 * COMMENT キーマップの設定
    デフォルトの org のキーバインドはあまりにも多くのキーバインドを書き換えるので
    かなりアレ. 必要なモンだけ有効にしておく.
    @see [[http://d.hatena.ne.jp/kitokitoki/20100430/p1][org-mode のデフォルトのキーバインドを無効にして必要なものだけ再定義する]]
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   ;; (add-hook 'org-mode-hook
   ;;   (lambda()
   ;;     ;; clear all org-map
@@ -81,16 +81,16 @@
   ;;     (define-key my-org-mode-map (kbd "C-c C-e") 'org-export)
   ;;     (define-key my-org-mode-map (kbd "C-c C-l") 'org-insert-link)
   ;; ))
-#+end_src
+#+END_SRC
 * MobileOrg の設定
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (require 'org-mobile)
   (setq org-mobile-directory "~/Documents/Dropbox/MobileOrg")
   (setq org-mobile-inbox-for-pull "~/Documents/Dropbox/org/remember.org")
-#+end_src
+#+END_SRC
 * HTML export の設定
    HTML に export する設定. Project の使い方がまだイマイチ
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   ;; HTML export の設定
   (require 'org-html)
   ;; default の style sheet は使わない
@@ -172,7 +172,7 @@
   ;; (setq auto-insert-query nil)
   ;; (setq auto-insert-alist
   ;;       '((org-mode . my-org-website-insert-skeleton-maybe)))
-#+end_src
+#+END_SRC
 
 * org2blog
   tDiaryもorgで書くようになってしまった.
@@ -184,7 +184,7 @@
   (auto-install-from-url "http://www.emacswiki.org/emacs/download/xml-rpc.el")
 #+end_example
 ** 設定
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   ;; (when (string-match "daphne" system-name)
   ;;   (my:not-locate-library org2blog "site-lisp/org2blog")
   ;;   (require 'org2blog-autoloads)
@@ -199,19 +199,19 @@
   ;;            :default-title "")))
   ;;   (setq org2blog/wp-use-tags-as-categories t)
   ;; )
-#+end_src
+#+END_SRC
 * LaTeX export の設定
 ** 日本語LaTeX用の設定
 DebianのLaTeXはまだUTF-8を処理できないので, EUC-JPでexportする.
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   ;; LaTeX export
   (require 'org-latex)
   (setq org-export-latex-coding-system 'euc-jp-unix)
   (setq org-export-latex-date-format "%Y年%m月%d日")
-#+end_src
+#+END_SRC
 ** jsarticle classの追加
    inputenc 等は読み込まないことにしてファイル毎にスタイルを設定する.
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (add-to-list 'org-export-latex-classes
                '("jsarticle"
                  "\\documentclass{jsarticle}
@@ -225,15 +225,15 @@ DebianのLaTeXはまだUTF-8を処理できないので, EUC-JPでexportする.
                  ("\\paragraph{%s}" . "\\paragraph*{%s}")
                  ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
   (setq org-export-latex-default-class "jsarticle")
-#+end_src
+#+END_SRC
 ** latexmk
    PDF作成にはlatexmkを使う
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (setq org-latex-to-pdf-process
         '("latexmk -pdfdvi %f"))
-#+end_src
+#+END_SRC
 * Beamer export の設定
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   ;; LaTeX-Beamer export
   (require 'org-beamer)
   ;; デフォルトのヘッドラインレベル -> 2
@@ -241,9 +241,9 @@ DebianのLaTeXはまだUTF-8を処理できないので, EUC-JPでexportする.
   ;; frame のオプション
   (setq org-beamer-frame-default-options "[fragile]")
   (setq org-export-with-sub-superscripts nil)
-#+end_src
+#+END_SRC
 * BibTeX連携
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (my:not-locate-library org-exp-bibtex "site-lisp/org-mode/contrib/lisp")
   (require 'org-exp-bibtex)
   (defun org-mode-reftex-setup ()
@@ -253,10 +253,10 @@ DebianのLaTeXはまだUTF-8を処理できないので, EUC-JPでexportする.
          (reftex-parse-all))
     (define-key org-mode-map (kbd "C-c [") 'reftex-citation))
   (add-hook 'org-mode-hook 'org-mode-reftex-setup)
-#+end_src
+#+END_SRC
 * Org-Babel
   ここで設定するより, 言語毎に設定した方が良い気がしてきた.
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (org-babel-do-load-languages
    'org-babel-load-languages
    '(
@@ -267,11 +267,11 @@ DebianのLaTeXはまだUTF-8を処理できないので, EUC-JPでexportする.
      (dot        . t)
      (R          . t)
      ))
-#+end_src
+#+END_SRC
 * export-generic の設定
 ** RD への export [0/1]
    - [ ] うまくいっていない. 行頭の空白をどうやって消すか
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (my:not-locate-library org-export-generic "site-lisp/org-mode/contrib/lisp")
   (require 'org-export-generic)
   (org-set-generic-type
@@ -313,4 +313,4 @@ DebianのLaTeXはまだUTF-8を処理できないので, EUC-JPでexportする.
                   :body-text-prefix    ""
                   :body-text-suffix    ""
                   ))
-#+end_src
+#+END_SRC

@@ -27,7 +27,7 @@
 
 ** 読み込み
 *** 読み込み
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (when (not (locate-library "htmlize"))
     (add-to-load-path "site-lisp/org-mode/contrib/lisp/")
     (eval-when-compile (add-to-load-path "site-lisp/org-mode/contrib/lisp/")))
@@ -42,14 +42,14 @@
   (require 'muse-project)
   (require 'muse-wiki)
   (require 'muse-colors)
-#+end_src
+#+END_SRC
 ** キーバインドの設定
 *** C-x n で project-find-file
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (define-key ctl-x-map "n" 'muse-project-find-file)
-#+end_src
+#+END_SRC
 *** outline-minor-mode を有効化して TAB に割り当て
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (add-hook 'muse-mode-hook
             (lambda ()
               (footnote-mode)
@@ -58,17 +58,17 @@
                   (define-key muse-mode-map [tab] 'outline-toggle-children)
                 (define-key muse-mode-map "\t" 'outline-toggle-children))
               ))
-#+end_src
+#+END_SRC
 ** 文字コード関連
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (setq muse-xhtml-charset-default "utf-8")
 (setq muse-html-encoding-default (quote utf-8))
 (setq muse-html-meta-content-encoding (quote utf-8))
-#+end_src
+#+END_SRC
 ** Project の定義
    cc-env にしか使わないので, その設定のみ
 *** style
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (muse-derive-style "my:cc-env" "xhtml"
                    :author "Youhei SASAKI <uwabami@gfd-dennou.org>"
                    :style-sheet "../css/cc-env.css"
@@ -77,9 +77,9 @@
                    :base-url "http://www.gfd-dennou.org/member/uwabami/cc-env/"
                    )
 (setq muse-footer-date-format "%F %H:%M:%S %Z ")
-#+end_src
+#+END_SRC
 *** Project
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (setq muse-project-alist
      '(
        ("cc-env"
@@ -87,4 +87,4 @@
         (:base "my:cc-env" :path "~/Public/cc-env")
         ))
      )
-#+end_src
+#+END_SRC

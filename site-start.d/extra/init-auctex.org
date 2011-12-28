@@ -27,22 +27,22 @@
 
 * 読み込みと基本設定
 ** 読み込み
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (load "auctex.el" nil t t)
   (load "preview-latex.el" nil t t)
-#+end_src
+#+END_SRC
 ** 基本設定
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (setq TeX-parse-self t) ; Enable parse on load.
   (setq TeX-auto-save t) ; Enable parse on save.
   (setq TeX-master t)
-#+end_src
+#+END_SRC
 * 日本語TeX用の基本設定
   (p)TeXLive2011を使っている.
   - jsartcile を基本的に使用する.
   - pxdvi で dvi を表示する.
   - PDF の表示には Okular を使用する.
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (setq TeX-default-mode 'japanese-latex-mode)
   (setq japanese-TeX-command-default "pTeX")
   (setq japanese-LaTeX-command-default "pLaTeX")
@@ -75,9 +75,9 @@
   ;; (add-hook 'TeX-mode-hook
   ;;           (function (lambda () (outline-minor-mode t))))
   ;; (add-hook 'LaTeX-mode-hook 'visual-inline-mode)
-#+end_src
+#+END_SRC
 * コマンドの追加
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (setq preview-image-type 'dvipng)
   (add-hook 'LaTeX-mode-hook 'TeX-PDF-mode)
   (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
@@ -107,19 +107,19 @@
                                      '("Okular" "okular --unique \"file:%s.pdf#src:%n %b\""
                                        TeX-run-discard-or-function t t :help "Forward search with Okular"))
                         )))
-#+end_src
+#+END_SRC
 * フォント関連
 ** サイズ可変の無効
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (setq font-latex-fontify-sectioning 1.0)
-#+end_src
+#+END_SRC
 ** 上付き, 下付きの無効化
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
 (setq font-latex-fontify-script nil)
-#+end_src
+#+END_SRC
 
 * SyncTex
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)
   (setq TeX-source-correlate-method 'synctex)
   (add-hook 'LaTeX-mode-hook '(lambda ()
@@ -134,21 +134,21 @@
                              (expand-file-name (TeX-master-directory))
                              "./"
                              (TeX-current-file-name-master-relative)))
-#+end_src
+#+END_SRC
 
 * BibTeX + Zotexo
 ** BibTeX
    日本語文献用にyomiを追加
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (setq bibtex-user-optional-fields
         '(("annote" "Personal annotation (ignored)")
           ("yomi" "Yomigana")
           ("location" "where it is (ignored)")
           ("memo" "Memorundum (ignored)")
           ))
-#+end_src
+#+END_SRC
 ** RefTeX
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (autoload 'reftex-mode     "reftex" "RefTeX Minor Mode" t)
   (autoload 'turn-on-reftex  "reftex" "RefTeX Minor Mode" nil)
   (autoload 'reftex-citation "reftex-cite" "Make citation" nil)
@@ -160,7 +160,7 @@
   (setq reftex-save-parse-info t)
   (setq reftex-use-multiple-selection-buffers t)
   (setq reftex-plug-into-AUCTeX t)
-#+end_src
+#+END_SRC
 ** zotexo.el
    Firefox の Pluginのひとつである Zotero を使って
    BibTeX情報を更新する.
@@ -169,8 +169,8 @@
 (auto-install-from-url "https://zotexo.googlecode.com/svn/trunk/zotexo.el")
 #+end_example
 *** 設定
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (require 'zotexo)
   (add-hook 'LaTeX-mode-hook 'zotexo-minor-mode)
   (setq zotexo--auto-update-is-on t)
-#+end_src
+#+END_SRC

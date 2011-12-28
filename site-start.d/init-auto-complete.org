@@ -32,58 +32,58 @@
 
 * 読み込み
    Debian パッケージがある場合はそれを読む
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (my:not-locate-library auto-complete "site-lisp/auto-complete-el")
   (require 'auto-complete)
-#+end_src
+#+END_SRC
 * 初期設定
 ** 全てのモードで補完を有効に
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (global-auto-complete-mode t)
-#+end_src
+#+END_SRC
 ** 自動起動の停止
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (setq ac-auto-start nil)
-#+end_src
+#+END_SRC
 ** キー設定
     M-Tab に割り当て
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (define-key ac-mode-map (kbd "M-TAB") 'auto-complete)
-#+end_src
+#+END_SRC
     補完メニュー表示時には C-n/C-p で選択
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (setq ac-use-menu-map t)
   (define-key ac-menu-map "\C-n" 'ac-next)
   (define-key ac-menu-map "\C-p" 'ac-previous)
   (define-key ac-completing-map (kbd "C-m") 'ac-complete)
   (define-key ac-completing-map (kbd "M-/") 'ac-stop)
-#+end_src
+#+END_SRC
 ** 表示関連
     待ち時間を長めに
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (setq ac-delay 0.2)
-#+end_src
+#+END_SRC
     補完候補をソート
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (setq ac-use-comphist t)
-#+end_src
+#+END_SRC
     補完候補の表示件数を無制限に(デフォルト10件)
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (setq ac-candidate-limit nil)
-#+end_src
+#+END_SRC
     クイックヘルプが表示されるとバッファが大きく変更される場合がるので停止
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (setq ac-use-quick-help nil)
-#+end_src
+#+END_SRC
     補完推測
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (setq ac-use-comphist nil)
-#+end_src
+#+END_SRC
 ** ヒストリ置き場の変更
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (setq ac-comphist-file (concat user-emacs-directory "tmp/ac-comphist.dat"))
-#+end_src
+#+END_SRC
 * flyspell-mode 用の work around
-#+begin_src emacs-lisp
+#+BEGIN_SRC emacs-lisp
   (ac-flyspell-workaround)
-#+end_src
+#+END_SRC

@@ -2,7 +2,7 @@
 # init-org.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/12/22 00:38:59$
+# $Lastupdate: 2012/01/02 19:02:49$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -56,7 +56,16 @@
   ;;           ("Idea" ?i "** %?\n   %i\n   %a\n   %t" nil "New Ideas")
   ;;           )))
 #+END_SRC
-* COMMENT キーマップの設定
+
+* 補完の追加
+  githubはコードブロックを大文字で認識するので, <s ブロック補完を大文字に.
+#+BEGIN_SRC emacs-lisp
+  (add-to-list 'org-structure-template-alist
+               '(
+                 ("s" "#+BEGIN_SRC ?\n\n#+END_SRC"
+                    "<src lang=\"?\">\n\n</src>")))
+#+END_SRC
+* キーマップの設定
    デフォルトの org のキーバインドはあまりにも多くのキーバインドを書き換えるので
    かなりアレ. 必要なモンだけ有効にしておく.
    @see [[http://d.hatena.ne.jp/kitokitoki/20100430/p1][org-mode のデフォルトのキーバインドを無効にして必要なものだけ再定義する]]

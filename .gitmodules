@@ -28,3 +28,6 @@
 [submodule "site-lisp/text-translator-el"]
 	path = site-lisp/text-translator-el
 	url = https://github.com/uwabami/text-translator-el.git
+[submodule "site-lisp/gnus"]
+	path = site-lisp/gnus
+	url = http://git.gnus.org/gnus.git

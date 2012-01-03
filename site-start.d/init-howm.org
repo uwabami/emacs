@@ -3,7 +3,7 @@
 #+begin_quote
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/12/02 08:36:56$
+# $Lastupdate: 2012/01/03 09:46:41$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 #
@@ -53,7 +53,8 @@
   (setq howm-menu-refresh-after-save nil)
   (setq howm-refresh-after-save nil)
   ;; title header を org に揃える
-  (setq howm-view-title-header "*")
+  (setq howm-view-title-header "=")
+  ;; (setq howm-view-title-header "*")
   ;; (setq dired-bind-jump nil)
   ;; \C-x\C-z を使う -> org-mode と被るから.
   (global-unset-key "\C-x\C-z")
@@ -75,7 +76,7 @@
   ;; howm のテンプレートのカスタマイズ
   (setq howm-template-date-format "[%Y-%m-%d %H:%M:%S]")
   (setq howm-template-file-format "==>%s")
-  (setq howm-template "%date%file\n* %cursor\n\n")
+  (setq howm-template "%date%file\n= %cursor\n\n")
   ;; \C-x m で howm-create(clmemo 風)
   (define-key ctl-x-map "m" 'howm-create)
   ;; 全文検索の対象ディレクトリ<- 追加しない
@@ -83,7 +84,7 @@
   ;; 検索対象除外ファイル
   ;; (setq howm-excluded-file-regexp
   ;;       "/\\.#\\|[~#]$\\|\\.bak$\\|/CVS/\\|\\.doc$\\|\\.pdf$\\|\\.ppt$\\|\\.xls\\|\\.howm-menu\\|.howm-keys$|\\.png$\\|\\.gif$\\|\\.tif$\\|\\.tiff$\\|\\.jpg\\|\\.jpeg")
-  ;; (setq howm-view-use-grep nil)
+  ;; (setq howm-view-use-grep t)
   ;; grep の設定
   (setq howm-view-grep-command "egrep")
   (setq howm-view-fgrep-command "fgrep")

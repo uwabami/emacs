@@ -2,7 +2,7 @@
 # init-org.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/01/02 19:02:49$
+# $Lastupdate: 2012/01/03 08:51:20$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -58,12 +58,11 @@
 #+END_SRC
 
 * 補完の追加
-  githubはコードブロックを大文字で認識するので, <s ブロック補完を大文字に.
+  githubはコードブロックを大文字で認識するので, <s を大文字に
 #+BEGIN_SRC emacs-lisp
   (add-to-list 'org-structure-template-alist
-               '(
-                 ("s" "#+BEGIN_SRC ?\n\n#+END_SRC"
-                    "<src lang=\"?\">\n\n</src>")))
+               '("s" "#+BEGIN_SRC ?\n\n#+END_SRC"
+                     "<src lang=\"?\">\n\n</src>"))
 #+END_SRC
 * キーマップの設定
    デフォルトの org のキーバインドはあまりにも多くのキーバインドを書き換えるので
@@ -112,8 +111,9 @@
   ;; バックアップファイルを作成しない
   (setq make-backup-files nil)
   ;; cache の置き場所を ~/.emacs.d/tmp/org-timestamps/ に変える
-  (setq org-publish-timestamp-directory
-        (convert-standard-filename (concat user-emacs-directory "tmp/org-timestamps/")))
+  ;; (setq org-publish-timestamp-directory
+  ;;       (convert-standard-filename (concat user-emacs-directory "tmp/org-timestamps/")))
+  (setq org-publish-use-timestamps-flag nil)
   ;; project の設定
   (setq org-publish-project-alist
         '(
@@ -183,32 +183,6 @@
   ;;       '((org-mode . my-org-website-insert-skeleton-maybe)))
 #+END_SRC
 
-* org2blog
-  tDiaryもorgで書くようになってしまった.
-** 導入
-   org2blog と xml-rpc が必要.
-   前者は github を submodule として登録しておく.
-   後者は emacswiki から.
-#+begin_example
-  (auto-install-from-url "http://www.emacswiki.org/emacs/download/xml-rpc.el")
-#+end_example
-** 設定
-#+BEGIN_SRC emacs-lisp
-  ;; (when (string-match "daphne" system-name)
-  ;;   (my:not-locate-library org2blog "site-lisp/org2blog")
-  ;;   (require 'org2blog-autoloads)
-  ;;   (require 'netrc)
-  ;;   (setq blog (netrc-machine (netrc-parse "~/.xmlrpc.gpg") "uwabami.junkhub.org" t))
-  ;;   (setq org2blog/wp-blog-alist
-  ;;         '(("log"
-  ;;            :url "http://uwabami.junkhub.org/log/xmlrpc.rb"
-  ;;            :username (netrc-get blog "login")
-  ;;            :password (netrc-get blog "password")
-  ;;            :default-categories ("Emacs")
-  ;;            :default-title "")))
-  ;;   (setq org2blog/wp-use-tags-as-categories t)
-  ;; )
-#+END_SRC
 * LaTeX export の設定
 ** 日本語LaTeX用の設定
 DebianのLaTeXはまだUTF-8を処理できないので, EUC-JPでexportする.
@@ -322,4 +296,30 @@ DebianのLaTeXはまだUTF-8を処理できないので, EUC-JPでexportする.
                   :body-text-prefix    ""
                   :body-text-suffix    ""
                   ))
+#+END_SRC
+* org2blog      :noexports:
+  tDiaryもorgで書くようになってしまった.
+** 導入
+   org2blog と xml-rpc が必要.
+   前者は github を submodule として登録しておく.
+   後者は emacswiki から.
+#+begin_example
+  (auto-install-from-url "http://www.emacswiki.org/emacs/download/xml-rpc.el")
+#+end_example
+** 設定
+#+BEGIN_SRC emacs-lisp
+  ;; (when (string-match "daphne" system-name)
+  ;;   (my:not-locate-library org2blog "site-lisp/org2blog")
+  ;;   (require 'org2blog-autoloads)
+  ;;   (require 'netrc)
+  ;;   (setq blog (netrc-machine (netrc-parse "~/.xmlrpc.gpg") "uwabami.junkhub.org" t))
+  ;;   (setq org2blog/wp-blog-alist
+  ;;         '(("log"
+  ;;            :url "http://uwabami.junkhub.org/log/xmlrpc.rb"
+  ;;            :username (netrc-get blog "login")
+  ;;            :password (netrc-get blog "password")
+  ;;            :default-categories ("Emacs")
+  ;;            :default-title "")))
+  ;;   (setq org2blog/wp-use-tags-as-categories t)
+  ;; )
 #+END_SRC

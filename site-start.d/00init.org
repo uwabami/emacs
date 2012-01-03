@@ -2,7 +2,7 @@
 # 00init.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/12/28 20:15:50$
+# $Lastupdate: 2012/01/03 14:08:46$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -508,8 +508,8 @@
 ** MUA の設定
    Wanderlust 愛用中. Wanderlust の無い環境用に gnus も設定しておく.
 #+BEGIN_SRC emacs-lisp
-  ;; (my:load-org-file "init-gnus.org")
   (my:load-org-file "init-wl.org")
+  ;; (my:load-org-file "init-gnus.org")
 #+END_SRC
 ** elscreen
    emacs 内で GNU screen っぽくする emacs-lisp. 残念ながら, Debian

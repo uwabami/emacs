@@ -2,7 +2,7 @@
 # init-org.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/01/03 08:51:20$
+# $Lastupdate: 2012/01/04 18:12:42$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -39,6 +39,8 @@
   (setq org-startup-truncated nil)
   ;; ファイルを開く時は項目を折り畳んだ状態にする
   (setq org-startup-folded t)
+  ;; 開いた時に画像を inline で表示しない
+  (setq org-startup-with-inline-images nil)
   ;; link を return で追う
   (setq org-retrun-follows-link t)
   ;; フォントロックを有効に
@@ -239,6 +241,7 @@ DebianのLaTeXはまだUTF-8を処理できないので, EUC-JPでexportする.
 #+END_SRC
 * Org-Babel
   ここで設定するより, 言語毎に設定した方が良い気がしてきた.
+*** org-babel で使う言語の設定
 #+BEGIN_SRC emacs-lisp
   (org-babel-do-load-languages
    'org-babel-load-languages
@@ -249,7 +252,13 @@ DebianのLaTeXはまだUTF-8を処理できないので, EUC-JPでexportする.
      (ditaa      . t)
      (dot        . t)
      (R          . t)
+     (gnuplot    . t)
      ))
+#+END_SRC
+*** org-babel のオプション
+    block の評価時に問い合わせない
+#+BEGIN_SRC emacs-lisp
+  (setq org-confirm-babel-evaluate nil)
 #+END_SRC
 * export-generic の設定
 ** RD への export [0/1]

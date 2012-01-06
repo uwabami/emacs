@@ -2,7 +2,7 @@
 # init-frame.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/12/02 01:11:27$
+# $Lastupdate: 2012/01/06 15:33:31$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -53,15 +53,12 @@ color-theme では透過色のターミナルで作業することを考えて,
                     (if (> op 90) 100 (+ op 10)))
                    ((eq action 'down)
                     (if (> 10 op) 10 (- op 10)))
-                   ((eq action 'clear)
-                    100)
-                   ((numberp action)
-                    action)
-                   (t
-                    nil)))
+                   ((eq action 'clear) 100)
+                   ((numberp action) action)
+                   (t nil)))
         (set-frame-parameter (selected-frame) 'alpha val))))
   (when window-system
-    (my-opacity-change 90)     ; default の透明度は 85 に
+    (my-opacity-change 90)     ; default の透明度は 90 に
     )
 #+END_SRC
 ** フォント設定
@@ -81,10 +78,6 @@ color-theme では透過色のターミナルで作業することを考えて,
                      ))
     (set-fontset-font "fontset-ricty"
                       charset
-                      (font-spec
-                       :family "Ricty"
-                       :size 13.5
-                      nil
-                      'prepend)))
+                      (font-spec :family "Ricty" :size 13.5 nil 'prepend)))
   (add-to-list 'default-frame-alist '(font ."fontset-ricty"))
 #+END_SRC

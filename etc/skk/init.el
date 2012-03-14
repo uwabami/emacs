@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8-unix; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright (C) 2010-2011  Youhei SASAKI
-;; $Lastupdate: 2011/11/29 15:39:14$
+;; $Lastupdate: 2012/02/16 17:44:57$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; Keywords:

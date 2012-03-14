@@ -2,7 +2,7 @@
 # init-frame.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/01/06 15:33:31$
+# $Lastupdate: 2012/03/15 06:30:18$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -64,7 +64,7 @@ color-theme では透過色のターミナルで作業することを考えて,
 ** フォント設定
    Ricty を使用することにする(Ricty の無い環境はとりあえず考えていない).
 #+BEGIN_SRC emacs-lisp
-  (create-fontset-from-ascii-font "Ricty-13.5" nil "ricty")
+  (create-fontset-from-ascii-font "Ricty-18" nil "ricty")
   (dolist (charset '(
                      unicode
                      japanese-jisx0208
@@ -78,6 +78,8 @@ color-theme では透過色のターミナルで作業することを考えて,
                      ))
     (set-fontset-font "fontset-ricty"
                       charset
-                      (font-spec :family "Ricty" :size 13.5 nil 'prepend)))
+                      (font-spec :family "Ricty" :size 18 nil 'prepend)))
   (add-to-list 'default-frame-alist '(font ."fontset-ricty"))
+  (custom-set-faces
+   '(variable-pitch ((t (:family "Ricty" :size 18 nil 'prepend)))))
 #+END_SRC

@@ -2,7 +2,7 @@
 # init-e2wm.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/11/28 21:25:04$
+# $Lastupdate: 2012/03/15 06:57:18$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -32,15 +32,14 @@
 
 * はじめに
 
-あとで書く
+あとで書くことに.
+
+- [[http://d.hatena.ne.jp/kiwanami/20100528/1275038929][広くなった画面を有効利用できる、Emacs内Window管理ツール e2wm.el を作ってみた。]]
 
 * 読み込み
 
 今のところ読み込んだだけ.
-
 キーバインドなんかも e2wm-config で提供されているものをそのまま使う事にしてみる.
-
-
 #+BEGIN_SRC emacs-lisp
   (my:not-locate-library window-layout "site-lisp/emacs-window-layout")
   (my:not-locate-library e2wm-config "site-lisp/emacs-window-manager")

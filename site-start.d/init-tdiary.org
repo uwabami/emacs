@@ -3,7 +3,7 @@
 #+begin_quote
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/12/22 01:16:51$
+# $Lastupdate: 2012/02/21 01:56:11$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 #
@@ -46,7 +46,7 @@
   (setq tdiary-style-mode 'rd-mode)
   ;; (setq tdiary-passwd-cache t)
   (setq tdiary-hour-offset 2)
-  (setq tdiary-text-suffix ".txt")
+  (setq tdiary-text-suffix ".rd")
   (setq tdiary-text-save-p t)
   (setq tdiary-init-file "~/Documents/Dropbox/tdiary/tdiary-mode.gpg")
 #+END_SRC

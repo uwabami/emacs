@@ -2,7 +2,7 @@
 # init-org.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/01/04 18:12:42$
+# $Lastupdate: 2012/02/16 18:18:07$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -98,93 +98,6 @@
   (setq org-mobile-directory "~/Documents/Dropbox/MobileOrg")
   (setq org-mobile-inbox-for-pull "~/Documents/Dropbox/org/remember.org")
 #+END_SRC
-* HTML export の設定
-   HTML に export する設定. Project の使い方がまだイマイチ
-#+BEGIN_SRC emacs-lisp
-  ;; HTML export の設定
-  (require 'org-html)
-  ;; default の style sheet は使わない
-  (setq org-export-html-style-include-default nil)
-  ;; -----------------------------------------------------------
-  ;;; Website 用の org file の置き場所
-  ;; @see http://orgmode.org/worg/org-tutorials/org-publish-html-tutorial.html
-  (require 'org-publish)
-  ;;
-  ;; バックアップファイルを作成しない
-  (setq make-backup-files nil)
-  ;; cache の置き場所を ~/.emacs.d/tmp/org-timestamps/ に変える
-  ;; (setq org-publish-timestamp-directory
-  ;;       (convert-standard-filename (concat user-emacs-directory "tmp/org-timestamps/")))
-  (setq org-publish-use-timestamps-flag nil)
-  ;; project の設定
-  (setq org-publish-project-alist
-        '(
-          ("emacs-setup"
-           :base-directory "~/.emacs.d/site-start.d/"
-           :exclude ".*\.el|^Makefile|.*\.gpg|sitemap\.org"
-           :base-extension "org"
-           :publishing-directory "~/Public/cc-env/Emacs/"
-           :recursive nil
-           :publish-function org-publish-org-to-html
-           :auto-sitemap t
-           :sitemap-filename "sitemap.org"
-           :sitemap-title "sitemap"
-           :headline-levels 2
-           :auto-preamble t
-           )
-          ("web-org"
-           :base-directory "~/Public/org/src/"
-           :exclude "^menu.*\.org\\|cc-env\\|css\\|img\\|.*\.pdf\\|.*\.tex"
-           :base-extension "org"
-           :publishing-directory "~/Public/"
-           :recursive t
-           :publish-function org-publish-org-to-html
-           :headline-levels 2
-           :html-postamble auto  ;; default
-           :auto-preamble t
-           )
-          ("web"
-           :components ("web-org" "Emacs"))
-          ))
-  ;; ;;; insert skelton and export config files
-  ;; ;;
-  ;; ;; @see http://thenybble.de/projects/orgsite.html
-  ;; ;;
-  ;; (defvar my-website-base-dir "~/Public/org/src" "Base directory of Website")
-  ;; (defvar my-website-config-name "export-config-")
-  ;; (setq my-website-base-dir (expand-file-name "~/Public/org/src"))
-  ;; (defun my-repeat-string (str times)
-  ;;   (with-output-to-string
-  ;;     (dotimes (i times)
-  ;;       (princ str))))
-  ;; (defun my-get-nesting-depth (filename basename)
-  ;;   (with-temp-buffer
-  ;;     (insert (file-relative-name filename basename))
-  ;;     (goto-line 0)
-  ;;     (count-matches "/")))
-  ;; (defun my-make-website-conf-path (filename)
-  ;;   (let ((nesting-level (my-get-nesting-depth filename my-website-base-dir)))
-  ;;     (concat (my-repeat-string "../" (+ nesting-level 1))
-  ;;             my-website-config-name (int-to-string nesting-level) ".org")))
-  ;; (define-skeleton my-org-website-skeleton "" "Enter Title: "
-  ;;   "#+TITLE: " str ?\n
-  ;;   "#+SETUPFILE: "
-  ;;   (my-make-website-conf-path (buffer-file-name)) ?\n
-  ;;   "#+INCLUDE: "
-  ;;   (my-make-website-conf-path (buffer-file-name)) ?\n ?\n
-  ;;   "* " _ )
-  ;; (defun my-org-website-insert-skeleton-maybe ()
-  ;;   (if (and (buffer-file-name)
-  ;;            (not (file-remote-p (buffer-file-name)))
-  ;;            (string-match (concat "^" my-website-base-dir)
-  ;;                          (expand-file-name (buffer-file-name))))
-  ;;       (my-org-website-skeleton)))
-  ;; (add-hook 'find-file-hook 'auto-insert)
-  ;; (setq auto-insert-query nil)
-  ;; (setq auto-insert-alist
-  ;;       '((org-mode . my-org-website-insert-skeleton-maybe)))
-#+END_SRC
-
 * LaTeX export の設定
 ** 日本語LaTeX用の設定
 DebianのLaTeXはまだUTF-8を処理できないので, EUC-JPでexportする.
@@ -260,7 +173,95 @@ DebianのLaTeXはまだUTF-8を処理できないので, EUC-JPでexportする.
 #+BEGIN_SRC emacs-lisp
   (setq org-confirm-babel-evaluate nil)
 #+END_SRC
-* export-generic の設定
+* HTML export の設定
+  org-jekyll で管理する．
+#+BEGIN_SRC emacs-lisp
+  ;; org-jekyll の読み込み
+  ;; (my:not-locate-library org-jekyll "site-lisp/org-jekyll")
+  ;; HTML export の設定
+  (require 'org-html)
+  ;; default の style sheet は使わない
+  (setq org-export-html-style-include-default nil)
+  ;; -----------------------------------------------------------
+  ;;; Website 用の org file の置き場所
+  ;; @see http://orgmode.org/worg/org-tutorials/org-publish-html-tutorial.html
+  ;; (require 'org-publish)
+  ;;
+  ;; バックアップファイルを作成しない
+  (setq make-backup-files nil)
+  ;; cache の置き場所を ~/.emacs.d/tmp/org-timestamps/ に変える
+  ;; (setq org-publish-timestamp-directory
+  ;;       (convert-standard-filename (concat user-emacs-directory "tmp/org-timestamps/")))
+  (setq org-publish-use-timestamps-flag nil)
+  ;; project の設定
+  (setq org-publish-project-alist
+        '(
+          ("emacs-setup"
+           :base-directory "~/.emacs.d/site-start.d/"
+           :exclude ".*\.el|^Makefile|.*\.gpg|sitemap\.org"
+           :base-extension "org"
+           :publishing-directory "~/Public/cc-env/Emacs/"
+           :recursive nil
+           :publish-function org-publish-org-to-html
+           :auto-sitemap t
+           :sitemap-filename "sitemap.org"
+           :sitemap-title "sitemap"
+           :headline-levels 2
+           :auto-preamble t
+           )
+          ("web-org"
+           :base-directory "~/Public/org/"
+           :exclude "^menu.*\.org\\|cc-env\\|css\\|img\\|.*\.pdf\\|.*\.tex"
+           :base-extension "org"
+           :publishing-directory "~/Public/"
+           :recursive t
+           :publish-function org-publish-org-to-html
+           :headline-levels 2
+           :html-postamble auto  ;; default
+           :auto-preamble t
+           )
+          ("web"
+           :components ("web-org" "Emacs"))
+          ))
+  ;; ;;; insert skelton and export config files
+  ;; ;;
+  ;; ;; @see http://thenybble.de/projects/orgsite.html
+  ;; ;;
+  ;; (defvar my-website-base-dir "~/Public/org/src" "Base directory of Website")
+  ;; (defvar my-website-config-name "export-config-")
+  ;; (setq my-website-base-dir (expand-file-name "~/Public/org/src"))
+  ;; (defun my-repeat-string (str times)
+  ;;   (with-output-to-string
+  ;;     (dotimes (i times)
+  ;;       (princ str))))
+  ;; (defun my-get-nesting-depth (filename basename)
+  ;;   (with-temp-buffer
+  ;;     (insert (file-relative-name filename basename))
+  ;;     (goto-line 0)
+  ;;     (count-matches "/")))
+  ;; (defun my-make-website-conf-path (filename)
+  ;;   (let ((nesting-level (my-get-nesting-depth filename my-website-base-dir)))
+  ;;     (concat (my-repeat-string "../" (+ nesting-level 1))
+  ;;             my-website-config-name (int-to-string nesting-level) ".org")))
+  ;; (define-skeleton my-org-website-skeleton "" "Enter Title: "
+  ;;   "#+TITLE: " str ?\n
+  ;;   "#+SETUPFILE: "
+  ;;   (my-make-website-conf-path (buffer-file-name)) ?\n
+  ;;   "#+INCLUDE: "
+  ;;   (my-make-website-conf-path (buffer-file-name)) ?\n ?\n
+  ;;   "* " _ )
+  ;; (defun my-org-website-insert-skeleton-maybe ()
+  ;;   (if (and (buffer-file-name)
+  ;;            (not (file-remote-p (buffer-file-name)))
+  ;;            (string-match (concat "^" my-website-base-dir)
+  ;;                          (expand-file-name (buffer-file-name))))
+  ;;       (my-org-website-skeleton)))
+  ;; (add-hook 'find-file-hook 'auto-insert)
+  ;; (setq auto-insert-query nil)
+  ;; (setq auto-insert-alist
+  ;;       '((org-mode . my-org-website-insert-skeleton-maybe)))
+#+END_SRC
+* export-generic の設定 :noexports:
 ** RD への export [0/1]
    - [ ] うまくいっていない. 行頭の空白をどうやって消すか
 #+BEGIN_SRC emacs-lisp

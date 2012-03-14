@@ -2,7 +2,7 @@
 #+begin_quote
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/12/02 16:01:49$
+# $Lastupdate: 2012/03/04 12:23:25$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 #
@@ -50,7 +50,6 @@
 #+BEGIN_SRC emacs-lisp
 (add-hook 'find-file-hooks 'auto-insert)
 #+END_SRC
-
 ** テンプレート内の置換変数の設定/置換関数の定義
 *** 置換する変数
 - author, email, file名 を展開する
@@ -86,7 +85,7 @@
         (nconc '(
                  ("\\.el$"   . ["template.el"   my-template])
                  ("\\.rb$"   . ["template.rb"   my-template])
-                 ("\\.rab$"  . ["template.rab"  my-template])
+                 ("\\.rbt$"  . ["template.rbt"  my-template])
                  ("\\.zsh$"  . ["template.zsh"  my-template])
                  ("\\.sh$"   . ["template.sh"   my-template])
                  ("\\.f90$"  . ["template.f90"  my-template])

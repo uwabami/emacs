@@ -2,7 +2,7 @@
 # init-auto-install.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/12/24 20:43:03$
+# $Lastupdate: 2012/03/15 06:43:36$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -226,3 +226,4 @@
   ;; (autoload 'id-manager "id-manager" nil t)
   ;; (global-set-key (kbd "M-7") 'id-manager)
 #+END_SRC
+

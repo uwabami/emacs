@@ -3,7 +3,7 @@
 #+begin_quote
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/12/07 05:57:00$
+# $Lastupdate: 2012/01/12 17:27:57$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 #

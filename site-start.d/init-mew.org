@@ -2,7 +2,7 @@
 # init-wl.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/02/17 10:29:31$
+# $Lastupdate: 2012/01/24 09:32:20$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -28,41 +28,31 @@
 #
 #+SETUPFILE: ~/.emacs.d/template/org/level-2.org
 #+INCLUDE: ~/.emacs.d/template/org/menu-level-2.org
-#+TITLE: 06. Wanderlust の設定
-
-* TODO HTML メールの表示設定[0/1]
-   HTMLメールの表示には w3m を使う.
-   - [ ] w3m-el で外部リンクを踏む際に safe にする設定が良くわからない...Orz
+#+TITLE: Mew の設定
+* MUA の設定
 #+BEGIN_SRC emacs-lisp
-  (setq mime-setup-enable-inline-html t)
-  (require 'mime-setup)
-  (require 'w3m-ems)
-  (require 'w3m-load)
-  (require 'mime-w3m)
-#+END_SRC
-* デフォルトのメーラを Wanderlust に変更する
-#+BEGIN_SRC emacs-lisp
-  (autoload 'wl "wl" "Wanderlust" t)
-  (autoload 'wl-other-frame "wl" "Wanderlust on new frame" t)
-  (autoload 'wl-draft "wl-draft" "Write draft with Wanderlust." t)
+  (autoload 'mew "mew" nil t)
+  (autoload 'mew-send "mew" nil t)
+  ;; Optional setup (Read Mail menu):
+  (setq read-mail-command 'mew)
+  ;; Optional setup (e.g. C-xm for sending a message):
+  (autoload 'mew-user-agent-compose "mew" nil t)
   (if (boundp 'mail-user-agent)
-      (setq mail-user-agent 'wl-user-agent))
-  (if (boundp 'read-mail-command)
-    (setq read-mail-command 'wl))
+      (setq mail-user-agent 'mew-user-agent))
   (if (fboundp 'define-mail-user-agent)
-    (define-mail-user-agent
-      'wl-user-agent
-      'wl-user-agent-compose
-      'wl-draft-send
-      'wl-draft-kill
-      'mail-send-hook))
+      (define-mail-user-agent
+        'mew-user-agent
+        'mew-user-agent-compose
+        'mew-draft-send-message
+        'mew-draft-kill
+        'mew-send-hook))
 #+END_SRC
-* キーバインド. F3 で Wanderlust を起動
+* キーバインド. F3 で Mewを起動
 #+BEGIN_SRC emacs-lisp
-  (global-set-key [f3] 'wl)
+  (global-set-key [f3] 'mew)
 #+END_SRC
-* Wanderlust 本体の設定は基本外部ファイルで
-   epa を有効にして gpg で暗号化したファイルを読む
+* 設定ファイルの位置の変更
+  epa を有効にして, gpg で暗号化した設定ファイルを読み込む
 #+BEGIN_SRC emacs-lisp
-  (setq wl-init-file "~/.wl/init.gpg")
+  (setq mew-rc-file "~/.mew.el.gpg")
 #+END_SRC

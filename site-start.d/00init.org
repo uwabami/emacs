@@ -2,7 +2,7 @@
 # 00init.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/01/03 14:08:46$
+# $Lastupdate: 2012/03/15 06:45:32$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -510,6 +510,7 @@
 #+BEGIN_SRC emacs-lisp
   (my:load-org-file "init-wl.org")
   ;; (my:load-org-file "init-gnus.org")
+  ;; (my:load-org-file "init-mew.org")
 #+END_SRC
 ** elscreen
    emacs 内で GNU screen っぽくする emacs-lisp. 残念ながら, Debian
@@ -617,6 +618,10 @@
 *** [[file:init-frame.org][GUI環境でのフォントとフレームの設定]]
 #+BEGIN_SRC emacs-lisp
   (when window-system (my:load-org-file "init-frame.org"))
+#+END_SRC
+** e2wm
+#+BEGIN_SRC emacs-lisp
+  (my:load-org-file "init-e2wm.org")
 #+END_SRC
 ** [[file:init-migemo.org][migemo の設定]]
    ローマ字でかなと漢字を incremental search する migemo の設定.

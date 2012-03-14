@@ -19,15 +19,15 @@
 [submodule "site-lisp/color-theme-darkpastel"]
 	path = site-lisp/color-theme-darkpastel
 	url = https://github.com/uwabami/color-theme-darkpastel.git
+[submodule "site-lisp/text-translator-el"]
+	path = site-lisp/text-translator-el
+	url = https://github.com/uwabami/text-translator-el.git
+[submodule "site-lisp/org-jekyll"]
+	path = site-lisp/org-jekyll
+	url = git://github.com/juanre/org-jekyll.git
 [submodule "site-lisp/emacs-window-manager"]
 	path = site-lisp/emacs-window-manager
 	url = https://github.com/uwabami/emacs-window-manager.git
 [submodule "site-lisp/emacs-window-layout"]
 	path = site-lisp/emacs-window-layout
 	url = https://github.com/uwabami/emacs-window-layout.git
-[submodule "site-lisp/text-translator-el"]
-	path = site-lisp/text-translator-el
-	url = https://github.com/uwabami/text-translator-el.git
-[submodule "site-lisp/gnus"]
-	path = site-lisp/gnus
-	url = http://git.gnus.org/gnus.git

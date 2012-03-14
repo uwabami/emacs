@@ -50,8 +50,14 @@
                                    '("pLaTeX" "platex -src-specials %t"
                                      TeX-run-TeX nil (latex-mode) :help "Run e-pLaTeX"))
                       (add-to-list 'TeX-command-list
+                                   '("pLaTeX(euc)" "platex -src-specials --kanji=euc %t"
+                                     TeX-run-TeX nil (latex-mode) :help "Run e-pLaTeX(euc)"))
+                      (add-to-list 'TeX-command-list
                                    '("pdfpLaTeX" "platex -synctex=1 %t && dvipdfmx %d"
                                      TeX-run-TeX nil (latex-mode) :help "Run e-pLaTeX and dvipdfmx"))
+                      (add-to-list 'TeX-command-list
+                                   '("pdfpLaTeX(euc)" "platex --kanji=euc -synctex=1 %t && dvipdfmx %d"
+                                     TeX-run-TeX nil (latex-mode) :help "Run e-pLaTeX(euc) and dvipdfmx"))
                       (add-to-list 'TeX-command-list
                                    '("pdfpLaTeX2" "platex -synctex=1 %t && dvips -Ppdf -t a4 -z -f %d | convbkmk -g > %f && ps2pdf %f"
                                      TeX-run-TeX nil (latex-mode) :help "Run e-pLaTeX, dvips, and ps2pdf"))

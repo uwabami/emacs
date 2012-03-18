@@ -1,8 +1,8 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
-# init-auto-complete.org
+# auto-complete.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2011/12/16 19:21:32$
+# $Lastupdate: 2012/03/15 15:14:16$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -33,8 +33,10 @@
 * 読み込み
    Debian パッケージがある場合はそれを読む
 #+BEGIN_SRC emacs-lisp
-  (my:not-locate-library auto-complete "site-lisp/auto-complete-el")
-  (require 'auto-complete)
+  (my:not-locate-library auto-complete-config "site-lisp/auto-complete-el")
+  (require 'auto-complete-config)
+  (add-to-list 'ac-dictionary-directories "~/.emacs.d/share/ac-dict")
+  (ac-config-default)
 #+END_SRC
 * 初期設定
 ** 全てのモードで補完を有効に

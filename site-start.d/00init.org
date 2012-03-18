@@ -466,7 +466,7 @@
   外部ファイルの設定を読み込んでいるモン, など.
 ** auto-complete
 #+BEGIN_SRC emacs-lisp
-  (my:load-org-file "init-auto-complete.org")
+  (my:load-org-file "auto-complete.org")
 #+END_SRC
 ** [[http://d.hatena.ne.jp/khiker/20070503/emacs_text_translator][Emacs でテキスト翻訳をする elisp]]. その名も text-translator-el.
 #+BEGIN_SRC emacs-lisp
@@ -525,6 +525,7 @@
     )
   (setq elscreen-tab-display-kill-screen nil)
   (require 'elscreen)
+  (my:not-locate-library elscreen-dired-enhance "local-lisp")
 #+END_SRC
    zsh 連携用の関数の追加
    [[http://d.hatena.ne.jp/syohex/20111026/1319606395][cdeを改良]] 参照.

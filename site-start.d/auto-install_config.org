@@ -1,8 +1,8 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
-# init-auto-install.org
+# auto-install_config.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/15 06:43:36$
+# $Lastupdate: 2012/03/21 00:58:42$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -193,7 +193,6 @@
 #+begin_example
 (auto-install-from-url "https://gist.github.com/raw/762297/b2a27ccd471a21e30dd82b3adb126b8caed41548/popup-color-at-point.el")
 #+end_example
-
 ** 設定
 #+BEGIN_SRC emacs-lisp
   (my:not-locate-library popup "site-lisp/auto-complete-el")

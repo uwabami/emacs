@@ -2,7 +2,7 @@
 # init-wl.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/02/17 10:29:31$
+# $Lastupdate: 2012/03/19 17:04:54$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -30,16 +30,6 @@
 #+INCLUDE: ~/.emacs.d/template/org/menu-level-2.org
 #+TITLE: 06. Wanderlust の設定
 
-* TODO HTML メールの表示設定[0/1]
-   HTMLメールの表示には w3m を使う.
-   - [ ] w3m-el で外部リンクを踏む際に safe にする設定が良くわからない...Orz
-#+BEGIN_SRC emacs-lisp
-  (setq mime-setup-enable-inline-html t)
-  (require 'mime-setup)
-  (require 'w3m-ems)
-  (require 'w3m-load)
-  (require 'mime-w3m)
-#+END_SRC
 * デフォルトのメーラを Wanderlust に変更する
 #+BEGIN_SRC emacs-lisp
   (autoload 'wl "wl" "Wanderlust" t)

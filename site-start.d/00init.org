@@ -2,7 +2,7 @@
 # 00init.org
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/15 06:45:32$
+# $Lastupdate: 2012/03/21 00:59:06$
 #
 # Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 # License: Expat
@@ -93,7 +93,7 @@
 
    cp5022x 自体は auto-install.el で install しており,
    ~/.emacs.d/auto-install/ 以下に置いています. 本来は外部 elisp なので
-   [[file:init-auto-install.org][auto-install の設定]] で設定するべきなんですが, 他にも影響がありそうなので
+   [[file:auto-install_config.org][auto-install の設定]] で設定するべきなんですが, 他にも影響がありそうなので
    ここで読み込んでいます.
 *** install
     以下を auto-install-el で評価して install します.
@@ -496,9 +496,9 @@
 #+BEGIN_SRC emacs-lisp
   (my:load-org-file "init-ddskk.org")
 #+END_SRC
-** [[file:init-auto-install.org][auto-install.elとinstallしたelispの設定]]
+** [[file:auto-install_config.org][auto-install.elとinstallしたelispの設定]]
 #+BEGIN_SRC emacs-lisp
-  (my:load-org-file  "init-auto-install.org")
+  (my:load-org-file  "auto-install_config.org")
 #+END_SRC
 ** [[file:init-e2wm.org][Emacs内Window管理ツール, e2wm.elの設定]]
    install したものの, 全然使えていないわけですけど.
@@ -560,66 +560,10 @@
         current-dir)))
 #+END_SRC
 ** 見た目/フォントなどの設定
-*** 256 色を出すための設定
-    ansi-color の方が良いのかな?
-#+BEGIN_SRC emacs-lisp
-  (when (not window-system)
-    (load "term/xterm")
-    (xterm-register-default-colors)
-    (tty-set-up-initial-frame-faces))
-#+END_SRC
-*** space や tab に色付け
-    whitespace-mode の方が良いのかな?
-    もっさりする, という話もあるので, 悩みドコロ.
-#+BEGIN_SRC emacs-lisp
-  (require 'whitespace)
-  (setq whitespace-style '(newline-mark))
-  (setq whitespace-display-mappings
-        '(
-          (newline-mark 10 [8629 10])
-          ))
-  (global-set-key (kbd "C-x w") 'global-whitespace-mode)
-  (defface my-face-r-1 '((t (:background "gray10"))) nil)
-  (defface my-face-b-1 '((t (:background "gray"))) nil)
-  (defface my-face-b-2 '((t (:background "gray50"))) nil)
-  (defface my-face-u-1 '((t (:foreground "SteelBlue" :underline t))) nil)
-  (defvar my-face-r-1 'my-face-r-1)
-  (defvar my-face-b-1 'my-face-b-1)
-  (defvar my-face-b-2 'my-face-b-2)
-  (defvar my-face-u-1 'my-face-u-1)
-  (defadvice font-lock-mode (before my-font-lock-mode ())
-    (font-lock-add-keywords
-     major-mode
-     '(("\t" 0 my-face-b-2 append)
-       ("　" 0 my-face-b-1 append)
-       ("[ \t]+$" 0 my-face-u-1 append)
-       ;;("[\r]*\n" 0 my-face-r-1 append)
-       )))
-  (ad-enable-advice 'font-lock-mode 'before 'my-font-lock-mode)
-  (ad-activate 'font-lock-mode)
-#+END_SRC
-*** color-theme
-    見た目や色に関しては color-theme を使用するようになった.
-    今のところ, 自作のテーマである [[https://github.com/uwabami/color-theme-darkpastel][color-theme-darkpastel]] を使用中.
-#+BEGIN_SRC emacs-lisp
-  (my:not-locate-library color-theme-autoloads "site-lisp/color-theme-6.6.0")
-  (add-to-load-path "site-lisp/color-theme-darkpastel")
-  (setq color-theme-load-all-themes nil)
-  (setq color-theme-libraries nil)
-  (require 'color-theme-autoloads)
-  (eval-after-load "color-theme-autoloads"
-    '(progn
-      (color-theme-initialize)
-      (require 'color-theme-darkpastel)
-      ))
-  (setq solarized-bold nil)
-  (setq solarized-italic nil)
-  (color-theme-darkpastel)
-#+END_SRC
-*** [[file:init-frame.org][GUI環境でのフォントとフレームの設定]]
-#+BEGIN_SRC emacs-lisp
-  (when window-system (my:load-org-file "init-frame.org"))
-#+END_SRC
+   Emacs を daemon モードで動作させることにしたので, 別ファイルで読み込む.
+   #+BEGIN_SRC emacs-lisp
+     (my:load-org-file "colorize.org")
+   #+END_SRC
 ** e2wm
 #+BEGIN_SRC emacs-lisp
   (my:load-org-file "init-e2wm.org")

@@ -3,7 +3,6 @@
 config/*.el
 config/*.elc
 config/sitemap.org
-backup/*
 tmp/*
 etc/skk/*
 site-lisp/00build-stamp

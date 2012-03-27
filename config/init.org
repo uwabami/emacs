@@ -255,10 +255,10 @@
       (add-hook 'before-save-hook 'delete-trailing-whitespace)
     #+END_SRC
 *** バックアップとauto-saveの作成
-    my:emacs-backup-dir を設定して, ~/.emacs.d/backup/ 以下に
+    my:emacs-backup-dir を設定して, ~/.emacs.d/tmp/ 以下に
     backup と auto-save ファイルを集約することに.
     #+BEGIN_SRC emacs-lisp
-      (defvar my:emacs-backup-dir (concat user-emacs-directory "backup/"))
+      (defvar my:emacs-backup-dir (concat user-emacs-directory "tmp/"))
       (setq make-backup-files t)
       (setq auto-save-default t)
       (setq backup-directory-alist

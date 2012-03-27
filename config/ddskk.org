@@ -1,0 +1,218 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# $Lastupdate: 2012/03/28 02:09:18$
+# License: Expat.
+#
+#+TITLE: ddskkの設定
+#+AUTHOR: Youhei SASAKI
+#+EMAIL: uwabami@gfd-dennou.org
+* 始めに
+  本家サイト[fn:1]より
+  #+BEGIN_QUOTE
+  Daredevil SKK (DDSKK) は Emacs Lisp 版の SKK です。本家 SKK を受け継いで開発を行っています。
+  #+END_QUOTE
+  日本語入力は skk + sticky-shift が無いと駄目な体になってしまった.
+
+  [[file:init.org][Emacsの基本設定]] で
+  - skk-user-directory
+  - skk-init-file
+  を設定しているので
+  #+BEGIN_EXAMPLE
+    skk-init-file          ~/.emacs.d/config/ddskk.{org,el,elc}
+    skk-jisyo              ~/.emacs.d/etc/skk/jisyo
+    skk-backup-jisyo       ~/.emacs.d/etc/skk/jisyo.bak
+    skk-emacs-id-file      ~/.emacs.d/etc/skk/emacs-id
+    skk-record-file        ~/.emacs.d/etc/skk/record
+    skk-study-file         ~/.emacs.d/etc/skk/study
+    skk-study-backup-file  ~/.emacs.d/etc/skk/study.bak
+  #+END_EXAMPLE
+  となっている(このファイルは ddskk.org).
+* byte-compile 用の設定
+  #+BEGIN_SRC emacs-lisp
+    (eval-when-compile
+      (require 'skk-vars)
+      (require 'skk-autoloads)
+      )
+  #+END_SRC
+* sticky-shift
+  sticky shift については
+  [[http://homepage1.nifty.com/blankspace/emacs/sticky.html][sticky shift]] [fn:2] を参照のこと.
+  ddskk の 14.2 以降から同梱されるようになった(ありがたい)
+  #+BEGIN_SRC emacs-lisp
+    (setq skk-sticky-key ";")
+  #+END_SRC
+* 表示関連
+  #+BEGIN_SRC emacs-lisp
+    ;; 日本語表示しない
+    (setq skk-japanese-message-and-error nil)
+    ;; メニューを日本語にしない -> toolbar 非表示だし.
+    (setq skk-show-japanese-menu nil)
+    ;; 注釈の表示
+    (setq skk-show-annotation nil)
+    ;; インジケータを左端に.
+    (setq skk-status-indicator 'left)
+    ;; skk モードの表示のカスタマイズ
+    (setq skk-latin-mode-string "[aa]")
+    (setq skk-hiragana-mode-string "[jj]")
+    (setq skk-katakana-mode-string "[qq]")
+    (setq skk-jisx0208-latin-mode-string "[AA]")
+    (setq skk-jisx0201-mode-string "[QQ]")
+    (setq skk-indicator-use-cursor-color nil)
+    (setq skk-show-inline 'vertical)
+    ;; (when skk-show-inline
+    ;;   (if (boundp 'skk-inline-show-face)
+    ;;       (setq
+    ;;        skk-inline-show-background-color "black")))
+    ;; カーソルには色をつけない
+    (setq skk-use-color-cursor nil)
+  #+END_SRC
+* 編集関連
+  #+BEGIN_SRC emacs-lisp
+    ;; キーバインド
+    (global-set-key "\C-x\C-j" 'skk-mode)
+    (global-set-key "\C-xj" 'skk-mode)
+    (global-set-key "\C-j" 'skk-mode)
+    (global-set-key "\C-\\" 'skk-mode)
+    ;; 半角カナを入力
+    (setq skk-use-jisx0201-input-method t)
+    ;; Enter で改行しない
+    (setq skk-egg-like-newline t)
+    ;;"「"を入力したら"」"も自動で挿入
+    (setq skk-auto-insert-paren t)
+    ;; 句読点変換ルール
+    (setq skk-kuten-touten-alist
+      '(
+        (jp . ("." . "," ))
+        (en . ("." . ","))
+        ))
+    ;; jp でも ".""," を使う. ←最近不評でどうしたモンかしらん.
+    (setq skk-kutouten-type 'en)
+    ;; 全角記号の変換
+    (setq skk-rom-kana-rule-list
+          (append skk-rom-kana-rule-list
+                  '(("!" nil "!")
+                    (":" nil ":")
+                    (";" nil ";")
+                    ("?" nil "?")
+                    ("z " nil "　")
+                    ("\\" nil "\\")
+                    )))
+    ;; 全角英語モードで U+FF0D, U+FF5E を入力する?
+    ;; (when (not (string< mule-version "6.0"))
+    ;;   (aset skk-jisx0208-latin-vector ?- (string #xFF0D))
+    ;;   (aset skk-jisx0208-latin-vector ?~ (string #xFF5E)))
+    ;; @で挿入する日付表示を西暦&半角に
+    (setq skk-date-ad t)
+    (setq skk-number-style nil)
+    ;; 送り仮名が厳密に正しい候補を優先
+    (setq skk-henkan-strict-okuri-precedence t)
+    ;; 辞書の共有
+    (setq skk-share-private-jisyo t)
+  #+END_SRC
+* インクリメンタルサーチ
+  [[file:migemo.org][migemo]] と共存するために
+  #+BEGIN_SRC emacs-lisp
+    ;; ddskk 起動時のみ, インクリメンタルサーチを使用
+    ;;; Isearch setting.
+    (add-hook 'isearch-mode-hook
+              #'(lambda ()
+                  (when (and (boundp 'skk-mode)
+                             skk-mode
+                             skk-isearch-mode-enable)
+                    (skk-isearch-mode-setup))))
+    (add-hook 'isearch-mode-end-hook
+              #'(lambda ()
+                  (when (and (featurep 'skk-isearch)
+                             skk-isearch-mode-enable)
+                    (skk-isearch-mode-cleanup))))
+    ;; migemo を使うので skk-isearch にはおとなしくしていて欲しい
+    (setq skk-isearch-start-mode 'latin)
+    (add-hook 'isearch-mode-hook 'skk-isearch-mode-setup)
+    (add-hook 'isearch-mode-hook 'skk-isearch-mode-cleanup)
+  #+END_SRC
+* 辞書の設定
+  一応ホスト名でふりわけている.
+  追加している辞書の一覧は
+  - [[http://www.chibutsu.org/jisho/][地球物理辞書]]
+  - [[http://www.geocities.jp/living_with_plasma/tanudic.html][天文・天体物理用語の漢字変換用辞書]]
+  - はてなキーワード
+  - [[http://matsucon.net/material/dic/][2ちゃんねる顔文字辞書 MatsuCon]]
+  - [[http://matsucon.net/][MatsuCon]]
+  といった所.
+  はてなキーワードからの辞書の抽出は [[http://d.hatena.ne.jp/znz][id:znz]]znz さんの
+   - [[http://rubyist.g.hatena.ne.jp/znz/20060924/p1][「はてなダイアリーキーワードふりがなリスト」を SKK の辞書に変換]]
+  を参考に.
+  [[http://matsucon.net/][MatsuCon]] で公開されている顔文字に関しては
+  顔文字に ; や が含まれている場合に, 適宜quoteする必要があるので
+  以下のスクリプトで適当に変換.
+  #+BEGIN_SRC ruby
+    #!/usr/bin/env ruby
+    require 'nkf'
+    src = ARGV[0]
+    if ARGV.size < 1
+      puts "usage: ime2skk.rb ime_dictionary"
+      exit 0
+    end
+    File.open(src, "r") {|f|
+      f.each do |line|
+        line_euc = NKF.nkf("-S -e",line)
+        if line_euc =~ /^([^!]+?)\t(.+?)\t.+$/
+          entry = $1
+          content = $2
+          if content =~/;/
+            puts entry + " /(concat \""+ content.gsub(';','\\\\073')+"\")/"
+          elsif content =~/\//
+            puts entry + " /(concat \""+ content.gsub('/','\\\\057')+"\")/"
+          else
+            puts entry + " /"+ content +"/"
+          end
+        end
+      end
+    }
+
+  #+END_SRC
+  他にも quote する必要あるような
+  気もするけれど, それは気がついた時に.
+  #+BEGIN_SRC emacs-lisp
+    ;; 辞書サーバの指定
+    (when (string-match system-name "daphne")
+      (setq skk-server-host "127.0.0.1")
+      (setq skk-server-portnum "1178")
+      (setq skk-large-jisyo nil)
+      ;; server completion
+      (add-to-list 'skk-search-prog-list
+                   '(skk-server-completion-search) t)
+      (add-to-list 'skk-search-prog-list
+                   '(skk-comp-by-server-completion) t)
+      )
+    (when (not (string-match system-name "daphne"))
+      (setq skk-large-jisyo "~/.skkdic/SKK-JISYO.L")
+      ;; 地球物理辞書の追加
+      (add-to-list
+       'skk-search-prog-list
+       '(skk-search-jisyo-file "~/.skkdic/SKK-JISYO.chibutsu" 10000) t)
+       ;; 天文・物理辞書(tandic4)の追加
+      (add-to-list
+       'skk-search-prog-list
+       '(skk-search-jisyo-file "~/.skkdic/SKK-JISYO.tanudic4" 10000) t)
+      ;; はてな辞書
+      (add-to-list
+       'skk-search-prog-list
+       '(skk-search-jisyo-file "~/.skkdic/SKK-JISYO.hatenakey" 10000) t)
+      ;; 2ch 顔文字辞書
+      (add-to-list
+       'skk-search-prog-list
+       '(skk-search-jisyo-file "~/.skkdic/SKK-JISYO.matsucon" 10000) t)
+      )
+    ;; 辞書登録の際に送り仮名を削除
+    (setq skk-check-okurigana-on-touroku 'auto)
+    ;;漢字登録のミスをチェックする
+    (setq skk-check-okurigana-on-touroku t)
+  #+END_SRC
+* Footnotes
+
+[fn:1] Daredevil SKK: [[http://openlab.ring.gr.jp/skk/ddskk-ja.html]]
+
+[fn:2] sticky shift: [[http://homepage1.nifty.com/blankspace/emacs/sticky.html]]
+

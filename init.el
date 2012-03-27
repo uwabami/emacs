@@ -2,7 +2,7 @@
 ;;; init.el
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2012/03/26 14:00:16$
+;; $Lastupdate: 2012/03/28 03:23:04$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -42,10 +42,10 @@
 ;; 元々は以下のURLにあった関数. 必要な物だけ抜粋
 ;; @see http://github.com/elim/dotemacs/blob/master/init.el
 ;;
-;; Emacs のバージョン判定. Emacs 23 以上だったら良い事にする.
+;; Emacs のバージョン判定. ELPAのためにEmacs23 まで判定
 ;;
 (defvar oldemacs-p (<= emacs-major-version 22))
-;; (defvar emacs23-p (>= emacs-major-version 23))
+(defvar emacs23-p (= emacs-major-version 23))
 ;;
 ;; Mac の Emacs flavor の判定 <-- darwin しか考えない
 ;;
@@ -102,12 +102,16 @@
  )
 ;;
 ;;; 良く使う macro の定義
-;; (not (locate-library "foobar") -> (add-to-load-path "foobar")
-;; (defmacro my:not-locate-library (lib &rest list)
-;;   `(when (not (locate-library ,(symbol-name lib)))
-;;      (add-to-load-path ,@list)
-;;      (eval-when-compile
-;;        (add-to-load-path ,@list))))
+;;
+;; 今のところ以下を定義
+;; - my:not-locate-library
+;;   (not (locate-library "foobar") -> (add-to-load-path "foobar")
+;;
+(defmacro my:not-locate-library (lib &rest list)
+  `(when (not (locate-library ,(symbol-name lib)))
+     (add-to-load-path ,@list)
+     (eval-when-compile
+       (add-to-load-path ,@list))))
 ;;
 ;;; org-babel
 ;;
@@ -155,10 +159,10 @@
 ;; - my:org-babel-load-file の際にディレクトリ名を
 ;;   ~/.emacs.d/config/ に決め打ち
 ;;
-(defvar org-settings-dir (concat user-emacs-directory "config/"))
+(defvar my:org-settings-dir (concat user-emacs-directory "config/"))
 (defun my:load-org-file (file)
-  "org-settings-dir 以下から my-org-babel-load-file"
-  (my:org-babel-load-file (expand-file-name file org-settings-dir)))
+  "my:org-settings-dir 以下から my:org-babel-load-file"
+  (my:org-babel-load-file (expand-file-name file my:org-settings-dir)))
 ;;
 ;; 実際に読み込む.
 ;;

@@ -12,7 +12,7 @@ all: $(ELCFILES)
 	@$(BATCH) --eval '(mapc (lambda (x) (my:org-babel-tangle-and-compile-file (symbol-name x))) (quote ($(CURDIR)/$<)))'
 
 clean:
-	rm -f $(ELCFILES)
+	rm -f $(ELCFILES) *.html *.tex
 
 distclean: clean
 	rm -f $(ELFILES)

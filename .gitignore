@@ -4,6 +4,8 @@ config/*.el
 config/*.elc
 config/sitemap.org
 tmp/*
+elpa/*
 etc/skk/*
 site-lisp/00build-stamp
+site-lisp/ddskk/skk-autoloads.el
 old

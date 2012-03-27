@@ -1,0 +1,75 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# $Lastupdate: 2012/03/28 02:57:44$
+# License: Expat
+#+TITLE: auto-installとinstallしたelispの設定
+#+AUTHOR: Youhei SASAKI
+#+EMAIL: uwabami@gfd-dennou.org
+* 始めに
+  emacs-lispが公開されているURIやEmacsWikiからファイルを取得して
+  installするライブラリ.
+  auto-installについては[[http://www.emacswiki.org/emacs/AutoInstall][EmacsWiki - AutoInstall]] [fn:1]を参考に.
+* 基本設定
+** load-path の追加
+   Debian にはパッケージがある[fn:2]. パッケージが無い/使えない環境では
+   ~/.emacs.d/site-lisp/auto-install-elを読みこむ.
+  #+BEGIN_SRC emacs-lisp
+  (my:not-locate-library auto-install "site-lisp/auto-install-el")
+  (require 'auto-install nil t)
+  #+END_SRC
+** 取得する際のネットワークの設定
+   wgetで取得する. proxyもwgetに任せるので適宜 ~/.wgetrc を
+   書いておく.
+   url-handlerでのproxy設定はなんか上手く動かないけれど,
+   深追いはしていない.
+  #+BEGIN_SRC emacs-lisp
+  (setq auto-install-use-wget t)
+  ;; (setq url-proxy-services '(("http" . "localhost:20080")))
+  #+END_SRC
+** install 先の設定
+   auto-installでinstallするelispのinstall先は
+   ~/.emacs.d/auto-install/ 以下に.
+   #+BEGIN_SRC emacs-lisp
+     (setq auto-install-directory
+           (expand-file-name
+            (concat user-emacs-directory "auto-install/")))
+   #+END_SRC
+* auto-async-byte-compile
+  auto-installした際に自動でbyte-compileしてくれる.
+  他にも, emacs-lisp-mode なファイルを保存するときに,
+  非同期にbyte-compileを走らせたりできるので,
+  byte-compile 忘れが無い. 結構素敵.
+** install
+   #+BEGIN_EXAMPLE
+     (unless (locate-library "auto-async-byte-compile")
+       (auto-install-from-url "http://www.emacswiki.org/emacs/download/auto-async-byte-compile.el"))
+   #+END_EXAMPLE
+** 設定
+   先頭が "_" で始まるファイルは compile しない
+   #+BEGIN_SRC emacs-lisp
+     (when (require 'auto-async-byte-compile nil t)
+       (setq auto-async-byte-compile-exclude-files-regexp "^_")
+       (add-hook 'emacs-lisp-mode-hook
+                 'enable-auto-async-byte-compile-mode))
+   #+END_SRC
+* [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727][パスワード管理ツール id-manager.el]]
+** インストール
+   #+BEGIN_EXAMPLE
+     (unless (locate-library "id-manager")
+       (auto-install-from-url "https://github.com/kiwanami/emacs-id-manager/raw/master/id-manager.el"))
+   #+END_EXAMPLE
+** 設定
+  #+BEGIN_SRC emacs-lisp
+    (when (require 'id-manager nil t)
+      ;; (autoload 'id-manager "id-manager" nil t)
+      (global-set-key (kbd "M-7") 'id-manager)
+      (setq idm-database-file "~/.gnupg/idm-db.gpg"))
+  #+END_SRC
+* Footnotes
+
+[fn:1] EmacsWiki - AutoInstall: [[http://www.emacswiki.org/emacs/AutoInstall]]
+
+[fn:2] qa.debian.org - auto-install-el: [[http://packages.qa.debian.org/a/auto-install-el.html]]
+
+

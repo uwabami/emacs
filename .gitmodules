@@ -1,6 +1,3 @@
 [submodule "site-lisp/org-mode"]
 	path = site-lisp/org-mode
 	url = git://orgmode.org/org-mode.git
-[submodule "site-lisp/helm"]
-	path = site-lisp/helm
-	url = git://github.com/emacs-helm/helm.git

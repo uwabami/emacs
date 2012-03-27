@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/27 19:24:14$
+# $Lastupdate: 2012/03/28 04:03:39$
 # License: Expat.
 #
 #+TITLE: Emacsの基本設定
@@ -129,7 +129,6 @@
     #+END_SRC
 * 機種依存しない(ハズ)の雑多な設定
   Emacsそのものの設定集.
-
   line-number-modeなど「有効無効をtoggleする関数」は,
   慣習的に0以下の数字を指定すると明示的に無効化できる.
 ** キーバインドの設定
@@ -258,20 +257,23 @@
     my:emacs-backup-dir を設定して, ~/.emacs.d/tmp/ 以下に
     backup と auto-save ファイルを集約することに.
     #+BEGIN_SRC emacs-lisp
-      (defvar my:emacs-backup-dir (concat user-emacs-directory "tmp/"))
-      (setq make-backup-files t)
+      (defvar my:emacs-backup-dir
+        (expand-file-name (concat user-emacs-directory "tmp/")))
+      (setq auto-save-list-file-prefix
+            (concat my:emacs-backup-dir ".saves-"))
       (setq auto-save-default t)
-      (setq backup-directory-alist
-            `(("." . ,(expand-file-name my:emacs-backup-dir))))
-      (setq auto-save-file-name-transforms
-            `((".*" ,(expand-file-name my:emacs-backup-dir) t)))
       (setq auto-save-timeout 15)
       (setq auto-save-interval 60)
-      (setq version-control t)
-      (setq kept-new-versions 5)
-      (setq kept-old-versions 5)
-      (setq delete-old-versions t)
-      (setq delete-auto-save-files t)
+      (setq make-backup-files t)
+      (setq backup-directory-alist
+            `(("." . ,my:emacs-backup-dir)))
+      ;; (setq auto-save-file-name-transforms
+      ;;       `((".*" ,my:emacs-backup-dir t)))
+      ;; (setq version-control t)
+      ;; (setq kept-new-versions 5)
+      ;; (setq kept-old-versions 5)
+      ;; (setq delete-old-versions t)
+      ;; (setq delete-auto-save-files t)
     #+END_SRC
 *** 空になったファイルを尋ねずに自動削除
     #+BEGIN_SRC emacs-lisp
@@ -366,23 +368,141 @@
      ;; 対称鍵のキャッシュを有効化
      (setq epa-file-cache-passphrase-for-symmetric-encryption t)
    #+END_SRC
+* 分割した設定ファイルの読み込み/外部emacs-lispなどの設定
+  以下は Emacs 本体に同梱されていない emacs-lisp program や
+  外部ファイルの設定を読み込んでいるモン, など.
+** [[http://www.kanji.zinbun.kyoto-u.ac.jp/~tomo/elisp/APEL/][APEL]] [fn:8] に load-path を通す
+   Web には
+   #+BEGIN_QUOTE
+   APEL (A Portable Emacs Library) は可搬性のある Emacs Lisp program の作成を支援するための library です。
+   #+END_QUOTE
+   とある.
+   今ん所, 使っている外部emacs-lispでは
+   Wanderlustとhowmがapelに依存している.
+   後者は無いと途方に暮れてしまうので, ここでload-pathの設定をしておく.
+   #+BEGIN_SRC emacs-lisp
+   (my:not-locate-library emu "site-lisp/apel")
+   #+END_SRC
+** [[http://www.morishima.net/~naoto/elscreen-en/][ElScreen]]
+   Emacsのバッファを GNU Screen っぽく扱う.
+   設定はキーバインドを \C-o に変えたくらい.
+   #+BEGIN_SRC emacs-lisp
+     (my:not-locate-library elscreen "site-lisp/elscreen")
+     (setq elscreen-prefix-key (kbd "C-o"))
+     (if (eq window-system 'x)
+         (setq elscreen-display-tab 4)
+       (setq elscreen-display-tab nil)
+       )
+     (setq elscreen-tab-display-kill-screen nil)
+     (require 'elscreen)
+     ;; (my:not-locate-library elscreen-dired-enhance "local-lisp")
+   #+END_SRC
+** 日本語入力
+   SKK をメインで使用中. 無いと途方に暮れる.
+   一応debug用にmozcも読み込んでいるが, 殆ど使った事がない.
+
+   ちなみにGTKが有効になっているとgit-immoduleなんかと衝突するので
+   .Xresources で xim を無効にしておくと良い.
+   #+BEGIN_EXAMPLE
+     ! disable XIM
+     Emacs*useXIM: false
+   #+END_EXAMPLE
+   なんて ~/.Xresources に書いておく.
+
+   ddskk 以前の古い skk が導入されている場合には
+   site-lisp 以下の ddskk を load する.
+
+   skk-user-directory を設定しているので辞書や id なんかは
+   ~/.emacs.d/etc/skk 以下に置かれるが, 設定ファイルだけは
+   [[file:ddskk.org][DDSKKの設定]] で行なっている.
+    #+BEGIN_SRC emacs-lisp
+      ;; mozc はとりあえず読み込んだだけ
+      (require 'mozc nil t)
+      ;;; skk の設定
+      ;; 古い skk しか無い場合には ddskk を読み込む
+      (my:not-locate-library skk-sticky "site-lisp/ddskk")
+      ;; byte-compile 用の設定
+      (eval-when-compile
+        (require 'skk-vars)
+        (require 'skk-autoloads))
+      ;; ddskk の辞書ファイル等は ~/.emacs.d/etc/skk 以下に置く
+      (setq skk-user-directory
+            (expand-file-name (concat user-emacs-directory "etc/skk")))
+      ;; ただし設定ファイルだけは ~/.emacs.d/config 以下に置く
+      (setq skk-init-file
+            (expand-file-name (concat user-emacs-directory "config/ddskk")))
+      ;; org-babel-tangle で ddskk.org から ddskk.el を生成
+      (my:org-babel-tangle-and-compile-file
+       (expand-file-name (concat user-emacs-directory "config/ddskk.org")))
+      ;; ddsk の設定ファイルは自動で byte-compile
+      (setq skk-byte-compile-init-file t)
+      ;; 読み込み
+      (require 'skk-leim)
+      (setq default-input-method "japanese-skk")
+      (require 'skk-autoloads)
+      (require 'skk-cus)
+    #+END_SRC
+** [[file:lookup_config.org][lookup-elで電子辞書を引く設定]]
+   #+BEGIN_SRC emacs-lisp
+     (when (locate-library "lookup")
+       (my:load-org-file "lookup_config.org"))
+   #+END_SRC
+** [[file:migemo_config.org][Migemoの設定]]
+   #+BEGIN_SRC emacs-lisp
+     (when (file-executable-p "/usr/bin/cmigemo")
+       (my:load-org-file "migemo_config.org"))
+   #+END_SRC
+** [[file:auto-install_config.org][auto-installとinstallしたelispの設定]]
+   #+BEGIN_SRC emacs-lisp
+     (my:load-org-file "auto-install_config.org")
+   #+END_SRC
+** [[http://tromey.com/elpa/install.html][ELPA]] [fn:9]
+   Emacs24から標準添付される予定のEmacs Lisp Package Archive.
+   auto-install とは異なり, パッケージのバージョン管理もしてくれる.
+*** install
+    elpa 自体は auto-install-el で導入することに
+    #+BEGIN_EXAMPLE
+      (unless (locate-library "package")
+        (auto-install-from-url "http://repo.or.cz/w/emacs.git/blob_plain/1a0a666f941c99882093d7bd08ced15033bc3f0c:/lisp/emacs-lisp/package.el"))
+    #+END_EXAMPLE
+    これが実行されると ~/.emacs.d/init.el に設定が追記されるので
+    適宜修正しておくこと.
+*** 設定
+    リポジトリとして [[http://marmalade-repo.org/][Marmalade]] [fn:11]も追加しておく
+    #+BEGIN_SRC emacs-lisp
+      (require 'package)
+      (add-to-list 'package-archives
+                   '("marmalade" . "http://marmalade-repo.org/packages/"))
+      (package-initialize)
+    #+END_SRC
 * Footnotes
 
-[fn:1] バッドノウハウと奥が深い症候群: http://0xcc.net/misc/bad-knowhow.html
+[fn:1] バッドノウハウと奥が深い症候群: [[http://0xcc.net/misc/bad-knowhow.html]]
 
-[fn:2] Emacs23 日本語向け設定例: http://nijino.homelinux.net/emacs/emacs23-ja.html
+[fn:2] Emacs23 日本語向け設定例: [[http://nijino.homelinux.net/emacs/emacs23-ja.html]]
 
-[fn:3] Wanderlustと文字コード: http://d.hatena.ne.jp/kiwanami/20091103/1257243524
+[fn:3] Wanderlustと文字コード: [[http://d.hatena.ne.jp/kiwanami/20091103/1257243524]]
 
-[fn:4] 鬼軍曹.el: https://github.com/k1LoW/emacs-drill-instructor/wiki/
+[fn:4] 鬼軍曹.el: [[https://github.com/k1LoW/emacs-drill-instructor/wiki/]]
 
-[fn:5] mode-line-formatをダイエットさす: http://homepage1.nifty.com/blankspace/emacs/mode-line.html
+[fn:5] mode-line-formatをダイエットさす: [[http://homepage1.nifty.com/blankspace/emacs/mode-line.html]]
 
-[fn:6] customizing the mode-line: http://emacs-fu.blogspot.jp/2011/08/customizing-mode-line.html
+[fn:6] customizing the mode-line: [[http://emacs-fu.blogspot.jp/2011/08/customizing-mode-line.html]]
 
-[fn:7] 無駄な行末の空白を削除する(Emacs Advent Calendar jp:2010): http://d.hatena.ne.jp/tototoshi/20101202/1291289625
+[fn:7] 無駄な行末の空白を削除する(Emacs Advent Calendar jp:2010): [[http://d.hatena.ne.jp/tototoshi/20101202/1291289625]]
 
-[fn:8] align設定用例集: http://handlename.hatenablog.jp/entry/2011/12/11/214923
+[fn:8] APEL: [[http://www.kanji.zinbun.kyoto-u.ac.jp/~tomo/elisp/APEL/index.html]]
+
+[fn:9] ELPA: [[http://tromey.com/elpa/install.html]]
+
+[fn:11] Marmalade: [[http://marmalade-repo.org/]]
+
+[fn:10] align設定用例集: [[http://handlename.hatenablog.jp/entry/2011/12/11/214923]]
+
+
+
+
+
 
 
 

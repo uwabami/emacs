@@ -1,0 +1,101 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# $Lastupdate: 2012/03/28 04:17:22$
+# License: Expat.
+#
+#+TITLE: フォントとフレームの設定
+#+AUTHOR: Youhei SASAKI
+#+EMAIL: uwabami@gfd-dennou.org
+* 始めに
+Emacs を Daemon モードで起動させているので,
+なにもしないと環境変数 TERM が dump になって font-lock などが悲しくなります.
+なので, クライアント起動時に色やフォントの設定を読み込む事にしました.
+* フォントやフレーム関連の設定を再読み込みする関数
+  #+BEGIN_SRC emacs-lisp
+    (defun my:load-theme ()
+      (interactive)
+      (my:load-org-file "GUI.org"))
+  #+END_SRC
+* [[http://d.hatena.ne.jp/khiker/20090809/emacs_opacity][フレームを半透明にする]] [fn:1]
+  飽きたら止めると思うけれど.
+    #+BEGIN_SRC emacs-lisp
+      (defun my-opacity-change (action)
+        (let* ((op
+                (frame-parameter
+                 (selected-frame) 'alpha)) val)
+          (unless op
+            (setq op 100))
+          (when (setq val
+                      (cond
+                       ((eq action 'up)
+                        (if (> op 90) 100 (+ op 10)))
+                       ((eq action 'down)
+                        (if (> 10 op) 10 (- op 10)))
+                       ((eq action 'clear) 100)
+                       ((numberp action) action)
+                       (t nil)))
+            (set-frame-parameter (selected-frame) 'alpha val))))
+      (when window-system
+        (my-opacity-change 90)     ; default の透明度は 90 に
+        )
+    #+END_SRC
+
+* フォントの設定
+  #+BEGIN_SRC emacs-lisp
+    (when window-system
+      (create-fontset-from-ascii-font "Ricty-18" nil "ricty")
+      (dolist (charset '(
+                         unicode
+                         japanese-jisx0208
+                         japanese-jisx0208-1978
+                         japanese-jisx0212
+                         japanese-jisx0213-1
+                         japanese-jisx0213-2
+                         japanese-jisx0213-a
+                         japanese-jisx0213.2004-1
+                         katakana-jisx0201
+                         ))
+        (set-fontset-font "fontset-ricty"
+                          charset
+                          (font-spec :family "Ricty" :size 18 nil 'prepend)))
+      (add-to-list 'default-frame-alist '(font ."fontset-ricty")))
+    (custom-set-faces
+     '(variable-pitch ((t (:family "Ricty" :size 18 nil 'prepend))))
+     '(fixed-pitch ((t (:family "Ricty" :size 18 nil 'prepend))))
+     )
+  #+END_SRC
+* Space や Tab に色付け
+  whitespace-mode の方が良いのかもしれないけれど,
+  設定が面倒なのと多少重いので...
+  #+BEGIN_SRC emacs-lisp
+    ;; (require 'whitespace)
+    ;; (setq whitespace-style '(newline-mark))
+    ;; (setq whitespace-display-mappings
+    ;;       '(
+    ;;         (newline-mark 10 [8629 10])
+    ;;         ))
+    ;; (global-set-key (kbd "C-x w") 'global-whitespace-mode)
+    (defface my-face-r-1 '((t (:background "gray10"))) nil)
+    (defface my-face-b-1 '((t (:background "gray"))) nil)
+    (defface my-face-b-2 '((t (:background "gray50"))) nil)
+    (defface my-face-u-1 '((t (:foreground "SteelBlue" :underline t))) nil)
+    (defvar my-face-r-1 'my-face-r-1)
+    (defvar my-face-b-1 'my-face-b-1)
+    (defvar my-face-b-2 'my-face-b-2)
+    (defvar my-face-u-1 'my-face-u-1)
+    (defadvice font-lock-mode (before my-font-lock-mode ())
+      (font-lock-add-keywords
+       major-mode
+       '(("\t" 0 my-face-b-2 append)
+         ("　" 0 my-face-b-1 append)
+         ("[ \t]+$" 0 my-face-u-1 append)
+         ;; ("[\r]*\n" 0 my-face-r-1 append)
+         )))
+    (ad-enable-advice 'font-lock-mode 'before 'my-font-lock-mode)
+    (ad-activate 'font-lock-mode)
+  #+END_SRC
+* Footnotes
+
+[fn:1] フレームを半透明にする: http://d.hatena.ne.jp/khiker/20090809/emacs_opacity
+

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/28 04:03:39$
+# $Lastupdate: 2012/03/28 04:59:20$
 # License: Expat.
 #
 #+TITLE: Emacsの基本設定
@@ -442,15 +442,26 @@
       (require 'skk-autoloads)
       (require 'skk-cus)
     #+END_SRC
+** MUA
+   Wanderlustを愛用中
+   #+BEGIN_SRC emacs-lisp
+     (when (locate-library "wl")
+       (my:load-org-file "extra/wl_config.org"))
+   #+END_SRC
+** [[file:GUI.org][フォントとフレームの設定]]
+   #+BEGIN_SRC emacs-lisp
+   (my:load-org-file "GUI.org")
+   #+END_SRC
 ** [[file:lookup_config.org][lookup-elで電子辞書を引く設定]]
    #+BEGIN_SRC emacs-lisp
      (when (locate-library "lookup")
-       (my:load-org-file "lookup_config.org"))
+       (my:load-org-file "extra/lookup_config.org"))
    #+END_SRC
 ** [[file:migemo_config.org][Migemoの設定]]
    #+BEGIN_SRC emacs-lisp
-     (when (file-executable-p "/usr/bin/cmigemo")
-       (my:load-org-file "migemo_config.org"))
+     (when (and (file-executable-p "/usr/bin/cmigemo")
+                (locate-library "migemo"))
+       (my:load-org-file "extra/migemo_config.org"))
    #+END_SRC
 ** [[file:auto-install_config.org][auto-installとinstallしたelispの設定]]
    #+BEGIN_SRC emacs-lisp

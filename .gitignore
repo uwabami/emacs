@@ -1,11 +1,10 @@
 *.elc
 *.dat 
-site-start.d/*.el
-site-start.d/*.elc
-site-start.d/sitemap.org
-etc/skk/*
+config/*.el
+config/*.elc
+config/sitemap.org
+backup/*
 tmp/*
+etc/skk/*
 site-lisp/00build-stamp
-site-lisp/color-theme-6.6.0/color-theme-autoloads.el
-site-lisp/ddskk/skk-autoloads.el
 old

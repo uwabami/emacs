@@ -1,0 +1,392 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# $Lastupdate: 2012/03/27 19:24:14$
+# License: Expat.
+#
+#+TITLE: Emacsの基本設定
+#+AUTHOR: Youhei SASAKI
+#+EMAIL: uwabami@gfd-dennou.org
+* 始めに
+  ~/.emacs→~/.emacs.d/init.el ときて, このファイルで
+  基本設定と外部elispの読み込みを行っています.
+
+  外部elispの設定は多くの場合別ファイルに分けていますが,
+  設定が短い場合にはこのファイルに記述して終わっていたりします.
+* 言語の設定
+** 基本設定
+   Emacs23以降はEmacs内部がUTF-8で記述されるようになったので, 極力
+   UTF-8を使用するようにしています(EUC-JPとかで使用すると稀に祟りがあっ
+   たりします).
+
+   過去の資源(特にTeX)に関しては, 未だEUC-JPのファイルも多いので注意す
+   る必要があります. Debian unstalbeにTeXLive2011が入ったので, そのうち
+   全部UTF-8に移行しますが(とはいえ過去の資産や共同作業する原稿なんかは
+   無理ですけれど...).
+   #+BEGIN_SRC emacs-lisp
+     (set-language-environment "Japanese")
+     (prefer-coding-system 'utf-8)
+     ;; (set-default-coding-systems 'utf-8)
+     ;; (set-terminal-coding-system 'utf-8)
+     ;; (set-keyboard-coding-system 'utf-8)
+     ;; (set-buffer-file-coding-system 'utf-8)
+   #+END_SRC
+*** 補足: 言語設定の確認
+    #+BEGIN_EXAMPLE
+    (set-language-environment "Japanese")
+    #+END_EXAMPLE
+    によってlocaleが設定されます. "Japanese"という大雑把な設定で
+    何が設定されるのかは
+    #+BEGIN_EXAMPLE
+    (describe-variable 'language-info-alist)
+    #+END_EXAMPLE
+    を実行して "Japanese"を参照すると良いです. 試しに実行してみると
+    #+BEGIN_EXAMPLE
+    ...
+     ("Japanese"
+      (documentation . t)
+      (sample-text . "Japanese (日本語)	こんにちは, ｺﾝﾆﾁﾊ")
+      (features japan-util)
+      (input-method . "japanese")
+      (coding-priority iso-2022-jp japanese-iso-8bit japanese-shift-jis iso-2022-jp-2004 euc-jis-2004 japanese-shift-jis-2004 iso-2022-jp-2)
+      (coding-system iso-2022-jp japanese-iso-8bit japanese-shift-jis japanese-iso-7bit-1978-irv iso-2022-jp-2004 japanese-shift-jis-2004 euc-jis-2004)
+      (charset japanese-jisx0208 japanese-jisx0212 latin-jisx0201 katakana-jisx0201 japanese-jisx0213\.2004-1 japanese-jisx0213-1 japanese-jisx0213-2 japanese-jisx0208-1978)
+      (tutorial . "TUTORIAL.ja")
+      (iso639-language . ja)
+      (exit-function . use-default-char-width-table)
+      (setup-function . setup-japanese-environment-internal))
+    ...
+    #+END_EXAMPLE
+    となっていました. coding-priorityを見るとわかるように
+    文字コードの自動判定などの大雑把な優先順位はiso-2022-jp→shift_jis→euc-jp...
+    となっていて, どこにも utf-8 がありません.
+    utf-8 を優先するには
+    #+BEGIN_EXAMPLE
+    (prefere-coding-system 'utf-8)
+    #+END_EXAMPLE
+    を設定します.
+** OSの違いに起因する条件分岐
+   全部Unix/Linux環境ならばこういう設定は不要なんでしょうけれど,
+   幾つか環境を渡り歩いていると, こういった[[http://0xcc.net/misc/bad-knowhow.html][バッドノウハウ]] [fn:1]
+   が増えていきます.
+
+   MacとLinuxでは同じUnicodeでも正規化が異なります(具体的にはMacのファ
+   イルシステムであるHFS+ではUnicodeの正規化が異なります). 日本語のファ
+   イル名を扱うことは滅多にありませんが, たまに祟りがあるのでそれを回避
+   するための設定をしておきます.
+
+   Unicodeの正規化とMac OS X特有の事情については
+    - [[http://homepage1.nifty.com/nomenclator/unicode/normalization.htm][Unicode正規化とは]]
+    - [[http://www.sakito.com/2010/05/mac-os-x-normalization.html][Mac OS X におけるファイル名に関するメモ(NFC, NFD等)]]
+   等が参考になるかと思います.
+
+   Windows の場合はファイル名などは cp932 にしています. とはいえ最近
+   Windows使っていないので良く知りません.
+   #+BEGIN_SRC emacs-lisp
+     (cond
+      (darwin-p
+       (require 'ucs-normarize)
+       (setq file-name-coding-system 'utf-8-hfs)
+       (setq locale-coding-system 'utf-8-hfs))
+      (nt-p
+       (setq file-name-coding-system 'cp932)
+       (setq locale-coding-system 'cp932))
+      (t
+       (setq file-name-coding-system 'utf-8)
+       (setq locale-coding-system 'utf-8))
+     )
+   #+END_SRC
+*** 補足
+    prefer-coding-systemを設定するとdefault-file-name-coding-systemが設
+    定されます. これとfile-name-coding-systemの順位は
+    #+BEGIN_QUOTE
+    file-name-coding-systemがnil→default-file-name-coding-systemを利用
+    #+END_QUOTE
+    となっています.
+
+    darwin-pとnt-pは~/.emacs.d/init.elで設定した環境判定用の変数です.
+** cp5022xの利用
+   Emacs23から内部がUnicodeベースになっています. しかし文字コードの変換
+   はGNU libcのiconvをベースにしているため, 環境によっては文字の変換が
+   うまく行なえません.
+   cp5022xについては [[http://nijino.homelinux.net/emacs/emacs23-ja.html][Emacs23 日本語向け設定例]] [fn:2]を参照して下さい.
+   また, [[http://d.hatena.ne.jp/kiwanami/about][kiwanami]] さんが [[http://d.hatena.ne.jp/kiwanami/20091103/1257243524][Wanderlustと文字コード]] [fn:3]というエントリで素
+   晴しい解説を書いて下さっています.
+
+   cp5022x 自体は auto-install.el で install しており,
+   ~/.emacs.d/auto-install/ 以下に置いています. 本来は外部 elisp なので
+   [[file:auto-install.org][auto-install の設定]] で設定するべきなんですが, 他にも影響がありそうなの
+   でここで読み込んでいます.
+*** install
+    以下をauto-install-elで評価してinstallします.
+    #+BEGIN_EXAMPLE
+      (auto-install-from-url "http://nijino.homelinux.net/emacs/cp5022x.el")
+    #+END_EXAMPLE
+*** 読み込み
+    単に読み込むだけです.
+    #+BEGIN_SRC emacs-lisp
+      (require 'cp5022x)
+    #+END_SRC
+* 機種依存しない(ハズ)の雑多な設定
+  Emacsそのものの設定集.
+
+  line-number-modeなど「有効無効をtoggleする関数」は,
+  慣習的に0以下の数字を指定すると明示的に無効化できる.
+** キーバインドの設定
+   設定しておいて, 結構忘れていたり.
+   とはいえ[home]と[end]は無いと途方に暮れます.
+   鬼軍曹.el [fn:4] とかで強制した方が良いのかもしれません.
+   #+BEGIN_SRC emacs-lisp
+     (global-set-key (kbd "C-h")     'backward-delete-char)
+     (global-set-key (kbd "C-c M-a") 'align-regexp)
+     (global-set-key (kbd "C-c ;")   'comment-region)
+     (global-set-key (kbd "C-c M-;") 'uncomment-region)
+     (global-set-key (kbd "C-/")     'undo)
+     (global-set-key (kbd "C-c M-r") 'replace-regexp)
+     (global-set-key (kbd "C-c r")   'replace-string)
+     (global-set-key (kbd "<home>")  'beginning-of-buffer)
+     (global-set-key (kbd "<end>")   'end-of-buffer)
+   #+END_SRC
+** モードライン関連
+*** モードラインのダイエット
+    デフォルトでは結構煩いので, いろいろと消す. 元ネタは
+    [[http://homepage1.nifty.com/blankspace/emacs/mode-line.html][mode-line-formatをダイエットさす]]モードラインのダイエット [fn:5]
+
+    しかし世の中にはもっと過激な人もいらっしゃって
+    [[http://emacs-fu.blogspot.jp/2011/08/customizing-mode-line.html][customizing the mode-line]] [fn:6]なんてこともできる.
+    そのうちもっと細かく設定するかも.
+    #+BEGIN_SRC emacs-lisp
+      (setq-default mode-line-format
+                    '("-"
+                      mode-line-mule-info
+                      mode-line-modified
+                      " "
+                      mode-line-buffer-identification
+                      " "
+                       global-mode-string
+                       " %[("
+                       mode-name
+                       mode-line-process
+                       minor-mode-alist
+                       "%n" ")%]"
+                       (which-func-mode ("" which-func-format "-"))
+                      "-%-"
+                      )
+                    )
+    #+END_SRC
+*** 行番号, 桁番号
+    必要に応じて linum-mode を有効にするので
+    モードラインにカーソルのある行番号や桁番号を表示しない.
+    #+BEGIN_SRC emacs-lisp
+      (line-number-mode 0)
+      (column-number-mode 0)
+    #+END_SRC
+*** linum-mode を有効にした場合の桁表示を 5 桁に.
+    #+BEGIN_SRC emacs-lisp
+      (setq linum-format "%5d ")
+    #+END_SRC
+** フレーム, ツールバーなど
+*** ツールバーは使用しない.
+    #+BEGIN_SRC emacs-lisp
+      (tool-bar-mode 0)
+    #+END_SRC
+*** スクロールバーは使用しない.
+    #+BEGIN_SRC emacs-lisp
+      (set-scroll-bar-mode nil)
+    #+END_SRC
+*** メニューバーを表示しない.
+    #+BEGIN_SRC emacs-lisp
+      (menu-bar-mode 0)
+    #+END_SRC
+*** bell-mode 使用しない
+    #+BEGIN_SRC emacs-lisp
+      (setq ring-bell-function 'ignore)
+    #+END_SRC
+*** startup を表示しない
+    #+BEGIN_SRC emacs-lisp
+      (setq inhibit-startup-screen 0)
+    #+END_SRC
+*** 可能ならば \C-x f で画像を表示
+    #+BEGIN_SRC emacs-lisp
+      (when (window-system)
+        (setq auto-image-file-mode t)
+        (setq auto-image-file-mode nil))
+    #+END_SRC
+** 表示/編集関連
+*** 余計な空行を入れない
+    #+BEGIN_SRC emacs-lisp
+      (setq next-line-add-newlines nil)
+      (put 'set-goal-column 'disabled nil)
+    #+END_SRC
+*** yes or no を y or n に
+    #+BEGIN_SRC emacs-lisp
+      (fset 'yes-or-no-p 'y-or-n-p)
+    #+END_SRC
+*** 選択リージョンに色付け
+    #+BEGIN_SRC emacs-lisp
+      (setq transient-mark-mode t)
+    #+END_SRC
+*** 対応する括弧を色付け
+    #+BEGIN_SRC emacs-lisp
+      (setq show-paren-delay 0)           ; 初期値は 0.125
+      (setq show-paren-style 'expression) ; 括弧内も強調表示
+      (show-paren-mode t)                 ; 有効化
+    #+END_SRC
+*** タイトルのバッファ名を非表示
+    #+BEGIN_SRC emacs-lisp
+      (setq frame-title-format nil)
+    #+END_SRC
+*** tab 幅 4, tab でのインデントはしない
+    #+BEGIN_SRC emacs-lisp
+      (setq-default tab-width 4)
+      (setq-default indent-tabs-mode nil)
+    #+END_SRC
+*** 文字列は 72 文字で折り返し(RFC2822)
+    #+BEGIN_SRC emacs-lisp
+      (setq-default fill-column 72)
+      (setq paragraph-start '"^\\([ 　・○<\t\n\f]\\|(?[0-9a-zA-Z]+)\\)")
+      (setq-default auto-fill-mode nil)
+    #+END_SRC
+*** 行末の無駄な空白を削除する
+    元ネタ: (Emacs Advent Calendar jp:2010)[fn:7]
+
+    モード毎に設定した方が無難かもしれない.
+    #+BEGIN_SRC emacs-lisp
+      (add-hook 'before-save-hook 'delete-trailing-whitespace)
+    #+END_SRC
+*** バックアップとauto-saveの作成
+    my:emacs-backup-dir を設定して, ~/.emacs.d/backup/ 以下に
+    backup と auto-save ファイルを集約することに.
+    #+BEGIN_SRC emacs-lisp
+      (defvar my:emacs-backup-dir (concat user-emacs-directory "backup/"))
+      (setq make-backup-files t)
+      (setq auto-save-default t)
+      (setq backup-directory-alist
+            `(("." . ,(expand-file-name my:emacs-backup-dir))))
+      (setq auto-save-file-name-transforms
+            `((".*" ,(expand-file-name my:emacs-backup-dir) t)))
+      (setq auto-save-timeout 15)
+      (setq auto-save-interval 60)
+      (setq version-control t)
+      (setq kept-new-versions 5)
+      (setq kept-old-versions 5)
+      (setq delete-old-versions t)
+      (setq delete-auto-save-files t)
+    #+END_SRC
+*** 空になったファイルを尋ねずに自動削除
+    #+BEGIN_SRC emacs-lisp
+      (if (not (memq 'delete-file-if-no-contents after-save-hook))
+          (setq after-save-hook
+                (cons 'delete-file-if-no-contents after-save-hook)))
+      (defun delete-file-if-no-contents ()
+        (when (and
+               (buffer-file-name (current-buffer))
+               (= (point-min) (point-max)))
+          (delete-file
+           (buffer-file-name (current-buffer)))))
+    #+END_SRC
+*** scratch を殺さない. 消したら再生成
+    #+BEGIN_SRC emacs-lisp
+      (defun my:make-scratch (&optional arg)
+        (interactive)
+        (progn
+          ;; "*scratch*" を作成して buffer-list に放り込む
+          (set-buffer (get-buffer-create "*scratch*"))
+          (funcall initial-major-mode)
+          (erase-buffer)
+          (when (and initial-scratch-message (not inhibit-startup-message))
+            (insert initial-scratch-message))
+          (or arg
+              (progn
+                (setq arg 0)
+                (switch-to-buffer "*scratch*")))
+          (cond ((= arg 0) (message "*scratch* is cleared up."))
+                ((= arg 1) (message "another *scratch* is created")))))
+      (defun my:buffer-name-list ()
+        (mapcar (function buffer-name) (buffer-list)))
+      (add-hook 'kill-buffer-query-functions
+                ;; *scratch* バッファで kill-buffer したら内容を消去するだけにする
+                (function (lambda ()
+                            (if (string= "*scratch*" (buffer-name))
+                                (progn (my:make-scratch 0) nil)
+                              t))))
+      (add-hook 'after-save-hook
+                ;; *scratch* バッファの内容を保存したら
+                ;; *scratch* バッファを新しく作る.
+                (function
+                 (lambda ()
+                   (unless (member "*scratch*" (my:buffer-name-list))
+                     (my:make-scratch 1)))))
+
+    #+END_SRC
+*** モードラインのファイル名にディレクトリも表示
+    #+BEGIN_SRC emacs-lisp
+      (require 'uniquify)
+      (setq uniquify-buffer-name-style 'post-forward-angle-brackets)
+      (setq uniquify-min-dir-content 1)
+    #+END_SRC
+*** saveplace で前回の修正位置を記憶
+    記憶の保存先は ~/.emacs.d/tmp/emacs-places に
+    #+BEGIN_SRC emacs-lisp
+      (require 'saveplace)
+      (setq-default save-place t)
+      (setq save-place-file
+            (convert-standard-filename
+             (concat user-emacs-directory "tmp/emacs-places")))
+    #+END_SRC
+
+** emacs-server
+   既に emacs-server が起動しているならば何もせず,
+   起動していない場合には emacs-server を起動する.
+   #+BEGIN_SRC emacs-lisp
+     (eval-and-compile (require 'server))
+     (when (and (functionp 'server-running-p)
+                (not (server-running-p)))
+       (server-start))
+   #+END_SRC
+** timestamp の自動更新
+   ファイル内に"＄Lastupdate: ＄" (＄は小文字)がある場合には,
+   save する度にtimestamp を更新する.
+   #+BEGIN_SRC emacs-lisp
+     (require 'time-stamp)
+     (add-hook 'before-save-hook 'time-stamp)
+     (setq time-stamp-active t)
+     (setq time-stamp-line-limit 10)
+     (setq time-stamp-start "$Lastupdate: ")
+     (setq time-stamp-format "%04y/%02m/%02d %02H:%02M:%02S")
+     (setq time-stamp-end "\\$")
+   #+END_SRC
+** EasyPG[0/1]
+   Emacs23からは本体に同梱されているのでrequireする必要ないが,
+   一応残しておく
+   - [ ] gpg-agentと対称鍵暗号化方式の共存が変
+     - Mewみたいに独自にgpg-agent実装しているのもあって良くわからない
+   #+BEGIN_SRC emacs-lisp
+     (require 'epa-file) ; 読み込み
+     ;; 対称鍵のキャッシュを有効化
+     (setq epa-file-cache-passphrase-for-symmetric-encryption t)
+   #+END_SRC
+* Footnotes
+
+[fn:1] バッドノウハウと奥が深い症候群: http://0xcc.net/misc/bad-knowhow.html
+
+[fn:2] Emacs23 日本語向け設定例: http://nijino.homelinux.net/emacs/emacs23-ja.html
+
+[fn:3] Wanderlustと文字コード: http://d.hatena.ne.jp/kiwanami/20091103/1257243524
+
+[fn:4] 鬼軍曹.el: https://github.com/k1LoW/emacs-drill-instructor/wiki/
+
+[fn:5] mode-line-formatをダイエットさす: http://homepage1.nifty.com/blankspace/emacs/mode-line.html
+
+[fn:6] customizing the mode-line: http://emacs-fu.blogspot.jp/2011/08/customizing-mode-line.html
+
+[fn:7] 無駄な行末の空白を削除する(Emacs Advent Calendar jp:2010): http://d.hatena.ne.jp/tototoshi/20101202/1291289625
+
+[fn:8] align設定用例集: http://handlename.hatenablog.jp/entry/2011/12/11/214923
+
+
+
+
+
+
+

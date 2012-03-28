@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/29 03:56:44$
+# $Lastupdate: 2012/03/29 04:05:54$
 # License: GPL-3+
 #
 #+TITLE: Emacsの基本設定
@@ -485,8 +485,12 @@
 ** MUA
    Wanderlustを愛用中
    #+BEGIN_SRC emacs-lisp
-     (when (locate-library "wl")
+     (cond
+      ((string-match system-name "daphne")
        (my:load-org-file "wl_config.org"))
+      (t
+       (my:load-org-file "mew_config.org"))
+      )
    #+END_SRC
 ** [[file:GUI.org][フォントとフレームの設定]]
    #+BEGIN_SRC emacs-lisp

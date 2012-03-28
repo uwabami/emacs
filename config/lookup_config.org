@@ -1,12 +1,16 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/28 05:04:15$
+# $Lastupdate: 2012/03/29 04:18:10$
 # License: Expat.
 #+TITLE: lookup-elの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
 
+* byte-compile 用の小細工その1                                     :noexport:
+  #+BEGIN_SRC emacs-lisp
+    (when (require 'lookup nil t)
+  #+END_SRC
 * 読み込み
 #+BEGIN_SRC emacs-lisp
   (eval-when-compile (require 'lookup))
@@ -34,3 +38,7 @@
          ;; (ndeb "/usr/local/share/dict/eidai6" :alias "研究社 英和大辞典")
          ))
 #+END_SRC
+* byte-compile 用の小細工その2                                     :noexport:
+  #+BEGIN_SRC emacs-lisp
+    )
+  #+END_SRC

@@ -9,11 +9,11 @@
 
 * byte-compile 用の小細工その1                                     :noexport:
   #+BEGIN_SRC emacs-lisp
-    (when (require 'lookup nil t)
+    (when 
+      (require 'lookup nil t)
   #+END_SRC
 * 読み込み
 #+BEGIN_SRC emacs-lisp
-  (eval-when-compile (require 'lookup))
   (autoload 'lookup "lookup" nil t)
   (autoload 'lookup-region "lookup" nil t)
   (autoload 'lookup-pattern "lookup" nil t)

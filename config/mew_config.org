@@ -1,0 +1,36 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# $Lastupdate: 2012/03/29 04:12:12$
+# License: GPL-3+
+#
+#+TITLE: Mew の設定
+#+AUTHOR: Youhei SASAKI
+#+EMAIL: uwabami@gfd-dennou.org>
+* MUA の設定
+#+BEGIN_SRC emacs-lisp
+  (autoload 'mew "mew" nil t)
+  (autoload 'mew-send "mew" nil t)
+  ;; Optional setup (Read Mail menu):
+  (setq read-mail-command 'mew)
+  ;; Optional setup (e.g. C-xm for sending a message):
+  (autoload 'mew-user-agent-compose "mew" nil t)
+  (if (boundp 'mail-user-agent)
+      (setq mail-user-agent 'mew-user-agent))
+  (if (fboundp 'define-mail-user-agent)
+      (define-mail-user-agent
+        'mew-user-agent
+        'mew-user-agent-compose
+        'mew-draft-send-message
+        'mew-draft-kill
+        'mew-send-hook))
+#+END_SRC
+* キーバインド. F3 で Mewを起動
+#+BEGIN_SRC emacs-lisp
+  (global-set-key [f3] 'mew)
+#+END_SRC
+* 設定ファイルの位置の変更
+#+BEGIN_SRC emacs-lisp
+  (setq mew-rc-file
+        (expand-file-name "~/.mew.gpg"))
+#+END_SRC

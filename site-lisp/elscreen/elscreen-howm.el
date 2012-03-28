@@ -97,6 +97,6 @@ buffer-name and corresponding screen-name."
         (elscreen-kill)))))
 
 (eval-after-load "howm-mode"
-  '(progn
+   '(progn
      (define-key howm-mode-map
        "\C-c\C-c" 'howm-save-and-kill-buffer/screen)))

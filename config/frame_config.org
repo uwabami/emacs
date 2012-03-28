@@ -1,8 +1,8 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/28 04:17:22$
-# License: Expat.
+# $Lastupdate: 2012/03/28 23:06:33$
+# License: GPL-3+
 #
 #+TITLE: フォントとフレームの設定
 #+AUTHOR: Youhei SASAKI
@@ -15,7 +15,7 @@ Emacs を Daemon モードで起動させているので,
   #+BEGIN_SRC emacs-lisp
     (defun my:load-theme ()
       (interactive)
-      (my:load-org-file "GUI.org"))
+      (my:load-org-file "frame_config.org"))
   #+END_SRC
 * [[http://d.hatena.ne.jp/khiker/20090809/emacs_opacity][フレームを半透明にする]] [fn:1]
   飽きたら止めると思うけれど.

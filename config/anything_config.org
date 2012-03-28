@@ -1,0 +1,48 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# $Lastupdate: 2012/03/29 01:54:25$
+# License: GPL-3+
+#
+#+TITLE: Anythingの設定
+#+AUTHOR: Youhei SASAKI
+#+EMAIL: uwabami@gfd-dennou.org
+* 始めに
+  何度か挫折しては舞い戻ってくる [[http://emacswiki.org/emacs/Anything][Anything]] [fn:1] の設定とか.
+  あまりに高機能すぎて, よく眩暈をおこして使うのを止めるのですが,
+  最近の Emacs 界隈(ドコ?)では,
+  「Anything が使えないと人じゃない(違」みたいな空気があって
+  挫折しては戻ってきて挫折しては戻ってきて, を繰り返しています.
+* 導入とか
+  [[file:init.org][Emacsの基本設定]] で書いた通り,
+  Debianには[[http://packages.qa.debian.org/a/anything-el.html][パッケージ]] [fn:2]があるので
+  #+BEGIN_EXAMPLE
+  $ apt-get install anything-el
+  #+END_EXAMPLE
+  で OK.
+  パッケージが使えない場合には
+  [[http://tromey.com/elpa/install.html][ELPA]] [fn:3] で anything と anything-config を導入しておく.
+* 設定
+  とりあえず読み込んで基本的なキーバインドだけ設定.
+  現状は iswtichb-mode の代用としてしか使っていない.
+  気がむいたらそのうち他の設定もする, かも
+  #+BEGIN_SRC emacs-lisp
+    (setq anything-c-adaptive-history-file
+          (expand-file-name
+           (concat user-emacs-directory "tmp/anything-c-adaptive-history")))
+    (require 'anything-config)
+    (define-key global-map   (kbd "C-x b") 'anything-for-files)
+    (define-key global-map   (kbd "C-x C-b") 'anything-for-files)
+    (define-key anything-map (kbd "C-z") nil)
+    (define-key anything-map (kbd "C-l") 'anything-execute-persistent-action)
+    (define-key anything-map (kbd "C-o") nil)
+    (define-key anything-map (kbd "C-M-n") 'anything-next-source)
+    (define-key anything-map (kbd "C-M-p") 'anything-previous-source)
+  #+END_SRC
+* Footnotes
+
+[fn:1] Anything - EmacsWiki: [[http://emacswiki.org/emacs/Anything]]
+
+[fn:2] anything-el - Debian PTS: [[http://packages.qa.debian.org/a/anything-el.html]]
+
+[fn:3] ELPA: [[http://tromey.com/elpa/install.html]]

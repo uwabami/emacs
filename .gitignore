@@ -6,6 +6,7 @@ config/sitemap.org
 tmp/*
 elpa/*
 etc/skk/*
+share/*
 site-lisp/00build-stamp
 site-lisp/ddskk/skk-autoloads.el
 old

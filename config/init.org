@@ -1,8 +1,8 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/28 04:59:20$
-# License: Expat.
+# $Lastupdate: 2012/03/29 02:03:33$
+# License: GPL-3+
 #
 #+TITLE: Emacsの基本設定
 #+AUTHOR: Youhei SASAKI
@@ -87,7 +87,13 @@
       (darwin-p
        (require 'ucs-normarize)
        (setq file-name-coding-system 'utf-8-hfs)
-       (setq locale-coding-system 'utf-8-hfs))
+       (setq locale-coding-system 'utf-8-hfs)
+       ;; ついでにキーバインド
+       (global-set-key (kbd "M-v") 'yank)
+       ;; Cmd と Option を逆にする
+       (setq ns-command-modifier 'meta)
+       (setq ns-alternate-modifier 'super)
+       (global-set-key [ns-drag-file] 'ns-find-file))
       (nt-p
        (setq file-name-coding-system 'cp932)
        (setq locale-coding-system 'cp932))
@@ -131,6 +137,14 @@
   Emacsそのものの設定集.
   line-number-modeなど「有効無効をtoggleする関数」は,
   慣習的に0以下の数字を指定すると明示的に無効化できる.
+** 常に $HOME から開始
+   以前(Meadow?)で使っていた時に Cygwin のHOME に移動していないとファイル
+   を開くのが大変だったので指定していた. これを指定していると
+   byte-compile 時に CURDIR を設定する必要があったりして面倒だが,
+   まだ残している.
+   #+BEGIN_SRC emacs-lisp
+     (cd "~/")
+   #+END_SRC
 ** キーバインドの設定
    設定しておいて, 結構忘れていたり.
    とはいえ[home]と[end]は無いと途方に暮れます.
@@ -214,7 +228,10 @@
 ** 表示/編集関連
 *** 余計な空行を入れない
     #+BEGIN_SRC emacs-lisp
+      ;; バッファ終端で newline を入れない
       (setq next-line-add-newlines nil)
+      ;; ;; 保存時に最終行に一行追加するとりあえず使わないことに
+      ;; (setq require-final-newline t)
       (put 'set-goal-column 'disabled nil)
     #+END_SRC
 *** yes or no を y or n に
@@ -358,7 +375,7 @@
      (setq time-stamp-format "%04y/%02m/%02d %02H:%02M:%02S")
      (setq time-stamp-end "\\$")
    #+END_SRC
-** EasyPG[0/1]
+** TODO EasyPG[0/1]
    Emacs23からは本体に同梱されているのでrequireする必要ないが,
    一応残しておく
    - [ ] gpg-agentと対称鍵暗号化方式の共存が変
@@ -371,15 +388,16 @@
 * 分割した設定ファイルの読み込み/外部emacs-lispなどの設定
   以下は Emacs 本体に同梱されていない emacs-lisp program や
   外部ファイルの設定を読み込んでいるモン, など.
-** [[http://www.kanji.zinbun.kyoto-u.ac.jp/~tomo/elisp/APEL/][APEL]] [fn:8] に load-path を通す
-   Web には
+** [[http://www.kanji.zinbun.kyoto-u.ac.jp/~tomo/elisp/APEL/][APEL]] [fn:8] に load-path を通しておく
+   Upstream の Web には
    #+BEGIN_QUOTE
    APEL (A Portable Emacs Library) は可搬性のある Emacs Lisp program の作成を支援するための library です。
    #+END_QUOTE
    とある.
    今ん所, 使っている外部emacs-lispでは
    Wanderlustとhowmがapelに依存している.
-   後者は無いと途方に暮れてしまうので, ここでload-pathの設定をしておく.
+   後者は無いと途方に暮れてしまうので,
+   ここでload-pathの設定をしておく.
    #+BEGIN_SRC emacs-lisp
    (my:not-locate-library emu "site-lisp/apel")
    #+END_SRC
@@ -430,10 +448,10 @@
             (expand-file-name (concat user-emacs-directory "etc/skk")))
       ;; ただし設定ファイルだけは ~/.emacs.d/config 以下に置く
       (setq skk-init-file
-            (expand-file-name (concat user-emacs-directory "config/ddskk")))
+            (expand-file-name (concat user-emacs-directory "config/ddskk_config")))
       ;; org-babel-tangle で ddskk.org から ddskk.el を生成
       (my:org-babel-tangle-and-compile-file
-       (expand-file-name (concat user-emacs-directory "config/ddskk.org")))
+       (expand-file-name (concat user-emacs-directory "config/ddskk_config.org")))
       ;; ddsk の設定ファイルは自動で byte-compile
       (setq skk-byte-compile-init-file t)
       ;; 読み込み
@@ -446,22 +464,27 @@
    Wanderlustを愛用中
    #+BEGIN_SRC emacs-lisp
      (when (locate-library "wl")
-       (my:load-org-file "extra/wl_config.org"))
+       (my:load-org-file "wl_config.org"))
    #+END_SRC
 ** [[file:GUI.org][フォントとフレームの設定]]
    #+BEGIN_SRC emacs-lisp
-   (my:load-org-file "GUI.org")
+   (my:load-org-file "frame_config.org")
    #+END_SRC
 ** [[file:lookup_config.org][lookup-elで電子辞書を引く設定]]
    #+BEGIN_SRC emacs-lisp
      (when (locate-library "lookup")
-       (my:load-org-file "extra/lookup_config.org"))
+       (my:load-org-file "lookup_config.org"))
    #+END_SRC
 ** [[file:migemo_config.org][Migemoの設定]]
    #+BEGIN_SRC emacs-lisp
      (when (and (file-executable-p "/usr/bin/cmigemo")
                 (locate-library "migemo"))
-       (my:load-org-file "extra/migemo_config.org"))
+       (my:load-org-file "migemo_config.org"))
+   #+END_SRC
+** [[http://howm.sourceforge.jp/index-j.html][Howm]] - Hitori Otegaru Wiki Modoki
+   無いと途方に暮れるので, 適宜最新版を site-lisp 以下に持つことに.
+   #+BEGIN_SRC emacs-lisp
+     (my:load-org-file "howm_config.org")
    #+END_SRC
 ** [[file:auto-install_config.org][auto-installとinstallしたelispの設定]]
    #+BEGIN_SRC emacs-lisp
@@ -477,15 +500,35 @@
         (auto-install-from-url "http://repo.or.cz/w/emacs.git/blob_plain/1a0a666f941c99882093d7bd08ced15033bc3f0c:/lisp/emacs-lisp/package.el"))
     #+END_EXAMPLE
     これが実行されると ~/.emacs.d/init.el に設定が追記されるので
-    適宜修正しておくこと.
+    適宜修正しておくこと
 *** 設定
-    リポジトリとして [[http://marmalade-repo.org/][Marmalade]] [fn:11]も追加しておく
+    リポジトリとして [[http://marmalade-repo.org/][Marmalade]] [fn:10]も追加しておく
     #+BEGIN_SRC emacs-lisp
       (require 'package)
       (add-to-list 'package-archives
                    '("marmalade" . "http://marmalade-repo.org/packages/"))
       (package-initialize)
     #+END_SRC
+** AUCTeX
+   Debianのパッケージが無い場合には ELPA で導入しておくこと
+   #+BEGIN_SRC emacs-lisp
+   (my:load-org-file "auctex_config.org")
+   #+END_SRC
+** Anything
+   Debianでは[[http://packages.qa.debian.org/a/anything-el.html][anything-el]] [fn:11] としてパッケージ化されている.
+   パッケージが使えない場合には
+   ELPA で anything と anything-config を導入しておく
+   (auto-install-batch の方が良いのか?).
+   #+BEGIN_SRC emacs-lisp
+     (my:load-org-file "anything_config.org")
+   #+END_SRC
+** auto-complete
+   詳細は [[http://cx4a.org/software/auto-complete/index.ja.html][Auto Complete Mode]] [fn:12] 参照のこと.
+   Debianでは[[http://packages.qa.debian.org/a/auto-complete-el.html][ auto-complete-el]] [fn:13] としてパッケージ化されている.
+   パッケージが無い場合には ELPA で導入すること
+   #+BEGIN_SRC emacs-lisp
+     (my:load-org-file "auto-complete_config.org")
+   #+END_SRC
 * Footnotes
 
 [fn:1] バッドノウハウと奥が深い症候群: [[http://0xcc.net/misc/bad-knowhow.html]]
@@ -506,9 +549,17 @@
 
 [fn:9] ELPA: [[http://tromey.com/elpa/install.html]]
 
-[fn:11] Marmalade: [[http://marmalade-repo.org/]]
+[fn:10] Marmalade: [[http://marmalade-repo.org/]]
 
-[fn:10] align設定用例集: [[http://handlename.hatenablog.jp/entry/2011/12/11/214923]]
+[fn:11] anything-el - Debian PTS: [[http://packages.qa.debian.org/a/anything-el.html]]
+
+[fn:12] Auto Complete Mode: [[http://cx4a.org/software/auto-complete/index.ja.html]]
+
+[fn:13] auto-complete-el- Debian PTS: [[http://packages.qa.debian.org/a/auto-complete-el.html]]
+
+[fn:14] align設定用例集: [[http://handlename.hatenablog.jp/entry/2011/12/11/214923]]
+
+
 
 
 

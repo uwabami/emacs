@@ -1,0 +1,26 @@
+#+BEGIN_SRC emacs-lisp
+  (setq w3m-init-file
+        (expand-file-name
+         (concat user-emacs-directory "config/w3m_config")))
+  (when (require 'w3m-load nil t)
+    (setq w3m-home-page "http://www.gfd-dennou.org/member/uwabami/")
+    (setq w3m-default-save-directory
+          (expand-file-name
+           (concat user-emacs-directory "tmp")))
+    (setq w3m-arrived-file
+          (expand-file-name
+           (concat user-emacs-directory "tmp/w3m-arraived")))
+    (setq w3m-use-cookies t)
+    (setq w3m-cookie-file
+          (expand-file-name
+           (concat user-emacs-directory "tmp/w3m-cookie")))
+    (setq w3m-form-textarea-directory
+          (expand-file-name
+           (concat user-emacs-directory "tmp/w3m-textarea")))
+    (setq w3m-bookmark-file
+          (expand-file-name
+           (concat user-emacs-directory "etc/w3m/bookmark")))
+    (setq w3m-use-tab t)
+    (global-set-key [f4] 'w3m)
+    )
+#+END_SRC

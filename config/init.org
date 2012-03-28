@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/29 02:03:33$
+# $Lastupdate: 2012/03/29 03:56:44$
 # License: GPL-3+
 #
 #+TITLE: Emacsの基本設定
@@ -363,6 +363,20 @@
                 (not (server-running-p)))
        (server-start))
    #+END_SRC
+** browse-url
+   firefox → emacs-w3m → w3 の順で探索
+   #+BEGIN_SRC emacs-lisp
+     (require 'browse-url)
+     (cond
+      ((executable-find "firefox")
+       (setq browse-url-browser-function 'browse-url-firefox))
+      ((and (executable-find "w3m")
+            (locate-library "w3m"))
+       (setq browse-url-browser-function 'w3m-browse-url))
+      (t
+       (setq browse-url-browser-function 'browse-url-w3)))
+     (global-set-key (kbd "C-c C-j") 'browse-url-at-point)
+   #+END_SRC
 ** timestamp の自動更新
    ファイル内に"＄Lastupdate: ＄" (＄は小文字)がある場合には,
    save する度にtimestamp を更新する.
@@ -460,6 +474,14 @@
       (require 'skk-autoloads)
       (require 'skk-cus)
     #+END_SRC
+** emacs-w3m
+   #+BEGIN_SRC emacs-lisp
+     (when (locate-library "w3m-load")
+       (my:org-babel-tangle-and-compile-file
+        (expand-file-name
+         (concat user-emacs-directory "config/w3m_config.org")))
+       (my:load-org-file "w3m_config.org"))
+   #+END_SRC
 ** MUA
    Wanderlustを愛用中
    #+BEGIN_SRC emacs-lisp
@@ -512,7 +534,8 @@
 ** AUCTeX
    Debianのパッケージが無い場合には ELPA で導入しておくこと
    #+BEGIN_SRC emacs-lisp
-   (my:load-org-file "auctex_config.org")
+     (when (locate-library "auctex")
+       (my:load-org-file "auctex_config.org"))
    #+END_SRC
 ** Anything
    Debianでは[[http://packages.qa.debian.org/a/anything-el.html][anything-el]] [fn:11] としてパッケージ化されている.
@@ -520,14 +543,16 @@
    ELPA で anything と anything-config を導入しておく
    (auto-install-batch の方が良いのか?).
    #+BEGIN_SRC emacs-lisp
-     (my:load-org-file "anything_config.org")
+     (when (locate-library "anything-config")
+       (my:load-org-file "anything_config.org"))
    #+END_SRC
 ** auto-complete
    詳細は [[http://cx4a.org/software/auto-complete/index.ja.html][Auto Complete Mode]] [fn:12] 参照のこと.
    Debianでは[[http://packages.qa.debian.org/a/auto-complete-el.html][ auto-complete-el]] [fn:13] としてパッケージ化されている.
    パッケージが無い場合には ELPA で導入すること
    #+BEGIN_SRC emacs-lisp
-     (my:load-org-file "auto-complete_config.org")
+     (when (locate-library "auto-complete-config")
+       (my:load-org-file "auto-complete_config.org"))
    #+END_SRC
 * Footnotes
 

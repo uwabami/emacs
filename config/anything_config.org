@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/30 04:43:32$
+# $Lastupdate: 2012/03/30 04:52:00$
 # License: Expat
 #
 #+TITLE: Anythingの設定
@@ -70,6 +70,8 @@
   #+END_SRC
 ** su→sudo
    #+BEGIN_SRC emacs-lisp
+     (setq tramp-persistency-file-name
+           (concat my:user-emacs-temporary-directory "tramp"))
      (setq anything-su-or-sudo "sudo")
    #+END_SRC
 ** migemoの利用

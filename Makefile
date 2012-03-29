@@ -19,7 +19,7 @@ gc:
 
 TARGET:
 	@for d in $(TARGET_DIR) ;\
-		do $(MAKE) -C $$d ;\
+		do $(MAKE) -C $$d EMACS=$(EMACS) ;\
 	done
 
 clean:

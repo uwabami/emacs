@@ -9,7 +9,7 @@ TARGET: 00build-stamp
 
 00build-stamp:
 	@for d in $(TARGET_DIRS) ;\
-		do $(MAKE) -C $$d ;\
+		do $(MAKE) -C $$d EMACS=$(EMACS) ;\
 	done
 	touch $@
 	

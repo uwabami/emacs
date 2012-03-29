@@ -85,7 +85,7 @@
    #+BEGIN_SRC emacs-lisp
      (cond
       (darwin-p
-       (require 'ucs-normarize)
+       (require 'ucs-normalize)
        (setq file-name-coding-system 'utf-8-hfs)
        (setq locale-coding-system 'utf-8-hfs)
        ;; ついでにキーバインド

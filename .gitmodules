@@ -4,3 +4,9 @@
 [submodule "site-lisp/yasnippet"]
 	path = site-lisp/yasnippet
 	url = git://github.com/capitaomorte/yasnippet.git
+[submodule "site-lisp/color-theme-darkpastel"]
+	path = site-lisp/color-theme-darkpastel
+	url = https://uwabami@github.com/uwabami/color-theme-darkpastel.git
+[submodule "site-lisp/rail"]
+	path = site-lisp/rail
+	url = https://uwabami@github.com/uwabami/rail.git

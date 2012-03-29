@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/30 02:28:51$
+# $Lastupdate: 2012/03/30 04:34:47$
 # License: Expat
 #
 #+TITLE: auto-installとinstallしたelispの設定
@@ -74,6 +74,39 @@
       (global-set-key (kbd "M-7") 'id-manager)
       (setq idm-database-file "~/.gnupg/idm-db.gpg"))
   #+END_SRC
+* [[http://d.hatena.ne.jp/mooz/20101003/p1][zlc.el で Emacs のミニバッファ補完を zsh ライクに]] [fn:3]
+  find-file には zlc を使う
+** install
+   #+BEGIN_SRC emacs-lisp
+     (unless (locate-library "zlc")
+       (auto-install-from-url "https://github.com/mooz/emacs-zlc/raw/master/zlc.el"))
+   #+END_SRC
+** 設定
+   補完時のキーバインド.
+   zlc-reset がうまく動いてくれないような...
+   #+BEGIN_SRC emacs-lisp
+     (let ((map minibuffer-local-map))
+       (define-key map (kbd "<backtab>") 'zlc-select-previous)
+       (define-key map (kbd "S-<tab>")   'zlc-select-previous)
+       (define-key map (kbd "C-p")       'zlc-select-previous-vertical)
+       (define-key map (kbd "C-n")       'zlc-select-next-vertical)
+       (define-key map (kbd "C-b")       'zlc-select-previous)
+       (define-key map (kbd "C-f")       'zlc-select-next)
+       (define-key map (kbd "C-d")       'zlc-reset)
+       )
+   #+END_SRC
+* [[http://d.hatena.ne.jp/tarao/20101011/1286804507][Yet another icompelete]] [fn:4]
+  zlc を更に素敵にしてくれる.
+** install
+   #+BEGIN_SRC emacs-lisp
+     (unless (locate-library "yaicomplete")
+       (auto-install-from-url "http://github.com/tarao/elisp/raw/master/yaicomplete.el"))
+   #+END_SRC
+** 設定
+   #+BEGIN_SRC emacs-lisp
+     (require 'yaicomplete)
+     (yaicomplete-mode)
+   #+END_SRC
 * recentf の拡張
   詳細は rubikitch さんの[[http://d.hatena.ne.jp/rubikitch/20091224/recentf][人は俺を「recentfマスター」と呼ぶ]] [fn:5] を参照.
 ** インストール
@@ -142,5 +175,6 @@
 [fn:4] Yet another icomplete: [[http://d.hatena.ne.jp/tarao/20101011/ 1286804507]]
 
 [fn:5] 人は俺を「recentfマスター」と呼ぶ: [[http://d.hatena.ne.jp/rubikitch/20091224/recentf]]
+
 
 

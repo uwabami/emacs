@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/30 03:09:58$
+# $Lastupdate: 2012/03/30 04:43:32$
 # License: Expat
 #
 #+TITLE: Anythingの設定
@@ -53,17 +53,20 @@
       anything-enable-shortcuts 'alphabet)
    #+END_SRC
 ** キーバインド
+   :PROPERTIES:
+   :ID:       5c4f7137-e3c0-4b48-a861-7975307a54ce
+   :END:
    C-o, C-z はそれぞれ elscreen と howm にわたすので nil に
    #+BEGIN_SRC emacs-lisp
-     (define-key global-map   (kbd "C-x b")   'anything-for-buffers)
-     (define-key global-map   (kbd "C-x C-b") 'anything-for-buffers)
-     (define-key global-map   (kbd "C-x C-f") 'anything-for-files)
-     (define-key global-map   (kbd "M-y")     'anything-show-kill-ring)
-     (define-key anything-map (kbd "C-l")     'anything-execute-persistent-action)
+     (define-key global-map   (kbd "C-x b")       'anything-for-files)
+     (define-key global-map   (kbd "C-x C-b")     'anything-for-files)
+     ;; (define-key global-map   (kbd "C-x C-a C-f") 'anything-for-files)
+     (define-key global-map   (kbd "M-y")         'anything-show-kill-ring)
+     (define-key anything-map (kbd "C-l")         'anything-execute-persistent-action)
      (define-key anything-map (kbd "C-z") nil) ; → howm の prefix
      (define-key anything-map (kbd "C-o") nil) ; → elscreen の prefix
-     (define-key anything-map (kbd "C-M-n")   'anything-next-source)
-     (define-key anything-map (kbd "C-M-p")   'anything-previous-source)
+     (define-key anything-map (kbd "C-M-n")       'anything-next-source)
+     (define-key anything-map (kbd "C-M-p")       'anything-previous-source)
   #+END_SRC
 ** su→sudo
    #+BEGIN_SRC emacs-lisp

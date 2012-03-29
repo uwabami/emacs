@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/30 04:52:00$
+# $Lastupdate: 2012/03/30 04:58:55$
 # License: Expat
 #
 #+TITLE: Anythingの設定
@@ -85,13 +85,12 @@
    #+END_SRC
 ** auto-install を anything
    #+BEGIN_SRC emacs-lisp
-     (my:not-locate-library auto-install "site-lisp/auto-install-el")
-     (require 'anything-auto-install)
+     (require 'anything-auto-install nil t)
    #+END_SRC
 ** キーバインドを anything
    #+BEGIN_SRC emacs-lisp
-     (require 'descbinds-anything)
-     (descbinds-anything-install)
+     (when (require 'descbinds-anything nil t)
+       (descbinds-anything-install))
    #+END_SRC
 * byte-compile 用の小細工2                                         :noexport:
   #+BEGIN_SRC emacs-lisp

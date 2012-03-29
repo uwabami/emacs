@@ -3,7 +3,6 @@
 config/*.el
 config/*.elc
 config/sitemap.org
-auto-install/*
 elpa/*
 etc/skk/*
 share/*

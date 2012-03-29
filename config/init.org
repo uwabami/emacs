@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/30 02:24:14$
+# $Lastupdate: 2012/03/30 02:33:47$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -511,19 +511,19 @@
    auto-install とは異なり, パッケージのバージョン管理もしてくれる.
 *** install
     elpa 自体は auto-install-el で導入することに
-    #+BEGIN_EXAMPLE
+    #+BEGIN_SRC emacs-lisp
       (unless (locate-library "package")
         (auto-install-from-url "http://repo.or.cz/w/emacs.git/blob_plain/1a0a666f941c99882093d7bd08ced15033bc3f0c:/lisp/emacs-lisp/package.el"))
-    #+END_EXAMPLE
+    #+END_SRC
     これが実行されると ~/.emacs.d/init.el に設定が追記されるので
     適宜修正しておくこと
 *** 設定
     リポジトリとして [[http://marmalade-repo.org/][Marmalade]] [fn:10]も追加しておく
     #+BEGIN_SRC emacs-lisp
-      (require 'package)
-      (add-to-list 'package-archives
-                   '("marmalade" . "http://marmalade-repo.org/packages/"))
-      (package-initialize)
+      (when (require 'package nil t)
+        (add-to-list 'package-archives
+                     '("marmalade" . "http://marmalade-repo.org/packages/"))
+        (package-initialize))
     #+END_SRC
 ** AUCTeX
    Debianのパッケージが無い場合には ELPA で導入しておくこと

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/30 02:23:17$
+# $Lastupdate: 2012/03/30 02:28:51$
 # License: Expat
 #
 #+TITLE: auto-installとinstallしたelispの設定
@@ -123,6 +123,14 @@
          (save-buffer))
        )
    #+END_SRC
+* zotexo
+  Firefox の plugin のひとつである Zotero を使って
+  BibTeX 情報を更新するための emacs-lisp.
+  設定は [[file:auctex_config.org][AUCTeX の設定]] で
+  #+BEGIN_SRC emacs-lisp
+    (unless (locate-library "zotexo")
+      (auto-install-from-url "https://zotexo.googlecode.com/svn/trunk/zotexo.el"))
+  #+END_SRC
 * Footnotes
 
 [fn:1] EmacsWiki - AutoInstall: [[http://www.emacswiki.org/emacs/AutoInstall]]

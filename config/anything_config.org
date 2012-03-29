@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/29 19:05:07$
+# $Lastupdate: 2012/03/30 01:53:23$
 # License: Expat
 #
 #+TITLE: Anythingの設定
@@ -12,7 +12,7 @@
     (when (locate-library "anything-config")
   #+END_SRC
 * 始めに
-  何度か挫折しては舞い戻ってくる [[http://emacswiki.org/emacs/Anything][Anything]] [fn:1] の設定とか.
+  何度か挫折しては舞い戻ってくる [[http://emacswiki.org/emacs/Anything][Anything]] [fn:1] の設定.
   あまりに高機能すぎて, よく眩暈をおこして使うのを止めるのですが,
   最近の Emacs 界隈(ドコ?)では,
   「Anything が使えないと人じゃない(違」みたいな空気があって
@@ -27,21 +27,66 @@
   パッケージが使えない場合には
   [[http://tromey.com/elpa/install.html][ELPA]] [fn:3] で anything と anything-config を導入しておく.
 * 設定
-  とりあえず読み込んで基本的なキーバインドだけ設定.
-  現状は iswtichb-mode の代用としてしか使っていない.
-  気がむいたらそのうち他の設定もする, かも
-  #+BEGIN_SRC emacs-lisp
-    (setq anything-c-adaptive-history-file
-          (concat my:user-emacs-temporary-directory "anything-c-adaptive-history"))
+** history の位置変更
+   #+BEGIN_SRC emacs-lisp
+     (setq anything-c-adaptive-history-file
+           (concat my:user-emacs-temporary-directory "anything-c-adaptive-history"))
+   #+END_SRC
+** 読み込み
+   anything-config で一通りの設定を読み込み.
+   #+BEGIN_SRC emacs-lisp
     (require 'anything-config)
-    (define-key global-map   (kbd "C-x b") 'anything-for-files)
-    (define-key global-map   (kbd "C-x C-b") 'anything-for-files)
-    (define-key anything-map (kbd "C-z") nil)
-    (define-key anything-map (kbd "C-l") 'anything-execute-persistent-action)
-    (define-key anything-map (kbd "C-o") nil)
-    (define-key anything-map (kbd "C-M-n") 'anything-next-source)
-    (define-key anything-map (kbd "C-M-p") 'anything-previous-source)
+   #+END_SRC
+** 雑多な設定
+   #+BEGIN_SRC emacs-lisp
+     (setq
+      ;; 候補ほ表示するまでの時間を 0.5 → 0.3 に
+      anything-idle-delay 0.3
+      ;; タイプしてから再描画するまでの時間を 0.1 → 0.3 に
+      anything-input-idle-delay 0.3
+      ;; 最大候補表示数 50 → 100
+      anything-candidate-number-limit 100
+      ;; 体感速度向上
+      anything-quick-update t
+      ;; 選択候補のショートカットをアルファベットに
+      anything-enable-shortcuts 'alphabet)
+   #+END_SRC
+** キーバインド
+   C-o, C-z はそれぞれ elscreen と howm にわたすので nil に
+   #+BEGIN_SRC emacs-lisp
+     (define-key global-map   (kbd "C-x b")   'anything-for-buffers)
+     (define-key global-map   (kbd "C-x C-b") 'anything-for-buffers)
+     (define-key global-map   (kbd "C-x C-f") 'anything-for-files)
+     (define-key global-map   (kbd "M-y")     'anything-show-kill-ring)
+     (define-key anything-map (kbd "C-l")     'anything-execute-persistent-action)
+     (define-key anything-map (kbd "C-z") nil) ; → howm の prefix
+     (define-key anything-map (kbd "C-o") nil) ; → elscreen の prefix
+     (define-key anything-map (kbd "C-M-n")   'anything-next-source)
+     (define-key anything-map (kbd "C-M-p")   'anything-previous-source)
   #+END_SRC
+** su→sudo
+   #+BEGIN_SRC emacs-lisp
+     (setq anything-su-or-sudo "sudo")
+   #+END_SRC
+** migemoの利用
+   #+BEGIN_SRC emacs-lisp
+     (require 'anything-match-plugin nil t)
+     (when (and (locate-library "migemo")
+                (or (executable-find "cmigemo")
+                    (executable-find "migemo")))
+       (my:load-org-file "migemo_config.org")
+       (require 'anything-migemo nil t))
+   #+END_SRC
+** auto-install を anything
+   #+BEGIN_SRC emacs-lisp
+     (my:not-locate-library auto-install "site-lisp/auto-install-el")
+     (require 'anything-auto-install)
+   #+END_SRC
+** キーバインドを anything
+   #+BEGIN_SRC emacs-lisp
+     (require 'descbinds-anything)
+     (descbinds-anything-install)
+   #+END_SRC
 * byte-compile 用の小細工2                                         :noexport:
   #+BEGIN_SRC emacs-lisp
     )

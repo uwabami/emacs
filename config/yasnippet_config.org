@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/29 20:57:43$
+# $Lastupdate: 2012/03/29 21:35:43$
 # License: Expat
 #
 #+TITLE: yasnippetの設定
@@ -34,7 +34,7 @@
     (eval-after-load "yasnippet"
       '(progn
          (defun yas/org-very-safe-expand ()
-           (let ((yas/fallback-behavior '(region-end)turn-nil)) (yas/expand)))
+           (let ((yas/fallback-behavior 'return-nil)) (yas/expand)))
          ))
     (add-hook 'org-mode-hook
               (lambda ()

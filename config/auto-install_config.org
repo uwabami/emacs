@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/29 01:40:47$
+# $Lastupdate: 2012/03/30 02:23:17$
 # License: Expat
 #
 #+TITLE: auto-installとinstallしたelispの設定
@@ -36,16 +36,23 @@
            (expand-file-name
             (concat user-emacs-directory "auto-install/")))
    #+END_SRC
+* cp5022x.el
+  文字コード関連. 無いと途方にくれてしまう.
+** install
+   #+BEGIN_SRC emacs-lisp
+     (unless (locate-library "cp5022x")
+       (auto-install-from-url "http://nijino.homelinux.net/emacs/cp5022x.el"))
+   #+END_SRC
 * auto-async-byte-compile
   auto-installした際に自動でbyte-compileしてくれる.
   他にも, emacs-lisp-mode なファイルを保存するときに,
   非同期にbyte-compileを走らせたりできるので,
   byte-compile 忘れが無い. 結構素敵.
 ** install
-   #+BEGIN_EXAMPLE
+   #+BEGIN_SRC emacs-lisp
      (unless (locate-library "auto-async-byte-compile")
        (auto-install-from-url "http://www.emacswiki.org/emacs/download/auto-async-byte-compile.el"))
-   #+END_EXAMPLE
+   #+END_SRC
 ** 設定
    先頭が "_" で始まるファイルは compile しない
    #+BEGIN_SRC emacs-lisp
@@ -56,10 +63,10 @@
    #+END_SRC
 * [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727][パスワード管理ツール id-manager.el]]
 ** インストール
-   #+BEGIN_EXAMPLE
+   #+BEGIN_SRC emacs-lisp
      (unless (locate-library "id-manager")
        (auto-install-from-url "https://github.com/kiwanami/emacs-id-manager/raw/master/id-manager.el"))
-   #+END_EXAMPLE
+   #+END_SRC
 ** 設定
   #+BEGIN_SRC emacs-lisp
     (when (require 'id-manager nil t)
@@ -67,37 +74,54 @@
       (global-set-key (kbd "M-7") 'id-manager)
       (setq idm-database-file "~/.gnupg/idm-db.gpg"))
   #+END_SRC
-* [[http://d.hatena.ne.jp/mooz/20101003/p1][zlc.el で Emacs のミニバッファ補完を zsh ライクに]] [fn:3]
-  find-file は anything より zlc の方が好み
-** install
-   #+BEGIN_EXAMPLE
-     (auto-install-from-url "https://github.com/mooz/emacs-zlc/raw/master/zlc.el")
-   #+END_EXAMPLE
-** 設定
-   補完のキーバインドを設定しておく
-   zlc-reset が上手く動いてくれないような...
+* recentf の拡張
+  詳細は rubikitch さんの[[http://d.hatena.ne.jp/rubikitch/20091224/recentf][人は俺を「recentfマスター」と呼ぶ]] [fn:5] を参照.
+** インストール
    #+BEGIN_SRC emacs-lisp
-     (when (require 'zlc nil t)
-       (let ((map minibuffer-local-map))
-         (define-key map (kbd "<backtab>") 'zlc-select-previous)
-         (define-key map (kbd "S-<tab>")   'zlc-select-previous)
-         (define-key map (kbd "C-p")       'zlc-select-previous-vertical)
-         (define-key map (kbd "C-n")       'zlc-select-next-vertical)
-         (define-key map (kbd "C-b")       'zlc-select-previous)
-         (define-key map (kbd "C-f")       'zlc-select-next)
-         (define-key map (kbd "C-d")       'zlc-reset)
-         ))
+     (unless (locate-library "recentf-ext")
+       (auto-install-from-url "http://www.emacswiki.org/cgi-bin/wiki/download/recentf-ext.el"))
    #+END_SRC
-* [[http://d.hatena.ne.jp/tarao/20101011/1286804507][Yet another icompelete]] [fn:4]
-  zlc を更に素敵にしてくれる.
+** 読み込み
+   #+BEGIN_SRC emacs-lisp
+     (require 'recentf-ext nil t)
+   #+END_SRC
+* color-moccur
 ** install
-   #+BEGIN_EXAMPLE
-   (auto-install-from-url "http://github.com/tarao/elisp/raw/master/yaicomplete.el")
-   #+END_EXAMPLE
+   #+BEGIN_SRC emacs-lisp
+     (unless (locate-library "color-moccur")
+       (auto-install-from-url "http://emacswiki.org/emacs/download/color-moccur.el"))
+   #+END_SRC
 ** 設定
    #+BEGIN_SRC emacs-lisp
-     (when (require 'yaicomplete nil t)
-       (yaicomplete-mode))
+     (when (require 'color-moccur nil t)
+       ;; M-o に割り当て
+       (define-key global-map (kbd "M-o") 'occur-by-moccur)
+       ;; スペース区切りで AND 検索
+       (setq moccur-split-word t)
+       ;; ディレクトリ検索時に除外するファイル
+       (add-to-list 'dmoccur-exclusion-mask "^#.+#$")
+       ;; Migemo が使えるなら Migemo を使う
+       (when (and (locate-library "migemo")
+                  (or (executable-find "cmigemo")
+                      (executable-find "migemo")))
+         (setq moccur-use-migemo t)))
+   #+END_SRC
+* moccur-edit
+  color-moccurの結果を一括編集
+** install
+   #+BEGIN_SRC emacs-lisp
+     (unless (locate-library "moccur-edit")
+       (auto-install-from-url "http://www.emacswiki.org/emacs/download/moccur-edit.el"))
+   #+END_SRC
+** 設定
+   #+BEGIN_SRC emacs-lisp
+     (when (and (locate-library "color-moccur")
+                (locate-library "moccur-edit"))
+       (require 'moccur-edit)
+       (defadvice moccur-edit-change-file
+         (after save-after-moccur-edit-buffer-activate)
+         (save-buffer))
+       )
    #+END_SRC
 * Footnotes
 
@@ -108,5 +132,7 @@
 [fn:3] zlc.el で Emacs のミニバッファ補完を zsh ライクに: [[http://d.hatena.ne.jp/mooz/20101003/p1]]
 
 [fn:4] Yet another icomplete: [[http://d.hatena.ne.jp/tarao/20101011/ 1286804507]]
+
+[fn:5] 人は俺を「recentfマスター」と呼ぶ: [[http://d.hatena.ne.jp/rubikitch/20091224/recentf]]
 
 

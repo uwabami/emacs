@@ -1,16 +1,22 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/29 20:09:43$
+# $Lastupdate: 2012/03/30 00:54:25$
 # License: Expat
 #
 #+TITLE: フォントとフレームの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
 * 始めに
-Emacs を Daemon モードで起動させているので,
-なにもしないと環境変数 TERM が dump になって font-lock などが悲しくなります.
-なので, クライアント起動時に色やフォントの設定を読み込む事にしました.
+  Emacs を Daemon モードで起動させているので,
+  なにもしないと環境変数 TERM が dump になって font-lock などが悲しくなります.
+  なので, クライアント起動時に色やフォントの設定を読み込む事にしました.
+* カーソルのある位置の face を調べる関数
+  #+BEGIN_SRC emacs-lisp
+    (defun describe-face-at-point ()
+      (interactive)
+      (message "%s" (get-char-property (point) 'face)))
+  #+END_SRC
 * フォントやフレーム関連の設定を再読み込みする関数
   #+BEGIN_SRC emacs-lisp
     (defun my:load-theme ()
@@ -64,6 +70,22 @@ Emacs を Daemon モードで起動させているので,
      '(variable-pitch ((t (:family "Ricty" :size 18 nil 'prepend))))
      '(fixed-pitch ((t (:family "Ricty" :size 18 nil 'prepend))))
      ))
+  #+END_SRC
+* color-theme
+  #+BEGIN_SRC emacs-lisp
+    (load "term/xterm")
+    (when (not (window-system))
+      (xterm-register-default-colors))
+    ;;(tty-set-up-initial-frame-faces)
+    (when (window-system)
+      (set-background-color "#242424")
+      (set-foreground-color "#f6f3e8"))
+    ;; (when (locate-library "color-theme")
+    ;;   (add-to-load-path "site-lisp/color-theme-darkpastel")
+    ;;   (setq color-theme-load-all-themes nil)
+    ;;   (setq color-theme-libraries nil)
+    ;;   (require 'color-theme-darkpastel)
+    ;;   (color-theme-darkpastel))
   #+END_SRC
 * Space や Tab に色付け
   whitespace-mode の方が良いのかもしれないけれど,

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/29 20:00:17$
+# $Lastupdate: 2012/03/30 02:24:14$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -123,16 +123,10 @@
    ~/.emacs.d/auto-install/ 以下に置いています. 本来は外部 elisp なので
    [[file:auto-install.org][auto-install の設定]] で設定するべきなんですが, 他にも影響がありそうなの
    でここで読み込んでいます.
-*** install
-    以下をauto-install-elで評価してinstallします.
-    #+BEGIN_EXAMPLE
-      (auto-install-from-url "http://nijino.homelinux.net/emacs/cp5022x.el")
-    #+END_EXAMPLE
-*** 読み込み
-    単に読み込むだけです.
-    #+BEGIN_SRC emacs-lisp
-      (require 'cp5022x)
-    #+END_SRC
+   #+BEGIN_SRC emacs-lisp
+     (when (locate-library "cp5022x")
+       (require 'cp5022x))
+   #+END_SRC
 * 機種依存しない(ハズ)の雑多な設定
   Emacsそのものの設定集.
   line-number-modeなど「有効無効をtoggleする関数」は,
@@ -349,9 +343,8 @@
       (setq-default save-place t)
       (setq save-place-file
             (convert-standard-filename
-             (concat user-emacs-directory "tmp/emacs-places")))
+             (concat my:user-emacs-temporary-directory "emacs-places")))
     #+END_SRC
-
 ** emacs-server
    既に emacs-server が起動しているならば何もせず,
    起動していない場合には emacs-server を起動する.

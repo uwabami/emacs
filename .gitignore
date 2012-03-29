@@ -3,10 +3,11 @@
 config/*.el
 config/*.elc
 config/sitemap.org
-tmp/*
+auto-install/*
 elpa/*
 etc/skk/*
 share/*
+tmp/*
 site-lisp/00build-stamp
 site-lisp/ddskk/skk-autoloads.el
 old

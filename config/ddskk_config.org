@@ -2,7 +2,7 @@
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
 # $Lastupdate: 2012/03/28 02:09:18$
-# License: GPL-3+
+# License: Expat
 #
 #+TITLE: ddskkの設定
 #+AUTHOR: Youhei SASAKI

@@ -2,7 +2,7 @@
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
 # $Lastupdate: 2012/03/29 20:00:17$
-# License: GPL-3+
+# License: Expat
 #
 #+TITLE: Emacsの基本設定
 #+AUTHOR: Youhei SASAKI

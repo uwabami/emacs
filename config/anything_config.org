@@ -2,7 +2,7 @@
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
 # $Lastupdate: 2012/03/29 19:05:07$
-# License: GPL-3+
+# License: Expat
 #
 #+TITLE: Anythingの設定
 #+AUTHOR: Youhei SASAKI

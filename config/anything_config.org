@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/30 01:53:23$
+# $Lastupdate: 2012/03/30 03:09:58$
 # License: Expat
 #
 #+TITLE: Anythingの設定
@@ -40,15 +40,16 @@
 ** 雑多な設定
    #+BEGIN_SRC emacs-lisp
      (setq
-      ;; 候補ほ表示するまでの時間を 0.5 → 0.3 に
-      anything-idle-delay 0.3
-      ;; タイプしてから再描画するまでの時間を 0.1 → 0.3 に
-      anything-input-idle-delay 0.3
-      ;; 最大候補表示数 50 → 100
-      anything-candidate-number-limit 100
+      ;; 候補を表示するまでの時間を 0.5 → 0.2 に
+      anything-idle-delay 0.2
+      ;; タイプしてから再描画するまでの時間を 0.1 に(default)
+      anything-input-idle-delay 0.1
+      ;; 最大候補表示数 50 (default)
+      anything-candidate-number-limit 50
       ;; 体感速度向上
       anything-quick-update t
       ;; 選択候補のショートカットをアルファベットに
+      ;; これ大文字ファイル名の選択で嵌らないか?
       anything-enable-shortcuts 'alphabet)
    #+END_SRC
 ** キーバインド

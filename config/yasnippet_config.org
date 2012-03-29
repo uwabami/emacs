@@ -1,0 +1,56 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# $Lastupdate: 2012/03/29 19:44:57$
+# License: GPL-3+
+#
+#+TITLE: yasnippetの設定
+#+AUTHOR: Youhei SASAKI
+#+EMAIL: uwabami@gfd-dennou.org
+* byte-compile 用の小細工1                                         :noexport:
+  #+BEGIN_SRC emacs-lisp
+    (when (locate-library "yasnippet")
+  #+END_SRC
+* 始めに
+  本家より
+  #+BEGIN_QUOTE
+  YASnippet は、Emacs のためのテンプレートシステムです。省略形でタイプすると、自動的に関数テンプレートに展開してくれます。次の言語向けのテンプレートが同梱されています： C, C++, C#, Perl, Python, Ruby, SQL, LaTeX, HTML, CSS, ...
+  #+END_QUOTE
+  詳細は [[http://yasnippet-doc-jp.googlecode.com/svn/trunk/doc-jp/index.html][Yet Another Snippet extension]] [fn:1] 参照のこと.
+  Debianでは [[http://packages.qa.debian.org/y/yasnippet.html][yasnippet]] [fn:15] としてパッケージ化されている.
+  パッケージが無い場合には ELPA で導入すること.
+* 設定
+  yasnippet のキーバインドと org-mode のキーバインドがぶつかる [fn:3]
+  のでそれをなんとかするのがまず最初.
+  #+BEGIN_SRC emacs-lisp
+    (require 'yasnippet)
+    (yas/initialize)
+    (make-variable-buffer-local 'yas/trigger-key)
+    (add-hook 'org-mode-hook
+              (lambda ()
+                (yas/minor-mode-on)
+                (setq yas/trigger-key [tab])
+                (add-to-list 'org-tab-first-hook 'yas/org-very-safe-expand)
+                (define-key yas/keymap [tab] 'yas/next-field)))
+    (eval-after-load "yasnippet"
+      '(progn
+         (defun yas/org-very-safe-expand ()
+           (let ((yas/fallback-behavior 'return-nil))
+             (yas/expand)))))
+         ;; (setq yas/root-directory
+         ;;       '((concat my:user-emacs-share-directory "yasnippet/snippets")))
+         ;; (mapc 'yas/load-directory yas/root-directory)))
+  #+END_SRC
+
+* byte-compile 用の小細工2                                         :noexport:
+  #+BEGIN_SRC emacs-lisp
+    )
+  #+END_SRC
+* Footnotes
+
+[fn:1] Yet Another Snippet extension: [[http://yasnippet-doc-jp.googlecode.com/svn/trunk/doc-jp/index.html]]
+
+[fn:2] yasnippet - Debian PTS: [[http://packages.qa.debian.org/y/yasnippet.html]]
+
+[fn:3] Packages that lead to conflicts with Org mode: [[http://orgmode.org/manual/Conflicts.html]]
+

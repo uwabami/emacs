@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/29 04:14:12$
+# $Lastupdate: 2012/03/29 19:03:24$
 # License: GPL-3+
 #
 #+TITLE: Emacsの基本設定
@@ -274,23 +274,21 @@
     my:emacs-backup-dir を設定して, ~/.emacs.d/tmp/ 以下に
     backup と auto-save ファイルを集約することに.
     #+BEGIN_SRC emacs-lisp
-      (defvar my:emacs-backup-dir
-        (expand-file-name (concat user-emacs-directory "tmp/")))
       (setq auto-save-list-file-prefix
-            (concat my:emacs-backup-dir ".saves-"))
+            (concat my:user-emacs-temporary-directory ".saves-"))
       (setq auto-save-default t)
       (setq auto-save-timeout 15)
       (setq auto-save-interval 60)
       (setq make-backup-files t)
       (setq backup-directory-alist
-            `(("." . ,my:emacs-backup-dir)))
-      ;; (setq auto-save-file-name-transforms
-      ;;       `((".*" ,my:emacs-backup-dir t)))
-      ;; (setq version-control t)
-      ;; (setq kept-new-versions 5)
-      ;; (setq kept-old-versions 5)
-      ;; (setq delete-old-versions t)
-      ;; (setq delete-auto-save-files t)
+            `(("." . ,my:user-emacs-temporary-directory)))
+      (setq auto-save-file-name-transforms
+            `((".*" ,my:user-emacs-temporary-directory t)))
+      (setq version-control t)
+      (setq kept-new-versions 5)
+      (setq kept-old-versions 5)
+      (setq delete-old-versions t)
+      (setq delete-auto-save-files t)
     #+END_SRC
 *** 空になったファイルを尋ねずに自動削除
     #+BEGIN_SRC emacs-lisp
@@ -459,13 +457,13 @@
         (require 'skk-autoloads))
       ;; ddskk の辞書ファイル等は ~/.emacs.d/etc/skk 以下に置く
       (setq skk-user-directory
-            (expand-file-name (concat user-emacs-directory "etc/skk")))
+            (concat my:user-emacs-etc-directory "skk"))
       ;; ただし設定ファイルだけは ~/.emacs.d/config 以下に置く
       (setq skk-init-file
-            (expand-file-name (concat user-emacs-directory "config/ddskk_config")))
+            (concat my:user-emacs-config-directory "ddskk_config"))
       ;; org-babel-tangle で ddskk.org から ddskk.el を生成
       (my:org-babel-tangle-and-compile-file
-       (expand-file-name (concat user-emacs-directory "config/ddskk_config.org")))
+       (concat my:user-emacs-config-directory "ddskk_config.org"))
       ;; ddsk の設定ファイルは自動で byte-compile
       (setq skk-byte-compile-init-file t)
       ;; 読み込み
@@ -478,8 +476,7 @@
    #+BEGIN_SRC emacs-lisp
      (when (locate-library "w3m-load")
        (my:org-babel-tangle-and-compile-file
-        (expand-file-name
-         (concat user-emacs-directory "config/w3m_config.org")))
+        (concat my:user-emacs-config-directory "w3m_config.org"))
        (my:load-org-file "w3m_config.org"))
    #+END_SRC
 ** MUA
@@ -558,6 +555,14 @@
      (when (locate-library "auto-complete-config")
        (my:load-org-file "auto-complete_config.org"))
    #+END_SRC
+** yasnippets
+   詳細は [[http://yasnippet-doc-jp.googlecode.com/svn/trunk/doc-jp/index.html][Yet Another Snippet extension]] [fn:14] 参照のこと.
+   Debianでは [[http://packages.qa.debian.org/y/yasnippet.html][yasnippet]] [fn:15] としてパッケージ化されている.
+   パッケージが無い場合には ELPA で導入すること
+   #+BEGIN_SRC emacs-lisp
+     (when (locate-library "yasnippet")
+       (my:load-org-file "yasnippet_config.org"))
+   #+END_SRC
 * Footnotes
 
 [fn:1] バッドノウハウと奥が深い症候群: [[http://0xcc.net/misc/bad-knowhow.html]]
@@ -584,20 +589,10 @@
 
 [fn:12] Auto Complete Mode: [[http://cx4a.org/software/auto-complete/index.ja.html]]
 
-[fn:13] auto-complete-el- Debian PTS: [[http://packages.qa.debian.org/a/auto-complete-el.html]]
+[fn:13] auto-complete-el - Debian PTS: [[http://packages.qa.debian.org/a/auto-complete-el.html]]
 
-[fn:14] align設定用例集: [[http://handlename.hatenablog.jp/entry/2011/12/11/214923]]
+[fn:14] Yet Another Snippet extension: [[http://yasnippet-doc-jp.googlecode.com/svn/trunk/doc-jp/index.html]]
 
+[fn:15] yasnippet - Debian PTS: [[http://packages.qa.debian.org/y/yasnippet.html]]
 
-
-
-
-
-
-
-
-
-
-
-
-
+[fn:16] align設定用例集: [[http://handlename.hatenablog.jp/entry/2011/12/11/214923]]

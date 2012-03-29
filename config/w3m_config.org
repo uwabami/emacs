@@ -1,26 +1,28 @@
+* バイトコンパイル用の小細工1                                      :noexport:
+  #+BEGIN_SRC emacs-lisp
+    (when (locate-library "w3m")
+  #+END_SRC
+* 設定
 #+BEGIN_SRC emacs-lisp
   (setq w3m-init-file
-        (expand-file-name
-         (concat user-emacs-directory "config/w3m_config")))
+        (concat my:user-emacs-config-directory "w3m_config"))
+  (setq w3m-use-cookies t)
+  (setq w3m-use-tab t)
   (when (require 'w3m-load nil t)
     (setq w3m-home-page "http://www.gfd-dennou.org/member/uwabami/")
-    (setq w3m-default-save-directory
-          (expand-file-name
-           (concat user-emacs-directory "tmp")))
+    (setq w3m-default-save-directory my:user-emacs-temporary-directory)
     (setq w3m-arrived-file
-          (expand-file-name
-           (concat user-emacs-directory "tmp/w3m-arraived")))
-    (setq w3m-use-cookies t)
+          (concat my:user-emacs-temporary-directory "w3m-arraived"))
     (setq w3m-cookie-file
-          (expand-file-name
-           (concat user-emacs-directory "tmp/w3m-cookie")))
+          (concat my:user-emacs-temporary-directory "w3m-cookie"))
     (setq w3m-form-textarea-directory
-          (expand-file-name
-           (concat user-emacs-directory "tmp/w3m-textarea")))
+          (concat my:user-emacs-temporary-directory "w3m-textarea"))
     (setq w3m-bookmark-file
-          (expand-file-name
-           (concat user-emacs-directory "etc/w3m/bookmark")))
-    (setq w3m-use-tab t)
+          (concat my:user-emacs-etc-directory "w3m/bookmark"))
     (global-set-key [f4] 'w3m)
     )
 #+END_SRC
+* バイトコンパイル用の小細工2                                      :noexport:
+  #+BEGIN_SRC emacs-lisp
+    )
+  #+END_SRC

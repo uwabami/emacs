@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/29 02:43:19$
+# $Lastupdate: 2012/03/29 17:00:55$
 # License: GPL-3+
 #
 #+TITLE: howm の設定
@@ -32,14 +32,8 @@
     (setq howm-history-file "~/Documents/Dropbox/org/.howm-history")
     (setq howm-menu-file "~/Documents/Dropbox/org/.howm-menu")
   #+END_SRC
-* 読み込み
-  elscreen-howm で define-key (kbd "C-c C-c") されていることに注意.
-  これは org と被る!!
-  #+BEGIN_SRC emacs-lisp
-    (require 'howm)
-    (require 'elscreen-howm)
-  #+END_SRC
-* org-mode でメモを書くために
+
+* org-mode でメモを書くためにその1
   メモはorgで書くので, org-mode の hook として howm-mode を登録しておきます.
   こうすると C-c が org に取られるので, howm の prefix は C-xC-z にしておきます
   #+BEGIN_SRC emacs-lisp
@@ -54,9 +48,19 @@
     ;; ちなみに org に揃える"*"こともできるけれど, 長い文章を書くときに
     ;; シンドイと思う
     ;; (setq howm-view-title-header "*")
+   #+END_SRC
+* 読み込み
+  elscreen-howm で define-key (kbd "C-c C-c") されていることに注意.
+  これは org と被る!!
+  #+BEGIN_SRC emacs-lisp
     ;; \C-x\C-z を使う -> C-c は org-mode と被るから.
     (global-unset-key (kbd "C-x C-z"))
     (setq howm-prefix (kbd "C-x C-z"))
+    (require 'howm)
+    (require 'elscreen-howm)
+  #+END_SRC
+* org-mode でメモを書くためにその2
+  #+BEGIN_SRC emacs-lisp
     (eval-after-load "howm-mode"
       '(progn
          ;; \C-c \C-c は org に渡す

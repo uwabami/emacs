@@ -1,12 +1,16 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/29 01:54:25$
+# $Lastupdate: 2012/03/29 19:05:07$
 # License: GPL-3+
 #
 #+TITLE: Anythingの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
+* byte-compile 用の小細工1                                         :noexport:
+  #+BEGIN_SRC emacs-lisp
+    (when (locate-library "anything-config")
+  #+END_SRC
 * 始めに
   何度か挫折しては舞い戻ってくる [[http://emacswiki.org/emacs/Anything][Anything]] [fn:1] の設定とか.
   あまりに高機能すぎて, よく眩暈をおこして使うのを止めるのですが,
@@ -28,8 +32,7 @@
   気がむいたらそのうち他の設定もする, かも
   #+BEGIN_SRC emacs-lisp
     (setq anything-c-adaptive-history-file
-          (expand-file-name
-           (concat user-emacs-directory "tmp/anything-c-adaptive-history")))
+          (concat my:user-emacs-temporary-directory "anything-c-adaptive-history"))
     (require 'anything-config)
     (define-key global-map   (kbd "C-x b") 'anything-for-files)
     (define-key global-map   (kbd "C-x C-b") 'anything-for-files)
@@ -39,6 +42,10 @@
     (define-key anything-map (kbd "C-M-n") 'anything-next-source)
     (define-key anything-map (kbd "C-M-p") 'anything-previous-source)
   #+END_SRC
+* byte-compile 用の小細工2                                         :noexport:
+  #+BEGIN_SRC emacs-lisp
+    )
+  #+END_SRC
 * Footnotes
 
 [fn:1] Anything - EmacsWiki: [[http://emacswiki.org/emacs/Anything]]
@@ -46,3 +53,4 @@
 [fn:2] anything-el - Debian PTS: [[http://packages.qa.debian.org/a/anything-el.html]]
 
 [fn:3] ELPA: [[http://tromey.com/elpa/install.html]]
+

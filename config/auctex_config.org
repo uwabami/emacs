@@ -1,12 +1,16 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/28 22:12:13$
+# $Lastupdate: 2012/03/29 18:49:30$
 # License: GPL-3+
 #
 #+TITLE: AUCTeX の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
+* byte-compile 用の小細工1                                         :noexport:
+  #+BEGIN_SRC emacs-lisp
+    (when (locate-library "auctex")
+  #+END_SRC
 * 読み込みと基本設定
 #+BEGIN_SRC emacs-lisp
   (load "auctex.el" nil t t)
@@ -168,3 +172,7 @@
   (add-hook 'LaTeX-mode-hook 'zotexo-minor-mode)
   (setq zotexo--auto-update-is-on t)
 #+END_SRC
+* byte-compile 用の小細工2                                         :noexport:
+  #+BEGIN_SRC emacs-lisp
+    )
+  #+END_SRC

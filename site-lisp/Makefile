@@ -1,5 +1,5 @@
 TARGET_DIR	:= $(subst ./, ,$(shell find . -maxdepth 1 -mindepth 1 -type d))
-#EXCLUDE		:= calfw markdown-mode 
+EXCLUDE		:= yasnippet
 TARGET_DIRS	:= $(filter-out $(EXCLUDE),$(TARGET_DIR))
 include $(HOME)/.emacs.d/Mkinclude
 

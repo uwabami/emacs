@@ -2,7 +2,7 @@
 ;;; init.el
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2012/03/29 01:17:52$
+;; $Lastupdate: 2012/03/29 19:13:30$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -64,14 +64,27 @@
 ;; @see http://sakito.jp/emacs/emacs23.html
 ;;
 ;; Emacs 22 以下用に user-emacs-directory を定義する.
+;; 他にも以下の変数を定義
+;; - my:user-emacs-config-directory    → ~/.emacs.d/config
+;; - my:user-emacs-temporary-directory → ~/.emacs.d/tmp
+;; - my:user-emacs-etc-directory       → ~/.emacs.d/etc
+;; - my:user-emacs-share-directory     → ~/.emacs.d/share
 ;;
 (when oldemacs-p
   (defvar user-emacs-directory (expand-file-name "~/.emacs.d/")))
+(defvar my:user-emacs-config-directory
+  (expand-file-name (concat user-emacs-directory "config/")))
+(defvar my:user-emacs-temporary-directory
+  (expand-file-name (concat user-emacs-directory "tmp/")))
+(defvar my:user-emacs-etc-directory
+  (expand-file-name (concat user-emacs-directory "etc/")))
+(defvar my:user-emacs-share-directory
+  (expand-file-name (concat user-emacs-directory "share/")))
 ;;
 ;;; load-path 追加用の関数の定義
 ;;
-;; - 読み込みたくないファイルは, 先頭に "." や "_" をつけると良い
-;; - 最後に add したものが先頭にくる
+;; 最後に add したものが先頭にくるようになっている. 読み込みたくないファ
+;; イルは, 先頭に "." や "_" をつけると良い.
 ;;
 (defun add-to-load-path (&rest paths)
   (let (path)
@@ -89,16 +102,10 @@
 ;; で確認する.
 ;;
 (add-to-load-path
- ;; 分割した設定群の置き場所.
- "config"
- ;; 自作の小物など
- "local-lisp"
- ;; auto-install で install したファイル. auto-install 自体の設定は
- ;; ~/.emacs.d/config/auto-install.org 参照
- "auto-install"
- ;; org-mode は常に最新版(Git HEAD)を load する. git の submodule で
- ;; org-mode の HEAD を持って来ること.
- "site-lisp/org-mode/lisp"
+ "config"                  ; 分割した設定群の置き場所.
+ "local-lisp"              ; 自作の小物など
+ "auto-install"            ; auto-install で install したモノ
+ "site-lisp/org-mode/lisp" ; org-mode (Git HEAD)
  )
 ;;
 ;;; 良く使う macro の定義
@@ -159,19 +166,14 @@
 ;; - my:org-babel-load-file の際にディレクトリ名を
 ;;   ~/.emacs.d/config/ に決め打ち
 ;;
-(defvar my:org-settings-dir (concat user-emacs-directory "config/"))
 (defun my:load-org-file (file)
-  "my:org-settings-dir 以下から my:org-babel-load-file"
-  (my:org-babel-load-file (expand-file-name file my:org-settings-dir)))
+  "my:user-emacs-config-directory 以下から my:org-babel-load-file"
+  (my:org-babel-load-file
+   (expand-file-name file my:user-emacs-config-directory)))
 ;;
 ;; 実際に読み込む.
 ;;
 (my:load-org-file "init.org")
-;;
-;; Emacs Deamon 用に color-theme と fontset を読み込むためだけの関数の追加
-;; (defun my:load-theme ()
-;;   (interactive)
-;;   (my:load-org-file "colorize.org"))
 ;;
 ;;; calculate bootup time/ スピード狂に捧ぐ.
 ;;

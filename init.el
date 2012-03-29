@@ -2,7 +2,7 @@
 ;;; init.el
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2012/03/29 19:13:30$
+;; $Lastupdate: 2012/03/29 20:45:01$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -44,24 +44,12 @@
 ;;
 ;; Emacs のバージョン判定. ELPAのためにEmacs23 まで判定
 ;;
-(defvar oldemacs-p (<= emacs-major-version 22))
-(defvar emacs23-p (= emacs-major-version 23))
+(defvar oldemacs-p (<= emacs-major-version 22)) ; 22 以下?
+(defvar emacs23-p (= emacs-major-version 23))   ; 23 ?
+(defvar darwin-p (eq system-type 'darwin))      ; Mac OS X 用
+(defvar nt-p (eq system-type 'windows-nt))      ; Windows 用
 ;;
-;; Mac の Emacs flavor の判定 <-- darwin しか考えない
-;;
-(defvar darwin-p (eq system-type 'darwin))
-;;
-;; Linux の判定 <-- BSD とか使うようになったらどうするかな?
-;;
-;; (defvar linux-p (eq system-type 'gnu/linux))
-;;
-;; Windows用 <-- NT Emacs のことだけしか考えない
-;;
-(defvar nt-p (eq system-type 'windows-nt))
-;;
-;;; load-path 追加用の変数/関数
-;;
-;; @see http://sakito.jp/emacs/emacs23.html
+;;; ディレクトリ構成を決めるための変数
 ;;
 ;; Emacs 22 以下用に user-emacs-directory を定義する.
 ;; 他にも以下の変数を定義
@@ -72,13 +60,13 @@
 ;;
 (when oldemacs-p
   (defvar user-emacs-directory (expand-file-name "~/.emacs.d/")))
-(defvar my:user-emacs-config-directory
+(defconst my:user-emacs-config-directory
   (expand-file-name (concat user-emacs-directory "config/")))
-(defvar my:user-emacs-temporary-directory
+(defconst my:user-emacs-temporary-directory
   (expand-file-name (concat user-emacs-directory "tmp/")))
-(defvar my:user-emacs-etc-directory
+(defconst my:user-emacs-etc-directory
   (expand-file-name (concat user-emacs-directory "etc/")))
-(defvar my:user-emacs-share-directory
+(defconst my:user-emacs-share-directory
   (expand-file-name (concat user-emacs-directory "share/")))
 ;;
 ;;; load-path 追加用の関数の定義
@@ -110,9 +98,9 @@
 ;;
 ;;; 良く使う macro の定義
 ;;
-;; 今のところ以下を定義
+;; 今のところ以下を定義:
 ;; - my:not-locate-library
-;;   (not (locate-library "foobar") -> (add-to-load-path "foobar")
+;;   - (not (locate-library "foobar") -> (add-to-load-path "foobar")
 ;;
 (defmacro my:not-locate-library (lib &rest list)
   `(when (not (locate-library ,(symbol-name lib)))

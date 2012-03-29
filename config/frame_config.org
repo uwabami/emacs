@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/28 23:06:33$
+# $Lastupdate: 2012/03/29 20:09:43$
 # License: GPL-3+
 #
 #+TITLE: フォントとフレームの設定
@@ -59,11 +59,11 @@ Emacs を Daemon モードで起動させているので,
         (set-fontset-font "fontset-ricty"
                           charset
                           (font-spec :family "Ricty" :size 18 nil 'prepend)))
-      (add-to-list 'default-frame-alist '(font ."fontset-ricty")))
-    (custom-set-faces
+      (add-to-list 'default-frame-alist '(font ."fontset-ricty"))
+     (custom-set-faces
      '(variable-pitch ((t (:family "Ricty" :size 18 nil 'prepend))))
      '(fixed-pitch ((t (:family "Ricty" :size 18 nil 'prepend))))
-     )
+     ))
   #+END_SRC
 * Space や Tab に色付け
   whitespace-mode の方が良いのかもしれないけれど,

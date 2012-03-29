@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/29 18:49:30$
+# $Lastupdate: 2012/03/29 20:30:10$
 # License: GPL-3+
 #
 #+TITLE: AUCTeX の設定
@@ -9,7 +9,8 @@
 #+EMAIL: uwabami@gfd-dennou.org
 * byte-compile 用の小細工1                                         :noexport:
   #+BEGIN_SRC emacs-lisp
-    (when (locate-library "auctex")
+    (when (and (locate-library "auctex")
+               (locate-library "zotexo"))
   #+END_SRC
 * 読み込みと基本設定
 #+BEGIN_SRC emacs-lisp
@@ -163,12 +164,12 @@
    Firefox の Pluginのひとつである Zotero を使って
    BibTeX情報を更新する.
 *** auto-install で導入
-#+begin_example
-(auto-install-from-url "https://zotexo.googlecode.com/svn/trunk/zotexo.el")
-#+end_example
+    #+BEGIN_EXAMPLE
+    (auto-install-from-url "https://zotexo.googlecode.com/svn/trunk/zotexo.el")
+    #+END_EXAMPLE
 *** 設定
 #+BEGIN_SRC emacs-lisp
-  (require 'zotexo)
+  (eval-and-compile (require 'zotexo nil t))
   (add-hook 'LaTeX-mode-hook 'zotexo-minor-mode)
   (setq zotexo--auto-update-is-on t)
 #+END_SRC

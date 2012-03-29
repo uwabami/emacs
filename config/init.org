@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/29 19:03:24$
+# $Lastupdate: 2012/03/29 20:00:17$
 # License: GPL-3+
 #
 #+TITLE: Emacsの基本設定
@@ -557,11 +557,11 @@
    #+END_SRC
 ** yasnippets
    詳細は [[http://yasnippet-doc-jp.googlecode.com/svn/trunk/doc-jp/index.html][Yet Another Snippet extension]] [fn:14] 参照のこと.
-   Debianでは [[http://packages.qa.debian.org/y/yasnippet.html][yasnippet]] [fn:15] としてパッケージ化されている.
-   パッケージが無い場合には ELPA で導入すること
+# Debianでは [[http://packages.qa.debian.org/y/yasnippet.html][yasnippet]] [fn:15] としてパッケージ化されている.
+# パッケージが無い場合には ELPA で導入すること
    #+BEGIN_SRC emacs-lisp
-     (when (locate-library "yasnippet")
-       (my:load-org-file "yasnippet_config.org"))
+     (add-to-load-path "site-lisp/yasnippet")
+     (my:load-org-file "yasnippet_config.org")
    #+END_SRC
 * Footnotes
 

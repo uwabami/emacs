@@ -7,7 +7,7 @@ TARGET_DIR	:= site-lisp auto-install config
 all: TARGET $(ELCFiles)
 
 update:
-	git submodule foreach 'git checkout master ; git pull origin master; git pull --rebase'
+	git submodule foreach 'git fetch --all && git rebase origin/master'
 	rm -f $(HOME)/.emacs.d/site-lisp/00build-stamp
 
 gc:

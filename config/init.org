@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/30 02:33:47$
+# $Lastupdate: 2012/03/30 17:35:54$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -274,6 +274,7 @@
       (setq auto-save-timeout 15)
       (setq auto-save-interval 60)
       (setq make-backup-files t)
+      (setq backup-by-copying t) ; symlink は使わない
       (setq backup-directory-alist
             `(("." . ,my:user-emacs-temporary-directory)))
       (setq auto-save-file-name-transforms
@@ -329,6 +330,29 @@
                    (unless (member "*scratch*" (my:buffer-name-list))
                      (my:make-scratch 1)))))
 
+    #+END_SRC
+*** 履歴ファイル管理
+    undo 関連
+    #+BEGIN_SRC emacs-lisp
+      (setq undo-limit 160000) ; 無限にしたいができないので, 倍に
+      (setq undo-strong-limit 240000)
+      (savehist-mode 1)        ; ミニバッファの履歴を保存しリストア
+      (setq savehist-file
+            (concat my:user-emacs-temporary-directory "history"))
+      (setq history-length t)  ; t で無制限
+    #+END_SRC
+    recentf 関連. [[file:auto-install_config.org][auto-installとinstallしたelispの設定]] も参照のこと.
+    #+BEGIN_SRC emacs-lisp
+      (add-hook 'after-init-hook 'recentf-mode)
+      (eval-after-load "recentf"
+        '(progn
+           (setq recentf-max-saved-items 2000)
+           (setq recentf-save-file
+                 (concat my:user-emacs-temporary-directory "recentf"))
+           (setq recentf-auto-cleanup 'never)
+           (run-with-idle-timer 300 t 'recentf-save-list)
+           (run-with-idle-timer 600 t 'recentf-cleanup)
+           ))
     #+END_SRC
 *** モードラインのファイル名にディレクトリも表示
     #+BEGIN_SRC emacs-lisp
@@ -511,8 +535,9 @@
    auto-install とは異なり, パッケージのバージョン管理もしてくれる.
 *** install
     elpa 自体は auto-install-el で導入することに
-    #+BEGIN_SRC emacs-lisp
+    #+BEGIN_SRC
       (unless (locate-library "package")
+        (require 'auto-install nil t)
         (auto-install-from-url "http://repo.or.cz/w/emacs.git/blob_plain/1a0a666f941c99882093d7bd08ced15033bc3f0c:/lisp/emacs-lisp/package.el"))
     #+END_SRC
     これが実行されると ~/.emacs.d/init.el に設定が追記されるので
@@ -555,6 +580,10 @@
    #+BEGIN_SRC emacs-lisp
      (add-to-load-path "site-lisp/yasnippet")
      (my:load-org-file "yasnippet_config.org")
+   #+END_SRC
+** org-mode
+   #+BEGIN_SRC emacs-lisp
+     (my:load-org-file "org-mode_config.org")
    #+END_SRC
 * Footnotes
 

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/04/04 00:29:15$
+# $Lastupdate: 2012/04/04 21:39:23$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -541,6 +541,8 @@
        (my:load-org-file "lookup_config.org"))
    #+END_SRC
 ** [[file:migemo_config.org][Migemoの設定]]
+   Ruby版の本家Migemo はバージョンによっては UTF-8 で動作しないので
+   C/Migemo じゃない時には使わないように.
    #+BEGIN_SRC emacs-lisp
      (when (and (file-executable-p "/usr/bin/cmigemo")
                 (locate-library "migemo"))

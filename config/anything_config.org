@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/30 04:58:55$
+# $Lastupdate: 2012/04/04 21:35:27$
 # License: Expat
 #
 #+TITLE: Anythingの設定
@@ -82,8 +82,7 @@
    #+BEGIN_SRC emacs-lisp
      (require 'anything-match-plugin nil t)
      (when (and (locate-library "migemo")
-                (or (executable-find "cmigemo")
-                    (executable-find "migemo")))
+                (executable-find "cmigemo"))
        (my:load-org-file "migemo_config.org")
        (require 'anything-migemo nil t))
    #+END_SRC

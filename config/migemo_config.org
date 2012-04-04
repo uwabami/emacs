@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/29 01:16:50$
+# $Lastupdate: 2012/04/04 21:36:54$
 # License: Expat.
 #+TITLE: Migemo の設定
 #+AUTHOR: Youhei SASAKI
@@ -31,19 +31,16 @@
 #+BEGIN_SRC emacs-lisp
   (eval-after-load "migemo"
     '(progn
-       (cond
-        ((file-executable-p "/usr/bin/cmigemo")
-         (setq migemo-command "/usr/bin/cmigemo")
-         (setq migemo-options '("-q" "--emacs"))
-         (setq migemo-dictionary "/usr/share/cmigemo/utf-8/migemo-dict")
-         (setq migemo-coding-system 'utf-8-unix))
-        (t
-         (setq migemo-command "/usr/bin/migemo")
-         (setq migemo-options '("-S" "migemo" "-t" "emacs"  "-i" "\a")))
-        )))
-  (load-library "migemo")
-  (migemo-init)
-  (add-hook 'isearch-mode-hook 'migemo-init)
+       (file-executable-p "/usr/bin/cmigemo")
+       (setq migemo-command "/usr/bin/cmigemo")
+       (setq migemo-options '("-q" "--emacs"))
+       (setq migemo-dictionary "/usr/share/cmigemo/utf-8/migemo-dict")
+       (setq migemo-coding-system 'utf-8-unix))
+    )
+  (when (file-executable-p "/usr/bin/cmigemo")
+    (load-library "migemo")
+    (migemo-init)
+    (add-hook 'isearch-mode-hook 'migemo-init))
 #+END_SRC
 * Footnotes
 

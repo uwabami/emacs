@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/30 04:34:47$
+# $Lastupdate: 2012/04/04 21:34:37$
 # License: Expat
 #
 #+TITLE: auto-installとinstallしたelispの設定
@@ -135,9 +135,9 @@
        (add-to-list 'dmoccur-exclusion-mask "^#.+#$")
        ;; Migemo が使えるなら Migemo を使う
        (when (and (locate-library "migemo")
-                  (or (executable-find "cmigemo")
-                      (executable-find "migemo")))
-         (setq moccur-use-migemo t)))
+                  (executable-find "cmigemo"))
+         (setq moccur-use-migemo t))
+       )
    #+END_SRC
 * moccur-edit
   color-moccurの結果を一括編集

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/04/04 09:29:51$
+# $Lastupdate: 2012/04/04 10:34:04$
 # License: Expat
 #
 #+TITLE: Orgモードの設定
@@ -19,7 +19,7 @@
     ;; 開いた時に画像を inline で表示しない
     (setq org-startup-with-inline-images nil)
     ;; ;; link を return で追う
-    ;; (setq org-retrun-follows-link t)
+    (setq org-retrun-follows-link t)
     ;; フォントロックを有効に
     (add-hook 'org-mode-hook 'turn-on-font-lock)
     ;; 基本ディレクトリ
@@ -34,6 +34,25 @@
     ;;           ("Bug" ?b "** TODO %?   :bug:\n   %i\n   %a\n   %t" nil "Inbox")
     ;;           ("Idea" ?i "** %?\n   %i\n   %a\n   %t" nil "New Ideas")
     ;;           )))
+  #+END_SRC
+* org-babel
+  使う言語の追加
+  #+BEGIN_SRC emacs-lisp
+    (org-babel-do-load-languages
+     'org-babel-load-languages
+     '(
+       (ruby       . t)
+       (sh         . t)
+       (emacs-lisp . t)
+       (ditaa      . t)
+       (dot        . t)
+       (R          . t)
+       (gnuplot    . t)
+       ))
+  #+END_SRC
+  block 評価時の問い合わせの無効化
+  #+BEGIN_SRC emacs-lisp
+    (setq org-confirm-babel-evaluate nil)
   #+END_SRC
 * LaTeX export の設定
 ** 日本語LaTeX用の設定

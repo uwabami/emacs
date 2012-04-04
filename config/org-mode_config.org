@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/30 14:11:05$
+# $Lastupdate: 2012/04/04 09:29:51$
 # License: Expat
 #
 #+TITLE: Orgモードの設定
@@ -18,8 +18,8 @@
     (setq org-startup-folded t)
     ;; 開いた時に画像を inline で表示しない
     (setq org-startup-with-inline-images nil)
-    ;; link を return で追う
-    (setq org-retrun-follows-link t)
+    ;; ;; link を return で追う
+    ;; (setq org-retrun-follows-link t)
     ;; フォントロックを有効に
     (add-hook 'org-mode-hook 'turn-on-font-lock)
     ;; 基本ディレクトリ
@@ -39,10 +39,9 @@
 ** 日本語LaTeX用の設定
    DebianのLaTeXはまだUTF-8を処理できないので, EUC-JPでexportする.
    #+BEGIN_SRC emacs-lisp
-  ;; LaTeX export
-  (require 'org-latex)
-  (setq org-export-latex-coding-system 'euc-jp-unix)
-  (setq org-export-latex-date-format "%Y年%m月%d日")
+     (require 'org-latex)
+     (setq org-export-latex-coding-system 'euc-jp-unix)
+     (setq org-export-latex-date-format "%Y年%m月%d日")
    #+END_SRC
 ** jsarticle classの追加
    inputenc 等は読み込まないことにしてファイル毎にスタイルを設定する.
@@ -67,36 +66,62 @@
      (setq org-latex-to-pdf-process
            '("latexmk -pdfdvi %f"))
    #+END_SRC
-* Beamer export の設定
+* beamer export の設定
   #+BEGIN_SRC emacs-lisp
-    ;; LaTeX-Beamer export
     (require 'org-beamer)
     ;; デフォルトのヘッドラインレベル -> 2
     (setq org-beamer-frame-level 2)
     ;; frame のオプション
     (setq org-beamer-frame-default-options "[fragile]")
     (setq org-export-with-sub-superscripts nil)
-#+END_SRC
-
+  #+END_SRC
 * HTML export の設定
+  [[http://juanreyero.com/open/org-jekyll/index.html#Org-jekyll][Org-jekyll]] [fn:1]でサイト構築を行なっているので, それにまつわる設定
   #+BEGIN_SRC emacs-lisp
-    ;; ;; org-jekyll の読み込み
-    ;; ;; (my:not-locate-library org-jekyll "site-lisp/org-jekyll")
-    ;; ;; HTML export の設定
-    ;; (require 'org-html)
-    ;; ;; default の style sheet は使わない
+    ;; org-html, org-publish
+    (require 'org-html)
+    (require 'org-publish)
+    ;; cache の置き場所を ~/.emacs.d/tmp/org-timestamps/ に変える
+    ;; (setq org-publish-timestamp-directory
+    ;;       (convert-standard-filename (concat user-emacs-directory "tmp/org-timestamps/")))
+    (setq org-publish-use-timestamps-flag nil)
+    ;; org-jekyll の読み込み
+    ;; (my:not-locate-library org-jekyll "site-lisp/org-jekyll")
+    ;; (require 'org-jekyll)
+    ;; (defvar my:org-publish-website
+    ;;   (expand-file-name (concat (getenv "HOME") "/tmp/jekyll/")))
+    ;; (setq org-jekyll-lang-subdirs
+    ;;       '(("en" . "en")
+    ;;         ("ja" . "ja")))
+    ;; (add-to-list 'org-publish-project-alist
+    ;;              `("website-src"
+    ;;                :base-directory "~/tmp/org"
+    ;;                :recursive t
+    ;;                :base-extension "org"
+    ;;                :publishing-directory ,my:org-publish-website
+    ;;                :exclude "^blog\\|^bitacora"
+    ;;                :site-root "http://www.gfd-dennou.org/member/uwabami"
+    ;;                :jekyll-sanitize-permalinks t
+    ;;                :publishing-function org-publish-org-to-html
+    ;;                :section-numbers nil
+    ;;                :headline-levels 4
+    ;;                 :table-of-contents t
+    ;;                 :auto-index nil
+    ;;                 :auto-preamble nil
+    ;;                 :body-only t
+    ;;                 :auto-postamble nil)
+    ;;              )
+    ;; (add-to-list 'org-publish-project-alist
+    ;;              '("website" :components ("website-src")))
+    ;; default の style sheet は使わない
     ;; (setq org-export-html-style-include-default nil)
+    ;;
     ;; ;; -----------------------------------------------------------
     ;; ;;; Website 用の org file の置き場所
     ;; ;; @see http://orgmode.org/worg/org-tutorials/org-publish-html-tutorial.html
-    ;; ;; (require 'org-publish)
     ;; ;;
     ;; ;; バックアップファイルを作成しない
     ;; (setq make-backup-files nil)
-    ;; ;; cache の置き場所を ~/.emacs.d/tmp/org-timestamps/ に変える
-    ;; ;; (setq org-publish-timestamp-directory
-    ;; ;;       (convert-standard-filename (concat user-emacs-directory "tmp/org-timestamps/")))
-    ;; (setq org-publish-use-timestamps-flag nil)
     ;; ;; project の設定
     ;; (setq org-publish-project-alist
     ;;       '(
@@ -165,3 +190,7 @@
     ;; ;; (setq auto-insert-alist
     ;; ;;       '((org-mode . my-org-website-insert-skeleton-maybe)))
   #+END_SRC
+
+* Footnotes
+
+[fn:1] Org-jekyll: [[http://juanreyero.com/open/org-jekyll/index.html#Org-jekyll]]

@@ -1,0 +1,79 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# $Lastupdate: 2012/04/04 08:00:05$
+# License: Expat
+#
+#+TITLE: muse-mode の設定
+#+AUTHOR: Youhei SASAKI
+#+EMAIL: uwabami@gfd-dennou.org
+
+* 始めに
+  [[http://www.gfd-dennou.org/member/uwabami/cc-env/][計算機関連のメモ]] はほとんど全て [[http://mwolson.org/projects/EmacsMuse.html][muse-mode]] [fn:1] で書いています.
+* 読み込み
+  #+BEGIN_SRC emacs-lisp
+    (unless (locate-library "htmlize")
+      (add-to-load-path "site-lisp/org-mode/contrib/lisp/"))
+    (add-to-load-path "site-lisp/muse-el/lisp")
+    (require 'htmlize)
+    (require 'muse)
+    (require 'muse-mode)
+    (require 'muse-colors)
+    (require 'muse-project)
+    (require 'muse-html)
+    (require 'muse-latex)
+    (require 'muse-latex2png)
+  #+END_SRC
+* 雑多な設定
+** キーバインド
+   C-x n で muse-project-find-file
+   #+BEGIN_SRC emacs-lisp
+     (define-key ctl-x-map "n" 'muse-project-find-file)
+   #+END_SRC
+** orgsttuct + outline-minor-mode で編集を org っぽく.
+   #+BEGIN_SRC emacs-lisp
+     (add-hook 'muse-mode-hook 'turn-on-orgstruct)
+     (add-hook 'muse-mode-hook 'turn-on-orgstruct++)
+     (add-hook 'muse-mode-hook
+               (lambda ()
+                 (footnote-mode)
+                 (outline-minor-mode)
+                 (if window-system
+                     (define-key muse-mode-map [tab] 'outline-toggle-children)
+                   (define-key muse-mode-map "\t" 'outline-toggle-children))
+                 ))
+
+   #+END_SRC
+** 文字コード関連
+   #+BEGIN_SRC emacs-lisp
+     (setq muse-xhtml-charset-default "utf-8")
+     (setq muse-html-encoding-default (quote utf-8))
+     (setq muse-html-meta-content-encoding (quote utf-8))
+   #+END_SRC
+* Project の定義
+  今のところ [[http://www.gfd-dennou.org/member/uwabami/cc-env/][計算機関連のメモ]] にしか使わないのでその設定のみ.
+** style
+   #+BEGIN_SRC emacs-lisp
+     (muse-derive-style "my:cc-env" "xhtml"
+                        :author "Youhei SASAKI <uwabami@gfd-dennou.org>"
+                        ;; :style-sheet "../css/cc-env.css"
+                        ;; :header "~/.emacs.d/template/muse/cc-env-header.html"
+                        ;; :footer "~/.emacs.d/template/muse/cc-env-footer.html"
+                        ;; :base-url "http://www.gfd-dennou.org/member/uwabami/cc-env/"
+                        )
+     (setq muse-footer-date-format "%F %H:%M:%S %Z ")
+   #+END_SRC
+** project
+   #+BEGIN_SRC emacs-lisp
+     (setq muse-project-alist
+                 '(
+                   ("cc-env"
+                    ("~/Public/cc-env" :default "index")
+                    (:base "my:cc-env" :path "~/Public/cc-env"))
+                   ))
+   #+END_SRC
+* Footnotes
+
+[fn:1] Emacs Muse:[[http://mwolson.org/projects/EmacsMuse.html]]
+
+

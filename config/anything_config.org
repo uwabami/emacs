@@ -32,6 +32,10 @@
      (setq anything-c-adaptive-history-file
            (concat my:user-emacs-temporary-directory "anything-c-adaptive-history"))
    #+END_SRC
+** non-X 用の ad hoc な対応
+   #+BEGIN_SRC emacs-lisp
+     (setq anything-c-find-files-icons-directory nil)
+   #+END_SRC
 ** 読み込み
    anything-config で一通りの設定を読み込み.
    #+BEGIN_SRC emacs-lisp

@@ -13,3 +13,12 @@
 [submodule "site-lisp/org-jekyll"]
 	path = site-lisp/org-jekyll
 	url = git://github.com/juanre/org-jekyll.git
+[submodule "site-lisp/offlineimap-el"]
+	path = site-lisp/offlineimap-el
+	url = git://git.naquadah.org/offlineimap-el.git
+[submodule "site-lisp/html5-el"]
+	path = site-lisp/html5-el
+	url = git://github.com/hober/html5-el.git
+[submodule "site-lisp/muse-el"]
+	path = site-lisp/muse-el
+	url = git://repo.or.cz/muse-el.git

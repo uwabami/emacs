@@ -1,0 +1,48 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# $Lastupdate: 2012/04/02 18:21:46$
+# License: Expat
+#
+#+TITLE: nxml-mode の設定
+#+AUTHOR: Youhei SASAKI
+#+EMAIL: uwabami@gfd-dennou.org
+* 始めに
+  HTML/XML を手で書くことはもう殆んどないのだけれども,
+  一応設定しておく.
+* HTML5 の rng scheme の追加
+  #+BEGIN_SRC emacs-lisp
+    (my:not-locate-library whattf-dt "site-lisp/html5-el")
+    (eval-after-load "rng-loc"
+      '(progn
+        (add-to-list 'rng-scheme-locating-files
+                     (expand-file-name
+                       (concat user-emacs-directory "site-lisp/html5-el")))
+        (require 'whattf-dt)
+      ))
+  #+END_SRC
+* 設定
+  #+BEGIN_SRC emacs-lisp
+    (eval-when-compile (require 'nxml-mode))
+    ;; html は nxml-mode
+    (add-to-list 'auto-mode-alist
+                 '("\\.[sx]?html?\\(\\.[a-zA-z_]+\\)?\\'" . nxml-mode))
+    (fset 'html-mode 'nxml-mode)
+    ;; xml も nxml-mode
+    (add-to-list 'auto-mode-alist
+                 (cons (concat "\\." (regexp-opt '("xml" "xsd" "sch" "rng" "xslt" "svg" "rss") t) "\\'")
+                       'nxml-mode))
+    (setq magic-mode-alist
+          (cons '("<\ \?xml " . nxml-mode) magic-mode-alist))
+    (fset 'xml-mode 'nxml-mode)
+    ;; </ の補完
+    (setq nxml-slash-auto-complete-flag t)
+    ;; M-TAB での補完 <- 補完は auto-complete があるのでいらないかも
+    (setq nxm-bind-meta-tab-to-complete-flag t)
+    ;; nxml-mode で auto-complete-mode を有効に
+    (add-to-list 'ac-modes 'nxml-mode)
+    ;; インデントの調整
+    (setq nxml-child-indent 2)     ; <- デフォルト
+    (setq nxm-attribute-indent 4 ) ; <- デフォルト
+  #+END_SRC
+

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/30 17:35:54$
+# $Lastupdate: 2012/04/04 00:29:15$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -334,12 +334,12 @@
 *** 履歴ファイル管理
     undo 関連
     #+BEGIN_SRC emacs-lisp
-      (setq undo-limit 160000) ; 無限にしたいができないので, 倍に
-      (setq undo-strong-limit 240000)
+      ;; (setq undo-limit 160000) ; 無限にしたいができないので, 倍に
+      ;; (setq undo-strong-limit 240000)
       (savehist-mode 1)        ; ミニバッファの履歴を保存しリストア
       (setq savehist-file
             (concat my:user-emacs-temporary-directory "history"))
-      (setq history-length t)  ; t で無制限
+      ;; (setq history-length t)  ; t で無制限
     #+END_SRC
     recentf 関連. [[file:auto-install_config.org][auto-installとinstallしたelispの設定]] も参照のこと.
     #+BEGIN_SRC emacs-lisp
@@ -497,11 +497,36 @@
        (my:load-org-file "w3m_config.org"))
    #+END_SRC
 ** MUA
-   Wanderlustを愛用中
+   Wanderlustを愛用中.
+   メールの同期自体は offlineimap を cron でまわして処理しているのだけれども
+   すぐにメールが欲しい事があるので, それに対応するために
+   [[http://julien.danjou.info/software/offlineimap.el][offlineimap for Emacs]] も設定.
    #+BEGIN_SRC emacs-lisp
      (cond
       ((string-match system-name "daphne")
-       (my:load-org-file "wl_config.org"))
+       (my:load-org-file "wl_config.org")
+       (add-to-load-path "site-lisp/offlineimap-el")
+       (autoload 'offlineimap "offlineimap" nil t)
+       (eval-after-load "offlineimap"
+         '(progn
+            (setq offlineimap-command "offlineimap -u Machine.MachineUI")
+            (setq offlineimap-buffer-maximum-size 3000)
+            (setq offlineimap-mode-line-symbol "imap")
+            (setq offlineimap-enable-mode-line-p
+                  '(member major-mode
+                           '(offlineimap-mode
+                             wl-summary-mode
+                             wl-folder-mode
+                             wl-message-mode)))
+            (defun offlineimap-real-quit
+              "real quit offline-imap"
+              (interactive)
+              (offlineimap-kill)
+              (offlineimap-quit)
+              (define-key offlineimap-mode-map (kbd "Q") 'offlineimap-real-quit))
+              ))
+       (global-set-key [f1] 'offlineimap)
+       )
       (t
        (my:load-org-file "mew_config.org"))
       )
@@ -571,12 +596,11 @@
    パッケージが無い場合には ELPA で導入すること
    #+BEGIN_SRC emacs-lisp
      (when (locate-library "auto-complete-config")
-       (my:load-org-file "auto-complete_config.org"))
+      (my:load-org-file "auto-complete_config.org"))
    #+END_SRC
 ** yasnippets
    詳細は [[http://yasnippet-doc-jp.googlecode.com/svn/trunk/doc-jp/index.html][Yet Another Snippet extension]] [fn:14] 参照のこと.
-# Debianでは [[http://packages.qa.debian.org/y/yasnippet.html][yasnippet]] [fn:15] としてパッケージ化されている.
-# パッケージが無い場合には ELPA で導入すること
+   手放せなくなってきたので site-lisp 以下に submodule にしている.
    #+BEGIN_SRC emacs-lisp
      (add-to-load-path "site-lisp/yasnippet")
      (my:load-org-file "yasnippet_config.org")
@@ -584,6 +608,20 @@
 ** org-mode
    #+BEGIN_SRC emacs-lisp
      (my:load-org-file "org-mode_config.org")
+   #+END_SRC
+** nxml-mode
+   #+BEGIN_SRC emacs-lisp
+     (my:load-org-file "nxml-mode_config.org")
+   #+END_SRC
+** ruby-mode
+   #+BEGIN_SRC emacs-lisp
+     (my:load-org-file "ruby-mode_config.org")
+   #+END_SRC
+** [[http://mwolson.org/projects/EmacsMuse.html][EmacsMuse]] [fn:15]
+   site-lisp 以下に submodule にしている.
+   #+BEGIN_SRC emacs-lisp
+     (add-to-load-path "site-lisp/muse-el/lisp")
+     (my:load-org-file "muse_config.org")
    #+END_SRC
 * Footnotes
 
@@ -615,6 +653,6 @@
 
 [fn:14] Yet Another Snippet extension: [[http://yasnippet-doc-jp.googlecode.com/svn/trunk/doc-jp/index.html]]
 
-[fn:15] yasnippet - Debian PTS: [[http://packages.qa.debian.org/y/yasnippet.html]]
-
 [fn:16] align設定用例集: [[http://handlename.hatenablog.jp/entry/2011/12/11/214923]]
+
+[fn:15] Emacs Muse: [[http://mwolson.org/projects/EmacsMuse.html]]

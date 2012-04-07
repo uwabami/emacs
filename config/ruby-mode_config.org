@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/04/04 09:26:48$
+# $Lastupdate: 2012/04/05 19:59:04$
 # License: Expat
 #
 #+TITLE: ruby-mode の設定

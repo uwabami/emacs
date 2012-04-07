@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/04/04 21:34:37$
+# $Lastupdate: 2012/04/07 01:02:40$
 # License: Expat
 #
 #+TITLE: auto-installとinstallしたelispの設定
@@ -164,6 +164,18 @@
     (unless (locate-library "zotexo")
       (auto-install-from-url "https://zotexo.googlecode.com/svn/trunk/zotexo.el"))
   #+END_SRC
+* popup-color-at-point
+** install
+   #+BEGIN_SRC emacs-lisp
+    (when (and (locate-library "popup")
+               (not (locate-library "popup-color-at-point")))
+      (auto-install-from-url "https://gist.github.com/raw/762297/b2a27ccd471a21e30dd82b3adb126b8caed41548/popup-color-at-point.el"))
+   #+END_SRC
+** 設定
+   #+BEGIN_SRC emacs-lisp
+     (when (locate-library "popup")
+       (require 'popup-color-at-point))
+   #+END_SRC
 * Footnotes
 
 [fn:1] EmacsWiki - AutoInstall: [[http://www.emacswiki.org/emacs/AutoInstall]]

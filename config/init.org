@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/04/04 21:39:23$
+# $Lastupdate: 2012/04/07 16:52:27$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -624,6 +624,11 @@
    #+BEGIN_SRC emacs-lisp
      (add-to-load-path "site-lisp/muse-el/lisp")
      (my:load-org-file "muse_config.org")
+   #+END_SRC
+** twittering-mode
+   #+BEGIN_SRC emacs-lisp
+     (my:not-locate-library twittering-mode "site-lisp/twittering-mode")
+     (my:load-org-file "twmode_config.org")
    #+END_SRC
 * Footnotes
 

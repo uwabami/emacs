@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/04/07 01:02:40$
+# $Lastupdate: 2012/04/08 03:37:19$
 # License: Expat
 #
 #+TITLE: auto-installとinstallしたelispの設定
@@ -176,6 +176,12 @@
      (when (locate-library "popup")
        (require 'popup-color-at-point))
    #+END_SRC
+** [[http://d.hatena.ne.jp/khiker/20070503/emacs_text_translator][Emacs でテキスト翻訳をする elisp]].[fn:6]
+   その名も text-translator-el.
+   #+BEGIN_SRC emacs-lisp
+     (require 'text-translator-load)
+     (global-set-key "\C-xt" 'text-translator-all-by-auto-selection)
+   #+END_SRC
 * Footnotes
 
 [fn:1] EmacsWiki - AutoInstall: [[http://www.emacswiki.org/emacs/AutoInstall]]
@@ -187,6 +193,8 @@
 [fn:4] Yet another icomplete: [[http://d.hatena.ne.jp/tarao/20101011/ 1286804507]]
 
 [fn:5] 人は俺を「recentfマスター」と呼ぶ: [[http://d.hatena.ne.jp/rubikitch/20091224/recentf]]
+
+[fn:6] text-translator-el: http://d.hatena.ne.jp/khiker/20070503/emacs_text_translator
 
 
 

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/04/04 10:34:04$
+# $Lastupdate: 2012/04/08 04:14:02$
 # License: Expat
 #
 #+TITLE: Orgモードの設定
@@ -100,15 +100,35 @@
     ;; org-html, org-publish
     (require 'org-html)
     (require 'org-publish)
-    ;; cache の置き場所を ~/.emacs.d/tmp/org-timestamps/ に変える
-    ;; (setq org-publish-timestamp-directory
-    ;;       (convert-standard-filename (concat user-emacs-directory "tmp/org-timestamps/")))
-    (setq org-publish-use-timestamps-flag nil)
-    ;; org-jekyll の読み込み
     ;; (my:not-locate-library org-jekyll "site-lisp/org-jekyll")
     ;; (require 'org-jekyll)
-    ;; (defvar my:org-publish-website
-    ;;   (expand-file-name (concat (getenv "HOME") "/tmp/jekyll/")))
+    (setq org-publish-webpage
+          (expand-file-name
+           (concat (getenv "HOME") "/tmp/web")))
+    (add-to-list 'org-publish-project-alist
+                 `("src"
+                   :base-directory "~/tmp/web"
+                   :recursive nil
+                   :base-extension "org"
+                   :publishing-directory ,org-publish-webpage
+                   :publishing-function org-publish-org-to-html
+                   :jekyll-sanitize-permalinks t)
+                 )
+    (add-to-list 'org-publish-project-alist
+                 `("img"
+                   :base-directory "~/tmp/web/img"
+                   :base-extension "jpg\\|png"
+                   :publishing-directory (concat ,org-publish-webpage "/img")
+                   :publishing-function org-publish-attachment)
+                 )
+    (add-to-list 'org-publish-project-alist
+                 '("web" :components ("src"
+                                      "img")
+                   ))
+    ;; cache の置き場所を ~/.emacs.d/tmp/org-timestamps/ に変える
+    (setq org-publish-timestamp-directory
+          (concat my:user-emacs-temporary-directory "org-timestamps/"))
+    (setq org-publish-use-timestamps-flag nil)
     ;; (setq org-jekyll-lang-subdirs
     ;;       '(("en" . "en")
     ;;         ("ja" . "ja")))

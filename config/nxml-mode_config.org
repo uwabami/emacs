@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/04/02 18:21:46$
+# $Lastupdate: 2012/04/07 22:39:48$
 # License: Expat
 #
 #+TITLE: nxml-mode の設定
@@ -12,14 +12,14 @@
   一応設定しておく.
 * HTML5 の rng scheme の追加
   #+BEGIN_SRC emacs-lisp
-    (my:not-locate-library whattf-dt "site-lisp/html5-el")
-    (eval-after-load "rng-loc"
-      '(progn
-        (add-to-list 'rng-scheme-locating-files
-                     (expand-file-name
-                       (concat user-emacs-directory "site-lisp/html5-el")))
-        (require 'whattf-dt)
-      ))
+    ;; (my:not-locate-library whattf-dt "site-lisp/html5-el")
+    ;; (eval-after-load "rng-loc"
+    ;;   '(progn
+    ;;     (add-to-list 'rng-scheme-locating-files
+    ;;                  (expand-file-name
+    ;;                    (concat user-emacs-directory "site-lisp/html5-el")))
+    ;;     (require 'whattf-dt)
+    ;;   ))
   #+END_SRC
 * 設定
   #+BEGIN_SRC emacs-lisp

@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8-unix; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2012/03/29 23:31:49$
+;; $Lastupdate: 2012/04/17 12:10:32$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -43,8 +43,9 @@
 ;;
 ;; Emacs のバージョン判定. ELPAのためにEmacs23 まで判定
 ;;
-(defvar oldemacs-p (<= emacs-major-version 22)) ; 22 以下?
-(defvar emacs23-p (= emacs-major-version 23))   ; 23 ?
+(defvar oldemacs-p (< emacs-major-version 22))  ; 22 未満
+(defvar emacs22-p (<= emacs-major-version 22))  ; 22 以下
+(defvar emacs23-p (>= emacs-major-version 23))  ; 23 以上
 (defvar darwin-p (eq system-type 'darwin))      ; Mac OS X 用
 (defvar nt-p (eq system-type 'windows-nt))      ; Windows 用
 ;;

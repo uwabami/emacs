@@ -1,0 +1,73 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# $Lastupdate: 2012/04/18 15:36:39$
+# License: Expat
+#
+#+TITLE: AutoInsertでテンプレートを自動挿入
+#+AUTHOR: Youhei SASAKI
+#+EMAIL: uwabami@gfd-dennou.org
+* 始めに
+* 読み込みと初期設定
+** 読み込み
+   #+BEGIN_SRC emacs-lisp
+     (require 'autoinsert)
+     (auto-insert-mode 1)
+   #+END_SRC
+** insert 時の問い合わせ無効化
+   #+BEGIN_SRC emacs-lisp
+     (setq auto-insert-query nil)
+   #+END_SRC
+** テンプレートディレクトリの設定
+   末尾に "/" が必要なので注意
+   #+BEGIN_SRC emacs-lisp
+     (setq auto-insert-directory "~/.emacs.d/template/")
+   #+END_SRC
+** hook
+   #+BEGIN_SRC emacs-lisp
+     (add-hook 'find-file-hooks 'auto-insert)
+   #+END_SRC
+* テンプレート内の置換変数/関数の定義
+** テンプレート内の置換変数の定義
+   #+BEGIN_SRC emacs-lisp
+     (defvar my:autoinsert-template-replace-alist
+       '(("%file%" .
+          (lambda()
+            (file-name-nondirectory (buffer-file-name))))
+         ("%author%" . (lambda()(identity user-full-name)))
+         ("%email%"  . (lambda()(identity user-mail-address)))
+         ("%filewithoutext%" .
+          (lambda()
+            (file-name-sans-extension (file-name-nondirectory (buffer-file-name)))))
+         ))
+   #+END_SRC
+** テンプレート内の置換関数の定義
+   #+BEGIN_SRC emacs-lisp
+     (defun my:template ()
+       (time-stamp)
+       (mapc #'(lambda(c)
+                 (progn
+                   (goto-char (point-min))
+                   (replace-string (car c) (funcall (cdr c)) nil)))
+             my:autoinsert-template-replace-alist)
+       (goto-char (point-max))
+       (message "done."))
+   #+END_SRC
+* TODO テンプレートの設定[0/1]
+  - [ ] org の場合, ディレクトリに合わせてテンプレートを切り替えたい
+  #+BEGIN_SRC emacs-lisp
+    (setq auto-insert-alist
+          (nconc '(
+                   ("\\.el$"   . ["template.el"   my:template])
+                   ("\\.rb$"   . ["template.rb"   my:template])
+                   ("\\.rbt$"  . ["template.rbt"  my:template])
+                   ("\\.zsh$"  . ["template.zsh"  my:template])
+                   ("\\.sh$"   . ["template.sh"   my:template])
+                   ("\\.f90$"  . ["template.f90"  my:template])
+                   ("\\.cpp$"  . ["template.cpp"  my:template])
+                   ("\\.tex$"  . ["template.tex"  my:template])
+    ;;               ("\\.org$"  . ["template.org"  my:template])
+                   ("\\.muse$" . ["template.muse" my:template])
+                   ) auto-insert-alist))
+  #+END_SRC
+

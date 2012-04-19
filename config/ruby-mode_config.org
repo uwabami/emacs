@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/04/05 19:59:04$
+# $Lastupdate: 2012/04/17 13:00:01$
 # License: Expat
 #
 #+TITLE: ruby-mode の設定
@@ -18,6 +18,8 @@
       "Major mode for ruby files" t)
     (add-to-list 'auto-mode-alist
                  '("\\.rb$" . ruby-mode))
+    (add-to-list 'auto-mode-alist
+                 '("Rakefile$" . ruby-mode))
     (add-to-list 'interpreter-mode-alist
                  '("ruby" . ruby-mode))
   #+END_SRC

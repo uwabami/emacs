@@ -1,0 +1,45 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# $Lastupdate: 2012/04/12 00:21:35$
+# License: Expat
+#
+#+TITLE: tdiary-modeの設定
+#+AUTHOR: Youhei SASAKI
+#+EMAIL: uwabami@gfd-dennou.org
+* 始めに
+  いわゆる tDiary を使っています.
+  この手の日記なり Blog なりは Emacs から更新できてナンボだと思うので
+  tdiary-mode が無いと途方に暮れます.
+
+  その設定とか
+* 導入
+  tDiary の git HEAD から auto-install で持ってきます.
+  #+BEGIN_SRC emacs-lisp
+    ;; (unless (locate-library "tdiary-mode")
+    ;;   (auto-install-from-url "https://raw.github.com/tdiary/tdiary-contrib/master/util/tdiary-mode/http.el")
+    ;;   (auto-install-from-url "https://raw.github.com/tdiary/tdiary-contrib/master/util/tdiary-mode/tdiary-mode.el"))
+  #+END_SRC
+* 設定
+  読み込みとか.
+  日記は RD で書いているので, その設定とか.
+  #+BEGIN_SRC emacs-lisp
+    (eval-when-compile
+      (require 'tdiary-mode-socks)
+      (require 'rd-mode))
+    (setq socks-server '("Default" "localhost" "1080" 5))
+    (setq tdiary-browser-function 'nil)
+    (setq tdiary-diary-list '(("log" "https://uwabami.junkhub.org/log/")))
+    (setq tdiary-text-directory
+          (expand-file-name (concat (getenv "HOME") "/Documents/Dropbox/tdiary/")))
+    (autoload 'tdiary-mode "tdiary-mode" nil t)
+    (autoload 'tdiary-new "tdiary-mode" nil t)
+    (autoload 'tdiary-new-diary "tdiary-mode" nil t)
+    (autoload 'tdiary-replace "tdiary-mode" nil t)
+    (setq tdiary-init-file "~/Documents/Dropbox/tdiary/tdiary-mode.gpg")
+    (setq tdiary-coding-system 'utf-8-unix)
+    (setq tdiary-style-mode 'rd-mode)
+    (setq tdiary-hour-offset 2)
+    (setq tdiary-text-suffix ".rd")
+    (setq tdiary-text-save-p t)
+  #+END_SRC

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/04/08 04:14:02$
+# $Lastupdate: 2012/04/13 02:11:48$
 # License: Expat
 #
 #+TITLE: Orgモードの設定
@@ -100,30 +100,28 @@
     ;; org-html, org-publish
     (require 'org-html)
     (require 'org-publish)
-    ;; (my:not-locate-library org-jekyll "site-lisp/org-jekyll")
-    ;; (require 'org-jekyll)
     (setq org-publish-webpage
           (expand-file-name
            (concat (getenv "HOME") "/tmp/web")))
     (add-to-list 'org-publish-project-alist
                  `("src"
                    :base-directory "~/tmp/web"
-                   :recursive nil
+                   :recursive t
+                   :exclude ".*\.el\\|^Makefile\\|.*\.gpg\\|sitemap\.org\\|^cc-env\\|^img"
                    :base-extension "org"
                    :publishing-directory ,org-publish-webpage
                    :publishing-function org-publish-org-to-html
-                   :jekyll-sanitize-permalinks t)
+                   )
                  )
+    ;; (add-to-list 'org-publish-project-alist
+    ;;              `("img"
+    ;;                :base-directory "~/tmp/web/img"
+    ;;                :base-extension "jpg\\|png"
+    ;;                :publishing-directory (concat ,org-publish-webpage "/img")
+    ;;                :publishing-function org-publish-attachment)
+    ;;              )
     (add-to-list 'org-publish-project-alist
-                 `("img"
-                   :base-directory "~/tmp/web/img"
-                   :base-extension "jpg\\|png"
-                   :publishing-directory (concat ,org-publish-webpage "/img")
-                   :publishing-function org-publish-attachment)
-                 )
-    (add-to-list 'org-publish-project-alist
-                 '("web" :components ("src"
-                                      "img")
+                 '("web" :components ("src")
                    ))
     ;; cache の置き場所を ~/.emacs.d/tmp/org-timestamps/ に変える
     (setq org-publish-timestamp-directory
@@ -152,9 +150,6 @@
     ;;              )
     ;; (add-to-list 'org-publish-project-alist
     ;;              '("website" :components ("website-src")))
-    ;; default の style sheet は使わない
-    ;; (setq org-export-html-style-include-default nil)
-    ;;
     ;; ;; -----------------------------------------------------------
     ;; ;;; Website 用の org file の置き場所
     ;; ;; @see http://orgmode.org/worg/org-tutorials/org-publish-html-tutorial.html
@@ -228,6 +223,9 @@
     ;; ;; (setq auto-insert-query nil)
     ;; ;; (setq auto-insert-alist
     ;; ;;       '((org-mode . my-org-website-insert-skeleton-maybe)))
+    ;; default の style sheet は使わない
+    ;;(setq org-export-html-style-include-default nil)
+
   #+END_SRC
 
 * Footnotes

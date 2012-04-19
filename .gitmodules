@@ -22,6 +22,3 @@
 [submodule "site-lisp/muse-el"]
 	path = site-lisp/muse-el
 	url = git://repo.or.cz/muse-el.git
-[submodule "site-lisp/twittering-mode"]
-	path = site-lisp/twittering-mode
-	url = git://github.com/hayamiz/twittering-mode.git

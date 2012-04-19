@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/04/07 16:52:27$
+# $Lastupdate: 2012/04/17 18:40:12$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -129,6 +129,7 @@
    #+END_SRC
 * 機種依存しない(ハズ)の雑多な設定
   Emacsそのものの設定集.
+
   line-number-modeなど「有効無効をtoggleする関数」は,
   慣習的に0以下の数字を指定すると明示的に無効化できる.
 ** 常に $HOME から開始
@@ -577,6 +578,11 @@
                      '("marmalade" . "http://marmalade-repo.org/packages/"))
         (package-initialize))
     #+END_SRC
+** autoinsert
+   テンプレートの自動挿入
+   #+BEGIN_SRC emacs-lisp
+     (my:load-org-file "autoinsert_config.org")
+   #+END_SRC
 ** AUCTeX
    Debianのパッケージが無い場合には ELPA で導入しておくこと
    #+BEGIN_SRC emacs-lisp
@@ -600,6 +606,11 @@
      (when (locate-library "auto-complete-config")
       (my:load-org-file "auto-complete_config.org"))
    #+END_SRC
+** flyspell-mode
+   とりあえず auto-complete (popup.el) の後に読み込む事に.
+   #+BEGIN_SRC emacs-lisp
+     (my:load-org-file "flyspell_config.org")
+   #+END_SRC
 ** yasnippets
    詳細は [[http://yasnippet-doc-jp.googlecode.com/svn/trunk/doc-jp/index.html][Yet Another Snippet extension]] [fn:14] 参照のこと.
    手放せなくなってきたので site-lisp 以下に submodule にしている.
@@ -619,16 +630,20 @@
    #+BEGIN_SRC emacs-lisp
      (my:load-org-file "ruby-mode_config.org")
    #+END_SRC
+** fortran-mode
+   f90 の場合もここで設定
+   #+BEGIN_SRC emacs-lisp
+     (my:load-org-file "fortran-mode_config.org")
+   #+END_SRC
 ** [[http://mwolson.org/projects/EmacsMuse.html][EmacsMuse]] [fn:15]
    site-lisp 以下に submodule にしている.
    #+BEGIN_SRC emacs-lisp
      (add-to-load-path "site-lisp/muse-el/lisp")
      (my:load-org-file "muse_config.org")
    #+END_SRC
-** twittering-mode
+** tdiary-mode
    #+BEGIN_SRC emacs-lisp
-     (my:not-locate-library twittering-mode "site-lisp/twittering-mode")
-     (my:load-org-file "twmode_config.org")
+   (my:load-org-file "tdiary-mode_config.org")
    #+END_SRC
 * Footnotes
 

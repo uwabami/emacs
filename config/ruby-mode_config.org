@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/04/17 13:00:01$
+# $Lastupdate: 2012/04/19 18:06:12$
 # License: Expat
 #
 #+TITLE: ruby-mode の設定
@@ -11,9 +11,13 @@
   Ruby 愛しているよ Ruby.
   あと [[http://rabbit-shockers.org/][Rabbit]] の設定もしておく.
 * 基本設定
+** auto-mode-alist の設定
   ruby-mode は Emacs23 以降は本体に同梱されているので
-  autoload を設定するだけで良い
+  autoload を設定するだけで良い.
+  Rakefile は ruby-mode にならないので, auto-mode-alist に追加しておく.
   #+BEGIN_SRC emacs-lisp
+    (eval-when-compile
+      (require 'ruby-mode))
     (autoload 'ruby-mode "ruby-mode"
       "Major mode for ruby files" t)
     (add-to-list 'auto-mode-alist
@@ -42,8 +46,10 @@
 ** 設定
    #+BEGIN_SRC emacs-lisp
      (require 'ruby-block)
-     (ruby-block-mode t)
      (setq ruby-block-mode-highlight-toggle t)
+     (defun ruby-mode-hook-ruby-block ()
+       (ruby-block-mode t))
+     (add-hook 'ruby-mode-hook 'ruby-mode-hook-ruby-block)
    #+END_SRC
 * rd-mode
 ** 導入
@@ -53,12 +59,13 @@
    #+END_SRC
 ** 設定
    #+BEGIN_SRC emacs-lisp
+     (eval-when-compile
+       (require 'rd-mode))
      (autoload 'rd-mode "rd-mode" "major mode for ruby document formatter RD" t)
      ;; rd-mode が起動した際に, =end \n\n =begin を省略しない.
      (add-hook 'rd-mode-hook 'rd-show-other-block-all)
      (add-to-list 'auto-mode-alist
                   '("\\.rd$" . rd-mode))
-
    #+END_SRC
 * rabbit-mode
 ** 導入
@@ -68,6 +75,8 @@
    #+END_SRC
 ** 設定
    #+BEGIN_SRC emacs-lisp
+     (eval-when-compile
+       (require 'rabbit-mode))
      (autoload 'rabbit-mode "rabbit-mode" "major mode for Rabbit" t)
      (add-to-list 'auto-mode-alist
                   '("\\.\\(rbt\\|rab\\)$" . rabbit-mode))

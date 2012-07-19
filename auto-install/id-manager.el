@@ -94,7 +94,7 @@
   end with '.gpg' for encryption by the GnuPG.")
 
 (defvar idm-gen-password-cmd
-  "head -c 10 < /dev/random | uuencode -m - | tail -n 2 |head -n 1 | head -c10")
+  "head -c 10 < /dev/urandom | uuencode -m - | tail -n 2 |head -n 1 | head -c10")
 ;;  "openssl rand 32 | uuencode -m - | tail -n 2 |head -n 1 | head -c10"
 ;;  ...any other password generation ?
 

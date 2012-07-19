@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/04/13 02:11:48$
+# $Lastupdate: 2012/05/04 00:55:01$
 # License: Expat
 #
 #+TITLE: Orgモードの設定
@@ -55,6 +55,7 @@
     (setq org-confirm-babel-evaluate nil)
   #+END_SRC
 * LaTeX export の設定
+  主に日本語LaTeX → pTeX 用の設定とか.
 ** 日本語LaTeX用の設定
    DebianのLaTeXはまだUTF-8を処理できないので, EUC-JPでexportする.
    #+BEGIN_SRC emacs-lisp
@@ -86,6 +87,7 @@
            '("latexmk -pdfdvi %f"))
    #+END_SRC
 * beamer export の設定
+  beamer でプレゼンするための設定
   #+BEGIN_SRC emacs-lisp
     (require 'org-beamer)
     ;; デフォルトのヘッドラインレベル -> 2

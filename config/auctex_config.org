@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/30 02:29:33$
+# $Lastupdate: 2012/07/13 16:39:05$
 # License: Expat
 #
 #+TITLE: AUCTeX の設定
@@ -69,6 +69,9 @@
                         (TeX-source-correlate-mode 1)
                         (setq TeX-source-correlate-start-server t)
                         (add-to-list 'TeX-command-list
+                                     '("pdflatex(original)" "pdflatex %t"
+                                       TeX-run-TeX nil (latex-mode) :help "Run pdflatex"))
+                        (add-to-list 'TeX-command-list
                                      '("pLaTeX" "platex -src-specials %t"
                                        TeX-run-TeX nil (latex-mode) :help "Run e-pLaTeX"))
                         (add-to-list 'TeX-command-list
@@ -120,20 +123,20 @@
 #+END_SRC
 * SyncTex
 #+BEGIN_SRC emacs-lisp
-  (add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)
-  (setq TeX-source-correlate-method 'synctex)
-  (add-hook 'LaTeX-mode-hook '(lambda ()
-                                (add-to-list 'TeX-expand-list
-                                             '("%u" Okular-make-url))))
-  (defun Okular-make-url () (concat
-                             "file://"
-                             (expand-file-name (funcall file (TeX-output-extension) t)
-                                               (file-name-directory (TeX-master-file)))
-                             "#src:"
-                             (TeX-current-line)
-                             (expand-file-name (TeX-master-directory))
-                             "./"
-                             (TeX-current-file-name-master-relative)))
+  ;; (add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)
+  ;; (setq TeX-source-correlate-method 'synctex)
+  ;; (add-hook 'LaTeX-mode-hook '(lambda ()
+  ;;                               (add-to-list 'TeX-expand-list
+  ;;                                            '("%u" Okular-make-url))))
+  ;; (defun Okular-make-url () (concat
+  ;;                            "file://"
+  ;;                            (expand-file-name (funcall file (TeX-output-extension) t)
+  ;;                                              (file-name-directory (TeX-master-file)))
+  ;;                            "#src:"
+  ;;                            (TeX-current-line)
+  ;;                            (expand-file-name (TeX-master-directory))
+  ;;                            "./"
+  ;;                            (TeX-current-file-name-master-relative)))
 #+END_SRC
 * BibTeX + Zotexo
 ** BibTeX
@@ -164,9 +167,9 @@
    Firefox の Pluginのひとつである Zotero を使って
    BibTeX情報を更新する. 導入は auto-install で
 #+BEGIN_SRC emacs-lisp
-  (when (require 'zotexo nil t)
-    (add-hook 'LaTeX-mode-hook 'zotexo-minor-mode)
-    (setq zotexo--auto-update-is-on t))
+  ;; (when (require 'zotexo nil t)
+  ;;   (add-hook 'LaTeX-mode-hook 'zotexo-minor-mode)
+  ;;   (setq zotexo--auto-update-is-on t))
 #+END_SRC
 * byte-compile 用の小細工2                                         :noexport:
   #+BEGIN_SRC emacs-lisp

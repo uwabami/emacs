@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/29 17:00:55$
+# $Lastupdate: 2012/04/28 16:31:58$
 # License: Expat
 #
 #+TITLE: howm の設定
@@ -129,7 +129,7 @@
   (setq howm-template "%date%file\n= %cursor\n\n")
   #+END_SRC
 * [[http://howm.sourceforge.jp/cgi-bin/hiki/hiki.cgi?ExternalTool][併用ツール]] [fn:2]
-  そのうち何か設定する, かも.
+  そのうちなにか書くかも.
 * Footnotes
 [fn:1] Howm: [[http://howm.sourceforge.jp/index-j.html]]
 

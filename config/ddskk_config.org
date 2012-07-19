@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/28 02:09:18$
+# $Lastupdate: 2012/05/01 00:20:42$
 # License: Expat
 #
 #+TITLE: ddskkの設定
@@ -209,6 +209,13 @@
     (setq skk-check-okurigana-on-touroku 'auto)
     ;;漢字登録のミスをチェックする
     (setq skk-check-okurigana-on-touroku t)
+  #+END_SRC
+* 部首変換
+  #+BEGIN_SRC emacs-lisp
+    (require 'skk-tankan)
+    (add-to-list 'skk-search-prog-list
+                 '(skk-tankan-search 'skk-search-jisyo-file
+                                     skk-large-jisyo 10000))
   #+END_SRC
 * Footnotes
 

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/30 00:00:24$
+# $Lastupdate: 2012/06/27 17:45:46$
 # License: Expat.
 #
 #+TITLE: Wanderlust の設定
@@ -12,6 +12,7 @@
   (autoload 'wl "wl" "Wanderlust" t)
   (autoload 'wl-other-frame "wl" "Wanderlust on new frame" t)
   (autoload 'wl-draft "wl-draft" "Write draft with Wanderlust." t)
+;;  (autoload 'elmo-split "elmo-split" "Split messages on the folder. " t)
   (if (boundp 'mail-user-agent)
       (setq mail-user-agent 'wl-user-agent))
   (if (boundp 'read-mail-command)

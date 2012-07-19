@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/04/04 21:36:54$
+# $Lastupdate: 2012/06/14 04:41:44$
 # License: Expat.
 #+TITLE: Migemo の設定
 #+AUTHOR: Youhei SASAKI

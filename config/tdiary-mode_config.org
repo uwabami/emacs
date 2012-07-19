@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/04/12 00:21:35$
+# $Lastupdate: 2012/04/25 03:21:20$
 # License: Expat
 #
 #+TITLE: tdiary-modeの設定
@@ -24,9 +24,8 @@
   読み込みとか.
   日記は RD で書いているので, その設定とか.
   #+BEGIN_SRC emacs-lisp
-    (eval-when-compile
-      (require 'tdiary-mode-socks)
-      (require 'rd-mode))
+    (require 'tdiary-mode-socks)
+    (require 'rd-mode)
     (setq socks-server '("Default" "localhost" "1080" 5))
     (setq tdiary-browser-function 'nil)
     (setq tdiary-diary-list '(("log" "https://uwabami.junkhub.org/log/")))

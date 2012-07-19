@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/04/17 18:40:12$
+# $Lastupdate: 2012/07/19 20:24:30$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定

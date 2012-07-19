@@ -13,8 +13,8 @@
   YASnippet は、Emacs のためのテンプレートシステムです。省略形でタイプすると、自動的に関数テンプレートに展開してくれます。次の言語向けのテンプレートが同梱されています： C, C++, C#, Perl, Python, Ruby, SQL, LaTeX, HTML, CSS, ...
   #+END_QUOTE
   詳細は [[http://yasnippet-doc-jp.googlecode.com/svn/trunk/doc-jp/index.html][Yet Another Snippet extension]] [fn:1] 参照のこと.
-# Debianでは [[http://packages.qa.debian.org/y/yasnippet.html][yasnippet]] [fn:15] としてパッケージ化されている.
-# パッケージが無い場合には ELPA で導入すること.
+  Debianでは [[http://packages.qa.debian.org/y/yasnippet.html][yasnippet]] [fn:15] としてパッケージ化されている.
+  パッケージが無い場合には ELPA で導入すること.
 * 設定
   yasnippet のキーバインドと org-mode のキーバインドがぶつかる [fn:3]
   のでそれをなんとかするのがまず最初.

@@ -22,3 +22,6 @@
 [submodule "site-lisp/google-contacts-mew"]
 	path = site-lisp/google-contacts-mew
 	url = git://github.com/masutaka/google-contacts-mew.git
+[submodule "site-lisp/html5-el"]
+	path = site-lisp/html5-el
+	url = git://github.com/hober/html5-el.git

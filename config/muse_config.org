@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/04/04 21:41:30$
+# $Lastupdate: 2012/05/06 21:20:17$
 # License: Expat
 #
 #+TITLE: muse-mode の設定
@@ -29,7 +29,7 @@
    #+BEGIN_SRC emacs-lisp
      (define-key ctl-x-map "n" 'muse-project-find-file)
    #+END_SRC
-** orgsttuct + outline-minor-mode で編集を org っぽく.
+** orgstruct + outline-minor-mode で編集を org っぽく.
    #+BEGIN_SRC emacs-lisp
      (add-hook 'muse-mode-hook 'turn-on-orgstruct)
      (add-hook 'muse-mode-hook 'turn-on-orgstruct++)

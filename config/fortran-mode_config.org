@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/04/18 20:40:14$
+# $Lastupdate: 2012/07/18 18:15:16$
 # License: Expat
 #
 #+TITLE: fortran-mode, f90-mode の設定
@@ -28,8 +28,9 @@
                    f90-type-indent 2
                    f90-program-indent 2
                    f90-continuation-indent 2
-                   f90-comment-region "!!"
-                   f90-indented-comment-re "!!"
+                   f90-indented-comment-re "!"
+                   f90-comment-region "!!$"
+                   f90-directive-comment-re "!omp\\$"
                    f90-break-delimiters "[-+\\*/,><=% \t]"
                    f90-break-before-delimiters t
                    f90-beginning-ampersand t
@@ -38,7 +39,7 @@
                    f90-leave-line-no  nil
                    f90-startup-message t
                    indent-tabs-mode nil
-                   f90-font-lock-keywords f90-font-lock-keywords-4 )
+                   f90-font-lock-keywords f90-font-lock-keywords-4)
              ;;The rest is not default.
              (turn-on-font-lock)         ; for highlighting
              (if f90-auto-keyword-case   ; change case of all keywords on startup

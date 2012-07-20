@@ -7,6 +7,6 @@ elpa/*
 etc/skk/*
 share/*
 tmp/*
-site-lisp/00build-stamp
+site-lisp/*-stamp
 site-lisp/ddskk/skk-autoloads.el
 old

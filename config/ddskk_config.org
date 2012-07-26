@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/05/01 00:20:42$
+# $Lastupdate: 2012/07/22 04:27:24$
 # License: Expat
 #
 #+TITLE: ddskkの設定
@@ -176,7 +176,7 @@
   気もするけれど, それは気がついた時に.
   #+BEGIN_SRC emacs-lisp
     ;; 辞書サーバの指定
-    (when (string-match system-name "daphne")
+    (when (string-match system-name "daphne.localdomain")
       (setq skk-server-host "127.0.0.1")
       (setq skk-server-portnum "1178")
       (setq skk-large-jisyo nil)
@@ -186,7 +186,7 @@
       (add-to-list 'skk-search-prog-list
                    '(skk-comp-by-server-completion) t)
       )
-    (when (not (string-match system-name "daphne"))
+    (when (not (string-match system-name "daphne.localdomain"))
       (setq skk-large-jisyo "~/.skkdic/SKK-JISYO.L")
       ;; 地球物理辞書の追加
       (add-to-list

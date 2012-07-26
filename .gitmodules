@@ -25,3 +25,6 @@
 [submodule "site-lisp/html5-el"]
 	path = site-lisp/html5-el
 	url = https://github.com/uwabami/html5-el.git
+[submodule "site-lisp/orgmode-markdown"]
+	path = site-lisp/orgmode-markdown
+	url = git://github.com/alexhenning/ORGMODE-Markdown.git

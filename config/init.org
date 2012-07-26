@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/07/19 20:24:30$
+# $Lastupdate: 2012/07/22 04:26:55$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -504,7 +504,7 @@
    [[http://julien.danjou.info/software/offlineimap.el][offlineimap for Emacs]] も設定.
    #+BEGIN_SRC emacs-lisp
      (cond
-      ((string-match system-name "daphne")
+      ((string-match system-name "daphne.localdomain")
        (my:load-org-file "wl_config.org")
        (add-to-load-path "site-lisp/offlineimap-el")
        (autoload 'offlineimap "offlineimap" nil t)

@@ -1,5 +1,5 @@
 TARGET_DIR	:= $(subst ./, ,$(shell find . -maxdepth 1 -mindepth 1 -type d))
-EXCLUDE		:= yasnippet org-jekyll offlineimap-el google-contacts-mew
+EXCLUDE		:= yasnippet org-jekyll offlineimap-el google-contacts-mew orgmode-markdown
 TARGET_DIRS	:= $(filter-out $(EXCLUDE),$(TARGET_DIR))
 include $(HOME)/.emacs.d/Mkinclude
 
@@ -17,6 +17,13 @@ yasnippet-stamp:
 
 org-jekyll-stamp:
 	@( cd org-jekyll && \
+	for f in `ls -1 *.el` ;\
+	do $(EMACS) -L . -q -no-site-file -batch -f batch-byte-compile $$f ;\
+	done )
+	touch $@
+
+orgmode-markdown-stamp:
+	@( cd orgmode-markdown && \
 	for f in `ls -1 *.el` ;\
 	do $(EMACS) -L . -q -no-site-file -batch -f batch-byte-compile $$f ;\
 	done )

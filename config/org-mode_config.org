@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/05/04 00:55:01$
+# $Lastupdate: 2012/07/30 17:50:38$
 # License: Expat
 #
 #+TITLE: Orgモードの設定
@@ -102,26 +102,34 @@
     ;; org-html, org-publish
     (require 'org-html)
     (require 'org-publish)
+    ;; (add-to-load-path "site-lisp/org-mode/contrib/lisp")
+    ;; (require 'org-static-mathjax)
     (setq org-publish-webpage
           (expand-file-name
-           (concat (getenv "HOME") "/tmp/web")))
+           (concat (getenv "HOME") "/Public/")))
+    (setq org-publish-webpage-img
+          (expand-file-name
+           (concat org-publish-webpage "images/")))
     (add-to-list 'org-publish-project-alist
                  `("src"
-                   :base-directory "~/tmp/web"
+                   :base-directory ,org-publish-webpage
                    :recursive t
-                   :exclude ".*\.el\\|^Makefile\\|.*\.gpg\\|sitemap\.org\\|^cc-env\\|^img"
+                   :exclude ".*\.el\\|^Makefile\\|.*\.gpg\\|sitemap\.org\\|^cc-env\\|^images\\|^_site\\|config\.org"
                    :base-extension "org"
+                   :headline-level 4
                    :publishing-directory ,org-publish-webpage
                    :publishing-function org-publish-org-to-html
+                   :body-only t
                    )
                  )
-    ;; (add-to-list 'org-publish-project-alist
-    ;;              `("img"
-    ;;                :base-directory "~/tmp/web/img"
-    ;;                :base-extension "jpg\\|png"
-    ;;                :publishing-directory (concat ,org-publish-webpage "/img")
-    ;;                :publishing-function org-publish-attachment)
-    ;;              )
+    (add-to-list 'org-publish-project-alist
+                 `("img"
+                   :base-directory ,org-publish-webpage-img
+                   :base-extension "jpg\\|png"
+                   :publishing-directory ,org-publish-webpage-img
+                   :publishing-function org-publish-attachment
+                   )
+                 )
     (add-to-list 'org-publish-project-alist
                  '("web" :components ("src")
                    ))
@@ -129,105 +137,6 @@
     (setq org-publish-timestamp-directory
           (concat my:user-emacs-temporary-directory "org-timestamps/"))
     (setq org-publish-use-timestamps-flag nil)
-    ;; (setq org-jekyll-lang-subdirs
-    ;;       '(("en" . "en")
-    ;;         ("ja" . "ja")))
-    ;; (add-to-list 'org-publish-project-alist
-    ;;              `("website-src"
-    ;;                :base-directory "~/tmp/org"
-    ;;                :recursive t
-    ;;                :base-extension "org"
-    ;;                :publishing-directory ,my:org-publish-website
-    ;;                :exclude "^blog\\|^bitacora"
-    ;;                :site-root "http://www.gfd-dennou.org/member/uwabami"
-    ;;                :jekyll-sanitize-permalinks t
-    ;;                :publishing-function org-publish-org-to-html
-    ;;                :section-numbers nil
-    ;;                :headline-levels 4
-    ;;                 :table-of-contents t
-    ;;                 :auto-index nil
-    ;;                 :auto-preamble nil
-    ;;                 :body-only t
-    ;;                 :auto-postamble nil)
-    ;;              )
-    ;; (add-to-list 'org-publish-project-alist
-    ;;              '("website" :components ("website-src")))
-    ;; ;; -----------------------------------------------------------
-    ;; ;;; Website 用の org file の置き場所
-    ;; ;; @see http://orgmode.org/worg/org-tutorials/org-publish-html-tutorial.html
-    ;; ;;
-    ;; ;; バックアップファイルを作成しない
-    ;; (setq make-backup-files nil)
-    ;; ;; project の設定
-    ;; (setq org-publish-project-alist
-    ;;       '(
-    ;;         ("emacs-setup"
-    ;;          :base-directory "~/.emacs.d/site-start.d/"
-    ;;          :exclude ".*\.el|^Makefile|.*\.gpg|sitemap\.org"
-    ;;          :base-extension "org"
-    ;;          :publishing-directory "~/Public/cc-env/Emacs/"
-    ;;          :recursive nil
-    ;;          :publish-function org-publish-org-to-html
-    ;;          :auto-sitemap t
-    ;;          :sitemap-filename "sitemap.org"
-    ;;          :sitemap-title "sitemap"
-    ;;          :headline-levels 2
-    ;;          :auto-preamble t
-    ;;          )
-    ;;         ("web-org"
-    ;;          :base-directory "~/Public/org/"
-    ;;          :exclude "^menu.*\.org\\|cc-env\\|css\\|img\\|.*\.pdf\\|.*\.tex"
-    ;;          :base-extension "org"
-    ;;          :publishing-directory "~/Public/"
-    ;;          :recursive t
-    ;;          :publish-function org-publish-org-to-html
-    ;;          :headline-levels 2
-    ;;          :html-postamble auto  ;; default
-    ;;          :auto-preamble t
-    ;;          )
-    ;;         ("web"
-    ;;          :components ("web-org" "Emacs"))
-    ;;         ))
-    ;; ;; ;;; insert skelton and export config files
-    ;; ;; ;;
-    ;; ;; ;; @see http://thenybble.de/projects/orgsite.html
-    ;; ;; ;;
-    ;; ;; (defvar my-website-base-dir "~/Public/org/src" "Base directory of Website")
-    ;; ;; (defvar my-website-config-name "export-config-")
-    ;; ;; (setq my-website-base-dir (expand-file-name "~/Public/org/src"))
-    ;; ;; (defun my-repeat-string (str times)
-    ;; ;;   (with-output-to-string
-    ;; ;;     (dotimes (i times)
-    ;; ;;       (princ str))))
-    ;; ;; (defun my-get-nesting-depth (filename basename)
-    ;; ;;   (with-temp-buffer
-    ;; ;;     (insert (file-relative-name filename basename))
-    ;; ;;     (goto-line 0)
-    ;; ;;     (count-matches "/")))
-    ;; ;; (defun my-make-website-conf-path (filename)
-    ;; ;;   (let ((nesting-level (my-get-nesting-depth filename my-website-base-dir)))
-    ;; ;;     (concat (my-repeat-string "../" (+ nesting-level 1))
-    ;; ;;             my-website-config-name (int-to-string nesting-level) ".org")))
-    ;; ;; (define-skeleton my-org-website-skeleton "" "Enter Title: "
-    ;; ;;   "#+TITLE: " str ?\n
-    ;; ;;   "#+SETUPFILE: "
-    ;; ;;   (my-make-website-conf-path (buffer-file-name)) ?\n
-    ;; ;;   "#+INCLUDE: "
-    ;; ;;   (my-make-website-conf-path (buffer-file-name)) ?\n ?\n
-    ;; ;;   "* " _ )
-    ;; ;; (defun my-org-website-insert-skeleton-maybe ()
-    ;; ;;   (if (and (buffer-file-name)
-    ;; ;;            (not (file-remote-p (buffer-file-name)))
-    ;; ;;            (string-match (concat "^" my-website-base-dir)
-    ;; ;;                          (expand-file-name (buffer-file-name))))
-    ;; ;;       (my-org-website-skeleton)))
-    ;; ;; (add-hook 'find-file-hook 'auto-insert)
-    ;; ;; (setq auto-insert-query nil)
-    ;; ;; (setq auto-insert-alist
-    ;; ;;       '((org-mode . my-org-website-insert-skeleton-maybe)))
-    ;; default の style sheet は使わない
-    ;;(setq org-export-html-style-include-default nil)
-
   #+END_SRC
 
 * Footnotes

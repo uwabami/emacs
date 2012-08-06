@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/30 03:06:22$
+# $Lastupdate: 2012/08/07 00:55:55$
 # License: Expat
 #
 #+TITLE: フォントとフレームの設定
@@ -46,10 +46,10 @@
         (my-opacity-change 90)     ; default の透明度は 90 に
         )
     #+END_SRC
-
 * フォントの設定
   #+BEGIN_SRC emacs-lisp
     (when window-system
+      (modify-frame-parameters nil '((wait-for-wm . nil)))
       (create-fontset-from-ascii-font "Ricty-18" nil "ricty")
       (dolist (charset '(
                          unicode

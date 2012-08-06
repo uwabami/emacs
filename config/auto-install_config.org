@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/05/03 19:46:42$
+# $Lastupdate: 2012/08/04 01:35:27$
 # License: Expat
 #
 #+TITLE: auto-installとinstallしたelispの設定
@@ -60,6 +60,19 @@
        (setq auto-async-byte-compile-exclude-files-regexp "^_")
        (add-hook 'emacs-lisp-mode-hook
                  'enable-auto-async-byte-compile-mode))
+   #+END_SRC
+* edit-server
+  chrome/chromium と通信するために
+** install
+   #+BEGIN_SRC emacs-lisp
+     (unless (locate-library "edit-server")
+       (auto-install-from-url "https://raw.github.com/stsquad/emacs_chrome/master/servers/edit-server.el"))
+   #+END_SRC
+** 設定
+   #+BEGIN_SRC emacs-lisp
+     (require 'edit-server)
+     (setq edit-server-new-frame nil)
+     (edit-server-start)
    #+END_SRC
 * [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727][パスワード管理ツール id-manager.el]]
 ** インストール

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/07/30 17:50:38$
+# $Lastupdate: 2012/07/30 20:40:47$
 # License: Expat
 #
 #+TITLE: Orgモードの設定
@@ -110,6 +110,9 @@
     (setq org-publish-webpage-img
           (expand-file-name
            (concat org-publish-webpage "images/")))
+    (setq org-publish-gh-pages
+          (expand-file-name
+           (concat (getenv "HOME") "/Sources/gh-pages")))
     (add-to-list 'org-publish-project-alist
                  `("src"
                    :base-directory ,org-publish-webpage
@@ -131,7 +134,22 @@
                    )
                  )
     (add-to-list 'org-publish-project-alist
+                 `("gh-pages"
+                   :base-directory ,org-publish-gh-pages
+                   :base-extension "org"
+                   :recursive nil
+                   :exclude ".*\.el\\|^Makefile\\|.*\.gpg\\|sitemap\.org\\|^cc-env\\|^images\\|^_site\\|config\.org"
+                   :headline-level 4
+                   :publishing-directory ,org-publish-gh-pages
+                   :publishing-function org-publish-org-to-html
+                   :body-only t
+                   )
+                 )
+    (add-to-list 'org-publish-project-alist
                  '("web" :components ("src")
+                   ))
+    (add-to-list 'org-publish-project-alist
+                 '("github" :components ("gh-pages")
                    ))
     ;; cache の置き場所を ~/.emacs.d/tmp/org-timestamps/ に変える
     (setq org-publish-timestamp-directory

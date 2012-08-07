@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/07/30 20:40:47$
+# $Lastupdate: 2012/08/07 20:57:37$
 # License: Expat
 #
 #+TITLE: Orgモードの設定
@@ -19,7 +19,7 @@
     ;; 開いた時に画像を inline で表示しない
     (setq org-startup-with-inline-images nil)
     ;; ;; link を return で追う
-    (setq org-retrun-follows-link t)
+    (setq org-return-follows-link t)
     ;; フォントロックを有効に
     (add-hook 'org-mode-hook 'turn-on-font-lock)
     ;; 基本ディレクトリ
@@ -97,66 +97,74 @@
     (setq org-export-with-sub-superscripts nil)
   #+END_SRC
 * HTML export の設定
-  [[http://juanreyero.com/open/org-jekyll/index.html#Org-jekyll][Org-jekyll]] [fn:1]でサイト構築を行なっているので, それにまつわる設定
+  [[http://jekyllrb.com/][Jekyll]] [fn:1] でサイト構築を行なっているので, それにまつわる設定
   #+BEGIN_SRC emacs-lisp
     ;; org-html, org-publish
     (require 'org-html)
     (require 'org-publish)
-    ;; (add-to-load-path "site-lisp/org-mode/contrib/lisp")
-    ;; (require 'org-static-mathjax)
-    (setq org-publish-webpage
-          (expand-file-name
-           (concat (getenv "HOME") "/Public/")))
-    (setq org-publish-webpage-img
-          (expand-file-name
-           (concat org-publish-webpage "images/")))
-    (setq org-publish-gh-pages
-          (expand-file-name
-           (concat (getenv "HOME") "/Sources/gh-pages")))
-    (add-to-list 'org-publish-project-alist
-                 `("src"
-                   :base-directory ,org-publish-webpage
-                   :recursive t
-                   :exclude ".*\.el\\|^Makefile\\|.*\.gpg\\|sitemap\.org\\|^cc-env\\|^images\\|^_site\\|config\.org"
-                   :base-extension "org"
-                   :headline-level 4
-                   :publishing-directory ,org-publish-webpage
-                   :publishing-function org-publish-org-to-html
-                   :body-only t
-                   )
-                 )
-    (add-to-list 'org-publish-project-alist
-                 `("img"
-                   :base-directory ,org-publish-webpage-img
-                   :base-extension "jpg\\|png"
-                   :publishing-directory ,org-publish-webpage-img
-                   :publishing-function org-publish-attachment
-                   )
-                 )
-    (add-to-list 'org-publish-project-alist
-                 `("gh-pages"
-                   :base-directory ,org-publish-gh-pages
-                   :base-extension "org"
-                   :recursive nil
-                   :exclude ".*\.el\\|^Makefile\\|.*\.gpg\\|sitemap\.org\\|^cc-env\\|^images\\|^_site\\|config\.org"
-                   :headline-level 4
-                   :publishing-directory ,org-publish-gh-pages
-                   :publishing-function org-publish-org-to-html
-                   :body-only t
-                   )
-                 )
-    (add-to-list 'org-publish-project-alist
-                 '("web" :components ("src")
-                   ))
-    (add-to-list 'org-publish-project-alist
-                 '("github" :components ("gh-pages")
-                   ))
+    (defvar my:org-publish-webpage
+      (expand-file-name
+       (concat (getenv "HOME") "/Public/")))
+    (defvar my:org-publish-webpage-img
+      (expand-file-name
+       (concat my:org-publish-webpage "images/")))
+    (defvar my:org-publish-gh-pages
+      (expand-file-name
+       (concat (getenv "HOME") "/Sources/gh-pages")))
+    (defvar my:org-publish-emacs-pages
+      (expand-file-name
+       (concat my:org-publish-webpage "cc-env/Emacs/")))
+    (setq org-publish-project-alist
+          `(
+            ("public"
+             :base-directory ,my:org-publish-webpage
+             :recursive t
+             :exclude ".*\.el\\|^Makefile\\|.*\.gpg\\|sitemap\.org\\|^cc-env\\|^images\\|^_site\\|^export-config\.org"
+             :base-extension "org"
+             :headline-level 4
+             :publishing-directory ,my:org-publish-webpage
+             :publishing-function org-publish-org-to-html
+             :body-only t
+             )
+            ("img"
+             :base-directory ,my:org-publish-webpage-img
+             :base-extension "jpg\\|png"
+             :publishing-directory ,my:org-publish-webpage-img
+             :publishing-function org-publish-attachment
+             )
+            ("gh-pages"
+             :base-directory ,my:org-publish-gh-pages
+             :base-extension "org"
+             :recursive nil
+             :exclude ".*\.el\\|^Makefile\\|.*\.gpg\\|sitemap\.org\\|^cc-env\\|^images\\|^_site\\|^export-config\.org"
+             :headline-level 4
+             :publishing-directory my:org-publish-gh-pages
+             :publishing-function org-publish-org-to-html
+             :body-only t
+             )
+            ("Emacs"
+             :base-directory ,my:user-emacs-config-directory
+             :base-extension "org"
+             :recursive nil
+             :exclude ".*\.el\\|^Makefile\\|.*\.gpg\\|sitemap\.org\\|^cc-env\\|^images\\|^_site\\|^export-config\.org"
+             :headline-level 4
+             :publishing-directory ,my:org-publish-emacs-pages
+             :publishing-function org-publish-org-to-html
+             :body-only t
+             :auto-sitemap t
+             :sitemap-filename "sitemap.org"
+             :sitemap-title "sitemap"
+             ;; :auto-preamble t
+             )
+            ("web" :components ("public" "img"))
+            ("github" :components ("gh-pages"))
+            ("emacs" :components ("Emacs"))
+            ))
     ;; cache の置き場所を ~/.emacs.d/tmp/org-timestamps/ に変える
     (setq org-publish-timestamp-directory
           (concat my:user-emacs-temporary-directory "org-timestamps/"))
     (setq org-publish-use-timestamps-flag nil)
   #+END_SRC
-
 * Footnotes
 
-[fn:1] Org-jekyll: [[http://juanreyero.com/open/org-jekyll/index.html#Org-jekyll]]
+[fn:1] Jeykll: [[http://jekyllrb.com/]]

@@ -1,16 +1,22 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/04 01:31:32$
+# $Lastupdate: 2012/08/07 20:59:08$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
+#+SETUPFILE: ./export-config.org
+#+BEGIN_HTML
+---
+layout: emacs
+title: Emacsの基本設定
+---
+#+END_HTML
 * 始めに
   ~/.emacs→~/.emacs.d/init.el ときて, このファイルで
   基本設定と外部elispの読み込みを行っています.
-
   外部elispの設定は多くの場合別ファイルに分けていますが,
   設定が短い場合にはこのファイルに記述して終わっていたりします.
 * 言語の設定
@@ -19,10 +25,10 @@
    UTF-8を使用するようにしています(EUC-JPとかで使用すると稀に祟りがあっ
    たりします).
 
-   過去の資源(特にTeX)に関しては, 未だEUC-JPのファイルも多いので注意す
-   る必要があります. Debian unstalbeにTeXLive2011が入ったので, そのうち
-   全部UTF-8に移行しますが(とはいえ過去の資産や共同作業する原稿なんかは
-   無理ですけれど...).
+   過去の資源(特にTeX)に関しては, 未だEUC-JPのファイルも多いので注意する
+   必要があります. Debian unstalbe に TeXLive2012 が入ったので, そのうち
+   全部UTF-8に移行しますが(とはいえ過去の資産や共同作業する原稿なんかは無
+   理ですけれど...).
    #+BEGIN_SRC emacs-lisp
      (set-language-environment "Japanese")
      (prefer-coding-system 'utf-8)
@@ -35,8 +41,8 @@
     #+BEGIN_EXAMPLE
     (set-language-environment "Japanese")
     #+END_EXAMPLE
-    によってlocaleが設定されます. "Japanese"という大雑把な設定で
-    何が設定されるのかは
+    によってlocaleが設定されます.
+    "Japanese"という大雑把な設定で何が設定されるのかは
     #+BEGIN_EXAMPLE
     (describe-variable 'language-info-alist)
     #+END_EXAMPLE
@@ -57,10 +63,9 @@
       (setup-function . setup-japanese-environment-internal))
     ...
     #+END_EXAMPLE
-    となっていました. coding-priorityを見るとわかるように
-    文字コードの自動判定などの大雑把な優先順位はiso-2022-jp→shift_jis→euc-jp...
-    となっていて, どこにも utf-8 がありません.
-    utf-8 を優先するには
+    となっていました. coding-priority を見るとわかるように文字コードの自
+    動判定などの大雑把な優先順位は iso-2022-jp→shift_jis→euc-jp... となっ
+    ていて, どこにも utf-8 がありません.  utf-8 を優先するには
     #+BEGIN_EXAMPLE
     (prefere-coding-system 'utf-8)
     #+END_EXAMPLE
@@ -225,7 +230,7 @@
     #+BEGIN_SRC emacs-lisp
       ;; バッファ終端で newline を入れない
       (setq next-line-add-newlines nil)
-      ;; ;; 保存時に最終行に一行追加するとりあえず使わないことに
+      ;; 保存時に最終行に一行追加する→とりあえず使わないことに
       ;; (setq require-final-newline t)
       (put 'set-goal-column 'disabled nil)
     #+END_SRC
@@ -258,12 +263,19 @@
       (setq paragraph-start '"^\\([ 　・○<\t\n\f]\\|(?[0-9a-zA-Z]+)\\)")
       (setq-default auto-fill-mode nil)
     #+END_SRC
-*** 行末の無駄な空白を削除する
+*** 行末の無駄な空白/改行を削除する
     元ネタ: (Emacs Advent Calendar jp:2010)[fn:7]
 
-    モード毎に設定した方が無難かもしれない.
+    RD や Markdown だと空白行に意味があったりするので, 拡張子で判断して外している.
     #+BEGIN_SRC emacs-lisp
-      (add-hook 'before-save-hook 'delete-trailing-whitespace)
+      (defvar my:delete-trailing-whitespace-exclude-suffix
+            (list "\\.rd$" "\\.md$" "\\.rbt$"))
+      (defun my:delete-trailing-whitespace ()
+        (interactive)
+        (cond ((equal nil (loop for pattern in my:delete-trailing-whitespace-exclude-suffix
+                                thereis (string-match pattern buffer-file-name)))
+               (delete-trailing-whitespace))))
+      (add-hook 'before-save-hook 'my:delete-trailing-whitespace)
     #+END_SRC
 *** バックアップとauto-saveの作成
     my:emacs-backup-dir を設定して, ~/.emacs.d/tmp/ 以下に
@@ -415,7 +427,7 @@
      ;; 対称鍵のキャッシュを有効化
      (setq epa-file-cache-passphrase-for-symmetric-encryption t)
    #+END_SRC
-* 分割した設定ファイルの読み込み/外部emacs-lispなどの設定
+* 外部emacs-lispなどの設定/分割した設定ファイルの読み込み
   以下は Emacs 本体に同梱されていない emacs-lisp program や
   外部ファイルの設定を読み込んでいるモン, など.
 ** [[http://www.kanji.zinbun.kyoto-u.ac.jp/~tomo/elisp/APEL/][APEL]] [fn:8] に load-path を通しておく
@@ -462,7 +474,7 @@
 
    skk-user-directory を設定しているので辞書や id なんかは
    ~/.emacs.d/etc/skk 以下に置かれるが, 設定ファイルだけは
-   [[file:ddskk.org][DDSKKの設定]] で行なっている.
+   [[file:ddskk_config.org][ddskkの設定]] で行なっている.
     #+BEGIN_SRC emacs-lisp
       ;; mozc はとりあえず読み込んだだけ
       (require 'mozc nil t)
@@ -563,7 +575,7 @@
    auto-install とは異なり, パッケージのバージョン管理もしてくれる.
 *** install
     elpa 自体は auto-install-el で導入することに
-    #+BEGIN_SRC
+    #+BEGIN_SRC emacs-lisp
       (unless (locate-library "package")
         (require 'auto-install nil t)
         (auto-install-from-url "http://repo.or.cz/w/emacs.git/blob_plain/1a0a666f941c99882093d7bd08ced15033bc3f0c:/lisp/emacs-lisp/package.el"))

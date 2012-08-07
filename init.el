@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8-unix; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2012/04/17 12:10:32$
+;; $Lastupdate: 2012/08/07 20:44:17$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -46,6 +46,7 @@
 (defvar oldemacs-p (< emacs-major-version 22))  ; 22 未満
 (defvar emacs22-p (<= emacs-major-version 22))  ; 22 以下
 (defvar emacs23-p (>= emacs-major-version 23))  ; 23 以上
+(defvar emacs24-p (>= emacs-major-version 24))  ; 24 以上
 (defvar darwin-p (eq system-type 'darwin))      ; Mac OS X 用
 (defvar nt-p (eq system-type 'windows-nt))      ; Windows 用
 ;;

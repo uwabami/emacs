@@ -1,0 +1,7 @@
+#+OPTIONS: toc:nil num:nil \n:nil @:on ^:nil todo:nil
+#+OPTIONS: TeX:t LaTeX:t author:nil creator:nil timestamp:nil validator:nil
+#+MACRO: em @<em>$1@</em>
+#+MACRO: strong @<strong>$1@</strong>
+#+HTML: <nav>
+#+INCLUDE: sitemap.org
+#+HTML: </nav>

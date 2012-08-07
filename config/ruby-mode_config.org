@@ -1,12 +1,19 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/04 02:23:50$
+# $Lastupdate: 2012/08/07 20:05:04$
 # License: Expat
 #
-#+TITLE: ruby-mode の設定
+#+TITLE: Ruby関連の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
+#+SETUPFILE: ./export-config.org
+#+BEGIN_HTML
+---
+layout: emacs
+title: Ruby関連の設定
+---
+#+END_HTML
 * 始めに
   Ruby 愛しているよ Ruby.
   あと [[http://rabbit-shockers.org/][Rabbit]] の設定もしておく.

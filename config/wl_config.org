@@ -1,12 +1,19 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/06/27 17:45:46$
+# $Lastupdate: 2012/08/07 21:00:34$
 # License: Expat.
 #
 #+TITLE: Wanderlust の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
+#+SETUPFILE: ./export-config.org
+#+BEGIN_HTML
+---
+layout: emacs
+title: Wanderlustの設定
+---
+#+END_HTML
 * デフォルトのメーラを Wanderlust に変更する
 #+BEGIN_SRC emacs-lisp
   (autoload 'wl "wl" "Wanderlust" t)

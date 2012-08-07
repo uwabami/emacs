@@ -10,9 +10,6 @@
 [submodule "site-lisp/color-theme-darkpastel"]
 	path = site-lisp/color-theme-darkpastel
 	url = https://github.com/uwabami/color-theme-darkpastel.git
-[submodule "site-lisp/org-jekyll"]
-	path = site-lisp/org-jekyll
-	url = git://github.com/juanre/org-jekyll.git
 [submodule "site-lisp/offlineimap-el"]
 	path = site-lisp/offlineimap-el
 	url = git://git.naquadah.org/offlineimap-el.git
@@ -25,6 +22,3 @@
 [submodule "site-lisp/html5-el"]
 	path = site-lisp/html5-el
 	url = https://github.com/uwabami/html5-el.git
-[submodule "site-lisp/orgmode-markdown"]
-	path = site-lisp/orgmode-markdown
-	url = git://github.com/alexhenning/ORGMODE-Markdown.git

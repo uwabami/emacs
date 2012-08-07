@@ -8,7 +8,7 @@ all: TARGET $(ELCFiles)
 
 update:
 	git submodule foreach 'git fetch --all && git rebase origin/master'
-	rm -f $(HOME)/.emacs.d/site-lisp/00build-stamp
+	rm -f $(HOME)/.emacs.d/site-lisp/*-stamp
 
 gc:
 	git submodule foreach 'git gc ; git repack'

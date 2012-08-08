@@ -129,6 +129,7 @@ title: org-modeの設定
              :exclude ".*\.el\\|^Makefile\\|.*\.gpg\\|sitemap\.org\\|^cc-env\\|^images\\|^_site\\|^export-config\.org"
              :base-extension "org"
              :headline-level 4
+             :htmlized-source t
              :publishing-directory ,my:org-publish-webpage
              :publishing-function org-publish-org-to-html
              :body-only t
@@ -143,6 +144,7 @@ title: org-modeの設定
              :base-directory ,my:org-publish-gh-pages
              :base-extension "org"
              :recursive nil
+             :htmlized-source t
              :exclude ".*\.el\\|^Makefile\\|.*\.gpg\\|sitemap\.org\\|^cc-env\\|^images\\|^_site\\|^export-config\.org"
              :headline-level 4
              :publishing-directory my:org-publish-gh-pages
@@ -152,6 +154,7 @@ title: org-modeの設定
             ("Emacs"
              :base-directory ,my:user-emacs-config-directory
              :base-extension "org"
+             :htmlized-source t
              :recursive nil
              :exclude "^export-config\.org"
              :headline-level 4

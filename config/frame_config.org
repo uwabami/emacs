@@ -1,12 +1,19 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/07 00:55:55$
+# $Lastupdate: 2012/08/08 15:43:44$
 # License: Expat
 #
 #+TITLE: フォントとフレームの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
+#+SETUPFILE: ./export-config.org
+#+BEGIN_HTML
+---
+layout: emacs
+title: フォントとフレームの設定
+---
+#+END_HTML
 * 始めに
   Emacs を Daemon モードで起動させているので,
   なにもしないと環境変数 TERM が dump になって font-lock などが悲しくなります.

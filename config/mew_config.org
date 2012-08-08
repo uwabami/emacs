@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/07 21:01:11$
+# $Lastupdate: 2012/08/08 15:33:59$
 # License: Expat
 #
 #+TITLE: Mew の設定
@@ -14,7 +14,6 @@ layout: emacs
 title: Mewの設定
 ---
 #+END_HTML
-
 * MUA の設定
 #+BEGIN_SRC emacs-lisp
   (autoload 'mew "mew" nil t)

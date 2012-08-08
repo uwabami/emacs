@@ -1,12 +1,19 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/04/28 16:31:58$
+# $Lastupdate: 2012/08/08 15:41:35$
 # License: Expat
 #
 #+TITLE: howm の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
+#+SETUPFILE: ./export-config.org
+#+BEGIN_HTML
+---
+layout: emacs
+title: howm の設定
+---
+#+END_HTML
 
 * 始めに
   [[http://howm.sourceforge.jp/index-j.html][Howm]] [fn:1]は お手軽なメモ環境です. 本家によれば

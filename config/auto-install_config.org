@@ -1,12 +1,20 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/04 01:35:27$
+# $Lastupdate: 2012/08/08 15:39:54$
 # License: Expat
 #
-#+TITLE: auto-installとinstallしたelispの設定
+#+TITLE: auto-install の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
+#+SETUPFILE: ./export-config.org
+#+BEGIN_HTML
+---
+layout: emacs
+title: auto-install の設定
+---
+#+END_HTML
+
 * 始めに
   emacs-lispが公開されているURIやEmacsWikiからファイルを取得して
   installするライブラリ.

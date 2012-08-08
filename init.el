@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8-unix; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2012/08/07 20:44:17$
+;; $Lastupdate: 2012/08/08 14:56:48$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -69,6 +69,8 @@
   (expand-file-name (concat user-emacs-directory "etc/")))
 (defconst my:user-emacs-share-directory
   (expand-file-name (concat user-emacs-directory "share/")))
+(defconst my:user-emacs-template-directory
+  (expand-file-name (concat user-emacs-directory "template/")))
 ;;
 ;;; load-path 追加用の関数の定義
 ;;
@@ -92,7 +94,6 @@
 ;;
 (add-to-load-path
  "config"                  ; 分割した設定群の置き場所.
- "local-lisp"              ; 自作の小物など
  "auto-install"            ; auto-install で install したモノ
  "site-lisp/org-mode/lisp" ; org-mode (Git HEAD)
  )

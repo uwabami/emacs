@@ -1,12 +1,19 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/07/18 18:15:16$
+# $Lastupdate: 2012/08/08 15:40:52$
 # License: Expat
 #
 #+TITLE: fortran-mode, f90-mode の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
+#+SETUPFILE: ./export-config.org
+#+BEGIN_HTML
+---
+layout: emacs
+title: fortran-mode, f90-mode の設定
+---
+#+END_HTML
 * 始めに
   数値計算屋さんにとっては FORTRAN (<=77) /fortran (>=90) でプログラムを
   書くことが多いので.

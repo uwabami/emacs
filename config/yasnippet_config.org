@@ -1,20 +1,30 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/29 21:35:43$
+# $Lastupdate: 2012/08/08 15:47:49$
 # License: Expat
 #
 #+TITLE: yasnippetの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
+#+SETUPFILE: ./export-config.org
+#+BEGIN_HTML
+---
+layout: emacs
+title: yasnippetの設定
+---
+#+END_HTML
 * 始めに
   本家より
   #+BEGIN_QUOTE
-  YASnippet は、Emacs のためのテンプレートシステムです。省略形でタイプすると、自動的に関数テンプレートに展開してくれます。次の言語向けのテンプレートが同梱されています： C, C++, C#, Perl, Python, Ruby, SQL, LaTeX, HTML, CSS, ...
+  YASnippet は、Emacs のためのテンプレートシステムです。省略形でタイプす
+  ると、自動的に関数テンプレートに展開してくれます。次の言語向けのテンプ
+  レートが同梱されています： C, C++, C#, Perl, Python, Ruby, SQL, LaTeX,
+  HTML, CSS, ...
   #+END_QUOTE
-  詳細は [[http://yasnippet-doc-jp.googlecode.com/svn/trunk/doc-jp/index.html][Yet Another Snippet extension]] [fn:1] 参照のこと.
-  Debianでは [[http://packages.qa.debian.org/y/yasnippet.html][yasnippet]] [fn:15] としてパッケージ化されている.
-  パッケージが無い場合には ELPA で導入すること.
+  詳細は [[http://yasnippet-doc-jp.googlecode.com/svn/trunk/doc-jp/index.html][Yet Another Snippet extension]] [fn:1] 参照のこと. Debianでは
+  [[http://packages.qa.debian.org/y/yasnippet.html][yasnippet]] [fn:15] としてパッケージ化されている. パッケージが無い場合に
+  は ELPA で導入すること.
 * 設定
   yasnippet のキーバインドと org-mode のキーバインドがぶつかる [fn:3]
   のでそれをなんとかするのがまず最初.

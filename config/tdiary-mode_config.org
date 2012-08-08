@@ -1,12 +1,19 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/04/25 03:21:20$
+# $Lastupdate: 2012/08/08 15:43:06$
 # License: Expat
 #
 #+TITLE: tdiary-modeの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
+#+SETUPFILE: ./export-config.org
+#+BEGIN_HTML
+---
+layout: emacs
+title: nxml-mode の設定
+---
+#+END_HTML
 * 始めに
   いわゆる tDiary を使っています.
   この手の日記なり Blog なりは Emacs から更新できてナンボだと思うので

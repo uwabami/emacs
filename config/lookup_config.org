@@ -1,11 +1,18 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/03/29 17:29:14$
+# $Lastupdate: 2012/08/08 15:41:55$
 # License: Expat.
-#+TITLE: lookup-elの設定
+#+TITLE: lookupの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
+#+SETUPFILE: ./export-config.org
+#+BEGIN_HTML
+---
+layout: emacs
+title: lookupの設定
+---
+#+END_HTML
 
 * byte-compile 用の小細工1                                         :noexport:
   #+BEGIN_SRC emacs-lisp

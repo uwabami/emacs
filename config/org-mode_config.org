@@ -1,12 +1,19 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/07 20:57:37$
+# $Lastupdate: 2012/08/08 15:29:11$
 # License: Expat
 #
-#+TITLE: Orgモードの設定
+#+TITLE: org-modeの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
+#+SETUPFILE: ./export-config.org
+#+BEGIN_HTML
+---
+layout: emacs
+title: org-modeの設定
+---
+#+END_HTML
 * 始めに
 * 基本設定
   #+BEGIN_SRC emacs-lisp
@@ -146,15 +153,14 @@
              :base-directory ,my:user-emacs-config-directory
              :base-extension "org"
              :recursive nil
-             :exclude ".*\.el\\|^Makefile\\|.*\.gpg\\|sitemap\.org\\|^cc-env\\|^images\\|^_site\\|^export-config\.org"
+             :exclude "^export-config\.org"
              :headline-level 4
              :publishing-directory ,my:org-publish-emacs-pages
              :publishing-function org-publish-org-to-html
              :body-only t
              :auto-sitemap t
              :sitemap-filename "sitemap.org"
-             :sitemap-title "sitemap"
-             ;; :auto-preamble t
+             :sitemap-title ""
              )
             ("web" :components ("public" "img"))
             ("github" :components ("gh-pages"))

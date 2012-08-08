@@ -1,12 +1,19 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/07/13 16:39:05$
+# $Lastupdate: 2012/08/08 15:34:53$
 # License: Expat
 #
 #+TITLE: AUCTeX の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
+#+SETUPFILE: ./export-config.org
+#+BEGIN_HTML
+---
+layout: emacs
+title: AUCTeX の設定
+---
+#+END_HTML
 * byte-compile 用の小細工1                                         :noexport:
   #+BEGIN_SRC emacs-lisp
     (when (and (locate-library "auctex")

@@ -1,12 +1,20 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/04/17 18:43:01$
+# $Lastupdate: 2012/08/08 15:40:34$
 # License: Expat
 #
 #+TITLE: flyspell-modeの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
+#+SETUPFILE: ./export-config.org
+#+BEGIN_HTML
+---
+layout: emacs
+title: flyspell-modeの設定
+---
+#+END_HTML
+
 * 読み込みと初期設定
   aspell か ispell か?
   #+BEGIN_SRC emacs-lisp

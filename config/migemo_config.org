@@ -1,11 +1,18 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/06/14 04:41:44$
+# $Lastupdate: 2012/08/08 15:38:28$
 # License: Expat.
 #+TITLE: Migemo の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
+#+SETUPFILE: ./export-config.org
+#+BEGIN_HTML
+---
+layout: emacs
+title: Migemo の設定
+---
+#+END_HTML
 * はじめに
   [[http://0xcc.net/migemo][Migemo]] はローマ字のまま日本語をインクリメンタルサーチするための
   プログラム. ないと結構途方に暮れるのだけれど, pure ruby の実装が

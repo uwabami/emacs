@@ -3,5 +3,5 @@
 #+MACRO: em @<em>$1@</em>
 #+MACRO: strong @<strong>$1@</strong>
 #+HTML: <nav>
-#+INCLUDE: sitemap.org
+#+INCLUDE: ./sitemap.org
 #+HTML: </nav>

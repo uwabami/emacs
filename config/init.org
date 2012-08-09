@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/08 16:17:10$
+# $Lastupdate: 2012/08/09 18:09:40$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -163,8 +163,7 @@ title: Emacsの基本設定
 ** モードライン関連
 *** モードラインのダイエット
     デフォルトでは結構煩いので, いろいろと消す. 元ネタは
-    [[http://homepage1.nifty.com/blankspace/emacs/mode-line.html][mode-line-formatをダイエットさす]]モードラインのダイエット [fn:5]
-
+    [[http://homepage1.nifty.com/blankspace/emacs/mode-line.html][mode-line-formatをダイエットさす]]モードラインのダイエット [fn:5].
     しかし世の中にはもっと過激な人もいらっしゃって
     [[http://emacs-fu.blogspot.jp/2011/08/customizing-mode-line.html][customizing the mode-line]] [fn:6]なんてこともできる.
     そのうちもっと細かく設定するかも.
@@ -189,12 +188,12 @@ title: Emacsの基本設定
     #+END_SRC
 *** 行番号, 桁番号
     必要に応じて linum-mode を有効にするので
-    モードラインにカーソルのある行番号や桁番号を表示しない.
+    モードラインに行番号や桁番号を表示しない.
     #+BEGIN_SRC emacs-lisp
       (line-number-mode 0)
       (column-number-mode 0)
     #+END_SRC
-*** linum-mode を有効にした場合の桁表示を 5 桁に.
+    linum-mode を有効にした場合の桁表示を 5 桁にする
     #+BEGIN_SRC emacs-lisp
       (setq linum-format "%5d ")
     #+END_SRC
@@ -264,17 +263,19 @@ title: Emacsの基本設定
       (setq-default auto-fill-mode nil)
     #+END_SRC
 *** 行末の無駄な空白/改行を削除する
-    元ネタ: (Emacs Advent Calendar jp:2010)[fn:7]
-
-    RD や Markdown だと空白行に意味があったりするので, 拡張子で判断して外している.
+    元ネタ: (Emacs Advent Calendar jp:2010)[fn:7]. ただし, RD や
+    Markdown だと空白行に意味があったりするので, 拡張子で判断して外してい
+    る.
     #+BEGIN_SRC emacs-lisp
       (defvar my:delete-trailing-whitespace-exclude-suffix
-            (list "\\.rd$" "\\.md$" "\\.rbt$"))
+        (list "\\.rd$" "\\.md$" "\\.rbt$"))
       (defun my:delete-trailing-whitespace ()
         (interactive)
-        (cond ((equal nil (loop for pattern in my:delete-trailing-whitespace-exclude-suffix
-                                thereis (string-match pattern buffer-file-name)))
-               (delete-trailing-whitespace))))
+        (cond
+         ((equal nil
+                 (loop for pattern in my:delete-trailing-whitespace-exclude-suffix
+                       thereis (string-match pattern buffer-file-name)))
+          (delete-trailing-whitespace))))
       (add-hook 'before-save-hook 'my:delete-trailing-whitespace)
     #+END_SRC
 *** バックアップとauto-saveの作成

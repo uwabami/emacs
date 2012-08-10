@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/08 15:41:35$
+# $Lastupdate: 2012/08/10 15:29:57$
 # License: Expat
 #
 #+TITLE: howm の設定
@@ -33,13 +33,14 @@ title: howm の設定
 * ディレクトリの設定
   メモの内容は dropbox で同期することに
   #+BEGIN_SRC emacs-lisp
-    (setq howm-directory "~/Documents/Dropbox/org")
+    (when (file-exists-p
+           (expand-file-name (concat (getenv "HOME") "/Documents/Dropbox/org")))
+      (setq howm-directory "~/Documents/Dropbox/org")
+      (setq howm-keyword-file "~/Documents/Dropbox/org/.howm-keys")
+      (setq howm-history-file "~/Documents/Dropbox/org/.howm-history")
+      (setq howm-menu-file "~/Documents/Dropbox/org/.howm-menu"))
     (setq howm-file-name-format "%Y%m%d-%H%M%S.howm")
-    (setq howm-keyword-file "~/Documents/Dropbox/org/.howm-keys")
-    (setq howm-history-file "~/Documents/Dropbox/org/.howm-history")
-    (setq howm-menu-file "~/Documents/Dropbox/org/.howm-menu")
   #+END_SRC
-
 * org-mode でメモを書くためにその1
   メモはorgで書くので, org-mode の hook として howm-mode を登録しておきます.
   こうすると C-c が org に取られるので, howm の prefix は C-xC-z にしておきます

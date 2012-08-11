@@ -96,6 +96,7 @@
  "config"                  ; 分割した設定群の置き場所.
  "auto-install"            ; auto-install で install したモノ
  "site-lisp/org-mode/lisp" ; org-mode (Git HEAD)
+ "local"                   ; 自作の emacs-lisp とか.
  )
 ;;
 ;;; 良く使う macro の定義

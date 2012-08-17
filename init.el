@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8-unix; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2012/08/08 14:56:48$
+;; $Lastupdate: 2012/08/12 01:37:46$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -29,7 +29,8 @@
 
 ;; 必要になることが多いので cl だけは読み込んでおく
 ;;
-(eval-when-compile (require 'cl))
+(eval-when-compile (byte-compile-disable-warning 'cl-functions))
+(require 'cl)
 ;;
 ;;; 自己紹介 -> 名前とメールアドレスの設定
 ;;

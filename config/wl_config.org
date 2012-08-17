@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/07 21:00:34$
+# $Lastupdate: 2012/08/15 17:03:11$
 # License: Expat.
 #
 #+TITLE: Wanderlust の設定
@@ -39,5 +39,9 @@ title: Wanderlustの設定
 * Wanderlust 本体の設定は基本外部ファイルで
    epa を有効にして gpg で暗号化したファイルを読む
 #+BEGIN_SRC emacs-lisp
+  ;; local の elmo データベースの場所
+  ;; →Wanderlust 起動前に設定しておく必要あり
+  (setq elmo-msgdb-directory "~/Mail/.elmo")
+  ;; (setq elmo-cache-directory (expand-file-name "cache" elmo-msgdb-directory))
   (setq wl-init-file "~/.wl/init.gpg")
 #+END_SRC

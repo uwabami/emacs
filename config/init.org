@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/09 18:25:18$
+# $Lastupdate: 2012/08/16 14:16:29$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -658,6 +658,14 @@ title: Emacsの基本設定
 ** tdiary-mode
    #+BEGIN_SRC emacs-lisp
    (my:load-org-file "tdiary-mode_config.org")
+   #+END_SRC
+** yaml-mode
+   #+BEGIN_SRC emacs-lisp
+     (when (locate-library "yaml-mode")
+       (eval-when-compile (require 'yaml-mode))
+       (autoload 'yaml-mode "yaml-mode" "Major mode for Yaml" t)
+       (add-to-list 'auto-mode-alist '("\\.yml$" . yaml-mode))
+       )
    #+END_SRC
 * Footnotes
 

@@ -1,0 +1,4 @@
+(:name id-manager
+       :description "ID/Password management tool for emacs users."
+       :type http
+       :url "https://raw.github.com/kiwanami/emacs-id-manager/master/id-manager.el")

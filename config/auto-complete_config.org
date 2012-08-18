@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/08 15:36:03$
+# $Lastupdate: 2012/08/18 11:34:07$
 # License: Expat
 #
 #+TITLE: AutoCompleteの設定
@@ -14,16 +14,16 @@ layout: emacs
 title: AutoCompleteの設定
 ---
 #+END_HTML
-* byte-compile 用の小細工1                                         :noexport:
-  #+BEGIN_SRC emacs-lisp
-    (when (locate-library "auto-complete-config")
-  #+END_SRC
 * 始めに
   [[http://cx4a.org/software/auto-complete/index.ja.html][Auto Complete Mode]] [fn:1] を参照のこと. 大変便利なのだけれども
   Org-mode や yasnippet と共存させようとすると, 結構面倒.
   ここで設定しているのはそういうお話.
 
-  導入に関しては Debian パッケージ使うなり ELPA 使うなり
+  導入に関しては Debian パッケージ使うなり el-get 使うなり
+  #+BEGIN_SRC emacs-lisp
+    (unless (locate-library "auto-complete")
+      (el-get 'sync 'auto-complete))
+  #+END_SRC
 * 読み込みと初期設定
   #+BEGIN_SRC emacs-lisp
     (require 'auto-complete-config)
@@ -55,10 +55,6 @@ title: AutoCompleteの設定
     (define-key ac-completing-map (kbd "<tab>") 'ac-complete)
     (define-key ac-completing-map (kbd "M-/")   'ac-stop)
     (define-key ac-completing-map (kbd "RET") nil) ; return での補完禁止
-  #+END_SRC
-* byte-compile 用の小細工2                                         :noexport:
-  #+BEGIN_SRC emacs-lisp
-    )
   #+END_SRC
 * Footnotes
 [fn:1] Auto Complete Mode: [[http://cx4a.org/software/auto-complete/index.ja.html]]

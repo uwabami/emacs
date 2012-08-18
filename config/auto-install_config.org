@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/09 18:25:43$
+# $Lastupdate: 2012/08/18 09:29:59$
 # License: Expat
 #
 #+TITLE: auto-install の設定
@@ -172,7 +172,7 @@ title: auto-install の設定
      (require 'text-translator)
      (global-set-key (kbd "C-x t") 'text-translator-all-by-auto-selection)
    #+END_SRC
-#* 以下, コメントアウト
+   #* 以下, コメントアウト
 * [[http://d.hatena.ne.jp/mooz/20101003/p1][zlc.el で Emacs のミニバッファ補完 zsh ライクに]] [fn:3]
   find-file には zlc を使う
 ** install
@@ -220,6 +220,3 @@ title: auto-install の設定
 [fn:5] 人は俺を「recentfマスター」と呼ぶ: [[http://d.hatena.ne.jp/rubikitch/20091224/recentf]]
 
 [fn:6] text-translator-el: http://d.hatena.ne.jp/khiker/20070503/emacs_text_translator
-
-
-

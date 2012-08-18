@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8-unix; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2012/08/12 01:37:46$
+;; $Lastupdate: 2012/08/18 08:29:39$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -26,17 +26,17 @@
 ;;; Code:
 ;; -----------------------------------------------------------
 ;;; byte-compile 関連
-
+;;
 ;; 必要になることが多いので cl だけは読み込んでおく
 ;;
 (eval-when-compile (byte-compile-disable-warning 'cl-functions))
 (require 'cl)
-;;
+;; -----------------------------------------------------------
 ;;; 自己紹介 -> 名前とメールアドレスの設定
 ;;
 (setq user-full-name "Youhei SASAKI")
 (setq user-mail-address "uwabami@gfd-dennou.org")
-;;
+;; -----------------------------------------------------------
 ;;; Emacs の種類/バージョンを判別するための変数を定義
 ;;
 ;; 元々は以下のURLにあった関数. 必要な物だけ抜粋
@@ -50,7 +50,7 @@
 (defvar emacs24-p (>= emacs-major-version 24))  ; 24 以上
 (defvar darwin-p (eq system-type 'darwin))      ; Mac OS X 用
 (defvar nt-p (eq system-type 'windows-nt))      ; Windows 用
-;;
+;; -----------------------------------------------------------
 ;;; ディレクトリ構成を決めるための変数
 ;;
 ;; Emacs 22 以下用に user-emacs-directory を定義する.
@@ -72,7 +72,7 @@
   (expand-file-name (concat user-emacs-directory "share/")))
 (defconst my:user-emacs-template-directory
   (expand-file-name (concat user-emacs-directory "template/")))
-;;
+;; -----------------------------------------------------------
 ;;; load-path 追加用の関数の定義
 ;;
 ;; 最後に add したものが先頭にくるようになっている. 読み込みたくないファ
@@ -86,7 +86,7 @@
         (add-to-list 'load-path default-directory)
         (if (fboundp 'normal-top-level-add-subdirs-to-loadpath)
             (normal-top-level-add-subdirs-to-load-path))))))
-;;
+;; -----------------------------------------------------------
 ;;; load-path の設定
 ;;
 ;; load-path の優先順位が気になる場合には
@@ -95,11 +95,10 @@
 ;;
 (add-to-load-path
  "config"                  ; 分割した設定群の置き場所.
- "auto-install"            ; auto-install で install したモノ
  "site-lisp/org-mode/lisp" ; org-mode (Git HEAD)
  "local"                   ; 自作の emacs-lisp とか.
  )
-;;
+;; -----------------------------------------------------------
 ;;; 良く使う macro の定義
 ;;
 ;; 今のところ以下を定義:
@@ -111,7 +110,7 @@
      (add-to-load-path ,@list)
      (eval-when-compile
        (add-to-load-path ,@list))))
-;;
+;; -----------------------------------------------------------
 ;;; org-babel
 ;;
 ;; Emacs の設定はorg-mode で記述する.
@@ -120,7 +119,7 @@
 ;;      http://uwabami.junkhub.org/log/20111213.html#p01
 ;;
 (require 'org-install)
-;;
+;; -----------------------------------------------------------
 ;;; ob-tangle より自分用に幾つか関数を設定
 ;;
 ;; my:org-babel-tangle-and-compile-file
@@ -144,8 +143,8 @@
                    (> (age file) (age compiled-file)))
         (org-babel-tangle-file file exported-file "emacs-lisp")
         (byte-compile-file exported-file)))))
-;;
-;; my:org-babel-load-file
+;; -----------------------------------------------------------
+;;; my:org-babel-load-file
 ;; - my:org-babel-tangle-and-comile-file してから load する
 ;;
 (defun my:org-babel-load-file (file)
@@ -153,8 +152,8 @@
   (interactive "fFile to load: ")
   (my:org-babel-tangle-and-compile-file file)
   (load (file-name-sans-extension file)))
-;;
-;; my:org-load-file
+;; -----------------------------------------------------------
+;;; my:org-load-file
 ;; - my:org-babel-load-file の際にディレクトリ名を
 ;;   ~/.emacs.d/config/ に決め打ち
 ;;
@@ -162,11 +161,11 @@
   "my:user-emacs-config-directory 以下から my:org-babel-load-file"
   (my:org-babel-load-file
    (expand-file-name file my:user-emacs-config-directory)))
+;; -----------------------------------------------------------
+;;; 実際に読み込む.
 ;;
-;; 実際に読み込む.
-;;
-(my:load-org-file "init.org")
-;;
+(my:load-org-file "index.org")
+;; -----------------------------------------------------------
 ;;; calculate bootup time/ スピード狂に捧ぐ.
 ;;
 ;; 目標: 3000ms 圏内

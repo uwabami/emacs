@@ -1,5 +1,5 @@
 TARGET_DIR	:= $(subst ./, ,$(shell find . -maxdepth 1 -mindepth 1 -type d))
-EXCLUDE		:= yasnippet offlineimap-el google-contacts-mew 
+EXCLUDE		:= yasnippet offlineimap-el google-contacts-mew el-get
 TARGET_DIRS	:= $(filter-out $(EXCLUDE),$(TARGET_DIR))
 include $(HOME)/.emacs.d/Mkinclude
 
@@ -11,6 +11,8 @@ all: 00build-stamp
 	done
 	touch $@
 
+el-get-stamp:
+	touch $@
 yasnippet-stamp:
 	@( cd yasnippet && rake compile )
 	touch $@

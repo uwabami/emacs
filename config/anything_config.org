@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/08 15:35:10$
+# $Lastupdate: 2012/08/18 11:32:16$
 # License: Expat
 #
 #+TITLE: Anythingの設定
@@ -14,10 +14,6 @@ layout: emacs
 title: Anythingの設定
 ---
 #+END_HTML
-* byte-compile 用の小細工1                                         :noexport:
-  #+BEGIN_SRC emacs-lisp
-    (when (locate-library "anything-config")
-  #+END_SRC
 * 始めに
   何度か挫折しては舞い戻ってくる [[http://emacswiki.org/emacs/Anything][Anything]] [fn:1] の設定.
   あまりに高機能すぎて, よく眩暈をおこして使うのを止めるのですが,
@@ -33,6 +29,10 @@ title: Anythingの設定
   で OK.
   パッケージが使えない場合には
   [[http://tromey.com/elpa/install.html][ELPA]] [fn:3] で anything と anything-config を導入しておく.
+  #+BEGIN_SRC emacs-lisp
+    (unless (locate-library "anything")
+      (el-get 'sync 'anything))
+  #+END_SRC
 * 設定
 ** history の位置変更
    #+BEGIN_SRC emacs-lisp
@@ -93,24 +93,15 @@ title: Anythingの設定
        (my:load-org-file "migemo_config.org")
        (require 'anything-migemo nil t))
    #+END_SRC
-** auto-install を anything
-   #+BEGIN_SRC emacs-lisp
-     (require 'anything-auto-install nil t)
-   #+END_SRC
 ** キーバインドを anything
    #+BEGIN_SRC emacs-lisp
+     (unless (locate-library "descbinds-anything")
+       (el-get 'sync 'descbinds-anything))
      (when (require 'descbinds-anything nil t)
        (descbinds-anything-install))
    #+END_SRC
-* byte-compile 用の小細工2                                         :noexport:
-  #+BEGIN_SRC emacs-lisp
-    )
-  #+END_SRC
 * Footnotes
 
 [fn:1] Anything - EmacsWiki: [[http://emacswiki.org/emacs/Anything]]
 
 [fn:2] anything-el - Debian PTS: [[http://packages.qa.debian.org/a/anything-el.html]]
-
-[fn:3] ELPA: [[http://tromey.com/elpa/install.html]]
-

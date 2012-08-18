@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/16 14:16:29$
+# $Lastupdate: 2012/08/18 11:34:49$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -135,7 +135,7 @@ title: Emacsの基本設定
 * 機種依存しない(ハズ)の雑多な設定
   Emacsそのものの設定集.
 
-  line-number-modeなど「有効無効をtoggleする関数」は,
+  ちなみに line-number-modeなど「有効無効をtoggleする関数」は,
   慣習的に0以下の数字を指定すると明示的に無効化できる.
 ** 常に $HOME から開始
    以前(Meadow?)で使っていた時に Cygwin のHOME に移動していないとファイル
@@ -198,70 +198,71 @@ title: Emacsの基本設定
       (setq linum-format "%5d ")
     #+END_SRC
 ** フレーム, ツールバーなど
-*** ツールバーは使用しない.
-    #+BEGIN_SRC emacs-lisp
-      (tool-bar-mode 0)
-    #+END_SRC
-*** スクロールバーは使用しない.
-    #+BEGIN_SRC emacs-lisp
-      (set-scroll-bar-mode nil)
-    #+END_SRC
-*** メニューバーを表示しない.
-    #+BEGIN_SRC emacs-lisp
-      (menu-bar-mode 0)
-    #+END_SRC
-*** bell-mode 使用しない
-    #+BEGIN_SRC emacs-lisp
-      (setq ring-bell-function 'ignore)
-    #+END_SRC
-*** startup を表示しない
-    #+BEGIN_SRC emacs-lisp
-      (setq inhibit-startup-screen 0)
-    #+END_SRC
-*** 可能ならば \C-x f で画像を表示
-    #+BEGIN_SRC emacs-lisp
-      (when (window-system)
-        (setq auto-image-file-mode t)
-        (setq auto-image-file-mode nil))
-    #+END_SRC
+   ツールバーは使用しない.
+   #+BEGIN_SRC emacs-lisp
+     (tool-bar-mode 0)
+   #+END_SRC
+   スクロールバーは使用しない.
+   #+BEGIN_SRC emacs-lisp
+     (set-scroll-bar-mode nil)
+   #+END_SRC
+   メニューバーを表示しない.
+   #+BEGIN_SRC emacs-lisp
+    (menu-bar-mode 0)
+   #+END_SRC
+   bell-mode 使用しない
+   #+BEGIN_SRC emacs-lisp
+    (setq ring-bell-function 'ignore)
+   #+END_SRC
+   startup を表示しない
+   #+BEGIN_SRC emacs-lisp
+    (setq inhibit-startup-screen 0)
+   #+END_SRC
+   可能ならば \C-x f で画像を表示
+   #+BEGIN_SRC emacs-lisp
+     (when (window-system)
+       (setq auto-image-file-mode t)
+       (setq auto-image-file-mode nil))
+   #+END_SRC
 ** 表示/編集関連
-*** 余計な空行を入れない
-    #+BEGIN_SRC emacs-lisp
-      ;; バッファ終端で newline を入れない
-      (setq next-line-add-newlines nil)
-      ;; 保存時に最終行に一行追加する→とりあえず使わないことに
-      ;; (setq require-final-newline t)
-      (put 'set-goal-column 'disabled nil)
-    #+END_SRC
-*** yes or no を y or n に
-    #+BEGIN_SRC emacs-lisp
-      (fset 'yes-or-no-p 'y-or-n-p)
-    #+END_SRC
-*** 選択リージョンに色付け
-    #+BEGIN_SRC emacs-lisp
-      (setq transient-mark-mode t)
-    #+END_SRC
-*** 対応する括弧を色付け
-    #+BEGIN_SRC emacs-lisp
-      (setq show-paren-delay 0)           ; 初期値は 0.125
-      (setq show-paren-style 'expression) ; 括弧内も強調表示
-      (show-paren-mode t)                 ; 有効化
-    #+END_SRC
-*** タイトルのバッファ名を非表示
-    #+BEGIN_SRC emacs-lisp
-      (setq frame-title-format nil)
-    #+END_SRC
-*** tab 幅 4, tab でのインデントはしない
-    #+BEGIN_SRC emacs-lisp
+*** 雑多な設定
+   余計な空行を入れない
+   #+BEGIN_SRC emacs-lisp
+     ;; バッファ終端で newline を入れない
+     (setq next-line-add-newlines nil)
+     ;; 保存時に最終行に一行追加する→とりあえず使わないことに
+     ;; (setq require-final-newline t)
+     (put 'set-goal-column 'disabled nil)
+   #+END_SRC
+   yes or no を y or n に
+   #+BEGIN_SRC emacs-lisp
+     (fset 'yes-or-no-p 'y-or-n-p)
+   #+END_SRC
+   選択リージョンに色付け
+   #+BEGIN_SRC emacs-lisp
+     (setq transient-mark-mode t)
+   #+END_SRC
+   対応する括弧を色付け
+   #+BEGIN_SRC emacs-lisp
+     (setq show-paren-delay 0)           ; 初期値は 0.125
+     (setq show-paren-style 'expression) ; 括弧内も強調表示
+     (show-paren-mode t)                 ; 有効化
+   #+END_SRC
+   タイトルのバッファ名を非表示
+   #+BEGIN_SRC emacs-lisp
+     (setq frame-title-format nil)
+   #+END_SRC
+   tab 幅 4, tab でのインデントはしない
+   #+BEGIN_SRC emacs-lisp
       (setq-default tab-width 4)
       (setq-default indent-tabs-mode nil)
-    #+END_SRC
-*** 文字列は 72 文字で折り返し(RFC2822)
-    #+BEGIN_SRC emacs-lisp
+   #+END_SRC
+   文字列は 72 文字で折り返し(RFC2822)
+   #+BEGIN_SRC emacs-lisp
       (setq-default fill-column 72)
       (setq paragraph-start '"^\\([ 　・○<\t\n\f]\\|(?[0-9a-zA-Z]+)\\)")
       (setq-default auto-fill-mode nil)
-    #+END_SRC
+   #+END_SRC
 *** 行末の無駄な空白/改行を削除する
     元ネタ: (Emacs Advent Calendar jp:2010)[fn:7]. ただし, RD や
     Markdown だと空白行に意味があったりするので, 拡張子で判断して外してい
@@ -328,6 +329,7 @@ title: Emacsの基本設定
                 (switch-to-buffer "*scratch*")))
           (cond ((= arg 0) (message "*scratch* is cleared up."))
                 ((= arg 1) (message "another *scratch* is created")))))
+
       (defun my:buffer-name-list ()
         (mapcar (function buffer-name) (buffer-list)))
       (add-hook 'kill-buffer-query-functions
@@ -343,39 +345,40 @@ title: Emacsの基本設定
                  (lambda ()
                    (unless (member "*scratch*" (my:buffer-name-list))
                      (my:make-scratch 1)))))
-
     #+END_SRC
 *** 履歴ファイル管理
-    undo 関連
+    Undo 関連
     #+BEGIN_SRC emacs-lisp
-      ;; (setq undo-limit 160000) ; 無限にしたいができないので, 倍に
-      ;; (setq undo-strong-limit 240000)
+      (setq undo-limit 160000) ; 無限にしたいができないので, 倍に
+      (setq undo-strong-limit 240000)
       (savehist-mode 1)        ; ミニバッファの履歴を保存しリストア
       (setq savehist-file
             (concat my:user-emacs-temporary-directory "history"))
-      ;; (setq history-length t)  ; t で無制限
+      (setq history-length t)  ; t で無制限
     #+END_SRC
-    recentf 関連. [[file:auto-install_config.org][auto-installとinstallしたelispの設定]] も参照のこと.
+    Recentf 関連.
     #+BEGIN_SRC emacs-lisp
       (add-hook 'after-init-hook 'recentf-mode)
       (eval-after-load "recentf"
         '(progn
            (setq recentf-max-saved-items 2000)
            (setq recentf-save-file
-                 (concat my:user-emacs-temporary-directory "recentf"))
+                 (expand-file-name
+                  (concat my:user-emacs-temporary-directory "recentf")))
            (setq recentf-auto-cleanup 'never)
            (run-with-idle-timer 300 t 'recentf-save-list)
            (run-with-idle-timer 600 t 'recentf-cleanup)
            ))
     #+END_SRC
 *** モードラインのファイル名にディレクトリも表示
+    uniquify を使用
     #+BEGIN_SRC emacs-lisp
       (require 'uniquify)
       (setq uniquify-buffer-name-style 'post-forward-angle-brackets)
       (setq uniquify-min-dir-content 1)
     #+END_SRC
 *** saveplace で前回の修正位置を記憶
-    記憶の保存先は ~/.emacs.d/tmp/emacs-places に
+    記憶の保存先は ~/.emacs.d/tmp/emacs-places にする
     #+BEGIN_SRC emacs-lisp
       (require 'saveplace)
       (setq-default save-place t)
@@ -408,7 +411,7 @@ title: Emacsの基本設定
    #+END_SRC
 ** timestamp の自動更新
    ファイル内に"＄Lastupdate: ＄" (＄は小文字)がある場合には,
-   save する度にtimestamp を更新する.
+   save する度に timestamp を更新する.
    #+BEGIN_SRC emacs-lisp
      (require 'time-stamp)
      (add-hook 'before-save-hook 'time-stamp)
@@ -418,62 +421,40 @@ title: Emacsの基本設定
      (setq time-stamp-format "%04y/%02m/%02d %02H:%02M:%02S")
      (setq time-stamp-end "\\$")
    #+END_SRC
-** TODO EasyPG[0/1]
+** EasyPG
    Emacs23からは本体に同梱されているのでrequireする必要ないが,
    一応残しておく
-   - [ ] gpg-agentと対称鍵暗号化方式の共存が変
-     - Mewみたいに独自にgpg-agent実装しているのもあって良くわからない
    #+BEGIN_SRC emacs-lisp
-     (require 'epa-file) ; 読み込み
+     (require 'epa-file)
      ;; 対称鍵のキャッシュを有効化
      (setq epa-file-cache-passphrase-for-symmetric-encryption t)
    #+END_SRC
-* 外部emacs-lispなどの設定/分割した設定ファイルの読み込み
+* 外部 emacs-lisp などの設定/分割した設定ファイルの読み込み
   以下は Emacs 本体に同梱されていない emacs-lisp program や
   外部ファイルの設定を読み込んでいるモン, など.
-** [[file:auto-install_config.org][auto-installとinstallしたelispの設定]]
+** el-get
+   パッケージ管理には el-get を使うようになりました.
    #+BEGIN_SRC emacs-lisp
-     (my:load-org-file "auto-install_config.org")
+     (my:load-org-file "el-get_config.org")
    #+END_SRC
-** [[http://tromey.com/elpa/install.html][ELPA]] [fn:8]
-   Emacs24から標準添付される予定のEmacs Lisp Package Archive.
-   auto-install とは異なり, パッケージのバージョン管理もしてくれる.
-*** install
-    elpa 自体は auto-install-el で導入することに
-    #+BEGIN_SRC emacs-lisp
-      (unless (locate-library "package")
-        (require 'auto-install nil t)
-        (auto-install-from-url "http://repo.or.cz/w/emacs.git/blob_plain/1a0a666f941c99882093d7bd08ced15033bc3f0c:/lisp/emacs-lisp/package.el"))
-    #+END_SRC
-    これが実行されると ~/.emacs.d/init.el に設定が追記されるので
-    適宜修正しておくこと
-*** 設定
-    リポジトリとして [[http://marmalade-repo.org/][Marmalade]] [fn:9]も追加しておく
-    #+BEGIN_SRC emacs-lisp
-      (when (require 'package nil t)
-        (add-to-list 'package-archives
-                     '("marmalade" . "http://marmalade-repo.org/packages/"))
-        (package-initialize))
-    #+END_SRC
-
 ** [[http://www.kanji.zinbun.kyoto-u.ac.jp/~tomo/elisp/APEL/][APEL]] [fn:10] に load-path を通しておく
    Upstream の Web には
    #+BEGIN_QUOTE
-   APEL (A Portable Emacs Library) は可搬性のある Emacs Lisp program の作成を支援するための library です。
+   APEL (A Portable Emacs Library) は可搬性のある Emacs Lisp program の作
+   成を支援するための library です。
    #+END_QUOTE
-   とある.
-   今ん所, 使っている外部emacs-lispでは
-   Wanderlustとhowmがapelに依存している.
-   後者は無いと途方に暮れてしまうので,
-   ここでload-pathの設定をしておく.
+   とある. 今ん所, 使っている外部emacs-lispではWanderlustとhowmがapelに依存してい
+   る.
    #+BEGIN_SRC emacs-lisp
-   (my:not-locate-library emu "site-lisp/apel")
+     (unless (locate-library "emu")
+       (el-get 'sync 'apel))
    #+END_SRC
 ** [[http://www.morishima.net/~naoto/elscreen-en/][ElScreen]]
    Emacsのバッファを GNU Screen っぽく扱う.
    設定はキーバインドを \C-o に変えたくらい.
    #+BEGIN_SRC emacs-lisp
-     (my:not-locate-library elscreen "site-lisp/elscreen")
+     (unless  (locate-library "elscreen")
+       (el-get 'sync 'elscreen))
      (setq elscreen-prefix-key (kbd "C-o"))
      (if (eq window-system 'x)
          (setq elscreen-display-tab 4)
@@ -481,12 +462,9 @@ title: Emacsの基本設定
        )
      (setq elscreen-tab-display-kill-screen nil)
      (require 'elscreen)
-     ;; (my:not-locate-library elscreen-dired-enhance "local-lisp")
    #+END_SRC
 ** 日本語入力
    SKK をメインで使用中. 無いと途方に暮れる.
-   一応debug用にmozcも読み込んでいるが, 殆ど使った事がない.
-
    ちなみにGTKが有効になっているとgit-immoduleなんかと衝突するので
    .Xresources で xim を無効にしておくと良い.
    #+BEGIN_EXAMPLE
@@ -501,39 +479,37 @@ title: Emacsの基本設定
    skk-user-directory を設定しているので辞書や id なんかは
    ~/.emacs.d/etc/skk 以下に置かれるが, 設定ファイルだけは
    [[file:ddskk_config.org][ddskkの設定]] で行なっている.
-    #+BEGIN_SRC emacs-lisp
-      ;; mozc はとりあえず読み込んだだけ
-      (require 'mozc nil t)
-      ;;; skk の設定
-      ;; 古い skk しか無い場合には ddskk を読み込む
-      (my:not-locate-library skk-sticky "site-lisp/ddskk")
-      ;; byte-compile 用の設定
-      (eval-when-compile
-        (require 'skk-vars)
-        (require 'skk-autoloads))
-      ;; ddskk の辞書ファイル等は ~/.emacs.d/etc/skk 以下に置く
-      (setq skk-user-directory
-            (concat my:user-emacs-etc-directory "skk"))
-      ;; ただし設定ファイルだけは ~/.emacs.d/config 以下に置く
-      (setq skk-init-file
-            (concat my:user-emacs-config-directory "ddskk_config"))
-      ;; org-babel-tangle で ddskk.org から ddskk.el を生成
-      (my:org-babel-tangle-and-compile-file
-       (concat my:user-emacs-config-directory "ddskk_config.org"))
-      ;; ddsk の設定ファイルは自動で byte-compile
-      (setq skk-byte-compile-init-file t)
-      ;; 読み込み
-      (require 'skk-leim)
-      (setq default-input-method "japanese-skk")
-      (require 'skk-autoloads)
-      (require 'skk-cus)
+   #+BEGIN_SRC emacs-lisp
+     ;;; skk の設定
+     ;; 古い skk しか無い場合には ddskk を読み込む
+     (unless (locate-library "skk-sticky")
+       (el-get 'sync 'ddskk))
+     ;; byte-compile 用の設定
+     (eval-when-compile
+       (require 'skk-vars)
+       (require 'skk-autoloads))
+     ;; ddskk の辞書ファイル等は ~/.emacs.d/etc/skk 以下に置く
+     (setq skk-user-directory
+           (concat my:user-emacs-etc-directory "skk"))
+     ;; ただし設定ファイルだけは ~/.emacs.d/config 以下に置く
+     (setq skk-init-file
+           (concat my:user-emacs-config-directory "ddskk_config"))
+     ;; org-babel-tangle で ddskk.org から ddskk.el を生成
+     (my:org-babel-tangle-and-compile-file
+      (concat my:user-emacs-config-directory "ddskk_config.org"))
+     ;; ddsk の設定ファイルは自動で byte-compile
+     (setq skk-byte-compile-init-file t)
+     ;; 読み込み
+     (require 'skk-leim)
+     (setq default-input-method "japanese-skk")
+     (require 'skk-autoloads)
+     (require 'skk-cus)
     #+END_SRC
 ** emacs-w3m
    #+BEGIN_SRC emacs-lisp
-     (when (locate-library "w3m-load")
-       (my:org-babel-tangle-and-compile-file
-        (concat my:user-emacs-config-directory "w3m_config.org"))
-       (my:load-org-file "w3m_config.org"))
+     (unless (locate-library "w3m-load")
+       (el-get 'sync 'emacs-w3m))
+     (my:load-org-file "w3m_config.org")
    #+END_SRC
 ** MUA
    Wanderlustを愛用中.
@@ -541,43 +517,30 @@ title: Emacsの基本設定
    すぐにメールが欲しい事があるので, それに対応するために
    [[http://julien.danjou.info/software/offlineimap.el][offlineimap for Emacs]] も設定.
    #+BEGIN_SRC emacs-lisp
-     (cond
-      ((string-match system-name "daphne.localdomain")
-       (my:load-org-file "wl_config.org")
-       (add-to-load-path "site-lisp/offlineimap-el")
-       (autoload 'offlineimap "offlineimap" nil t)
-       (eval-after-load "offlineimap"
-         '(progn
-            (setq offlineimap-command "offlineimap -u Machine.MachineUI")
-            (setq offlineimap-buffer-maximum-size 3000)
-            (setq offlineimap-mode-line-symbol "imap")
-            (setq offlineimap-enable-mode-line-p
-                  '(member major-mode
-                           '(offlineimap-mode
-                             wl-summary-mode
-                             wl-folder-mode
-                             wl-message-mode)))
-            (defun offlineimap-real-quit
-              "real quit offline-imap"
-              (interactive)
-              (offlineimap-kill)
-              (offlineimap-quit)
-              (define-key offlineimap-mode-map (kbd "Q") 'offlineimap-real-quit))
-              ))
-       (global-set-key [f1] 'offlineimap)
-       )
-      (t
-       (my:load-org-file "mew_config.org"))
-      )
-   #+END_SRC
-** [[file:GUI.org][フォントとフレームの設定]]
-   #+BEGIN_SRC emacs-lisp
-   (my:load-org-file "frame_config.org")
-   #+END_SRC
-** [[file:lookup_config.org][lookup-elで電子辞書を引く設定]]
-   #+BEGIN_SRC emacs-lisp
-     (when (locate-library "lookup")
-       (my:load-org-file "lookup_config.org"))
+     (unless (locate-library "wl")
+       (el-get 'sync 'wanderlust))
+     (my:load-org-file "wl_config.org")
+     (add-to-load-path "site-lisp/offlineimap-el")
+     (autoload 'offlineimap "offlineimap" nil t)
+     (eval-after-load "offlineimap"
+       '(progn
+          (setq offlineimap-command "offlineimap -u Machine.MachineUI")
+          (setq offlineimap-buffer-maximum-size 3000)
+          (setq offlineimap-mode-line-symbol "imap")
+          (setq offlineimap-enable-mode-line-p
+                '(member major-mode
+                         '(offlineimap-mode
+                           wl-summary-mode
+                           wl-folder-mode
+                           wl-message-mode)))
+          (defun offlineimap-real-quit
+            "real quit offline-imap"
+            (interactive)
+            (offlineimap-kill)
+            (offlineimap-quit)
+            (define-key offlineimap-mode-map (kbd "Q") 'offlineimap-real-quit))
+          ))
+     (global-set-key [f1] 'offlineimap)
    #+END_SRC
 ** [[file:migemo_config.org][Migemoの設定]]
    Ruby版の本家Migemo はバージョンによっては UTF-8 で動作しないので
@@ -597,75 +560,29 @@ title: Emacsの基本設定
    #+BEGIN_SRC emacs-lisp
      (my:load-org-file "autoinsert_config.org")
    #+END_SRC
-** AUCTeX
-   Debianのパッケージが無い場合には ELPA で導入しておくこと
-   #+BEGIN_SRC emacs-lisp
-     (when (locate-library "auctex")
-       (my:load-org-file "auctex_config.org"))
-   #+END_SRC
 ** Anything
    Debianでは[[http://packages.qa.debian.org/a/anything-el.html][anything-el]] [fn:11] としてパッケージ化されている.
-   パッケージが使えない場合には
-   ELPA で anything と anything-config を導入しておく
+   パッケージが使えない場合には el-get で導入しておく
    (auto-install-batch の方が良いのか?).
    #+BEGIN_SRC emacs-lisp
-     (when (locate-library "anything-config")
-       (my:load-org-file "anything_config.org"))
+     (my:load-org-file "anything_config.org")
    #+END_SRC
 ** auto-complete
    詳細は [[http://cx4a.org/software/auto-complete/index.ja.html][Auto Complete Mode]] [fn:12] 参照のこと.
    Debianでは[[http://packages.qa.debian.org/a/auto-complete-el.html][ auto-complete-el]] [fn:13] としてパッケージ化されている.
    パッケージが無い場合には ELPA で導入すること
    #+BEGIN_SRC emacs-lisp
-     (when (locate-library "auto-complete-config")
-      (my:load-org-file "auto-complete_config.org"))
-   #+END_SRC
-** flyspell-mode
-   とりあえず auto-complete (popup.el) の後に読み込む事に.
-   #+BEGIN_SRC emacs-lisp
-     (my:load-org-file "flyspell_config.org")
-   #+END_SRC
-** yasnippets
-   詳細は [[http://yasnippet-doc-jp.googlecode.com/svn/trunk/doc-jp/index.html][Yet Another Snippet extension]] [fn:14] 参照のこと.
-   手放せなくなってきたので site-lisp 以下に submodule にしている.
-   #+BEGIN_SRC emacs-lisp
-     (add-to-load-path "site-lisp/yasnippet")
-     (my:load-org-file "yasnippet_config.org")
+     (my:load-org-file "auto-complete_config.org")
    #+END_SRC
 ** org-mode
    #+BEGIN_SRC emacs-lisp
      (my:load-org-file "org-mode_config.org")
-   #+END_SRC
-** nxml-mode
-   #+BEGIN_SRC emacs-lisp
-     (my:load-org-file "nxml-mode_config.org")
-   #+END_SRC
-** ruby-mode
-   #+BEGIN_SRC emacs-lisp
-     (my:load-org-file "ruby-mode_config.org")
-   #+END_SRC
-** fortran-mode
-   f90 の場合もここで設定
-   #+BEGIN_SRC emacs-lisp
-     (my:load-org-file "fortran-mode_config.org")
    #+END_SRC
 ** [[http://mwolson.org/projects/EmacsMuse.html][EmacsMuse]] [fn:15]
    site-lisp 以下に submodule にしている.
    #+BEGIN_SRC emacs-lisp
      (add-to-load-path "site-lisp/muse-el/lisp")
      (my:load-org-file "muse_config.org")
-   #+END_SRC
-** tdiary-mode
-   #+BEGIN_SRC emacs-lisp
-   (my:load-org-file "tdiary-mode_config.org")
-   #+END_SRC
-** yaml-mode
-   #+BEGIN_SRC emacs-lisp
-     (when (locate-library "yaml-mode")
-       (eval-when-compile (require 'yaml-mode))
-       (autoload 'yaml-mode "yaml-mode" "Major mode for Yaml" t)
-       (add-to-list 'auto-mode-alist '("\\.yml$" . yaml-mode))
-       )
    #+END_SRC
 * Footnotes
 

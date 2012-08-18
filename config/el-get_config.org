@@ -1,0 +1,111 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# $Lastupdate: 2012/08/18 10:54:08$
+# License: Expat
+#
+#+TITLE: el-get で パッケージ管理
+#+AUTHOR: Youhei SASAKI
+#+EMAIL: uwabami@gfd-dennou.org
+#+SETUPFILE: ./export-config.org
+#+BEGIN_HTML
+---
+layout: emacs
+title: el-get で パッケージ管理
+---
+#+END_HTML
+* 初期設定
+  proxy 環境下で url-retrive するのがうまく行かないので
+  submodule として site-lisp 以下に持っておくことにした.
+  また, レシピの置き場所を ~/.emacs.d/recipes にしている(default?)
+  #+BEGIN_SRC emacs-lisp
+    (add-to-load-path "site-lisp/el-get")
+    (when (require 'el-get nil t)
+    ;;; recipe の置き場所の追加
+      (add-to-list 'el-get-recipe-path
+                   (expand-file-name
+                    (concat user-emacs-directory "recipes")))
+      (el-get 'sync))
+  #+END_SRC
+* auto-async-byte-compile
+  #+BEGIN_SRC emacs-lisp
+    (unless (locate-library "auto-async-byte-compile")
+      (el-get 'sync 'auto-async-byte-compile))
+    ;; 先頭が "_" で始まるファイルは compile しない
+    (when (require 'auto-async-byte-compile nil t)
+      (setq auto-async-byte-compile-exclude-files-regexp "^_")
+      (add-hook 'emacs-lisp-mode-hook
+                'enable-auto-async-byte-compile-mode))
+  #+END_SRC
+* edit-server for chrome/chromium
+  #+BEGIN_SRC emacs-lisp
+    (unless (locate-library "edit-server")
+      (el-get 'sync 'edit-server))
+    (when (require 'edit-server nil t)
+      (setq edit-server-new-frame nil)
+      (edit-server-start))
+  #+END_SRC
+* [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727][パスワード管理ツール id-manager.el]]
+  #+BEGIN_SRC emacs-lisp
+    (unless (locate-library "id-manager")
+      (el-get 'sync 'id-manager))
+    (when (require 'id-manager nil t)
+      (global-set-key (kbd "M-7") 'id-manager)
+      (setq idm-database-file
+            (expand-file-name
+             (concat (getenv "HOME") "/.gnupg/idm-db.gpg"))))
+  #+END_SRC
+
+* recentf の拡張 → [[http://d.hatena.ne.jp/rubikitch/20091224/recentf][人は俺を「recentfマスター」と呼ぶ]] [fn:1]
+  #+BEGIN_SRC emacs-lisp
+    (unless (locate-library "recentf-ext")
+      (el-get 'sync 'recentf-ext))
+    (require 'recentf-ext nil t)
+  #+END_SRC
+* [[http://d.hatena.ne.jp/mooz/20101003/p1][zlc.el で Emacs のミニバッファ補完 zsh ライクに]] [fn:2]
+  #+BEGIN_SRC emacs-lisp
+     (unless (locate-library "zlc")
+       (el-get 'sync 'zlc))
+  #+END_SRC
+  補完時のキーバインド.
+  zlc-reset がうまく動いてくれないような...
+   #+BEGIN_SRC emacs-lisp
+     (when (require 'zlc nil t)
+       (let ((map minibuffer-local-map))
+         (define-key map (kbd "<backtab>") 'zlc-select-previous)
+         (define-key map (kbd "S-<tab>")   'zlc-select-previous)
+         (define-key map (kbd "C-p")       'zlc-select-previous-vertical)
+         (define-key map (kbd "C-n")       'zlc-select-next-vertical)
+         (define-key map (kbd "C-b")       'zlc-select-previous)
+         (define-key map (kbd "C-f")       'zlc-select-next)
+         (define-key map (kbd "C-d")       'zlc-reset)
+         ))
+   #+END_SRC
+* [[http://d.hatena.ne.jp/tarao/20101011/1286804507][Yet another icompelete]] [fn:3]
+  zlc の補完をさらに素敵に
+  #+BEGIN_SRC emacs-lisp
+    (unless (locate-library "yaicomplete")
+      (el-get 'sync 'yaicomplete))
+    (when (require 'yaicomplete nil t)
+      (yaicomplete-mode))
+  #+END_SRC
+* [[http://d.hatena.ne.jp/khiker/20070503/emacs_text_translator][Emacs でテキスト翻訳をする elisp]]. [fn:4]
+  #+BEGIN_SRC emacs-lisp
+    (unless (locate-library "text-translator")
+      (if (executable-find "bzr")
+          (el-get 'sync 'text-translator-bzr-head)))
+    (when (string-match system-name "daphne.localdomain")
+      (setq text-translator-proxy-server "localhost")
+      (setq text-translator-proxy-port "20080"))
+    (when (require 'text-translator nil t)
+      (global-set-key (kbd "C-x t") 'text-translator-all-by-auto-selection))
+  #+END_SRC
+* Footnotes
+
+[fn:1] 人は俺を「recentfマスター」と呼ぶ: [[http://d.hatena.ne.jp/rubikitch/20091224/recentf]]
+
+[fn:2] zlc.el で Emacs のミニバッファ補完を zsh ライクに: [[http://d.hatena.ne.jp/mooz/20101003/p1]]
+
+[fn:3] Yet another icomplete: [[http://d.hatena.ne.jp/tarao/20101011/ 1286804507]]
+
+[fn:4] text-translator-el: http://d.hatena.ne.jp/khiker/20070503/emacs_text_translator

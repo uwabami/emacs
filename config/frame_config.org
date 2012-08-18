@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/10 14:29:55$
+# $Lastupdate: 2012/08/19 02:28:46$
 # License: Expat
 #
 #+TITLE: フォントとフレームの設定
@@ -14,45 +14,35 @@ layout: emacs
 title: フォントとフレームの設定
 ---
 #+END_HTML
-* 始めに
-  Emacs を Daemon モードで起動させているので,
-  なにもしないと環境変数 TERM が dump になって font-lock などが悲しくなります.
-  なので, クライアント起動時に色やフォントの設定を読み込む事にしました.
 * カーソルのある位置の face を調べる関数
   #+BEGIN_SRC emacs-lisp
     (defun describe-face-at-point ()
       (interactive)
       (message "%s" (get-char-property (point) 'face)))
   #+END_SRC
-* フォントやフレーム関連の設定を再読み込みする関数
-  #+BEGIN_SRC emacs-lisp
-    (defun my:load-theme ()
-      (interactive)
-      (my:load-org-file "frame_config.org"))
-  #+END_SRC
 * [[http://d.hatena.ne.jp/khiker/20090809/emacs_opacity][フレームを半透明にする]] [fn:1]
   飽きたら止めると思うけれど.
-    #+BEGIN_SRC emacs-lisp
-      (defun my-opacity-change (action)
-        (let* ((op
-                (frame-parameter
-                 (selected-frame) 'alpha)) val)
-          (unless op
-            (setq op 100))
-          (when (setq val
-                      (cond
-                       ((eq action 'up)
-                        (if (> op 90) 100 (+ op 10)))
-                       ((eq action 'down)
-                        (if (> 10 op) 10 (- op 10)))
-                       ((eq action 'clear) 100)
-                       ((numberp action) action)
-                       (t nil)))
-            (set-frame-parameter (selected-frame) 'alpha val))))
-      (when window-system
-        (my-opacity-change 90)     ; default の透明度は 90 に
-        )
-    #+END_SRC
+  #+BEGIN_SRC emacs-lisp
+    (defun my-opacity-change (action)
+      (let* ((op
+              (frame-parameter
+               (selected-frame) 'alpha)) val)
+        (unless op
+          (setq op 100))
+        (when (setq val
+                    (cond
+                     ((eq action 'up)
+                      (if (> op 90) 100 (+ op 10)))
+                     ((eq action 'down)
+                      (if (> 10 op) 10 (- op 10)))
+                     ((eq action 'clear) 100)
+                     ((numberp action) action)
+                     (t nil)))
+          (set-frame-parameter (selected-frame) 'alpha val))))
+    (when window-system
+      (my-opacity-change 90)     ; default の透明度は 90 に
+      )
+  #+END_SRC
 * フォントの設定
   #+BEGIN_SRC emacs-lisp
     (when window-system
@@ -73,10 +63,10 @@ title: フォントとフレームの設定
                           charset
                           (font-spec :family "Ricty" :size 18 nil 'prepend)))
       (add-to-list 'default-frame-alist '(font ."fontset-ricty"))
-     (custom-set-faces
-     '(variable-pitch ((t (:family "Ricty" :size 18 nil 'prepend))))
-     '(fixed-pitch ((t (:family "Ricty" :size 18 nil 'prepend))))
-     ))
+      (custom-set-faces
+       '(variable-pitch ((t (:family "Ricty" :size 18 nil 'prepend))))
+       '(fixed-pitch ((t (:family "Ricty" :size 18 nil 'prepend))))
+       ))
   #+END_SRC
 * color-theme
   #+BEGIN_SRC emacs-lisp
@@ -87,12 +77,13 @@ title: フォントとフレームの設定
     (when (window-system)
       (set-background-color "#242424")
       (set-foreground-color "#f6f3e8"))
-    (my:not-locate-library color-theme "site-lisp/color-theme-6.6.0")
+    (unless (locate-library "color-theme")
+      (el-get 'sync 'color-theme))
     (add-to-load-path "site-lisp/color-theme-darkpastel")
     (setq color-theme-load-all-themes nil)
     (setq color-theme-libraries nil)
-    (require 'color-theme-darkpastel)
-    (color-theme-darkpastel)
+    (when (require 'color-theme-darkpastel nil t)
+      (color-theme-darkpastel))
   #+END_SRC
 * Space や Tab に色付け
   whitespace-mode の方が良いのかもしれないけれど,
@@ -127,4 +118,3 @@ title: フォントとフレームの設定
 * Footnotes
 
 [fn:1] フレームを半透明にする: http://d.hatena.ne.jp/khiker/20090809/emacs_opacity
-

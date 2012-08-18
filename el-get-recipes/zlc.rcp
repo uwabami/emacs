@@ -1,4 +1,4 @@
 (:name zlc
        :description "Provides zsh like completion for minibuffer in Emacs."
-       :type http
-       :url "https://github.com/mooz/emacs-zlc/raw/master/zlc.el")
+       :type github
+       :pkgname "mooz/zlc")

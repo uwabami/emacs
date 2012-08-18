@@ -1,18 +1,21 @@
 TARGET_DIR	:= $(subst ./, ,$(shell find . -maxdepth 1 -mindepth 1 -type d))
-EXCLUDE		:= yasnippet offlineimap-el google-contacts-mew el-get
+EXCLUDE		:= yasnippet offlineimap-el google-contacts-mew el-get org-mode
 TARGET_DIRS	:= $(filter-out $(EXCLUDE),$(TARGET_DIR))
 include $(HOME)/.emacs.d/Mkinclude
 
 all: 00build-stamp
 
 00build-stamp: $(patsubst %,%-stamp,$(EXCLUDE))
-	@for d in $(TARGET_DIRS) ;\
-		do $(MAKE) -C $$d EMACS=$(EMACS) ;\
-	done
+	touch $@
+
+org-mode-stamp:
+	@( cd org-mode && make )
+	-@( cd org-mode/contrib/lisp && $(EMACS) -q -no-site-file -L . -batch -f batch-byte-compile *.el )
 	touch $@
 
 el-get-stamp:
 	touch $@
+
 yasnippet-stamp:
 	@( cd yasnippet && rake compile )
 	touch $@

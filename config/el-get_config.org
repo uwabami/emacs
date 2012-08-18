@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/18 10:54:08$
+# $Lastupdate: 2012/08/19 02:22:44$
 # License: Expat
 #
 #+TITLE: el-get で パッケージ管理
@@ -24,16 +24,22 @@ title: el-get で パッケージ管理
     ;;; recipe の置き場所の追加
       (add-to-list 'el-get-recipe-path
                    (expand-file-name
-                    (concat user-emacs-directory "recipes")))
+                    (concat user-emacs-directory "el-get-recipes")))
       (el-get 'sync))
+  #+END_SRC
+* cp5022x.el
+  文字コード関連. 機種依存文字とかをよきにとりはからうために
+  #+BEGIN_SRC emacs-lisp
+    (unless (locate-library "cp5022x")
+      (el-get 'sync 'cp5022x))
   #+END_SRC
 * auto-async-byte-compile
   #+BEGIN_SRC emacs-lisp
     (unless (locate-library "auto-async-byte-compile")
       (el-get 'sync 'auto-async-byte-compile))
-    ;; 先頭が "_" で始まるファイルは compile しない
+    ;; theme.el で終わるファイルは compile しない
     (when (require 'auto-async-byte-compile nil t)
-      (setq auto-async-byte-compile-exclude-files-regexp "^_")
+      (setq auto-async-byte-compile-exclude-files-regexp "theme\.el$")
       (add-hook 'emacs-lisp-mode-hook
                 'enable-auto-async-byte-compile-mode))
   #+END_SRC

@@ -1,4 +1,4 @@
 (:name yaicomplete
        :description "Yet another incremental completion in minibuffer."
-       :type http
-       :url "http://github.com/tarao/elisp/raw/master/yaicomplete.el")
+       :type github
+       :bkgname "tarao/yaicomplete")

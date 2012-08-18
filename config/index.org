@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/18 11:34:49$
+# $Lastupdate: 2012/08/19 01:56:49$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -124,10 +124,10 @@ title: Emacsの基本設定
    また, [[http://d.hatena.ne.jp/kiwanami/about][kiwanami]] さんが [[http://d.hatena.ne.jp/kiwanami/20091103/1257243524][Wanderlustと文字コード]] [fn:3]というエントリで素
    晴しい解説を書いて下さっています.
 
-   cp5022x 自体は auto-install.el で install しており,
-   ~/.emacs.d/auto-install/ 以下に置いています. 本来は外部 elisp なので
-   [[file:auto-install.org][auto-install の設定]] で設定するべきなんですが, 他にも影響がありそうなの
-   でここで読み込んでいます.
+   cp5022x 自体は el-get で install しています.
+   本来は外部 elisp なので
+   [[file:el-get_config.org][el-get でパッケージ管理]] で設定するべきなんですが,
+   他にも影響がありそうなのでここで読み込んでいます.
    #+BEGIN_SRC emacs-lisp
      (when (locate-library "cp5022x")
        (require 'cp5022x))
@@ -453,15 +453,16 @@ title: Emacsの基本設定
    Emacsのバッファを GNU Screen っぽく扱う.
    設定はキーバインドを \C-o に変えたくらい.
    #+BEGIN_SRC emacs-lisp
-     (unless  (locate-library "elscreen")
-       (el-get 'sync 'elscreen))
+     ;; (el-get 'sync 'elscreen-knu-branch)
+     (my:not-locate-library elscreen "site-lisp/elscreen")
      (setq elscreen-prefix-key (kbd "C-o"))
-     (if (eq window-system 'x)
-         (setq elscreen-display-tab 4)
-       (setq elscreen-display-tab nil)
-       )
-     (setq elscreen-tab-display-kill-screen nil)
+     (setq elscreen-display-tab 4)
+     ;; (setq elscreen-tab-display-kill-screen nil)
      (require 'elscreen)
+   #+END_SRC
+** [[file:frame_config.org][フォントとテーマの設定]]
+   #+BEGIN_SRC emacs-lisp
+   (my:load-org-file "frame_config.org")
    #+END_SRC
 ** 日本語入力
    SKK をメインで使用中. 無いと途方に暮れる.
@@ -475,13 +476,12 @@ title: Emacsの基本設定
 
    ddskk 以前の古い skk が導入されている場合には
    site-lisp 以下の ddskk を load する.
-
    skk-user-directory を設定しているので辞書や id なんかは
    ~/.emacs.d/etc/skk 以下に置かれるが, 設定ファイルだけは
    [[file:ddskk_config.org][ddskkの設定]] で行なっている.
    #+BEGIN_SRC emacs-lisp
      ;;; skk の設定
-     ;; 古い skk しか無い場合には ddskk を読み込む
+     ;; 古い skk しか無い場合には ddskk el-get する.
      (unless (locate-library "skk-sticky")
        (el-get 'sync 'ddskk))
      ;; byte-compile 用の設定
@@ -494,7 +494,7 @@ title: Emacsの基本設定
      ;; ただし設定ファイルだけは ~/.emacs.d/config 以下に置く
      (setq skk-init-file
            (concat my:user-emacs-config-directory "ddskk_config"))
-     ;; org-babel-tangle で ddskk.org から ddskk.el を生成
+     ;; org-babel-tangle で ddskk_config.org から ddskk_config.el を生成
      (my:org-babel-tangle-and-compile-file
       (concat my:user-emacs-config-directory "ddskk_config.org"))
      ;; ddsk の設定ファイルは自動で byte-compile

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/07 20:59:18$
+# $Lastupdate: 2012/08/18 17:11:39$
 # License: Expat
 #
 #+TITLE: ddskkの設定
@@ -18,16 +18,17 @@ title: ddskkの設定
 * 始めに
   本家サイト[fn:1]より
   #+BEGIN_QUOTE
-  Daredevil SKK (DDSKK) は Emacs Lisp 版の SKK です。本家 SKK を受け継いで開発を行っています。
+  Daredevil SKK (DDSKK) は Emacs Lisp 版の SKK です。本家 SKK を受け継い
+  で開発を行っています。
   #+END_QUOTE
   日本語入力は skk + sticky-shift が無いと駄目な体になってしまった.
 
   [[file:init.org][Emacsの基本設定]] で
   - skk-user-directory
   - skk-init-file
-  を設定しているので
+  を設定しているので, 設定ファイルの構成は
   #+BEGIN_EXAMPLE
-    skk-init-file          ~/.emacs.d/config/ddskk.{org,el,elc}
+    skk-init-file          ~/.emacs.d/config/ddskk_config.{org,el,elc}
     skk-jisyo              ~/.emacs.d/etc/skk/jisyo
     skk-backup-jisyo       ~/.emacs.d/etc/skk/jisyo.bak
     skk-emacs-id-file      ~/.emacs.d/etc/skk/emacs-id
@@ -180,8 +181,7 @@ title: ddskkの設定
     }
 
   #+END_SRC
-  他にも quote する必要あるような
-  気もするけれど, それは気がついた時に.
+  他にも quote する必要あるような気もするけれど, それは気がついた時に.
   #+BEGIN_SRC emacs-lisp
     ;; 辞書サーバの指定
     (when (string-match system-name "daphne.localdomain")
@@ -218,16 +218,8 @@ title: ddskkの設定
     ;;漢字登録のミスをチェックする
     (setq skk-check-okurigana-on-touroku t)
   #+END_SRC
-* 部首変換
-  #+BEGIN_SRC emacs-lisp
-    (require 'skk-tankan)
-    (add-to-list 'skk-search-prog-list
-                 '(skk-tankan-search 'skk-search-jisyo-file
-                                     skk-large-jisyo 10000))
-  #+END_SRC
 * Footnotes
 
 [fn:1] Daredevil SKK: [[http://openlab.ring.gr.jp/skk/ddskk-ja.html]]
 
 [fn:2] sticky shift: [[http://homepage1.nifty.com/blankspace/emacs/sticky.html]]
-

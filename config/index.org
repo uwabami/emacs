@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/19 11:06:44$
+# $Lastupdate: 2012/08/19 16:05:22$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -512,35 +512,45 @@ title: Emacsの基本設定
      (my:load-org-file "w3m_config.org")
    #+END_SRC
 ** MUA
-   Wanderlustを愛用中.
+   手元では offlineimap と dovecot を上げて Wanderlustを愛用中.
    メールの同期自体は offlineimap を cron でまわして処理しているのだけれども
    すぐにメールが欲しい事があるので, それに対応するために
    [[http://julien.danjou.info/software/offlineimap.el][offlineimap for Emacs]] も設定.
+
+   それ以外の所では Mew を使用中. Mew の imap は日付順のソートに対応して
+   いないので, ちょっとアレだけれど.
    #+BEGIN_SRC emacs-lisp
-     (unless (locate-library "wl")
-       (el-get 'sync 'wanderlust))
-     (my:load-org-file "wl_config.org")
-     (add-to-load-path "site-lisp/offlineimap-el")
-     (autoload 'offlineimap "offlineimap" nil t)
-     (eval-after-load "offlineimap"
-       '(progn
-          (setq offlineimap-command "offlineimap -u Machine.MachineUI")
-          (setq offlineimap-buffer-maximum-size 3000)
-          (setq offlineimap-mode-line-symbol "imap")
-          (setq offlineimap-enable-mode-line-p
-                '(member major-mode
-                         '(offlineimap-mode
-                           wl-summary-mode
-                           wl-folder-mode
-                           wl-message-mode)))
-          (defun offlineimap-real-quit
-            "real quit offline-imap"
-            (interactive)
-            (offlineimap-kill)
-            (offlineimap-quit)
-            (define-key offlineimap-mode-map (kbd "Q") 'offlineimap-real-quit))
-          ))
-     (global-set-key [f1] 'offlineimap)
+     (cond
+      ((string-match "daphne" system-name)
+       (my:load-org-file "wl_config.org")
+       (add-to-load-path "site-lisp/offlineimap-el")
+       (autoload 'offlineimap "offlineimap" nil t)
+       (eval-after-load "offlineimap"
+         '(progn
+            (setq offlineimap-command "offlineimap -u Machine.MachineUI")
+            (setq offlineimap-buffer-maximum-size 3000)
+            (setq offlineimap-mode-line-symbol "imap")
+            (setq offlineimap-enable-mode-line-p
+                  '(member major-mode
+                           '(offlineimap-mode
+                             wl-summary-mode
+                             wl-folder-mode
+                             wl-message-mode)))
+            (defun offlineimap-real-quit
+              "real quit offline-imap"
+              (interactive)
+              (offlineimap-kill)
+              (offlineimap-quit)
+              (define-key offlineimap-mode-map (kbd "Q") 'offlineimap-real-quit))
+            ))
+       (global-set-key [f1] 'offlineimap)
+       )
+      (t
+       (unless (locate-library "mew")
+         (el-get 'sync 'mew))
+       (my:load-org-file "mew_config.org")
+       )
+      )
    #+END_SRC
 ** [[file:migemo_config.org][Migemoの設定]]
    Ruby版の本家Migemo はバージョンによっては UTF-8 で動作しないので

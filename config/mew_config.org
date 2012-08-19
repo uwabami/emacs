@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/08 15:33:59$
+# $Lastupdate: 2012/08/19 14:59:03$
 # License: Expat
 #
 #+TITLE: Mew の設定
@@ -39,5 +39,5 @@ title: Mewの設定
 * 設定ファイルの位置の変更
 #+BEGIN_SRC emacs-lisp
   (setq mew-rc-file
-        (expand-file-name "~/.mew.gpg"))
+        (expand-file-name "~/.mua/mew-init.gpg"))
 #+END_SRC

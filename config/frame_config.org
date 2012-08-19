@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/19 02:28:46$
+# $Lastupdate: 2012/08/19 10:35:56$
 # License: Expat
 #
 #+TITLE: フォントとフレームの設定
@@ -77,13 +77,13 @@ title: フォントとフレームの設定
     (when (window-system)
       (set-background-color "#242424")
       (set-foreground-color "#f6f3e8"))
-    (unless (locate-library "color-theme")
-      (el-get 'sync 'color-theme))
-    (add-to-load-path "site-lisp/color-theme-darkpastel")
-    (setq color-theme-load-all-themes nil)
-    (setq color-theme-libraries nil)
-    (when (require 'color-theme-darkpastel nil t)
-      (color-theme-darkpastel))
+    (when (locate-library "color-theme")
+      (add-to-load-path "site-lisp/color-theme-darkpastel")
+      (setq color-theme-load-all-themes nil)
+      (setq color-theme-libraries nil)
+      (when (require 'color-theme-darkpastel nil t)
+        (color-theme-darkpastel))
+      )
   #+END_SRC
 * Space や Tab に色付け
   whitespace-mode の方が良いのかもしれないけれど,

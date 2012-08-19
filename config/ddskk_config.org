@@ -1,17 +1,17 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/18 17:11:39$
+# $Lastupdate: 2012/08/19 10:38:07$
 # License: Expat
 #
-#+TITLE: ddskkの設定
+#+TITLE: DDSKKの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
 #+SETUPFILE: ./export-config.org
 #+BEGIN_HTML
 ---
 layout: emacs
-title: ddskkの設定
+title: DDSKKの設定
 ---
 #+END_HTML
 
@@ -217,6 +217,22 @@ title: ddskkの設定
     (setq skk-check-okurigana-on-touroku 'auto)
     ;;漢字登録のミスをチェックする
     (setq skk-check-okurigana-on-touroku t)
+
+    ;; 動的補完
+    (setq skk-dcomp-activate t)
+    (setq skk-dcomp-multiple-activate t)
+    (setq skk-dcomp-multiple-rows 10)
+    ;; 動的補完の複数表示群のフェイス
+    (set-face-foreground 'skk-dcomp-multiple-face "Black")
+    (set-face-background 'skk-dcomp-multiple-face "LightGoldenrodYellow")
+    (set-face-bold-p 'skk-dcomp-multiple-face nil)
+    ;; 動的補完の複数表示郡の補完部分のフェイス
+    (set-face-foreground 'skk-dcomp-multiple-trailing-face "dim gray")
+    (set-face-bold-p 'skk-dcomp-multiple-trailing-face nil)
+    ;; 動的補完の複数表示郡の選択対象のフェイス
+    (set-face-foreground 'skk-dcomp-multiple-selected-face "White")
+    (set-face-background 'skk-dcomp-multiple-selected-face "LightGoldenrod4")
+    (set-face-bold-p 'skk-dcomp-multiple-selected-face nil)
   #+END_SRC
 * Footnotes
 

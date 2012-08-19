@@ -1,0 +1,4 @@
+(:name rabbit-mode
+       :description "Major mode for Rabbit"
+       :type http
+       :url "https://raw.github.com/shockers/rabbit/master/misc/emacs/rabbit-mode.el")

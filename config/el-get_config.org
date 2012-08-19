@@ -24,7 +24,7 @@ title: el-get で パッケージ管理
     ;;; recipe の置き場所の追加
       (add-to-list 'el-get-recipe-path
                    (expand-file-name
-                    (concat user-emacs-directory "el-get-recipes")))
+                    (concat user-emacs-directory "recipes")))
       (el-get 'sync))
   #+END_SRC
 * cp5022x.el

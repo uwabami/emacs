@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/07 20:05:04$
+# $Lastupdate: 2012/08/19 10:46:16$
 # License: Expat
 #
 #+TITLE: Ruby関連の設定
@@ -38,34 +38,28 @@ title: Ruby関連の設定
   対応する括弧や end を補完してくれる.
   これは ruby のソースの SVN HEAD から.
   #+BEGIN_SRC emacs-lisp
-    (require 'ruby-electric)
-    (add-hook 'ruby-mode-hook
-              '(lambda ()
-                 (ruby-electric-mode t)))
+    (unless (locate-library "ruby-electric")
+      (el-get 'sync 'ruby-electric))
+    (when (require 'ruby-electric nil t)
+      (add-hook 'ruby-mode-hook
+                '(lambda ()
+                   (ruby-electric-mode t))))
   #+END_SRC
 * ruby-block
-  対応する end をハイライトしてくれる
-** 導入
+  対応する end をハイライトしてくれる素敵elisp
   #+BEGIN_SRC emacs-lisp
     (unless (locate-library "ruby-block")
-      (auto-install-from-url "http://www.emacswiki.org/emacs/download/ruby-block.el"))
+      (el-get 'sync 'ruby-block))
+    (when (require 'ruby-block nil t)
+      (setq ruby-block-mode-highlight-toggle t)
+      (defun ruby-mode-hook-ruby-block ()
+        (ruby-block-mode t))
+      (add-hook 'ruby-mode-hook 'ruby-mode-hook-ruby-block))
   #+END_SRC
-** 設定
-   #+BEGIN_SRC emacs-lisp
-     (require 'ruby-block)
-     (setq ruby-block-mode-highlight-toggle t)
-     (defun ruby-mode-hook-ruby-block ()
-       (ruby-block-mode t))
-     (add-hook 'ruby-mode-hook 'ruby-mode-hook-ruby-block)
-   #+END_SRC
 * rd-mode
-** 導入
-   #+BEGIN_SRC emacs-lisp
+  #+BEGIN_SRC emacs-lisp
      (unless (locate-library "rd-mode")
-       (auto-install-from-url "https://raw.github.com/uwabami/rdtool/master/utils/rd-mode.el"))
-   #+END_SRC
-** 設定
-   #+BEGIN_SRC emacs-lisp
+       (el-get 'sync 'rd-mode))
      (eval-when-compile
        (require 'rd-mode))
      (autoload 'rd-mode "rd-mode" "major mode for ruby document formatter RD" t)
@@ -73,23 +67,19 @@ title: Ruby関連の設定
      (add-hook 'rd-mode-hook 'rd-show-other-block-all)
      (add-to-list 'auto-mode-alist
                   '("\\.rd$" . rd-mode))
-   #+END_SRC
+  #+END_SRC
 * rabbit-mode
-** 導入
-   #+BEGIN_SRC emacs-lisp
+  #+BEGIN_SRC emacs-lisp
      (unless (locate-library "rabbit-mode")
-       (auto-install-from-url "https://raw.github.com/shockers/rabbit/master/misc/emacs/rabbit-mode.el"))
-   #+END_SRC
-** 設定
-   #+BEGIN_SRC emacs-lisp
+       (el-get 'sync 'rabbit-mode))
      (eval-when-compile
        (require 'rabbit-mode))
      (autoload 'rabbit-mode "rabbit-mode" "major mode for Rabbit" t)
      (add-to-list 'auto-mode-alist
                   '("\\.\\(rbt\\|rab\\)$" . rabbit-mode))
   #+END_SRC
-
 * outline-minor-mode
+  多少 ad hoc ではあるけれど, とりあえず設定しておく
   #+BEGIN_SRC emacs-lisp
     (add-hook
      'rd-mode-hook

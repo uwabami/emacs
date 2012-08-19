@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/19 01:56:49$
+# $Lastupdate: 2012/08/19 10:39:34$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -574,10 +574,27 @@ title: Emacsの基本設定
    #+BEGIN_SRC emacs-lisp
      (my:load-org-file "auto-complete_config.org")
    #+END_SRC
+** yasnippets
+   詳細は [[http://yasnippet-doc-jp.googlecode.com/svn/trunk/doc-jp/index.html][Yet Another Snippet extension]] [fn:14] 参照のこと.
+   手放せなくなってきたので site-lisp 以下に submodule にしている.
+   #+BEGIN_SRC emacs-lisp
+     (add-to-load-path "site-lisp/yasnippet")
+     (my:load-org-file "yasnippet_config.org")
+   #+END_SRC
 ** org-mode
    #+BEGIN_SRC emacs-lisp
      (my:load-org-file "org-mode_config.org")
    #+END_SRC
+** ruby-mode
+   #+BEGIN_SRC emacs-lisp
+     (my:load-org-file "ruby-mode_config.org")
+   #+END_SRC
+** fortran-mode
+   f90 の場合もここで設定
+   #+BEGIN_SRC emacs-lisp
+     (my:load-org-file "fortran-mode_config.org")
+   #+END_SRC
+
 ** [[http://mwolson.org/projects/EmacsMuse.html][EmacsMuse]] [fn:15]
    site-lisp 以下に submodule にしている.
    #+BEGIN_SRC emacs-lisp

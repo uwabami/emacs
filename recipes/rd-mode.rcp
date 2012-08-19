@@ -1,0 +1,4 @@
+(:name rd-mode
+       :description "Major mode for RD editing."
+       :type http
+       :url "https://raw.github.com/uwabami/rdtool/master/utils/rd-mode.el")

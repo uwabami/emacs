@@ -1,5 +1,5 @@
 TARGET_DIR	:= $(subst ./, ,$(shell find . -maxdepth 1 -mindepth 1 -type d))
-EXCLUDE		:= yasnippet offlineimap-el google-contacts-mew el-get org-mode
+EXCLUDE		:= yasnippet offlineimap-el el-get org-mode
 TARGET_DIRS	:= $(filter-out $(EXCLUDE),$(TARGET_DIR))
 include $(HOME)/.emacs.d/Mkinclude
 

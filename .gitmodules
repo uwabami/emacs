@@ -16,9 +16,6 @@
 [submodule "site-lisp/muse-el"]
 	path = site-lisp/muse-el
 	url = git://repo.or.cz/muse-el.git
-[submodule "site-lisp/google-contacts-mew"]
-	path = site-lisp/google-contacts-mew
-	url = git://github.com/masutaka/google-contacts-mew.git
 [submodule "site-lisp/html5-el"]
 	path = site-lisp/html5-el
 	url = https://github.com/uwabami/html5-el.git

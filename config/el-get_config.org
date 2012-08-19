@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/19 02:22:44$
+# $Lastupdate: 2012/08/19 11:00:15$
 # License: Expat
 #
 #+TITLE: el-get で パッケージ管理
@@ -19,13 +19,12 @@ title: el-get で パッケージ管理
   submodule として site-lisp 以下に持っておくことにした.
   また, レシピの置き場所を ~/.emacs.d/recipes にしている(default?)
   #+BEGIN_SRC emacs-lisp
-    (add-to-load-path "site-lisp/el-get")
-    (when (require 'el-get nil t)
+    (eval-and-compile (require 'el-get))
     ;;; recipe の置き場所の追加
-      (add-to-list 'el-get-recipe-path
-                   (expand-file-name
-                    (concat user-emacs-directory "recipes")))
-      (el-get 'sync))
+    (add-to-list 'el-get-recipe-path
+                 (expand-file-name
+                  (concat user-emacs-directory "recipes")))
+    (el-get 'sync)
   #+END_SRC
 * cp5022x.el
   文字コード関連. 機種依存文字とかをよきにとりはからうために

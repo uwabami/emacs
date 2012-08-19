@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8-unix; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2012/08/18 08:29:39$
+;; $Lastupdate: 2012/08/19 11:00:11$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -96,6 +96,7 @@
 (add-to-load-path
  "config"                  ; 分割した設定群の置き場所.
  "site-lisp/org-mode/lisp" ; org-mode (Git HEAD)
+ "site-lisp/el-get"        ; el-get
  "local"                   ; 自作の emacs-lisp とか.
  )
 ;; -----------------------------------------------------------

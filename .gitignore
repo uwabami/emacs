@@ -1,14 +1,10 @@
 *.elc
 *.dat 
 config/*.el
-config/*.elc
 config/sitemap.org
 el-get/*
 elpa/*
 etc/*
 share/*
 tmp/*
-themes/*
 site-lisp/*-stamp
-site-lisp/ddskk/skk-autoloads.el
-old

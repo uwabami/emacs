@@ -27,14 +27,6 @@ offlineimap-el-stamp:
 	done )
 	touch $@
 
-google-contacts-mew-stamp:
-	@( cd google-contacts-mew && \
-	for f in `ls -1 *.el` ;\
-	do $(EMACS) -L . -q -no-site-file -batch -f batch-byte-compile $$f ;\
-	done )
-	touch $@
-
-
 clean:
 	rm -f $(wildcard *-stamp)
 

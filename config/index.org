@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/20 00:47:55$
+# $Lastupdate: 2012/08/22 02:02:29$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -432,7 +432,7 @@ title: Emacsの基本設定
 * 外部 emacs-lisp などの設定/分割した設定ファイルの読み込み
   以下は Emacs 本体に同梱されていない emacs-lisp program や
   外部ファイルの設定を読み込んでいるモン, など.
-** el-get
+** [[file:el-get_config.org][el-get]]
    パッケージ管理には el-get を使うようになりました.
    #+BEGIN_SRC emacs-lisp
      (my:load-org-file "el-get_config.org")
@@ -505,7 +505,7 @@ title: Emacsの基本設定
      (require 'skk-autoloads)
      (require 'skk-cus)
     #+END_SRC
-** emacs-w3m
+** [[file:w3m_config.org][emacs-w3m]]
    #+BEGIN_SRC emacs-lisp
      (unless (locate-library "w3m-load")
        (el-get 'sync 'emacs-w3m))
@@ -552,6 +552,11 @@ title: Emacsの基本設定
        )
       )
    #+END_SRC
+** [[file:auctex_config.org][AUCTeXの設定]]
+   TeXの編集には AUCTeX を使う
+   #+BEGIN_SRC emacs-lisp
+   (my:load-org-file "auctex_config.org")
+   #+END_SRC
 ** [[file:migemo_config.org][Migemoの設定]]
    Ruby版の本家Migemo はバージョンによっては UTF-8 で動作しないので
    C/Migemo じゃない時には使わないように.
@@ -565,62 +570,61 @@ title: Emacsの基本設定
    #+BEGIN_SRC emacs-lisp
      (my:load-org-file "howm_config.org")
    #+END_SRC
-** autoinsert
+** [[file:autoinsert_config.org][auto-insert]]
    テンプレートの自動挿入
    #+BEGIN_SRC emacs-lisp
      (my:load-org-file "autoinsert_config.org")
    #+END_SRC
-** Anything
+** [[file:anything_config.org][Anything]]
    Debianでは[[http://packages.qa.debian.org/a/anything-el.html][anything-el]] [fn:11] としてパッケージ化されている.
    パッケージが使えない場合には el-get で導入しておく
    (auto-install-batch の方が良いのか?).
    #+BEGIN_SRC emacs-lisp
      (my:load-org-file "anything_config.org")
    #+END_SRC
-** auto-complete
+** [[file:auto-complete_config.org][auto-complete]]
    詳細は [[http://cx4a.org/software/auto-complete/index.ja.html][Auto Complete Mode]] [fn:12] 参照のこと.
    Debianでは[[http://packages.qa.debian.org/a/auto-complete-el.html][ auto-complete-el]] [fn:13] としてパッケージ化されている.
    パッケージが無い場合には ELPA で導入すること
    #+BEGIN_SRC emacs-lisp
      (my:load-org-file "auto-complete_config.org")
    #+END_SRC
-** flyspell-mode
+** [[file:flyspell_config.org][flyspell-mode]]
    とりあえず auto-complete (popup.el) の後に読み込む事に.
    #+BEGIN_SRC emacs-lisp
      (my:load-org-file "flyspell_config.org")
    #+END_SRC
-** yasnippets
+** [[file:yasnippet_config.org][yasnippet]]
    詳細は [[http://yasnippet-doc-jp.googlecode.com/svn/trunk/doc-jp/index.html][Yet Another Snippet extension]] [fn:14] 参照のこと.
    手放せなくなってきたので site-lisp 以下に submodule にしている.
    #+BEGIN_SRC emacs-lisp
      (add-to-load-path "site-lisp/yasnippet")
      (my:load-org-file "yasnippet_config.org")
    #+END_SRC
-** org-mode
+** [[file:org-mode_config.org][org-mode]]
    #+BEGIN_SRC emacs-lisp
      (my:load-org-file "org-mode_config.org")
    #+END_SRC
-** nxml-mode
+** [[file:nxml-mode_config.org][nxml-mode]]
    #+BEGIN_SRC emacs-lisp
      (my:load-org-file "nxml-mode_config.org")
    #+END_SRC
-** ruby-mode
+** [[file:ruby-mode_config.org][ruby-mode]]
    #+BEGIN_SRC emacs-lisp
      (my:load-org-file "ruby-mode_config.org")
    #+END_SRC
-** fortran-mode
+** [[file:fortran-mode_config.org][fortran-mode]]
    f90 の場合もここで設定
    #+BEGIN_SRC emacs-lisp
      (my:load-org-file "fortran-mode_config.org")
    #+END_SRC
-
 ** [[http://mwolson.org/projects/EmacsMuse.html][EmacsMuse]] [fn:15]
    site-lisp 以下に submodule にしている.
    #+BEGIN_SRC emacs-lisp
      (add-to-load-path "site-lisp/muse-el/lisp")
      (my:load-org-file "muse_config.org")
    #+END_SRC
-** tdiary-mode
+** [[file:tdiary-mode_config.org][tdiary-mode]]
    #+BEGIN_SRC emacs-lisp
    (my:load-org-file "tdiary-mode_config.org")
    #+END_SRC

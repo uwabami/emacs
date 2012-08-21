@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/19 10:38:07$
+# $Lastupdate: 2012/08/21 22:08:06$
 # License: Expat
 #
 #+TITLE: DDSKKの設定
@@ -217,11 +217,13 @@ title: DDSKKの設定
     (setq skk-check-okurigana-on-touroku 'auto)
     ;;漢字登録のミスをチェックする
     (setq skk-check-okurigana-on-touroku t)
-
+  #+END_SRC
+* 動的補完
+  #+BEGIN_SRC emacs-lisp
     ;; 動的補完
     (setq skk-dcomp-activate t)
     (setq skk-dcomp-multiple-activate t)
-    (setq skk-dcomp-multiple-rows 10)
+    (setq skk-dcomp-multiple-rows 5)
     ;; 動的補完の複数表示群のフェイス
     (set-face-foreground 'skk-dcomp-multiple-face "Black")
     (set-face-background 'skk-dcomp-multiple-face "LightGoldenrodYellow")
@@ -233,6 +235,13 @@ title: DDSKKの設定
     (set-face-foreground 'skk-dcomp-multiple-selected-face "White")
     (set-face-background 'skk-dcomp-multiple-selected-face "LightGoldenrod4")
     (set-face-bold-p 'skk-dcomp-multiple-selected-face nil)
+  #+END_SRC
+* 部首変換, 総画数変換
+  #+BEGIN_SRC emacs-lisp
+    (require 'skk-tankan)
+    (add-to-list 'skk-search-prog-list
+                 '(skk-tankan-search 'skk-search-jisyo-file
+                                     skk-large-jisyo 10000))
   #+END_SRC
 * Footnotes
 

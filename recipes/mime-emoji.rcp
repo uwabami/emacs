@@ -1,5 +1,5 @@
-(:name pov-mode
-       :description "Major mode for Povray scene files"
+(:name mime-emoji
+       :description "Display Emoji for SEMI-MUA."
        :type http-tar
        :options ("xzf")
-       :url "http://xahlee.org/emacs/pov-mode-3.2.tar.gz")
+       :url "http://ikazuhiro.s206.xrea.com/filemgmt/visit.php/150")

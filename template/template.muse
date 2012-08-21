@@ -1,11 +1,9 @@
 #desc Top ; -*- mode: Muse; coding: utf-8-unix -*-
 #title
 <comment>
-Copyright(C) %author% All rights reserved.
-$Lastupdate: 2011/11/25 01:30:59$
-
-Author: %author% <%email%>
-License:
+Copyright(C) %author% <%email%> All rights reserved.
+$Lastupdate: 2012/08/21 15:11:32$
+License: Expat
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the

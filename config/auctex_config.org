@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/20 11:26:28$
+# $Lastupdate: 2012/08/20 14:36:49$
 # License: Expat
 #
 #+TITLE: AUCTeX の設定
@@ -34,18 +34,18 @@ title: AUCTeX の設定
   - PDF の表示には Okular を使用する.
     #+BEGIN_SRC emacs-lisp
       (setq TeX-default-mode 'japanese-latex-mode)
-      (setq japanese-TeX-command-default "pTeX")
-      (setq japanese-LaTeX-command-default "pLaTeX")
       (setq japanese-LaTeX-default-style "jsarticle")
+      (setq japanese-LaTeX-command-default "pLaTeX")
+      (setq japanese-TeX-command-default "pTeX")
       (setq TeX-engine-alist '((ptex "pTeX" "eptex" "platex" "eptex")
                                (uptex "upTeX" "euptex" "uplatex" "euptex")))
       (setq TeX-engine 'ptex)
       (setq TeX-view-program-list
-            '(("pxdvi" "xdvi -nofork -watchfile 1 -editor \"emacsclient +%%l %%f\" %d -sourceposition %n:%b")
+            '(("pxdvi" "xdvi -watchfile 1 %d")
               ;; ("TeXworks" "texworks %o")
               ;; ("Evince" "evince %o")
               ;; ("fwdevince" "evince_forward_search %o %n %b")
-              ("Okular" "okular --unique \"file:%o#src:%n %b\"")
+              ("Okular" "okular --unique \"file:%o#src:%n `pwd`%b\"")
               ;; ("zathura" "zathura %o")
               ;; ("mupdf" "mupdf %o")
               ;; ("xpdf" "xpdf %o")
@@ -58,67 +58,67 @@ title: AUCTeX の設定
               ))
       ;; (setq TeX-japanese-process-input-coding-system 'utf-8
       ;;       TeX-japanese-process-output-coding-system 'utf-8)
-      (add-hook 'LaTeX-mode-hook
-                (function (lambda () (outline-minor-mode t))))
-      (add-hook 'japanese-latex-mode-hook
-                (function (lambda () (outline-minor-mode t))))
-      (add-hook 'TeX-mode-hook
-                (function (lambda () (outline-minor-mode t))))
+      ;; (add-hook 'LaTeX-mode-hook
+      ;;           (function (lambda () (outline-minor-mode t))))
+      ;; (add-hook 'japanese-latex-mode-hook
+      ;;           (function (lambda () (outline-minor-mode t))))
+      ;; (add-hook 'TeX-mode-hook
+      ;;           (function (lambda () (outline-minor-mode t))))
       ;; (add-hook 'LaTeX-mode-hook 'visual-inline-mode)
     #+END_SRC
 * コマンドの追加
   #+BEGIN_SRC emacs-lisp
     (setq preview-image-type 'dvipng)
+    (add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)
     (add-hook 'LaTeX-mode-hook 'TeX-PDF-mode)
     (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
     (add-hook 'LaTeX-mode-hook
-              (function (lambda ()
-                          (TeX-source-correlate-mode 1)
-                          (setq TeX-source-correlate-start-server t)
-                          (add-to-list 'TeX-command-list
-                                       '("pdflatex(original)" "pdflatex %t"
-                                         TeX-run-TeX nil (latex-mode) :help "Run pdflatex"))
-                          (add-to-list 'TeX-command-list
-                                       '("pLaTeX" "platex -src-specials %t"
-                                         TeX-run-TeX nil (latex-mode) :help "Run e-pLaTeX"))
-                          (add-to-list 'TeX-command-list
-                                       '("pLaTeX(euc)" "platex -src-specials --kanji=euc %t"
-                                         TeX-run-TeX nil (latex-mode) :help "Run e-pLaTeX(euc)"))
-                          (add-to-list 'TeX-command-list
-                                       '("pLaTeX(sjis)" "platex -src-specials --kanji=sjis %t"
-                                         TeX-run-TeX nil (latex-mode) :help "Run e-pLaTeX(sjis)"))
-                          (add-to-list 'TeX-command-list
-                                       '("pLaTeX(jis)" "platex -src-specials --kanji=jis %t"
-                                         TeX-run-TeX nil (latex-mode) :help "Run e-pLaTeX(jis)"))
-                          (add-to-list 'TeX-command-list
-                                       '("pdfpLaTeX" "platex -synctex=1 %t && dvipdfmx %d"
-                                         TeX-run-TeX nil (latex-mode) :help "Run e-pLaTeX and dvipdfmx"))
-                          (add-to-list 'TeX-command-list
-                                       '("pdfpLaTeX(euc)" "platex --kanji=euc -synctex=1 %t && dvipdfmx %d"
-                                         TeX-run-TeX nil (latex-mode) :help "Run e-pLaTeX(euc) and dvipdfmx"))
-                          (add-to-list 'TeX-command-list
-                                       '("pdfpLaTeX(jis)" "platex --kanji=jis -synctex=1 %t && dvipdfmx %d"
-                                         TeX-run-TeX nil (latex-mode) :help "Run e-pLaTeX(euc) and dvipdfmx"))
-                          (add-to-list 'TeX-command-list
-                                       '("pdfpLaTeX(sjis)" "platex --kanji=sjis -synctex=1 %t && dvipdfmx %d"
-                                         TeX-run-TeX nil (latex-mode) :help "Run e-pLaTeX(euc) and dvipdfmx"))
-                          (add-to-list 'TeX-command-list
-                                       '("pdfpLaTeX2" "platex -synctex=1 %t && dvips -Ppdf -t a4 -z -f %d | convbkmk -g > %f && ps2pdf %f"
-                                         TeX-run-TeX nil (latex-mode) :help "Run e-pLaTeX, dvips, and ps2pdf"))
-                          (add-to-list 'TeX-command-list
-                                       '("pBibTeX" "pbibtex %s"
-                                         TeX-run-BibTeX nil t :help "Run pBibTeX"))
-                          (add-to-list 'TeX-command-list
-                                       '("Mendex" "mendex %s"
-                                         TeX-run-command nil t :help "Create index file with mendex"))
-                          (add-to-list 'TeX-command-list
-                                       '("dviView" "xdvi -nofork -watchfile 1 -editor \"emacsclient +%%l %%f\" %d -sourceposition %n:%b"
-                                         TeX-run-discard-or-function t t :help "Run DVI Viewer"))
-                          (add-to-list 'TeX-command-list
-                                       '("Okular" "okular --unique \"file:%s.pdf#src:%n %b\""
-                                         TeX-run-discard-or-function t t :help "Forward search with Okular"))
-                          )
-                        ))
+              (function
+               (lambda ()
+                 (add-to-list 'TeX-command-list
+                              '("pdflatex(original)" "pdflatex %t"
+                                TeX-run-TeX nil (latex-mode) :help "Run pdflatex"))
+                 (add-to-list 'TeX-command-list
+                              '("pLaTeX" "platex -src-specials %t"
+                                TeX-run-TeX nil (latex-mode) :help "Run e-pLaTeX"))
+                 (add-to-list 'TeX-command-list
+                              '("pLaTeX(euc)" "platex -src-specials --kanji=euc %t"
+                                TeX-run-TeX nil (latex-mode) :help "Run e-pLaTeX(euc)"))
+                 (add-to-list 'TeX-command-list
+                              '("pLaTeX(sjis)" "platex -src-specials --kanji=sjis %t"
+                                TeX-run-TeX nil (latex-mode) :help "Run e-pLaTeX(sjis)"))
+                 (add-to-list 'TeX-command-list
+                              '("pLaTeX(jis)" "platex -src-specials --kanji=jis %t"
+                                TeX-run-TeX nil (latex-mode) :help "Run e-pLaTeX(jis)"))
+                 (add-to-list 'TeX-command-list
+                              '("pdfpLaTeX" "platex -synctex=1 %t && dvipdfmx %d"
+                                TeX-run-TeX nil (latex-mode) :help "Run e-pLaTeX and dvipdfmx"))
+                 (add-to-list 'TeX-command-list
+                              '("pdfpLaTeX(euc)" "platex --kanji=euc -synctex=1 %t && dvipdfmx %d"
+                                TeX-run-TeX nil (latex-mode) :help "Run e-pLaTeX(euc) and dvipdfmx"))
+                 (add-to-list 'TeX-command-list
+                              '("pdfpLaTeX(jis)" "platex --kanji=jis -synctex=1 %t && dvipdfmx %d"
+                                TeX-run-TeX nil (latex-mode) :help "Run e-pLaTeX(euc) and dvipdfmx"))
+                 (add-to-list 'TeX-command-list
+                              '("pdfpLaTeX(sjis)" "platex --kanji=sjis -synctex=1 %t && dvipdfmx %d"
+                                TeX-run-TeX nil (latex-mode) :help "Run e-pLaTeX(euc) and dvipdfmx"))
+                 (add-to-list 'TeX-command-list
+                              '("pdfpLaTeX2" "platex -synctex=1 %t && dvips -Ppdf -t a4 -z -f %d | convbkmk -g > %f && ps2pdf %f"
+                                TeX-run-TeX nil (latex-mode) :help "Run e-pLaTeX, dvips, and ps2pdf"))
+                 (add-to-list 'TeX-command-list
+                              '("pBibTeX" "pbibtex %s"
+                                TeX-run-BibTeX nil t :help "Run pBibTeX"))
+                 (add-to-list 'TeX-command-list
+                              '("Mendex" "mendex %s"
+                                TeX-run-command nil t :help "Create index file with mendex"))
+                 (add-to-list 'TeX-command-list
+                              '("dviView" "xdvi -nofork -watchfile 1 %d"
+                                TeX-run-discard-or-function t t :help "Run DVI Viewer"))
+                 (add-to-list 'TeX-command-list
+                              '("Okular" "okular --unique \"file:%s.pdf#src:%n %b\""
+                                TeX-run-discard-or-function t t :help "Forward search with Okular"))
+                 )
+               ))
   #+END_SRC
 * フォント関連
 ** サイズ可変の無効
@@ -131,20 +131,9 @@ title: AUCTeX の設定
    #+END_SRC
 * SyncTex
   #+BEGIN_SRC emacs-lisp
-    ;; (add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)
-    ;; (setq TeX-source-correlate-method 'synctex)
-    ;; (add-hook 'LaTeX-mode-hook '(lambda ()
-    ;;                               (add-to-list 'TeX-expand-list
-    ;;                                            '("%u" Okular-make-url))))
-    ;; (defun Okular-make-url () (concat
-    ;;                            "file://"
-    ;;                            (expand-file-name (funcall file (TeX-output-extension) t)
-    ;;                                              (file-name-directory (TeX-master-file)))
-    ;;                            "#src:"
-    ;;                            (TeX-current-line)
-    ;;                            (expand-file-name (TeX-master-directory))
-    ;;                            "./"
-    ;;                            (TeX-current-file-name-master-relative)))
+    (add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)
+    (setq TeX-source-correlate-method 'synctex)
+    (setq TeX-source-correlate-start-server t)
   #+END_SRC
 * BibTeX + Zotexo
 ** BibTeX
@@ -167,6 +156,7 @@ title: AUCTeX の設定
      (autoload 'reftex-index-phrase-mode "reftex-index" "Phrase mode" t)
      (add-hook 'LaTeX-mode-hook 'turn-on-reftex)   ; with AUCTeX LaTeX mode
      (add-hook 'latex-mode-hook 'turn-on-reftex)   ; with Emacs latex mode
+     (setq reftex-plug-into-AUCTeX t)
      ;; Make RefTeX faster
      (setq reftex-enable-partial-scans t)
      (setq reftex-save-parse-info t)

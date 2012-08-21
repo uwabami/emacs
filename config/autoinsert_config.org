@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/08 15:37:46$
+# $Lastupdate: 2012/08/21 15:26:28$
 # License: Expat
 #
 #+TITLE: AutoInsert の設定
@@ -47,9 +47,6 @@ title: AutoInsert の設定
           (lambda()
             (file-name-sans-extension (file-name-nondirectory (buffer-file-name)))))
          ))
-   #+END_SRC
-** テンプレート内の置換関数の定義
-   #+BEGIN_SRC emacs-lisp
      (defun my:template ()
        (time-stamp)
        (mapc #'(lambda(c)
@@ -73,8 +70,7 @@ title: AutoInsert の設定
                    ("\\.f90$"  . ["template.f90"  my:template])
                    ("\\.cpp$"  . ["template.cpp"  my:template])
                    ("\\.tex$"  . ["template.tex"  my:template])
-    ;;               ("\\.org$"  . ["template.org"  my:template])
+                   ("\\.org$"  . ["template.org"  my:template])
                    ("\\.muse$" . ["template.muse" my:template])
                    ) auto-insert-alist))
   #+END_SRC
-

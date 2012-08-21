@@ -1,0 +1,107 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#
+# Copyright(C) Youhei SASAKI <uwabami@gfd-dennou.org> All rights reserved.
+# $Lastupdate: 2012/08/21 21:41:32$
+# License: Expat
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#+TITLE: mu4eを試してみる
+#+AUTHOR: Youhei SASAKI
+#+EMAIL: uwabami@gfd-dennou.org
+#+SETUPFILE: ./export-config.org
+#+BEGIN_HTML
+---
+layout: emacs
+title: mu4eを試してみる
+#+END_HTML
+* 始めに
+  [[http://www.djcbsoftware.nl/code/mu/mu4e.html][mu4e]] はEmacsで動作する検索ベースの MUA です. 検索エンジンとしては [[http://www.djcbsoftware.nl/code/mu/][mu]] と
+  いう Maildir を xapian によってインデックス化したデータベースを使用しま
+  す. mu4e 単体ではメールの受信や送信はできませんので, メールの受信には
+  offlineimap などを使用し, 送信には smtpmail なんかを使用します. ここで
+  はインストールと設定について述べています.
+* インストール
+  2012-8-21 現在では公開されている安定版は 0.9.8.5 です.
+  mu を用いたメールの検索は可能ですが,
+  iso-2022-jp のメールが読めない(化ける)ので, ちょっとこのままでは使えません.
+  詳細は [[https://groups.google.com/forum/?fromgroups%3D#!forum/mu-discuss][mu-discuss]] の「Message body encoding issue w/ iso-2022-jp」
+  を参照下さい.
+
+  そんなわけで Github から 最新ソースを落としてきてコンパイルしましょう.
+
+* 読み込みと初期設定
+  #+BEGIN_SRC emacs-lisp
+    ;; example configuration for mu-for-emacs (mu4e)
+    (eval-and-compile
+      (unless (locate-library "mu4e")
+        (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e/")))
+    (require 'mu4e)
+  #+END_SRC
+
+  #+BEGIN_SRC emacs-lisp
+    ;; example configuration for mu-for-emacs (mu4e)
+    (eval-and-compile
+      (unless (locate-library "mu4e")
+        (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e/")))
+    (require 'mu4e)
+    (setq
+     ;; a regular expression that matches all email address uses by the user;
+     ;; this allows us to correctly determine if user is the sender of some message
+     mu4e-user-mail-address-regexp
+     "sasakyh.\\|uwabami."
+     ;; path to our Maildir directory
+     mu4e-maildir       "/home/uwabami/.maildir"
+     ;; the next are relative to `mu4e-maildir'
+     mu4e-sent-folder   "/Sent"
+     mu4e-drafts-folder "/Drafts"
+     mu4e-trash-folder  "/Trash"
+
+     ;; the maildirs you use frequently; access them with 'j' ('jump')
+     mu4e-maildir-shortcuts
+     '(
+       ;; ("/archive"     . ?a)
+       ("/Gmail/INBOX"       . ?i)
+       ;; ("/work"        . ?w)
+       ;; ("/sent"        . ?s)
+       )
+
+       ;; when you want to use some external command for text->html conversion,
+       ;; i.e., the 'html2text' program
+       mu4e-html2text-command "html2text"
+
+       ;; the headers to show in the headers list -- a pair of the field + its
+       ;; width, with `nil' meaning 'unlimited' (better only use that for
+       ;; the last field. These are the defaults:
+       mu4e-headers-fields
+       '( (:date          .  25)
+          (:flags         .   6)
+          (:from          .  22)
+          (:subject       .  nil))
+
+       ;; program to get mail; alternatives are 'fetchmail', 'getmail'
+       ;; isync or your own shellscript. called when 'U' is pressed in
+       ;; main view
+       mu4e-get-mail-command "offlineimap"
+
+       ;; general emacs mail settings; used when composing e-mail
+       mu4e-reply-to-address "uwabami@gfd-dennou.org"
+    )
+  #+END_SRC

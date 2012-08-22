@@ -51,17 +51,13 @@ title: mu4eを試してみる
   #+BEGIN_SRC emacs-lisp
     ;; example configuration for mu-for-emacs (mu4e)
     (eval-and-compile
-      (unless (locate-library "mu4e")
+      (when (string-match "daphne" system-name)
+        (unless (locate-library "mu4e"))
         (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e/")))
-    (require 'mu4e)
   #+END_SRC
 
   #+BEGIN_SRC emacs-lisp
-    ;; example configuration for mu-for-emacs (mu4e)
-    (eval-and-compile
-      (unless (locate-library "mu4e")
-        (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu4e/")))
-    (require 'mu4e)
+    (when (require 'mu4e nil t)
     (setq
      ;; a regular expression that matches all email address uses by the user;
      ;; this allows us to correctly determine if user is the sender of some message
@@ -103,5 +99,6 @@ title: mu4eを試してみる
 
        ;; general emacs mail settings; used when composing e-mail
        mu4e-reply-to-address "uwabami@gfd-dennou.org"
+    )
     )
   #+END_SRC

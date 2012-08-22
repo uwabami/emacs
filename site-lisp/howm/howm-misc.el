@@ -1065,7 +1065,7 @@ When DOTS-STR is non-nil, it is used instead of \"...\"."
 (defun howm-bug-report (&optional show-sym)
   (interactive "P")
   (let ((report-buf (format-time-string "howm-bug-report-%Y%m%d-%H%M%S"))
-        (template (expand-file-name "sample/bug-report.txt" howm-directory)))
+        (template "sample/bug-report.txt"))
     (switch-to-buffer report-buf)
     (when (not (howm-buffer-empty-p))
       (error "Buffer %s exists (and not empty)." report-buf))

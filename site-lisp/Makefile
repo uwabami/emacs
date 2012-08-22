@@ -6,6 +6,10 @@ include $(HOME)/.emacs.d/Mkinclude
 all: 00build-stamp
 
 00build-stamp: $(patsubst %,%-stamp,$(EXCLUDE))
+	@for d in $(TARGET_DIRS) ;\
+	  do $(MAKE) -C $$d EMACS=$(EMACS) ;\
+	  touch $$d-stamp ;\
+	done
 	touch $@
 
 org-mode-stamp:
@@ -17,7 +21,6 @@ el-get-stamp:
 	touch $@
 
 yasnippet-stamp:
-	@( cd yasnippet && rake compile )
 	touch $@
 
 offlineimap-el-stamp:

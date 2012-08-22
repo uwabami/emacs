@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/22 02:02:29$
+# $Lastupdate: 2012/08/22 14:24:22$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -594,6 +594,10 @@ title: Emacsの基本設定
    #+BEGIN_SRC emacs-lisp
      (my:load-org-file "flyspell_config.org")
    #+END_SRC
+** [[file:lookup_config.org][lookup-el]]
+   #+BEGIN_SRC emacs-lisp
+     (my:load-org-file "lookup_config.org")
+   #+END_SRC
 ** [[file:yasnippet_config.org][yasnippet]]
    詳細は [[http://yasnippet-doc-jp.googlecode.com/svn/trunk/doc-jp/index.html][Yet Another Snippet extension]] [fn:14] 参照のこと.
    手放せなくなってきたので site-lisp 以下に submodule にしている.
@@ -636,6 +640,10 @@ title: Emacsの基本設定
        (autoload 'yaml-mode "yaml-mode" "Major mode for Yaml" t)
        (add-to-list 'auto-mode-alist '("\\.yml$\\|\\.yaml$" . yaml-mode))
        )
+   #+END_SRC
+** [[file:rinari_config.org][Rails開発環境(rinari)]]
+   #+BEGIN_SRC emacs-lisp
+     (my:load-org-file "rinari_config.org")
    #+END_SRC
 * Footnotes
 

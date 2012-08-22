@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/19 10:46:16$
+# $Lastupdate: 2012/08/22 13:50:26$
 # License: Expat
 #
 #+TITLE: Ruby関連の設定
@@ -18,7 +18,6 @@ title: Ruby関連の設定
   Ruby 愛しているよ Ruby.
   あと [[http://rabbit-shockers.org/][Rabbit]] の設定もしておく.
 * 基本設定
-** auto-mode-alist の設定
   ruby-mode は Emacs23 以降は本体に同梱されているので
   autoload を設定するだけで良い.
   Rakefile は ruby-mode にならないので, auto-mode-alist に追加しておく.
@@ -26,11 +25,19 @@ title: Ruby関連の設定
     (eval-when-compile
       (require 'ruby-mode))
     (autoload 'ruby-mode "ruby-mode"
-      "Major mode for ruby files" t)
+      "Major mode for ruby files" nil t)
     (add-to-list 'auto-mode-alist
                  '("\\.rb$" . ruby-mode))
     (add-to-list 'auto-mode-alist
-                 '("Rakefile$" . ruby-mode))
+                 '("\\.rake$" . ruby-mode))
+    (add-to-list 'auto-mode-alist
+                 '("\\.ru$" . ruby-mode))
+    (add-to-list 'auto-mode-alist
+                 '("Rakefile" . ruby-mode))
+    (add-to-list 'auto-mode-alist
+                 '("Gemfile" . ruby-mode))
+    (add-to-list 'auto-mode-alist
+                 '("Capfile" . ruby-mode))
     (add-to-list 'interpreter-mode-alist
                  '("ruby" . ruby-mode))
   #+END_SRC
@@ -62,7 +69,7 @@ title: Ruby関連の設定
        (el-get 'sync 'rd-mode))
      (eval-when-compile
        (require 'rd-mode))
-     (autoload 'rd-mode "rd-mode" "major mode for ruby document formatter RD" t)
+     (autoload 'rd-mode "rd-mode" "major mode for ruby document formatter RD" nil t)
      ;; rd-mode が起動した際に, =end \n\n =begin を省略しない.
      (add-hook 'rd-mode-hook 'rd-show-other-block-all)
      (add-to-list 'auto-mode-alist
@@ -74,7 +81,7 @@ title: Ruby関連の設定
        (el-get 'sync 'rabbit-mode))
      (eval-when-compile
        (require 'rabbit-mode))
-     (autoload 'rabbit-mode "rabbit-mode" "major mode for Rabbit" t)
+     (autoload 'rabbit-mode "rabbit-mode" "major mode for Rabbit" nil t)
      (add-to-list 'auto-mode-alist
                   '("\\.\\(rbt\\|rab\\)$" . rabbit-mode))
   #+END_SRC

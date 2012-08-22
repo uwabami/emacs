@@ -22,3 +22,9 @@
 [submodule "site-lisp/el-get"]
 	path = site-lisp/el-get
 	url = git://github.com/dimitri/el-get.git
+[submodule "site-lisp/rinari"]
+	path = site-lisp/rinari
+	url = git://github.com/eschulte/rinari.git
+[submodule "site-lisp/yasnippet-rails"]
+	path = site-lisp/yasnippet-rails
+	url = git://github.com/eschulte/yasnippets-rails.git

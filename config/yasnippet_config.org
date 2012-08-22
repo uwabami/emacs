@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/08 15:47:49$
+# $Lastupdate: 2012/08/22 14:22:25$
 # License: Expat
 #
 #+TITLE: yasnippetの設定
@@ -60,4 +60,3 @@ title: yasnippetの設定
 [fn:2] yasnippet - Debian PTS: [[http://packages.qa.debian.org/y/yasnippet.html]]
 
 [fn:3] Packages that lead to conflicts with Org mode: [[http://orgmode.org/manual/Conflicts.html]]
-

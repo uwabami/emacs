@@ -3,6 +3,6 @@
 ;;; @configure_input@
 
 (provide 'howm-version)
-(defconst howm-version "1.4.0rc2")
+(defconst howm-version "1.4.0")
 
 ;;; howm-version.el ends here

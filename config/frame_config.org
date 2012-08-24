@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/19 10:35:56$
+# $Lastupdate: 2012/08/24 11:21:47$
 # License: Expat
 #
 #+TITLE: フォントとフレームの設定
@@ -40,7 +40,7 @@ title: フォントとフレームの設定
                      (t nil)))
           (set-frame-parameter (selected-frame) 'alpha val))))
     (when window-system
-      (my-opacity-change 90)     ; default の透明度は 90 に
+      (my-opacity-change 95)     ; default の透明度は 90 に
       )
   #+END_SRC
 * フォントの設定
@@ -73,7 +73,7 @@ title: フォントとフレームの設定
     (load "term/xterm")
     (when (not (window-system))
       (xterm-register-default-colors))
-    ;;(tty-set-up-initial-frame-faces)
+    ;; (tty-set-up-initial-frame-faces)
     (when (window-system)
       (set-background-color "#242424")
       (set-foreground-color "#f6f3e8"))

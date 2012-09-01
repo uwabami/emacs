@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/21 22:08:06$
+# $Lastupdate: 2012/08/28 09:37:06$
 # License: Expat
 #
 #+TITLE: DDSKKの設定
@@ -220,21 +220,21 @@ title: DDSKKの設定
   #+END_SRC
 * 動的補完
   #+BEGIN_SRC emacs-lisp
-    ;; 動的補完
-    (setq skk-dcomp-activate t)
-    (setq skk-dcomp-multiple-activate t)
-    (setq skk-dcomp-multiple-rows 5)
-    ;; 動的補完の複数表示群のフェイス
-    (set-face-foreground 'skk-dcomp-multiple-face "Black")
-    (set-face-background 'skk-dcomp-multiple-face "LightGoldenrodYellow")
-    (set-face-bold-p 'skk-dcomp-multiple-face nil)
-    ;; 動的補完の複数表示郡の補完部分のフェイス
-    (set-face-foreground 'skk-dcomp-multiple-trailing-face "dim gray")
-    (set-face-bold-p 'skk-dcomp-multiple-trailing-face nil)
-    ;; 動的補完の複数表示郡の選択対象のフェイス
-    (set-face-foreground 'skk-dcomp-multiple-selected-face "White")
-    (set-face-background 'skk-dcomp-multiple-selected-face "LightGoldenrod4")
-    (set-face-bold-p 'skk-dcomp-multiple-selected-face nil)
+    ;; ;; 動的補完
+    ;; (setq skk-dcomp-activate t)
+    ;; (setq skk-dcomp-multiple-activate t)
+    ;; (setq skk-dcomp-multiple-rows 5)
+    ;; ;; 動的補完の複数表示群のフェイス
+    ;; (set-face-foreground 'skk-dcomp-multiple-face "Black")
+    ;; (set-face-background 'skk-dcomp-multiple-face "LightGoldenrodYellow")
+    ;; (set-face-bold-p 'skk-dcomp-multiple-face nil)
+    ;; ;; 動的補完の複数表示郡の補完部分のフェイス
+    ;; (set-face-foreground 'skk-dcomp-multiple-trailing-face "dim gray")
+    ;; (set-face-bold-p 'skk-dcomp-multiple-trailing-face nil)
+    ;; ;; 動的補完の複数表示郡の選択対象のフェイス
+    ;; (set-face-foreground 'skk-dcomp-multiple-selected-face "White")
+    ;; (set-face-background 'skk-dcomp-multiple-selected-face "LightGoldenrod4")
+    ;; (set-face-bold-p 'skk-dcomp-multiple-selected-face nil)
   #+END_SRC
 * 部首変換, 総画数変換
   #+BEGIN_SRC emacs-lisp

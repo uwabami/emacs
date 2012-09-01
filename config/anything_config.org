@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/18 11:32:16$
+# $Lastupdate: 2012/09/01 16:09:06$
 # License: Expat
 #
 #+TITLE: Anythingの設定
@@ -27,8 +27,8 @@ title: Anythingの設定
   $ apt-get install anything-el
   #+END_EXAMPLE
   で OK.
-  パッケージが使えない場合には
-  [[http://tromey.com/elpa/install.html][ELPA]] [fn:3] で anything と anything-config を導入しておく.
+  パッケージが使えない場合には el-get で
+  anything を導入しておく.
   #+BEGIN_SRC emacs-lisp
     (unless (locate-library "anything")
       (el-get 'sync 'anything))

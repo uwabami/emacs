@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/22 14:24:22$
+# $Lastupdate: 2012/09/01 16:06:51$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -585,7 +585,7 @@ title: Emacsの基本設定
 ** [[file:auto-complete_config.org][auto-complete]]
    詳細は [[http://cx4a.org/software/auto-complete/index.ja.html][Auto Complete Mode]] [fn:12] 参照のこと.
    Debianでは[[http://packages.qa.debian.org/a/auto-complete-el.html][ auto-complete-el]] [fn:13] としてパッケージ化されている.
-   パッケージが無い場合には ELPA で導入すること
+   パッケージが無い場合には el-get で導入すること
    #+BEGIN_SRC emacs-lisp
      (my:load-org-file "auto-complete_config.org")
    #+END_SRC
@@ -662,10 +662,6 @@ title: Emacsの基本設定
 [fn:7] 無駄な行末の空白を削除する(Emacs Advent Calendar jp:2010): [[http://d.hatena.ne.jp/tototoshi/20101202/1291289625]]
 
 [fn:10] APEL: [[http://www.kanji.zinbun.kyoto-u.ac.jp/~tomo/elisp/APEL/index.html]]
-
-[fn:8] ELPA: [[http://tromey.com/elpa/install.html]]
-
-[fn:9] Marmalade: [[http://marmalade-repo.org/]]
 
 [fn:11] anything-el - Debian PTS: [[http://packages.qa.debian.org/a/anything-el.html]]
 

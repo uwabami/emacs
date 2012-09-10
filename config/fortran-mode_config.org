@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/08 15:40:52$
+# $Lastupdate: 2012/09/07 10:56:40$
 # License: Expat
 #
 #+TITLE: fortran-mode, f90-mode の設定
@@ -36,7 +36,7 @@ title: fortran-mode, f90-mode の設定
                    f90-program-indent 2
                    f90-continuation-indent 2
                    f90-indented-comment-re "!"
-                   f90-comment-region "!!$"
+                   f90-comment-region "!!"
                    f90-directive-comment-re "!omp\\$"
                    f90-break-delimiters "[-+\\*/,><=% \t]"
                    f90-break-before-delimiters t

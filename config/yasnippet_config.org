@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/22 14:22:25$
+# $Lastupdate: 2012/09/04 22:45:07$
 # License: Expat
 #
 #+TITLE: yasnippetの設定

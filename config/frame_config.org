@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/24 11:21:47$
+# $Lastupdate: 2012/09/05 15:43:34$
 # License: Expat
 #
 #+TITLE: フォントとフレームの設定

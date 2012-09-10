@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/01 16:07:32$
+# $Lastupdate: 2012/09/01 20:46:59$
 # License: Expat
 #
 #+TITLE: AUCTeX の設定
@@ -28,11 +28,6 @@ title: AUCTeX の設定
     (setq TeX-master t)
   #+END_SRC
 * 日本語TeX用の基本設定
-  (p)TeXLive2011を使っている.
-  - jsartcile を基本的に使用する.
-  - pxdvi で dvi を表示する.
-  - PDF の表示には Okular を使用する.
-
     #+BEGIN_SRC emacs-lisp
       (setq TeX-default-mode 'japanese-latex-mode)
       (setq japanese-LaTeX-default-style "jsarticle")
@@ -44,9 +39,9 @@ title: AUCTeX の設定
       (setq TeX-view-program-list
             '(("pxdvi" "xdvi -watchfile 1 %d")
               ;; ("TeXworks" "texworks %o")
-              ;; ("Evince" "evince %o")
+              ("Evince" "evince %o")
               ;; ("fwdevince" "evince_forward_search %o %n %b")
-              ("Okular" "okular --unique \"file:%o#src:%n `pwd`%b\"")
+              ;; ("Okular" "okular --unique \"file:%o#src:%n `pwd`%b\"")
               ;; ("zathura" "zathura %o")
               ;; ("mupdf" "mupdf %o")
               ;; ("xpdf" "xpdf %o")
@@ -55,7 +50,7 @@ title: AUCTeX の設定
               ))
       (setq TeX-view-program-selection
             '((output-dvi "pxdvi")
-              (output-pdf "Okular")
+              (output-pdf "Evince")
               ))
       ;; (setq TeX-japanese-process-input-coding-system 'utf-8
       ;;       TeX-japanese-process-output-coding-system 'utf-8)
@@ -115,9 +110,9 @@ title: AUCTeX の設定
                  (add-to-list 'TeX-command-list
                               '("dviView" "xdvi -nofork -watchfile 1 %d"
                                 TeX-run-discard-or-function t t :help "Run DVI Viewer"))
-                 (add-to-list 'TeX-command-list
-                              '("Okular" "okular --unique \"file:%s.pdf#src:%n %b\""
-                                TeX-run-discard-or-function t t :help "Forward search with Okular"))
+                 ;; (add-to-list 'TeX-command-list
+                 ;;              '("Okular" "okular --unique \"file:%s.pdf#src:%n %b\""
+                 ;;                TeX-run-discard-or-function t t :help "Forward search with Okular"))
                  )
                ))
   #+END_SRC

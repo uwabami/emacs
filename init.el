@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2012/08/29 13:22:03$
+;; $Lastupdate: 2012/09/11 18:23:14$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -111,6 +111,17 @@
      (add-to-load-path ,@list)
      (eval-when-compile
        (add-to-load-path ,@list))))
+;; -----------------------------------------------------------
+;;; autoload-if-found
+(defun autoload-if-found (functions file &optional docstring interactive type)
+  "set autoload iff. FILE has found."
+  (if (not (listp functions))
+      (setq functions (list functions)))
+  (and (locate-library file)
+       (progn
+         (dolist (function functions)
+           (autoload function file docstring interactive type)) t))
+  )
 ;; -----------------------------------------------------------
 ;;; org-babel
 ;;

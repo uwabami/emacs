@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/05 15:43:34$
+# $Lastupdate: 2012/09/12 23:50:31$
 # License: Expat
 #
 #+TITLE: フォントとフレームの設定
@@ -47,7 +47,7 @@ title: フォントとフレームの設定
   #+BEGIN_SRC emacs-lisp
     (when window-system
       (modify-frame-parameters nil '((wait-for-wm . nil)))
-      (create-fontset-from-ascii-font "Ricty-18" nil "ricty")
+      (create-fontset-from-ascii-font "Ricty-13.5" nil "ricty")
       (dolist (charset '(
                          unicode
                          japanese-jisx0208
@@ -61,29 +61,17 @@ title: フォントとフレームの設定
                          ))
         (set-fontset-font "fontset-ricty"
                           charset
-                          (font-spec :family "Ricty" :size 18 nil 'prepend)))
+                          (font-spec :family "Ricty" :size 13.5 nil 'prepend)))
       (add-to-list 'default-frame-alist '(font ."fontset-ricty"))
       (custom-set-faces
-       '(variable-pitch ((t (:family "Ricty" :size 18 nil 'prepend))))
-       '(fixed-pitch ((t (:family "Ricty" :size 18 nil 'prepend))))
+       '(variable-pitch ((t (:family "Ricty" :size 13.5 nil 'prepend))))
+       '(fixed-pitch ((t (:family "Ricty" :size 13.5 nil 'prepend))))
        ))
   #+END_SRC
 * color-theme
   #+BEGIN_SRC emacs-lisp
-    (load "term/xterm")
-    (when (not (window-system))
-      (xterm-register-default-colors))
-    ;; (tty-set-up-initial-frame-faces)
-    (when (window-system)
-      (set-background-color "#242424")
-      (set-foreground-color "#f6f3e8"))
-    (when (locate-library "color-theme")
-      (add-to-load-path "site-lisp/color-theme-darkpastel")
-      (setq color-theme-load-all-themes nil)
-      (setq color-theme-libraries nil)
-      (when (require 'color-theme-darkpastel nil t)
-        (color-theme-darkpastel))
-      )
+    (unless (locate-library "color-theme-darkpastel")
+      (el-get 'sync 'color-theme-darkpastel))
   #+END_SRC
 * Space や Tab に色付け
   whitespace-mode の方が良いのかもしれないけれど,
@@ -114,6 +102,14 @@ title: フォントとフレームの設定
          )))
     (ad-enable-advice 'font-lock-mode 'before 'my-font-lock-mode)
     (ad-activate 'font-lock-mode)
+  #+END_SRC
+* e2wm
+  #+BEGIN_SRC emacs-lisp
+    (unless (locate-library "e2wm")
+      (el-get 'sync 'e2wm))
+    (require 'e2wm)
+    (global-set-key (kbd "M-+") 'e2wm:start-management)
+    (require 'e2wm-config)
   #+END_SRC
 * Footnotes
 

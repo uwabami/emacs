@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/11 12:28:02$
+# $Lastupdate: 2012/09/12 22:35:04$
 # License: Expat
 #
 #+TITLE: howm の設定
@@ -27,8 +27,10 @@ title: howm の設定
   無いと途方に暮れるので, 環境に howm が無い場合には site-lisp/howm に install してある howm を load-path に追加.
   elscreen-howmも同様.
   #+BEGIN_SRC emacs-lisp
-    (my:not-locate-library howm "site-lisp/howm")
-    (my:not-locate-library elscreen-howm "site-lisp/elscreen")
+    (unless (locate-library "howm")
+      (el-get 'sync 'howm-head))
+    (unless (locate-library "elscreen-howm")
+      (el-get 'sync 'elscreen-knu-branch))
   #+END_SRC
 * ディレクトリの設定
   メモの内容は dropbox で同期することに

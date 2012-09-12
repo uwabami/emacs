@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/01 16:06:51$
+# $Lastupdate: 2012/09/12 23:25:37$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -453,8 +453,8 @@ title: Emacsの基本設定
    Emacsのバッファを GNU Screen っぽく扱う.
    設定はキーバインドを \C-o に変えたくらい.
    #+BEGIN_SRC emacs-lisp
-     ;; (el-get 'sync 'elscreen-knu-branch)
-     (my:not-locate-library elscreen "site-lisp/elscreen")
+     (unless (locate-library "elscreen")
+       (el-get 'sync 'elscreen-knu-branch))
      (setq elscreen-prefix-key (kbd "C-o"))
      (setq elscreen-display-tab 4)
      ;; (setq elscreen-tab-display-kill-screen nil)
@@ -523,11 +523,12 @@ title: Emacsの基本設定
      (cond
       ((string-match "daphne" system-name)
        (my:load-org-file "wl_config.org")
-       (add-to-load-path "site-lisp/offlineimap-el")
+       (unless (locate-library "offlineimap")
+         (el-get 'sync 'offlineimap-without-gnus))
        (autoload 'offlineimap "offlineimap" nil t)
        (eval-after-load "offlineimap"
          '(progn
-            (setq offlineimap-command "offlineimap -u Machine.MachineUI")
+            (setq offlineimap-command "offlineimap -u machineui")
             (setq offlineimap-buffer-maximum-size 3000)
             (setq offlineimap-mode-line-symbol "imap")
             (setq offlineimap-enable-mode-line-p
@@ -598,13 +599,6 @@ title: Emacsの基本設定
    #+BEGIN_SRC emacs-lisp
      (my:load-org-file "lookup_config.org")
    #+END_SRC
-** [[file:yasnippet_config.org][yasnippet]]
-   詳細は [[http://yasnippet-doc-jp.googlecode.com/svn/trunk/doc-jp/index.html][Yet Another Snippet extension]] [fn:14] 参照のこと.
-   手放せなくなってきたので site-lisp 以下に submodule にしている.
-   #+BEGIN_SRC emacs-lisp
-     (add-to-load-path "site-lisp/yasnippet")
-     (my:load-org-file "yasnippet_config.org")
-   #+END_SRC
 ** [[file:org-mode_config.org][org-mode]]
    #+BEGIN_SRC emacs-lisp
      (my:load-org-file "org-mode_config.org")
@@ -640,10 +634,6 @@ title: Emacsの基本設定
        (autoload 'yaml-mode "yaml-mode" "Major mode for Yaml" t)
        (add-to-list 'auto-mode-alist '("\\.yml$\\|\\.yaml$" . yaml-mode))
        )
-   #+END_SRC
-** [[file:rinari_config.org][Rails開発環境(rinari)]]
-   #+BEGIN_SRC emacs-lisp
-     (my:load-org-file "rinari_config.org")
    #+END_SRC
 ** [[file:flynamke_config.org][flymakeの設定]]
    #+BEGIN_SRC emacs-lisp

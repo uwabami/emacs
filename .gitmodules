@@ -1,33 +1,6 @@
 [submodule "site-lisp/org-mode"]
 	path = site-lisp/org-mode
 	url = git://orgmode.org/org-mode.git
-[submodule "site-lisp/yasnippet"]
-	path = site-lisp/yasnippet
-	url = git://github.com/capitaomorte/yasnippet.git
-[submodule "site-lisp/rail"]
-	path = site-lisp/rail
-	url = https://github.com/uwabami/rail.git
-[submodule "site-lisp/color-theme-darkpastel"]
-	path = site-lisp/color-theme-darkpastel
-	url = https://github.com/uwabami/color-theme-darkpastel.git
-[submodule "site-lisp/offlineimap-el"]
-	path = site-lisp/offlineimap-el
-	url = git://git.naquadah.org/offlineimap-el.git
-[submodule "site-lisp/muse-el"]
-	path = site-lisp/muse-el
-	url = git://repo.or.cz/muse-el.git
-[submodule "site-lisp/html5-el"]
-	path = site-lisp/html5-el
-	url = https://github.com/uwabami/html5-el.git
 [submodule "site-lisp/el-get"]
 	path = site-lisp/el-get
 	url = git://github.com/dimitri/el-get.git
-[submodule "site-lisp/rinari"]
-	path = site-lisp/rinari
-	url = git://github.com/eschulte/rinari.git
-[submodule "site-lisp/yasnippet-rails"]
-	path = site-lisp/yasnippet-rails
-	url = git://github.com/eschulte/yasnippets-rails.git
-[submodule "site-lisp/elscreen"]
-	path = site-lisp/elscreen
-	url = git://github.com/knu/elscreen.git

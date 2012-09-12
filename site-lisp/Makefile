@@ -1,5 +1,5 @@
 TARGET_DIR	:= $(subst ./, ,$(shell find . -maxdepth 1 -mindepth 1 -type d))
-EXCLUDE		:= yasnippet offlineimap-el el-get org-mode 
+EXCLUDE		:= 
 TARGET_DIRS	:= $(filter-out $(EXCLUDE),$(TARGET_DIR))
 include $(HOME)/.emacs.d/Mkinclude
 
@@ -18,16 +18,6 @@ org-mode-stamp:
 	touch $@
 
 el-get-stamp:
-	touch $@
-
-yasnippet-stamp:
-	touch $@
-
-offlineimap-el-stamp:
-	@( cd offlineimap-el && \
-	for f in `ls -1 *.el` ;\
-	do $(EMACS) -L . -q -no-site-file -batch -f batch-byte-compile $$f ;\
-	done )
 	touch $@
 
 clean:

@@ -1,0 +1,7 @@
+(:name rail
+       :description "Elisp library, translates codenames with latin chars of FLIM/SEMI/Mule..."
+       :type github
+       :pkgname "uwabami/rail"
+       :autoloads nil
+       :build `(("make" ,(concat " EMACS=" el-get-emacs)))
+       )

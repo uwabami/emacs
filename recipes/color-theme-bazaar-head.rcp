@@ -1,0 +1,7 @@
+(:name color-theme-bazaar-head
+       :description "An Emacs-Lisp package with more than 50 color themes for your use. For questions about color-theme"
+       :type bzr
+       :url "http://bzr.savannah.gnu.org/r/color-theme/trunk/"
+       :autoload nil
+       :features "color-theme"
+       )

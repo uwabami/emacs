@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI <uwabami@gfd-dennou.org> All rights reserved.
-# $Lastupdate: 2012/09/11 13:00:21$
+# $Lastupdate: 2012/09/13 08:43:22$
 # License: Expat
 #
 # Permission is hereby granted, free of charge, to any person obtaining
@@ -65,10 +65,10 @@ title: calfw: カレンダーの設定
          (define-key howm-mode-map (kbd "M-C") 'cfw:elscreen-open-howm-calendar)
          (setq cfw:howm-schedule-contents
                (list
-                (cfw:ical-create-source "KUSM" "~/Mail/ics/KUSM.ics" "Green")
-                (cfw:ical-create-source "My" "~/Mail/ics/MyCalendar.ics" "#ffff4c")
-                (cfw:ical-create-source "GFD" "~/Mail/ics/GFD.ics" "#ff4c4c")
-                (cfw:ical-create-source "DebianJP" "~/Mail/ics/DebianJP.ics" "#4cffff")
+                (cfw:ical-create-source "KUSM" "~/Documents/Dropbox/ical/KUSM.ics" "Green")
+                (cfw:ical-create-source "My" "~/Documents/Dropbox/ical/MyCalendar.ics" "#ffff4c")
+                (cfw:ical-create-source "GFD" "~/Documents/Dropbox/ical/GFD.ics" "#ff4c4c")
+                (cfw:ical-create-source "DebianJP" "~/Documents/Dropbox/ical/DebianJP.ics" "#4cffff")
                 ))
          ))
    #+END_SRC

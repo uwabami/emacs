@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/18 11:27:03$
+# $Lastupdate: 2012/09/11 12:28:02$
 # License: Expat
 #
 #+TITLE: howm の設定
@@ -52,10 +52,10 @@ title: howm の設定
     ;; .howm も org + howm
     (add-to-list 'auto-mode-alist '("\\.howm$" . org-mode))
     ;; title header は "=" のままで
-    (setq howm-view-title-header "=")
+    ;; (setq howm-view-title-header "=")
     ;; ちなみに org に揃える"*"こともできるけれど, 長い文章を書くときに
     ;; シンドイと思う
-    ;; (setq howm-view-title-header "*")
+    (setq howm-view-title-header "*")
    #+END_SRC
 * 読み込み
   elscreen-howm で define-key (kbd "C-c C-c") されていることに注意.
@@ -78,6 +78,7 @@ title: howm の設定
            'howm-save-and-kill-buffer/screen)))
     ;; \C-x m で howm-create -> clmemo 風
     (define-key ctl-x-map "m" 'howm-create)
+    ;; (define-key ctl-x-map "m" 'org-remember)
     ;; skk と併用するための設定(Dired-X に C-xC-j を奪われないように)
     (setq dired-bind-jump nil)
   #+END_SRC
@@ -101,6 +102,11 @@ title: howm の設定
     ;; ad hoc にどんどん増えていくなぁ...
     (setq howm-excluded-file-regexp
           "/\\.#\\|[~#]$\\|\\.bak$\\|/CVS/\\|\\.doc\\|\\.pdf\\|\\.txt$\\|\\.html$\\|\\.tex$\\|\\.dvi$\\|\\.fdb_latexmk$\\|\\.ppt$\\|\\.xls$\\|\\.howm-menu$\\|.howm-keys$\\|\\.png$\\|\\.gif$\\|\\.tif$\\|\\.tiff$\\|\\.jpg$\\|\\.jpeg$")
+    ;; 日付検索用の regexp
+    (setq howm-reminder-regexp-grep-format
+          (concat "<" howm-date-regexp-grep "[ :0-9]*>%s"))
+    (setq howm-reminder-regexp-format
+          (concat "\\(<" howm-date-regexp "[ :0-9]*>\\)\\(\\(%s\\)\\([0-9]*\\)\\)"))
   #+END_SRC
 * メニューなどの表示の設定
   #+BEGIN_SRC emacs-lisp
@@ -131,13 +137,21 @@ title: howm の設定
   #+END_SRC
 * 編集テンプレートの設定
   #+BEGIN_SRC emacs-lisp
-  ;; howm のテンプレートのカスタマイズ
-  (setq howm-template-date-format "[%Y-%m-%d %H:%M:%S]")
-  (setq howm-template-file-format "==>%s")
-  (setq howm-template "%date%file\n= %cursor\n\n")
+    ;; howm のテンプレートのカスタマイズ
+    (setq howm-dtime-format (concat "<" howm-dtime-body-format ">"))
+    (setq howm-insert-date-format "<%s>")
+    (setq howm-template-date-format "<%Y-%m-%d %H:%M:%S>")
+    (setq howm-template-file-format "==>%s")
+    (setq howm-template "* %date %cursor\n%file\n")
+    (setq howm-reminder-today-format (format howm-insert-date-format howm-date-format))
+    ;; Howm で done したら org も done
+    (defadvice howm-action-lock-done-done
+      (after my-org-todo-done () activate) (org-todo))
   #+END_SRC
-* [[http://howm.sourceforge.jp/cgi-bin/hiki/hiki.cgi?ExternalTool][併用ツール]] [fn:2]
-  そのうちなにか書くかも.
+* カレンダー関連
+  #+BEGIN_SRC emacs-lisp
+    (my:load-org-file "calfw_config.org")
+  #+END_SRC
 * Footnotes
 [fn:1] Howm: [[http://howm.sourceforge.jp/index-j.html]]
 

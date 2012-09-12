@@ -28,3 +28,6 @@
 [submodule "site-lisp/yasnippet-rails"]
 	path = site-lisp/yasnippet-rails
 	url = git://github.com/eschulte/yasnippets-rails.git
+[submodule "site-lisp/elscreen"]
+	path = site-lisp/elscreen
+	url = git://github.com/knu/elscreen.git

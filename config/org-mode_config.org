@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/11 12:17:05$
+# $Lastupdate: 2012/09/13 09:25:35$
 # License: Expat
 #
 #+TITLE: org-modeの設定
@@ -106,6 +106,18 @@ title: org-modeの設定
    #+BEGIN_SRC emacs-lisp
      (setq org-latex-to-pdf-process
            '("latexmk -pdfdvi %f"))
+   #+END_SRC
+** preview
+   PDF は open or xdg-open で開くことに
+   #+BEGIN_SRC emacs-lisp
+     (cond
+      (darwin-p
+       (add-to-list 'org-file-apps
+                    '("\\.pdf\\'" . "open %s")))
+      (t
+       (add-to-list 'org-file-apps
+                    '("\\.pdf\\'" . "xdg-open %s")))
+      )
    #+END_SRC
 * beamer export の設定
   beamer でプレゼンするための設定

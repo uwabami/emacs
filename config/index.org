@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/13 07:47:17$
+# $Lastupdate: 2012/09/13 12:32:14$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -436,6 +436,10 @@ title: Emacsの基本設定
    パッケージ管理には el-get を使うようになりました.
    #+BEGIN_SRC emacs-lisp
      (my:load-org-file "el-get_config.org")
+   #+END_SRC
+** [[file:twittering-mode_config.org][twittering-mode]]
+   #+BEGIN_SRC emacs-lisp
+     (my:load-org-file "twittering-mode_config.org")
    #+END_SRC
 ** [[http://www.kanji.zinbun.kyoto-u.ac.jp/~tomo/elisp/APEL/][APEL]] [fn:10] に load-path を通しておく
    Upstream の Web には

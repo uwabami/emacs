@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/13 09:25:35$
+# $Lastupdate: 2012/09/16 07:57:56$
 # License: Expat
 #
 #+TITLE: org-modeの設定
@@ -14,7 +14,6 @@ layout: emacs
 title: org-modeの設定
 ---
 #+END_HTML
-* 始めに
 * 基本設定
   #+BEGIN_SRC emacs-lisp
     (require 'org-install)
@@ -31,30 +30,111 @@ title: org-modeの設定
     (add-hook 'org-mode-hook 'turn-on-font-lock)
     ;; 基本ディレクトリ
     (setq org-directory "~/Documents/Dropbox/org/")
-    ;; Agenda
-    ;; (setq org-agenda-files (list org-directory))
+    ;; 時刻のフォーマット
+    (setq org-display-custom-times "<%Y-%m-%d %H:%M:%S>")
+    (setq org-time-stamp-custom-formats "<%Y-%m-%d %H:%M:%S>")
+  #+END_SRC
+* org-capture
+** firefox との連携
+   mozreplを使ったメモも残せるようにしておく.
+  #+BEGIN_SRC emacs-lisp
+    (unless (locate-library "moz")
+      (el-get 'sync 'moz-repl))
+    (require 'moz)
+    ;; @see http://blogs.openaether.org/?p=236
+    (defun jk/moz-get (attr)
+      (comint-send-string (inferior-moz-process) attr)
+      ;; try to give the repl a chance to respond
+      (sleep-for 0 100))
+    (defun jk/moz-get-current-url ()
+      (interactive)
+      (jk/moz-get "repl._workContext.content.location.href"))
+    (defun jk/moz-get-current-title ()
+      (interactive)
+      (jk/moz-get "repl._workContext.content.document.title"))
+    (defun jk/moz-get-current (moz-fun)
+      (funcall moz-fun)
+      ;; doesn't work if repl takes too long to output string
+      (save-excursion
+        (set-buffer (process-buffer (inferior-moz-process)))
+        (goto-char (point-max))
+        (previous-line)
+        (setq jk/moz-current
+              (buffer-substring-no-properties
+               (+ (point-at-bol) (length moz-repl-name) 3)
+               (- (point-at-eol) 1))))
+      (message "%s" jk/moz-current)
+      jk/moz-current
+      )
+    (defun jk/moz-url ()
+      (interactive)
+      (jk/moz-get-current 'jk/moz-get-current-url)
+      )
+    (defun jk/moz-title ()
+      (interactive)
+      (jk/moz-get-current 'jk/moz-get-current-title)
+      )
+  #+END_SRC
+** メモ形式
+   1日1ファイル + howm での一覧表示のための小細工
+  #+BEGIN_SRC emacs-lisp
     ;; org-capture
-    ;; (require 'org-capture)
-    ;; (setq org-default-notes-file (concat org-directory "org-capture.org"))
-    ;; (define-key global-map "\C-cc" 'org-capture)
-    ;; (setq org-capture-templates
-    ;;       '(("t" "Todo" entry (file+headline "~/Documents/Dropbox/org/todo.org" "ToDo")
-    ;;          "* TODO %T %?\n  %i\n  %a")
-    ;;         ("m" "Memo" entry (file+headline "~/Documents/Dropbox/org/memo.org" "Memo")
-    ;;          "* %T %?\n  %i\n  %a")
-    ;;         ))
-    ;; (require 'org-remember)
-    ;; (require 'remember)
-    ;; (org-remember-insinuate)
-    ;; (setq remember-annotation-functions '(org-remember-annotation))
-    ;; (setq remember-handler-functions '(org-remember-handler))
-    ;; (add-hook 'remember-mode-hook 'org-remember-apply-template)
-    ;; (eval-after-load 'remember
-    ;;   '(add-hook 'remember-mode-hook 'org-remember-apply-template))
-    ;; (setq org-remember-templates
-    ;;       '(("Todo" ?t "TODO %T %?\n   %i\n   %a" "~/Documents/Dropbox/org/todo.howm")
-    ;;         ("Memo" ?b "%T %?\n   %i\n   %a" "~/Documents/Dropbox/org/memo.howm")
-    ;;         ))
+    (require 'org-capture)
+    (setq org-capture-bookmark nil)
+    (defun my:org-capture-howm-file ()
+      (expand-file-name
+       (format-time-string "%Y%m%d-%H%M%S.howm") org-directory))
+    (global-set-key (kbd "C-x m") 'org-capture)
+    (setq org-capture-templates
+          '(
+            ("t" "Todo" entry
+             (file my:org-capture-howm-file)
+             "* <%<%Y-%m-%d %H:%M:%S>>+ %?\n  %i\n  %a"
+             :prepend t
+             :unnarrowed t
+             :kill-buffer t)
+            ("m" "Memo" entry
+             (file my:org-capture-howm-file)
+             "* <%<%Y-%m-%d %H:%M:%S>>  %?\n  %i\n  %a"
+             :prepend t
+             :unnarrowed t
+             :kill-buffer t)
+            ("b" "Bookmark" entry
+             (file my:org-capture-howm-file)
+             "* <%<%Y-%m-%d %H:%M:%S>>  %?\n  %(concat \"[[\" (jk/moz-url) \"]]\")\n  %a"
+             :prepend t
+             :unnarrowed t
+             :kill-buffer t)
+            ("e" "Email" entry
+             (file my:org-capture-howm-file)
+             "* <%<%Y-%m-%d %H:%M:%S>>+ %?\n  %i\n  %a\n"
+             :prepend t
+             :unnarrowed t
+             :kill-buffer t)
+            ("d" "Diary" entry
+             (file my:org-capture-howm-file)
+             "* DIARY <%<%Y-%m-%d %H:%M:%S>> %?\n  %i\n  %a\n"
+             :prepend t
+             :unnarrowed t
+             :kill-buffer t)
+            ))
+  #+END_SRC
+* org-agenda
+  #+BEGIN_SRC emacs-lisp
+    ;; ;; TODO keyword
+    ;; (setq org-todo-keywords
+    ;;       '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)" "SOMEDAY(s)")))
+    ;; ;; timestamp の記録
+    ;; (setq org-log-done)
+    ;; ;; agenda ファイルの一覧
+    ;; (setq org-agenda-files (list org-directory))
+    ;; ;; 拡張子 -> howm
+    ;; (setq org-agenda-file-regexp "[^.].*\.howm")
+    ;; ;; アジェンダ表示で下線を用いる
+    ;; (add-hook 'org-agenda-mode-hook '(lambda () (hl-line-mode 1)))
+    ;; (setq hl-line-face 'underline)
+    ;; ;; 標準の祝日を利用しない
+    ;; (setq calendar-holidays nil)
   #+END_SRC
 * org-babel
   使う言語の追加
@@ -110,14 +190,10 @@ title: org-modeの設定
 ** preview
    PDF は open or xdg-open で開くことに
    #+BEGIN_SRC emacs-lisp
-     (cond
-      (darwin-p
-       (add-to-list 'org-file-apps
-                    '("\\.pdf\\'" . "open %s")))
-      (t
-       (add-to-list 'org-file-apps
-                    '("\\.pdf\\'" . "xdg-open %s")))
-      )
+     (setq org-file-apps
+           '(
+             ("\\.pdf\\'" . "evince %s"))
+           )
    #+END_SRC
 * beamer export の設定
   beamer でプレゼンするための設定

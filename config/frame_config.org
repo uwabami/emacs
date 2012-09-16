@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/13 12:38:31$
+# $Lastupdate: 2012/09/13 21:00:37$
 # License: Expat
 #
 #+TITLE: フォントとフレームの設定
@@ -45,28 +45,49 @@ title: フォントとフレームの設定
   #+END_SRC
 * フォントの設定
   #+BEGIN_SRC emacs-lisp
+    ;; (when window-system
+    ;;   (modify-frame-parameters nil '((wait-for-wm . nil)))
+    ;;   (create-fontset-from-ascii-font "Ricty-13.5" nil "ricty")
+    ;;   (dolist (charset '(
+    ;;                      unicode
+    ;;                      japanese-jisx0208
+    ;;                      japanese-jisx0208-1978
+    ;;                      japanese-jisx0212
+    ;;                      japanese-jisx0213-1
+    ;;                      japanese-jisx0213-2
+    ;;                      japanese-jisx0213-a
+    ;;                      japanese-jisx0213.2004-1
+    ;;                      katakana-jisx0201
+    ;;                      ))
+    ;;     (set-fontset-font "fontset-ricty"
+    ;;                       charset
+    ;;                       (font-spec :family "Ricty" :size 13.5 nil 'prepend)))
+    ;;   (add-to-list 'default-frame-alist '(font ."fontset-ricty"))
+    ;;   (custom-set-faces
+    ;;    '(variable-pitch ((t (:family "Ricty" :size 13.5 nil 'prepend))))
+    ;;    '(fixed-pitch ((t (:family "Ricty" :size 13.5 nil 'prepend))))
+    ;;    ))
     (when window-system
-      (modify-frame-parameters nil '((wait-for-wm . nil)))
-      (create-fontset-from-ascii-font "Ricty-13.5" nil "ricty")
-      (dolist (charset '(
-                         unicode
-                         japanese-jisx0208
-                         japanese-jisx0208-1978
-                         japanese-jisx0212
-                         japanese-jisx0213-1
-                         japanese-jisx0213-2
-                         japanese-jisx0213-a
-                         japanese-jisx0213.2004-1
-                         katakana-jisx0201
-                         ))
-        (set-fontset-font "fontset-ricty"
-                          charset
-                          (font-spec :family "Ricty" :size 13.5 nil 'prepend)))
-      (add-to-list 'default-frame-alist '(font ."fontset-ricty"))
+      (set-default-font
+       "-shinonome-gothic-medium-r-normal--16-*-*-*-*-*-*-*")
+      (progn
+        (set-face-font 'default
+                       "-shinonome-gothic-medium-r-normal--16-*-*-*-*-*-*-*")
+        (set-face-font 'bold
+                       "-shinonome-gothic-medium-r-normal--16-*-*-*-*-*-*-*")
+        (set-face-font 'italic
+                       "-shinonome-gothic-medium-r-normal--16-*-*-*-*-*-*-*")
+        (set-face-font 'bold-italic
+                       "-shinonome-gothic-medium-r-normal--16-*-*-*-*-*-*-*")
+        )
       (custom-set-faces
-       '(variable-pitch ((t (:family "Ricty" :size 13.5 nil 'prepend))))
-       '(fixed-pitch ((t (:family "Ricty" :size 13.5 nil 'prepend))))
-       ))
+       ;; '(fixed-pitch ((t (:family "Ricty" :size 13.5 nil (quote prepend)))))
+       ;; '(variable-pitch ((t (:family "Ricty" :size 13.5 nil (quote prepend)))))
+       '(custom-group-tag ((t (:inherit fixed-pitch :foreground "light blue" :weight bold :height 1.0))))
+       '(custom-group-tag-1 ((t (:inherit fixed-pitch :foreground "pink" :weight bold :height 1.0))))
+       '(e2wm:face-subtitle ((t (:inherit fixed-pitch :foreground "Gray90" :height 1.0))))
+       '(e2wm:face-title ((t (:inherit fixed-pitch :foreground "yellow" :height 1.0)))))
+      )
   #+END_SRC
 * color-theme
   #+BEGIN_SRC emacs-lisp
@@ -157,13 +178,6 @@ title: フォントとフレームの設定
    - 時計
    - multi-term
    - twittering-mode
-     #+BEGIN_SRC emacs-lisp
-       (setq e2wm:c-dashboard-plugins
-             '(clock
-               (open :plugin-args (:command multi-term :buffer "*multi-term*"))
-               (open :plugin-args (:command twit  :buffer "*twitter*"))
-               ))
-     #+END_SRC
 * Footnotes
 
 [fn:1] フレームを半透明にする: http://d.hatena.ne.jp/khiker/20090809/emacs_opacity

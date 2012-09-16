@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/21 15:26:28$
+# $Lastupdate: 2012/09/13 17:05:36$
 # License: Expat
 #
 #+TITLE: AutoInsert の設定
@@ -70,6 +70,7 @@ title: AutoInsert の設定
                    ("\\.f90$"  . ["template.f90"  my:template])
                    ("\\.cpp$"  . ["template.cpp"  my:template])
                    ("\\.tex$"  . ["template.tex"  my:template])
+                   ("\\.howm$" . ["template.howm" my:template])
                    ("\\.org$"  . ["template.org"  my:template])
                    ("\\.muse$" . ["template.muse" my:template])
                    ) auto-insert-alist))

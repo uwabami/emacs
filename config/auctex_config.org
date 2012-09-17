@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/01 20:46:59$
+# $Lastupdate: 2012/09/17 11:51:36$
 # License: Expat
 #
 #+TITLE: AUCTeX の設定
@@ -17,7 +17,8 @@ title: AUCTeX の設定
 * 導入
   #+BEGIN_SRC emacs-lisp
     (unless (locate-library "auctex")
-      (el-get 'sync 'auctex))
+      (if (executable-find "platex")
+          (el-get 'sync 'auctex)))
   #+END_SRC
 * 読み込みと基本設定
   #+BEGIN_SRC emacs-lisp

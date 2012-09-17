@@ -28,7 +28,7 @@ title: howm の設定
   elscreen-howmも同様.
   #+BEGIN_SRC emacs-lisp
     (unless (locate-library "howm")
-      (el-get 'sync 'howm-head))
+      (el-get 'sync 'howm-alioth))
     (unless (locate-library "elscreen-howm")
       (el-get 'sync 'elscreen-knu-branch))
   #+END_SRC

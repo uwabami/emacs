@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/12 23:00:46$
+# $Lastupdate: 2012/09/17 16:45:05$
 # License: Expat
 #
 #+TITLE: muse-mode の設定
@@ -36,7 +36,7 @@ title: muse-mode の設定
 ** キーバインド
    C-x n で muse-project-find-file
    #+BEGIN_SRC emacs-lisp
-     (define-key ctl-x-map "n" 'muse-project-find-file)
+     (define-key ctl-x-map "M" 'muse-project-find-file)
    #+END_SRC
 ** orgstruct + outline-minor-mode で編集を org っぽく.
    #+BEGIN_SRC emacs-lisp

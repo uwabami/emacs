@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/17 17:18:06$
+# $Lastupdate: 2012/09/17 23:23:09$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -479,7 +479,7 @@ title: Emacsの基本設定
    =skk-user-directory= を設定しているので, 辞書や id なんかは
    =~/.emacs.d/etc/skk= 以下に置かれるが, 設定ファイルだけは
    [[file:ddskk_config.org][ddskkの設定]] で行なっている.
-   - 古い skk しか無い場合には ddskk el-get する.
+   - 古い skk しか無い場合には ddskk を el-get する.
      #+BEGIN_SRC emacs-lisp
      (unless (locate-library "skk-sticky")
        (el-get 'sync 'ddskk))
@@ -511,7 +511,7 @@ title: Emacsの基本設定
      #+BEGIN_SRC emacs-lisp
      (setq skk-byte-compile-init-file t)
      #+END_SRC
-   - 読み込み
+   - autoloads で読み込み
      #+BEGIN_SRC emacs-lisp
        (require 'skk-leim)
        (setq default-input-method "japanese-skk")
@@ -530,16 +530,24 @@ title: Emacsの基本設定
    メールの同期自体は offlineimap を cron でまわして処理しているのだけれども
    すぐにメールが欲しい事があるので, それに対応するために
    [[http://julien.danjou.info/software/offlineimap.el][offlineimap for Emacs]] も設定.
-   #+BEGIN_SRC emacs-lisp
-     (cond
-      ((string-match "daphne" system-name)
-       (my:load-org-file "wl_config.org")
+*** offlineimap-el
+    インストールされていなければ offlineimap-el をインストールする.
+    ただし el-get のリポジトリにある offlineimap-el は
+    gnus に依存しているので, guns に依存しないレシピを書いておいた.
+**** インストール
+    #+BEGIN_SRC emacs-lisp
        (unless (locate-library "offlineimap")
          (el-get 'sync 'offlineimap-without-gnus))
+    #+END_SRC
+**** 設定
+     - wanderlust 起動中には wl で表示できるように
+     - F1 で呼び出せるようにしてみたり.
+     - kill するにはどうすれば良いかな...
+     #+BEGIN_SRC emacs-lisp
        (autoload 'offlineimap "offlineimap" nil t)
        (eval-after-load "offlineimap"
          '(progn
-            (setq offlineimap-command "offlineimap -u machineui")
+            (setq offlineimap-command "offlineimap -u machineui -o ")
             (setq offlineimap-buffer-maximum-size 3000)
             (setq offlineimap-mode-line-symbol "imap")
             (setq offlineimap-enable-mode-line-p
@@ -548,34 +556,57 @@ title: Emacsの基本設定
                              wl-summary-mode
                              wl-folder-mode
                              wl-message-mode)))
-            (defun offlineimap-real-quit
-              "real quit offline-imap"
-              (interactive)
-              (offlineimap-kill)
-              (offlineimap-quit)
-              (define-key offlineimap-mode-map (kbd "Q") 'offlineimap-real-quit))
-            ))
-       (global-set-key [f1] 'offlineimap)
-       )
-      (t
-       ;; (unless (locate-library "mew")
-       ;;   (el-get 'sync 'mew))
-       ;; (my:load-org-file "mew_config.org")
-       )
-      )
-   #+END_SRC
+              (global-set-key [f1] 'offlineimap)
+              (defun offlineimap-real-quit
+                "real quit offline-imap"
+                (interactive)
+                (offlineimap-quit)
+                (define-key offlineimap-mode-map (kbd "Q") 'offlineimap-real-quit))
+              ))
+     #+END_SRC
+*** wanderlust
+    設定自体は [[file:wl_config.org][Wanderlust の設定]] で行なっているので,
+    ここでは MUA の設定などだけ
+**** MUA の設定
+     =mail-user-agent= で Wanderlust が呼び出されるようにする
+     #+BEGIN_SRC emacs-lisp
+       (autoload 'wl "wl" "Wanderlust" t)
+       (autoload 'wl-other-frame "wl" "Wanderlust on new frame" t)
+       (autoload 'wl-draft "wl-draft" "Write draft with Wanderlust." t)
+       (if (boundp 'mail-user-agent)
+           (setq mail-user-agent 'wl-user-agent))
+       (if (boundp 'read-mail-command)
+           (setq read-mail-command 'wl))
+       (if (fboundp 'define-mail-user-agent)
+           (define-mail-user-agent
+             'wl-user-agent
+             'wl-user-agent-compose
+             'wl-draft-send
+             'wl-draft-kill
+             'mail-send-hook))
+     #+END_SRC
+**** 本体設定の読み込み
+     - elmo ディレクトリの場所の変更
+       #+BEGIN_SRC emacs-lisp
+         (setq elmo-msgdb-directory "~/Mail/.elmo")
+       #+END_SRC
+     - epa で暗号化したファイルを読み込み
+       #+BEGIN_SRC emacs-lisp
+         (setq wl-init-file "~/.mua/wl-init.gpg")
+       #+END_SRC
+**** キーバインド
+     F3 で Wanderlust が起動するように
+     #+BEGIN_SRC emacs-lisp
+       (global-set-key [f3] 'wl)
+     #+END_SRC
 ** [[file:auctex_config.org][AUCTeXの設定]]
    TeXの編集には AUCTeX を使う
    #+BEGIN_SRC emacs-lisp
    (my:load-org-file "auctex_config.org")
    #+END_SRC
 ** [[file:migemo_config.org][Migemoの設定]]
-   Ruby版の本家Migemo はバージョンによっては UTF-8 で動作しないので
-   C/Migemo じゃない時には使わないように.
    #+BEGIN_SRC emacs-lisp
-     (when (and (executable-find "cmigemo")
-                (locate-library "migemo"))
-       (my:load-org-file "migemo_config.org"))
+     (my:load-org-file "migemo_config.org")
    #+END_SRC
 ** [[http://howm.sourceforge.jp/index-j.html][Howm]] - Hitori Otegaru Wiki Modoki
    無いと途方に暮れるので, el-get で最新版を取得する
@@ -606,8 +637,11 @@ title: Emacsの基本設定
      (my:load-org-file "flyspell_config.org")
    #+END_SRC
 ** [[file:lookup_config.org][lookup-el]]
+   CVS 用のレシピは書きたくないので,
+   とりあえず =lookup= がインストールされている場合だけ読み込むように.
    #+BEGIN_SRC emacs-lisp
-     (my:load-org-file "lookup_config.org")
+     (if (locate-library "lookup")
+         (my:load-org-file "lookup_config.org"))
    #+END_SRC
 ** [[file:org-mode_config.org][org-mode]]
    #+BEGIN_SRC emacs-lisp
@@ -627,14 +661,8 @@ title: Emacsの基本設定
      (my:load-org-file "fortran-mode_config.org")
    #+END_SRC
 ** [[http://mwolson.org/projects/EmacsMuse.html][EmacsMuse]] [fn:13]
-   site-lisp 以下に submodule にしている.
    #+BEGIN_SRC emacs-lisp
-     (add-to-load-path "site-lisp/muse-el/lisp")
      (my:load-org-file "muse_config.org")
-   #+END_SRC
-** [[file:tdiary-mode_config.org][tdiary-mode]]
-   #+BEGIN_SRC emacs-lisp
-   (my:load-org-file "tdiary-mode_config.org")
    #+END_SRC
 ** yaml-mode
    #+BEGIN_SRC emacs-lisp

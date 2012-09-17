@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/22 13:04:03$
+# $Lastupdate: 2012/09/17 21:51:46$
 # License: Expat
 #
 #+TITLE: emacs-w3mの設定
@@ -11,25 +11,41 @@
 #+BEGIN_HTML
 ---
 layout: emacs
-title: emacs-w3mの設定
+title: emacs-w3m の設定
 ---
 #+END_HTML
-あんまり使っていないけれど.
-* インストール
+* 始めに
+  ブラウザ自体としてはあんまり使っていないけれど,
+  Wanderlust での HTML メールの表示なんかに必要で割と重宝している.
+* インストールと読み込み
+  みつからなければ el-get で導入する.
   #+BEGIN_SRC emacs-lisp
     (unless (locate-library "w3m")
       (el-get 'sync 'emacs-w3m))
+    (require 'w3m-load)
   #+END_SRC
 * 設定
-  #+BEGIN_SRC emacs-lisp
+  - 設定ファイルの置き場所
+    #+BEGIN_SRC emacs-lisp
     (setq w3m-init-file
           (concat my:user-emacs-config-directory "w3m_config"))
+    #+END_SRC
+  - cookie を使う
+    #+BEGIN_SRC emacs-lisp
     (setq w3m-use-cookies t)
+    #+END_SRC
+  - tab を使う
+    #+BEGIN_SRC emacs-lisp
     (setq w3m-use-tab t)
-    (when (require 'w3m-load nil t)
+    #+END_SRC
+  - 初期ページの設定
+    #+BEGIN_SRC emacs-lisp
       (setq w3m-home-page "http://www.gfd-dennou.org/member/uwabami/")
+    #+END_SRC
+  - tmp ファイルの置き場所
+    =my:user-emacs-etc-directory= にしている.
+    #+BEGIN_SRC emacs-lisp
       (setq w3m-default-save-directory my:user-emacs-temporary-directory)
-      (setq w3m-fill-column 78)
       (setq w3m-arrived-file
             (concat my:user-emacs-temporary-directory "w3m-arraived"))
       (setq w3m-cookie-file
@@ -38,6 +54,10 @@ title: emacs-w3mの設定
             (concat my:user-emacs-temporary-directory "w3m-textarea"))
       (setq w3m-bookmark-file
             (concat my:user-emacs-etc-directory "w3m/bookmark"))
+    #+END_SRC
+  - 一行は78文字で折り返し.
+    #+BEGIN_SRC emacs-lisp
       (global-set-key [f4] 'w3m)
-      )
-  #+END_SRC
+    #+END_SRC
+* Footnotes
+  - Emacs 上で w3m を動かそう: [[http://emacs-w3m.namazu.org/index-ja.html]]

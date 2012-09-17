@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/18 11:34:07$
+# $Lastupdate: 2012/09/17 23:04:23$
 # License: Expat
 #
 #+TITLE: AutoCompleteの設定
@@ -57,4 +57,5 @@ title: AutoCompleteの設定
     (define-key ac-completing-map (kbd "RET") nil) ; return での補完禁止
   #+END_SRC
 * Footnotes
-[fn:1] Auto Complete Mode: [[http://cx4a.org/software/auto-complete/index.ja.html]]
+
+- [fn:1] Auto Complete Mode: [[http://cx4a.org/software/auto-complete/index.ja.html]]

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/08 15:38:28$
+# $Lastupdate: 2012/09/17 23:23:00$
 # License: Expat.
 #+TITLE: Migemo の設定
 #+AUTHOR: Youhei SASAKI
@@ -14,9 +14,18 @@ title: Migemo の設定
 ---
 #+END_HTML
 * はじめに
-  [[http://0xcc.net/migemo][Migemo]] はローマ字のまま日本語をインクリメンタルサーチするための
-  プログラム. ないと結構途方に暮れるのだけれど, pure ruby の実装が
-  ruby1.9 だと動作しないので, C/Migemo を使うことにしている[fn:1].
+  [[http://0xcc.net/migemo][Migemo]] はローマ字のまま日本語をインクリメンタルサーチするためのプログラム.
+  ないと結構途方に暮れるのだけれど,
+  pure ruby の実装が ruby(>=1.9) だと動作しないので,
+  C/Migemo を使うことにしている[fn:1].
+* インストール
+  Ruby版の本家Migemo はバージョンによっては UTF-8 で動作しないので
+  C/Migemo じゃない時には使わないように.
+  #+BEGIN_SRC emacs-lisp
+    (unless (locate-library "migemo")
+      (if (executable-find "cmigemo")
+          (el-get 'sync 'migemo)))
+  #+END_SRC
 * ユーザ辞書を使わない
 #+BEGIN_SRC emacs-lisp
   (eval-after-load "migemo"

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/16 07:50:35$
+# $Lastupdate: 2012/09/17 23:24:30$
 # License: Expat.
 #+TITLE: lookupの設定
 #+AUTHOR: Youhei SASAKI
@@ -13,33 +13,33 @@ layout: emacs
 title: lookupの設定
 ---
 #+END_HTML
-
+* 始めに
+  辞書を引くための機能.
 * 読み込み
-#+BEGIN_SRC emacs-lisp
-  (autoload 'lookup "lookup" nil t)
-  (autoload 'lookup-region "lookup" nil t)
-  (autoload 'lookup-pattern "lookup" nil t)
-#+END_SRC
+  #+BEGIN_SRC emacs-lisp
+    (autoload 'lookup "lookup" nil t)
+    (autoload 'lookup-region "lookup" nil t)
+    (autoload 'lookup-pattern "lookup" nil t)
+  #+END_SRC
 * キーバインドの設定
-#+BEGIN_SRC emacs-lisp
-  (global-set-key "\C-cw" 'lookup-pattern)
-  (global-set-key "\C-cW" 'lookup-word)
+  =\C-cw= で辞書を引く
+  #+BEGIN_SRC emacs-lisp
+    (global-set-key "\C-cw" 'lookup-pattern)
+    (global-set-key "\C-cW" 'lookup-word)
 #+END_SRC
 * 検索エージェント, 辞書の設定
+  辞書ファイルは Dropbox で管理している
 #+BEGIN_SRC emacs-lisp
-  (defconst my:dict-dir
-    (expand-file-name
-     (concat (getenv "HOME") "/Documents/Dropbox/dict/")))
   (setq lookup-search-agents
-       '(
-         (ndeb "~/Documents/Dropbox/dict/eijiro"    :alias "英辞郎")
-         (ndeb "~/Documents/Dropbox/dict/waeijiro"  :alias "和英辞郎")
-         (ndeb "~/Documents/Dropbox/dict/rikagaku5" :alias "理化学辞典")
-         (ndeb "~/Documents/Dropbox/dict/koujien4"  :alias "広辞苑")
-         (ndeb "~/Documents/Dropbox/dict/wadai5"    :alias "研究社 和英大辞典")
-         ;; (ndeb "/usr/local/share/dict/shizenenja" :alias "自然科学系(英和)")
-         ;; (ndeb "/usr/local/share/dict/shizenjaen" :alias "自然科学系(和英)")
-         ;; (ndeb "/usr/local/share/dict/colloc" :alias "研究社 英和活用大辞典")
-         ;; (ndeb "/usr/local/share/dict/eidai6" :alias "研究社 英和大辞典")
-         ))
+        '(
+          (ndeb "~/Documents/Dropbox/dict/eijiro"    :alias "英辞郎")
+          (ndeb "~/Documents/Dropbox/dict/waeijiro"  :alias "和英辞郎")
+          (ndeb "~/Documents/Dropbox/dict/rikagaku5" :alias "理化学辞典")
+          (ndeb "~/Documents/Dropbox/dict/koujien4"  :alias "広辞苑")
+          (ndeb "~/Documents/Dropbox/dict/wadai5"    :alias "研究社 和英大辞典")
+          ;; (ndeb "/usr/local/share/dict/shizenenja" :alias "自然科学系(英和)")
+          ;; (ndeb "/usr/local/share/dict/shizenjaen" :alias "自然科学系(和英)")
+          ;; (ndeb "/usr/local/share/dict/colloc" :alias "研究社 英和活用大辞典")
+          ;; (ndeb "/usr/local/share/dict/eidai6" :alias "研究社 英和大辞典")
+          ))
 #+END_SRC

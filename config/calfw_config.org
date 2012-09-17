@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI <uwabami@gfd-dennou.org> All rights reserved.
-# $Lastupdate: 2012/09/17 13:37:36$
+# $Lastupdate: 2012/09/17 23:00:06$
 # License: Expat
 #
 # Permission is hereby granted, free of charge, to any person obtaining
@@ -33,28 +33,25 @@ title: "calfw: カレンダーの設定"
 ---
 #+END_HTML
 * 始めに
-
-最近は予定の管理は google カレンダー一本です.
-携帯で閲覧/追加できるのも良い感じです.
-ですが Emacs からも予定の閲覧や管理がしたくなります. ここではその設定とか.
-
+  最近は予定の管理は google カレンダー一本です.
+  携帯で閲覧/追加できるのも良い感じです.
+  ですが Emacs からも予定の閲覧や管理がしたくなります. ここではその設定とか.
 * 日本の休日の追加
   el-get 用のレシピも書いておきました.
-#+BEGIN_SRC emacs-lisp
-  (unless (locate-library "japanese-holiday")
-    (el-get 'sync 'japanese-holiday))
-  (add-hook 'calendar-load-hook
-            (lambda ()
-              (require 'japanese-holidays)
-              (setq calendar-holidays
-                    (append japanese-holidays holiday-local-holidays holiday-other-holidays))))
-#+END_SRC
+  #+BEGIN_SRC emacs-lisp
+    (unless (locate-library "japanese-holiday")
+      (el-get 'sync 'japanese-holiday))
+    (eval-and-compile (require 'japanese-holidays))
+    (setq calendar-holidays
+          (append japanese-holidays holiday-local-holidays holiday-other-holidays))
+  #+END_SRC
 * calfw の導入と設定
+  [[https://github.com/kiwanami/emacs-calfw][calfw]] はkiwanami 大先生による素敵elisp.
   Debian にはパッケージがあります. 無い場合は el-get
-#+BEGIN_SRC emacs-lisp
-  (unless (locate-library "calfw")
-    (el-get 'sync 'calfw))
-#+END_SRC
+  #+BEGIN_SRC emacs-lisp
+    (unless (locate-library "calfw")
+      (el-get 'sync 'calfw))
+  #+END_SRC
 * google calendar/howm との連携
   #+BEGIN_SRC emacs-lisp
     (eval-after-load "howm-menu"
@@ -72,3 +69,7 @@ title: "calfw: カレンダーの設定"
                 ))
          ))
    #+END_SRC
+
+* Footnotes
+  - Japanese holidays: [[http://www.meadowy.org/meadow/netinstall/browser/branches/3.00/pkginfo/japanese-holidays/japanese-holidays.el?rev%3D799][http://www.meadowy.org/meadow/netinstall/browser/branches/3.00/pkginfo/japanese-holidays/japanese-holidays.el?rev=799]]
+  - Calfw: A Calendar framework for Emacs: [[https://github.com/kiwanami/emacs-calfw]]

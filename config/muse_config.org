@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/17 16:45:05$
+# $Lastupdate: 2012/09/17 23:22:50$
 # License: Expat
 #
 #+TITLE: muse-mode の設定
@@ -17,12 +17,12 @@ title: muse-mode の設定
 
 * 始めに
   [[http://www.gfd-dennou.org/member/uwabami/cc-env/][計算機関連のメモ]] はほとんど全て [[http://mwolson.org/projects/EmacsMuse.html][muse-mode]] [fn:1] で書いています.
-* 読み込み
+* インストールと読み込み
   #+BEGIN_SRC emacs-lisp
     (unless (locate-library "muse")
       (el-get 'sync 'muse))
-    ;; (my:not-locate-library htmlize "site-lisp/org-mode/contrib/lisp")
-    ;; (add-to-load-path "site-lisp/muse-el/lisp")
+    (unless (locate-library "htmlize")
+      (add-to-load-path "site-lisp/org-mode/contrib"))
     (require 'htmlize)
     (require 'muse)
     (require 'muse-mode)
@@ -34,7 +34,7 @@ title: muse-mode の設定
   #+END_SRC
 * 雑多な設定
 ** キーバインド
-   C-x n で muse-project-find-file
+   C-x M で muse-project-find-file
    #+BEGIN_SRC emacs-lisp
      (define-key ctl-x-map "M" 'muse-project-find-file)
    #+END_SRC
@@ -50,7 +50,6 @@ title: muse-mode の設定
                      (define-key muse-mode-map [tab] 'outline-toggle-children)
                    (define-key muse-mode-map "\t" 'outline-toggle-children))
                  ))
-
    #+END_SRC
 ** 文字コード関連
    #+BEGIN_SRC emacs-lisp

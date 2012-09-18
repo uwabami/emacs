@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/17 22:55:39$
+# $Lastupdate: 2012/09/18 12:10:46$
 # License: Expat
 #
 #+TITLE: howm の設定
@@ -88,11 +88,11 @@ title: howm の設定
   結構きまり文句かも.
   Linux以外の環境で GNU grep を使う際の条件分岐は
   ちょっと真面目に設定した方が良いかも. あるいは grep 使わない?
-  - 検索で大文字小文字を区別しない
+** 検索で大文字小文字を区別しない
     #+BEGIN_SRC emacs-lisp
     (setq howm-keyword-case-fold-search t)
     #+END_SRC
-  - grep の設定
+** grep の設定
     #+BEGIN_SRC emacs-lisp
     (setq howm-view-grep-command "egrep")
     (setq howm-view-fgrep-command "fgrep")
@@ -100,18 +100,18 @@ title: howm の設定
     (setq howm-view-grep-fixed-option nil)
     (setq howm-view-grep-file-stdin-option nil)
     #+END_SRC
-  - 検索の対象ディレクトリ
+** 検索の対象ディレクトリ
     とりあえず追加しないことに
     #+BEGIN_SRC emacs-lisp
     (setq howm-search-other-dir nil)
     #+END_SRC
-  - 検索対象除外ファイル
+** 検索対象除外ファイル
     ad hoc にどんどん増えていくなぁ...
     #+BEGIN_SRC emacs-lisp
     (setq howm-excluded-file-regexp
           "/\\.#\\|[~#]$\\|\\.bak$\\|/CVS/\\|\\.doc\\|\\.pdf\\|\\.txt$\\|\\.html$\\|\\.tex$\\|\\.dvi$\\|\\.fdb_latexmk$\\|\\.ppt$\\|\\.xls$\\|\\.howm-menu$\\|.howm-keys$\\|\\.png$\\|\\.gif$\\|\\.tif$\\|\\.tiff$\\|\\.jpg$\\|\\.jpeg$")
     #+END_SRC
-  - org-mode 連携用
+** org-mode 連携用
     #+BEGIN_SRC emacs-lisp
       ;; 日付検索用の regexp
       (setq howm-reminder-regexp-grep-format

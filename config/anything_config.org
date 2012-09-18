@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/17 23:03:49$
+# $Lastupdate: 2012/09/18 12:07:35$
 # License: Expat
 #
 #+TITLE: Anythingの設定
@@ -34,21 +34,21 @@ title: Anythingの設定
       (el-get 'sync 'anything))
   #+END_SRC
 * 設定
-  - history の位置変更
+** history の位置変更
      #+BEGIN_SRC emacs-lisp
        (setq anything-c-adaptive-history-file
              (concat my:user-emacs-temporary-directory "anything-c-adaptive-history"))
      #+END_SRC
-  - non-X 用の ad hoc な対応
+** non-X 用の ad hoc な対応
      #+BEGIN_SRC emacs-lisp
        (setq anything-c-find-files-icons-directory nil)
      #+END_SRC
-  -  読み込み
-     anything-config で一通りの設定を読み込み.
+** 読み込み
+   anything-config で一通りの設定を読み込み.
      #+BEGIN_SRC emacs-lisp
       (require 'anything-config)
      #+END_SRC
-  -  雑多な設定
+** 雑多な設定
      #+BEGIN_SRC emacs-lisp
        (setq
         ;; 候補を表示するまでの時間を 0.5 → 0.2 に
@@ -63,8 +63,8 @@ title: Anythingの設定
         ;; これ大文字ファイル名の選択で嵌らないか?
         anything-enable-shortcuts 'alphabet)
      #+END_SRC
-  -  キーバインド
-     C-o, C-z はそれぞれ elscreen と howm にわたすので nil に
+** キーバインド
+   C-o, C-z はそれぞれ elscreen と howm にわたすので nil に
      #+BEGIN_SRC emacs-lisp
        (define-key global-map   (kbd "C-x b")       'anything-for-files)
        (define-key global-map   (kbd "C-x C-b")     'anything-for-files)
@@ -76,13 +76,14 @@ title: Anythingの設定
        (define-key anything-map (kbd "C-M-n")       'anything-next-source)
        (define-key anything-map (kbd "C-M-p")       'anything-previous-source)
     #+END_SRC
-  -  su→sudo
+** su→sudo
      #+BEGIN_SRC emacs-lisp
        (setq tramp-persistency-file-name
              (concat my:user-emacs-temporary-directory "tramp"))
        (setq anything-su-or-sudo "sudo")
      #+END_SRC
-  -  migemoの利用
+** migemoの利用
+   C/Migemo があったら =anything-migemo= を有効に
      #+BEGIN_SRC emacs-lisp
        (require 'anything-match-plugin nil t)
        (when (and (locate-library "migemo")
@@ -90,7 +91,7 @@ title: Anythingの設定
          (my:load-org-file "migemo_config.org")
          (require 'anything-migemo nil t))
      #+END_SRC
-  -  キーバインドを anything
+** キーバインドを anything
    #+BEGIN_SRC emacs-lisp
      (unless (locate-library "descbinds-anything")
        (el-get 'sync 'descbinds-anything))

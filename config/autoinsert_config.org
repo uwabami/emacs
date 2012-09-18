@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/17 23:24:40$
+# $Lastupdate: 2012/09/18 12:08:43$
 # License: Expat
 #
 #+TITLE: AutoInsert の設定
@@ -17,27 +17,27 @@ title: AutoInsert の設定
 * 始めに
   ファイル作成時にテンプレートを挿入してくれる素敵機能.
 * 読み込みと初期設定
-  - 読み込み
+** 読み込み
    #+BEGIN_SRC emacs-lisp
      (require 'autoinsert)
      (auto-insert-mode 1)
    #+END_SRC
-  - insert 時の問い合わせ無効化
+** insert 時の問い合わせ無効化
    #+BEGIN_SRC emacs-lisp
      (setq auto-insert-query nil)
    #+END_SRC
-  - テンプレートディレクトリの設定
-    末尾に "/" が必要なので注意
+** テンプレートディレクトリの設定
+   末尾に "/" が必要なので注意
    #+BEGIN_SRC emacs-lisp
      (setq auto-insert-directory "~/.emacs.d/template/")
    #+END_SRC
-  - hook
+** hook の追加
    #+BEGIN_SRC emacs-lisp
      (add-hook 'find-file-hooks 'auto-insert)
    #+END_SRC
 * テンプレート内の置換変数/関数の定義
   ファイル名や copyright header などを更新する関数
-   #+BEGIN_SRC emacs-lisp
+  #+BEGIN_SRC emacs-lisp
      (defvar my:autoinsert-template-replace-alist
        '(("%file%" .
           (lambda()
@@ -57,7 +57,7 @@ title: AutoInsert の設定
              my:autoinsert-template-replace-alist)
        (goto-char (point-max))
        (message "done."))
-   #+END_SRC
+  #+END_SRC
 * TODO テンプレートの設定[0/1]
   - [ ] ディレクトリに合わせてテンプレートを切り替えたい.
   #+BEGIN_SRC emacs-lisp

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI <uwabami@gfd-dennou.org> All rights reserved.
-# $Lastupdate: 2012/09/17 23:00:06$
+# $Lastupdate: 2012/09/18 12:09:44$
 # License: Expat
 #
 # Permission is hereby granted, free of charge, to any person obtaining
@@ -26,6 +26,7 @@
 #+AUTHOR: Youhei SASAKI
 #+EMAIL:  uwabami@gfd-dennou.org
 #+TITLE: calfw: カレンダーの設定
+#+SETUPFILE: ./export-config.org
 #+BEGIN_HTML
 ---
 layout: emacs

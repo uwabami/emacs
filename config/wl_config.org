@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/20 10:38:34$
+# $Lastupdate: 2012/09/20 11:42:09$
 # License: Expat.
 #
 #+TITLE: Wanderlust の設定
@@ -204,6 +204,31 @@ title: Wanderlustの設定
      (load "~/.mua/wl-info.gpg")
    #+END_SRC
 * 基本設定
+** 終了時に確認しない
+   #+BEGIN_SRC emacs-lisp
+      (setq wl-interactive-exit nil)
+   #+END_SRC
+** 送信時に確認しない
+   #+BEGIN_SRC emacs-lisp
+      (setq wl-interactive-send nil)
+   #+END_SRC
+** スレッドは常に閉じる
+   #+BEGIN_SRC emacs-lisp
+      (setq wl-thread-insert-opened nil)
+   #+END_SRC
+** 3 pain 表示 -> 使わない
+   #+BEGIN_SRC emacs-lisp
+      (setq wl-stay-folder-window nil)
+   #+END_SRC
+
+** サマリ内の移動で未読メッセージがないと次のフォルダに移動 -> しない
+   #+BEGIN_SRC emacs-lisp
+     (setq wl-auto-select-next nil)
+   #+END_SRC
+** 未読を優先的に読む
+   #+BEGIN_SRC emacs-lisp
+     (setq wl-summary-move-order 'unread)
+   #+END_SRC
 ** local の Mail folder の位置
    #+BEGIN_SRC emacs-lisp
     (setq elmo-maildir-folder-path "~/Mail")
@@ -231,8 +256,8 @@ title: Wanderlustの設定
    #+END_SRC
    ちなみに LDAP サーバからアドレスを引くことも可能.
    以前は GCALDaemon を使って local に ldap サーバを上げていたのだけれども,
-   Google Contacts の API が変わったらしく GCALDaemon で LDAP サーバは使えなくなったので,
-   コメントアウト.
+   Google Contacts の API が変わったらしく
+   GCALDaemon で LDAP サーバは使えなくなったのでコメントアウト.
    #+BEGIN_SRC emacs-lisp
      ;; ldap からアドレスを引く設定
      ;; (setq wl-use-ldap t)
@@ -244,7 +269,42 @@ title: Wanderlustの設定
    #+BEGIN_SRC emacs-lisp
     (setq elmo-passwd-alist-file-name "~/.mua/wl-passwd.gpg")
    #+END_SRC
-** キーバインド関連
+** スキャン時に問い合わせない
+   #+BEGIN_SRC emacs-lisp
+   (setq elmo-folder-update-confirm nil)
+   #+END_SRC
+** デフォルトのフォルダ
+   #+BEGIN_SRC emacs-lisp
+   (setq wl-default-folder "%inbox")
+   #+END_SRC
+** 起動時に確認するフォルダ -> INBOX のみ
+   #+BEGIN_SRC emacs-lisp
+   (setq wl-auto-check-folder-name "%inbox")
+   #+END_SRC
+** 補完スペック
+   #+BEGIN_SRC emacs-lisp
+   (if (string-match system-name "daphne")
+       (setq wl-default-spec "%Gmail/")
+     (setq wl-default-spec "%/"))
+   #+END_SRC
+** draft/trash などの位置-> Gmail と同期すると大変な事になるので local に持つ
+   #+BEGIN_SRC emacs-lisp
+   (if (string-match system-name "daphne")
+        (setq wl-draft-folder "%Drafts")
+      (setq wl-draft-folder "+Drafts"))
+   (if (string-match system-name "daphne")
+        (setq wl-trash-folder "%Trash")
+      (setq wl-trash-folder "+Trash"))
+   #+END_SRC
+** multipart 保存先
+   #+BEGIN_SRC emacs-lisp
+     (setq wl-temporary-file-directory "~/Downloads/")
+   #+END_SRC
+** 非同期チェック
+   #+BEGIN_SRC emacs-lisp
+        (setq wl-folder-check-async t)
+   #+END_SRC
+** キーバインド
    =C-c C-j= を browse-url に明け渡す
    #+BEGIN_SRC emacs-lisp
      (define-key wl-draft-mode-map "\C-c\C-j" 'browse-url-at-point)
@@ -264,6 +324,18 @@ title: Wanderlustの設定
    =M-o= で =auto-refile=
    #+BEGIN_SRC emacs-lisp
      (define-key wl-summary-mode-map "\M-o" 'wl-summary-auto-refile)
+   #+END_SRC
+** フォルダ更新時の挙動
+   #+BEGIN_SRC emacs-lisp
+        (setq wl-default-sync-range "update")
+   #+END_SRC
+** 重複メッセージを隠す
+   フォルダ内の Message-ID が同じメールを非表示にする
+   #+BEGIN_SRC emacs-lisp
+        (setq wl-folder-process-duplicates-alist
+              '(
+                (".*" . hide)
+                ))
    #+END_SRC
 
 ** imap 関連の設定
@@ -316,27 +388,187 @@ title: Wanderlustの設定
     #+BEGIN_SRC emacs-lisp
       (setq wl-bcc "uwabami@gfd-dennou.org")
     #+END_SRC
+** default mime charset -> iso-2022-jp に
+   #+BEGIN_SRC emacs-lisp
+   (setq wl-mime-charset 'iso-2022-jp)
+   #+END_SRC
+** 改ページ無視
+   #+BEGIN_SRC emacs-lisp
+   (setq wl-break-pages nil)
+   #+END_SRC
+* flag とフォルダを行き来する関数の追加
+  "=" でフラグ付きフォルダとメッセージのあるフォルダを行き来する
+  #+BEGIN_SRC emacs-lisp
+    (defun my:wl-summary-jump-to-referer-message ()
+      (interactive)
+      (when (wl-summary-message-number)
+        (if (equal
+             (elmo-folder-type-internal wl-summary-buffer-elmo-folder) 'flag)
+            (progn
+              (let* ((referer (elmo-flag-folder-referrer
+                               wl-summary-buffer-elmo-folder
+                               (wl-summary-message-number)))
+                     (folder (if (> (length referer) 1)
+                                 (completing-read
+                                  (format "Jump to (%s): " (car (car referer)))
+                                  referer
+                                  nil t nil nil (car (car referer)))
+                               (car (car referer)))))
+                (wl-summary-goto-folder-subr folder 'no-sync nil nil t)
+                (wl-summary-jump-to-msg (cdr (assoc folder referer)))))
+          (when (equal (elmo-folder-type wl-summary-last-visited-folder)
+                       'internal)
+            (wl-summary-goto-last-visited-folder)))))
+    (define-key wl-summary-mode-map "=" 'my:wl-summary-jump-to-referer-message)
+  #+END_SRC
+* 日本語添付ファイル名のデコード
+  日本語の添付ファイルに関しては, いまだにうまくいかない時がある.
+  #+BEGIN_SRC emacs-lisp
+    (defvar my-mime-filename-coding-system-for-decode
+      '(iso-2022-jp japanese-shift-jis japanese-iso-8bit))
+    (defun my-mime-decode-filename (filename)
+      (let ((filename (if (string-match "\n\t*" filename)
+                          (replace-match "" nil nil filename)
+                        filename))
+            (rest (eword-decode-string filename)))
+        (or (when (and my-mime-filename-coding-system-for-decode
+                       (string= rest filename))
+              (let ((dcs (mapcar (function coding-system-base)
+                                 (detect-coding-string filename))))
+                (unless (memq 'emacs-mule dcs)
+                  (let ((pcs my-mime-filename-coding-system-for-decode))
+                    (while pcs
+                      (if (memq (coding-system-base (car pcs)) dcs)
+                          (setq rest (decode-coding-string filename (car pcs))
+                                pcs nil)
+                        (setq pcs (cdr pcs))))))))
+            rest)))
+    (eval-after-load "mime"
+      '(defadvice mime-entity-filename
+         (after eword-decode-for-broken-MUA activate)
+         "Decode encoded file name for BROKEN MUA."
+         (when (stringp ad-return-value)
+           (setq ad-return-value (my-mime-decode-filename ad-return-value)))))
+    (require 'std11)
+    (eval-after-load "std11"
+      '(defadvice std11-wrap-as-quoted-string
+         (before encode-string activate)
+         "Encode a string."
+         (require 'eword-encode)
+         (ad-set-arg 0 (eword-encode-string (ad-get-arg 0)))))
+  #+END_SRC
+* summary-mode の表示のカスタマイズ
+** 自分が差出人である mail は To:某 と表示
+   #+BEGIN_SRC emacs-lisp
+   (setq wl-summary-showto-folder-regexp ".*")
+   (setq wl-summary-from-function 'wl-summary-default-from)
+   #+END_SRC
+** Gmail 風に, 自分宛のメールに ">" をつけて表示する
+  元ネタ [fn:4]: [[http://d.hatena.ne.jp/khiker/20080206/wanderlust]]
+  #+BEGIN_SRC emacs-lisp
+    (setq wl-user-mail-address-regexp
+          "^uwabami.*\\|^sasakyh.*")
+    ;; 一覧表示での置き換え規則に追加
+    (defun my:wl-summary-line-for-me ()
+      (if (catch 'found
+            (let ((to (elmo-message-entity-field wl-message-entity 'to))
+                  (cc (elmo-message-entity-field wl-message-entity 'cc)))
+              (when (or (stringp to) cc)
+                (setq to
+                      (append (if (stringp to) (list to) to)
+                              (when cc
+                                (if (stringp cc) (list cc) cc)))))
+              (dolist (i to)
+                (when (wl-address-user-mail-address-p (eword-decode-string i))
+                  (throw 'found t)))))
+          ">"
+        ""))
+    ;; > を summary-line-format に追加
+    (setq wl-summary-line-format-spec-alist
+          (append wl-summary-line-format-spec-alist
+                  '((?> (my:wl-summary-line-for-me)))))
+  #+END_SRC
+** 添付ファイルがあったら, サマリ行に "@" を付ける
+  #+BEGIN_SRC emacs-lisp
+    (setq wl-summary-line-format-spec-alist
+          (append wl-summary-line-format-spec-alist
+                  '((?@ (wl-summary-line-attached)))))
+  #+END_SRC
+** サマリ行のフォーマット指定
+   #+BEGIN_SRC emacs-lisp
+     (setq wl-summary-line-format
+        "%T%P%1@%1>%Y/%M/%D %21(%t%[%19(%c %f%)%]%) %#%~%s")
+   #+END_SRC
+** スレッドの幅の指定
+   #+BEGIN_SRC emacs-lisp
+     (setq wl-thread-indent-level 2)
+     (setq wl-thread-have-younger-brother-str "+"
+           wl-thread-youngest-child-str "+"
+           wl-thread-vertical-str "|"
+           wl-thread-horizontal-str "-"
+           wl-thread-space-str " ")
+
+   #+END_SRC
+** サマリ表示は切り詰めない
+   #+BEGIN_SRC emacs-lisp
+     (setq wl-subject-length-limit t)
+   #+END_SRC
+** "でクォートされた文字列もデコードする
+   #+BEGIN_SRC emacs-lisp
+     (setq mime-header-lexical-analyzer
+           '(
+             ;;eword-analyze-quoted-string
+             eword-analyze-domain-literal
+             eword-analyze-comment
+             eword-analyze-spaces
+             eword-analyze-special
+             eword-analyze-encoded-word
+             eword-analyze-atom))
+   #+END_SRC
+** Subject が変わったらスレッドを切る
+   #+BEGIN_SRC emacs-lisp
+     (setq wl-summary-divide-thread-when-subject-changed t)
+   #+END_SRC
+** 転送時に Subject に付加する文字列
+   #+BEGIN_SRC emacs-lisp
+     (setq wl-forward-subject-prefix "Fw: ")
+   #+END_SRC
+** Subject での Tab や複数スペースを無視
+   #+BEGIN_SRC emacs-lisp
+     (defadvice std11-unfold-string (after simply activate)
+       (setq ad-return-value
+             (elmo-replace-in-string ad-return-value "[ \t]+" " ")))
+   #+END_SRC
+* メッセージ表示
+  主にヘッダ関連. ここで設定されたヘッダが振り分けなどの条件となる
+** いったん全て非表示に
+   #+BEGIN_SRC emacs-lisp
+     (setq wl-message-ignored-field-list '("^.*:"))
+   #+END_SRC
+** 見たいヘッダだけ表示
+   #+BEGIN_SRC emacs-lisp
+     (setq wl-message-visible-field-list
+           '("^Subject:"
+             "^From:"
+             "^To:"
+             "^Cc:"
+             "^Date:"
+             "^Message-ID:"
+             ))
+   #+END_SRC
+** 表示順の変更 → Mew 風
+   #+BEGIN_SRC emacs-lisp
+     (setq wl-message-sort-field-list
+           '("^Subject:"
+             "^From:"
+             "^To:"
+             "^Cc:"
+             "^Date:"
+             "^Message-ID:"
+             ))
+   #+END_SRC
 * ドキュメント書いてない...
   #+BEGIN_SRC emacs-lisp
-        ;; スキャン時に問い合わせない
-        (setq elmo-folder-update-confirm nil)
-        ;; デフォルトのフォルダ
-        (setq wl-default-folder "%inbox")
-        ;; 起動時に確認するのは INBOX だけ.
-        (setq wl-auto-check-folder-name "%inbox")
-        ;; フォルダ更新時のデフォルト.
-        ;; 初期値は update だが, auto-check を設定したら no-sync になったので上書き
-        (setq wl-default-sync-range "update")
-        ;; 補完時に使用するスペック
-        (setq wl-default-spec "%Gmail/")
-        ;; draft は local に保存 <- Gmail と同期すると大変な事になる.
-        (setq wl-draft-folder "%Drafts")
-        ;; ゴミ箱は Gmail と同期 <- local のゴミ箱も Gmail と同期するので停止
-        (setq wl-trash-folder "%Trash")
-        ;; multipart 一時補完様ディレクトリ
-        (setq wl-temporary-file-directory "~/Downloads/")
-        ;; 非同期チェック
-        (setq wl-folder-check-async t)
         ; 削除を Trash へ回さず本当に消す(Gmail ではアーカイブになる).
         ; 基本ゴミ箱は二度と見ないし, Gmail なら All Mail から拾えるので.
         ;(setq wl-dispose-folder-alist
@@ -388,35 +620,9 @@ title: Wanderlustの設定
                 ;; 学会 ML
                 ;; ("^\\%Gmail/work/.*$" (number 300 500) hide)
                 ))
-        ;; 重複メッセージを隠す
-        (setq wl-folder-process-duplicates-alist
-              '(
-                (".*" . hide)
-                ))
         (add-hook 'wl-summary-prepared-hook 'wl-summary-expire)
         ;; (add-hook 'wl-expire-hook 'wl-summary-pack-number)
         ;; flag とフォルダを行き来する
-        (defun wl-summary-jump-to-referer-message ()
-          (interactive)
-          (when (wl-summary-message-number)
-            (if (equal
-                 (elmo-folder-type-internal wl-summary-buffer-elmo-folder) 'flag)
-                (progn
-                  (let* ((referer (elmo-flag-folder-referrer
-                                   wl-summary-buffer-elmo-folder
-                                   (wl-summary-message-number)))
-                         (folder (if (> (length referer) 1)
-                                     (completing-read
-                                      (format "Jump to (%s): " (car (car referer)))
-                                      referer
-                                      nil t nil nil (car (car referer)))
-                                   (car (car referer)))))
-                    (wl-summary-goto-folder-subr folder 'no-sync nil nil t)
-                    (wl-summary-jump-to-msg (cdr (assoc folder referer)))))
-              (when (equal (elmo-folder-type wl-summary-last-visited-folder)
-                           'internal)
-                (wl-summary-goto-last-visited-folder)))))
-        (define-key wl-summary-mode-map "=" 'wl-summary-jump-to-referer-message)
         ;; 返信設定
         ;; "a" (without-argument)では Reply-To: や From: などで指定された唯一人
         ;; または唯一つの投稿先に返信する。また，X-ML-Name: と Reply-To: がつい
@@ -440,93 +646,10 @@ title: Wanderlustの設定
         (setq wl-draft-always-delete-myself t)
         ;; サマリ表示には petname を使うが, 引用には使わない
         (setq wl-default-draft-cite-decorate-author nil)
-        ;; あんまり見たくないメールヘッダを隠すため,とりあえず全部非表示
-        (setq wl-message-ignored-field-list
-          '("^.*:"))
         ; 必要そうなものだけ表示に変える
-        (setq wl-message-visible-field-list
-          '("^Subject:"
-            "^From:"
-            "^To:"
-            "^Cc:"
-            "^Date:"
-            "^Message-ID:"
-          ))
         ; ヘッダーの並び順を変更 <- Mew 風
-        (setq wl-message-sort-field-list
-              '("^Subject:"
-                "^From:"
-                "^To:"
-                "^Cc:"
-                "^Date:"
-                "^Message-ID:"
-                ))
-        ;; スレッドは常に閉じる
-        (setq wl-thread-insert-opened nil)
         ;; サマリ表示
         ;; 自分が差出人である mail は To:某 と表示
-        (setq wl-summary-showto-folder-regexp ".*")
-        (setq wl-summary-from-function 'wl-summary-default-from)
-        ; Gmail 風に, 自分宛のメールに ">" をつけて表示する
-        ;; http://d.hatena.ne.jp/khiker/20080206/wanderlust
-        (setq wl-user-mail-address-regexp
-              "^uwabami.*\\|^sasakyh.*")
-        ;; 一覧表示での置き換え規則に追加
-        (defun my-wl-summary-line-for-me ()
-          (if (catch 'found
-                (let ((to (elmo-message-entity-field wl-message-entity 'to))
-                      (cc (elmo-message-entity-field wl-message-entity 'cc)))
-                  (when (or (stringp to) cc)
-                    (setq to
-                          (append (if (stringp to) (list to) to)
-                                  (when cc
-                                    (if (stringp cc) (list cc) cc)))))
-                  (dolist (i to)
-                    (when (wl-address-user-mail-address-p (eword-decode-string i))
-                      (throw 'found t)))))
-              ">"
-            ""))
-        ;; @ と > を summary-line-format に追加
-        (setq wl-summary-line-format-spec-alist
-              (append wl-summary-line-format-spec-alist
-                      '((?@ (wl-summary-line-attached)))))
-        (setq wl-summary-line-format-spec-alist
-              (append wl-summary-line-format-spec-alist
-                      '((?> (my-wl-summary-line-for-me)))))
-        ;; サマリ行の指定
-        (setq wl-summary-line-format
-              "%T%P%1@%1>%Y/%M/%D %21(%t%[%19(%c %f%)%]%) %#%~%s")
-        ;; スレッド表記の指定
-        (setq wl-thread-indent-level 2)
-        (setq wl-thread-have-younger-brother-str "+"
-              wl-thread-youngest-child-str "+"
-              wl-thread-vertical-str "|"
-              wl-thread-horizontal-str "-"
-              wl-thread-space-str " ")
-        ; サマリ表示は切り詰めない
-        (setq wl-subject-length-limit t)
-        ;; "でクオートされた文字列もデコードする
-        ;;(setq mime-header-accept-quoted-encoded-words t)
-        ;; http://www.fan.gr.jp/~ring/Meadow/wanderlust.html
-        (setq mime-header-lexical-analyzer
-              '(
-                ;;eword-analyze-quoted-string
-                eword-analyze-domain-literal
-                eword-analyze-comment
-                eword-analyze-spaces
-                eword-analyze-special
-                eword-analyze-encoded-word
-                eword-analyze-atom))
-        ;; サブジェクトが変わったらスレッドを切る
-        (setq wl-summary-divide-thread-when-subject-changed t)
-        ;; サマリ内の移動で未読メッセージがない場合も次のフォルダに移動しない
-        (setq wl-auto-select-next nil)
-        ;; ;; 未読がないフォルダは飛ばす(SPCキーだけで読み進める場合は便利)
-        ;;(setq wl-auto-select-next 'skip-no-unread)
-        ;; 未読メッセージを優先的に読む
-        (setq wl-summary-move-order 'unread)
-        ;; Forward時に元記事の Subject: の先頭に付け加える文字列
-        (setq wl-forward-subject-prefix "Fw: ")
         ;; メッセージ表示の際に確認を求めない上限値
         (setq elmo-message-fetch-threshold 10000000000000000)
         ;; メッセージのprefetch時に確認を求めない上限値
@@ -545,40 +668,6 @@ title: Wanderlustの設定
         ;;                 '(("charset" "UTF-8" "ISO-2022-JP" "US-ASCII"
         ;;                    "ISO-8859-1" "ISO-8859-8" "UTF-8")))
         ;;      (set-alist 'mime-content-types "text" (cdr text))))
-        ;; 日本語の添付ファイル名を正しく表示. これがないと化けます．
-        (defvar my-mime-filename-coding-system-for-decode
-          '(iso-2022-jp japanese-shift-jis japanese-iso-8bit))
-        (defun my-mime-decode-filename (filename)
-          (let ((filename (if (string-match "\n\t*" filename)
-                              (replace-match "" nil nil filename)
-                            filename))
-                (rest (eword-decode-string filename)))
-            (or (when (and my-mime-filename-coding-system-for-decode
-                           (string= rest filename))
-                  (let ((dcs (mapcar (function coding-system-base)
-                                     (detect-coding-string filename))))
-                    (unless (memq 'emacs-mule dcs)
-                      (let ((pcs my-mime-filename-coding-system-for-decode))
-                        (while pcs
-                          (if (memq (coding-system-base (car pcs)) dcs)
-                              (setq rest (decode-coding-string filename (car pcs))
-                                    pcs nil)
-                            (setq pcs (cdr pcs))))))))
-                rest)))
-        (eval-after-load "mime"
-          '(defadvice mime-entity-filename
-             (after eword-decode-for-broken-MUA activate)
-             "Decode encoded file name for BROKEN MUA."
-             (when (stringp ad-return-value)
-               (setq ad-return-value (my-mime-decode-filename ad-return-value)))))
-        (require 'std11)
-        ;; ファイル名が日本語の添付ファイルをエンコードする [semi-gnus-ja: 6046]
-        (eval-after-load "std11"
-          '(defadvice std11-wrap-as-quoted-string
-             (before encode-string activate)
-             "Encode a string."
-             (require 'eword-encode)
-             (ad-set-arg 0 (eword-encode-string (ad-get-arg 0)))))
         ;; mime の画像表示の切り替え
         (defun wl-summary-w3m-safe-toggle-inline-images (&optional arg)
           "Toggle displaying of all images in the message buffer.
@@ -591,16 +680,6 @@ title: Wanderlustの設定
              "\M-T" 'wl-summary-w3m-safe-toggle-inline-images))
         ;; 日本語添付ファイルの二重エスケープを回避
         (defun shell-quote-argument (file) file)
-        ;;subject で tab や複数の space を無視
-        (defadvice std11-unfold-string (after simply activate)
-          (setq ad-return-value
-                (elmo-replace-in-string ad-return-value "[ \t]+" " ")))
-        ;; default の mime charset
-        (setq wl-mime-charset 'iso-2022-jp)
-        ;; 終了時に確認しない
-        (setq wl-interactive-exit nil)
-        ;; 改ページを無視
-        (setq wl-break-pages nil)
         ;;; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         ; 振り分けの設定
         ;; 振り分けに使用するヘッダ
@@ -1076,4 +1155,6 @@ title: Wanderlustの設定
 
 [fn:2] rail - github pages : [[http://uwabami.github.com/rail/]]
 
-[fn:3] Wanderlustと文字コード: [[http://d.hatena.ne.jp/kiwanami/20091103/1257243524]]
+[fn:3] Wanderlustと文字コード : [[http://d.hatena.ne.jp/kiwanami/20091103/1257243524]]
+
+[fn:4] Wanderlustで自分宛てのメールをGMailのように「>」で強調する : [[http://d.hatena.ne.jp/khiker/20080206/wanderlust]]

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/20 11:42:09$
+# $Lastupdate: 2012/09/22 05:24:35$
 # License: Expat.
 #
 #+TITLE: Wanderlust の設定
@@ -54,7 +54,8 @@ title: Wanderlustの設定
      (when (locate-library "mime-w3m")
        (require 'w3m-ems)
        (require 'w3m-load)
-       (require 'mime-w3m))
+       (require 'mime-w3m)
+       )
    #+END_SRC
    大きいメッセージを送信時に分割しない
    #+BEGIN_SRC emacs-lisp
@@ -220,7 +221,6 @@ title: Wanderlustの設定
    #+BEGIN_SRC emacs-lisp
       (setq wl-stay-folder-window nil)
    #+END_SRC
-
 ** サマリ内の移動で未読メッセージがないと次のフォルダに移動 -> しない
    #+BEGIN_SRC emacs-lisp
      (setq wl-auto-select-next nil)
@@ -241,10 +241,7 @@ title: Wanderlustの設定
 ** folders の位置の変更
    ホスト名に応じて読み込むフォルダ設定を代えている.
    #+BEGIN_SRC emacs-lisp
-     (if (string-match "daphne" system-name)
-         (setq wl-folders-file "~/.mua/wl-folders.gpg")
-       (setq wl-folders-file "~/.mua/wl-folders-server.gpg")
-       )
+     (setq wl-folders-file "~/.mua/wl-folders.gpg")
    #+END_SRC
 ** フォルダ編集時に backup を作成しない.
    #+BEGIN_SRC emacs-lisp
@@ -252,7 +249,7 @@ title: Wanderlustの設定
    #+END_SRC
 ** アドレス帳
    #+BEGIN_SRC emacs-lisp
-    (setq wl-address-file "~/.mua/wl-addrbook.gpg")
+    (setq wl-address-file "~/.mua/Addrbook.gpg")
    #+END_SRC
    ちなみに LDAP サーバからアドレスを引くことも可能.
    以前は GCALDaemon を使って local に ldap サーバを上げていたのだけれども,
@@ -283,18 +280,13 @@ title: Wanderlustの設定
    #+END_SRC
 ** 補完スペック
    #+BEGIN_SRC emacs-lisp
-   (if (string-match system-name "daphne")
-       (setq wl-default-spec "%Gmail/")
-     (setq wl-default-spec "%/"))
+     (setq wl-default-spec "%")
    #+END_SRC
-** draft/trash などの位置-> Gmail と同期すると大変な事になるので local に持つ
+** draft/trash などの位置
+   Gmail と同期すると大変な事になるので local に持つ.
    #+BEGIN_SRC emacs-lisp
-   (if (string-match system-name "daphne")
-        (setq wl-draft-folder "%Drafts")
-      (setq wl-draft-folder "+Drafts"))
-   (if (string-match system-name "daphne")
-        (setq wl-trash-folder "%Trash")
-      (setq wl-trash-folder "+Trash"))
+     (setq wl-draft-folder "+Drafts")
+     (setq wl-trash-folder "+Trash")
    #+END_SRC
 ** multipart 保存先
    #+BEGIN_SRC emacs-lisp
@@ -375,7 +367,7 @@ title: Wanderlustの設定
 ** メール送信/draft-mode の挙動
 *** FCC: 送信控え
     #+BEGIN_SRC emacs-lisp
-        (setq wl-fcc "%Sent")
+        (setq wl-fcc "+Sent")
     #+END_SRC
 *** 送信済は既読にする
     ちゃんと動いていない気がする
@@ -539,6 +531,10 @@ title: Wanderlustの設定
        (setq ad-return-value
              (elmo-replace-in-string ad-return-value "[ \t]+" " ")))
    #+END_SRC
+** サマリ表には petname を使うが, 引用には使わない
+   #+BEGIN_SRC emacs-lisp
+   (setq wl-default-draft-cite-decorate-author nil)
+   #+END_SRC
 * メッセージ表示
   主にヘッダ関連. ここで設定されたヘッダが振り分けなどの条件となる
 ** いったん全て非表示に
@@ -567,587 +563,290 @@ title: Wanderlustの設定
              "^Message-ID:"
              ))
    #+END_SRC
+** メッセージの表示/prefetch の上限値
+   =nil= じゃ駄目なんだろうか?
+   #+BEGIN_SRC emacs-lisp
+     ;; メッセージ表示の際に確認を求めない上限値
+     (setq elmo-message-fetch-threshold 10000000000000000)
+     ;; メッセージのprefetch時に確認を求めない上限値
+     (setq wl-prefetch-threshold 10000000000000000)
+   #+END_SRC
+** mime の画像表示の切り替え
+   =M-T= でトグル
+   #+BEGIN_SRC emacs-lisp
+     (defun wl-summary-w3m-safe-toggle-inline-images (&optional arg)
+       "Toggle displaying of all images in the message buffer.
+     If the prefix arg is given, all images are considered to be safe."
+       (interactive "P")
+       (with-current-buffer wl-message-buffer
+         (w3m-toggle-inline-images arg)))
+     (eval-after-load "wl-summary"
+       '(define-key wl-summary-mode-map
+          "\M-T" 'wl-summary-w3m-safe-toggle-inline-images))
+   #+END_SRC
+* 返信設定
+** 自分宛のメールに返信する場合は =To:=, =Cc:= から自分のアドレスを削除
+   #+BEGIN_SRC emacs-lisp
+   (setq wl-draft-always-delete-myself t)
+   #+END_SRC
+** =a= の挙動
+   "a" (without-argument)では =Reply-To:= や =From:= などで
+   指定された唯一人または唯一つの投稿先に返信.
+   また, =X-ML-Name:= と =Reply-To:= がついているなら =Reply-To:= 宛に返信
+   #+BEGIN_SRC emacs-lisp
+     (setq wl-draft-reply-without-argument-list
+           '((("X-ML-Name" "Reply-To") . (("Reply-To") nil nil))
+             ("X-ML-Name" . (("To" "Cc") nil nil))
+             ("Followup-To" . (nil nil ("Followup-To")))
+             ("Newsgroups" . (nil nil ("Newsgroups")))
+             ("Reply-To" . (("Reply-To") nil nil))
+             ("Mail-Reply-To" . (("Mail-Reply-To") nil nil))
+             ("From" . (("From") nil nil))))
+   #+END_SRC
+** =C-u a= の挙動
+   =C-u a= (with-argument)であれば関係する全ての人・投稿先に返信
+   #+BEGIN_SRC emacs-lisp
+     (setq wl-draft-reply-with-argument-list
+           '(("Followup-To" . (("From") nil ("Followup-To")))
+             ("Newsgroups" . (("From") nil ("Newsgroups")))
+             ("Mail-Followup-To" . (("Mail-Followup-To") nil ("Newsgroups")))
+             ("From" . (("From") ("To" "Cc") ("Newsgroups")))))
+   #+END_SRC
+* 振り分け設定
+** 振り分け対象
+   =$= 以外を振り分け対象に
+   #+BEGIN_SRC emacs-lisp
+   (setq wl-summary-auto-refile-skip-marks '("$"))
+   #+END_SRC
+** 振り分け判定に使用するヘッダ
+   添付の有無の表示にも使うので =Content-Type= も登録.
+   あと =Delivered-To= はメールの検索の時に結構重宝している.
+   #+BEGIN_SRC emacs-lisp
+     (setq elmo-msgdb-extra-fields
+           '(
+             "List-Post"
+             "Resent-CC"
+             "Mailing-List"
+             "X-Mailing-List"
+             "X-ML-Address"
+             "X-ML-Name"
+             "X-ML-To"
+             "Reply-To"
+             "Subject"
+             "Content-Type" ;; 添付の有無の表示の為に追加
+             "X-Google-Appengine-App-Id";;
+             "To"
+             "Cc"
+             "From"
+             "Delivered-To"
+             ))
+   #+END_SRC
+** 自動振り分け
+   =wl-expire= の設定
+*** 自動振り分けの log
+    良い感じになってきたら nil にして log を残さないようにすること
+    #+BEGIN_SRC emacs-lisp
+        (setq wl-expire-use-log t)
+    #+END_SRC
+*** 起動時に自動振り分けを有効化する
+    #+BEGIN_SRC emacs-lisp
+      (add-hook 'wl-summary-prepared-pre-hook 'wl-summary-expire)
+    #+END_SRC
+*** ゴミ箱
+    imap フォルダでの削除を =%Trash= へ回さず
+    本当に消す(Gmail ではアーカイブになる).
+    ゴミ箱は二度と見ない/見たくないし, Gmail なら All Mail から拾える.
+    #+BEGIN_SRC emacs-lisp
+      (setq wl-dispose-folder-alist
+            '(
+              ("^%.*$" . remove) wl-dispose-folder-alist)
+            )
+    #+END_SRC
+** 実際の振り分けルール
+   あとで書く
+* GPG 署名
+  以前は mailcrypt を使っていたけれど,
+  epa があるので主にキーバインドの設定のみ.
+  =draft-mode= の文字コードをあらかじめ指定しておかないと,
+  送信時に文字コードが変換されるので不正な署名となってしまう.
+
+  もっとうまい方法/正攻法がありそうな気がするけれど,
+  使えてるから, まあ良いかな, とか.
+  #+BEGIN_SRC emacs-lisp
+    (setq pgg-default-keyserver-address "pool.sks-keyservers.net")
+    (setq pgg-scheme "gpg")
+    (setq pgg-messages-coding-system 'utf-8)
+    (add-hook 'wl-draft-mode-hook
+              '(lambda ()
+                 (set-buffer-file-coding-system 'iso-2022-jp)
+                 ))
+    (defun my:epa-wl-decrypt-message ()
+      (interactive)
+      (save-window-excursion
+        (wl-summary-jump-to-current-message)
+        (wl-message-decrypt-pgp-nonmime)))
+    (defun my:epa-wl-verify-message ()
+      (interactive)
+      (save-selected-window
+        (wl-summary-jump-to-current-message)
+        (wl-message-verify-pgp-nonmime)))
+    (define-key wl-summary-mode-map "\C-c:d" 'my:epa-wl-decrypt-message)
+    (define-key wl-summary-mode-map "\C-c:v" 'my:epa-wl-verify-message)
+    (define-key wl-draft-mode-map "\C-c:s" 'epa-mail-sign)
+    (define-key wl-draft-mode-map "\C-c:e" 'epa-mail-encrypt)
+  #+END_SRC
+* 検索
+  offlineimap なんかで local の maildir と同期させている場合は
+  [[http://www.djcbsoftware.nl/code/mu/][maildir-utils]] が素敵です.
+  #+BEGIN_SRC emacs-lisp
+    (when (executable-find "mu")
+      (elmo-search-register-engine
+       'mu 'local-file
+       :prog "mu"
+       :args '("find" pattern "-o" "plain" "-f" "l" "--muhome" "~/.mu")
+       :charset 'utf-8)
+      (setq elmo-search-default-engine 'mu))
+  #+END_SRC
+  それ以外の場合には...どうしたら良いでしょう?
+  namazu は検索 index の生成が遅すぎるし,
+  hyper estraier は upstream dead な雰囲気だし.
 * ドキュメント書いてない...
   #+BEGIN_SRC emacs-lisp
-        ; 削除を Trash へ回さず本当に消す(Gmail ではアーカイブになる).
-        ; 基本ゴミ箱は二度と見ないし, Gmail なら All Mail から拾えるので.
-        ;(setq wl-dispose-folder-alist
-        ;      '(
-        ;        ("^%.*$" . remove)
-        ;        )
-        ;      );;wl-dispose-folder-alist))
-        ;; sync の仕方の設定
-        (setq wl-folder-sync-range-alist
-              '(
-                ("^%.*$" . "update")
-                ))
-        ;; 自動振り分け/アーカイブの設定
-        (setq wl-expire-use-log nil)
-        (setq elmo-archive-treat-file t)
-        (setq wl-expire-alist
-              '(;;
-                ;; RSS
-                ;; ("^\\%Gmail/feed2imap" (date 14) "%Gmail/feed2imap/archive")
-                ;; ("^\\%Gmail/feed2imap/archive" (date 14) wl-expire-archive-date)
-                ;; 新聞
-                ("^@"  (date 7) remove)
-                ;; ゴミ箱は自動削除
-                ("^\\%Trash$" (date 7) remove)
-                ;; 研究室まわり, yyhlab, kobe-s3all, kusm
-                ("^\\%Gmail/yyhlab$" (date 365) "%Gmail/yyhlab/archive")
-                ;; ("^\\%Gmail/yyhlab/archive$" (number 1000 2000) hide)
-                ("^\\%Gmail/kobe$" (date 365) "%Gmail/kobe/archive")
-                ;; ("^\\%Gmail/kobe/archive$" (number 1000 2000) hide)
-                ("^\\%Gmail/kusm$" (date 365) "%Gmail/kusm/archive")
-                ;; ("^\\%Gmail/kusm/archive$" (number 1000 2000) hide)
-                ;; itpass, epnetfan
-                ;; ("^\\%Gmail/kobe/itpass$" (number 300 500) hide)
-                ("^\\%Gmail/kobe/itpass/syslog$" (date 7) remove)
-                ;; ("^\\%Gmail/kobe/itpass/.*$" (number 300 500) hide)
-                ;; ("^\\%Gmail/epnetfan$" (number 300 500) hide)
-                ;; ("^\\%Gmail/epnetfan/.*$" (number 300 500) hide)
-                ;; dennou
-                ;; ("^\\%Gmail/dennou/.*$" (number 300 500) hide)
-                ;; cps
-                ("^\\%Gmail/cps/syslog$" (date 7) remove)
-                ;; ("^\\%Gmail/cps.*$" (number 300 500) hide)
-                ;; Debian
-                ;; ("^\\%Gmail/debian/.*$" (number 300 500) hide)
-                ;; OSC
-                ;; ("^\\%Gmail/osc/.*$" (number 300 500) hide)
-                ;; その他, ML など
-                ;; ("^\\%Gmail/lang/.*$" (number 300 500) hide)
-                ;; 学会 ML
-                ;; ("^\\%Gmail/work/.*$" (number 300 500) hide)
-                ))
-        (add-hook 'wl-summary-prepared-hook 'wl-summary-expire)
-        ;; (add-hook 'wl-expire-hook 'wl-summary-pack-number)
-        ;; flag とフォルダを行き来する
-        ;; 返信設定
-        ;; "a" (without-argument)では Reply-To: や From: などで指定された唯一人
-        ;; または唯一つの投稿先に返信する。また，X-ML-Name: と Reply-To: がつい
-        ;; ているなら Reply-To: 宛にする。
-        (setq wl-draft-reply-without-argument-list
-              '((("X-ML-Name" "Reply-To") . (("Reply-To") nil nil))
-                ("X-ML-Name" . (("To" "Cc") nil nil))
-                ("Followup-To" . (nil nil ("Followup-To")))
-                ("Newsgroups" . (nil nil ("Newsgroups")))
-                ("Reply-To" . (("Reply-To") nil nil))
-                ("Mail-Reply-To" . (("Mail-Reply-To") nil nil))
-                ("From" . (("From") nil nil))))
-        ;; "C-u a" (with-argument)であれば関係する全ての人・投稿先に返信する。
-        (setq wl-draft-reply-with-argument-list
-              '(("Followup-To" . (("From") nil ("Followup-To")))
-                ("Newsgroups" . (("From") nil ("Newsgroups")))
-                ("Mail-Followup-To" . (("Mail-Followup-To") nil ("Newsgroups")))
-                ("From" . (("From") ("To" "Cc") ("Newsgroups")))))
-        ;; 自分宛てのメールに返信する場合，常に `To:', `Cc:' から
-        ;; 自分のメールアドレスを削除
-        (setq wl-draft-always-delete-myself t)
-        ;; サマリ表示には petname を使うが, 引用には使わない
-        (setq wl-default-draft-cite-decorate-author nil)
-        ; 必要そうなものだけ表示に変える
-        ; ヘッダーの並び順を変更 <- Mew 風
-        ;; サマリ表示
-        ;; 自分が差出人である mail は To:某 と表示
-        ;; メッセージ表示の際に確認を求めない上限値
-        (setq elmo-message-fetch-threshold 10000000000000000)
-        ;; メッセージのprefetch時に確認を求めない上限値
-        (setq wl-prefetch-threshold 10000000000000000)
-        ;; テキストファイルを UTF-8 で添付する設定
-        (eval-after-load
-            "mime-edit"
-          '(set-alist 'mime-file-types "\\.txt$"
-                      '("text" "plain" (("charset" . "UTF-8")) "8bit" "attachement" (("filename" . file )))
-                      )
-          )
-        ;; (eval-after-load
-        ;;     "mime-edit"
-        ;;   '(let ((text (assoc "text" mime-content-types)))
-        ;;      (set-alist 'text "plain"
-        ;;                 '(("charset" "UTF-8" "ISO-2022-JP" "US-ASCII"
-        ;;                    "ISO-8859-1" "ISO-8859-8" "UTF-8")))
-        ;;      (set-alist 'mime-content-types "text" (cdr text))))
-        ;; mime の画像表示の切り替え
-        (defun wl-summary-w3m-safe-toggle-inline-images (&optional arg)
-          "Toggle displaying of all images in the message buffer.
-        If the prefix arg is given, all images are considered to be safe."
-          (interactive "P")
-          (with-current-buffer wl-message-buffer
-            (w3m-toggle-inline-images arg)))
-        (eval-after-load "wl-summary"
-          '(define-key wl-summary-mode-map
-             "\M-T" 'wl-summary-w3m-safe-toggle-inline-images))
-        ;; 日本語添付ファイルの二重エスケープを回避
-        (defun shell-quote-argument (file) file)
-        ;;; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        ; 振り分けの設定
-        ;; 振り分けに使用するヘッダ
-        (setq elmo-msgdb-extra-fields
-              '(
-                "List-Post"
-                "Resent-CC"
-                "Mailing-List"
-                "X-Mailing-List"
-                "X-ML-Address"
-                "X-ML-Name"
-                "X-ML-To"
-                "Reply-To"
-                "Subject"
-                "Content-Type" ;; 添付の有無の表示の為に追加
-                "X-Google-Appengine-App-Id";;
-                "To"
-                "Cc"
-                "From"
-                "Delivered-To"
-                ))
-        ;; 購読しているメーリングリスト.
-        (setq wl-subscribed-mailing-list
-              '(;;
-                "yyhlab-ml@gfd-dennou.org"
-                "dcusers-ml@gfd-dennou.org"
-                "bunken-ml@gfd-dennou.org"
-                "dcdvlop@gfd-dennou.org"
-                "dcstaff@gfd-dennou.org"
-                "dcmodel@gfd-dennou.org"
-                "gomi-ml@gfd-dennou.org"
-                "gfdsemi-admin@gfd-dennou.org"
-                "davis-rgst@gfd-dennou.org"
-                "dennou-ruby@notwork.org"
-                ;;
-                "postmaster-oml@wakusei.jp"
-                "newsletter-ml@wakusei.jp"
-                "oml@wakusei.jp"
-                "ymnet@kugi.kyoto-u.ac.jp"
-                "sedi@simons-rock.edu"
-                "wtk-ml@gfd-dennou.org"
-                ;;
-                "kobe-s3all@gfd-dennou.org"
-                "itpass-ml@itpass.scitec.kobe-u.ac.jp"
-                ;;
-                "wheel-ml@cps-jp.org"
-                "sicg-wheel@cps-jp.org"
-                "itdvlop-ml@cps-jp.org"
-                "mosir-ml@cps-jp.org"
-                "SystemAdmin@cps-jp.org"
-                ;;
-                "epnetfan-ml@ep.sci.hokudai.ac.jp"
-                "epcore-ml@ep.sci.hokudai.ac.jp"
-                ;;
-                "debian-newmaint@lists.debian.org"
-                "debian-tex-maint@lists.debian.org"
-                "debian-science@lists.debian.org"
-                "debian-backports@lists.debian.org"
-                "debian-mentors@lists.debian.org"
-                "pkg-grass-devel@lists.alioth.debian.org"
-                "debian-gis@lists.debian.org"
-                "pkg-ruby-extras-maintainers@list.alioth.debian.org"
-                "debian-ruby@lists.debian.org"
-                ;;
-                "debian-devel@debian.or.jp"
-                "debian-www@debian.or.jp"
-                "debian-users@debian.or.jp"
-                "debian@qwik.jp"
-                "board@debian.or.jp"
-                ;;
-                "osc-kansai@list.ospn.jp"
-                ;;
-                "kansai-emacs-admin@peccu.sytes.net"
-                "ruby-dev@ruby-lang.org"
-                "ruby-core@ruby-lang.org"
-                "ruby-talk@ruby-lang.org"
-                "ruby-list@ruby-lang.org"
-                "rabbit-commit@ml.cozmixng.org"
-                ;;
-                "announce@jpcert.or.jp"
-                ))
-        (setq wl-refile-rule-alist
-              '(
-                ("From"
-                 ("uwabami-daphne@gfd-dennou.org" . "%Trash")
-                 ("noreply-f272f984@plus.google.com" . "%Trash")
-                 ("sasakyh+orchid@gmail.com" . "%Trash")
-                 ("xt4pbs@cfca.nao.ac.jp (XT4 PBS)" . "%Trash")
-                 ("root@yggdrasil.junkhub.org" . "%Trash")
-                 ("root@linden.junkhub.org" . "%Trash")
-                 ("root@junkhub.org" . "%Trash")
-                 ("root@smaux.math.kyoto-u.ac.jp" . "%Gmail/kusm")
-                 ("redmine-admin@math.kyoto-u.ac.jp" . "%Trash")
-                 ("Debian FTP Masters <ftpmaster@ftp-master.debian.org>" . "%Trash")
-                 ("ssg140@math.kyoto-u.ac.jp" . "%Trash")
-                 )
-                ("Reply-To"
-                 ("board@rt.debian.or.jp" . "%Gmail/debian/jp/rt")
-                 ("board-comment@rt.debian.or.jp" . "%Gmail/debian/jp/rt")
-                 ("<noreply@oku.edu.mie-u.ac.jp>" . "%Trash")
-                 ("jrecin@tokyo.jst.go.jp" . "%Gmail/jrec-in")
-                 ("linux-users" . "%Gmail/lang/linux-users")
-                 )
-                ("List-Post"
-                 ("<mailto:yyhlab-ml@gfd-dennou.org>" . "%Gmail/yyhlab")
-                 ("<mailto:dennou-ruby@notwork.org>" . "%Gmail/dennou/ruby")
-                 ("<mailto:kakusan-ml@gfd-dennou.org>" . "%Gmail/dennou/kakusan")
-                 ;;
-                 ("<mailto:postmaster-oml@wakusei.jp>" . "%Gmail/work/oml")
-                 ("<mailto:newsletter-ml@wakusei.jp>" . "%Gmail/work/oml")
-                 ("<mailto:ymnet@kugi.kyoto-u.ac.jp>" . "%Gmail/work/ymnet")
-                 ("<mailto:sedi@simons-rock.edu>" . "%Gmail/work/sedi")
-                 ;;
-                 ("<mailto:itpass-ml@itpass.scitec.kobe-u.ac.jp>" . "%Gmail/kobe/itpass")
-                 ;;
-                 ("<mailto:cps-wheel@cps.scitec.kobe-u.ac.jp>" . "%Gmail/cps/wheel")
-                 ("<mailto:wheel-ml@cps-jp.org>" . "%Gmail/cps/wheel")
-                 ("<mailto:netfan-ml@cps-jp.org>" . "%Gmail/cps/netfan-ml")
-                 ("<mailto:cps-wheel@cps-jp.org>" . "%Gmail/cps/wheel")
-                 ("<mailto:itdvlop-ml@cps-jp.org>" . "%Gmail/cps/itdvlop")
-                 ("<mailto:itdvlop-ml@cps.scitec.kobe-u.ac.jp>" . "%Gmail/cps/itdvlop")
-                 ("<mailto:sicg-wheel@cps-jp.org>" . "%Gmail/cps/wheel")
-                 ("<mailto:sicg-wheel@cpsscitec.kobe-u.ac.jp>" . "%Gmail/cps/wheel")
-                 ("<mailto:iscg-wheel@cps-jp.org>" . "%Gmail/cps/wheel")
-                 ("<mailto:iscg-core@cps-jp.org>" . "%Gmail/cps/wheel")
-                 ("<mailto:iscg-wheel@cps.scitec.kobe-u.ac.jp>" . "%Gmail/cps/wheel")
-                 ("<mailto:iccg-wheel@cps-jp.org>" . "%Gmail/cps/wheel")
-                 ("<mailto:iccg-wheel@cps.scitec.kobe-u.ac.jp>" . "%Gmail/cps/wheel")
-                 ("<mailto:ercg-wheel@cps-jp.org>" . "%Gmail/cps/wheel")
-                 ("<mailto:ercg-seminar@cps-jp.org>" . "%Gmail/cps/wheel")
-                 ("<mailto:ercg-wheel@cps.scitec.kobe-u.ac.jp>" . "%Gmail/cps/wheel")
-                 ("<mailto:mosir-ml@cps.scitec.kobe-u.ac.jp>" . "%Gmail/cps/mosir")
-                 ("<mailto:mosir-ml@cps-jp.org>" . "%Gmail/cps/mosir")
-                 ("<mailto:SystemAdmin@cps-r3.ircpi.kobe-u.ac.jp>" . "%Gmail/cps/syslog")
-                 ("<mailto:SystemAdmin@cps-jp.org>" . "%Gmail/cps/syslog")
-                 ("<mailto:SystemAdmin@cps-r3.cps-jp.org>". "%Gmail/cps/syslog")
-                 ("<mailto:SystemAdmin@nosappu.ep.sci.hokudai.ac.jp>" . "%Gmail/cps/syslog")
-                 ("<mailto:SystemDevelop-svnroot@cps-jp.org>" . "%Trash")
-                 ("<mailto:SystemAdmin@erimo.ep.sci.hokudai.ac.jp>" . "%Gmail/cps/syslog")
-                 ("<mailto:analysis_server@cps-jp.org>" . "%Gmail/cps/analysis_server")
-                 ;;
-                 ("<mailto:epnetfan-ml@ep.sci.hokudai.ac.jp>" . "%Gmail/epnetfan/epnetfan-ml")
-                 ("<mailto:epcore-ml@ep.sci.hokudai.ac.jp>" . "%Gmail/epnetfan/epcore")
-                 ;;
-                 ("<mailto:debian-devel-announce@lists.debian.org>" . "%Gmail/debian/devel-announce")
-                 ("<mailto:debian-news@lists.debian.org>" . "%Gmail/debian/devel-announce")
-                 ("<mailto:debian-newmaint@lists.debian.org>" . "%Gmail/debian/nm")
-                 ("<mailto:pkg-fonts-devel@lists.alioth.debian.org>" . "%Gmail/debian/fonts")
-                 ("<mailto:debian-science@lists.debian.org>" . "%Gmail/debian/science")
-                 ("<mailto:debian-backports@lists.debian.org>" . "%Gmail/debian/backports")
-                 ("<mailto:debian-tex-maint@lists.debian.org>" . "%Gmail/debian/TeX")
-                 ("<mailto:debian-mentors@lists.debian.org>" . "%Gmail/debian/mentors")
-                 ("<mailto:debian-japanese@lists.debian.org>" . "%Gmail/debian/japanese")
-                 ("<mailto:debian-devel@lists.debian.org>" . "%Gmail/debian/devel")
-                 ("<mailto:pkg-ruby-extras-maintainers@lists.alioth.debian.org>" . "%Trash")
-                 ("<mailto:pkg-ruby-extras-commits@lists.alioth.debian.org>" . "%Trash")
-                 ("<mailto:debian-ruby@lists.debian.org>" . "%Gmail/debian/ruby")
-                 ("<mailto:debian-gis@lists.debian.org>" . "%Gmail/debian/gis")
-                 ("<mailto:tokyodebian-commits@lists.alioth.debian.org>" . "%Trash")
-                 ("<mailto:pkg-grass-devel@lists.alioth.debian.org>" . "%Gmail/debian/gis")
-                 ;;
-                 ("<mailto:ubuntu-jp@lists.ubuntu.com>" . "%Gmail/Ubuntu/ubuntu-jp")
-                 ;;
-                 ("<mailto:lilo@lilo.linux.or.jp>" . "%Gmail/lilo")
-                 ;;
-                 ("<mailto:grand-meeting@debian.or.jp>" . "%Gmail/debian/jp/grandmeeting")
-                 ("<mailto:debian-users@debian.or.jp>" . "%Gmail/debian/jp/users")
-                 ("<mailto:debian-devel@debian.or.jp>" . "%Gmail/debian/jp/devel")
-                 ("<mailto:debian-doc@debian.or.jp>" . "%Gmail/debian/jp/doc")
-                 ("<mailto:debian-www@debian.or.jp>" . "%Gmail/debian/jp/www")
-                 ("<mailto:debian-private@debian.or.jp>" . "%Gmail/debian/jp/private")
-                 ("<mailto:board@debian.or.jp>" . "%Gmail/debian/jp/private")
-                 ;;
-                 ("<mailto:osc-kansai@list.ospn.jp>" . "%Gmail/osc/kansai")
-                 ("<mailto:osc-member@list.ospn.jp>" . "%Gmail/osc/member")
-                 ;;
-                 ("<mailto:ruby-dev@ruby-lang.org>" . "%Gmail/lang/ruby-dev")
-                 ("<mailto:ruby-core@ruby-lang.org>" . "%Gmail/lang/ruby-core")
-                 ("<mailto:ruby-talk@ruby-lang.org>" . "%Gmail/lang/ruby-talk")
-                 ("<mailto:ruby-list@ruby-lang.org>" . "%Gmail/lang/ruby-list")
-                 ("<mailto:tdiary-devel@lists.sourceforge.net>" . "%Gmail/lang/tdiary")
-                 ("<mailto:ptex@ml.asciimw.jp>" . "%Gmail/lang/pTeX")
-                 ("<mailto:texconf12@googlegroups.com>" . "%Gmail/lang/pTeX/TeXconf2012")
-                 ("<mailto:sciruby-dev@googlegroups.com>" . "%Gmail/lang/ruby-sciruby")
-                 ("<mailto:kansai-emacs-admin@peccu.sytes.net>" . "%Gmail/lang/kansai-emacs")
-                 ("<mailto:memo@memo.st.ryukoku.ac.jp>" . "%Gmail/lang/sec-memo")
-                 ("<mailto:ksp-ja@googlegroups.com>" . "%Gmail/osc/ksp")
-                 ;;
-                 ("<mailto:hpc-users@cfca.nao.ac.jp>" . "%Trash")
-                 )
-                ;; ("Resent-CC"
-                ;;  ()
-                ;;  )
-                ("Mailing-List"
-                 ("contact dcmodel-help@gfd-dennou.org; run by ezmlm" . "%Gmail/dennou/dcmodel")
-                 ("contact dcdvlop-help@gfd-dennou.org; run by ezmlm" . "%Gmail/dennou/dcdvlop")
-                 ("contact dcusers-help@gfd-dennou.org; run by ezmlm" . "%Gmail/dennou/dcusers-ml")
-                 ("contact bunken-ml-help@gfd-dennou.org; run by ezmlm" . "%Gmail/dennou/bunken")
-                 ("contact davis-ml-help@gfd-dennou.org; run by ezmlm" . "%Gmail/dennou/davis")
-                 ("contact gomi-ml-help@gfd-dennou.org; run by ezmlm" . "%Gmail/dennou/gomi")
-                 ("contact kobe-s3all-help@gfd-dennou.org; run by ezmlm" . "%Gmail/kobe")
-                 ("contact gfdsemi-admin-help@gfd-dennou.org; run by ezmlm" . "%Gmail/dennou/gfdsemi")
-                 ("contact gfdsemi-ml-help@gfd-dennou.org; run by ezmlm" . "%Gmail/dennou/gfdsemi")
-                 ("contact wtk-ml-help@gfd-dennou.org; run by ezmlm" . "%Gmail/work/wtk")
-                 ("contact inex-ml-help@ep.sci.hokudai.ac.jp; run by ezmlm" . "%Gmail/epnetfan/inex")
-                 ("contact davis-help@gfd-dennou.org; run by ezmlm" . "%Trash")
-                 ("contact spmodel-help@gfd-dennou.org; run by ezmlm" . "%Trash")
-                 ("contact dcpam-help@gfd-dennou.org; run by ezmlm" . "%Trash")
-                 ("contact hagukumu-ml-help@gfd-dennou.org; run by ezmlm" . "%Gmail/dennou/hagukumu")
-                 ("contact hagukumu-staff-help@gfd-dennou.org; run by ezmlm" . "%Gmail/dennou/hagukumu")
-                 )
-                ;; ("X-Mailing-List"
-                ;;  ()
-                ;;  )
-                ("X-ML-Address"
-                 ("amazon-auth-proxy@qwik.jp" . "%Gmail/lang/tdiary")
-                 ("debian@qwik.jp" . "%Gmail/debian/jp/study")
-                 ("debian-grand-meeting@qwik.jp" . "%Gmail/debian/jp/grandmeeting")
-                 ("rabbit-commit@ml.cozmixng.org" . "%Trash")
-                 ("rabbit-shocker@ml.cozmixng.org" . "%Gmail/lang/rabbit-shockers")
-                 )
-                ("X-ML-Name"
-                 ("spiflow-member" . "%Gmail/work")
-                 ("sgepssbb" . "%Gmail/work/sgepss")
-                 ("sgepssall" . "%Gmail/work/sgepss")
-                 )
-                ("X-ML-To"
-                 ("nanhon@ml-c5.infoseek.co.jp" . "%Gmail/friend/nanhon")
-                 )
-                ("To"
-                 ("sasakyh+daphne@gmail.com" . "%Trash")
-                 ("root@yggdrasil.junkhub.org" . "%Trash")
-                 ("root@linden.junkhub.org" . "%Trash")
-                 ("root@junkhub.org" . "%Trash")
-                 ;;
-                 ("yyhlab-ml@gfd-dennou.org" . "%Gmail/yyhlab")
-                 ("dcusers-ml@gfd-dennou.org"   . "%Gmail/dennou/dcusers-ml")
-                 ("bunken-ml@gfd-dennou.org"   . "%Gmail/dennou/bunken")
-                 ("dcdvlop@gfd-dennou.org"   . "%Gmail/dennou/dcdvlop")
-                 ("dcmodel@gfd-dennou.org"   . "%Gmail/dennou/dcmodel")
-                 ("dcstaff@gfd-dennou.org"   . "%Gmail/dennou/dcstaff")
-                 ("gomi-ml@gfd-dennou.org"   . "%Gmail/dennou/gomi")
-                 ("fdeps-wheel@gfd-dennou.org" . "%Gmail/dennou/fdeps")
-                 ;;
-                 ("oa@math.kyoto-u.ac.jp" . "%Gmail/kusm")
-                 ("support@math.kyoto-u.ac.jp" . "%Gmail/kusm")
-                 ;;
-                 ("yamada-seminar@studia01.kugi.kyoto-u.ac.jp" . "%Gmail/kurims")
-                 ;;
-                 ("kobe-s3all@gfd-dennou.org" . "%Gmail/kobe")
-                 ("itpass-ml@itpass.scitec.kobe-u.ac.jp" . "%Gmail/kobe/itpass")
-                 ("itpadmin@itpass.scitec.kobe-u.ac.jp" . "%Gmail/kobe/itpass/syslog")
-                 ;;
-                 ("wheel-ml@cps-jp.org" . "%Gmail/cps/wheel")
-                 ;;
-                 ("epnetfan-ml@ep.sci.hokudai.ac.jp" . "%Gmail/epnetfan/epnetfan-ml")
-                 ("epcore-ml@ep.sci.hokudai.ac.jp" . "%Gmail/epnetfan/epcore")
-                 ("eva@ep.sci.hokudai.ac.jp" . "%Gmail/epnetfan/eva")
-                 ;;
-                 ("jssusr@jss.jaxa.jp" . "%Trash")
-                 ("announce@jpcert.or.jp" . "%Trash")
-                 )
-                ("Cc"
-                 ("yyhlab-ml@gfd-dennou.org" . "%Gmail/yyhlab")
-                 ("dcusers-ml@gfd-dennou.org"   . "%Gmail/dennou/dcusers-ml")
-                 ("bunken-ml@gfd-dennou.org"   . "%Gmail/dennou/bunken")
-                 ("dcdvlop@gfd-dennou.org"   . "%Gmail/dennou/dcdvlop")
-                 ("dcmodel@gfd-dennou.org"   . "%Gmail/dennou/dcmodel")
-                 ("dcstaff@gfd-dennou.org"   . "%Gmail/dennou/dcstaff")
-                 ("gomi-ml@gfd-dennou.org"   . "%Gmail/dennou/gomi")
-                 ("fdeps-wheel@gfd-dennou.org" . "%Gmail/dennou/fdeps")
-                 ("davis-rgst@gfd-dennou.org" . "%Trash")
-                 ;;
-                 ("oa@math.kyoto-u.ac.jp" . "%Gmail/kusm")
-                 ;;
-                 ("kobe-s3all@gfd-dennou.org" . "%Gmail/kobe")
-                 ("itpass-ml@itpass.scitec.kobe-u.ac.jp" . "%Gmail/kobe/itpass")
-                 ;;
-                 ("wheel-ml@cps-jp.org" . "%Gmail/cps/wheel")
-                 ;;
-                 ("epnetfan-ml@ep.sci.hokudai.ac.jp" . "%Gmail/epnetfan/epnetfan-ml")
-                 ("epcore-ml@ep.sci.hokudai.ac.jp" . "%Gmail/epnetfan/epcore")
-                 ("eva@ep.sci.hokudai.ac.jp" . "%Gmail/epnetfan/eva")
-                 )
-                ;; ("X-Google-Appengine-App-Id"
-                ;;  ()
-                ;;  )
-                ))
-        ;; $ 以外のメールを振り分け対象にする
-        (setq wl-summary-auto-refile-skip-marks '("$"))
-        ;;; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        ;; ;; spam filter -> bsfilter を使用する
-        ;; (setq elmo-spam-scheme 'bsfilter)
-        ;; (setq elmo-spam-bsfilter-shell-program "/usr/bin/ruby1.8")
-        ;; (require 'wl-spam)
-        ;; (setq wl-spam-folder "%Dennou/Spam")
-        ;;; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        ;; [[ face の 設定 ]]
-        (setq wl-highlight-demo-face nil)
-        (setq wl-highlight-folder-by-number nil)
-        ;;; message face の振り分け
-        (setq wl-highlight-message-header-alist
-              '(("Subject[ \t]*:"
-                 . wl-highlight-message-subject-header-contents)
-                ("From[ \t]*:"
-                 . wl-highlight-message-from-header-contents)
-                ("Date[ \t]*:"
-                 . wl-highlight-message-date-header-contents)
-                ("\\(.*To\\|Cc\\|Newsgroups\\)[ \t]*:"
-                 . wl-highlight-message-important-header-contents)
-                ("\\(User-Agent\\|X-Mailer\\|X-Newsreader\\)[ \t]*:" .
-                 wl-highlight-message-unimportant-header-contents)
-                ))
-        ;;; face 設定用の関数定義
-        (defun my:wl-set-face (face spec)
-          (make-face face)
-          (cond ((fboundp 'face-spec-set)
-                 (face-spec-set face spec))
-                (t
-                 (wl-declare-face face spec))))
-        (unless (locate-library "color-theme-darkpastel")
-        ;;; face の定義
-          (my:wl-set-face 'wl-highlight-message-subject-header-contents
-                          '((t (:foreground "red" :bold t))))
-          (my:wl-set-face 'wl-highlight-message-from-header-contents
-                          '((t (:foreground "yellow" :bold t))))
-          (my:wl-set-face 'wl-highlight-message-important-header-contents
-                          '((t (:foreground "magenta" :bold t))))
-          (my:wl-set-face 'wl-highlight-message-unimportant-header-contents
-                          '((t (:foreground "grey" :bold t))))
-          (my:wl-set-face 'wl-highlight-message-date-header-contents
-                          '((t (:foreground "green" :bold t))))
-          (my:wl-set-face 'wl-highlight-message-headers
-                          '((t (:foreground "cyan" :bold t))))
-          (my:wl-set-face 'wl-highlight-message-header-contents
-                          '((t (:foreground "grey" :bold t))))
-          ;; citation
-          (my:wl-set-face 'wl-highlight-message-citation-header
-                          '((t (:foreground "lightgreen"))))
-          (my:wl-set-face 'wl-highlight-message-cited-text-1
-                          '((t (:foreground "emerald"))))
-          (my:wl-set-face 'wl-highlight-message-cited-text-2
-                          '((t (:foreground "cyan"))))
-          (my:wl-set-face 'wl-highlight-message-cited-text-3
-                          '((t (:foreground "lightblue"))))
-          (my:wl-set-face 'wl-highlight-message-cited-text-4
-                          '((t (:foreground "blue"))))
-          (my:wl-set-face 'wl-highlight-message-cited-text-5
-                          '((t (:foreground "purple"))))
-          (my:wl-set-face 'wl-highlight-message-cited-text-6
-                          '((t (:foreground "magenta"))))
-          (my:wl-set-face 'wl-highlight-message-cited-text-7
-                          '((t (:foreground "pink"))))
-          (my:wl-set-face 'wl-highlight-message-cited-text-8
-                          '((t (:foreground "red"))))
-          (my:wl-set-face 'wl-highlight-message-cited-text-9
-                          '((t (:foreground "orange"))))
-          (my:wl-set-face 'wl-highlight-message-cited-text-10
-                          '((t (:foreground "yellow"))))
-          (my:wl-set-face 'wl-highlight-message-signature
-                          '((t (:foreground "white"))))
-          ;; ;; summary
-          (my:wl-set-face 'wl-highlight-summary-thread-top-face
-                          '((t (:foreground "white"))))
-          (my:wl-set-face 'wl-highlight-summary-normal-face
-                          '((t (:foreground "white"))))
-          (my:wl-set-face 'wl-highlight-summary-new-face
-                          '((t (:foreground "red"))))
-          (my:wl-set-face 'wl-highlight-summary-unread-face
-                          '((t (:foreground "red"))))
-          (my:wl-set-face 'wl-highlight-summary-important-face
-                          '((t (:foreground "cyan"))))
-          (my:wl-set-face 'wl-highlight-summary-flagged-face
-                          '((t (:foreground "yellow"))))
-          (my:wl-set-face 'wl-highlight-summary-displaying-face
-                          '((t (:underline t))))
-          (my:wl-set-face 'wl-highlight-summary-forwarded-face
-                          '((t (:forground "yellow"))))
-          (my:wl-set-face 'wl-highlight-summary-answered-face
-                          '((t (:forground "lightblue"))))
-          (my:wl-set-face 'wl-highlight-summary-deleted-face
-                          '((t (:foreground "darkblue"))))
-          (my:wl-set-face 'wl-highlight-summary-refiled-face
-                          '((t (:foreground "green"))))
-          (my:wl-set-face 'wl-highlight-summary-target-face
-                          '((t (:foreground "cyan"))))
-          (my:wl-set-face 'wl-highlight-thread-indent-face
-                          '((t (:underline t))))
-          (my:wl-set-face 'wl-highlight-folder-zero-face
-                          '((t (:foreground "white"))))
-          (my:wl-set-face 'wl-highlight-folder-opened-face
-                          '((t (:foreground "cyan"))))
-          (my:wl-set-face 'wl-highlight-folder-unread-face
-                          '((t (:foreground "blue"))))
-          (my:wl-set-face 'wl-highlight-folder-unknown-face
-                          '((t (:foreground "cyan"))))
-          (my:wl-set-face 'wl-highlight-folder-few-face
-                          '((t (:foreground "red"))))
-          (my:wl-set-face 'wl-highlight-folder-many-face
-                          '((t (:foreground "pink"))))
-          )
-        ;;; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        ;;; 検索
-        ;; mu を使用. Debian では maildir-utils を入れる
-        (when (executable-find "mu")
-          (elmo-search-register-engine
-           'mu 'local-file
-           :prog "mu"
-           ;; :args '("find" pattern "-o" "plain" "-f" "l" "--muhome" "~/Mail/.mu")
-           :args '("find" pattern "-o" "plain" "-f" "l" "--muhome" "~/.mu")
-           :charset 'utf-8)
-          (setq elmo-search-default-engine 'mu))
-        ;;; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        ;;; GPG の設定
-        (setq pgg-default-keyserver-address "pool.sks-keyservers.net")
-        (setq pgg-scheme "gpg")
-        (setq pgg-messages-coding-system 'utf-8)
-        (add-hook 'wl-draft-mode-hook
-                  '(lambda ()
-                     (set-buffer-file-coding-system 'iso-2022-jp)
-                     (turn-on-orgstruct)
-                     (turn-on-orgstruct++)
-                     (turn-on-orgtbl)
-                     ))
-        ;; (add-hook 'wl-draft-mode-hook 'turn-on-orgtbl)
-        ;; (add-hook 'wl-draft-mode-hook 'trun-on-orgstruct)
-        (defun my-epa-wl-decrypt-message ()
-          (interactive)
-          (save-window-excursion
-            (wl-summary-jump-to-current-message)
-            (wl-message-decrypt-pgp-nonmime)))
-        (defun my-epa-wl-verify-message ()
-          (interactive)
-          (save-selected-window
-            (wl-summary-jump-to-current-message)
-            (wl-message-verify-pgp-nonmime)))
-        (define-key wl-summary-mode-map "\C-c:d" 'my-epa-wl-decrypt-message)
-        (define-key wl-summary-mode-map "\C-c:v" 'my-epa-wl-verify-message)
-        (define-key wl-draft-mode-map "\C-c:s" 'epa-mail-sign)
-        (define-key wl-draft-mode-map "\C-c:e" 'epa-mail-encrypt)
-        ;;; %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        ;;; [[mhc の設定]]
-        (when (locate-library "mhc")
-          (autoload 'mhc-wl-setup "mhc-wl")
-          (add-hook 'wl-init-hook 'mhc-wl-setup)
-          (setq mhc-base-folder "+schedule")
-          (setq mhc-mail-path   (expand-file-name "~/Mail/"))
-          (setq mhc-insert-overdue-todo t)
-          (setq mhc-use-wide-scope 14)
-          (setq mhc-file-line-status-strings '(" Mhc" . " MHC"))
-          (setq mhc-symbol-face-alist
-                '((mhc-calendar-face-saturday . (nil "blue"        nil))
-                  (mhc-calendar-face-sunday   . (nil "red"         nil))
-                  (mhc-summary-face-saturday  . (nil "blue"        nil))
-                  (mhc-summary-face-sunday    . (nil "red"         nil))
-                  (mhc-summary-face-today     . (nil "black"       nil))
-                  (mhc-summary-face-separator . (nil "snow"        nil))
-                  (mhc-summary-face-time      . (nil "yellowgreen" nil))
-                  (mhc-summary-face-location  . (nil "snow"        nil))
-                  (mhc-summary-face-conflict  . (nil "white"       "purple"))
-                  (mhc-summary-face-secret    . (nil "gray"        nil))
-                  (mhc-minibuf-face-candidate . (nil nil           nil))
-                  (mhc-category-face-holiday  . (nil "red"         nil))))
-          (setq mhc-calendar-start-day-of-week 1)
-          (setq mhc-calendar-language 'japanese)
-          (setq mhc-use-week-separator 6)
-          )
+    ;; sync の仕方の設定
+    (setq wl-folder-sync-range-alist
+          '(
+            ("^%.*$" . "update")
+            ))
+    ;; 自動振り分け/アーカイブの設定
+    (setq elmo-archive-treat-file t)
+    ;; テキストファイルを UTF-8 で添付する設定
+    (eval-after-load
+        "mime-edit"
+      '(set-alist 'mime-file-types "\\.txt$"
+                  '("text" "plain" (("charset" . "UTF-8")) "8bit" "attachement" (("filename" . file )))
+                  )
+      )
+    ;; (eval-after-load
+    ;;     "mime-edit"
+    ;;   '(let ((text (assoc "text" mime-content-types)))
+    ;;      (set-alist 'text "plain"
+    ;;                 '(("charset" "UTF-8" "ISO-2022-JP" "US-ASCII"
+    ;;                    "ISO-8859-1" "ISO-8859-8" "UTF-8")))
+    ;;      (set-alist 'mime-content-types "text" (cdr text))))
+    ;; 日本語添付ファイルの二重エスケープを回避
+    (defun shell-quote-argument (file) file)
   #+END_SRC
+* face の設定
+  header の色を変えられるように, 幾つか list を追加しておいて,
+  細かい設定は color-theme で行なうことにしている
+** header 毎の色指定の追加
+   #+BEGIN_SRC emacs-lisp
+     (setq wl-highlight-message-header-alist
+           '(("Subject[ \t]*:"
+              . wl-highlight-message-subject-header-contents)
+             ("From[ \t]*:"
+              . wl-highlight-message-from-header-contents)
+             ("Date[ \t]*:"
+              . wl-highlight-message-date-header-contents)
+             ("\\(.*To\\|Cc\\|Newsgroups\\)[ \t]*:"
+              . wl-highlight-message-important-header-contents)
+             ("\\(User-Agent\\|X-Mailer\\|X-Newsreader\\)[ \t]*:" .
+              wl-highlight-message-unimportant-header-contents)
+             ))
+   #+END_SRC
+** face の指定
+   実際の色指定は [[https://github.com/uwabami/color-theme-darkpastel][color-theme-darkpastel]] 参照のこと[fn:5]
+   color-theme を使わないならば
+   #+BEGIN_EXAMPLE
+     (defun my:wl-set-face (face spec)
+       (make-face face)
+       (cond ((fboundp 'face-spec-set)
+              (face-spec-set face spec))
+             (t
+              (wl-declare-face face spec))))
+   #+END_EXAMPLE
+   とかやっておいて, 以下の様に指定する, とか?
+   #+BEGIN_EXAMPLE
+     ;; Mew 風の font-lock
+     (my:wl-set-face 'wl-highlight-message-subject-header-contents
+                     '((t (:foreground "red" :bold t))))
+     (my:wl-set-face 'wl-highlight-message-from-header-contents
+                     '((t (:foreground "yellow" :bold t))))
+     (my:wl-set-face 'wl-highlight-message-important-header-contents
+                     '((t (:foreground "magenta" :bold t))))
+     (my:wl-set-face 'wl-highlight-message-unimportant-header-contents
+                     '((t (:foreground "grey" :bold t))))
+     (my:wl-set-face 'wl-highlight-message-date-header-contents
+                     '((t (:foreground "green" :bold t))))
+     (my:wl-set-face 'wl-highlight-message-headers
+                     '((t (:foreground "cyan" :bold t))))
+     (my:wl-set-face 'wl-highlight-message-header-contents
+                     '((t (:foreground "grey" :bold t))))
+     ;; citation
+     (my:wl-set-face 'wl-highlight-message-citation-header
+                     '((t (:foreground "lightgreen"))))
+     (my:wl-set-face 'wl-highlight-message-cited-text-1
+                     '((t (:foreground "emerald"))))
+     (my:wl-set-face 'wl-highlight-message-cited-text-2
+                     '((t (:foreground "cyan"))))
+     (my:wl-set-face 'wl-highlight-message-cited-text-3
+                     '((t (:foreground "lightblue"))))
+     (my:wl-set-face 'wl-highlight-message-cited-text-4
+                     '((t (:foreground "blue"))))
+     (my:wl-set-face 'wl-highlight-message-cited-text-5
+                     '((t (:foreground "purple"))))
+     (my:wl-set-face 'wl-highlight-message-cited-text-6
+                     '((t (:foreground "magenta"))))
+     (my:wl-set-face 'wl-highlight-message-cited-text-7
+                     '((t (:foreground "pink"))))
+     (my:wl-set-face 'wl-highlight-message-cited-text-8
+                     '((t (:foreground "red"))))
+     (my:wl-set-face 'wl-highlight-message-cited-text-9
+                     '((t (:foreground "orange"))))
+     (my:wl-set-face 'wl-highlight-message-cited-text-10
+                     '((t (:foreground "yellow"))))
+     (my:wl-set-face 'wl-highlight-message-signature
+                     '((t (:foreground "white"))))
+     ;; summary
+     (my:wl-set-face 'wl-highlight-summary-thread-top-face
+                     '((t (:foreground "white"))))
+     (my:wl-set-face 'wl-highlight-summary-normal-face
+                     '((t (:foreground "white"))))
+     (my:wl-set-face 'wl-highlight-summary-new-face
+                     '((t (:foreground "red"))))
+     (my:wl-set-face 'wl-highlight-summary-unread-face
+                     '((t (:foreground "red"))))
+     (my:wl-set-face 'wl-highlight-summary-important-face
+                     '((t (:foreground "cyan"))))
+     (my:wl-set-face 'wl-highlight-summary-flagged-face
+                     '((t (:foreground "yellow"))))
+     (my:wl-set-face 'wl-highlight-summary-displaying-face
+                     '((t (:underline t))))
+     (my:wl-set-face 'wl-highlight-summary-forwarded-face
+                     '((t (:forground "yellow"))))
+     (my:wl-set-face 'wl-highlight-summary-answered-face
+                     '((t (:forground "lightblue"))))
+     (my:wl-set-face 'wl-highlight-summary-deleted-face
+                     '((t (:foreground "darkblue"))))
+     (my:wl-set-face 'wl-highlight-summary-refiled-face
+                     '((t (:foreground "green"))))
+     (my:wl-set-face 'wl-highlight-summary-target-face
+                     '((t (:foreground "cyan"))))
+     (my:wl-set-face 'wl-highlight-thread-indent-face
+                     '((t (:underline t))))
+     (my:wl-set-face 'wl-highlight-folder-zero-face
+                     '((t (:foreground "white"))))
+     (my:wl-set-face 'wl-highlight-folder-opened-face
+                     '((t (:foreground "cyan"))))
+     (my:wl-set-face 'wl-highlight-folder-unread-face
+                     '((t (:foreground "blue"))))
+     (my:wl-set-face 'wl-highlight-folder-unknown-face
+                     '((t (:foreground "cyan"))))
+     (my:wl-set-face 'wl-highlight-folder-few-face
+                     '((t (:foreground "red"))))
+     (my:wl-set-face 'wl-highlight-folder-many-face
+                     '((t (:foreground "pink"))))
+   #+END_EXAMPLE
 
 * Footnotes
 
@@ -1158,3 +857,5 @@ title: Wanderlustの設定
 [fn:3] Wanderlustと文字コード : [[http://d.hatena.ne.jp/kiwanami/20091103/1257243524]]
 
 [fn:4] Wanderlustで自分宛てのメールをGMailのように「>」で強調する : [[http://d.hatena.ne.jp/khiker/20080206/wanderlust]]
+
+[fn:5] color-theme-darkpastel : [[https://github.com/uwabami/color-theme-darkpastel]]

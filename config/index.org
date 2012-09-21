@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/18 12:04:44$
+# $Lastupdate: 2012/09/21 23:49:12$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -585,7 +585,7 @@ title: Emacsの基本設定
 
     本体設定: =~/.elmo= の場所を変更している
        #+BEGIN_SRC emacs-lisp
-         (setq elmo-msgdb-directory "~/Mail/.elmo")
+         (setq elmo-msgdb-directory "~/Mail/elmo")
        #+END_SRC
     org で書かれた設定ファイルから elisp を抽出して compile
     #+BEGIN_SRC emacs-lisp

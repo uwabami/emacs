@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/22 05:24:35$
+# $Lastupdate: 2012/09/22 15:35:35$
 # License: Expat.
 #
 #+TITLE: Wanderlust の設定
@@ -248,13 +248,30 @@ title: Wanderlustの設定
    (setq wl-fldmgr-make-backup nil)
    #+END_SRC
 ** アドレス帳
+*** Mew の =Addrbook= 形式を使う
+    #+BEGIN_SRC emacs-lisp
+      (require 'wl-addrbook)
+      (wl-addrbook-setup)
+      (setq wl-addrbook-file "~/.mua/Addrbook.gpg")
+    #+END_SRC
+*** google-contacts-mew → Addrbook
+    Google Contacts から Mew の =Addrbook= 形式へ import するライブラリ
+    #+BEGIN_SRC emacs-lisp
+      (unless (locate-library "google-contacts-mew")
+        (el-get 'sync 'google-contacts-mew))
+      (require 'google-contacts-mew)
+      (setq google-contacts-mew-ask nil)
+      (setq mew-conf-path nil)
+    #+END_SRC
+    Mew の Addrbook 形式を使用するので, その場所の設定
    #+BEGIN_SRC emacs-lisp
-    (setq wl-address-file "~/.mua/Addrbook.gpg")
+     (setq mew-addrbook-file wl-addrbook-file)
    #+END_SRC
-   ちなみに LDAP サーバからアドレスを引くことも可能.
-   以前は GCALDaemon を使って local に ldap サーバを上げていたのだけれども,
-   Google Contacts の API が変わったらしく
-   GCALDaemon で LDAP サーバは使えなくなったのでコメントアウト.
+*** LDAP?
+    LDAP サーバからアドレスを引くことも可能.
+    以前は GCALDaemon を使って local に ldap サーバを上げていたのだけれども,
+    Google Contacts の API が変わったらしく
+    GCALDaemon で LDAP サーバは使えなくなったのでコメントアウト.
    #+BEGIN_SRC emacs-lisp
      ;; ldap からアドレスを引く設定
      ;; (setq wl-use-ldap t)
@@ -387,6 +404,11 @@ title: Wanderlustの設定
 ** 改ページ無視
    #+BEGIN_SRC emacs-lisp
    (setq wl-break-pages nil)
+   #+END_SRC
+** icon 使わない
+   GUI でもメニュー表示してないし
+   #+BEGIN_SRC emacs-lisp
+     (setq wl-highlight-folder-with-icon nil)
    #+END_SRC
 * flag とフォルダを行き来する関数の追加
   "=" でフラグ付きフォルダとメッセージのあるフォルダを行き来する

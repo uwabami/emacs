@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/13 21:00:37$
+# $Lastupdate: 2012/09/24 01:14:53$
 # License: Expat
 #
 #+TITLE: フォントとフレームの設定
@@ -66,6 +66,10 @@ title: フォントとフレームの設定
     ;;   (custom-set-faces
     ;;    '(variable-pitch ((t (:family "Ricty" :size 13.5 nil 'prepend))))
     ;;    '(fixed-pitch ((t (:family "Ricty" :size 13.5 nil 'prepend))))
+    ;;    '(e2wm:face-subtitle ((t (:inherit fixed-pitch :foreground "Gray90" :height 1.0))))
+    ;;    '(e2wm:face-title ((t (:inherit fixed-pitch :foreground "yellow" :height 1.0))))
+    ;;    '(custom-group-tag ((t (:inherit fixed-pitch :foreground "light blue" :weight bold :height 1.0))))
+    ;;    '(custom-group-tag-1 ((t (:inherit fixed-pitch :foreground "pink" :weight bold :height 1.0))))
     ;;    ))
     (when window-system
       (set-default-font
@@ -86,7 +90,8 @@ title: フォントとフレームの設定
        '(custom-group-tag ((t (:inherit fixed-pitch :foreground "light blue" :weight bold :height 1.0))))
        '(custom-group-tag-1 ((t (:inherit fixed-pitch :foreground "pink" :weight bold :height 1.0))))
        '(e2wm:face-subtitle ((t (:inherit fixed-pitch :foreground "Gray90" :height 1.0))))
-       '(e2wm:face-title ((t (:inherit fixed-pitch :foreground "yellow" :height 1.0)))))
+       '(e2wm:face-title ((t (:inherit fixed-pitch :foreground "yellow" :height 1.0))))
+       )
       )
   #+END_SRC
 * color-theme

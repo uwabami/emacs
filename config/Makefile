@@ -1,5 +1,5 @@
 include $(HOME)/.emacs.d/Mkinclude
-EXCLUDE		:= sitemap.org export-config.org sitemap.org~
+EXCLUDE		:= sitemap.org export-config.org sitemap.org~ README.org
 BATCH		:= $(EMACS) --batch -l $(HOME)/.emacs.d/init.el --no-site-file
 __ALL_SRC__ := $(filter-out $(EXCLUDE), $(wildcard *.org))
 ORGFILES	:= $(__ALL_SRC__:%v.org=)

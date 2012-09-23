@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/22 15:35:35$
+# $Lastupdate: 2012/09/23 17:55:30$
 # License: Expat.
 #
 #+TITLE: Wanderlust の設定
@@ -22,7 +22,7 @@ title: Wanderlustの設定
    SEMI や FLIM などの UA の表示に [[http://uwabami.github.com/rail/][rail]] [fn:2]を使っている.
    #+BEGIN_SRC emacs-lisp
      (unless (locate-library "rail")
-       (el-get 'sync 'rail))
+       (el-get 'sync '(rail)))
      (eval-and-compile (require 'rail))
      (setq rail-emulate-genjis t)
    #+END_SRC
@@ -30,10 +30,12 @@ title: Wanderlustの設定
    #+ATTR_HTML: with="50%"
    [[file:https:/raw.github.com/uwabami/rail/gh-pages/images/wanderlust_with_or_without_rail.png]]
 ** elscreen-wl
-   elscreen と Wanderlust の連携. メール作成時に screen を追加して, 送信後に screen を閉じてくれたり.
+   elscreen と Wanderlust の連携.
+   メール作成時に draft 用の screen を追加して,
+   送信後に screen を閉じる.
    #+BEGIN_SRC emacs-lisp
      (unless (locate-library "elscreen-wl")
-       (el-get 'sync 'elscreen-wl))
+       (el-get 'sync '(elscreen-wl)))
      (require 'elscreen-wl)
    #+END_SRC
 ** cp5022x を使う
@@ -43,7 +45,12 @@ title: Wanderlustの設定
     (when (require 'cp5022x nil t)
       (add-to-list 'mime-charset-coding-system-alist '(iso-2022-jp . cp50220)))
    #+END_SRC
+   default mime charset -> iso-2022-jp に
+   #+BEGIN_SRC emacs-lisp
+   (setq wl-mime-charset 'iso-2022-jp)
+   #+END_SRC
 ** emacs-w3m + SEMI の追加設定
+   HTML メールを表示するための設定.
    mime-setup がロードされる前に記述する必要あり.
    #+BEGIN_SRC emacs-lisp
      (setq mime-setup-enable-inline-html nil)
@@ -61,72 +68,50 @@ title: Wanderlustの設定
    #+BEGIN_SRC emacs-lisp
      (setq mime-edit-split-message nil)
    #+END_SRC
-** c-sig
-   署名の選択に c-sig を使用している.
-*** 導入
-    一時配布元が良くわからないので alioth の Git リポジトリを参照する
-    el-get 用の recipe 書いてみたり.
-    #+BEGIN_SRC emacs-lisp
-    (unless (locate-library "c-sig")
-      (el-get 'sync 'c-sig-alioth))
-    (eval-when-compile (require 'c-sig))
-    #+END_SRC
-*** 設定
-    #+BEGIN_SRC emacs-lisp
-      (autoload 'insert-signature-eref "c-sig" "c-sig" t)
-      (setq sig-insert-end t)
-      (setq sig-save-to-sig-name-alist nil)
-      (setq message-signature-file nil)
-      ;; Mew 風に \C-c \t で c-sig -> signature 挿入
-      (define-key wl-draft-mode-map "\C-c\t" 'insert-signature-eref)
-      (add-hook 'wl-draft-mode-hook
-                '(lambda ()
-                   (define-key (current-local-map) "\C-c\C-w"
-                     'insert-signature-eref)))
-    #+END_SRC
-* 個人情報, 送受信サーバの設定
-** 送受信の設定
-   =ssl.el= の代わりに =opentls= を使う.
-   ついで(あれば) =/etc/ssl/certs/ca-ceritficats.crt= で証明書を検証.
+* 送受信の設定
+  =ssl.el= の代わりに =opentls= を使う.
+  ついで(あれば) =/etc/ssl/certs/ca-ceritficats.crt= で証明書を検証.
+  #+BEGIN_SRC emacs-lisp
+    (require 'tls)
+    (set-alist 'elmo-network-stream-type-alist
+               "!opentls" '(opentls nil open-tls-stream))
+    (set-alist 'elmo-network-stream-type-alist
+               "!" '(ssl ssl open-tls-stream))
+    (setq ssl-program-name "gnutls-cli")
+    (if (file-exists-p "/etc/ssl/certs/ca-certificates.crt")
+        (setq ssl-program-arguments
+              '("--port" service
+                "--x509cafile" "/etc/ssl/certs/ca-certificates.crt" host)))
+  #+END_SRC
+* 個人情報の設定
+  具体的な設定内容は
+  設定自体は =~/.mua/wl-info.gpg= に書いて読み込んでいる.
    #+BEGIN_SRC emacs-lisp
-     (require 'tls)
-     (set-alist 'elmo-network-stream-type-alist
-                "!opentls" '(opentls nil open-tls-stream))
-     (set-alist 'elmo-network-stream-type-alist
-                "!" '(ssl ssl open-tls-stream))
-     (setq ssl-program-name "gnutls-cli")
-     (if (file-exists-p "/etc/ssl/certs/ca-certificates.crt")
-         (setq ssl-program-arguments
-               '("--port" service
-                 "--x509cafile" "/etc/ssl/certs/ca-certificates.crt" host)))
+     (load "~/.mua/wl-info.gpg")
    #+END_SRC
-** 個人情報の設定
-   設定する内容は
-   #+BEGIN_EXAMPLE
-     ;; From: の設定
-     (setq wl-from "Your Name <e-mail@example.com>")
-     ;; (system-name) が FQDN を返さない場合、
-     ;; `wl-local-domain' にホスト名を除いたドメイン名を設定してください。
-     ;(setq wl-local-domain "example.com")
-     ;; 自分のメールアドレスのリスト
-     (setq wl-user-mail-address-list
-           (list (wl-address-header-extract-address wl-from)
-             ;; "e-mail2@example.com"
-             ;; "e-mail3@example.net" ...
-             ))
-     ;; 自分の参加しているメーリングリストのリスト
-     (setq wl-subscribed-mailing-list
-           '("wl@lists.airs.net"
-         "apel-ja@m17n.org"
-         "emacs-mime-ja@m17n.org"
-         ;; "ml@example.com" ...
-         ))
-   #+END_EXAMPLE
-   など.
-
-   設定自体は =~/.mua/wl-info.gpg= に書いて読み込む.
-** 送信サーバの設定
-   設定する内容は
+  設定している内容は以下の通り
+** 自身のメールアドレスと購読メーリングリストの設定
+  #+BEGIN_EXAMPLE
+    ;; From: の設定
+    (setq wl-from (concat user-full-name " <" user-mail-address ">"))
+    ;; (system-name) が FQDN を返さない場合、
+    ;; `wl-local-domain' にホスト名を除いたドメイン名を設定してください。
+    ;(setq wl-local-domain "example.com")
+    ;; 自分のメールアドレスのリスト
+    (setq wl-user-mail-address-list
+          (list (wl-address-header-extract-address wl-from)
+            ;; "e-mail2@example.com"
+            ;; "e-mail3@example.net" ...
+            ))
+    ;; 自分の参加しているメーリングリストのリスト
+    (setq wl-subscribed-mailing-list
+          '("wl@lists.airs.net"
+        "apel-ja@m17n.org"
+        "emacs-mime-ja@m17n.org"
+        ;; "ml@example.com" ...
+        ))
+  #+END_EXAMPLE
+** 送信用SMTPサーバの設定
    #+BEGIN_EXAMPLE
      (setq wl-smtp-connection-type 'starttls)
      (setq wl-smtp-posting-server "your smtp server")
@@ -134,13 +119,9 @@ title: Wanderlustの設定
      (setq wl-smtp-posting-port 587)
      (setq wl-smtp-posting-user "your account")
    #+END_EXAMPLE
-   など.
-
-   設定自体は =~/.mua/wl-info.gpg= に書いて読み込む.
 ** From に応じて送信サーバをきりかえる.
    本来はメール作成時/返信時の template の切り替えなのだれど,
    送信時の SMTP の設定を from に合わせてきりかえるようにする.
-   設定は
    #+BEGIN_EXAMPLE
      (setq wl-template-alist
          '(("default"
@@ -174,23 +155,21 @@ title: Wanderlustの設定
             )
            ))
    #+END_EXAMPLE
-   など. ssh tunnel を自動的にやる事はできないモンだろうか
+   ssh tunnel を自動的にやる事はできないモンだろうか
    (送信時に open して, 送信後に close する, みたいなの).
 
-   設定自体は =~/.mua/wl-info.gpg= に書いて読み込む.
-*** template 選択を可視化
+   ついでに template の切り替えに関して幾つか設定.
     #+BEGIN_SRC emacs-lisp
+     ;; template 切り替え時に 内容を表示
      (setq wl-template-visible-select t)
     #+END_SRC
-*** template 切り替えのキーバインド
-    =draft-mode= で =C-c C-n= をするとテンプレートをきりかえる
+    =draft-mode= で =C-c C-n= をするとテンプレートを切り替え
     #+BEGIN_SRC emacs-lisp
      (define-key wl-draft-mode-map "\C-c\C-n" 'wl-template-select)
     #+END_SRC
-*** from に応じて wl-from, wl-envelope-from, 送信 smtp サーバを変更する
+    from に応じて wl-from, wl-envelope-from, 送信 smtp サーバを
+    変更する送信時に変更
    #+BEGIN_SRC emacs-lisp
-     ;; ドラフトバッファの From を見て wl-from (と同時に wl-envelope-from) を
-     ;; 書き換える (手書きで From を書き換えたときにも有効)
      (add-hook 'wl-draft-send-hook
                (lambda ()
                  (set (make-local-variable 'wl-from)
@@ -198,80 +177,52 @@ title: Wanderlustの設定
      ;; 送信時に自動的に wl-draft-config-alist を適用しない
      (remove-hook 'wl-draft-send-hook 'wl-draft-config-exec)
    #+END_SRC
-** サーバ情報などの読み込み
-   個人情報(メールアドレス), サーバの設定などは
-   gpg ファイルに書いて, =epa= で透過的に読み込む.
-   #+BEGIN_SRC emacs-lisp
-     (load "~/.mua/wl-info.gpg")
-   #+END_SRC
 * 基本設定
-** 終了時に確認しない
+** imap 関連
+   デフォルトの認証設定
    #+BEGIN_SRC emacs-lisp
-      (setq wl-interactive-exit nil)
+    (setq elmo-imap4-default-authenticate-type 'clear)
+    (setq elmo-imap4-default-port '993)
+    (setq elmo-imap4-default-stream-type 'opentls)
    #+END_SRC
-** 送信時に確認しない
+   フォルダ名は UTF-7 でエンコードされているので,
+   表示する際にこれをデコードする
    #+BEGIN_SRC emacs-lisp
-      (setq wl-interactive-send nil)
+      (setq elmo-imap4-use-modified-utf7 t)
    #+END_SRC
-** スレッドは常に閉じる
-   #+BEGIN_SRC emacs-lisp
-      (setq wl-thread-insert-opened nil)
-   #+END_SRC
-** 3 pain 表示 -> 使わない
-   #+BEGIN_SRC emacs-lisp
-      (setq wl-stay-folder-window nil)
-   #+END_SRC
-** サマリ内の移動で未読メッセージがないと次のフォルダに移動 -> しない
-   #+BEGIN_SRC emacs-lisp
-     (setq wl-auto-select-next nil)
-   #+END_SRC
-** 未読を優先的に読む
-   #+BEGIN_SRC emacs-lisp
-     (setq wl-summary-move-order 'unread)
-   #+END_SRC
-** local の Mail folder の位置
+** フォルダの位置の default からの変更
+   =~/Mail/= もしくは =~/.mua/= 以下に集約している
+
+   local の Mail folder の位置
    #+BEGIN_SRC emacs-lisp
     (setq elmo-maildir-folder-path "~/Mail")
    #+END_SRC
-** lost+found フォルダの設定
+   lost+found フォルダの設定:
    =elmo-maildir-folder-path= からの相対パスになっている
    #+BEGIN_SRC emacs-lisp
    (setq elmo-lost+found-folder ".lost+found")
    #+END_SRC
-** folders の位置の変更
-   ホスト名に応じて読み込むフォルダ設定を代えている.
+   folders の位置の変更
+   =~/.mua/wl-folders.gpg= に変更
    #+BEGIN_SRC emacs-lisp
      (setq wl-folders-file "~/.mua/wl-folders.gpg")
    #+END_SRC
-** フォルダ編集時に backup を作成しない.
+   draft や trash は
+   Gmail と同期すると大変な事になるので local に持つ.
    #+BEGIN_SRC emacs-lisp
-   (setq wl-fldmgr-make-backup nil)
+     (setq wl-draft-folder "+Drafts")
+     (setq wl-trash-folder "+Trash")
+     (setq wl-temporary-file-directory "~/Downloads/")
    #+END_SRC
-** アドレス帳
-*** Mew の =Addrbook= 形式を使う
-    #+BEGIN_SRC emacs-lisp
-      (require 'wl-addrbook)
-      (wl-addrbook-setup)
-      (setq wl-addrbook-file "~/.mua/Addrbook.gpg")
-    #+END_SRC
-*** google-contacts-mew → Addrbook
-    Google Contacts から Mew の =Addrbook= 形式へ import するライブラリ
-    #+BEGIN_SRC emacs-lisp
-      (unless (locate-library "google-contacts-mew")
-        (el-get 'sync 'google-contacts-mew))
-      (require 'google-contacts-mew)
-      (setq google-contacts-mew-ask nil)
-      (setq mew-conf-path nil)
-    #+END_SRC
-    Mew の Addrbook 形式を使用するので, その場所の設定
+   アドレス帳
    #+BEGIN_SRC emacs-lisp
-     (setq mew-addrbook-file wl-addrbook-file)
+     (setq wl-address-file  "~/.mua/Addrbook.gpg")
+     (setq wl-use-petname t)
    #+END_SRC
-*** LDAP?
-    LDAP サーバからアドレスを引くことも可能.
-    以前は GCALDaemon を使って local に ldap サーバを上げていたのだけれども,
-    Google Contacts の API が変わったらしく
-    GCALDaemon で LDAP サーバは使えなくなったのでコメントアウト.
+   LDAP サーバからアドレスを引くことも可能.
+   以前は GCALDaemon を使って local に ldap サーバを上げていたのだけれども,
+   Google Contacts の API が変わったらしく
+   GCALDaemon で LDAP サーバは使えなくなったのでコメントアウト.
    #+BEGIN_SRC emacs-lisp
      ;; ldap からアドレスを引く設定
      ;; (setq wl-use-ldap t)
@@ -279,41 +230,75 @@ title: Wanderlustの設定
      ;; (setq wl-ldap-port "636")
      ;; (setq wl-ldap-base "ou=People,dc=example,dc=com")
    #+END_SRC
-** パスワードの保存先
+   パスワードの保存先
    #+BEGIN_SRC emacs-lisp
     (setq elmo-passwd-alist-file-name "~/.mua/wl-passwd.gpg")
    #+END_SRC
-** スキャン時に問い合わせない
+** フォルダ編集時に backup を作成しない.
    #+BEGIN_SRC emacs-lisp
-   (setq elmo-folder-update-confirm nil)
+   (setq wl-fldmgr-make-backup nil)
    #+END_SRC
-** デフォルトのフォルダ
+** FCC, BCC の設定
    #+BEGIN_SRC emacs-lisp
-   (setq wl-default-folder "%inbox")
+      (setq wl-fcc "+Sent")
    #+END_SRC
-** 起動時に確認するフォルダ -> INBOX のみ
+   送信済は既読にする → ちゃんと動いていない気がする
    #+BEGIN_SRC emacs-lisp
-   (setq wl-auto-check-folder-name "%inbox")
+      (setq wl-fcc-force-as-read t)
    #+END_SRC
-** 補完スペック
+   Gmail だと bcc でも Message-ID が同じなので表示されない
+   or ML への投稿のスレッドが切れる.
+   安直な対応として SMTP サーバとして gmail 以外を使えば良い.
+    #+BEGIN_SRC emacs-lisp
+      (setq wl-bcc (concat user-mail-address))
+    #+END_SRC
+** 起動時に =%INBOX= のみをチェック
    #+BEGIN_SRC emacs-lisp
-     (setq wl-default-spec "%")
+      (setq wl-auto-check-folder-name "%INBOX")
    #+END_SRC
-** draft/trash などの位置
-   Gmail と同期すると大変な事になるので local に持つ.
+** confirm 関連の設定
+   スキャン時の問い合わせの無効化.
+   ちなみ
+   confirm を nil にしても 問い合わせが無いだけで
+   threshold は効くので, 明示的に nil に.
    #+BEGIN_SRC emacs-lisp
-     (setq wl-draft-folder "+Drafts")
-     (setq wl-trash-folder "+Trash")
+     (setq elmo-folder-update-confirm nil)
+     (setq elmo-folder-update-threshold nil)
+     (setq elmo-message-fetch-confirm nil)
+     (setq elmo-message-fetch-threshold nil)
+     (setq wl-prefetch-confirm nil)
+     (setq wl-prefetch-threshold nil)
    #+END_SRC
-** multipart 保存先
+   終了時に確認しない
    #+BEGIN_SRC emacs-lisp
-     (setq wl-temporary-file-directory "~/Downloads/")
+      (setq wl-interactive-exit nil)
    #+END_SRC
-** 非同期チェック
+   送信時は確認する
    #+BEGIN_SRC emacs-lisp
-        (setq wl-folder-check-async t)
+      (setq wl-interactive-send t)
    #+END_SRC
-** キーバインド
+** misc.
+   スレッドは常に閉じる
+   #+BEGIN_SRC emacs-lisp
+      (setq wl-thread-insert-opened nil)
+   #+END_SRC
+   3 pain 表示 -> 使わない
+   #+BEGIN_SRC emacs-lisp
+      (setq wl-stay-folder-window nil)
+   #+END_SRC
+   未読を優先的に読む
+   #+BEGIN_SRC emacs-lisp
+     (setq wl-summary-move-order 'unread)
+   #+END_SRC
+   改ページ無視
+   #+BEGIN_SRC emacs-lisp
+   (setq wl-break-pages nil)
+   #+END_SRC
+   icon を使わない → GUI でもメニュー表示してないし, 体感的には遅くなる
+   #+BEGIN_SRC emacs-lisp
+     (setq wl-highlight-folder-with-icon nil)
+   #+END_SRC
+* キーバインド関連
    =C-c C-j= を browse-url に明け渡す
    #+BEGIN_SRC emacs-lisp
      (define-key wl-draft-mode-map "\C-c\C-j" 'browse-url-at-point)
@@ -334,84 +319,10 @@ title: Wanderlustの設定
    #+BEGIN_SRC emacs-lisp
      (define-key wl-summary-mode-map "\M-o" 'wl-summary-auto-refile)
    #+END_SRC
-** フォルダ更新時の挙動
-   #+BEGIN_SRC emacs-lisp
-        (setq wl-default-sync-range "update")
-   #+END_SRC
-** 重複メッセージを隠す
-   フォルダ内の Message-ID が同じメールを非表示にする
-   #+BEGIN_SRC emacs-lisp
-        (setq wl-folder-process-duplicates-alist
-              '(
-                (".*" . hide)
-                ))
-   #+END_SRC
-
-** imap 関連の設定
-*** imap の認証
-   #+BEGIN_SRC emacs-lisp
-    (setq elmo-imap4-default-authenticate-type 'clear)
-    (setq elmo-imap4-default-port '993)
-    (setq elmo-imap4-default-stream-type 'opentls)
-   #+END_SRC
-*** 日本語フォルダ名対策
-    フォルダ名は UTF-7 でエンコードされているので,
-    表示する際にこれをデコードする
-    #+BEGIN_SRC emacs-lisp
-      (setq elmo-imap4-use-modified-utf7 t)
-    #+END_SRC
-*** キャッシュ
-    #+BEGIN_SRC emacs-lisp
-      (setq elmo-imap4-use-cache t)
-    #+END_SRC
-*** plugged/unplugged の挙動
-    オフライン/オンライン操作の有効化
-    #+BEGIN_SRC emacs-lisp
-        (setq elmo-enable-disconnected-operation t)
-    #+END_SRC
-    unplugged で送信→queueに格納
-    #+BEGIN_SRC emacs-lisp
-        (setq wl-draft-enable-queuing t)
-    #+END_SRC
-    plugged にした際に queue を送信
-    #+BEGIN_SRC emacs-lisp
-        (setq wl-auto-flush-queue t)
-    #+END_SRC
-    起動時の接続設定 -> 常に online に
-    #+BEGIN_SRC emacs-lisp
-        (setq wl-plugged t)
-    #+END_SRC
-** メール送信/draft-mode の挙動
-*** FCC: 送信控え
-    #+BEGIN_SRC emacs-lisp
-        (setq wl-fcc "+Sent")
-    #+END_SRC
-*** 送信済は既読にする
-    ちゃんと動いていない気がする
-    #+BEGIN_SRC emacs-lisp
-      (setq wl-fcc-force-as-read t)
-    #+END_SRC
-*** BCC
-    Gmail だと, bcc でも Message-ID が同じなので表示されない or ML への投
-    稿のスレッドが切れる. 対応として SMTP サーバとして gmail 以外を使えば良い.
-    #+BEGIN_SRC emacs-lisp
-      (setq wl-bcc "uwabami@gfd-dennou.org")
-    #+END_SRC
-** default mime charset -> iso-2022-jp に
-   #+BEGIN_SRC emacs-lisp
-   (setq wl-mime-charset 'iso-2022-jp)
-   #+END_SRC
-** 改ページ無視
-   #+BEGIN_SRC emacs-lisp
-   (setq wl-break-pages nil)
-   #+END_SRC
-** icon 使わない
-   GUI でもメニュー表示してないし
-   #+BEGIN_SRC emacs-lisp
-     (setq wl-highlight-folder-with-icon nil)
-   #+END_SRC
 * flag とフォルダを行き来する関数の追加
-  "=" でフラグ付きフォルダとメッセージのあるフォルダを行き来する
+  "=" でフラグ付きフォルダと
+  実際にメッセージのあるフォルダを行き来する.
+  Gmail の「スター付き」フォルダでも有効
   #+BEGIN_SRC emacs-lisp
     (defun my:wl-summary-jump-to-referer-message ()
       (interactive)
@@ -435,6 +346,145 @@ title: Wanderlustの設定
             (wl-summary-goto-last-visited-folder)))))
     (define-key wl-summary-mode-map "=" 'my:wl-summary-jump-to-referer-message)
   #+END_SRC
+
+* summary-mode の表示のカスタマイズ
+** 自分が差出人である mail は To:某 と表示
+   #+BEGIN_SRC emacs-lisp
+   (setq wl-summary-showto-folder-regexp ".*")
+   (setq wl-summary-from-function 'wl-summary-default-from)
+   #+END_SRC
+** サマリ行の表示関連
+   サマリ行のフォーマット指定
+   #+BEGIN_SRC emacs-lisp
+     (setq wl-summary-line-format
+        "%T%P%1@%1>%Y/%M/%D %21(%t%[%19(%c %f%)%]%) %#%~%s")
+   #+END_SRC
+   サマリ表示は切り詰めない
+   #+BEGIN_SRC emacs-lisp
+     (setq wl-subject-length-limit t)
+   #+END_SRC
+   スレッドの幅の指定
+   #+BEGIN_SRC emacs-lisp
+     (setq wl-thread-indent-level 2)
+     (setq wl-thread-have-younger-brother-str "+"
+           wl-thread-youngest-child-str "+"
+           wl-thread-vertical-str "|"
+           wl-thread-horizontal-str "-"
+           wl-thread-space-str " ")
+
+   #+END_SRC
+   以下の二つの設定を有効にするには
+   =elmo-msgdb-extra-fields= を設定する必要がある.
+   この変数は振り分け判定にも使用するのでそこで設定している
+*** Gmail 風に, 自分宛のメールに ">" をつけて表示する
+    元ネタ [fn:4]: [[http://d.hatena.ne.jp/khiker/20080206/wanderlust]]
+    #+BEGIN_SRC emacs-lisp
+      (setq wl-user-mail-address-regexp
+            "^uwabami.*\\|^sasakyh.*")
+      ;; 一覧表示での置き換え規則に追加
+      (defun my:wl-summary-line-for-me ()
+        (if (catch 'found
+              (let ((to (elmo-message-entity-field wl-message-entity 'to))
+                    (cc (elmo-message-entity-field wl-message-entity 'cc)))
+                (when (or (stringp to) cc)
+                  (setq to
+                        (append (if (stringp to) (list to) to)
+                                (when cc
+                                  (if (stringp cc) (list cc) cc)))))
+                (dolist (i to)
+                  (when (wl-address-user-mail-address-p (eword-decode-string i))
+                    (throw 'found t)))))
+            ">"
+          ""))
+      ;; > を summary-line-format に追加
+      (setq wl-summary-line-format-spec-alist
+            (append wl-summary-line-format-spec-alist
+                    '((?> (my:wl-summary-line-for-me)))))
+    #+END_SRC
+*** 添付ファイルがあったら, サマリ行に "@" を付ける
+    #+BEGIN_SRC emacs-lisp
+      (setq wl-summary-line-format-spec-alist
+            (append wl-summary-line-format-spec-alist
+                    '((?@ (wl-summary-line-attached)))))
+    #+END_SRC
+** クォートされた文字列もデコードする
+   #+BEGIN_SRC emacs-lisp
+     (setq mime-header-lexical-analyzer
+           '(
+             ;; eword-analyze-quoted-string
+             eword-analyze-domain-literal
+             eword-analyze-comment
+             eword-analyze-spaces
+             eword-analyze-special
+             eword-analyze-encoded-word
+             eword-analyze-atom))
+   #+END_SRC
+** Subject が変わったらスレッドを切る
+   #+BEGIN_SRC emacs-lisp
+     (setq wl-summary-divide-thread-when-subject-changed nil)
+   #+END_SRC
+** Subject での Tab や複数スペースを無視
+   #+BEGIN_SRC emacs-lisp
+     (defadvice std11-unfold-string (after simply activate)
+       (setq ad-return-value
+             (elmo-replace-in-string ad-return-value "[ \t]+" " ")))
+   #+END_SRC
+** 重複メッセージを非表示に
+   フォルダ内の Message-ID が同じメールを非表示にする
+   #+BEGIN_SRC emacs-lisp
+     (setq wl-folder-process-duplicates-alist
+           '(
+             (".*" . hide)
+             ))
+   #+END_SRC
+* 振り分け設定
+  =$= 以外を振り分け対象に
+  #+BEGIN_SRC emacs-lisp
+   (setq wl-summary-auto-refile-skip-marks '("$"))
+  #+END_SRC
+** 振り分け判定に使用するヘッダ
+   添付の有無の表示にも使うので =Content-Type= も登録.
+   あと =Delivered-To= はメールの検索の時に結構重宝している.
+   #+BEGIN_SRC emacs-lisp
+     (setq elmo-msgdb-extra-fields
+           '(
+             "List-Post"
+             "Resent-CC"
+             "Mailing-List"
+             "X-Mailing-List"
+             "X-ML-Address"
+             "X-ML-Name"
+             "X-ML-To"
+             "Delivered-To"
+             "Content-Type" ;; 添付の有無の表示の為に追加
+             "X-Google-Appengine-App-Id";; GAEの送信するメールの振り分け用
+             "To"
+             "Cc"
+             "From"
+             "Subject"
+             "Reply-To"
+             ))
+   #+END_SRC
+** 自動振り分け
+   =wl-expire= の設定
+*** log
+    良い感じになってきたら nil にして log を残さないようにすること
+    #+BEGIN_SRC emacs-lisp
+        (setq wl-expire-use-log t)
+    #+END_SRC
+*** 起動時に自動振り分けを有効化する
+    正規表現をミスすると致命的なので注意
+    #+BEGIN_SRC emacs-lisp
+    ;;  (add-hook 'wl-summary-prepared-pre-hook 'wl-summary-expire)
+    #+END_SRC
+*** 実際の expire rule
+    あまり細かい事は考えず, 一年前のメールは =hide= にしている.
+    #+BEGIN_SRC emacs-lisp
+      ;; (setq wl-expire-alist
+      ;;       '(:
+      ;;         ("^\\%.*$" (date 365) hide)
+      ;;         ))
+    #+END_SRC
 * 日本語添付ファイル名のデコード
   日本語の添付ファイルに関しては, いまだにうまくいかない時がある.
   #+BEGIN_SRC emacs-lisp
@@ -470,95 +520,11 @@ title: Wanderlustの設定
          "Encode a string."
          (require 'eword-encode)
          (ad-set-arg 0 (eword-encode-string (ad-get-arg 0)))))
+    ;; 二重エスケープを回避
+    (defun shell-quote-argument (file) file)
   #+END_SRC
-* summary-mode の表示のカスタマイズ
-** 自分が差出人である mail は To:某 と表示
-   #+BEGIN_SRC emacs-lisp
-   (setq wl-summary-showto-folder-regexp ".*")
-   (setq wl-summary-from-function 'wl-summary-default-from)
-   #+END_SRC
-** Gmail 風に, 自分宛のメールに ">" をつけて表示する
-  元ネタ [fn:4]: [[http://d.hatena.ne.jp/khiker/20080206/wanderlust]]
-  #+BEGIN_SRC emacs-lisp
-    (setq wl-user-mail-address-regexp
-          "^uwabami.*\\|^sasakyh.*")
-    ;; 一覧表示での置き換え規則に追加
-    (defun my:wl-summary-line-for-me ()
-      (if (catch 'found
-            (let ((to (elmo-message-entity-field wl-message-entity 'to))
-                  (cc (elmo-message-entity-field wl-message-entity 'cc)))
-              (when (or (stringp to) cc)
-                (setq to
-                      (append (if (stringp to) (list to) to)
-                              (when cc
-                                (if (stringp cc) (list cc) cc)))))
-              (dolist (i to)
-                (when (wl-address-user-mail-address-p (eword-decode-string i))
-                  (throw 'found t)))))
-          ">"
-        ""))
-    ;; > を summary-line-format に追加
-    (setq wl-summary-line-format-spec-alist
-          (append wl-summary-line-format-spec-alist
-                  '((?> (my:wl-summary-line-for-me)))))
-  #+END_SRC
-** 添付ファイルがあったら, サマリ行に "@" を付ける
-  #+BEGIN_SRC emacs-lisp
-    (setq wl-summary-line-format-spec-alist
-          (append wl-summary-line-format-spec-alist
-                  '((?@ (wl-summary-line-attached)))))
-  #+END_SRC
-** サマリ行のフォーマット指定
-   #+BEGIN_SRC emacs-lisp
-     (setq wl-summary-line-format
-        "%T%P%1@%1>%Y/%M/%D %21(%t%[%19(%c %f%)%]%) %#%~%s")
-   #+END_SRC
-** スレッドの幅の指定
-   #+BEGIN_SRC emacs-lisp
-     (setq wl-thread-indent-level 2)
-     (setq wl-thread-have-younger-brother-str "+"
-           wl-thread-youngest-child-str "+"
-           wl-thread-vertical-str "|"
-           wl-thread-horizontal-str "-"
-           wl-thread-space-str " ")
 
-   #+END_SRC
-** サマリ表示は切り詰めない
-   #+BEGIN_SRC emacs-lisp
-     (setq wl-subject-length-limit t)
-   #+END_SRC
-** "でクォートされた文字列もデコードする
-   #+BEGIN_SRC emacs-lisp
-     (setq mime-header-lexical-analyzer
-           '(
-             ;;eword-analyze-quoted-string
-             eword-analyze-domain-literal
-             eword-analyze-comment
-             eword-analyze-spaces
-             eword-analyze-special
-             eword-analyze-encoded-word
-             eword-analyze-atom))
-   #+END_SRC
-** Subject が変わったらスレッドを切る
-   #+BEGIN_SRC emacs-lisp
-     (setq wl-summary-divide-thread-when-subject-changed t)
-   #+END_SRC
-** 転送時に Subject に付加する文字列
-   #+BEGIN_SRC emacs-lisp
-     (setq wl-forward-subject-prefix "Fw: ")
-   #+END_SRC
-** Subject での Tab や複数スペースを無視
-   #+BEGIN_SRC emacs-lisp
-     (defadvice std11-unfold-string (after simply activate)
-       (setq ad-return-value
-             (elmo-replace-in-string ad-return-value "[ \t]+" " ")))
-   #+END_SRC
-** サマリ表には petname を使うが, 引用には使わない
-   #+BEGIN_SRC emacs-lisp
-   (setq wl-default-draft-cite-decorate-author nil)
-   #+END_SRC
 * メッセージ表示
-  主にヘッダ関連. ここで設定されたヘッダが振り分けなどの条件となる
 ** いったん全て非表示に
    #+BEGIN_SRC emacs-lisp
      (setq wl-message-ignored-field-list '("^.*:"))
@@ -585,14 +551,6 @@ title: Wanderlustの設定
              "^Message-ID:"
              ))
    #+END_SRC
-** メッセージの表示/prefetch の上限値
-   =nil= じゃ駄目なんだろうか?
-   #+BEGIN_SRC emacs-lisp
-     ;; メッセージ表示の際に確認を求めない上限値
-     (setq elmo-message-fetch-threshold 10000000000000000)
-     ;; メッセージのprefetch時に確認を求めない上限値
-     (setq wl-prefetch-threshold 10000000000000000)
-   #+END_SRC
 ** mime の画像表示の切り替え
    =M-T= でトグル
    #+BEGIN_SRC emacs-lisp
@@ -606,162 +564,59 @@ title: Wanderlustの設定
        '(define-key wl-summary-mode-map
           "\M-T" 'wl-summary-w3m-safe-toggle-inline-images))
    #+END_SRC
-* 返信設定
-** 自分宛のメールに返信する場合は =To:=, =Cc:= から自分のアドレスを削除
-   #+BEGIN_SRC emacs-lisp
-   (setq wl-draft-always-delete-myself t)
-   #+END_SRC
-** =a= の挙動
-   "a" (without-argument)では =Reply-To:= や =From:= などで
-   指定された唯一人または唯一つの投稿先に返信.
-   また, =X-ML-Name:= と =Reply-To:= がついているなら =Reply-To:= 宛に返信
-   #+BEGIN_SRC emacs-lisp
-     (setq wl-draft-reply-without-argument-list
-           '((("X-ML-Name" "Reply-To") . (("Reply-To") nil nil))
-             ("X-ML-Name" . (("To" "Cc") nil nil))
-             ("Followup-To" . (nil nil ("Followup-To")))
-             ("Newsgroups" . (nil nil ("Newsgroups")))
-             ("Reply-To" . (("Reply-To") nil nil))
-             ("Mail-Reply-To" . (("Mail-Reply-To") nil nil))
-             ("From" . (("From") nil nil))))
-   #+END_SRC
-** =C-u a= の挙動
-   =C-u a= (with-argument)であれば関係する全ての人・投稿先に返信
-   #+BEGIN_SRC emacs-lisp
-     (setq wl-draft-reply-with-argument-list
-           '(("Followup-To" . (("From") nil ("Followup-To")))
-             ("Newsgroups" . (("From") nil ("Newsgroups")))
-             ("Mail-Followup-To" . (("Mail-Followup-To") nil ("Newsgroups")))
-             ("From" . (("From") ("To" "Cc") ("Newsgroups")))))
-   #+END_SRC
-* 振り分け設定
-** 振り分け対象
-   =$= 以外を振り分け対象に
-   #+BEGIN_SRC emacs-lisp
-   (setq wl-summary-auto-refile-skip-marks '("$"))
-   #+END_SRC
-** 振り分け判定に使用するヘッダ
-   添付の有無の表示にも使うので =Content-Type= も登録.
-   あと =Delivered-To= はメールの検索の時に結構重宝している.
-   #+BEGIN_SRC emacs-lisp
-     (setq elmo-msgdb-extra-fields
-           '(
-             "List-Post"
-             "Resent-CC"
-             "Mailing-List"
-             "X-Mailing-List"
-             "X-ML-Address"
-             "X-ML-Name"
-             "X-ML-To"
-             "Reply-To"
-             "Subject"
-             "Content-Type" ;; 添付の有無の表示の為に追加
-             "X-Google-Appengine-App-Id";;
-             "To"
-             "Cc"
-             "From"
-             "Delivered-To"
-             ))
-   #+END_SRC
-** 自動振り分け
-   =wl-expire= の設定
-*** 自動振り分けの log
-    良い感じになってきたら nil にして log を残さないようにすること
-    #+BEGIN_SRC emacs-lisp
-        (setq wl-expire-use-log t)
-    #+END_SRC
-*** 起動時に自動振り分けを有効化する
-    #+BEGIN_SRC emacs-lisp
-      (add-hook 'wl-summary-prepared-pre-hook 'wl-summary-expire)
-    #+END_SRC
-*** ゴミ箱
-    imap フォルダでの削除を =%Trash= へ回さず
-    本当に消す(Gmail ではアーカイブになる).
-    ゴミ箱は二度と見ない/見たくないし, Gmail なら All Mail から拾える.
-    #+BEGIN_SRC emacs-lisp
-      (setq wl-dispose-folder-alist
-            '(
-              ("^%.*$" . remove) wl-dispose-folder-alist)
-            )
-    #+END_SRC
-** 実際の振り分けルール
-   あとで書く
-* GPG 署名
-  以前は mailcrypt を使っていたけれど,
-  epa があるので主にキーバインドの設定のみ.
-  =draft-mode= の文字コードをあらかじめ指定しておかないと,
-  送信時に文字コードが変換されるので不正な署名となってしまう.
 
-  もっとうまい方法/正攻法がありそうな気がするけれど,
-  使えてるから, まあ良いかな, とか.
+* 返信設定
+  自分宛のメールに返信する場合は =To:=, =Cc:= から自分のアドレスを削除
   #+BEGIN_SRC emacs-lisp
-    (setq pgg-default-keyserver-address "pool.sks-keyservers.net")
-    (setq pgg-scheme "gpg")
-    (setq pgg-messages-coding-system 'utf-8)
+    (setq wl-draft-always-delete-myself t)
+  #+END_SRC
+  "a" (without-argument)では =Reply-To:= や =From:= などで
+  指定された唯一人または唯一つの投稿先に返信.
+  また, =X-ML-Name:= と =Reply-To:= がついているなら =Reply-To:= 宛に返信
+  #+BEGIN_SRC emacs-lisp
+    (setq wl-draft-reply-without-argument-list
+          '((("X-ML-Name" "Reply-To") . (("Reply-To") nil nil))
+            ("X-ML-Name" . (("To" "Cc") nil nil))
+            ("Followup-To" . (nil nil ("Followup-To")))
+            ("Newsgroups" . (nil nil ("Newsgroups")))
+            ("Reply-To" . (("Reply-To") nil nil))
+            ("Mail-Reply-To" . (("Mail-Reply-To") nil nil))
+            ("From" . (("From") nil nil))))
+  #+END_SRC
+  =C-u a= (with-argument)であれば関係する全ての人・投稿先に返信
+  #+BEGIN_SRC emacs-lisp
+    (setq wl-draft-reply-with-argument-list
+          '(("Followup-To" . (("From") nil ("Followup-To")))
+            ("Newsgroups" . (("From") nil ("Newsgroups")))
+            ("Mail-Followup-To" . (("Mail-Followup-To") nil ("Newsgroups")))
+            ("From" . (("From") ("To" "Cc") ("Newsgroups")))))
+  #+END_SRC
+** c-sig
+  署名の選択に c-sig を使用している.
+
+  一時配布元が良くわからないので
+  alioth の Git リポジトリを参照する el-get 用の recipe を書いてみたり.
+    #+BEGIN_SRC emacs-lisp
+    (unless (locate-library "c-sig")
+      (el-get 'sync 'c-sig-alioth))
+    (eval-when-compile (require 'c-sig))
+    #+END_SRC
+  設定は以下の通り. Mew 風に =C-c <tab>= で signature を挿入するようにしている
+  #+BEGIN_SRC emacs-lisp
+    (eval-and-compile (require 'c-sig))
+    (setq sig-insert-end t)
+    (setq sig-save-to-sig-name-alist nil)
+    (setq message-signature-file nil)
+    ;; Mew 風に \C-c \t で c-sig -> signature 挿入
+    (define-key wl-draft-mode-map "\C-c\t" 'insert-signature-eref)
     (add-hook 'wl-draft-mode-hook
               '(lambda ()
-                 (set-buffer-file-coding-system 'iso-2022-jp)
-                 ))
-    (defun my:epa-wl-decrypt-message ()
-      (interactive)
-      (save-window-excursion
-        (wl-summary-jump-to-current-message)
-        (wl-message-decrypt-pgp-nonmime)))
-    (defun my:epa-wl-verify-message ()
-      (interactive)
-      (save-selected-window
-        (wl-summary-jump-to-current-message)
-        (wl-message-verify-pgp-nonmime)))
-    (define-key wl-summary-mode-map "\C-c:d" 'my:epa-wl-decrypt-message)
-    (define-key wl-summary-mode-map "\C-c:v" 'my:epa-wl-verify-message)
-    (define-key wl-draft-mode-map "\C-c:s" 'epa-mail-sign)
-    (define-key wl-draft-mode-map "\C-c:e" 'epa-mail-encrypt)
+                 (define-key (current-local-map) "\C-c\C-w"
+                   'insert-signature-eref)))
   #+END_SRC
-* 検索
-  offlineimap なんかで local の maildir と同期させている場合は
-  [[http://www.djcbsoftware.nl/code/mu/][maildir-utils]] が素敵です.
-  #+BEGIN_SRC emacs-lisp
-    (when (executable-find "mu")
-      (elmo-search-register-engine
-       'mu 'local-file
-       :prog "mu"
-       :args '("find" pattern "-o" "plain" "-f" "l" "--muhome" "~/.mu")
-       :charset 'utf-8)
-      (setq elmo-search-default-engine 'mu))
-  #+END_SRC
-  それ以外の場合には...どうしたら良いでしょう?
-  namazu は検索 index の生成が遅すぎるし,
-  hyper estraier は upstream dead な雰囲気だし.
-* ドキュメント書いてない...
-  #+BEGIN_SRC emacs-lisp
-    ;; sync の仕方の設定
-    (setq wl-folder-sync-range-alist
-          '(
-            ("^%.*$" . "update")
-            ))
-    ;; 自動振り分け/アーカイブの設定
-    (setq elmo-archive-treat-file t)
-    ;; テキストファイルを UTF-8 で添付する設定
-    (eval-after-load
-        "mime-edit"
-      '(set-alist 'mime-file-types "\\.txt$"
-                  '("text" "plain" (("charset" . "UTF-8")) "8bit" "attachement" (("filename" . file )))
-                  )
-      )
-    ;; (eval-after-load
-    ;;     "mime-edit"
-    ;;   '(let ((text (assoc "text" mime-content-types)))
-    ;;      (set-alist 'text "plain"
-    ;;                 '(("charset" "UTF-8" "ISO-2022-JP" "US-ASCII"
-    ;;                    "ISO-8859-1" "ISO-8859-8" "UTF-8")))
-    ;;      (set-alist 'mime-content-types "text" (cdr text))))
-    ;; 日本語添付ファイルの二重エスケープを回避
-    (defun shell-quote-argument (file) file)
-  #+END_SRC
-* face の設定
-  header の色を変えられるように, 幾つか list を追加しておいて,
-  細かい設定は color-theme で行なうことにしている
-** header 毎の色指定の追加
+* Face の設定
+** header 毎の face の追加
+   color-theme で細かく指定するために, 幾つかの face 定義を追加
    #+BEGIN_SRC emacs-lisp
      (setq wl-highlight-message-header-alist
            '(("Subject[ \t]*:"
@@ -870,6 +725,57 @@ title: Wanderlustの設定
                      '((t (:foreground "pink"))))
    #+END_EXAMPLE
 
+* GPG 署名
+  以前は mailcrypt を使っていたけれど,
+  epa があるので主にキーバインドの設定のみ.
+  =draft-mode= の文字コードをあらかじめ指定しておかないと,
+  送信時に文字コードが変換されるので不正な署名となってしまう.
+
+  もっとうまい方法/正攻法がありそうな気がするけれど,
+  使えてるから, まあ良いかな, とか.
+  #+BEGIN_SRC emacs-lisp
+    (setq pgg-default-keyserver-address "pool.sks-keyservers.net")
+    (setq pgg-scheme "gpg")
+    (setq pgg-messages-coding-system 'utf-8)
+    (add-hook 'wl-draft-mode-hook
+              '(lambda ()
+                 (set-buffer-file-coding-system 'iso-2022-jp)
+                 ))
+    (defun my:epa-wl-decrypt-message ()
+      (interactive)
+      (save-window-excursion
+        (wl-summary-jump-to-current-message)
+        (wl-message-decrypt-pgp-nonmime)))
+    (defun my:epa-wl-verify-message ()
+      (interactive)
+      (save-selected-window
+        (wl-summary-jump-to-current-message)
+        (wl-message-verify-pgp-nonmime)))
+    (define-key wl-summary-mode-map "\C-c:d" 'my:epa-wl-decrypt-message)
+    (define-key wl-summary-mode-map "\C-c:v" 'my:epa-wl-verify-message)
+    (define-key wl-draft-mode-map "\C-c:s" 'epa-mail-sign)
+    (define-key wl-draft-mode-map "\C-c:e" 'epa-mail-encrypt)
+  #+END_SRC
+* 検索
+  offlineimap なんかで local の maildir へメールを同期させている場合は
+  [[http://www.djcbsoftware.nl/code/mu/][maildir-utils]] が素敵です.
+  #+BEGIN_SRC emacs-lisp
+    (when (executable-find "mu")
+      (elmo-search-register-engine
+       'mu 'local-file
+       :prog "mu"
+       :args '("find" pattern "-o" "plain" "-f" "l" "--muhome" "~/.mu")
+       :charset 'utf-8)
+      (setq elmo-search-default-engine 'mu))
+  #+END_SRC
+  maildir-utils を使う場合には archive の設定はしない方が良い
+  (検索できなくなる).
+
+  namazu は検索 index の生成が遅すぎるし,
+  hyper estraier は upstream dead な雰囲気だし,
+  気分的には今後はこれ一択な気がする.
+
+  ちなみに, これを使わずに =V= での検索で十分, という話もある
 * Footnotes
 
 [fn:1] wanderlust - github : [[https://github.com/wanderlust/wanderlust]]

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/24 00:27:13$
+# $Lastupdate: 2012/09/25 08:02:20$
 # License: Expat.
 #
 #+TITLE: Wanderlust の設定
@@ -214,10 +214,22 @@ title: Wanderlustの設定
      (setq wl-trash-folder "+Trash")
      (setq wl-temporary-file-directory "~/Downloads/")
    #+END_SRC
-   アドレス帳
+   アドレス帳 -> google-contacts-mew を使う
    #+BEGIN_SRC emacs-lisp
-     (setq wl-address-file  "~/.mua/Addrbook.gpg")
      (setq wl-use-petname t)
+     ;; (setq wl-address-file   "~/.mua/Addrbook.gpg")
+     (setq wl-addrbook-file  "~/.mua/Addrbook.gpg")
+     (require 'wl-addrbook)
+     (unless (locate-library "google-contacts-mew")
+       (el-get 'sync '(google-contacts-mew)))
+     (require 'google-contacts-mew)
+     (setq google-contacts-mew-ask nil)
+     (setq mew-conf-path nil)
+     (setq mew-addrbook-file wl-addrbook-file)
+     (setq wl-summary-use-addrbook-from-func t)
+     (wl-addrbook-setup)
+     (define-key wl-summary-mode-map "@" 'wl-summary-addrbook-add)
+     ;; (setq wl-summary-get-petname-function 'wl-addrbook-get-nickname)
    #+END_SRC
    LDAP サーバからアドレスを引くことも可能.
    以前は GCALDaemon を使って local に ldap サーバを上げていたのだけれども,

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/21 23:49:12$
+# $Lastupdate: 2012/10/19 16:23:47$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -679,6 +679,34 @@ title: Emacsの基本設定
    #+BEGIN_SRC emacs-lisp
      (my:load-org-file "flymake_config.org")
    #+END_SRC
+** [[http://navi2ch.sourceforge.net/][Navi2ch Project Home Page]]
+   #+BEGIN_SRC emacs-lisp
+     (my:load-org-file "navi2ch_config.org")
+   #+END_SRC
+** [[http://www.djcbsoftware.nl/code/mu/mu4e.html][mu4e]]
+   maildir-utils を使った, 検索ベースの MUA である mu4e の設定
+   #+BEGIN_SRC emacs-lisp
+     (when (file-exists-p "/usr/local/share/emacs/site-lisp/mu4e")
+       (add-to-list 'load-path
+                    "/usr/local/share/emacs/site-lisp/mu4e"))
+     (my:load-org-file "mu4e_config.org")
+   #+END_SRC
+** その他, local に持っているもの.
+   #+BEGIN_SRC emacs-lisp
+     (when (locate-library "popup")
+       (require 'popup-color-at-point))
+   #+END_SRC
+* doc-view の無効化
+  #+BEGIN_SRC emacs-lisp
+    (defadvice find-file (around disable-doc-view (filename &optional wildcards) activate)
+      (cond
+       ((string-match "\\.\\(?:PDF\\|DVI\\|pdf\\|dvi\\)\\'" filename)
+        (let ((process-connection-type nil))
+          ;; (start-process "" nil "/usr/bin/kde-open" filename)))
+          (start-process "" nil "/usr/bin/kde-open" filename)))
+       (t
+        ad-do-it)))
+  #+END_SRC
 * Footnotes
 
 [fn:1] バッドノウハウと奥が深い症候群: [[http://0xcc.net/misc/bad-knowhow.html]]

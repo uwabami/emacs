@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/17 23:18:29$
+# $Lastupdate: 2012/10/06 20:14:03$
 # License: Expat
 #
 #+TITLE: org-modeの設定
@@ -16,7 +16,6 @@ title: org-modeの設定
 #+END_HTML
 * 基本設定
   #+BEGIN_SRC emacs-lisp
-    (require 'org-install)
     (require 'org)
     ;; 打ち切らない.
     (setq org-startup-truncated nil)
@@ -33,50 +32,27 @@ title: org-modeの設定
     ;; 時刻のフォーマット
     (setq org-display-custom-times "<%Y-%m-%d %H:%M:%S>")
     (setq org-time-stamp-custom-formats "<%Y-%m-%d %H:%M:%S>")
+    ;; アプリケーションの関連付け
+    ;; (cond
+    ;;  (darwin-p
+    ;;   (setq org-file-apps-defaults-macosx nil)
+    ;;   (setq org-file-apps-defaults-macosx '((t . "open '%s'")))
+    ;;   (setq org-file-apps org-file-apps-defaults-macosx)
+    ;;   )
+    ;;  (nt-p
+    ;;   (setq org-file-apps-defaults-windowsnt nil)
+    ;;   (setq org-file-apps-defaults-windowsnt '((t . "open '%s'")))
+    ;;   (setq org-file-apps org-file-apps-defaults-windowsnt)
+    ;;   )
+    ;;  (t
+    ;;   (setq org-file-apps-defaults-gnu nil)
+    ;;   (setq org-file-apps-defaults-gnu '((t . "xdg-open '%s'")))
+    ;;   (setq org-file-apps org-file-apps-defaults-gnu)
+    ;;   )
+    ;;  )
   #+END_SRC
 * org-capture
-** firefox との連携
-   mozreplを使ったメモも残せるようにしておく.
-  #+BEGIN_SRC emacs-lisp
-    (unless (locate-library "moz")
-      (el-get 'sync 'moz-repl))
-    (require 'moz)
-    ;; @see http://blogs.openaether.org/?p=236
-    (defun jk/moz-get (attr)
-      (comint-send-string (inferior-moz-process) attr)
-      ;; try to give the repl a chance to respond
-      (sleep-for 0 100))
-    (defun jk/moz-get-current-url ()
-      (interactive)
-      (jk/moz-get "repl._workContext.content.location.href"))
-    (defun jk/moz-get-current-title ()
-      (interactive)
-      (jk/moz-get "repl._workContext.content.document.title"))
-    (defun jk/moz-get-current (moz-fun)
-      (funcall moz-fun)
-      ;; doesn't work if repl takes too long to output string
-      (save-excursion
-        (set-buffer (process-buffer (inferior-moz-process)))
-        (goto-char (point-max))
-        (previous-line)
-        (setq jk/moz-current
-              (buffer-substring-no-properties
-               (+ (point-at-bol) (length moz-repl-name) 3)
-               (- (point-at-eol) 1))))
-      (message "%s" jk/moz-current)
-      jk/moz-current
-      )
-    (defun jk/moz-url ()
-      (interactive)
-      (jk/moz-get-current 'jk/moz-get-current-url)
-      )
-    (defun jk/moz-title ()
-      (interactive)
-      (jk/moz-get-current 'jk/moz-get-current-title)
-      )
-  #+END_SRC
-** メモ形式
-   1日1ファイル + howm での一覧表示のための小細工
+  1日1ファイル + howm での一覧表示のための小細工
   #+BEGIN_SRC emacs-lisp
     ;; org-capture
     (require 'org-capture)
@@ -88,44 +64,116 @@ title: org-modeの設定
     (setq org-capture-templates
           '(
             ("t" "Todo" entry
-             (file my:org-capture-howm-file)
-             "* <%<%Y-%m-%d %H:%M:%S>>+ %?\n  %i\n  %a"
-             :prepend t
-             :unnarrowed t
+             (file "~/Documents/Dropbox/org/ToDo.org")
+             "* TODO <%<%Y-%m-%d %H:%M:%S>>+ %?\n  %i\n  %a\n"
+             :prepend nil
+             :unnarrowed nil
              :kill-buffer t)
             ("m" "Memo" entry
              (file my:org-capture-howm-file)
-             "* <%<%Y-%m-%d %H:%M:%S>>  %?\n  %i\n  %a"
-             :prepend t
-             :unnarrowed t
-             :kill-buffer t)
-            ("b" "Bookmark" entry
-             (file my:org-capture-howm-file)
-             "* <%<%Y-%m-%d %H:%M:%S>>  %?\n  %(concat \"[[\" (jk/moz-url) \"]]\")\n  %a"
+             "* <%<%Y-%m-%d %H:%M:%S>>  %?\n  %i\n  %a\n\n"
              :prepend t
              :unnarrowed t
              :kill-buffer t)
             ("e" "Email" entry
              (file my:org-capture-howm-file)
-             "* <%<%Y-%m-%d %H:%M:%S>>+ %?\n  %i\n  %a\n"
+             "* <%<%Y-%m-%d %H:%M:%S>>+ %?\n  %i\n  %a\n\n"
              :prepend t
              :unnarrowed t
              :kill-buffer t)
             ("d" "Diary" entry
              (file my:org-capture-howm-file)
-             "* DIARY <%<%Y-%m-%d %H:%M:%S>> %?\n  %i\n  %a\n"
+             "* DIARY <%<%Y-%m-%d %H:%M:%S>> %?\n  %i\n  %a\n\n"
              :prepend t
              :unnarrowed t
              :kill-buffer t)
             ))
   #+END_SRC
-* org-agenda
+* org-agenda & mobileorg
   #+BEGIN_SRC emacs-lisp
-    ;; ;; TODO keyword
-    ;; (setq org-todo-keywords
-    ;;       '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)" "SOMEDAY(s)")))
-    ;; ;; timestamp の記録
+    (require 'org-mobile)
+    (setq org-mobile-directory
+          (concat  "~/Documents/Dropbox/MobileOrg"))
+    (defvar org-agenda-files nil)
+    (setq org-agenda-files
+          `("~/Documents/Dropbox/org/ToDo.org"))
+    (setq org-mobile-files org-agenda-files)
+    (setq org-refile-targets '((org-agenda-files :level . 1)))
+    (setq org-mobile-inbox-for-pull
+          (concat org-directory "mobile-pull.org"))
+    (setq org-mobile-creating-agendas nil)
+    (setq org-todo-keywords
+          '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)" "SOMEDAY(s)")))
+    ;; 上で定義した ToDo だけを Agenda として抽出
+    (setq org-mobile-agendas 'custom)
+    ;; 起動時に sync...?
+    ;; (defun org-mobile-sync ()
+    ;;   (interactive)
+    ;;   (let
+    ;;       (org-mobile-sync-type
+    ;;        (read-from-minibuffer "How do you sync the org files? (pull or push) "))
+    ;;     (message "%s" org-mobile-sync-type)
+    ;;     (cond
+    ;;      ((string= "pull" org-mobile-sync-type)(org-mobile-pull))
+    ;;      ((string= "push" org-mobile-sync-type)(org-mobile-push)))))
+    ;; 起動時にモバイルで環境で編集したファイルを読み込む
+    ;; (eval-after-load "org"
+    ;;   '(progn
+    ;;      (message "%s" "MobileOrg sync ... [pull]")
+    ;;      (org-mobile-pull)))
+    ;; need org-mode
+    ;; (defadvice org-mobile-create-sumo-agenda (after org-mobile-create-sumo-agenda-fixup activate)
+    ;;   "MobileOrgのAgenda Viewsを見やすくする"
+    ;;   (let ((agendas (expand-file-name "agendas.org" org-mobile-directory)))
+    ;;     (while (get-file-buffer agendas) (kill-buffer (get-file-buffer agendas)))
+    ;;     (find-file agendas)
+    ;;     (goto-char (point-min))
+    ;;     (while (re-search-forward "\\* .*<after>KEYS=. TITLE: \\(.*\\)</after>\\(\n+\\)" nil t)
+    ;;       (if (save-match-data (looking-at "\\* "))
+    ;;           (replace-match "" t)
+    ;;         (replace-match "* \\1\\2" t))
+    ;;       )
+    ;;     (save-buffer)
+    ;;     (dolist (entry org-mobile-checksum-files)
+    ;;       (when (string= "agendas.org" (car entry))
+    ;;         (setcdr entry (md5 (current-buffer)))
+    ;;         ))
+    ;;     ))
+    ;; (defadvice org-mobile-push (around org-mobile-push-safe activate)
+    ;;   "もしコンフリクトがあれば一覧を表示する。
+    ;; そうで無ければ、全ファイルをTODO順にソートし、余分な入力日時を除去し、プッシュする。"
+    ;;   (when (org-occur-in-agenda-files "^\\*\\* End of edit$")
+    ;;     (dolist (file (org-agenda-files))
+    ;;       (with-current-buffer (find-file-noselect file)
+    ;;         (let ((before (buffer-substring-no-properties (point-min) (point-max))))
+    ;;           (goto-char (point-min))
+    ;;           (while (re-search-forward "^\\[[0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\} . [0-9]\\{2\\}:[0-9]\\{2\\}\\]\n" nil t)
+    ;;             (replace-match "" t))
+    ;;           (condition-case nil
+    ;;               (org-sort-entries nil ?o)
+    ;;             (error nil))
+    ;;           (if (string= before (buffer-substring-no-properties (point-min) (point-max)))
+    ;;               (set-buffer-modified-p nil)
+    ;;             (save-buffer))
+    ;;           )))
+    ;;     ad-do-it
+    ;;     (org-export-icalendar-combine-agenda-files)
+    ;;     )
+    ;;   )
+
+    ;; (defadvice org-mobile-pull (around org-mobile-pull-and-push activate)
+    ;;   "mobileorg.orgに何かデータが入っていれば、プル＆プッシュする。"
+    ;;   (when (<= 2 (nth 7 (file-attributes (expand-file-name org-mobile-capture-file org-mobile-directory))))
+    ;;     ad-do-it
+    ;;     (org-mobile-push)
+    ;;     )
+    ;;   )
+    ;; timestamp の記録
     ;; (setq org-log-done)
+    ;; (setq org-mobile-directory
+    ;;       "~/Documents/Dropbox/MobileOrg")
+    ;; (setq org-mobile-index-for-pull
+    ;;       "~/Documents/Dropbox/org/mobile-flagged.org")
     ;; ;; agenda ファイルの一覧
     ;; (setq org-agenda-files (list org-directory))
     ;; ;; 拡張子 -> howm
@@ -136,6 +184,7 @@ title: org-modeの設定
     ;; ;; 標準の祝日を利用しない
     ;; (setq calendar-holidays nil)
   #+END_SRC
+
 * org-babel
   使う言語の追加
   #+BEGIN_SRC emacs-lisp
@@ -186,14 +235,6 @@ title: org-modeの設定
    #+BEGIN_SRC emacs-lisp
      (setq org-latex-to-pdf-process
            '("latexmk -pdfdvi %f"))
-   #+END_SRC
-** preview
-   PDF は open or xdg-open で開くことに
-   #+BEGIN_SRC emacs-lisp
-     (setq org-file-apps
-           '(
-             ("\\.pdf\\'" . "evince %s"))
-           )
    #+END_SRC
 * beamer export の設定
   beamer でプレゼンするための設定

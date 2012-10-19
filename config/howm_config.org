@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/18 12:10:46$
+# $Lastupdate: 2012/10/06 03:37:53$
 # License: Expat
 #
 #+TITLE: howm の設定
@@ -162,6 +162,13 @@ title: howm の設定
 * カレンダー関連
   #+BEGIN_SRC emacs-lisp
     (my:load-org-file "calfw_config.org")
+  #+END_SRC
+* viewer
+  #+BEGIN_SRC emacs-lisp
+    (setq howm-view-external-viewer-assoc
+          '(
+            ("\.\\(pdf\\|PDF\\)$" . "evince %s")
+            ))
   #+END_SRC
 * Footnotes
 [fn:1] Howm: [[http://howm.sourceforge.jp/index-j.html]]

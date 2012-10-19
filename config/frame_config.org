@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/24 01:14:53$
+# $Lastupdate: 2012/10/13 02:17:28$
 # License: Expat
 #
 #+TITLE: フォントとフレームの設定
@@ -110,10 +110,10 @@ title: フォントとフレームの設定
     ;;         (newline-mark 10 [8629 10])
     ;;         ))
     ;; (global-set-key (kbd "C-x w") 'global-whitespace-mode)
-    (defface my-face-r-1 '((t (:background "gray10"))) nil)
-    (defface my-face-b-1 '((t (:background "gray"))) nil)
-    (defface my-face-b-2 '((t (:background "gray50"))) nil)
-    (defface my-face-u-1 '((t (:foreground "SteelBlue" :underline t))) nil)
+    (defface my-face-r-1 '((t (:background "#888888"))) nil)
+    (defface my-face-b-1 '((t (:background "#888888"))) nil)
+    (defface my-face-b-2 '((t (:background "#888888"))) nil)
+    (defface my-face-u-1 '((t (:foreground "#242424" :underline t))) nil)
     (defvar my-face-r-1 'my-face-r-1)
     (defvar my-face-b-1 'my-face-b-1)
     (defvar my-face-b-2 'my-face-b-2)

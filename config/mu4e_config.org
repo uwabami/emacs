@@ -1,0 +1,36 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# $Lastupdate: 2012/10/19 16:31:24$
+# License: Expat
+#
+#+TITLE: mu4e の設定
+#+AUTHOR: Youhei SASAKI
+#+EMAIL: uwabami@gfd-dennou.org
+#+SETUPFILE: ./export-config.org
+#+BEGIN_HTML
+---
+layout: emacs
+title: mu4e の設定
+---
+#+END_HTML
+
+* 始めに
+
+  maildir-utils による検索ベースの MUA である
+  mu4e を試してみる
+
+#+BEGIN_SRC emacs-lisp
+  (require 'mu4e)
+  (setq
+   mu4e-maildir       "~/Mail/imap" ;; top-level Maildir
+   mu4e-sent-folder   "/&kAFP4W4IMH8w4TD8MOs-"
+  ;;  mu4e-sent-folder   "/sent"       ;; folder for sent messages
+   mu4e-drafts-folder "/&Tgtm+DBN-"
+  ;; mu4e-drafts-folder "/drafts"     ;; unfinished messages
+   mu4e-drafts-folder "/&MLQw33ux-"
+  ;; mu4e-trash-folder  "/trash"      ;; trashed messages
+   mu4e-refile-folder "/archive")   ;; saved messages
+  ;; don't save messages to Sent Messages, Gmail/IMAP takes care of this
+  (setq mu4e-sent-messages-behavior 'delete)
+#+END_SRC

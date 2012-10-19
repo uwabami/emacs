@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/20 10:15:20$
+# $Lastupdate: 2012/10/17 04:30:25$
 # License: Expat
 #
 #+TITLE: emacs-w3mの設定
@@ -55,9 +55,9 @@ title: emacs-w3m の設定
       (setq w3m-bookmark-file
             (concat my:user-emacs-etc-directory "w3m/bookmark"))
     #+END_SRC
-** 一行は78文字で折り返し.
+** 右端の 10 文字前で折り返し
    #+BEGIN_SRC emacs-lisp
-      (setq w3m-fill-column 78)
+      (setq w3m-fill-column -10)
    #+END_SRC
 ** キーバインド
     #+BEGIN_SRC emacs-lisp

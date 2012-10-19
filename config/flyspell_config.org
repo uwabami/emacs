@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/17 23:07:04$
+# $Lastupdate: 2012/09/28 13:19:05$
 # License: Expat
 #
 #+TITLE: flyspell-modeの設定
@@ -90,7 +90,7 @@ title: flyspell-modeの設定
     (global-set-key (kbd "C-c <ESC> <f8>") 'flyspell-buffer)
     ;; flyspell-mode を自動的に開始させたいファイルを指定 (お好みでアンコメントするなり, 変更するなり)
     ; (add-to-list 'auto-mode-alist '("\\.txt" . flyspell-mode))
-    (add-to-list 'auto-mode-alist '("\\.tex" . flyspell-mode))
+    ; (add-to-list 'auto-mode-alist '("\\.tex" . flyspell-mode))
     ; (add-to-list 'auto-mode-alist '("\\.properties" . flyspell-mode))
     ; (add-to-list 'auto-mode-alist '("\\.dtd" . flyspell-mode)
   #+END_SRC

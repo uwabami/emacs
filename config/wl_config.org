@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/25 08:02:20$
+# $Lastupdate: 2012/10/18 02:51:38$
 # License: Expat.
 #
 #+TITLE: Wanderlust の設定
@@ -67,6 +67,10 @@ title: Wanderlustの設定
    大きいメッセージを送信時に分割しない
    #+BEGIN_SRC emacs-lisp
      (setq mime-edit-split-message nil)
+   #+END_SRC
+   text/plain を html より優先
+   #+BEGIN_SRC emacs-lisp
+     (set-alist 'mime-view-type-subtype-score-alist '(text . html) 0)
    #+END_SRC
 * 送受信の設定
   =ssl.el= の代わりに =opentls= を使う.
@@ -211,25 +215,18 @@ title: Wanderlustの設定
    Gmail と同期すると大変な事になるので local に持つ.
    #+BEGIN_SRC emacs-lisp
      (setq wl-draft-folder "+Drafts")
+     ;;(setq wl-trash-folder "%ゴミ箱")
      (setq wl-trash-folder "+Trash")
      (setq wl-temporary-file-directory "~/Downloads/")
    #+END_SRC
-   アドレス帳 -> google-contacts-mew を使う
+   アドレス帳 -> google-contacts-wl を使う
    #+BEGIN_SRC emacs-lisp
      (setq wl-use-petname t)
-     ;; (setq wl-address-file   "~/.mua/Addrbook.gpg")
-     (setq wl-addrbook-file  "~/.mua/Addrbook.gpg")
-     (require 'wl-addrbook)
-     (unless (locate-library "google-contacts-mew")
-       (el-get 'sync '(google-contacts-mew)))
-     (require 'google-contacts-mew)
-     (setq google-contacts-mew-ask nil)
-     (setq mew-conf-path nil)
-     (setq mew-addrbook-file wl-addrbook-file)
-     (setq wl-summary-use-addrbook-from-func t)
-     (wl-addrbook-setup)
-     (define-key wl-summary-mode-map "@" 'wl-summary-addrbook-add)
-     ;; (setq wl-summary-get-petname-function 'wl-addrbook-get-nickname)
+     (setq wl-address-file   "~/.mua/Address")
+     (unless (locate-library "google-contacts-wl")
+       (el-get 'sync '(google-contacts-wl)))
+     (require 'google-contacts-wl)
+     (setq google-contacts-wl-ask nil)
    #+END_SRC
    LDAP サーバからアドレスを引くことも可能.
    以前は GCALDaemon を使って local に ldap サーバを上げていたのだけれども,
@@ -252,7 +249,7 @@ title: Wanderlustの設定
    #+END_SRC
 ** FCC, BCC の設定
    #+BEGIN_SRC emacs-lisp
-      (setq wl-fcc "+Sent")
+      (setq wl-fcc nil)
    #+END_SRC
    送信済は既読にする → ちゃんと動いていない気がする
    #+BEGIN_SRC emacs-lisp
@@ -311,26 +308,30 @@ title: Wanderlustの設定
      (setq wl-highlight-folder-with-icon nil)
    #+END_SRC
 * キーバインド関連
-   =C-c C-j= を browse-url に明け渡す
-   #+BEGIN_SRC emacs-lisp
+  =<f2>= で Addrbook の更新
+  #+BEGIN_SRC emacs-lisp
+    (global-set-key [f2] 'google-contacts-wl-update-address)
+  #+END_SRC
+  =C-c C-j= を browse-url に明け渡す
+  #+BEGIN_SRC emacs-lisp
      (define-key wl-draft-mode-map "\C-c\C-j" 'browse-url-at-point)
-   #+END_SRC
-   =M-u= で unread にする
-   #+BEGIN_SRC emacs-lisp
+  #+END_SRC
+  =M-u= で unread にする
+  #+BEGIN_SRC emacs-lisp
      (define-key wl-summary-mode-map "\M-u" 'wl-summary-mark-as-unread)
-   #+END_SRC
-   =i= で sync <- Mew 風
-   #+BEGIN_SRC emacs-lisp
+  #+END_SRC
+  =i= で sync <- Mew 風
+  #+BEGIN_SRC emacs-lisp
      (define-key wl-summary-mode-map "i" 'wl-summary-sync-update)
-   #+END_SRC
-   =C-o= を elscreen にあけわたす -> auto-refile は =M-o= で (Mew 風)
-   #+BEGIN_SRC emacs-lisp
+  #+END_SRC
+  =C-o= を elscreen にあけわたす -> auto-refile は =M-o= で (Mew 風)
+  #+BEGIN_SRC emacs-lisp
      (define-key wl-summary-mode-map "\C-o" elscreen-map)
-   #+END_SRC
-   =M-o= で =auto-refile=
-   #+BEGIN_SRC emacs-lisp
+  #+END_SRC
+  =M-o= で =auto-refile=
+  #+BEGIN_SRC emacs-lisp
      (define-key wl-summary-mode-map "\M-o" 'wl-summary-auto-refile)
-   #+END_SRC
+  #+END_SRC
 * flag とフォルダを行き来する関数の追加
   "=" でフラグ付きフォルダと
   実際にメッセージのあるフォルダを行き来する.
@@ -461,6 +462,7 @@ title: Wanderlustの設定
      (setq elmo-msgdb-extra-fields
            '(
              "List-Post"
+             "List-Id"
              "Resent-CC"
              "Mailing-List"
              "X-Mailing-List"
@@ -536,6 +538,23 @@ title: Wanderlustの設定
     (defun shell-quote-argument (file) file)
   #+END_SRC
 
+* 添付ファイルの扱い
+  =/etc/mailcap= と =~/.mailcap= の二つに
+  同じエントリがあると, 動作が微妙になる
+  - [[http://comments.gmane.org/gmane.mail.wanderlust.general.japanese/8618]]
+
+  ここでは =~/.mailcap= だけを見にいくように
+  #+BEGIN_SRC emacs-lisp
+    (setq mime-view-mailcap-files '("~/.mailcap"))
+  #+END_SRC
+  ちなみに
+  =~/.mailcap= 自体は
+  #+BEGIN_SRC example
+  applications/*; xdg-open %s;
+  image/*; xdg-open %s;
+  video/*; xdg-open %s;
+  #+END_SRC
+  として xdg-open に丸投げ.
 * メッセージ表示
 ** いったん全て非表示に
    #+BEGIN_SRC emacs-lisp
@@ -602,6 +621,10 @@ title: Wanderlustの設定
             ("Newsgroups" . (("From") nil ("Newsgroups")))
             ("Mail-Followup-To" . (("Mail-Followup-To") nil ("Newsgroups")))
             ("From" . (("From") ("To" "Cc") ("Newsgroups")))))
+  #+END_SRC
+  サマリ表示には petname を使うが, 引用には使わない
+  #+BEGIN_SRC emacs-lisp
+  (setq wl-default-draft-cite-decorate-author nil)
   #+END_SRC
 ** c-sig
   署名の選択に c-sig を使用している.

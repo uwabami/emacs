@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/10/18 19:49:13$
+# $Lastupdate: 2012/10/28 20:35:24$
 # License: Expat
 #
 #+TITLE: AUCTeX の設定
@@ -74,8 +74,14 @@ title: AUCTeX の設定
                                        '("Latexmk(utf8)" "latexmk -e '$latex=q/platex -kanji=utf8 -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=utf8/' -e '$makeindex=q/mendex/' -e '$dvipdf=q/dvipdfmx %%O -o %%D %%S/'  -gg -pdfdvi %t"
                                          TeX-run-TeX nil (latex-mode) :help "Run Latexmk(utf8)"))
                           (add-to-list 'TeX-command-list
+                                       '("Latexmk(jis)" "latexmk -e '$latex=q/platex -kanji=jis -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=jis/' -e '$makeindex=q/mendex/' -e '$dvipdf=q/dvipdfmx %%O -o %%D %%S/'  -gg -pdfdvi %t"
+                                         TeX-run-TeX nil (latex-mode) :help "Run Latexmk(jis)"))
+                          (add-to-list 'TeX-command-list
                                        '("Latexmk(utf8,ps2pdf)" "latexmk -e '$latex=q/platex -kanji=utf8 -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=utf8/' -e '$makeindex=q/mendex/' -e '$dvips=q/dvips %%O -z -f %%S | convbkmk -g > %%D/' -e '$ps2pdf=q/ps2pdfwr %%O %%S %%D/'  -gg -pdfps %t"
                                          TeX-run-TeX nil (latex-mode) :help "Run Latexmk(utf8,ps2pdf)"))
+                          (add-to-list 'TeX-command-list
+                                       '("Latexmk(jis,ps2pdf)" "latexmk -e '$latex=q/platex -kanji=jis -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=jis/' -e '$makeindex=q/mendex/' -e '$dvips=q/dvips %%O -z -f %%S | convbkmk -g > %%D/' -e '$ps2pdf=q/ps2pdfwr %%O %%S %%D/'  -gg -pdfps %t"
+                                         TeX-run-TeX nil (latex-mode) :help "Run Latexmk(jis,ps2pdf)"))
                           (add-to-list 'TeX-command-list
                                        '("Latexmk(euc)" "latexmk -e '$latex=q/platex -kanji=euc -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=euc/' -e '$makeindex=q/mendex/' -e '$dvipdf=q/dvipdfmx %%O -o %%D %%S/'  -gg -pdfdvi %t"
                                          TeX-run-TeX nil (latex-mode) :help "Run Latexmk(euc)"))
@@ -103,6 +109,12 @@ title: AUCTeX の設定
                           (add-to-list 'TeX-command-list
                                        '("pdfpLaTeX(utf8,ps2pdfwr)" "platex %S %(mode) %t && dvips -Ppdf -z -f %d | convbkmk -g > %f && ps2pdf %f"
                                          TeX-run-TeX nil (latex-mode) :help "Run pLaTeX, dvips, and ps2pdf"))
+                          (add-to-list 'TeX-command-list
+                                       '("pdfpLaTeX(jis)" "platex --kanji=jis %S %(mode) %t && dvipdfmx %d"
+                                         TeX-run-TeX nil (latex-mode) :help "Run pLaTeX(jis) and dvipdfmx"))
+                          (add-to-list 'TeX-command-list
+                                       '("pdfpLaTeX(jis,ps2pdfwr)" "platex --kanji=jis %S %(mode) %t && dvips -Ppdf -z -f %d | convbkmk -g > %f && ps2pdf %f"
+                                         TeX-run-TeX nil (latex-mode) :help "Run pLaTeX(jis), dvips, and ps2pdf"))
                           (add-to-list 'TeX-command-list
                                        '("pdfpLaTeX(euc)" "platex -kanji=euc %S %(mode) %t && dvipdfmx %d"
                                          TeX-run-TeX nil (latex-mode) :help "Run pLaTeX(euc) and dvipdfmx"))

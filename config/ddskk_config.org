@@ -184,7 +184,7 @@ title: DDSKKの設定
   他にも quote する必要あるような気もするけれど, それは気がついた時に.
   #+BEGIN_SRC emacs-lisp
     ;; 辞書サーバの指定
-    (when (string-match system-name "daphne.localdomain")
+    (when (string-match system-name "daphne")
       (setq skk-server-host "127.0.0.1")
       (setq skk-server-portnum "1178")
       (setq skk-large-jisyo nil)
@@ -194,7 +194,7 @@ title: DDSKKの設定
       (add-to-list 'skk-search-prog-list
                    '(skk-comp-by-server-completion) t)
       )
-    (when (not (string-match system-name "daphne.localdomain"))
+    (when (not (string-match system-name "daphne"))
       (setq skk-large-jisyo "~/.skkdic/SKK-JISYO.L")
       ;; 地球物理辞書の追加
       (add-to-list

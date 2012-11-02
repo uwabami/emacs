@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/10/06 20:14:03$
+# $Lastupdate: 2012/11/03 02:41:47$
 # License: Expat
 #
 #+TITLE: org-modeの設定
@@ -28,7 +28,7 @@ title: org-modeの設定
     ;; フォントロックを有効に
     (add-hook 'org-mode-hook 'turn-on-font-lock)
     ;; 基本ディレクトリ
-    (setq org-directory "~/Documents/Dropbox/org/")
+    (setq org-directory "~/Dropbox/org/")
     ;; 時刻のフォーマット
     (setq org-display-custom-times "<%Y-%m-%d %H:%M:%S>")
     (setq org-time-stamp-custom-formats "<%Y-%m-%d %H:%M:%S>")
@@ -64,7 +64,7 @@ title: org-modeの設定
     (setq org-capture-templates
           '(
             ("t" "Todo" entry
-             (file "~/Documents/Dropbox/org/ToDo.org")
+             (file "~/Dropbox/org/ToDo.org")
              "* TODO <%<%Y-%m-%d %H:%M:%S>>+ %?\n  %i\n  %a\n"
              :prepend nil
              :unnarrowed nil
@@ -93,10 +93,10 @@ title: org-modeの設定
   #+BEGIN_SRC emacs-lisp
     (require 'org-mobile)
     (setq org-mobile-directory
-          (concat  "~/Documents/Dropbox/MobileOrg"))
+          (concat  "~/Dropbox/MobileOrg"))
     (defvar org-agenda-files nil)
     (setq org-agenda-files
-          `("~/Documents/Dropbox/org/ToDo.org"))
+          `("~/Dropbox/org/ToDo.org"))
     (setq org-mobile-files org-agenda-files)
     (setq org-refile-targets '((org-agenda-files :level . 1)))
     (setq org-mobile-inbox-for-pull
@@ -269,7 +269,7 @@ title: org-modeの設定
             ("public"
              :base-directory ,my:org-publish-webpage
              :recursive t
-             :exclude ".*\.el\\|^Makefile\\|.*\.gpg\\|sitemap\.org\\|^cc-env\\|^images\\|^_site\\|^export-config\.org"
+             :exclude ".*\.el\\|^Makefile\\|.*\.gpg\\|sitemap\.org\\|^cc-env\\|^images\\|^_site\\|^README\.org\\|^export-config\.org"
              :base-extension "org"
              :headline-level 4
              :htmlized-source t

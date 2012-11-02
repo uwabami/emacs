@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/10/19 16:31:24$
+# $Lastupdate: 2012/10/22 01:00:07$
 # License: Expat
 #
 #+TITLE: mu4e の設定
@@ -21,7 +21,9 @@ title: mu4e の設定
   mu4e を試してみる
 
 #+BEGIN_SRC emacs-lisp
-  (require 'mu4e)
+  (unless (and (locate-library "mu4e")
+               (file-exists-p "/usr/local/share/site-lisp/mu4e"))
+    (require 'mu4e))
   (setq
    mu4e-maildir       "~/Mail/imap" ;; top-level Maildir
    mu4e-sent-folder   "/&kAFP4W4IMH8w4TD8MOs-"

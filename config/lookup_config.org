@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/17 23:24:30$
+# $Lastupdate: 2012/11/03 02:44:50$
 # License: Expat.
 #+TITLE: lookupの設定
 #+AUTHOR: Youhei SASAKI
@@ -32,14 +32,14 @@ title: lookupの設定
 #+BEGIN_SRC emacs-lisp
   (setq lookup-search-agents
         '(
-          (ndeb "~/Documents/Dropbox/dict/eijiro"    :alias "英辞郎")
-          (ndeb "~/Documents/Dropbox/dict/waeijiro"  :alias "和英辞郎")
-          (ndeb "~/Documents/Dropbox/dict/rikagaku5" :alias "理化学辞典")
-          (ndeb "~/Documents/Dropbox/dict/koujien4"  :alias "広辞苑")
-          (ndeb "~/Documents/Dropbox/dict/wadai5"    :alias "研究社 和英大辞典")
+          (ndeb "~/Dropbox/dict/eijiro"    :alias "英辞郎")
+          (ndeb "~/Dropbox/dict/waeijiro"  :alias "和英辞郎")
+          (ndeb "~/Dropbox/dict/rikagaku5" :alias "理化学辞典 第5版")
+          (ndeb "~/Dropbox/dict/koujien4"  :alias "広辞苑 第4版")
+          (ndeb "~/Dropbox/dict/wadai5"    :alias "研究社 和英大辞典 第5版")
+          (ndeb "~/Dropbox/dict/eidai6"    :alias "研究社 英和大辞典 第6版")
+          (ndeb "~/Dropbox/dict/colloc"    :alias "研究社 英和活用大辞典 ")
           ;; (ndeb "/usr/local/share/dict/shizenenja" :alias "自然科学系(英和)")
           ;; (ndeb "/usr/local/share/dict/shizenjaen" :alias "自然科学系(和英)")
-          ;; (ndeb "/usr/local/share/dict/colloc" :alias "研究社 英和活用大辞典")
-          ;; (ndeb "/usr/local/share/dict/eidai6" :alias "研究社 英和大辞典")
           ))
 #+END_SRC

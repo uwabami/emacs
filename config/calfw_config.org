@@ -63,10 +63,10 @@ title: "calfw: カレンダーの設定"
          (define-key howm-mode-map (kbd "M-C") 'cfw:elscreen-open-howm-calendar)
          (setq cfw:howm-schedule-contents
                (list
-                (cfw:ical-create-source "KUSM" "~/Documents/Dropbox/ical/KUSM.ics" "Green")
-                (cfw:ical-create-source "My" "~/Documents/Dropbox/ical/MyCalendar.ics" "#ffff4c")
-                (cfw:ical-create-source "GFD" "~/Documents/Dropbox/ical/GFD.ics" "#ff4c4c")
-                (cfw:ical-create-source "DebianJP" "~/Documents/Dropbox/ical/DebianJP.ics" "#4cffff")
+                (cfw:ical-create-source "KUSM" "~/Dropbox/ical/KUSM.ics" "Green")
+                (cfw:ical-create-source "My" "~/Dropbox/ical/MyCalendar.ics" "#ffff4c")
+                (cfw:ical-create-source "GFD" "~/Dropbox/ical/GFD.ics" "#ff4c4c")
+                (cfw:ical-create-source "DebianJP" "~/Dropbox/ical/DebianJP.ics" "#4cffff")
                 ))
          ))
    #+END_SRC

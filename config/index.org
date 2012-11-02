@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/10/19 16:23:47$
+# $Lastupdate: 2012/10/31 23:58:32$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -608,7 +608,7 @@ title: Emacsの基本設定
    #+END_SRC
 ** [[file:migemo_config.org][Migemoの設定]]
    #+BEGIN_SRC emacs-lisp
-     (my:load-org-file "migemo_config.org")
+     ;; (my:load-org-file "migemo_config.org")
    #+END_SRC
 ** [[http://howm.sourceforge.jp/index-j.html][Howm]] - Hitori Otegaru Wiki Modoki
    無いと途方に暮れるので, el-get で最新版を取得する
@@ -682,6 +682,10 @@ title: Emacsの基本設定
 ** [[http://navi2ch.sourceforge.net/][Navi2ch Project Home Page]]
    #+BEGIN_SRC emacs-lisp
      (my:load-org-file "navi2ch_config.org")
+   #+END_SRC
+** [[file:lookup_config.org][lookup の設定]]
+   #+BEGIN_SRC emacs-lisp
+     (my:load-org-file "lookup_config.org")
    #+END_SRC
 ** [[http://www.djcbsoftware.nl/code/mu/mu4e.html][mu4e]]
    maildir-utils を使った, 検索ベースの MUA である mu4e の設定

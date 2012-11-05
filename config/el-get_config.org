@@ -42,14 +42,6 @@ title: el-get で パッケージ管理
       (add-hook 'emacs-lisp-mode-hook
                 'enable-auto-async-byte-compile-mode))
   #+END_SRC
-* edit-server for chrome/chromium
-  #+BEGIN_SRC emacs-lisp
-    (unless (locate-library "edit-server")
-      (el-get 'sync 'edit-server))
-    (when (require 'edit-server nil t)
-      (setq edit-server-new-frame nil)
-      (edit-server-start))
-  #+END_SRC
 * [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727][パスワード管理ツール id-manager.el]]
   #+BEGIN_SRC emacs-lisp
     (unless (locate-library "id-manager")

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/11/17 23:09:47$
+# $Lastupdate: 2012/11/18 02:43:41$
 # License: Expat.
 #
 #+TITLE: Wanderlust の設定
@@ -77,8 +77,7 @@ title: Wanderlustの設定
    #+BEGIN_SRC emacs-lisp
      (set-alist 'mime-view-type-subtype-score-alist '(text . html) 0)
    #+END_SRC
-* 送受信の設定
-  =ssl.el= の代わりに =opentls= を使う.
+* ssl.elの代わりにopentlsを使う
   ついで(あれば) =/etc/ssl/certs/ca-ceritficats.crt= で証明書を検証.
   #+BEGIN_SRC emacs-lisp
     (require 'tls)
@@ -86,11 +85,23 @@ title: Wanderlustの設定
                "!opentls" '(opentls nil open-tls-stream))
     (set-alist 'elmo-network-stream-type-alist
                "!" '(ssl ssl open-tls-stream))
-    (setq ssl-program-name "gnutls-cli")
-    (if (file-exists-p "/etc/ssl/certs/ca-certificates.crt")
-        (setq ssl-program-arguments
-              '("--port" service
-                "--x509cafile" "/etc/ssl/certs/ca-certificates.crt" host)))
+    ;; (setq ssl-program-name "gnutls-cli")
+    (cond
+     ((file-exists-p "/etc/ssl/certs/ca-certificates.crt")
+      ;; (setq ssl-program-arguments
+      ;;       '("--port" service
+      ;;         "--x509cafile" "/etc/ssl/certs/ca-certificates.crt" host))
+      (setq tls-program
+            '("gnutls-cli --x509cafile /etc/ssl/certs/ca-certificates.crt -p %p %h"
+              "gnutls-cli --x509cafile /etc/ssl/certs/ca-certificates.crt -p %p %h --protocols ssl3")))
+     (t
+      ;; (setq ssl-program-arguments
+      ;;       '("--port" service
+      ;;         "--insecure" host))
+      (setq tls-program
+            '("gnutls-cli --insecure -p %p %h"))
+      )
+     )
   #+END_SRC
 * 個人情報の設定
   具体的な設定内容は

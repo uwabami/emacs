@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/11/17 22:25:00$
+# $Lastupdate: 2012/11/18 01:31:27$
 # License: Expat
 #
 #+TITLE: フォントとフレームの設定
@@ -121,60 +121,6 @@ title: フォントとフレームの設定
     (ad-enable-advice 'font-lock-mode 'before 'my-font-lock-mode)
     (ad-activate 'font-lock-mode)
   #+END_SRC
-* e2wm
-** 読み込み
-  #+BEGIN_SRC emacs-lisp
-    (unless (locate-library "e2wm")
-      (el-get 'sync 'e2wm))
-    (require 'e2wm)
-    (global-set-key (kbd "M-+") 'e2wm:start-management)
-    (require 'e2wm-config)
-  #+END_SRC
-** frame の設定
-   #+BEGIN_SRC emacs-lisp
-     (when window-system
-       (cond
-        ((and (>= (x-display-pixel-width) 1440)
-              (>= (x-display-pixel-height) 900))
-           (setq e2wm:c-code-recipe
-                 '(| (:left-max-size 35)
-                     (- (:upper-size-ratio 0.7)
-                        files history)
-                     (- (:upper-size-ratio 0.7)
-                        (| (:right-max-size 30)
-                           main imenu)
-                        sub)))
-           )
-        ((and (>= (x-display-pixel-width) 1280)
-              (>= (x-display-pixel-height) 768))
-         (setq e2wm:c-code-recipe
-               '(| (:left-max-size 30)
-                   (- (:upper-size-ratio 0.7)
-                      files history)
-                   (- (:upper-size-ratio 0.7)
-                      (| (:right-max-size 25)
-                         main imenu)
-                      sub)))
-         )
-        (t
-         ;; for 1024x768
-         (setq e2wm:c-code-recipe
-               '(| (:left-max-size 35)
-                   (- (:upper-size-ratio 0.7)
-                      (- (:upper-size-ratio 0.6)
-                         files imenu)
-                      history)
-                   (- (:upper-size-ratio 0.7)
-                      main sub)))
-         )
-        ))
-   #+END_SRC
-** Top 無しの dashboard みたいなアレ
-   Top などの情報は conky で表示しているので,
-   があれば良いのだけれど, どしたら良いかな.
-   - 時計
-   - multi-term
-   - twittering-mode
 * Footnotes
 
 [fn:1] フレームを半透明にする: http://d.hatena.ne.jp/khiker/20090809/emacs_opacity

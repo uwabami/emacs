@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/17 23:23:00$
+# $Lastupdate: 2012/11/17 22:35:53$
 # License: Expat.
 #+TITLE: Migemo の設定
 #+AUTHOR: Youhei SASAKI
@@ -18,6 +18,9 @@ title: Migemo の設定
   ないと結構途方に暮れるのだけれど,
   pure ruby の実装が ruby(>=1.9) だと動作しないので,
   C/Migemo を使うことにしている[fn:1].
+
+  ちなみに, Debian パッケージを使う場合には, 以下の設定は不要.
+  install するだけで良きにはからってくれる(ようにしてある, ハズ).
 * インストール
   Ruby版の本家Migemo はバージョンによっては UTF-8 で動作しないので
   C/Migemo じゃない時には使わないように.
@@ -27,14 +30,14 @@ title: Migemo の設定
           (el-get 'sync 'migemo)))
   #+END_SRC
 * ユーザ辞書を使わない
-#+BEGIN_SRC emacs-lisp
+  #+BEGIN_SRC emacs-lisp
   (eval-after-load "migemo"
     '(progn
        (setq migemo-user-dictionary nil)
        (setq migemo-regex-dictionary nil)))
-#+END_SRC
+  #+END_SRC
 * キャッシュ機能を利用する
-#+BEGIN_SRC emacs-lisp
+  #+BEGIN_SRC emacs-lisp
   (eval-after-load "migemo"
     '(progn
        (setq migemo-use-pattern-alist t)
@@ -42,9 +45,9 @@ title: Migemo の設定
        (setq migemo-use-frequent-pattern-alist t)
        (setq migemo-frequent-pattern-alist-file (concat user-emacs-directory "tmp/migemo-frequent"))
        (setq migemo-pattern-alist-length 2048)))
-#+END_SRC
+  #+END_SRC
 * 読み込み
-#+BEGIN_SRC emacs-lisp
+  #+BEGIN_SRC emacs-lisp
   (eval-after-load "migemo"
     '(progn
        (file-executable-p "/usr/bin/cmigemo")
@@ -57,7 +60,7 @@ title: Migemo の設定
     (load-library "migemo")
     (migemo-init)
     (add-hook 'isearch-mode-hook 'migemo-init))
-#+END_SRC
+  #+END_SRC
 * Footnotes
 
 [fn:1] C/Migemo の Debian パッケージは私がメンテ中 : [[http://packages.qa.debian.org/c/cmigemo.html]]

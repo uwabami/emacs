@@ -4,3 +4,6 @@
 [submodule "site-lisp/el-get"]
 	path = site-lisp/el-get
 	url = git://github.com/dimitri/el-get.git
+[submodule "site-lisp/term-plus-el"]
+	path = site-lisp/term-plus-el
+	url = git://github.com/tarao/term-plus-el.git

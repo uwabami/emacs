@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/11/03 02:41:47$
+# $Lastupdate: 2012/11/14 17:53:55$
 # License: Expat
 #
 #+TITLE: org-modeの設定
@@ -207,7 +207,8 @@ title: org-modeの設定
 * LaTeX export の設定
   主に日本語LaTeX → pTeX 用の設定とか.
 ** 日本語LaTeX用の設定
-   DebianのLaTeXはまだUTF-8を処理できないので, EUC-JPでexportする.
+   (squeeze 以前の)DebianのpLaTeXはまだUTF-8を処理できないので,
+   EUC-JPでexportする.
    #+BEGIN_SRC emacs-lisp
      (require 'org-latex)
      (setq org-export-latex-coding-system 'euc-jp-unix)
@@ -230,13 +231,25 @@ title: org-modeの設定
                       ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
      (setq org-export-latex-default-class "jsarticle")
    #+END_SRC
+   強調等の変換
+   #+BEGIN_SRC emacs-lisp
+   (setq org-export-latex-emphasis-alist
+     '(
+        ("*" "{\\bfseries{%s}}" nil)
+        ("/" "{\\emph{%s}}" nil)
+        ("_" "\\underline{%s}" nil)
+        ("+" "\\st{%s}" nil)
+        ("=" "\\protectedtexttt" nil)
+        ("~" "\\verb" t)
+        ))
+   #+END_SRC
 ** latexmk
    PDF作成にはlatexmkを使う
    #+BEGIN_SRC emacs-lisp
      (setq org-latex-to-pdf-process
            '("latexmk -pdfdvi %f"))
    #+END_SRC
-* beamer export の設定
+* Beamer export の設定
   beamer でプレゼンするための設定
   #+BEGIN_SRC emacs-lisp
     (require 'org-beamer)

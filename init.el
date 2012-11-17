@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2012/10/06 20:13:46$
+;; $Lastupdate: 2012/11/16 18:15:37$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -112,8 +112,8 @@
      (eval-when-compile
        (add-to-load-path ,@list))))
 ;; -----------------------------------------------------------
-;;; autoload-if-found
-(defun autoload-if-found (functions file &optional docstring interactive type)
+;;; my:autoload-if-found
+(defun my:autoload-if-found (functions file &optional docstring interactive type)
   "set autoload iff. FILE has found."
   (if (not (listp functions))
       (setq functions (list functions)))

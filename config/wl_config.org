@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/10/18 02:51:38$
+# $Lastupdate: 2012/11/17 23:09:47$
 # License: Expat.
 #
 #+TITLE: Wanderlust の設定
@@ -16,13 +16,20 @@ title: Wanderlustの設定
 #+END_HTML
 * Wanderlust の設定
   MUA として Wanderlust を愛用している.
-  ちなみに, 配布御本尊である m17.org が停止して, 配布先が github になっています. [fn:1]
+  ちなみに, 配布御本尊である m17n.org が運用停止したので,
+  一時配布元がどこになるのか良くわかりません.
+
+  Emacs24 で動く版は配布先が github になっています. [fn:1]
 * 依存/追加ライブラリの読み込み
+  インストール自体は [[file:index.org][Emacsの基本設定]] で行なっている.
+  インストールしているのは今のところ以下の通り:
+  - rail
+  - elscreen-wl
+  - google-contacts-wl
+  - c-sig
 ** rail
    SEMI や FLIM などの UA の表示に [[http://uwabami.github.com/rail/][rail]] [fn:2]を使っている.
    #+BEGIN_SRC emacs-lisp
-     (unless (locate-library "rail")
-       (el-get 'sync '(rail)))
      (eval-and-compile (require 'rail))
      (setq rail-emulate-genjis t)
    #+END_SRC
@@ -34,8 +41,6 @@ title: Wanderlustの設定
    メール作成時に draft 用の screen を追加して,
    送信後に screen を閉じる.
    #+BEGIN_SRC emacs-lisp
-     (unless (locate-library "elscreen-wl")
-       (el-get 'sync '(elscreen-wl)))
      (require 'elscreen-wl)
    #+END_SRC
 ** cp5022x を使う
@@ -223,8 +228,6 @@ title: Wanderlustの設定
    #+BEGIN_SRC emacs-lisp
      (setq wl-use-petname t)
      (setq wl-address-file   "~/.mua/Address")
-     (unless (locate-library "google-contacts-wl")
-       (el-get 'sync '(google-contacts-wl)))
      (require 'google-contacts-wl)
      (setq google-contacts-wl-ask nil)
    #+END_SRC
@@ -627,15 +630,10 @@ title: Wanderlustの設定
   (setq wl-default-draft-cite-decorate-author nil)
   #+END_SRC
 ** c-sig
-  署名の選択に c-sig を使用している.
-
-  一時配布元が良くわからないので
-  alioth の Git リポジトリを参照する el-get 用の recipe を書いてみたり.
-    #+BEGIN_SRC emacs-lisp
-    (unless (locate-library "c-sig")
-      (el-get 'sync 'c-sig-alioth))
+   署名の選択に c-sig を使用している.
+  #+BEGIN_SRC emacs-lisp
     (eval-when-compile (require 'c-sig))
-    #+END_SRC
+  #+END_SRC
   設定は以下の通り. Mew 風に =C-c <tab>= で signature を挿入するようにしている
   #+BEGIN_SRC emacs-lisp
     (eval-and-compile (require 'c-sig))
@@ -810,7 +808,7 @@ title: Wanderlustの設定
   hyper estraier は upstream dead な雰囲気だし,
   気分的には今後はこれ一択な気がする.
 
-  ちなみに, これを使わずに =V= での検索で十分, という話もある
+  ちなみに, これを使わずに =V= での検索(imapの検索)で十分, という話もある
 * Footnotes
 
 [fn:1] wanderlust - github : [[https://github.com/wanderlust/wanderlust]]

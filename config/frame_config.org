@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/10/13 02:17:28$
+# $Lastupdate: 2012/11/17 22:25:00$
 # License: Expat
 #
 #+TITLE: フォントとフレームの設定
@@ -45,53 +45,45 @@ title: フォントとフレームの設定
   #+END_SRC
 * フォントの設定
   #+BEGIN_SRC emacs-lisp
-    ;; (when window-system
-    ;;   (modify-frame-parameters nil '((wait-for-wm . nil)))
-    ;;   (create-fontset-from-ascii-font "Ricty-13.5" nil "ricty")
-    ;;   (dolist (charset '(
-    ;;                      unicode
-    ;;                      japanese-jisx0208
-    ;;                      japanese-jisx0208-1978
-    ;;                      japanese-jisx0212
-    ;;                      japanese-jisx0213-1
-    ;;                      japanese-jisx0213-2
-    ;;                      japanese-jisx0213-a
-    ;;                      japanese-jisx0213.2004-1
-    ;;                      katakana-jisx0201
-    ;;                      ))
-    ;;     (set-fontset-font "fontset-ricty"
-    ;;                       charset
-    ;;                       (font-spec :family "Ricty" :size 13.5 nil 'prepend)))
-    ;;   (add-to-list 'default-frame-alist '(font ."fontset-ricty"))
-    ;;   (custom-set-faces
-    ;;    '(variable-pitch ((t (:family "Ricty" :size 13.5 nil 'prepend))))
-    ;;    '(fixed-pitch ((t (:family "Ricty" :size 13.5 nil 'prepend))))
-    ;;    '(e2wm:face-subtitle ((t (:inherit fixed-pitch :foreground "Gray90" :height 1.0))))
-    ;;    '(e2wm:face-title ((t (:inherit fixed-pitch :foreground "yellow" :height 1.0))))
-    ;;    '(custom-group-tag ((t (:inherit fixed-pitch :foreground "light blue" :weight bold :height 1.0))))
-    ;;    '(custom-group-tag-1 ((t (:inherit fixed-pitch :foreground "pink" :weight bold :height 1.0))))
-    ;;    ))
+    (defun my:font-ja-spec (spec)
+      (set-fontset-font nil 'japanese-jisx0208 spec)
+      (set-fontset-font nil 'katakana-jisx0201 spec)
+      (set-fontset-font nil 'japanese-jisx0212 spec)
+      (set-fontset-font nil '(#x0080 . #x024F) spec)
+      (set-fontset-font nil '(#x0370 . #x03FF) spec)
+      (set-fontset-font nil 'mule-unicode-0100-24ff spec)
+      )
+    (defun my:font-ascii-spec (spec)
+       (set-fontset-font nil 'ascii spec))
+
     (when window-system
-      (set-default-font
-       "-shinonome-gothic-medium-r-normal--16-*-*-*-*-*-*-*")
-      (progn
-        (set-face-font 'default
-                       "-shinonome-gothic-medium-r-normal--16-*-*-*-*-*-*-*")
-        (set-face-font 'bold
-                       "-shinonome-gothic-medium-r-normal--16-*-*-*-*-*-*-*")
-        (set-face-font 'italic
-                       "-shinonome-gothic-medium-r-normal--16-*-*-*-*-*-*-*")
-        (set-face-font 'bold-italic
-                       "-shinonome-gothic-medium-r-normal--16-*-*-*-*-*-*-*")
-        )
-      (custom-set-faces
-       ;; '(fixed-pitch ((t (:family "Ricty" :size 13.5 nil (quote prepend)))))
-       ;; '(variable-pitch ((t (:family "Ricty" :size 13.5 nil (quote prepend)))))
-       '(custom-group-tag ((t (:inherit fixed-pitch :foreground "light blue" :weight bold :height 1.0))))
-       '(custom-group-tag-1 ((t (:inherit fixed-pitch :foreground "pink" :weight bold :height 1.0))))
-       '(e2wm:face-subtitle ((t (:inherit fixed-pitch :foreground "Gray90" :height 1.0))))
-       '(e2wm:face-title ((t (:inherit fixed-pitch :foreground "yellow" :height 1.0))))
+      (cond
+       (darwin-p
+        (defvar my:ja-font "Hiragino Maru Gothic Pro"))
+       (nt-p
+        (defvar my:ja-font "メイリオ"))
+       (t
+        (defvar my:ja-font "Migu 1M"))
        )
+      (let
+          ((font-size 16)
+           (ascii-font "Inconsolata")
+           (ja-font my:ja-font)
+           )
+        (my:font-ascii-spec (font-spec :family ascii-font :size font-size))
+        (my:font-ja-spec (font-spec :family ja-font :size font-size))
+        (custom-set-faces
+         '(variable-pitch ((t (:family ascii-font :size font-size nil 'prepend))))
+         '(fixed-pitch ((t (:family ascii-font :size font-size nil 'prepend))))
+         )
+        )
+      (setq face-font-rescale-alist
+            '(
+              (".*Inconsolata.*" 1.0)
+              (".*Migu.*" 1.2)
+              ("-cdac$" . 1.0)))           ; 1.3
+      ;; Space between lines
+      (set-default 'line-spacing 1)
       )
   #+END_SRC
 * color-theme

@@ -695,8 +695,8 @@ title: Emacsの基本設定
    #+BEGIN_SRC emacs-lisp
      (when (file-exists-p "/usr/local/share/emacs/site-lisp/mu4e")
        (add-to-list 'load-path
-                    "/usr/local/share/emacs/site-lisp/mu4e"))
-     (my:load-org-file "mu4e_config.org")
+                    "/usr/local/share/emacs/site-lisp/mu4e")
+     (my:load-org-file "mu4e_config.org"))
    #+END_SRC
 ** [[http://d.hatena.ne.jp/tarao/20121021/1350844264][term+.el]]
    第6回関西Emacsで紹介された term.el の拡張.

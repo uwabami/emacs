@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/11/18 02:11:47$
+# $Lastupdate: 2012/12/03 02:34:46$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -443,8 +443,7 @@ title: Emacsの基本設定
    Emacsのバッファを GNU Screen っぽく扱う.
    設定はキーバインドを =\C-o= に変えたくらい.
    #+BEGIN_SRC emacs-lisp
-     (unless (locate-library "elscreen")
-       (el-get 'sync 'elscreen-knu-branch))
+     (el-get 'sync '(elscreen-knu-branch))
      (setq elscreen-prefix-key (kbd "C-o"))
      (setq elscreen-display-tab 4)
      ;; (setq elscreen-tab-display-kill-screen nil)

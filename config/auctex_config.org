@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/10/28 20:35:24$
+# $Lastupdate: 2012/11/28 22:59:19$
 # License: Expat
 #
 #+TITLE: AUCTeX の設定
@@ -29,39 +29,39 @@ title: AUCTeX の設定
   以下, ほぼ [[http://oku.edu.mie-u.ac.jp/~okumura/texwiki/?AUCTeX#ra10f739][TeXWiki - AUCTeX]] のまま.
 ** pTeX, upTeX 用の基本設定
   #+BEGIN_SRC emacs-lisp
-        (setq TeX-default-mode 'japanese-latex-mode)
-        (setq japanese-LaTeX-command-default "pLaTeX")
-        (setq japanese-LaTeX-default-style "jsarticle")
-        (setq TeX-engine-alist '((ptex "pTeX" "eptex" "platex" "eptex")
-                                 (jtex "jTeX" "jtex" "jlatex" nil)
-                                 (uptex "upTeX" "euptex" "uplatex" "euptex")))
-        (setq TeX-engine 'ptex)
-        (setq TeX-view-program-list
-               '(("pxdvi" "pxdvi -watchfile 1 %d")
-                 ("xdvi"  "xdvi -watchfile 1 %d")
-                 ("Preview.app" "/usr/bin/open -a Preview.app %o")
-                 ("zathura" "zathura -s -x \"emacsclient --no-wait +%%{line} %%{input}\" %o")
-                 ))
-        (cond
-         (darwin-p
-          (setq TeX-view-program-selection
-                '((output-dvi "pxdvi")
-                  (output-pdf "Preview.app"))))
-         (t
-          (setq TeX-view-program-selection
-                '((output-dvi "xdvi")
-                  (output-pdf "zathura"))))
-         )
-        (setq preview-image-type 'dvipng)
-        (add-hook 'LaTeX-mode-hook 'TeX-PDF-mode)
-        ;; (add-hook 'LaTeX-mode-hook 'TeX-interactive-mode)
-        (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
-        ;; 禁則
-        (setq kinsoku-limit 10)
-        ;; master file
-        ;; (setq TeX-auto-save t)
-        ;; (setq TeX-parse-self t)
-        ;; (setq-default TeX-master nil)
+    (setq TeX-default-mode 'japanese-latex-mode)
+    (setq japanese-LaTeX-command-default "pLaTeX")
+    (setq japanese-LaTeX-default-style "jsarticle")
+    (setq TeX-engine-alist '((ptex "pTeX" "eptex" "platex" "eptex")
+                             (jtex "jTeX" "jtex" "jlatex" nil)
+                             (uptex "upTeX" "euptex" "uplatex" "euptex")))
+    (setq TeX-engine 'ptex)
+    (setq TeX-view-program-list
+           '(("pxdvi" "pxdvi -watchfile 1 %d")
+             ("xdvi"  "xdvi -watchfile 1 %d")
+             ("Preview.app" "/usr/bin/open -a Preview.app %o")
+             ("zathura" "zathura -s -x \"emacsclient --no-wait +%%{line} %%{input}\" %o")
+             ))
+    (cond
+     (darwin-p
+      (setq TeX-view-program-selection
+            '((output-dvi "pxdvi")
+              (output-pdf "Preview.app"))))
+     (t
+      (setq TeX-view-program-selection
+            '((output-dvi "xdvi")
+              (output-pdf "zathura"))))
+     )
+    (setq preview-image-type 'dvipng)
+    (add-hook 'LaTeX-mode-hook 'TeX-PDF-mode)
+    ;; (add-hook 'LaTeX-mode-hook 'TeX-interactive-mode)
+    (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
+    ;; 禁則
+    (setq kinsoku-limit 10)
+    ;; master file
+    (setq TeX-auto-save t)
+    (setq TeX-parse-self t)
+    (setq-default TeX-master nil)
     #+END_SRC
 ** コマンドの追加
   #+BEGIN_SRC emacs-lisp

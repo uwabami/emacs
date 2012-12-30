@@ -28,4 +28,4 @@ clean:
 	rm -f $(ELCFiles) *~
 
 distclean: clean
-	(cd site-lisp && $(MAKE) distclean )
+	(cd config && $(MAKE) distclean)

@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2012/11/18 01:27:51$
+;; $Lastupdate: 2012/12/31 02:42:48$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -135,8 +135,8 @@
 ;;; ob-tangle より自分用に幾つか関数を設定
 ;;
 ;; my:org-babel-tangle-and-compile-file
-;; - 指定された org ファイルから emacs-lisp を export してbyte-compile
-;;   する. Make から呼ぶ事も想定しているのでこの段階では load はしない.
+;; 指定された org ファイルから emacs-lisp を export してbyte-compile
+;; する. Make から呼ぶ事も想定しているのでこの段階では load はしない.
 ;;
 (defun my:org-babel-tangle-and-compile-file (file)
   "export emacs-lisp and byte-compile from org files (not load).
@@ -157,7 +157,7 @@
         (byte-compile-file exported-file)))))
 ;; -----------------------------------------------------------
 ;;; my:org-babel-load-file
-;; - my:org-babel-tangle-and-comile-file してから load する
+;; my:org-babel-tangle-and-comile-file してから load する
 ;;
 (defun my:org-babel-load-file (file)
   "load after byte-compile"
@@ -166,8 +166,8 @@
   (load (file-name-sans-extension file)))
 ;; -----------------------------------------------------------
 ;;; my:org-load-file
-;; - my:org-babel-load-file の際にディレクトリ名を
-;;   ~/.emacs.d/config/ に決め打ち
+;; my:org-babel-load-file の際にディレクトリ名を
+;; ~/.emacs.d/config/ に決め打ち
 ;;
 (defun my:load-org-file (file)
   "my:user-emacs-config-directory 以下から my:org-babel-load-file"

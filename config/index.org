@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/12/03 02:34:46$
+# $Lastupdate: 2012/12/31 02:44:16$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -87,24 +87,24 @@ title: Emacsの基本設定
    Windows の場合はファイル名などは cp932 にしています.
    とはいえ最近 Windows 使っていないので良く知りません.
    #+BEGIN_SRC emacs-lisp
-     (cond
-      (darwin-p
-       (require 'ucs-normalize)
-       (setq file-name-coding-system 'utf-8-hfs)
-       (setq locale-coding-system 'utf-8-hfs)
-       ;; ついでにキーバインド
-       (global-set-key (kbd "M-v") 'yank)
-       ;; Cmd と Option を逆にする
-       (setq ns-command-modifier 'meta)
-       (setq ns-alternate-modifier 'super)
-       (global-set-key [ns-drag-file] 'ns-find-file))
-      (nt-p
-       (setq file-name-coding-system 'cp932)
-       (setq locale-coding-system 'cp932))
-      (t
-       (setq file-name-coding-system 'utf-8)
-       (setq locale-coding-system 'utf-8))
-     )
+          (cond
+           (darwin-p
+            (require 'ucs-normalize)
+            (setq file-name-coding-system 'utf-8-hfs)
+            (setq locale-coding-system 'utf-8-hfs)
+            ;; ついでにキーバインド: Ctrl を Mac から奪い取る
+            (setq mac-pass-control-to-system t)
+            ;; Cmd と Option を逆にする
+            (setq ns-command-modifier 'meta)
+            (setq ns-alternate-modifier 'super)
+            (global-set-key [ns-drag-file] 'ns-find-file))
+           (nt-p
+            (setq file-name-coding-system 'cp932)
+            (setq locale-coding-system 'cp932))
+           (t
+            (setq file-name-coding-system 'utf-8)
+            (setq locale-coding-system 'utf-8))
+          )
    #+END_SRC
 *** 補足
     =prefer-coding-system= を設定すると =default-file-name-coding-system= が設定されます.
@@ -138,13 +138,6 @@ title: Emacsの基本設定
   Emacs そのものの設定集.
   ちなみに =line-number-mode= など「有効無効をtoggleする関数」は,
   慣習的に =0= 以下の数字を指定すると明示的に無効化できる.
-** 常に $HOME から開始
-   以前 (Meadow?) で使っていた時に,
-   Cygwin の時には =$HOME= に移動していないとファイルを開くのが大変だったので指定していました.
-   これを指定していると byte-compile 時に =CURDIR= を設定する必要があったりして面倒だけれども, まだ残している.
-   #+BEGIN_SRC emacs-lisp
-     (cd "~/")
-   #+END_SRC
 ** キーバインドの設定
    設定しておいて, 結構忘れていたり.
    とはいえ =[home]= と =[end]= は無いと途方に暮れます.
@@ -199,7 +192,7 @@ title: Emacsの基本設定
 ** フレーム, ツールバーなど
 *** ツールバーは使用しない.
      #+BEGIN_SRC emacs-lisp
-     (tool-bar-mode 0)
+       (tool-bar-mode 0)
      #+END_SRC
 *** スクロールバーは使用しない.
      #+BEGIN_SRC emacs-lisp
@@ -226,43 +219,43 @@ title: Emacsの基本設定
 ** 表示/編集関連
 *** 余計な空行を入れない設定
     バッファ終端で newline を入れない
-        #+BEGIN_SRC emacs-lisp
-          (setq next-line-add-newlines nil)
-        #+END_SRC
+    #+BEGIN_SRC emacs-lisp
+      (setq next-line-add-newlines nil)
+    #+END_SRC
     保存時に最終行に一行追加→とりあえず使わないことに
-        #+BEGIN_SRC emacs-lisp
-          ;; (setq require-final-newline t)
-          (put 'set-goal-column 'disabled nil)
-        #+END_SRC
+    #+BEGIN_SRC emacs-lisp
+      ;; (setq require-final-newline t)
+      (put 'set-goal-column 'disabled nil)
+    #+END_SRC
 *** yes or no を y or n に
-      #+BEGIN_SRC emacs-lisp
-     (fset 'yes-or-no-p 'y-or-n-p)
-      #+END_SRC
+    #+BEGIN_SRC emacs-lisp
+      (fset 'yes-or-no-p 'y-or-n-p)
+    #+END_SRC
 *** 選択リージョンに色付け
-      #+BEGIN_SRC emacs-lisp
-        (setq transient-mark-mode t)
-      #+END_SRC
+    #+BEGIN_SRC emacs-lisp
+      (setq transient-mark-mode t)
+    #+END_SRC
 *** 対応する括弧を色付け
-      #+BEGIN_SRC emacs-lisp
-        (setq show-paren-delay 0)           ; 初期値は 0.125
-        (setq show-paren-style 'expression) ; 括弧内も強調表示
-        (show-paren-mode t)                 ; 有効化
-      #+END_SRC
+    #+BEGIN_SRC emacs-lisp
+      (setq show-paren-delay 0)           ; 初期値は 0.125
+      (setq show-paren-style 'expression) ; 括弧内も強調表示
+      (show-paren-mode t)                 ; 有効化
+    #+END_SRC
 *** タイトルのバッファ名を非表示
-      #+BEGIN_SRC emacs-lisp
-        (setq frame-title-format nil)
-      #+END_SRC
+    #+BEGIN_SRC emacs-lisp
+      (setq frame-title-format nil)
+    #+END_SRC
 *** tab 幅 4, tab でのインデントはしない
-      #+BEGIN_SRC emacs-lisp
-        (setq-default tab-width 4)
-        (setq-default indent-tabs-mode nil)
-      #+END_SRC
-*** 文字列は 72 文字で折り返し(RFC2822)
-      #+BEGIN_SRC emacs-lisp
-        (setq-default fill-column 72)
-        (setq paragraph-start '"^\\([ 　・○<\t\n\f]\\|(?[0-9a-zA-Z]+)\\)")
-        (setq-default auto-fill-mode nil)
-      #+END_SRC
+    #+BEGIN_SRC emacs-lisp
+      (setq-default tab-width 4)
+      (setq-default indent-tabs-mode nil)
+    #+END_SRC
+*** 文字列は 72 文字で折り返し(RFC2822風味)
+    #+BEGIN_SRC emacs-lisp
+      (setq-default fill-column 72)
+      (setq paragraph-start '"^\\([ 　・○<\t\n\f]\\|(?[0-9a-zA-Z]+)\\)")
+      (setq-default auto-fill-mode nil)
+    #+END_SRC
 *** 行末の無駄な空白/改行を削除する
     元ネタ: (Emacs Advent Calendar jp:2010)[fn:7].
     ただし, RD や Markdown だと空白行に意味があったりするので,
@@ -431,292 +424,6 @@ title: Emacsの基本設定
      ;; 対称鍵のキャッシュを有効化
      (setq epa-file-cache-passphrase-for-symmetric-encryption t)
    #+END_SRC
-* 外部 emacs-lisp などの設定/分割した設定ファイルの読み込み
-  以下は Emacs 本体に同梱されていない emacs-lisp program や
-  外部ファイルの設定を読み込んでいるモン, など.
-** [[file:el-get_config.org][El-Get]]
-   パッケージ管理には El-Get [fn:8] を使うようになりました.
-   #+BEGIN_SRC emacs-lisp
-     (my:load-org-file "el-get_config.org")
-   #+END_SRC
-** [[http://www.morishima.net/~naoto/elscreen-en/][ElScreen]]
-   Emacsのバッファを GNU Screen っぽく扱う.
-   設定はキーバインドを =\C-o= に変えたくらい.
-   #+BEGIN_SRC emacs-lisp
-     (el-get 'sync '(elscreen-knu-branch))
-     (setq elscreen-prefix-key (kbd "C-o"))
-     (setq elscreen-display-tab 4)
-     ;; (setq elscreen-tab-display-kill-screen nil)
-     (require 'elscreen)
-   #+END_SRC
-** [[file:frame_config.org][フォントとテーマの設定]]
-   #+BEGIN_SRC emacs-lisp
-   (my:load-org-file "frame_config.org")
-   #+END_SRC
-** 日本語入力
-   SKK をメインで使用中. 無いと途方に暮れる.
-   ちなみにGTKが有効になっていると =gtk-immodule= なんかと衝突するので
-   =~/.Xresources= で xim を無効にしておくと良い.
-   例えば以下の様に:
-   #+BEGIN_EXAMPLE
-     ! disable XIM
-     Emacs*useXIM: false
-   #+END_EXAMPLE
-
-   ddskk 以前の古い skk が導入されている場合には el-get で ddskk を導入する.
-   =skk-user-directory= を設定しているので, 辞書や id なんかは
-   =~/.emacs.d/etc/skk= 以下に置かれるが, 設定ファイルだけは
-   [[file:ddskk_config.org][ddskkの設定]] で行なっている.
-*** 古い skk しか無い場合には ddskk を el-get する.
-     #+BEGIN_SRC emacs-lisp
-     (unless (locate-library "skk-sticky")
-       (el-get 'sync 'ddskk))
-     #+END_SRC
-*** byte-compile 用の変数の読み込み
-     #+BEGIN_SRC emacs-lisp
-     (eval-when-compile
-       (require 'skk-vars)
-       (require 'skk-autoloads))
-     #+END_SRC
-*** 設定ファイルの置き場所の設定
-    辞書ファイルは =~/.emacs.d/etc/skk= 以下に置く
-       #+BEGIN_SRC emacs-lisp
-         (setq skk-user-directory
-               (concat my:user-emacs-etc-directory "skk"))
-       #+END_SRC
-    設定ファイルは =~/.emacs.d/config=  以下に置く → [[file:ddskk_config.org][ddskkの設定]]
-       #+BEGIN_SRC emacs-lisp
-         (setq skk-init-file
-               (concat my:user-emacs-config-directory "ddskk_config"))
-
-       #+END_SRC
-*** org で書かれた設定ファイルから elisp を抽出
-     #+BEGIN_SRC emacs-lisp
-     (my:org-babel-tangle-and-compile-file
-      (concat my:user-emacs-config-directory "ddskk_config.org"))
-     #+END_SRC
-*** ddskk の設定ファイルは読み込み時に byte-compile する
-     #+BEGIN_SRC emacs-lisp
-     (setq skk-byte-compile-init-file t)
-     #+END_SRC
-*** skk-autoloads で読み込み
-     #+BEGIN_SRC emacs-lisp
-       (require 'skk-leim)
-       (setq default-input-method "japanese-skk")
-       (require 'skk-autoloads)
-       (require 'skk-cus)
-     #+END_SRC
-** [[file:w3m_config.org][emacs-w3m]]
-   HTML メールの表示などに使っている
-   #+BEGIN_SRC emacs-lisp
-     (unless (locate-library "w3m-load")
-       (el-get 'sync 'emacs-w3m))
-     (my:load-org-file "w3m_config.org")
-   #+END_SRC
-** MUA
-   手元では offlineimap と dovecot を上げて Wanderlustを愛用中.
-   メールの同期自体は offlineimap を cron でまわして処理しているのだけれども
-   すぐにメールが欲しい事があるので, それに対応するために
-   [[http://julien.danjou.info/software/offlineimap.el][offlineimap for Emacs]] も設定.
-*** offlineimap-el
-    インストールされていなければ offlineimap-el をインストールする.
-    ただし el-get のリポジトリにある offlineimap-el は
-    gnus に依存しているので, guns に依存しないレシピを書いておいた.
-    #+BEGIN_SRC emacs-lisp
-       (unless (locate-library "offlineimap")
-         (el-get 'sync 'offlineimap-without-gnus))
-    #+END_SRC
-    Wanderlust 使用時には modeline に表示することと,
-    [F1] で offlineimap を起動できるようにした.
-    kill するにはどうすれば良いかな...
-    #+BEGIN_SRC emacs-lisp
-      (autoload 'offlineimap "offlineimap" nil t)
-      (eval-after-load "offlineimap"
-        '(progn
-           (setq offlineimap-command "offlineimap -u machineui -o ")
-           (setq offlineimap-buffer-maximum-size 3000)
-           (setq offlineimap-mode-line-symbol "imap")
-           (setq offlineimap-enable-mode-line-p
-                 '(member major-mode
-                          '(offlineimap-mode
-                            wl-summary-mode
-                            wl-folder-mode
-                            wl-message-mode)))
-             (global-set-key [f1] 'offlineimap)
-             (defun offlineimap-real-quit
-               "real quit offline-imap"
-               (interactive)
-               (offlineimap-quit)
-               (define-key offlineimap-mode-map (kbd "Q") 'offlineimap-real-quit))
-             ))
-    #+END_SRC
-*** wanderlust
-    設定自体は [[file:wl_config.org][Wanderlust の設定]] で行なっているので,
-    ここでは MUA の設定なんかをしている.
-
-    インストールは必要に応じて =el-get= なり =apt-get= なり.
-    #+BEGIN_SRC emacs-lisp
-      (unless (locate-library "wl")
-        (el-get 'sync '(wanderlust)))
-      (unless (locate-library "rail")
-        (el-get 'sync '(rail)))
-      (unless (locate-library "elscreen-wl")
-        (el-get 'sync '(elscreen-wl)))
-      (unless (locate-library "google-contacts-wl")
-        (el-get 'sync '(google-contacts-wl)))
-      (unless (locate-library "c-sig")
-        (el-get 'sync 'c-sig-alioth))
-    #+END_SRC
-
-    =mail-user-agent= で Wanderlust が呼び出されるようにする
-    #+BEGIN_SRC emacs-lisp
-       (autoload 'wl "wl" "Wanderlust" t)
-       (autoload 'wl-other-frame "wl" "Wanderlust on new frame" t)
-       (autoload 'wl-draft "wl-draft" "Write draft with Wanderlust." t)
-       (if (boundp 'mail-user-agent)
-           (setq mail-user-agent 'wl-user-agent))
-       (if (boundp 'read-mail-command)
-           (setq read-mail-command 'wl))
-       (if (fboundp 'define-mail-user-agent)
-           (define-mail-user-agent
-             'wl-user-agent
-             'wl-user-agent-compose
-             'wl-draft-send
-             'wl-draft-kill
-             'mail-send-hook))
-    #+END_SRC
-    本体設定: =~/.elmo= の場所を変更している
-    #+BEGIN_SRC emacs-lisp
-      (setq elmo-msgdb-directory "~/Mail/elmo")
-    #+END_SRC
-    org で書かれた設定ファイルから elisp を抽出して compile
-    #+BEGIN_SRC emacs-lisp
-      (my:org-babel-tangle-and-compile-file
-       (concat my:user-emacs-config-directory "wl_config.org"))
-    #+END_SRC
-    設定ファイルの変更: 初期値は =~/.wl=.
-    #+BEGIN_SRC emacs-lisp
-      (setq wl-init-file
-            (concat my:user-emacs-config-directory "wl_config"))
-    #+END_SRC
-    キーバインド: [F3] で Wanderlust が起動するように(最近使ってないけれど).
-    #+BEGIN_SRC emacs-lisp
-      (global-set-key [f3] 'wl)
-    #+END_SRC
-** [[file:auctex_config.org][AUCTeXの設定]]
-   TeXの編集には AUCTeX を使う.
-   =platex= コマンドが存在する場合だけ, 設定を読み込むように.
-   #+BEGIN_SRC emacs-lisp
-     (when (executable-find "platex")
-       (my:load-org-file "auctex_config.org"))
-   #+END_SRC
-** [[file:migemo_config.org][Migemoの設定]]
-   Debianパッケージを使う場合には,
-   以下のファイルは読み込まなくても良きにはからってくれるけれども, 一応.
-   #+BEGIN_SRC emacs-lisp
-     (my:load-org-file "migemo_config.org")
-   #+END_SRC
-** [[file:org-mode_config.org][org-mode]]
-   #+BEGIN_SRC emacs-lisp
-     (my:load-org-file "org-mode_config.org")
-   #+END_SRC
-** [[http://howm.sourceforge.jp/index-j.html][Howm]] - Hitori Otegaru Wiki Modoki
-   無いと途方に暮れるので, el-get で最新版を取得:
-   #+BEGIN_SRC emacs-lisp
-     (my:load-org-file "howm_config.org")
-   #+END_SRC
-** [[file:autoinsert_config.org][auto-insert]]
-   テンプレートの自動挿入
-   #+BEGIN_SRC emacs-lisp
-     (my:load-org-file "autoinsert_config.org")
-   #+END_SRC
-** [[file:anything_config.org][Anything]]
-   Debianでは[[http://packages.qa.debian.org/a/anything-el.html][anything-el]] [fn:10] としてパッケージ化されている.
-   #+BEGIN_SRC emacs-lisp
-     (my:load-org-file "anything_config.org")
-   #+END_SRC
-** [[file:auto-complete_config.org][auto-complete]]
-   詳細は [[http://cx4a.org/software/auto-complete/index.ja.html][Auto Complete Mode]] [fn:11] 参照のこと.
-   Debianでは[[http://packages.qa.debian.org/a/auto-complete-el.html][ auto-complete-el]] [fn:12] としてパッケージ化されている.
-   #+BEGIN_SRC emacs-lisp
-     (my:load-org-file "auto-complete_config.org")
-   #+END_SRC
-** [[file:flyspell_config.org][flyspell-mode]]
-   とりあえず auto-complete (popup.el) の後に読み込む事に.
-   #+BEGIN_SRC emacs-lisp
-     (my:load-org-file "flyspell_config.org")
-   #+END_SRC
-** [[file:lookup_config.org][lookup-el]]
-   CVS 用のレシピは書きたくないので,
-   とりあえず =lookup= がインストールされていて, 辞書が存在する場合にだけ読み込むように.
-   #+BEGIN_SRC emacs-lisp
-     (if (and (locate-library "lookup")
-              (file-exists-p "/usr/local/share/dict/lookup-enabled"))
-         (my:load-org-file "lookup_config.org"))
-   #+END_SRC
-** [[file:nxml-mode_config.org][nxml-mode]]
-   #+BEGIN_SRC emacs-lisp
-     (my:load-org-file "nxml-mode_config.org")
-   #+END_SRC
-** [[file:ruby-mode_config.org][ruby-mode]]
-   #+BEGIN_SRC emacs-lisp
-     (my:load-org-file "ruby-mode_config.org")
-   #+END_SRC
-** [[file:fortran-mode_config.org][fortran-mode]]
-   f90 の場合もここで設定
-   #+BEGIN_SRC emacs-lisp
-     (my:load-org-file "fortran-mode_config.org")
-   #+END_SRC
-** [[http://mwolson.org/projects/EmacsMuse.html][EmacsMuse]] [fn:13]
-   #+BEGIN_SRC emacs-lisp
-     (my:load-org-file "muse_config.org")
-   #+END_SRC
-** yaml-mode
-   別ファイルに分割するほどでも無いので, ここで設定.
-   #+BEGIN_SRC emacs-lisp
-     (unless (locate-library "yaml-mode")
-       (el-get 'sync 'yaml-mode))
-     (when (require 'yaml-mode nil t)
-       (autoload 'yaml-mode "yaml-mode" "Major mode for Yaml" t)
-       (add-to-list 'auto-mode-alist '("\\.yml$\\|\\.yaml$" . yaml-mode))
-       )
-   #+END_SRC
-** [[file:flynamke_config.org][flymakeの設定]]
-   #+BEGIN_SRC emacs-lisp
-     (my:load-org-file "flymake_config.org")
-   #+END_SRC
-** [[http://navi2ch.sourceforge.net/][Navi2ch]]
-   最近あんまり読まなくなったなぁ...
-   #+BEGIN_SRC emacs-lisp
-     (my:load-org-file "navi2ch_config.org")
-   #+END_SRC
-** [[http://d.hatena.ne.jp/tarao/20121021/1350844264][term+.el]]
-   第6回関西Emacsで紹介された term.el の拡張.
-   素敵すぎます.
-   #+BEGIN_SRC emacs-lisp
-     (eval-and-compile
-       (add-to-load-path "site-lisp/term-plus-el"))
-     (require 'term+)
-     (require 'xterm-256color)
-   #+END_SRC
-** その他, local に持っているもの.
-   #+BEGIN_SRC emacs-lisp
-     (when (locate-library "popup")
-       (require 'popup-color-at-point))
-   #+END_SRC
-* doc-view の無効化
-  便利そうなんだけれど, スキャンした画像から生成した PDF が多いので
-  doc-view の恩恵にはあんまりあずかってない.
-  そんなわけで, xdg-open にお任せすることに.
-  #+BEGIN_SRC emacs-lisp
-    (defadvice find-file (around disable-doc-view (filename &optional wildcards) activate)
-      (cond
-       ((string-match "\\.\\(?:PDF\\|DVI\\|pdf\\|dvi\\)\\'" filename)
-        (let ((process-connection-type nil))
-          (start-process "" nil "/usr/bin/xdg-open" filename)))
-       (t
-        ad-do-it)))
-  #+END_SRC
 * Footnotes
 
 [fn:1] バッドノウハウと奥が深い症候群: [[http://0xcc.net/misc/bad-knowhow.html]]

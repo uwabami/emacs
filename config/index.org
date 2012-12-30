@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/12/31 02:50:51$
+# $Lastupdate: 2012/12/31 03:43:48$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -433,7 +433,19 @@ title: Emacsの基本設定
    #+BEGIN_SRC emacs-lisp
      (my:load-org-file "el-get_config.org")
    #+END_SRC
-
+   今の所, ここで install しているのは以下の通り
+   - [[https://raw.github.com/awasira/cp5022x.el/master/cp5022x.el][cp5022x.el]]
+   - [[http://emacswiki.org/emacs/auto-async-byte-compile.el][auto-async-byte-compile.el]]
+   - [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727][パスワード管理ツール id-manager.el]]
+   - [[http://www.morishima.net/~naoto/elscreen-en/][ElScreen]]
+** [[http://www.morishima.net/~naoto/elscreen-en/][ElScreen]]
+   無いと途方に暮れる.
+   設定はキーバインドを =\C-o= に変えたくらい
+   #+BEGIN_SRC emacs-lisp
+     (setq elscreen-prefix-key (kbd "C-o"))
+     (setq elscreen-display-tab 4)
+     (eval-and-compile (require 'elscreen))
+   #+END_SRC
 * Footnotes
 
 [fn:1] バッドノウハウと奥が深い症候群: [[http://0xcc.net/misc/bad-knowhow.html]]

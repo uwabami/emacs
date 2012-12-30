@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/12/31 03:01:25$
+# $Lastupdate: 2012/12/31 03:49:33$
 # License: Expat
 #
 #+TITLE: el-get で パッケージ管理
@@ -26,7 +26,7 @@ title: el-get で パッケージ管理
                   (concat user-emacs-directory "recipes")))
     (el-get 'sync)
   #+END_SRC
-* cp5022x.el
+* [[https://raw.github.com/awasira/cp5022x.el/master/cp5022x.el][cp5022x.el]]
   文字コード関連. 機種依存文字とかをよきにとりはからうために.
   レシピは [[file:~/dot.emacs.d/recipes/cp5022x.rcp][recipes/cp5022x.rcp]] を参照の事.
   取得元は Github なので, git の proxy 設定ができていれば取得可能.
@@ -34,7 +34,7 @@ title: el-get で パッケージ管理
     (unless (locate-library "cp5022x")
       (el-get 'sync '(cp5022x)))
   #+END_SRC
-* auto-async-byte-compile
+* [[http://emacswiki.org/emacs/auto-async-byte-compile.el][auto-async-byte-compile.el]]
   取得元は emacswiki.
   環境変数が正しく設定されていれば, きちんと install できる, 筈.
   #+BEGIN_SRC emacs-lisp
@@ -59,12 +59,12 @@ title: el-get で パッケージ管理
             (expand-file-name
              (concat (getenv "HOME") "/.gnupg/idm-db.gpg"))))
   #+END_SRC
-* Footnotes
-
-[fn:1] 人は俺を「recentfマスター」と呼ぶ: [[http://d.hatena.ne.jp/rubikitch/20091224/recentf]]
-
-[fn:2] zlc.el で Emacs のミニバッファ補完を zsh ライクに: [[http://d.hatena.ne.jp/mooz/20101003/p1]]
-
-[fn:3] Yet another icomplete: [[http://d.hatena.ne.jp/tarao/20101011/ 1286804507]]
-
-[fn:4] text-translator-el: http://d.hatena.ne.jp/khiker/20070503/emacs_text_translator
+* [[http://www.morishima.net/~naoto/elscreen-en/][ElScreen]]
+  Emacsのバッファを GNU Screen っぽく扱う素敵 elisp.
+  最近新しいリリースが無い & APEL 依存があるのが難点だろうか.
+  ここでは [[https://github.com/knu][MUSHA]] さんが folk している branch から
+  取得する [[file:~/dot.emacs.d/recipes/elscreen-knu-branch.rcp][recipes/elscreen-knu-branch.rcp]] を使っている.
+  #+BEGIN_SRC emacs-lisp
+    (unless (locate-library "elscreen")
+      (el-get 'sync '(elscreen-knu-branch)))
+   #+END_SRC

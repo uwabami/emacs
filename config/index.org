@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/12/31 02:44:16$
+# $Lastupdate: 2012/12/31 02:50:51$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -424,6 +424,16 @@ title: Emacsの基本設定
      ;; 対称鍵のキャッシュを有効化
      (setq epa-file-cache-passphrase-for-symmetric-encryption t)
    #+END_SRC
+* 外部 emacs-lisp などの設定/分割した設定ファイルの読み込み
+  以下は Emacs 本体に同梱されていない emacs-lisp program.
+  大抵の場合は Debian パッケージを使うようにしているけれども,
+  必要に応じて =el-get= で install している.
+** [[file:el-get_config.org][El-Get]]
+   パッケージ管理には El-Get [fn:8] を使うようになりました.
+   #+BEGIN_SRC emacs-lisp
+     (my:load-org-file "el-get_config.org")
+   #+END_SRC
+
 * Footnotes
 
 [fn:1] バッドノウハウと奥が深い症候群: [[http://0xcc.net/misc/bad-knowhow.html]]
@@ -450,8 +460,8 @@ title: Emacsの基本設定
 
 [fn:12] auto-complete-el - Debian PTS: [[http://packages.qa.debian.org/a/auto-complete-el.html]]
 
-[fn:14] Yet Another Snippet extension: [[http://yasnippet-doc-jp.googlecode.com/svn/trunk/doc-jp/index.html]]
+[fn:13] Yet Another Snippet extension: [[http://yasnippet-doc-jp.googlecode.com/svn/trunk/doc-jp/index.html]]
 
-[fn:15] align設定用例集: [[http://handlename.hatenablog.jp/entry/2011/12/11/214923]]
+[fn:14] align設定用例集: [[http://handlename.hatenablog.jp/entry/2011/12/11/214923]]
 
-[fn:13] Emacs Muse: [[http://mwolson.org/projects/EmacsMuse.html]]
+[fn:15] Emacs Muse: [[http://mwolson.org/projects/EmacsMuse.html]]

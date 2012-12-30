@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/10/06 03:22:38$
+# $Lastupdate: 2012/12/31 03:01:25$
 # License: Expat
 #
 #+TITLE: el-get で パッケージ管理
@@ -27,15 +27,19 @@ title: el-get で パッケージ管理
     (el-get 'sync)
   #+END_SRC
 * cp5022x.el
-  文字コード関連. 機種依存文字とかをよきにとりはからうために
+  文字コード関連. 機種依存文字とかをよきにとりはからうために.
+  レシピは [[file:~/dot.emacs.d/recipes/cp5022x.rcp][recipes/cp5022x.rcp]] を参照の事.
+  取得元は Github なので, git の proxy 設定ができていれば取得可能.
   #+BEGIN_SRC emacs-lisp
     (unless (locate-library "cp5022x")
-      (el-get 'sync 'cp5022x))
+      (el-get 'sync '(cp5022x)))
   #+END_SRC
 * auto-async-byte-compile
+  取得元は emacswiki.
+  環境変数が正しく設定されていれば, きちんと install できる, 筈.
   #+BEGIN_SRC emacs-lisp
     (unless (locate-library "auto-async-byte-compile")
-      (el-get 'sync 'auto-async-byte-compile))
+      (el-get 'sync '(auto-async-byte-compile)))
     ;; theme.el で終わるファイルは compile しない
     (when (require 'auto-async-byte-compile nil t)
       (setq auto-async-byte-compile-exclude-files-regexp "theme\.el$")
@@ -43,6 +47,9 @@ title: el-get で パッケージ管理
                 'enable-auto-async-byte-compile-mode))
   #+END_SRC
 * [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727][パスワード管理ツール id-manager.el]]
+  無いと途方に暮れるくらい, 依存しまくり.
+  レシピは [[file:~/dot.emacs.d/recipes/id-manager.rcp][recipes/id-manager.rcp]] を参照の事.
+  取得元は Github なので, git の proxy 設定ができていれば取得可能.
   #+BEGIN_SRC emacs-lisp
     (unless (locate-library "id-manager")
       (el-get 'sync 'id-manager))
@@ -51,51 +58,6 @@ title: el-get で パッケージ管理
       (setq idm-database-file
             (expand-file-name
              (concat (getenv "HOME") "/.gnupg/idm-db.gpg"))))
-  #+END_SRC
-
-* recentf の拡張 → [[http://d.hatena.ne.jp/rubikitch/20091224/recentf][人は俺を「recentfマスター」と呼ぶ]] [fn:1]
-  #+BEGIN_SRC emacs-lisp
-    (unless (locate-library "recentf-ext")
-      (el-get 'sync 'recentf-ext))
-    (require 'recentf-ext nil t)
-  #+END_SRC
-* [[http://d.hatena.ne.jp/mooz/20101003/p1][zlc.el で Emacs のミニバッファ補完 zsh ライクに]] [fn:2]
-  #+BEGIN_SRC emacs-lisp
-     (unless (locate-library "zlc")
-       (el-get 'sync 'zlc))
-  #+END_SRC
-  補完時のキーバインド.
-  zlc-reset がうまく動いてくれないような...
-   #+BEGIN_SRC emacs-lisp
-     (when (require 'zlc nil t)
-       (let ((map minibuffer-local-map))
-         (define-key map (kbd "<backtab>") 'zlc-select-previous)
-         (define-key map (kbd "S-<tab>")   'zlc-select-previous)
-         (define-key map (kbd "C-p")       'zlc-select-previous-vertical)
-         (define-key map (kbd "C-n")       'zlc-select-next-vertical)
-         (define-key map (kbd "C-b")       'zlc-select-previous)
-         (define-key map (kbd "C-f")       'zlc-select-next)
-         (define-key map (kbd "C-d")       'zlc-reset)
-         ))
-   #+END_SRC
-* [[http://d.hatena.ne.jp/tarao/20101011/1286804507][Yet another icompelete]] [fn:3]
-  zlc の補完をさらに素敵に
-  #+BEGIN_SRC emacs-lisp
-    (unless (locate-library "yaicomplete")
-      (el-get 'sync 'yaicomplete))
-    (when (require 'yaicomplete nil t)
-      (yaicomplete-mode))
-  #+END_SRC
-* [[http://d.hatena.ne.jp/khiker/20070503/emacs_text_translator][Emacs でテキスト翻訳をする elisp]]. [fn:4]
-  #+BEGIN_SRC emacs-lisp
-    (unless (locate-library "text-translator")
-      (if (executable-find "bzr")
-          (el-get 'sync 'text-translator-bzr-head)))
-    (when (string-match system-name "daphne")
-      (setq text-translator-proxy-server "127.0.0.1")
-      (setq text-translator-proxy-port "20080"))
-    (when (require 'text-translator nil t)
-      (global-set-key (kbd "C-x t") 'text-translator-all-by-auto-selection))
   #+END_SRC
 * Footnotes
 

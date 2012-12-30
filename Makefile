@@ -22,10 +22,10 @@ TARGET:
 	done
 
 clean:
-	@for d in $(TARGET_DIR) ;\
-		do $(MAKE) clean -C $$d ;\
-	done
+	(cd config && $(MAKE) distclean)
 	rm -f $(ELCFiles) *~
 
 distclean: clean
-	(cd config && $(MAKE) distclean)
+	@for d in $(TARGET_DIR) ;\
+		do $(MAKE) clean -C $$d ;\
+	done

@@ -1,5 +1,5 @@
 *.elc
-*.dat 
+*.dat
 config/*.el
 config/sitemap.org
 el-get/*

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/12/31 03:49:33$
+# $Lastupdate: 2012/12/31 04:11:31$
 # License: Expat
 #
 #+TITLE: el-get で パッケージ管理
@@ -68,3 +68,11 @@ title: el-get で パッケージ管理
     (unless (locate-library "elscreen")
       (el-get 'sync '(elscreen-knu-branch)))
    #+END_SRC
+* [[http://openlab.ring.gr.jp/skk/ddskk-ja.html][Daredevil SKK (DDSKK)]]
+  古い skk しか無い場合には ddskk を el-get する.
+  ここでは [[https://github.com/hsaito][Hideki Saito]] さんの github にミラーから
+  取得する [[file:~/dot.emacs.d/recipes/ddskk-hsaito-branch.rcp][recipes/ddskk-hsaito-branch.rcp]] を使っている.
+  #+BEGIN_SRC emacs-lisp
+     (unless (locate-library "skk-sticky")
+       (el-get 'sync '(ddskk-hsaito-branch)))
+  #+END_SRC

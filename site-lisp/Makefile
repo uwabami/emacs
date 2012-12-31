@@ -22,6 +22,3 @@ distclean: clean
 	@for d in $(TARGET_DIRS) ;\
 		do $(MAKE) clean -C $$d ;\
 	done
-	@for d in $(EXCLUDE) ;\
-	  do echo "cd $$d && rm -f *.elc" && (cd $$d && rm -f *.elc ) ;\
-	done

@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2012/12/31 02:42:48$
+;; $Lastupdate: 2013/01/01 02:23:11$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -29,8 +29,13 @@
 ;;
 ;; 必要になることが多いので cl だけは読み込んでおく
 ;;
-(eval-when-compile (byte-compile-disable-warning 'cl-functions))
 (require 'cl)
+;;
+;; 警告, Compile-Log の非表示
+;;
+(eval-when-compile (byte-compile-disable-warning 'cl-functions))
+(let ((win (get-buffer-window "*Compile-Log*")))
+  (when win (delete-window win)))
 ;; -----------------------------------------------------------
 ;;; 自己紹介 -> 名前とメールアドレスの設定
 ;;
@@ -42,11 +47,8 @@
 ;; 元々は以下のURLにあった関数. 必要な物だけ抜粋
 ;; @see http://github.com/elim/dotemacs/blob/master/init.el
 ;;
-;; Emacs のバージョン判定. ELPAのためにEmacs23 まで判定
-;;
-(defvar oldemacs-p (< emacs-major-version 22))  ; 22 未満
-(defvar emacs22-p (<= emacs-major-version 22))  ; 22 以下
-(defvar emacs23-p (>= emacs-major-version 23))  ; 23 以上
+(defvar oldemacs-p (<= emacs-major-version 22)) ; 22 以下
+(defvar emacs23-p (<= emacs-major-version 23))  ; 23 以下
 (defvar emacs24-p (>= emacs-major-version 24))  ; 24 以上
 (defvar darwin-p (eq system-type 'darwin))      ; Mac OS X 用
 (defvar nt-p (eq system-type 'windows-nt))      ; Windows 用
@@ -96,32 +98,33 @@
 (add-to-load-path
  "config"                  ; 分割した設定群の置き場所.
  "site-lisp/org-mode/lisp" ; org-mode (Git HEAD)
- "site-lisp/el-get"        ; el-get
+ "el-get/el-get"           ; el-get で install した物.
  "local"                   ; 自作の emacs-lisp とか.
  )
 ;; -----------------------------------------------------------
-;;; 良く使う macro の定義
+;;; el-get の install
 ;;
-;; 今のところ以下を定義:
-;; - my:not-locate-library
-;;   - (not (locate-library "foobar") -> (add-to-load-path "foobar")
-;;
-(defmacro my:not-locate-library (lib &rest list)
-  `(when (not (locate-library ,(symbol-name lib)))
-     (add-to-load-path ,@list)
-     (eval-when-compile
-       (add-to-load-path ,@list))))
+(unless (require 'el-get nil 'noerror)
+  (with-current-buffer
+      (url-retrieve-synchronously
+       "http://raw.github.com/dimitri/el-get/master/el-get-install.el")
+    (let (el-get-master-branch)
+      (goto-char (point-max))
+      (eval-print-last-sexp))))
+(add-to-list 'el-get-recipe-path
+             (expand-file-name (concat user-emacs-directory "recipes")))
+(setq el-get-github-default-url-type 'https)
 ;; -----------------------------------------------------------
-;;; my:autoload-if-found
-(defun my:autoload-if-found (functions file &optional docstring interactive type)
-  "set autoload iff. FILE has found."
-  (if (not (listp functions))
-      (setq functions (list functions)))
-  (and (locate-library file)
-       (progn
-         (dolist (function functions)
-           (autoload function file docstring interactive type)) t))
-  )
+;;; bundle - an el-get wrapper
+;;
+;; @oarat による素敵 emacs-lisp を el-get の wrapper として使う
+;;
+(add-to-list 'el-get-sources
+             '(:name bundle
+                     :url "http://gist.github.com/raw/4414297/bundle.el"
+                     :type http
+                     :features (bundle)))
+(el-get 'sync 'bundle)
 ;; -----------------------------------------------------------
 ;;; org-babel
 ;;
@@ -157,6 +160,7 @@
         (byte-compile-file exported-file)))))
 ;; -----------------------------------------------------------
 ;;; my:org-babel-load-file
+;;
 ;; my:org-babel-tangle-and-comile-file してから load する
 ;;
 (defun my:org-babel-load-file (file)
@@ -166,6 +170,7 @@
   (load (file-name-sans-extension file)))
 ;; -----------------------------------------------------------
 ;;; my:org-load-file
+;;
 ;; my:org-babel-load-file の際にディレクトリ名を
 ;; ~/.emacs.d/config/ に決め打ち
 ;;
@@ -174,7 +179,7 @@
   (my:org-babel-load-file
    (expand-file-name file my:user-emacs-config-directory)))
 ;; -----------------------------------------------------------
-;;; 実際に読み込む.
+;;; 実際に設定を読み込む.
 ;;
 (my:load-org-file "index.org")
 ;; -----------------------------------------------------------

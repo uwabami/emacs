@@ -1,0 +1,6 @@
+(:name elscreen-wl-knu-branch
+       :description "elscreen plugin for Wanderlust"
+       :type http
+       :url "https://raw.github.com/knu/elscreen/master/elscreen-wl.el"
+       :autoloads nil
+       )

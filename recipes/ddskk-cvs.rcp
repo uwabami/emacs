@@ -1,0 +1,10 @@
+(:name ddskk-cvs
+       :website "http://openlab.ring.gr.jp/skk/ddskk.html"
+       :description "A Japanese input method on Emacs."
+       :type cvs
+       :options login
+       :url ":pserver:guest:guest@openlab.jp:/circus/cvsroot"
+       :module "skk/main"
+       :autoloads nil
+       :features "skk-autoloads"
+       :build ("make"))

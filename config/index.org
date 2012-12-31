@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/12/31 08:30:50$
+# $Lastupdate: 2012/12/31 18:30:55$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -448,7 +448,7 @@ title: Emacsの基本設定
      (setq elscreen-display-tab 4)
      (eval-and-compile (require 'elscreen))
    #+END_SRC
-** [[http://openlab.ring.gr.jp/skk/ddskk-ja.html][Daredevil SKK (DDSKK)]]
+** 日本語入力: [[http://openlab.ring.gr.jp/skk/ddskk-ja.html][Daredevil SKK (DDSKK)]]
    SKK をメインで使用中. 無いと途方に暮れる.
    ちなみにGTKが有効になっていると =gtk-immodule= なんかと衝突するので
    =~/.Xresources= で xim を無効にしておくと良い.
@@ -493,6 +493,46 @@ title: Emacsの基本設定
      (require 'skk-autoloads)
      (require 'skk-cus)
    #+END_SRC
+** MUA: [[https://github.com/wanderlust/wanderlust][Wanderlust]]
+*** wanderlust
+    設定自体は [[file:wl_config.org][Wanderlust の設定]] で行なっているので,
+    ここでは MUA の設定なんかをしている.
+
+    =mail-user-agent= で Wanderlust が呼び出されるようにする
+    #+BEGIN_SRC emacs-lisp
+       (autoload 'wl "wl" "Wanderlust" t)
+       (autoload 'wl-other-frame "wl" "Wanderlust on new frame" t)
+       (autoload 'wl-draft "wl-draft" "Write draft with Wanderlust." t)
+       (if (boundp 'mail-user-agent)
+           (setq mail-user-agent 'wl-user-agent))
+       (if (boundp 'read-mail-command)
+           (setq read-mail-command 'wl))
+       (if (fboundp 'define-mail-user-agent)
+           (define-mail-user-agent
+             'wl-user-agent
+             'wl-user-agent-compose
+             'wl-draft-send
+             'wl-draft-kill
+             'mail-send-hook))
+    #+END_SRC
+    本体設定: =~/.elmo= の場所を変更している
+    #+BEGIN_SRC emacs-lisp
+      (setq elmo-msgdb-directory "~/Mail/elmo")
+    #+END_SRC
+    org で書かれた設定ファイルから elisp を抽出して compile
+    #+BEGIN_SRC emacs-lisp
+      (my:org-babel-tangle-and-compile-file
+       (concat my:user-emacs-config-directory "wl_config.org"))
+    #+END_SRC
+    設定ファイルの変更: 初期値は =~/.wl=.
+    #+BEGIN_SRC emacs-lisp
+      (setq wl-init-file
+            (concat my:user-emacs-config-directory "wl_config"))
+    #+END_SRC
+    キーバインド: [F3] で Wanderlust が起動するように(最近使ってないけれど).
+    #+BEGIN_SRC emacs-lisp
+      (global-set-key [f3] 'wl)
+    #+END_SRC
 * Footnotes
 
 [fn:1] バッドノウハウと奥が深い症候群: [[http://0xcc.net/misc/bad-knowhow.html]]

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/12/31 04:11:31$
+# $Lastupdate: 2012/12/31 18:20:18$
 # License: Expat
 #
 #+TITLE: el-get で パッケージ管理
@@ -75,4 +75,39 @@ title: el-get で パッケージ管理
   #+BEGIN_SRC emacs-lisp
      (unless (locate-library "skk-sticky")
        (el-get 'sync '(ddskk-hsaito-branch)))
+  #+END_SRC
+* MUA: Wanderlust 関連
+  Wanderlust本体と
+    - [[http://uwabami.github.com/rail/][RAIL: Replace Agent-String Internal Library]]
+    - elscreen-wl
+    - google-contacts-wl
+    - c-sig
+  を導入している.
+
+  elscreen-wl は elscreen と Wanderlust の連携.
+  前述の [[https://github.com/knu][MUSHA]] さんが folk している branch から
+  install している場合はここで再度 el-get する必要は無いが,
+  Debian パッケージの場合には同梱されていなかったりするので,
+  ここで再度 =el-get sync= している.
+
+  [[http://uwabami.github.com/rail/][RAIL: Replace Agent-String Internal Library]]
+  の recipe は
+  [[file:~/.emacs.d/recipes/rail.rcp][recipes/rail.rcp]] を参照の事.
+
+  [[https://github.com/uwabami/google-contacts-wl][google-contacts-wl]] は Google Contacts -> Wanderlust Address file
+  の 1-way convertor. el-get 用の recipe は
+  [[file:~/.emacs.d/recipes/google-contacts-wl.rcp][recipes/google-contacts-wl.rcp]] を参照の事.
+
+  c-sig は upstream dead?
+  Debian のリポジトリ (alioth) から取得する
+  [[file:~/.emacs.d/recipes/c-sig-alioth.rcp][recipes/c-sig-alioth.rcp]] を使っている.
+  #+BEGIN_SRC emacs-lisp
+     (unless (locate-library "wl")
+       (el-get 'sync '(wanderlust)))
+     (unless (locate-library "rail")
+       (el-get 'sync '(rail)))
+     (unless (locate-library "elscreen-wl")
+       (el-get 'sync '(elscreen-wl-knu-branch)))
+     (unless (locate-library "google-contacts-wl")
+       (el-get 'sync '(google-contacts-wl)))
   #+END_SRC

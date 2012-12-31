@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/12/31 03:59:12$
+# $Lastupdate: 2012/12/31 08:30:50$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -433,7 +433,9 @@ title: Emacsの基本設定
    #+BEGIN_SRC emacs-lisp
      (my:load-org-file "el-get_config.org")
    #+END_SRC
-   今の所, ここで install しているのは以下の通り
+   今の所, ここで install しているのは以下の通り.
+   ただし, 他のパッケージシステム(Debian とか)で
+   install されていなかったらinstall する, という方針です.
    - [[https://raw.github.com/awasira/cp5022x.el/master/cp5022x.el][cp5022x.el]]
    - [[http://emacswiki.org/emacs/auto-async-byte-compile.el][auto-async-byte-compile.el]]
    - [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727][パスワード管理ツール id-manager.el]]
@@ -458,40 +460,39 @@ title: Emacsの基本設定
    =skk-user-directory= を設定しているので, 辞書や id なんかは
    =~/.emacs.d/etc/skk= 以下に置かれるが, 設定ファイルだけは
    [[file:ddskk_config.org][ddskkの設定]] で行なっている.
-*** byte-compile 用の変数の読み込み
-     #+BEGIN_SRC emacs-lisp
+
+   byte-compile 用の変数の読み込み.
+   #+BEGIN_SRC emacs-lisp
      (eval-when-compile
        (require 'skk-vars)
        (require 'skk-autoloads))
-     #+END_SRC
-*** 設定ファイルの置き場所の設定
-    辞書ファイルは =~/.emacs.d/etc/skk= 以下に置く
-       #+BEGIN_SRC emacs-lisp
-         (setq skk-user-directory
-               (concat my:user-emacs-etc-directory "skk"))
-       #+END_SRC
-    設定ファイルは =~/.emacs.d/config=  以下に置く → [[file:ddskk_config.org][ddskkの設定]]
-       #+BEGIN_SRC emacs-lisp
-         (setq skk-init-file
-               (concat my:user-emacs-config-directory "ddskk_config"))
-
-       #+END_SRC
-*** org で書かれた設定ファイルから elisp を抽出
-     #+BEGIN_SRC emacs-lisp
+   #+END_SRC
+   辞書ファイルは =~/.emacs.d/etc/skk= 以下に置く
+   #+BEGIN_SRC emacs-lisp
+     (setq skk-user-directory
+           (concat my:user-emacs-etc-directory "skk"))
+   #+END_SRC
+   設定ファイルは =~/.emacs.d/config=  以下に置く → [[file:ddskk_config.org][ddskkの設定]]
+   #+BEGIN_SRC emacs-lisp
+     (setq skk-init-file
+           (concat my:user-emacs-config-directory "ddskk_config"))
+   #+END_SRC
+   org で書かれた設定ファイルから elisp を抽出
+   #+BEGIN_SRC emacs-lisp
      (my:org-babel-tangle-and-compile-file
       (concat my:user-emacs-config-directory "ddskk_config.org"))
-     #+END_SRC
-*** ddskk の設定ファイルは読み込み時に byte-compile する
-     #+BEGIN_SRC emacs-lisp
+   #+END_SRC
+   ddskk の設定ファイルは読み込み時に byte-compile する
+   #+BEGIN_SRC emacs-lisp
      (setq skk-byte-compile-init-file t)
-     #+END_SRC
-*** skk-autoloads で読み込み
-     #+BEGIN_SRC emacs-lisp
-       (require 'skk-leim)
-       (setq default-input-method "japanese-skk")
-       (require 'skk-autoloads)
-       (require 'skk-cus)
-     #+END_SRC
+   #+END_SRC
+   skk-autoloads で読み込み
+   #+BEGIN_SRC emacs-lisp
+     (require 'skk-leim)
+     (setq default-input-method "japanese-skk")
+     (require 'skk-autoloads)
+     (require 'skk-cus)
+   #+END_SRC
 * Footnotes
 
 [fn:1] バッドノウハウと奥が深い症候群: [[http://0xcc.net/misc/bad-knowhow.html]]

@@ -12,7 +12,6 @@ all: index.elc
 	@$(BATCH) --eval '(mapc (lambda (x) (my:org-babel-tangle-and-compile-file (symbol-name x))) (quote ($(CURDIR)/$<)))'
 
 clean:
-	rm -f $(ELCFILES) *.html *.tex *.org_archive
+	rm -f $(ELCFILES) *.html *.tex *.org_archive *.el *.elc
 
 distclean: clean
-	rm -f *.el *.elc

@@ -1,5 +1,6 @@
 *.elc
 *.dat
+bundle
 config/*.el
 config/sitemap.org
 el-get/*

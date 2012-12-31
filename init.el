@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2013/01/01 02:23:11$
+;; $Lastupdate: 2013/01/01 03:50:16$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -88,7 +88,6 @@
         (add-to-list 'load-path default-directory)
         (if (fboundp 'normal-top-level-add-subdirs-to-loadpath)
             (normal-top-level-add-subdirs-to-load-path))))))
-;; -----------------------------------------------------------
 ;;; load-path の設定
 ;;
 ;; load-path の優先順位が気になる場合には
@@ -125,6 +124,25 @@
                      :type http
                      :features (bundle)))
 (el-get 'sync 'bundle)
+;; -----------------------------------------------------------
+;;; eval-after-load-compile
+;;
+;; byte-compile version for eval-after-load
+;;
+(defmacro eval-after-load-compile (feature &rest form)
+  (declare (indent defun))
+  (let ((feat (if (and (listp feature) (eq (nth 0 feature) 'quote))
+                  (nth 1 feature) feature)))
+    (eval '(eval-when (compile)
+             (cond ((stringp feat) (load feat t))
+                   ((symbolp feat) (require feat nil t)))))
+    (if (cond ((stringp feat) (locate-library feat))
+              ((symbolp feat) (featurep feat)))
+        ;; byte-compiled version
+        `(eval-after-load ,feature
+           '(funcall ,(byte-compile `(lambda () ,@form))))
+      ;; normal version
+      `(eval-after-load ,feature '(progn ,@form)))))
 ;; -----------------------------------------------------------
 ;;; org-babel
 ;;

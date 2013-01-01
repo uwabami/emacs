@@ -98,7 +98,6 @@
  "config"                  ; 分割した設定群の置き場所.
  "site-lisp/org-mode/lisp" ; org-mode (Git HEAD)
  "el-get/el-get"           ; el-get で install した物.
- "local"                   ; 自作の emacs-lisp とか.
  )
 ;; -----------------------------------------------------------
 ;;; el-get の install

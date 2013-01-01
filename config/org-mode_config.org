@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/11/14 17:53:55$
+# $Lastupdate: 2013/01/01 04:39:02$
 # License: Expat
 #
 #+TITLE: org-modeの設定
@@ -184,7 +184,6 @@ title: org-modeの設定
     ;; ;; 標準の祝日を利用しない
     ;; (setq calendar-holidays nil)
   #+END_SRC
-
 * org-babel
   使う言語の追加
   #+BEGIN_SRC emacs-lisp

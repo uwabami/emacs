@@ -161,7 +161,7 @@ title: howm の設定
   #+END_SRC
 * カレンダー関連
   #+BEGIN_SRC emacs-lisp
-    (my:load-org-file "calfw_config.org")
+  ;;  (my:load-org-file "calfw_config.org")
   #+END_SRC
 * viewer
   #+BEGIN_SRC emacs-lisp

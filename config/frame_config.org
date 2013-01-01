@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/12/03 03:11:16$
+# $Lastupdate: 2013/01/02 02:30:51$
 # License: Expat
 #
 #+TITLE: フォントとフレームの設定
@@ -93,11 +93,6 @@ title: フォントとフレームの設定
       (set-default 'line-spacing 1)
       )
   #+END_SRC
-* color-theme
-  #+BEGIN_SRC emacs-lisp
-    (unless (locate-library "color-theme-darkpastel")
-      (el-get 'sync 'color-theme-darkpastel))
-  #+END_SRC
 * Space や Tab に色付け
   whitespace-mode の方が良いのかもしれないけれど,
   設定が面倒なのと多少重いので...
@@ -127,31 +122,6 @@ title: フォントとフレームの設定
          )))
     (ad-enable-advice 'font-lock-mode 'before 'my-font-lock-mode)
     (ad-activate 'font-lock-mode)
-  #+END_SRC
-* e2wm
-  #+BEGIN_SRC emacs-lisp
-    (unless (locate-library "e2wm")
-      (el-get 'sync '(e2wm)))
-    (require 'e2wm)
-    (require 'e2wm-config)
-    (global-set-key (kbd "M-+") 'e2wm:start-management)
-    (e2wm:add-keymap
-     e2wm:pst-minor-mode-keymap
-     '(("<M-left>"   . e2wm:dp-code ) ; codeへ変更
-       ("<M-right>"  . e2wm:dp-two) ; twoへ変更
-       ("<M-up>"     . e2wm:dp-doc)  ; docへ変更
-       ("<M-down>"   . e2wm:dp-dashboard) ; dashboardへ変更
-       ("C-."        . e2wm:pst-history-forward-command) ; 履歴進む
-       ("C-,"        . e2wm:pst-history-back-command) ; 履歴戻る
-       ;; ("C-M-s"      . e2wm:my-toggle-sub) ; subの表示をトグルする
-       ;; ("prefix L"   . ielm) ; ielm を起動する（subで起動する）
-       ("M-m"        . e2wm:pst-window-select-main-command) ; メインウインドウを選択する
-       ))
-    ;; (setq e2wm:c-dashboard-plugins
-    ;;   '(clock top
-    ;;     (open :plugin-args (:command term :buffer "*term+*"))
-    ;;     (open :plugin-args (:command doctor :buffer "*doctor*"))
-    ;;   ))
   #+END_SRC
 * Footnotes
 

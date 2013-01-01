@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/11/18 02:43:41$
+# $Lastupdate: 2013/01/01 04:21:29$
 # License: Expat.
 #
 #+TITLE: Wanderlust の設定
@@ -21,7 +21,6 @@ title: Wanderlustの設定
 
   Emacs24 で動く版は配布先が github になっています. [fn:1]
 * 依存/追加ライブラリの読み込み
-  インストール自体は [[file:index.org][Emacsの基本設定]] で行なっている.
   インストールしているのは今のところ以下の通り:
   - rail
   - elscreen-wl
@@ -31,7 +30,6 @@ title: Wanderlustの設定
    SEMI や FLIM などの UA の表示に [[http://uwabami.github.com/rail/][rail]] [fn:2]を使っている.
    #+BEGIN_SRC emacs-lisp
      (eval-and-compile (require 'rail))
-     (setq rail-emulate-genjis t)
    #+END_SRC
    ちなみに rail を有効にすると, 以下の様に User-Agent が表示される
    #+ATTR_HTML: with="50%"
@@ -240,7 +238,6 @@ title: Wanderlustの設定
      (setq wl-use-petname t)
      (setq wl-address-file   "~/.mua/Address")
      (require 'google-contacts-wl)
-     (setq google-contacts-wl-ask nil)
    #+END_SRC
    LDAP サーバからアドレスを引くことも可能.
    以前は GCALDaemon を使って local に ldap サーバを上げていたのだけれども,
@@ -768,7 +765,6 @@ title: Wanderlustの設定
      (my:wl-set-face 'wl-highlight-folder-many-face
                      '((t (:foreground "pink"))))
    #+END_EXAMPLE
-
 * GPG 署名
   以前は mailcrypt を使っていたけれど,
   epa があるので主にキーバインドの設定のみ.
@@ -801,6 +797,10 @@ title: Wanderlustの設定
     (define-key wl-draft-mode-map "\C-c:e" 'epa-mail-encrypt)
   #+END_SRC
 * 検索
+  最近は手元で dovecot を上げて, imap search で十分なので,
+  以下の設定はしていません.
+
+  メモとして残しておきます.
   offlineimap なんかで local の maildir へメールを同期させている場合は
   [[http://www.djcbsoftware.nl/code/mu/][maildir-utils]] が素敵です.
   #+BEGIN_SRC emacs-lisp
@@ -819,7 +819,6 @@ title: Wanderlustの設定
   hyper estraier は upstream dead な雰囲気だし,
   気分的には今後はこれ一択な気がする.
 
-  ちなみに, これを使わずに =V= での検索(imapの検索)で十分, という話もある
 * Footnotes
 
 [fn:1] wanderlust - github : [[https://github.com/wanderlust/wanderlust]]

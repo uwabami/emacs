@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/18 12:07:35$
+# $Lastupdate: 2013/01/01 04:49:05$
 # License: Expat
 #
 #+TITLE: Anythingの設定
@@ -20,19 +20,6 @@ title: Anythingの設定
   最近の Emacs 界隈(ドコ?)では,
   「Anything が使えないと人じゃない(違」みたいな空気があって
   挫折しては戻ってきて挫折しては戻ってきて, を繰り返しています.
-* 導入とか
-  [[file:init.org][Emacsの基本設定]] で書いた通り,
-  Debianには[[http://packages.qa.debian.org/a/anything-el.html][パッケージ]] [fn:2]があるので
-  #+BEGIN_EXAMPLE
-  $ apt-get install anything-el
-  #+END_EXAMPLE
-  で OK.
-  パッケージが使えない場合には el-get で
-  anything を導入しておく.
-  #+BEGIN_SRC emacs-lisp
-    (unless (locate-library "anything")
-      (el-get 'sync 'anything))
-  #+END_SRC
 * 設定
 ** history の位置変更
      #+BEGIN_SRC emacs-lisp
@@ -93,13 +80,8 @@ title: Anythingの設定
      #+END_SRC
 ** キーバインドを anything
    #+BEGIN_SRC emacs-lisp
-     (unless (locate-library "descbinds-anything")
-       (el-get 'sync 'descbinds-anything))
-     (when (require 'descbinds-anything nil t)
-       (descbinds-anything-install))
+     (require 'descbinds-anything)
    #+END_SRC
 * Footnotes
 
 [fn:1] Anything - EmacsWiki: [[http://emacswiki.org/emacs/Anything]]
-
-[fn:2] anything-el - Debian PTS: [[http://packages.qa.debian.org/a/anything-el.html]]

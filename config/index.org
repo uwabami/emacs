@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/02 21:29:24$
+# $Lastupdate: 2013/01/02 22:52:00$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -315,6 +315,14 @@ title: Emacsの基本設定
       (autoload 'yaml-mode "yaml-mode" "Major mode for Yaml" t)
       (add-to-list 'auto-mode-alist '("\\.yml$\\|\\.yaml$" . yaml-mode))
       )
+  #+END_SRC
+* TeX関連: [[file:auctex_config.org][AUCTeX の設定]]
+  #+BEGIN_SRC emacs-lisp
+    (when (and (executable-find "platex")
+               (locate-library "auctex"))
+      ;; (unless (locate-library "reftex")
+      ;;       (el-get 'sync 'reftex))
+      (my:load-org-file "auctex_config.org"))
   #+END_SRC
 * [[file:flynamke_config.org][flymakeの設定]]
   #+BEGIN_SRC emacs-lisp

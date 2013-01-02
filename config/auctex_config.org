@@ -1,0 +1,185 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# $Lastupdate: 2013/01/02 23:11:33$
+# License: Expat
+#
+#+TITLE: AUCTeX の設定
+#+AUTHOR: Youhei SASAKI
+#+EMAIL: uwabami@gfd-dennou.org
+#+SETUPFILE: ./export-config.org
+#+BEGIN_HTML
+---
+layout: emacs
+title: AUCTeX の設定
+---
+#+END_HTML
+* 始めに
+  TeX 編集用のモードとしては YaTeX と AUCTeX がありますが, YaTeX の font-lock が遅いことから AUCTeX を使うようになりました.
+* 読み込み
+  #+BEGIN_SRC emacs-lisp
+    (load "auctex.el" nil t t)
+  #+END_SRC
+  以下, 設定はほぼ [[http://oku.edu.mie-u.ac.jp/~okumura/texwiki/?AUCTeX#ra10f739][TeXWiki - AUCTeX]] のまま.
+* pTeX, upTeX 用の基本設定
+ #+BEGIN_SRC emacs-lisp
+   (setq TeX-default-mode 'japanese-latex-mode)
+   (setq japanese-LaTeX-command-default "pLaTeX")
+   (setq japanese-LaTeX-default-style "jsarticle")
+   (setq TeX-engine-alist '((ptex "pTeX" "eptex" "platex" "eptex")
+                            (jtex "jTeX" "jtex" "jlatex" nil)
+                            (uptex "upTeX" "euptex" "uplatex" "euptex")))
+   (setq TeX-engine 'ptex)
+   (setq TeX-view-program-list
+          '(("pxdvi" "pxdvi -watchfile 1 %d")
+            ("xdvi"  "xdvi -watchfile 1 %d")
+            ("Preview.app" "/usr/bin/open -a Preview.app %o")
+            ("fwdevince" "fwdevince %o %n \"%b\"")
+            ))
+   (cond
+    (darwin-p
+     (setq TeX-view-program-selection
+           '((output-dvi "pxdvi")
+             (output-pdf "Preview.app"))))
+    (t
+     (setq TeX-view-program-selection
+           '((output-dvi "xdvi")
+             (output-pdf "Evince")
+             )))
+    )
+   (setq preview-image-type 'dvipng)
+   (add-hook 'LaTeX-mode-hook 'TeX-PDF-mode)
+   ;; (add-hook 'LaTeX-mode-hook 'TeX-interactive-mode)
+   (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
+   ;; 禁則
+   (setq kinsoku-limit 10)
+   ;; master file
+   (setq TeX-auto-save t)
+   (setq TeX-parse-self t)
+   (setq-default TeX-master nil)
+   #+END_SRC
+* コマンドの追加
+ #+BEGIN_SRC emacs-lisp
+   (add-hook 'LaTeX-mode-hook
+             (function (lambda ()
+                         (add-to-list 'TeX-command-list
+                                      '("Latexmk(euc)" "latexmk -e '$latex=q/platex -kanji=euc -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=euc/' -e '$makeindex=q/mendex/' -e '$dvipdf=q/dvipdfmx %%O -o %%D %%S/'  -gg -pdfdvi %t"
+                                        TeX-run-TeX nil (latex-mode) :help "Run Latexmk"))
+                         (add-to-list 'TeX-command-list
+                                      '("Latexmk(utf8)" "latexmk -e '$latex=q/platex -kanji=utf8 -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=utf8/' -e '$makeindex=q/mendex/' -e '$dvipdf=q/dvipdfmx %%O -o %%D %%S/'  -gg -pdfdvi %t"
+                                        TeX-run-TeX nil (latex-mode) :help "Run Latexmk(utf8)"))
+                         (add-to-list 'TeX-command-list
+                                      '("Latexmk(jis)" "latexmk -e '$latex=q/platex -kanji=jis -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=jis/' -e '$makeindex=q/mendex/' -e '$dvipdf=q/dvipdfmx %%O -o %%D %%S/'  -gg -pdfdvi %t"
+                                        TeX-run-TeX nil (latex-mode) :help "Run Latexmk(jis)"))
+                         (add-to-list 'TeX-command-list
+                                      '("Latexmk(euc,ps2pdf)" "latexmk -e '$latex=q/platex -kanji=euc -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=euc/' -e '$makeindex=q/mendex/' -e '$dvips=q/dvips %%O -z -f %%S | convbkmk -g > %%D/' -e '$ps2pdf=q/ps2pdfwr %%O %%S %%D/'  -gg -pdfps %t"
+                                        TeX-run-TeX nil (latex-mode) :help "Run Latexmk(utf8,ps2pdf)"))
+                         (add-to-list 'TeX-command-list
+                                      '("Latexmk(utf8,ps2pdf)" "latexmk -e '$latex=q/platex -kanji=utf8 -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=utf8/' -e '$makeindex=q/mendex/' -e '$dvips=q/dvips %%O -z -f %%S | convbkmk -g > %%D/' -e '$ps2pdf=q/ps2pdfwr %%O %%S %%D/'  -gg -pdfps %t"
+                                        TeX-run-TeX nil (latex-mode) :help "Run Latexmk(utf8,ps2pdf)"))
+                         (add-to-list 'TeX-command-list
+                                      '("Latexmk(jis,ps2pdf)" "latexmk -e '$latex=q/platex -kanji=jis -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=jis/' -e '$makeindex=q/mendex/' -e '$dvips=q/dvips %%O -z -f %%S | convbkmk -g > %%D/' -e '$ps2pdf=q/ps2pdfwr %%O %%S %%D/'  -gg -pdfps %t"
+                                        TeX-run-TeX nil (latex-mode) :help "Run Latexmk(jis,ps2pdf)"))
+                         (add-to-list 'TeX-command-list
+                                      '("Latexmk(uplatex)" "latexmk -e '$latex=q/uplatex -kanji=utf8 -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=utf8/' -e '$makeindex=q/mendex/' -e '$dvipdf=q/dvipdfmx %%O -o %%D %%S/'  -gg -pdfdvi %t"
+                                        TeX-run-TeX nil (latex-mode) :help "Run Latexmk(uplatex)"))
+                         (add-to-list 'TeX-command-list
+                                      '("Latexmk(uplatex,ps2pdf)" "latexmk -e '$latex=q/uplatex -kanji=utf8 -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=utf8/' -e '$makeindex=q/mendex/' -e '$dvips=q/dvips %%O -z -f %%S | convbkmk -g > %%D/' -e '$ps2pdf=q/ps2pdfwr %%O %%S %%D/'  -gg -pdfps %t"
+                                        TeX-run-TeX nil (latex-mode) :help "Run Latexmk(uplatex,ps2pdf)"))
+                         (add-to-list 'TeX-command-list
+                                      '("Latexmk(pdflatex)" "latexmk -e '$pdflatex=q/pdflatex %S %(mode)/' -e '$bibtex=q/bibtex/' -e '$makeindex=q/makeindex/'  -gg -pdf %t"
+                                        TeX-run-TeX nil (latex-mode) :help "Run Latexmk(pdflatex)"))
+                         (add-to-list 'TeX-command-list
+                                      '("Latexmk(lualatex)" "latexmk -e '$pdflatex=q/lualatex %S %(mode)/' -e '$bibtex=q/bibtexu/' -e '$makeindex=q/texindy/'  -gg -pdf %t"
+                                        TeX-run-TeX nil (latex-mode) :help "Run Latexmk(lualatex)"))
+                         (add-to-list 'TeX-command-list
+                                      '("Latexmk(xelatex)" "latexmk -e '$pdflatex=q/xelatex %S %(mode)/' -e '$bibtex=q/bibtexu/' -e '$makeindex=q/texindy/'  -gg -xelatex %t"
+                                        TeX-run-TeX nil (latex-mode) :help "Run Latexmk(xelatex)"))
+                         (add-to-list 'TeX-command-list
+                                      '("pdfpLaTeX(utf8)" "platex %S %(mode) %t && dvipdfmx %d"
+                                        TeX-run-TeX nil (latex-mode) :help "Run pLaTeX and dvipdfmx"))
+                         (add-to-list 'TeX-command-list
+                                      '("pdfpLaTeX(utf8,ps2pdfwr)" "platex %S %(mode) %t && dvips -Ppdf -z -f %d | convbkmk -g > %f && ps2pdf %f"
+                                        TeX-run-TeX nil (latex-mode) :help "Run pLaTeX, dvips, and ps2pdf"))
+                         (add-to-list 'TeX-command-list
+                                      '("pdfpLaTeX(jis)" "platex --kanji=jis %S %(mode) %t && dvipdfmx %d"
+                                        TeX-run-TeX nil (latex-mode) :help "Run pLaTeX(jis) and dvipdfmx"))
+                         (add-to-list 'TeX-command-list
+                                      '("pdfpLaTeX(jis,ps2pdfwr)" "platex --kanji=jis %S %(mode) %t && dvips -Ppdf -z -f %d | convbkmk -g > %f && ps2pdf %f"
+                                        TeX-run-TeX nil (latex-mode) :help "Run pLaTeX(jis), dvips, and ps2pdf"))
+                         (add-to-list 'TeX-command-list
+                                      '("pdfpLaTeX(euc)" "platex -kanji=euc %S %(mode) %t && dvipdfmx %d"
+                                        TeX-run-TeX nil (latex-mode) :help "Run pLaTeX(euc) and dvipdfmx"))
+                         (add-to-list 'TeX-command-list
+                                      '("pdfpLaTeX(euc,ps2pdfwr)" "platex -kanji=euc %S %(mode) %t && dvips -Ppdf -z -f %d | convbkmk -g > %f && ps2pdf %f"
+                                        TeX-run-TeX nil (latex-mode) :help "Run pLaTeX(euc), dvips, and ps2pdf"))
+                         (add-to-list 'TeX-command-list
+                                      '("pdfupLaTeX" "uplatex %S %(mode) %t && dvipdfmx %d"
+                                        TeX-run-TeX nil (latex-mode) :help "Run upLaTeX and dvipdfmx"))
+                         (add-to-list 'TeX-command-list
+                                      '("pdfupLaTeX(ps2pdfwr)" "uplatex %S %(mode) %t && dvips -Ppdf -z -f %d | convbkmk -u > %f && ps2pdf %f"
+                                        TeX-run-TeX nil (latex-mode) :help "Run upLaTeX, dvips, and ps2pdf"))
+                         (add-to-list 'TeX-command-list
+                                      '("pBibTeX" "pbibtex %s"
+                                        TeX-run-BibTeX nil t :help "Run pBibTeX"))
+                         (add-to-list 'TeX-command-list
+                                      '("pBibTeX(euc)" "pbibtex -kanji=euc %s"
+                                        TeX-run-BibTeX nil t :help "Run pBibTeX"))
+                         (add-to-list 'TeX-command-list
+                                      '("upBibTeX" "upbibtex %s"
+                                        TeX-run-BibTeX nil t :help "Run upBibTeX"))
+                         (add-to-list 'TeX-command-list
+                                      '("Preview.app" "/usr/bin/open -a Preview.app %o"
+                                        TeX-run-discard-or-function t t :help "Run Preview.app"))
+                         (add-to-list 'TeX-command-list
+                                      '("Evince" "evince %o"
+                                        TeX-run-discard-or-function t t :help "Run Evince"))
+                         )))
+        #+END_SRC
+* フォント表示関連
+  サイズ可変の無効
+  #+BEGIN_SRC emacs-lisp
+    (setq font-latex-fontify-sectioning 1.0)
+  #+END_SRC
+  上付き, 下付きの無効化
+  #+BEGIN_SRC emacs-lisp
+    (setq font-latex-fontify-script nil)
+  #+END_SRC
+* SyncTex
+ #+BEGIN_SRC emacs-lisp
+   (setq TeX-source-correlate-method 'synctex)
+   (setq TeX-source-correlate-start-server t)
+   (add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)
+ #+END_SRC
+* BibTeX
+  日本語文献用にyomiを追加
+   #+BEGIN_SRC emacs-lisp
+     (setq bibtex-user-optional-fields
+           '(("annote" "Personal annotation (ignored)")
+             ("yomi" "Yomigana")
+             ("location" "where it is (ignored)")
+             ("memo" "Memorundum (ignored)")
+             ))
+   #+END_SRC
+* RefTeX
+  #+BEGIN_SRC emacs-lisp
+    ;; (unless (locate-library "reftex")
+    ;;   (if (executable-find "platex")
+    ;;       (el-get 'sync 'reftex)))
+    ;;(autoload 'reftex-mode     "reftex" "RefTeX Minor Mode" t)
+    ;; (autoload 'turn-on-reftex  "reftex" "RefTeX Minor Mode" nil)
+    ;; (autoload 'reftex-citation "reftex-cite" "Make citation" nil)
+    ;; (autoload 'reftex-index-phrase-mode "reftex-index" "Phrase mode" t)
+    (add-hook 'LaTeX-mode-hook 'turn-on-reftex)   ; with AUCTeX LaTeX mode
+    ;; (add-hook 'latex-mode-hook 'turn-on-reftex)   ; with Emacs latex mode
+    (setq reftex-plug-into-AUCTeX t)
+    ;; Make RefTeX faster
+    (setq reftex-enable-partial-scans t)
+    ;; (setq reftex-save-parse-info t)
+    ;; (setq reftex-use-multiple-selection-buffers t)
+  #+END_SRC
+* outline-minor-mode
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'LaTeX-mode-hook
+            (function (lambda () (outline-minor-mode t))))
+#+END_SRC

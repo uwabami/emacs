@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/02 19:53:31$
+# $Lastupdate: 2013/01/03 00:45:31$
 # License: Expat.
 #
 #+TITLE: Wanderlust の設定
@@ -799,29 +799,6 @@ title: Wanderlustの設定
     (define-key wl-draft-mode-map "\C-c:s" 'epa-mail-sign)
     (define-key wl-draft-mode-map "\C-c:e" 'epa-mail-encrypt)
   #+END_SRC
-* 検索
-  最近は手元で dovecot を上げて, imap search で十分なので,
-  以下の設定はしていません.
-
-  メモとして残しておきます.
-  offlineimap なんかで local の maildir へメールを同期させている場合は
-  [[http://www.djcbsoftware.nl/code/mu/][maildir-utils]] が素敵です.
-  #+BEGIN_SRC emacs-lisp
-    (when (executable-find "mu")
-      (elmo-search-register-engine
-       'mu 'local-file
-       :prog "mu"
-       :args '("find" pattern "-o" "plain" "-f" "l" "--muhome" "~/.mu")
-       :charset 'utf-8)
-      (setq elmo-search-default-engine 'mu))
-  #+END_SRC
-  maildir-utils を使う場合には archive の設定はしない方が良い
-  (検索できなくなる).
-
-  namazu は検索 index の生成が遅すぎるし,
-  hyper estraier は upstream dead な雰囲気だし,
-  気分的には今後はこれ一択な気がする.
-
 * Footnotes
 
 [fn:1] wanderlust - github : [[https://github.com/wanderlust/wanderlust]]

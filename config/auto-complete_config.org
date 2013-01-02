@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/02 20:01:55$
+# $Lastupdate: 2013/01/03 01:29:38$
 # License: Expat
 #
 #+TITLE: AutoCompleteの設定
@@ -50,6 +50,34 @@ title: AutoCompleteの設定
     (define-key ac-completing-map (kbd "M-/")   'ac-stop)
     (define-key ac-completing-map (kbd "RET") nil) ; return での補完禁止
   #+END_SRC
+* look による 英単語の補完
+  ネタ元は [[http://d.hatena.ne.jp/kitokitoki/20101205][auto-complete.el と look コマンドを使って英単語を補完する]] [fn:2]
+  #+BEGIN_SRC emacs-lisp
+    (when (executable-find "look")
+      (defun my-ac-look ()
+        "look コマンドの出力をリストで返す"
+        (interactive)
+        (unless (executable-find "look")
+          (error "look コマンドがありません"))
+        (let ((search-word (thing-at-point 'word)))
+          (with-temp-buffer
+            (call-process-shell-command "look" nil t 0 search-word)
+            (split-string-and-unquote (buffer-string) "\n"))))
+
+      (defun ac-complete-look ()
+        (interactive)
+        (let ((ac-menu-height 50)
+              (ac-candidate-limit t))
+          (auto-complete '(ac-source-look))))
+
+      (defvar ac-source-look
+        '((candidates . my-ac-look)
+          (requires . 2)))  ;; 2文字以上ある場合にのみ対応させる
+
+    (global-set-key (kbd "M-h") 'ac-complete-look))
+  #+END_SRC
 * Footnotes
 
-- [fn:1] Auto Complete Mode: [[http://cx4a.org/software/auto-complete/index.ja.html]]
+[fn:1] Auto Complete Mode: [[http://cx4a.org/software/auto-complete/index.ja.html]]
+
+[fn:2] auto-complete.el と look コマンドを使って英単語を補完する: [[http://d.hatena.ne.jp/kitokitoki/20101205]]

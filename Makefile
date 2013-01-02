@@ -5,6 +5,10 @@ TARGET_DIR	:= site-lisp config
 
 all: TARGET $(ELCFiles)
 
+bootstrap:
+	( cd site-lisp && $(MAKE) ) 
+	$(EMACS) -nw
+
 update:
 	git submodule foreach 'git fetch --all && git rebase origin/master'
 	rm -f $(HOME)/.emacs.d/site-lisp/*-stamp

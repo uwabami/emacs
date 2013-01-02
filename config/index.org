@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/02 02:33:40$
+# $Lastupdate: 2013/01/02 16:08:02$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -377,7 +377,7 @@ title: Emacsの基本設定
   最近新しいリリースが無い & APEL 依存があるのが難点だろうか.
 
   ここでは [[https://github.com/knu][MUSHA]] さんが folk している branch から
-  取得する [[file:~/dot.emacs.d/recipes/elscreen-knu-branch.rcp][recipes/elscreen-knu-branch.rcp]] を使っている.
+  取得する[[file:~/.emacs.d/recipes/elscreen-knu-branch.rcp][recipes/elscreen-knu-branch.rcp]] を使っている.
 
   設定はキーバインドを =\C-o= に変えたくらい
   #+BEGIN_SRC emacs-lisp

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/03 00:36:38$
+# $Lastupdate: 2013/01/03 01:52:48$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -126,6 +126,8 @@ title: Emacsの基本設定
         (el-get 'sync 'rail))
       ;; Google Contacts と Address の連携
       (el-get 'sync 'google-contacts-wl)
+      (unless (locate-library "c-sig")
+        (el-get 'sync 'c-sig-alioth))
   #+END_SRC
   =mail-user-agent= で Wanderlust が呼び出されるようにする
   #+BEGIN_SRC emacs-lisp

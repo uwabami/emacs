@@ -29,5 +29,4 @@ distclean: clean
 	@for d in $(TARGET_DIR) ;\
 		do $(MAKE) clean -C $$d ;\
 	done
-	(cd el-get && rm -fr .loaddefs.* .status.* ./* )
-	rm -fr tmp/* bundle
+	rm -fr tmp/* el-get

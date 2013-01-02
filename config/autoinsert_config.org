@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/01 04:42:17$
+# $Lastupdate: 2013/01/02 17:42:47$
 # License: Expat
 #
 #+TITLE: AutoInsert の設定
@@ -16,6 +16,7 @@ title: AutoInsert の設定
 #+END_HTML
 * 始めに
   ファイル作成時にテンプレートを挿入してくれる素敵機能.
+  テンプレートファイルは =~/.emacs.d/template/= 以下に集約している.
 * 読み込み
    #+BEGIN_SRC emacs-lisp
      (require 'autoinsert)
@@ -35,7 +36,7 @@ title: AutoInsert の設定
     (add-hook 'find-file-hooks 'auto-insert)
   #+END_SRC
 * テンプレート内の置換変数/関数の定義
-  ファイル名や copyright header などを更新する関数
+  テンプレート内のファイル名や copyright header などを更新する関数
   #+BEGIN_SRC emacs-lisp
      (defvar my:autoinsert-template-replace-alist
        '(("%file%" .
@@ -57,8 +58,7 @@ title: AutoInsert の設定
        (goto-char (point-max))
        (message "done."))
   #+END_SRC
-* TODO テンプレートの設定[0/1]
-  - [ ] ディレクトリに合わせてテンプレートを切り替えたい.
+* テンプレートの設定[0/1]
   #+BEGIN_SRC emacs-lisp
     (setq auto-insert-alist
           (nconc '(
@@ -75,3 +75,5 @@ title: AutoInsert の設定
                    ("\\.muse$" . ["template.muse" my:template])
                    ) auto-insert-alist))
   #+END_SRC
+  - [ ] ディレクトリに合わせてテンプレートを切り替えたい.
+    - 具体的には, org ファイルのテンプレート展開をちょっとゴニョゴニョしたいのだけれど, どうしたら良いかな...

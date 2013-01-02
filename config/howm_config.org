@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/10/06 03:37:53$
+# $Lastupdate: 2013/01/02 19:35:46$
 # License: Expat
 #
 #+TITLE: howm の設定
@@ -26,18 +26,6 @@ title: howm の設定
   ということです. 非常に便利で, 無いと途方に暮れてしまします.
 
   ちなみに私はメモの形式は Org にしています.
-* インストール
-  無いと途方に暮れるので,
-  環境に howm と elscreen-howm が無い場合には el-get しています.
-  elscreen-howmも同様.
-  ただ, 手元の el-get では tar.gz の展開に失敗するので
-  Debian パッケージの Git リポジトリから取得するようにしています.
-  #+BEGIN_SRC emacs-lisp
-    (unless (locate-library "howm")
-      (el-get 'sync 'howm-alioth))
-    (unless (locate-library "elscreen-howm")
-      (el-get 'sync 'elscreen-knu-branch))
-  #+END_SRC
 * ディレクトリの設定
   メモの内容は dropbox で同期することに
   #+BEGIN_SRC emacs-lisp

@@ -1,0 +1,122 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# $Lastupdate: 2013/01/02 19:58:10$
+# License: Expat
+#
+#+TITLE: 言語の設定
+#+AUTHOR: Youhei SASAKI
+#+EMAIL: uwabami@gfd-dennou.org
+#+SETUPFILE: ./export-config.org
+#+BEGIN_HTML
+---
+layout: emacs
+title: 言語の設定
+---
+#+END_HTML
+
+* 始めに
+  文字コードの指定等をこのファイルに記述しています.
+* 基本設定
+  Emacs23 以降は Emacs内部 が UTF-8 で記述されるようになったので,
+  極力 UTF-8を使用するようにしています
+  (EUC-JPとかで使用すると稀に祟りがあったりします).
+
+  過去の資源(特にTeX)に関しては,
+  未だ EUC-JP のファイルも多いので注意する必要があります.
+  Debian (>= 7.0) に TeXLive2012 が入ったので,
+  そのうち全部 UTF-8 に移行予定です.
+  とはいえ過去の資産や共同作業する原稿なんかは無理ですけれど.
+
+  #+BEGIN_SRC emacs-lisp
+    (set-language-environment "Japanese")
+    (prefer-coding-system 'utf-8)
+  #+END_SRC
+** 補足: 言語設定の確認
+   #+BEGIN_EXAMPLE
+   (set-language-environment "Japanese")
+   #+END_EXAMPLE
+   によってlocaleが設定されます.
+   "Japanese"という大雑把な設定で何が設定されるのかは
+   #+BEGIN_EXAMPLE
+   (describe-variable 'language-info-alist)
+   #+END_EXAMPLE
+   を実行して "Japanese"を参照すると良いです. 試しに実行してみると
+   #+BEGIN_EXAMPLE
+   ...
+    ("Japanese"
+     (documentation . t)
+     (sample-text . "Japanese (日本語)	こんにちは, ｺﾝﾆﾁﾊ")
+     (features japan-util)
+     (input-method . "japanese")
+     (coding-priority iso-2022-jp japanese-iso-8bit japanese-shift-jis iso-2022-jp-2004 euc-jis-2004 japanese-shift-jis-2004 iso-2022-jp-2)
+     (coding-system iso-2022-jp japanese-iso-8bit japanese-shift-jis japanese-iso-7bit-1978-irv iso-2022-jp-2004 japanese-shift-jis-2004 euc-jis-2004)
+     (charset japanese-jisx0208 japanese-jisx0212 latin-jisx0201 katakana-jisx0201 japanese-jisx0213\.2004-1 japanese-jisx0213-1 japanese-jisx0213-2 japanese-jisx0208-1978)
+     (tutorial . "TUTORIAL.ja")
+     (iso639-language . ja)
+     (exit-function . use-default-char-width-table)
+     (setup-function . setup-japanese-environment-internal))
+   ...
+   #+END_EXAMPLE
+   となっていました. coding-priority を見るとわかるように文字コードの自
+   動判定などの大雑把な優先順位は iso-2022-jp→shift_jis→euc-jp... となっ
+   ていて, どこにも utf-8 がありません.  utf-8 を優先するには
+   #+BEGIN_EXAMPLE
+   (prefere-coding-system 'utf-8)
+   #+END_EXAMPLE
+   を設定します.
+* OSの違いに起因する条件分岐
+  Mac と Linux では同じ Unicode でも正規化が異なります
+  (具体的には Mac のファイルシステムである HFS+ では
+  Unicode の正規化が異なります).
+  日本語のファイル名を扱うことは滅多にありませんが,
+  たまに祟りがあるのでそれを回避するための設定をしておきます.
+
+  Unicode の正規化と Mac OS X 特有の事情については
+   - [[http://homepage1.nifty.com/nomenclator/unicode/normalization.htm][Unicode正規化とは]] [fn:3]
+   - [[http://www.sakito.com/2010/05/mac-os-x-normalization.html][Mac OS X におけるファイル名に関するメモ(NFC, NFD等)]] [fn:4]
+  等が参考になるかと思います.
+
+  Windows の場合はファイル名などは cp932 にしています.
+  とはいえ最近 Windows 使っていないので良く知りません.
+  #+BEGIN_SRC emacs-lisp
+    (cond
+     (darwin-p
+      (require 'ucs-normalize)
+      (setq file-name-coding-system 'utf-8-hfs)
+      (setq locale-coding-system 'utf-8-hfs)
+      ;; ついでにキーバインド: Ctrl を Mac から奪い取る
+      (setq mac-pass-control-to-system t)
+      ;; Cmd と Option を逆にする
+      (setq ns-command-modifier 'meta)
+      (setq ns-alternate-modifier 'super)
+      (global-set-key [ns-drag-file] 'ns-find-file))
+     (nt-p
+      (setq file-name-coding-system 'cp932)
+      (setq locale-coding-system 'cp932))
+     (t
+      (setq file-name-coding-system 'utf-8)
+      (setq locale-coding-system 'utf-8))
+    )
+  #+END_SRC
+** 補足
+   =prefer-coding-system= を設定すると
+   =default-file-name-coding-system= が設定されます.
+   優先順位は
+   1. =file-name-coding-system= を見る
+      - =file-name-coding-system=  が nil なら...
+   2. =default-file-name-coding-system= を利用
+   となっています.
+
+   =darwin-p= と =nt-p= は =~/.emacs.d/init.el=
+   で設定した環境判定用の以下の変数です:
+   #+BEGIN_EXAMPLE
+   (defvar darwin-p (eq system-type 'darwin))      ; Mac OS X 用
+   (defvar nt-p (eq system-type 'windows-nt))      ; Windows 用
+   #+END_EXAMPLE
+* Footnotes
+
+
+[fn:3] Unicode正規化とは: [[http://homepage1.nifty.com/nomenclator/unicode/normalization.htm]]
+
+[fn:4] Mac OS X におけるファイル名に関するメモ(NFC, NFD等): [[http://www.sakito.com/2010/05/mac-os-x-normalization.html]]

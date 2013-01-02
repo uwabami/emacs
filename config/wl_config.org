@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/01 04:21:29$
+# $Lastupdate: 2013/01/02 19:53:31$
 # License: Expat.
 #
 #+TITLE: Wanderlust の設定
@@ -39,6 +39,9 @@ title: Wanderlustの設定
    メール作成時に draft 用の screen を追加して,
    送信後に screen を閉じる.
    #+BEGIN_SRC emacs-lisp
+     (eval-when-compile
+       (add-to-list 'load-path
+                    (concat user-emacs-directory "el-get/elscreen-knu-branch")))
      (require 'elscreen-wl)
    #+END_SRC
 ** cp5022x を使う

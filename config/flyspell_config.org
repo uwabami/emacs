@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/09/28 13:19:05$
+# $Lastupdate: 2013/01/02 21:10:04$
 # License: Expat
 #
 #+TITLE: flyspell-modeの設定
@@ -31,58 +31,6 @@ title: flyspell-modeの設定
     (eval-after-load "ispell"
       '(add-to-list 'ispell-skip-region-alist '("[^\000-\377]+")))
   #+END_SRC
-* flyspell-mode + popup
-  元ネタは [[http://d.hatena.ne.jp/mooz/20100423/p1][flyspell-mode の修正候補表示を popup.el で]] [fn:1]. 愛用している
-  修正したい単語の上にカーソルをもっていき, C-c M-RETを押すことで候補を選択.
-  #+BEGIN_SRC emacs-lisp
-    (when (locate-library "popup")
-      (eval-when-compile
-        (require 'popup))
-      (defun my:flyspell-correct-word-popup-el ()
-        "Pop up a menu of possible corrections for misspelled word before point."
-        (interactive)
-        ;; use the correct dictionary
-        (flyspell-accept-buffer-local-defs)
-        (let ((cursor-location (point))
-              (word (flyspell-get-word nil)))
-          (if (consp word)
-              (let ((start (car (cdr word)))
-                    (end (car (cdr (cdr word))))
-                    (word (car word))
-                    poss ispell-filter)
-                ;; now check spelling of word.
-                (ispell-send-string "%\n");put in verbose mode
-                (ispell-send-string (concat "^" word "\n"))
-              ;; wait until ispell has processed word
-                (while (progn
-                         (accept-process-output ispell-process)
-                         (not (string= "" (car ispell-filter)))))
-              ;; Remove leading empty element
-                (setq ispell-filter (cdr ispell-filter))
-              ;; ispell process should return something after word is sent.
-              ;; Tag word as valid (i.e., skip) otherwise
-                (or ispell-filter
-                    (setq ispell-filter '(*)))
-                (if (consp ispell-filter)
-                    (setq poss (ispell-parse-output (car ispell-filter))))
-                (cond
-                 ((or (eq poss t) (stringp poss))
-                  ;; don't correct word
-                  t)
-                 ((null poss)
-                ;; ispell error
-                  (error "Ispell: error in Ispell process"))
-                 (t
-                  ;; The word is incorrect, we have to propose a replacement.
-                  (flyspell-do-correct (popup-menu* (car (cddr poss)) :scroll-bar t :margin t)
-                                       poss word cursor-location start end cursor-location)))
-                (ispell-pdict-save t)))))
-      (add-hook 'flyspell-mode-hook
-                (lambda ()
-                  (define-key flyspell-mode-map (kbd "C-c M-RET") 'my:flyspell-correct-word-popup-el)
-                  ))
-      )
-  #+END_SRC
 * キーバインド
   flyspell-mode の有効化は C-c <f8>, flyspell-buffer は C-c M-<f8>
   #+BEGIN_SRC emacs-lisp
@@ -90,10 +38,7 @@ title: flyspell-modeの設定
     (global-set-key (kbd "C-c <ESC> <f8>") 'flyspell-buffer)
     ;; flyspell-mode を自動的に開始させたいファイルを指定 (お好みでアンコメントするなり, 変更するなり)
     ; (add-to-list 'auto-mode-alist '("\\.txt" . flyspell-mode))
-    ; (add-to-list 'auto-mode-alist '("\\.tex" . flyspell-mode))
+    (add-to-list 'auto-mode-alist '("\\.tex" . flyspell-mode))
     ; (add-to-list 'auto-mode-alist '("\\.properties" . flyspell-mode))
     ; (add-to-list 'auto-mode-alist '("\\.dtd" . flyspell-mode)
   #+END_SRC
-* Footnotes
-
-[fn:1] flyspell-mode の修正候補表示を popup.el で:  http://d.hatena.ne.jp/mooz/20100423/p1

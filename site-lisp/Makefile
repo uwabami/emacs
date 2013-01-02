@@ -1,5 +1,4 @@
 TARGET_DIR	:= $(subst ./, ,$(shell find . -maxdepth 1 -mindepth 1 -type d))
-EXCLUDE		:= el-get
 TARGET_DIRS	:= $(filter-out $(EXCLUDE),$(TARGET_DIR))
 include $(HOME)/.emacs.d/Mkinclude
 
@@ -10,9 +9,6 @@ all: 00build-stamp
 
 org-mode-stamp:
 	@( cd org-mode && make compile && make autoloads )
-	touch $@
-
-el-get-stamp:
 	touch $@
 
 clean:

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/02 16:08:02$
+# $Lastupdate: 2013/01/02 21:29:24$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -16,395 +16,40 @@ title: Emacsの基本設定
 #+END_HTML
 * 始めに
   =~/.emacs= → =~/.emacs.d/init.el= ときて,
-  このファイルで基本設定と外部 elisp の読み込みを行っています.
+  このファイルで設定ファイルの読み込みを行なっています.
+* [[file:00language_config.org][言語の設定]]
+  Emacs23 から内部が Unicode ベースになっています.
+  しかし文字コードの変換は GNU libc の iconv をベースにしているため,
+  環境によっては文字の変換がうまく行なえません.
 
-  外部 elisp の設定は多くの場合別ファイルに分けていますが,
-  設定が短い場合にはこのファイルに記述して終わっていたりします.
-* 言語の設定
-** 基本設定
-   Emacs23 以降は Emacs内部 が UTF-8 で記述されるようになったので,
-   極力 UTF-8を使用するようにしています
-   (EUC-JPとかで使用すると稀に祟りがあったりします).
-
-   過去の資源(特にTeX)に関しては,
-   未だ EUC-JP のファイルも多いので注意する必要があります.
-   Debian (>= 7.0) に TeXLive2012 が入ったので,
-   そのうち全部 UTF-8 に移行予定です.
-   とはいえ過去の資産や共同作業する原稿なんかは無理ですけれど.
-   #+BEGIN_SRC emacs-lisp
-     (set-language-environment "Japanese")
-     (prefer-coding-system 'utf-8)
-   #+END_SRC
-*** 補足: 言語設定の確認
-    #+BEGIN_EXAMPLE
-    (set-language-environment "Japanese")
-    #+END_EXAMPLE
-    によってlocaleが設定されます.
-    "Japanese"という大雑把な設定で何が設定されるのかは
-    #+BEGIN_EXAMPLE
-    (describe-variable 'language-info-alist)
-    #+END_EXAMPLE
-    を実行して "Japanese"を参照すると良いです. 試しに実行してみると
-    #+BEGIN_EXAMPLE
-    ...
-     ("Japanese"
-      (documentation . t)
-      (sample-text . "Japanese (日本語)	こんにちは, ｺﾝﾆﾁﾊ")
-      (features japan-util)
-      (input-method . "japanese")
-      (coding-priority iso-2022-jp japanese-iso-8bit japanese-shift-jis iso-2022-jp-2004 euc-jis-2004 japanese-shift-jis-2004 iso-2022-jp-2)
-      (coding-system iso-2022-jp japanese-iso-8bit japanese-shift-jis japanese-iso-7bit-1978-irv iso-2022-jp-2004 japanese-shift-jis-2004 euc-jis-2004)
-      (charset japanese-jisx0208 japanese-jisx0212 latin-jisx0201 katakana-jisx0201 japanese-jisx0213\.2004-1 japanese-jisx0213-1 japanese-jisx0213-2 japanese-jisx0208-1978)
-      (tutorial . "TUTORIAL.ja")
-      (iso639-language . ja)
-      (exit-function . use-default-char-width-table)
-      (setup-function . setup-japanese-environment-internal))
-    ...
-    #+END_EXAMPLE
-    となっていました. coding-priority を見るとわかるように文字コードの自
-    動判定などの大雑把な優先順位は iso-2022-jp→shift_jis→euc-jp... となっ
-    ていて, どこにも utf-8 がありません.  utf-8 を優先するには
-    #+BEGIN_EXAMPLE
-    (prefere-coding-system 'utf-8)
-    #+END_EXAMPLE
-    を設定します.
-** OSの違いに起因する条件分岐
-   全部 Unix/Linux 環境ならばこういう設定は不要なんでしょうけれど,
-   幾つか環境を渡り歩いていると,
-   こういった[[http://0xcc.net/misc/bad-knowhow.html][バッドノウハウ]] [fn:1] が増えていきます.
-
-   Mac と Linux では同じ Unicode でも正規化が異なります
-   (具体的には Mac のファイルシステムである HFS+ では
-   Unicode の正規化が異なります).
-   日本語のファイル名を扱うことは滅多にありませんが,
-   たまに祟りがあるのでそれを回避するための設定をしておきます.
-
-   Unicode の正規化と Mac OS X 特有の事情については
-    - [[http://homepage1.nifty.com/nomenclator/unicode/normalization.htm][Unicode正規化とは]]
-    - [[http://www.sakito.com/2010/05/mac-os-x-normalization.html][Mac OS X におけるファイル名に関するメモ(NFC, NFD等)]]
-   等が参考になるかと思います.
-
-   Windows の場合はファイル名などは cp932 にしています.
-   とはいえ最近 Windows 使っていないので良く知りません.
-   #+BEGIN_SRC emacs-lisp
-          (cond
-           (darwin-p
-            (require 'ucs-normalize)
-            (setq file-name-coding-system 'utf-8-hfs)
-            (setq locale-coding-system 'utf-8-hfs)
-            ;; ついでにキーバインド: Ctrl を Mac から奪い取る
-            (setq mac-pass-control-to-system t)
-            ;; Cmd と Option を逆にする
-            (setq ns-command-modifier 'meta)
-            (setq ns-alternate-modifier 'super)
-            (global-set-key [ns-drag-file] 'ns-find-file))
-           (nt-p
-            (setq file-name-coding-system 'cp932)
-            (setq locale-coding-system 'cp932))
-           (t
-            (setq file-name-coding-system 'utf-8)
-            (setq locale-coding-system 'utf-8))
-          )
-   #+END_SRC
-*** 補足
-    =prefer-coding-system= を設定すると =default-file-name-coding-system= が設定されます.
-    優先順位は
-    #+BEGIN_EXAMPLE
-    file-name-coding-system が nil → default-file-name-coding-systemを利用
-    #+END_EXAMPLE
-    となっています.
-
-    =darwin-p= と =nt-p= は =~/.emacs.d/init.el= で設定した環境判定用の以下の変数です:
-    #+BEGIN_EXAMPLE
-    (defvar darwin-p (eq system-type 'darwin))      ; Mac OS X 用
-    (defvar nt-p (eq system-type 'windows-nt))      ; Windows 用
-    #+END_EXAMPLE
-** cp5022xの利用
-   Emacs23 から内部が Unicode ベースになっています.
-   しかし文字コードの変換は GNU libc の iconv をベースにしているため,
-   環境によっては文字の変換がうまく行なえません.
-   cp5022x については [[http://nijino.homelinux.net/emacs/emacs23-ja.html][Emacs23 日本語向け設定例]] [fn:2] を参照して下さい.
-   また, [[http://d.hatena.ne.jp/kiwanami/about][kiwanami]] さんが [[http://d.hatena.ne.jp/kiwanami/20091103/1257243524][Wanderlustと文字コード]] [fn:3]
-   というエントリで素晴しい解説を書いて下さっています.
-
-   cp5022x 自体は bundle で install しています.
-   #+BEGIN_SRC emacs-lisp
-     (when (require 'cp5022x nil 'noerror)
-       (bundle 'cp5022x))
-   #+END_SRC
-* 機種依存しない(ハズ)の雑多な設定
-  Emacs そのものの設定集.
-  ちなみに =line-number-mode= など「有効無効をtoggleする関数」は,
-  慣習的に =0= 以下の数字を指定すると明示的に無効化できる.
-** キーバインドの設定
-   設定しておいて, 結構忘れていたり.
-   とはいえ =[home]= と =[end]= は無いと途方に暮れます.
-   鬼軍曹.el [fn:4] とかで強制した方が良いのかもしれません.
-   #+BEGIN_SRC emacs-lisp
-     (global-set-key (kbd "C-h")     'backward-delete-char)
-     (global-set-key (kbd "C-c M-a") 'align-regexp)
-     (global-set-key (kbd "C-c ;")   'comment-region)
-     (global-set-key (kbd "C-c M-;") 'uncomment-region)
-     (global-set-key (kbd "C-/")     'undo)
-     (global-set-key (kbd "C-c M-r") 'replace-regexp)
-     (global-set-key (kbd "C-c r")   'replace-string)
-     (global-set-key (kbd "<home>")  'beginning-of-buffer)
-     (global-set-key (kbd "<end>")   'end-of-buffer)
-   #+END_SRC
-** 編集/表示関連
-   yes or no を y or n に
-   #+BEGIN_SRC emacs-lisp
-      (fset 'yes-or-no-p 'y-or-n-p)
-   #+END_SRC
-   選択リージョンに色付け
-   #+BEGIN_SRC emacs-lisp
-      (setq transient-mark-mode t)
-   #+END_SRC
-   対応する括弧を色付け
-   #+BEGIN_SRC emacs-lisp
-      (setq show-paren-delay 0)           ; 初期値は 0.125
-      (setq show-paren-style 'expression) ; 括弧内も強調表示
-      (show-paren-mode t)                 ; 有効化
-   #+END_SRC
-   tab 幅 4, tab でのインデントはしない
-   #+BEGIN_SRC emacs-lisp
-      (setq-default tab-width 4)
-      (setq-default indent-tabs-mode nil)
-   #+END_SRC
-   文字列は 72 文字で折り返し(RFC2822風味)
-   #+BEGIN_SRC emacs-lisp
-      (setq-default fill-column 72)
-      (setq paragraph-start '"^\\([ 　・○<\t\n\f]\\|(?[0-9a-zA-Z]+)\\)")
-      (setq-default auto-fill-mode nil)
-   #+END_SRC
-   バッファ終端で newline を入れない
-   #+BEGIN_SRC emacs-lisp
-      (setq next-line-add-newlines nil)
-   #+END_SRC
-   保存時に最終行に一行追加→とりあえず使わないことに
-   #+BEGIN_SRC emacs-lisp
-      ;; (setq require-final-newline t)
-      (put 'set-goal-column 'disabled nil)
-   #+END_SRC
-   symlink は常においかける
-   #+BEGIN_SRC emacs-lisp
-     (setq vc-follow-symlinks t)
-   #+END_SRC
-   変更のあったファイルの自動再読み込み
-   #+BEGIN_SRC emacs-lisp
-     (global-auto-revert-mode 1)
-   #+END_SRC
-** [[file:autoinsert_config.org][auto-insert]]
-  テンプレートの自動挿入
+  そこで言語設定の前に =cp5022x.el= を読み込むことにしています.
+  cp5022x については [[http://nijino.homelinux.net/emacs/emacs23-ja.html][Emacs23 日本語向け設定例]]  [fn:1] を参照して下さい.
+  また, [[http://d.hatena.ne.jp/kiwanami/about][kiwanami]] さんが [[http://d.hatena.ne.jp/kiwanami/20091103/1257243524][Wanderlustと文字コード]] [fn:2]
+  というエントリで素晴しい解説を書いて下さっています.
+  #+BEGIN_SRC emacs-lisp
+    (el-get 'sync 'cp5022x)
+    (my:load-org-file "language_config.org")
+  #+END_SRC
+* [[file:basic_config.org][バージョン依存しない(はず)の雑多な設定]]
+  #+BEGIN_SRC emacs-lisp
+    (my:load-org-file "basic_config.org")
+  #+END_SRC
+* テンプレートの自動挿入: [[file:autoinsert_config.org][autoinsert]]
   #+BEGIN_SRC emacs-lisp
     (my:load-org-file "autoinsert_config.org")
   #+END_SRC
-** 行末の無駄な空白/改行を削除する
-   元ネタ: (Emacs Advent Calendar jp:2010)[fn:7].
-   ただし, RD や Markdown だと空白行に意味があったりするので,
-   必要に応じて拡張子で判断して外している.
-   #+BEGIN_SRC emacs-lisp
-      (defvar my:delete-trailing-whitespace-exclude-suffix
-        (list "\\.rd$" "\\.md$" "\\.rbt$"))
-      (defun my:delete-trailing-whitespace ()
-        (interactive)
-        (cond
-         ((equal nil
-                 (loop for pattern in my:delete-trailing-whitespace-exclude-suffix
-                       thereis (string-match pattern buffer-file-name)))
-          (delete-trailing-whitespace))))
-      (add-hook 'before-save-hook 'my:delete-trailing-whitespace)
-   #+END_SRC
-** バックアップとauto-saveの作成/位置の変更
-   =~/.emacs.d/init.el= にて =my:emacs-backup-dir= を設定して,
-   =~/.emacs.d/tmp/= 以下に
-   backup と auto-save ファイルを集約する
-   #+BEGIN_SRC emacs-lisp
-      (setq auto-save-list-file-prefix
-            (concat my:user-emacs-temporary-directory ".saves-"))
-      (setq auto-save-default t)
-      (setq auto-save-timeout 15)
-      (setq auto-save-interval 60)
-      (setq make-backup-files t)
-      (setq backup-by-copying t) ; symlink は使わない
-      (setq backup-directory-alist
-            `(("." . ,my:user-emacs-temporary-directory)))
-      (setq auto-save-file-name-transforms
-            `((".*" ,my:user-emacs-temporary-directory t)))
-      (setq version-control t)
-      (setq kept-new-versions 5)
-      (setq kept-old-versions 5)
-      (setq delete-old-versions t)
-      (setq delete-auto-save-files t)
-   #+END_SRC
-** 空になったファイルを尋ねずに自動削除
-   ゴミが残らないし, 地味に便利.
-   #+BEGIN_SRC emacs-lisp
-      (if (not (memq 'delete-file-if-no-contents after-save-hook))
-          (setq after-save-hook
-                (cons 'delete-file-if-no-contents after-save-hook)))
-      (defun delete-file-if-no-contents ()
-        (when (and
-               (buffer-file-name (current-buffer))
-               (= (point-min) (point-max)))
-          (delete-file
-           (buffer-file-name (current-buffer)))))
-   #+END_SRC
-** scratch を殺さない. 消したら再生成
-   ...元ネタがどこだったのか忘れてしまった...
-   #+BEGIN_SRC emacs-lisp
-      (defun my:make-scratch (&optional arg)
-        (interactive)
-        (progn
-          ;; "*scratch*" を作成して buffer-list に放り込む
-          (set-buffer (get-buffer-create "*scratch*"))
-          (funcall initial-major-mode)
-          (erase-buffer)
-          (when (and initial-scratch-message (not inhibit-startup-message))
-            (insert initial-scratch-message))
-          (or arg
-              (progn
-                (setq arg 0)
-                (switch-to-buffer "*scratch*")))
-          (cond ((= arg 0) (message "*scratch* is cleared up."))
-                ((= arg 1) (message "another *scratch* is created")))))
-
-      (defun my:buffer-name-list ()
-        (mapcar (function buffer-name) (buffer-list)))
-      (add-hook 'kill-buffer-query-functions
-                ;; *scratch* バッファで kill-buffer したら内容を消去するだけにする
-                (function (lambda ()
-                            (if (string= "*scratch*" (buffer-name))
-                                (progn (my:make-scratch 0) nil)
-                              t))))
-      (add-hook 'after-save-hook
-                ;; *scratch* バッファの内容を保存したら
-                ;; *scratch* バッファを新しく作る.
-                (function
-                 (lambda ()
-                   (unless (member "*scratch*" (my:buffer-name-list))
-                     (my:make-scratch 1)))))
-   #+END_SRC
-** 履歴ファイル管理
-   undo-hist と recentf-ext について, あとで書くこと.
-
-   =undo=
-   #+BEGIN_SRC emacs-lisp
-      (setq undo-limit 160000) ; 無限にしたいができないので, 倍に
-      (setq undo-strong-limit 240000)
-      (savehist-mode 1)        ; ミニバッファの履歴を保存しリストア
-      (setq savehist-file
-            (concat my:user-emacs-temporary-directory "history"))
-      (setq history-length t)  ; t で無制限
-   #+END_SRC
-
-   =recentf=
-   #+BEGIN_SRC emacs-lisp
-      (add-hook 'after-init-hook 'recentf-mode)
-      (eval-after-load "recentf"
-        '(progn
-           (setq recentf-max-saved-items 2000)
-           (setq recentf-save-file
-                 (expand-file-name
-                  (concat my:user-emacs-temporary-directory "recentf")))
-           (setq recentf-auto-cleanup 'never)
-           (run-with-idle-timer 300 t 'recentf-save-list)
-           (run-with-idle-timer 600 t 'recentf-cleanup)
-           ))
-   #+END_SRC
-** モードラインのファイル名にディレクトリも表示:
-   =uniquify= を使用
-   #+BEGIN_SRC emacs-lisp
-      (require 'uniquify)
-      (setq uniquify-buffer-name-style 'post-forward-angle-brackets)
-      (setq uniquify-min-dir-content 1)
-   #+END_SRC
-** saveplace で前回の修正位置を記憶する.
-   記憶の保存先は =~/.emacs.d/tmp/emacs-places= に変更.
-   #+BEGIN_SRC emacs-lisp
-      (require 'saveplace)
-      (setq-default save-place t)
-      (setq save-place-file
-            (convert-standard-filename
-             (concat my:user-emacs-temporary-directory "emacs-places")))
-   #+END_SRC
-** timestamp の自動更新
-   ファイル内に =$Lastupdate: $= (＄は小文字)がある場合には,
-   save する度に timestamp を更新する.
-   #+BEGIN_SRC emacs-lisp
-     (require 'time-stamp)
-     (add-hook 'before-save-hook 'time-stamp)
-     (setq time-stamp-active t)
-     (setq time-stamp-line-limit 10)
-     (setq time-stamp-start "$Lastupdate: ")
-     (setq time-stamp-format "%04y/%02m/%02d %02H:%02M:%02S")
-     (setq time-stamp-end "\\$")
-   #+END_SRC
-** emacs-server
-   既に =emacs-server= が起動しているならば何もせず,
-   起動していない場合には =emacs-server= を起動する.
-   #+BEGIN_SRC emacs-lisp
-     (eval-and-compile (require 'server))
-     (when (and (functionp 'server-running-p)
-                (not (server-running-p)))
-       (server-start))
-   #+END_SRC
-** browse-url
-   Firefox → emacs-w3m → w3 の順で探索
-   #+BEGIN_SRC emacs-lisp
-     (require 'browse-url)
-     (cond
-      ((executable-find "firefox")
-       (setq browse-url-browser-function 'browse-url-firefox))
-      ((and (executable-find "w3m")
-            (locate-library "w3m"))
-       (setq browse-url-browser-function 'w3m-browse-url))
-      (t
-       (setq browse-url-browser-function 'browse-url-w3)))
-     (global-set-key (kbd "C-c C-j") 'browse-url-at-point)
-   #+END_SRC
-** EasyPG
-   Emacs23からは本体に同梱されているので
-   明示的に requireする必要ないが,
-   あって困るモンでも無いので残しておく.
-   #+BEGIN_SRC emacs-lisp
-     (require 'epa-file)
-     ;; 対称鍵のキャッシュを有効化
-     (setq epa-file-cache-passphrase-for-symmetric-encryption t)
-   #+END_SRC
-* [[http://www.morishima.net/~naoto/elscreen-en/][ElScreen]]
-  Emacsのバッファを GNU Screen っぽく扱う素敵 elisp.
-  最近新しいリリースが無い & APEL 依存があるのが難点だろうか.
-
-  ここでは [[https://github.com/knu][MUSHA]] さんが folk している branch から
-  取得する[[file:~/.emacs.d/recipes/elscreen-knu-branch.rcp][recipes/elscreen-knu-branch.rcp]] を使っている.
-
-  設定はキーバインドを =\C-o= に変えたくらい
+* Recentf-Ext:  [[http://d.hatena.ne.jp/rubikitch/20091224/recentf][人は俺を「recentfマスター」と呼ぶ]]
   #+BEGIN_SRC emacs-lisp
-    (bundle elscreen-knu-branch
-      (setq elscreen-prefix-key (kbd "C-o"))
-      (setq elscreen-display-tab 4)
-      (require 'elscreen))
+    (el-get 'sync 'recentf-ext)
+    (require 'recentf-ext nil t)
   #+END_SRC
-* [[http://d.hatena.ne.jp/mooz/20101003/p1][zlc.el で Emacs のミニバッファ補完 zsh ライクに]] [fn:2]
+* [[file:migemo_config.org][C/Migemo の設定]]
   #+BEGIN_SRC emacs-lisp
-    (bundle zlc
-      (require 'zlc)
-      (let ((map minibuffer-local-map))
-        (define-key map (kbd "<backtab>") 'zlc-select-previous)
-        (define-key map (kbd "S-<tab>")   'zlc-select-previous)
-        (define-key map (kbd "C-p")       'zlc-select-previous-vertical)
-        (define-key map (kbd "C-n")       'zlc-select-next-vertical)
-        (define-key map (kbd "C-b")       'zlc-select-previous)
-        (define-key map (kbd "C-f")       'zlc-select-next)
-        (define-key map (kbd "C-d")       'zlc-reset)))
-  #+END_SRC
-* [[http://d.hatena.ne.jp/tarao/20101011/1286804507][Yet another icompelete]] [fn:3]
-  zlc の補完をさらに素敵に
-  #+BEGIN_SRC emacs-lisp
-    (bundle yaicomplete
-      (require 'yaicomplete)
-      (yaicomplete-mode))
+    (unless (locate-library "migemo")
+      (if (executable-find "cmigemo")
+          (el-get 'sync 'migemo)))
+    (when (featurep 'migemo)
+      (my:load-org-file "migemo_config.org"))
   #+END_SRC
 * 日本語入力: [[http://openlab.ring.gr.jp/skk/ddskk-ja.html][Daredevil SKK (DDSKK)]]
   SKK をメインで使用中. 無いと途方に暮れる.
@@ -419,10 +64,12 @@ title: Emacsの基本設定
   =~/.emacs.d/etc/skk= 以下に置かれるが,
   実際の設定は [[file:ddskk_config.org][ddskkの設定]] で行なっている.
 
-  install は bundle を使う
+  ddskk がインストールされていない/古い ddskk が install されている場合には
+  最新版を入手することに.
+  CVS は proxy 越えられないわけですが, どうしたモンかなぁ...
   #+BEGIN_SRC emacs-lisp
-  (unless (locate-library "skk-sticky")
-    (bundle ddskk-cvs))
+    (unless (locate-library "skk-sticky")
+      (el-get 'sync 'ddskk-cvs))
   #+END_SRC
 
   byte-compile 用の変数の読み込み.
@@ -465,171 +112,222 @@ title: Emacsの基本設定
 * MUA: [[https://github.com/wanderlust/wanderlust][Wanderlust]]
   設定自体は [[file:wl_config.org][Wanderlust の設定]] で行なっているので,
   ここでは MUA の設定なんかをしている.
-  導入は bundle で.
 
-  Wanderlust本体と
-    - [[http://uwabami.github.com/rail/][RAIL: Replace Agent-String Internal Library]]
-    - google-contacts-wl
-    - c-sig
-  を導入している.
-
-  [[http://uwabami.github.com/rail/][RAIL: Replace Agent-String Internal Library]]
-  の recipe は
-  [[file:~/.emacs.d/recipes/rail.rcp][recipes/rail.rcp]] を参照の事.
-
-  [[https://github.com/uwabami/google-contacts-wl][google-contacts-wl]] は Google Contacts -> Wanderlust Address file
-  の 1-way convertor. el-get 用の recipe は
-  [[file:~/.emacs.d/recipes/google-contacts-wl.rcp][recipes/google-contacts-wl.rcp]] を参照の事.
-
-  c-sig は upstream dead?
-  Debian のリポジトリ (alioth) から取得する
-  [[file:~/.emacs.d/recipes/c-sig-alioth.rcp][recipes/c-sig-alioth.rcp]] を使っている.
-
+  インストールされていない環境では, 以下の設定は読み込まない, その1
   #+BEGIN_SRC emacs-lisp
-        (unless (locate-library "wl")
-          (bundle wanderlust))
-        (unless (locate-library "rail")
-          (bundle rail
-            (eval-after-load-compile 'rail
-              (setq rail-emulate-genjis t))))
-        (unless (locate-library "google-contacts-wl")
-          (bundle google-contacts-wl
-            (eval-after-load-compile 'google-contacts-wl
-              (setq google-contacts-wl-ask nil))))
-        (unless (locate-library "c-sig")
-          (bundle c-sig-alioth))
+    (when (locate-library "wl")
+      ;; rail は Debian パッケージを優先
+      (unless (locate-library "rail")
+        (el-get 'sync 'rail))
+      ;; Google Contacts と Address の連携
+      (el-get 'sync 'google-contacts-wl)
   #+END_SRC
   =mail-user-agent= で Wanderlust が呼び出されるようにする
   #+BEGIN_SRC emacs-lisp
-       (autoload 'wl "wl" "Wanderlust" t)
-       (autoload 'wl-other-frame "wl" "Wanderlust on new frame" t)
-       (autoload 'wl-draft "wl-draft" "Write draft with Wanderlust." t)
-       (if (boundp 'mail-user-agent)
-           (setq mail-user-agent 'wl-user-agent))
-       (if (boundp 'read-mail-command)
-           (setq read-mail-command 'wl))
-       (if (fboundp 'define-mail-user-agent)
-           (define-mail-user-agent
-             'wl-user-agent
-             'wl-user-agent-compose
-             'wl-draft-send
-             'wl-draft-kill
-             'mail-send-hook))
+    (autoload 'wl "wl" "Wanderlust" t)
+    (autoload 'wl-other-frame "wl" "Wanderlust on new frame" t)
+    (autoload 'wl-draft "wl-draft" "Write draft with Wanderlust." t)
+    (if (boundp 'mail-user-agent)
+        (setq mail-user-agent 'wl-user-agent))
+    (if (boundp 'read-mail-command)
+        (setq read-mail-command 'wl))
+    (if (fboundp 'define-mail-user-agent)
+        (define-mail-user-agent
+          'wl-user-agent
+          'wl-user-agent-compose
+          'wl-draft-send
+          'wl-draft-kill
+          'mail-send-hook))
   #+END_SRC
   本体設定: =~/.elmo= の場所を変更している
   #+BEGIN_SRC emacs-lisp
-      (setq elmo-msgdb-directory "~/Mail/elmo")
+    (setq elmo-msgdb-directory "~/Mail/elmo")
   #+END_SRC
   org で書かれた設定ファイルから elisp を抽出して compile
   #+BEGIN_SRC emacs-lisp
-      (my:org-babel-tangle-and-compile-file
-       (concat my:user-emacs-config-directory "wl_config.org"))
+    (my:org-babel-tangle-and-compile-file
+     (concat my:user-emacs-config-directory "wl_config.org"))
   #+END_SRC
   設定ファイルの変更: 初期値は =~/.wl=.
   #+BEGIN_SRC emacs-lisp
-      (setq wl-init-file
-            (concat my:user-emacs-config-directory "wl_config"))
+    (setq wl-init-file
+          (concat my:user-emacs-config-directory "wl_config"))
   #+END_SRC
-  キーバインド: [F3] で Wanderlust が起動するように(最近使ってないけれど).
+  インストールされている環境では, 以下の設定は読み込まない, その2
   #+BEGIN_SRC emacs-lisp
-      (global-set-key [f3] 'wl)
+    )
   #+END_SRC
-* [[http://emacswiki.org/emacs/auto-async-byte-compile.el][auto-async-byte-compile.el]]
+* [[http://www.morishima.net/~naoto/elscreen-en/][ElScreen]]
+  Emacsのバッファを GNU Screen っぽく扱う素敵 elisp.
+  最近新しいリリースが無い & APEL 依存があるのが難点だろうか.
+
+  ここでは [[https://github.com/knu][MUSHA]] さんが folk している branch から
+  取得する [[file:~/.emacs.d/recipes/elscreen-knu-branch.rcp][recipes/elscreen-knu-branch.rcp]] を使っている.
+
+  設定はキーバインドを =\C-o= に変えたくらい.
   #+BEGIN_SRC emacs-lisp
-    (bundle 'auto-async-byte-compile
-      (eval-after-load-compile 'auto-async-byte-compile
-        (setq auto-async-byte-compile-exclude-files-regexp "theme\.el$")
-        (add-hook 'emacs-lisp-mode-hook
-                  'enable-auto-async-byte-compile-mode)))
+    (el-get 'sync 'elscreen-knu-branch)
+    (setq elscreen-prefix-key (kbd "C-o"))
+    (setq elscreen-display-tab 4)
+    (require 'elscreen)
+  #+END_SRC
+* [[http://d.hatena.ne.jp/mooz/20101003/p1][zlc.el で Emacs のミニバッファ補完 zsh ライクに]]
+  #+BEGIN_SRC emacs-lisp
+    (el-get 'sync 'zlc)
+    (require 'zlc)
+    (let ((map minibuffer-local-map))
+      (define-key map (kbd "<backtab>") 'zlc-select-previous)
+      (define-key map (kbd "S-<tab>")   'zlc-select-previous)
+      (define-key map (kbd "C-p")       'zlc-select-previous-vertical)
+      (define-key map (kbd "C-n")       'zlc-select-next-vertical)
+      (define-key map (kbd "C-b")       'zlc-select-previous)
+      (define-key map (kbd "C-f")       'zlc-select-next)
+      (define-key map (kbd "C-d")       'zlc-reset))
+  #+END_SRC
+* [[http://d.hatena.ne.jp/tarao/20101011/1286804507][Yet another icompelete]]
+  #+BEGIN_SRC emacs-lisp
+    (el-get 'sync 'yaicomplete)
+    (require 'yaicomplete)
+    (yaicomplete-mode)
+  #+END_SRC
+
+* [[file:frame_config.org][フォントとフレームの設定]]
+  #+BEGIN_SRC emacs-lisp
+  (my:load-org-file "frame_config.org")
+  #+END_SRC
+* color-theme
+  自作の color-theme の読み込み.
+  そのうち Emacs24 用の theme も準備する予定.
+  #+BEGIN_SRC emacs-lisp
+    (when (locate-library "color-theme")
+      (el-get 'sync 'color-theme-darkpastel))
   #+END_SRC
 * [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727][パスワード管理ツール id-manager.el]]
   無いと途方に暮れるくらい, 依存しまくり.
   レシピは [[file:~/dot.emacs.d/recipes/id-manager.rcp][recipes/id-manager.rcp]] を参照の事.
   #+BEGIN_SRC emacs-lisp
-    (bundle id-manager
-      (eval-after-load-compile 'id-manager
-        (global-set-key (kbd "M-7") 'id-manager)
-        (setq idm-database-file
-            (expand-file-name
-             (concat (getenv "HOME") "/.gnupg/idm-db.gpg"))))
-      (require 'id-manager))
+    (el-get 'sync 'id-manager)
+    (require 'id-manager)
+    (global-set-key (kbd "M-7") 'id-manager)
+    (setq idm-database-file
+          (expand-file-name
+           (concat (getenv "HOME") "/.gnupg/idm-db.gpg")))
   #+END_SRC
-* [[file:frame_config.org][フォントとフレームの設定]]
+* [[http://emacswiki.org/emacs/auto-async-byte-compile.el][auto-async-byte-compile.el]]
   #+BEGIN_SRC emacs-lisp
-    (when (require 'color-theme nil t)
-      (bundle color-theme-darkpastel))
-    (my:load-org-file "frame_config.org")
+    (el-get 'sync 'auto-async-byte-compile)
+    (require 'auto-async-byte-compile)
+    (setq auto-async-byte-compile-exclude-files-regexp "theme\.el$")
+    (add-hook 'emacs-lisp-mode-hook
+              'enable-auto-async-byte-compile-mode)
   #+END_SRC
+
 * [[file:org-mode_config.org][Org-mode]]
-  TeX/Beamer への export, org-capture の設定をしている
+  TeX/Beamer への export, org-capture の設定をしています.
+  保存先は Dropbox なので, Dropbox が無い場合には読み込まない様に.
   #+BEGIN_SRC emacs-lisp
     (when (file-exists-p
            (expand-file-name (concat (getenv "HOME") "/Dropbox/org")))
-     (my:load-org-file "org-mode_config.org"))
+      (my:load-org-file "org-mode_config.org"))
   #+END_SRC
 * [[http://howm.sourceforge.jp/index-j.html][Howm]] 関連
-  メモは howm + org-Capture で取って, Dropbox に保存してます.
-  無いと途方に暮れる...
+  メモは howm + org-Capture で取っています.
+  保存先は Dropbox なので Dropbox が無い場合には読み込まない様に.
   #+BEGIN_SRC emacs-lisp
     (when (file-exists-p
            (expand-file-name (concat (getenv "HOME") "/Dropbox/org")))
       (unless (locate-library "howm")
-        (bundle howm-alioth))
+        (el-get 'sync 'howm-alioth))
       (my:load-org-file "howm_config.org"))
   #+END_SRC
 * [[file:anything_config.org][Anything]]
-  Debianでは[[http://packages.qa.debian.org/a/anything-el.html][anything-el]] [fn:10] としてパッケージ化されているので
+  Debianでは [[http://packages.qa.debian.org/a/anything-el.html][anything-el]] [fn:3] としてパッケージ化されているので
   #+BEGIN_EXAMPLE
   $ apt-get install anything-el
   #+END_EXAMPLE
   で OK.
 
-  パッケージが使えない場合には bundle ことにする.
+  パッケージが使えない場合には el-get で導入します.
   #+BEGIN_SRC emacs-lisp
     (unless (locate-library "anything")
-      (bundle anything))
-    (unless (locate-library "descbinds-anything")
-      (bundle descbinds-anything
-        (eval-after-load-compile 'descbinds-anything
-          (descbinds-anything-install))))
+      (el-get 'sync 'anything))
     (my:load-org-file "anything_config.org")
   #+END_SRC
-* [[file:auto-complete_config.org][auto-complete]]
-  詳細は [[http://cx4a.org/software/auto-complete/index.ja.html][Auto Complete Mode]] [fn:11] 参照のこと.
-  Debianでは[[http://packages.qa.debian.org/a/auto-complete-el.html][ auto-complete-el]] [fn:12] としてパッケージ化されている.
+* [[file:auto-complete_config.org][AutoComplete]]
+  詳細は [[http://cx4a.org/software/auto-complete/index.ja.html][Auto Complete Mode]] [fn:4] 参照のこと.
+  Debianでは[[http://packages.qa.debian.org/a/auto-complete-el.html][ auto-complete-el]] [fn:5] としてパッケージ化されている.
   #+BEGIN_SRC emacs-lisp
     (unless (locate-library "auto-complete")
-      (bundle auto-complete
-       (my:load-org-file "auto-complete_config.org")))
+      (el-get 'sync 'auto-complete))
+    (my:load-org-file "auto-complete_config.org")
+  #+END_SRC
+* [[file:flyspell_config.org][flyspell-mode]]
+  #+BEGIN_SRC emacs-lisp
+    (my:load-org-file "flyspell_config.org")
+  #+END_SRC
+* [[file:lookup_config.org][lookup-el]]
+  =lookup= がインストールされていて, 辞書が存在する場合にだけ読み込む.
+  #+BEGIN_SRC emacs-lisp
+    (if (and (locate-library "lookup")
+             (file-exists-p "/usr/local/share/dict/lookup-enabled"))
+        (my:load-org-file "lookup_config.org"))
+  #+END_SRC
+* [[http://d.hatena.ne.jp/khiker/20070503/emacs_text_translator][Emacs でテキスト翻訳をする elisp]]
+  #+BEGIN_SRC emacs-lisp
+    (unless (locate-library "text-translator")
+      (if (executable-find "bzr")
+          (el-get 'sync 'text-translator-bzr-head)))
+    (when (string-match system-name "daphne")
+      (setq text-translator-proxy-server "127.0.0.1")
+      (setq text-translator-proxy-port "20080"))
+    (when (require 'text-translator nil t)
+      (global-set-key (kbd "C-x t") 'text-translator-all-by-auto-selection))
+  #+END_SRC
+* [[file:ruby-mode_config.org][ruby-mode]]
+  #+BEGIN_SRC emacs-lisp
+    (unless (locate-library "ruby-electric")
+      (el-get 'sync 'ruby-electric))
+    (unless (locate-library "ruby-block")
+      (el-get 'sync 'ruby-block))
+    (unless (locate-library "rd-mode")
+      (el-get 'sync 'rd-mode))
+    (unless (locate-library "rabbit-mode")
+      (el-get 'sync 'rabbit-mode))
+    (my:load-org-file "ruby-mode_config.org")
+  #+END_SRC
+* [[file:fortran-mode_config.org][fortran-mode]]
+  f90 の場合もここで設定
+  #+BEGIN_SRC emacs-lisp
+    (my:load-org-file "fortran-mode_config.org")
+  #+END_SRC
+* [[http://mwolson.org/projects/EmacsMuse.html][EmacsMuse]]
+  #+BEGIN_SRC emacs-lisp
+    (unless (locate-library "muse")
+      (el-get 'sync 'muse))
+    (my:load-org-file "muse_config.org")
+  #+END_SRC
+* yaml-mode
+  別ファイルに分割するほどでも無いので, ここで設定.
+  #+BEGIN_SRC emacs-lisp
+    (unless (locate-library "yaml-mode")
+      (el-get 'sync 'yaml-mode))
+    (when (require 'yaml-mode nil t)
+      (autoload 'yaml-mode "yaml-mode" "Major mode for Yaml" t)
+      (add-to-list 'auto-mode-alist '("\\.yml$\\|\\.yaml$" . yaml-mode))
+      )
+  #+END_SRC
+* [[file:flynamke_config.org][flymakeの設定]]
+  #+BEGIN_SRC emacs-lisp
+    (my:load-org-file "flymake_config.org")
   #+END_SRC
 * Footnotes
 
-[fn:1] バッドノウハウと奥が深い症候群: [[http://0xcc.net/misc/bad-knowhow.html]]
+[fn:1] Emacs23 日本語向け設定例: [[http://nijino.homelinux.net/emacs/emacs23-ja.html]]
 
-[fn:2] Emacs23 日本語向け設定例: [[http://nijino.homelinux.net/emacs/emacs23-ja.html]]
+[fn:2] Wanderlustと文字コード: [[http://d.hatena.ne.jp/kiwanami/20091103/1257243524]]
 
-[fn:3] Wanderlustと文字コード: [[http://d.hatena.ne.jp/kiwanami/20091103/1257243524]]
+[fn:3] anything-el - Debian PTS: [[http://packages.qa.debian.org/a/anything-el.html]]
 
-[fn:4] 鬼軍曹.el: [[https://github.com/k1LoW/emacs-drill-instructor/wiki/]]
+[fn:4] Auto Complete Mode: [[http://cx4a.org/software/auto-complete/index.ja.html]]
 
-[fn:5] mode-line-formatをダイエットさす: [[http://homepage1.nifty.com/blankspace/emacs/mode-line.html]]
-
-[fn:6] customizing the mode-line: [[http://emacs-fu.blogspot.jp/2011/08/customizing-mode-line.html]]
-
-[fn:7] 無駄な行末の空白を削除する(Emacs Advent Calendar jp:2010): [[http://d.hatena.ne.jp/tototoshi/20101202/1291289625]]
-
-[fn:8] El-Get: [[https://github.com/dimitri/el-get]]
-
-[fn:9] APEL: [[http://www.kanji.zinbun.kyoto-u.ac.jp/~tomo/elisp/APEL/index.html]]
-
-[fn:10] anything-el - Debian PTS: [[http://packages.qa.debian.org/a/anything-el.html]]
-
-[fn:11] Auto Complete Mode: [[http://cx4a.org/software/auto-complete/index.ja.html]]
-
-[fn:12] auto-complete-el - Debian PTS: [[http://packages.qa.debian.org/a/auto-complete-el.html]]
-
-[fn:13] Yet Another Snippet extension: [[http://yasnippet-doc-jp.googlecode.com/svn/trunk/doc-jp/index.html]]
-
-[fn:14] align設定用例集: [[http://handlename.hatenablog.jp/entry/2011/12/11/214923]]
-
-[fn:15] Emacs Muse: [[http://mwolson.org/projects/EmacsMuse.html]]
+[fn:5] auto-complete-el - Debian PTS: [[http://packages.qa.debian.org/a/auto-complete-el.html]]

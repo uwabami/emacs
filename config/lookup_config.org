@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/11/17 22:47:21$
+# $Lastupdate: 2013/01/02 21:11:24$
 # License: Expat.
 #+TITLE: lookupの設定
 #+AUTHOR: Youhei SASAKI
@@ -28,7 +28,6 @@ title: lookupの設定
     (global-set-key "\C-cW" 'lookup-word)
 #+END_SRC
 * 検索エージェント, 辞書の設定
-  辞書ファイルは Dropbox で管理している
   #+BEGIN_SRC emacs-lisp
     (setq lookup-search-agents
           '(

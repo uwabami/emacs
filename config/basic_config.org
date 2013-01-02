@@ -1,0 +1,320 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# $Lastupdate: 2013/01/02 19:59:19$
+# License: Expat
+#
+#+TITLE: バージョン依存しない(はず)の雑多な設定
+#+AUTHOR: Youhei SASAKI
+#+EMAIL: uwabami@gfd-dennou.org
+#+SETUPFILE: ./export-config.org
+#+BEGIN_HTML
+---
+layout: emacs
+title: バージョン依存しない(はず)の雑多な設定
+---
+#+END_HTML
+* 始めに
+  Emacs そのものの設定集. 多分機種依存しないように書けている, ハズ.
+
+  ちなみに =line-number-mode= など「有効無効をtoggleする関数」は,
+  慣習的に =0= 以下の数字を指定すると明示的に無効化できる.
+* 常に $HOME から開始
+  以前 Meadow を使っていた時に, Cygwin の =$HOME= から始めないと
+  ファイルを開くのが大変だったので, 指定しています.
+  これを指定していると byte-compile 時に常に =CURDIR= を指定する必要があって,
+  それなりに面倒なのですが, 体が慣れてしまったので残しています.
+  #+BEGIN_SRC emacs-lisp
+  (cd "~/")
+  #+END_SRC
+* キーバインドの設定
+  既に手癖になってしまっているので,
+  鬼軍曹.el [fn:1] とかで強制した方が良いのかも, とか, 偶に思いますが, 捨てられません.
+  とはいえ =[home]= と =[end]= は無いと途方に暮れます.
+  鬼軍曹.el [fn:1] とかで強制した方が良いのかもしれません.
+  #+BEGIN_SRC emacs-lisp
+    (global-set-key (kbd "C-h")     'backward-delete-char)
+    (global-set-key (kbd "C-c M-a") 'align-regexp)
+    (global-set-key (kbd "C-c ;")   'comment-region)
+    (global-set-key (kbd "C-c M-;") 'uncomment-region)
+    (global-set-key (kbd "C-/")     'undo)
+    (global-set-key (kbd "C-c M-r") 'replace-regexp)
+    (global-set-key (kbd "C-c r")   'replace-string)
+    (global-set-key (kbd "<home>")  'beginning-of-buffer)
+    (global-set-key (kbd "<end>")   'end-of-buffer)
+  #+END_SRC
+* モードラインのダイエット
+  デフォルトでは結構煩いので, いろいろと消す. 元ネタは
+  [[http://homepage1.nifty.com/blankspace/emacs/mode-line.html][mode-line-formatをダイエットさす]]モードラインのダイエット [fn:2].
+  しかし世の中にはもっと過激な人もいらっしゃって
+  [[http://emacs-fu.blogspot.jp/2011/08/customizing-mode-line.html][customizing the mode-line]] [fn:3]なんてこともできる.
+  そのうちもっと細かく設定するかも.
+  #+BEGIN_SRC emacs-lisp
+    (setq-default mode-line-format
+                  '("-"
+                    mode-line-mule-info
+                    mode-line-modified
+                    " "
+                    mode-line-buffer-identification
+                    " "
+                     global-mode-string
+                     " %[("
+                     mode-name
+                     mode-line-process
+                     minor-mode-alist
+                     "%n" ")%]"
+                     (which-func-mode ("" which-func-format "-"))
+                    "-%-"
+                    )
+                  )
+  #+END_SRC
+* 行番号, 桁番号の表示
+  必要に応じて =linum-mode= を有効にするので,
+  通常はモードラインに行番号や桁番号を表示しない.
+  #+BEGIN_SRC emacs-lisp
+    (line-number-mode 0)
+    (column-number-mode 0)
+  #+END_SRC
+  =linum-mode= を有効にした場合の桁表示を 5 桁にする.
+  #+BEGIN_SRC emacs-lisp
+    (setq linum-format "%5d ")
+  #+END_SRC
+* フレーム, ツールバーなど
+  ツールバーは使用しない.
+  #+BEGIN_SRC emacs-lisp
+    (if (fboundp 'tool-bar-mode)
+        (tool-bar-mode -1))
+  #+END_SRC
+  スクロールバーは使用しない.
+  #+BEGIN_SRC emacs-lisp
+    (if (fboundp 'set-scroll-bar-mode)
+        (set-scroll-bar-mode nil))
+  #+END_SRC
+  メニューバーを表示しない.
+  #+BEGIN_SRC emacs-lisp
+    (if (fboundp 'menu-bar-mode)
+        (menu-bar-mode -1))
+  #+END_SRC
+  bell-mode 使用しない
+  #+BEGIN_SRC emacs-lisp
+    (setq ring-bell-function 'ignore)
+  #+END_SRC
+  可能ならば \C-x f で画像を表示
+  #+BEGIN_SRC emacs-lisp
+    (when (window-system)
+      (setq auto-image-file-mode t)
+      (setq auto-image-file-mode nil))
+  #+END_SRC
+* 編集/表示関連
+  yes or no を y or n に
+  #+BEGIN_SRC emacs-lisp
+     (fset 'yes-or-no-p 'y-or-n-p)
+  #+END_SRC
+  選択リージョンに色付け
+  #+BEGIN_SRC emacs-lisp
+     (setq transient-mark-mode t)
+  #+END_SRC
+  対応する括弧を色付け
+  #+BEGIN_SRC emacs-lisp
+     (setq show-paren-delay 0)           ; 初期値は 0.125
+     (setq show-paren-style 'expression) ; 括弧内も強調表示
+     (show-paren-mode t)                 ; 有効化
+  #+END_SRC
+  tab 幅 4, tab でのインデントはしない
+  #+BEGIN_SRC emacs-lisp
+     (setq-default tab-width 4)
+     (setq-default indent-tabs-mode nil)
+  #+END_SRC
+  文字列は 72 文字で折り返し(RFC2822風味)
+  #+BEGIN_SRC emacs-lisp
+     (setq-default fill-column 72)
+     (setq paragraph-start '"^\\([ 　・○<\t\n\f]\\|(?[0-9a-zA-Z]+)\\)")
+     (setq-default auto-fill-mode nil)
+  #+END_SRC
+  バッファ終端で newline を入れない
+  #+BEGIN_SRC emacs-lisp
+     (setq next-line-add-newlines nil)
+  #+END_SRC
+  保存時に最終行に一行追加→とりあえず使わないことに
+  #+BEGIN_SRC emacs-lisp
+     ;; (setq require-final-newline t)
+     (put 'set-goal-column 'disabled nil)
+  #+END_SRC
+  symlink は常においかける
+  #+BEGIN_SRC emacs-lisp
+    (setq vc-follow-symlinks t)
+  #+END_SRC
+  変更のあったファイルの自動再読み込み
+  #+BEGIN_SRC emacs-lisp
+    (global-auto-revert-mode 1)
+  #+END_SRC
+* 行末の無駄な空白/改行を削除する
+  元ネタ: (Emacs Advent Calendar jp:2010)[fn:4].
+  ただし, RD や Markdown だと空白行に意味があったりするので,
+  必要に応じて拡張子で判断して外している.
+  #+BEGIN_SRC emacs-lisp
+    (defvar my:delete-trailing-whitespace-exclude-suffix
+      (list "\\.rd$" "\\.md$" "\\.rbt$"))
+    (defun my:delete-trailing-whitespace ()
+      (interactive)
+      (cond
+       ((equal nil
+               (loop for pattern in my:delete-trailing-whitespace-exclude-suffix
+                     thereis (string-match pattern buffer-file-name)))
+        (delete-trailing-whitespace))))
+    (add-hook 'before-save-hook 'my:delete-trailing-whitespace)
+  #+END_SRC
+* バックアップとauto-saveの作成/位置の変更
+  =~/.emacs.d/init.el= にて =my:emacs-backup-dir= を設定して,
+  =~/.emacs.d/tmp/= 以下に
+  backup と auto-save ファイルを集約する
+  #+BEGIN_SRC emacs-lisp
+     (setq auto-save-list-file-prefix
+           (concat my:user-emacs-temporary-directory ".saves-"))
+     (setq auto-save-default t)
+     (setq auto-save-timeout 15)
+     (setq auto-save-interval 60)
+     (setq make-backup-files t)
+     (setq backup-by-copying t) ; symlink は使わない
+     (setq backup-directory-alist
+           `(("." . ,my:user-emacs-temporary-directory)))
+     (setq auto-save-file-name-transforms
+           `((".*" ,my:user-emacs-temporary-directory t)))
+     (setq version-control t)
+     (setq kept-new-versions 5)
+     (setq kept-old-versions 5)
+     (setq delete-old-versions t)
+     (setq delete-auto-save-files t)
+  #+END_SRC
+* 空になったファイルを尋ねずに自動削除
+  ゴミが残らないし, 地味に便利.
+  #+BEGIN_SRC emacs-lisp
+     (if (not (memq 'delete-file-if-no-contents after-save-hook))
+         (setq after-save-hook
+               (cons 'delete-file-if-no-contents after-save-hook)))
+     (defun delete-file-if-no-contents ()
+       (when (and
+              (buffer-file-name (current-buffer))
+              (= (point-min) (point-max)))
+         (delete-file
+          (buffer-file-name (current-buffer)))))
+  #+END_SRC
+* scratch を殺さない. 消したら再生成
+  ...元ネタがどこだったのか忘れてしまった...
+  #+BEGIN_SRC emacs-lisp
+     (defun my:make-scratch (&optional arg)
+       (interactive)
+       (progn
+         ;; "*scratch*" を作成して buffer-list に放り込む
+         (set-buffer (get-buffer-create "*scratch*"))
+         (funcall initial-major-mode)
+         (erase-buffer)
+         (when (and initial-scratch-message (not inhibit-startup-message))
+           (insert initial-scratch-message))
+         (or arg
+             (progn
+               (setq arg 0)
+               (switch-to-buffer "*scratch*")))
+         (cond ((= arg 0) (message "*scratch* is cleared up."))
+               ((= arg 1) (message "another *scratch* is created")))))
+
+     (defun my:buffer-name-list ()
+       (mapcar (function buffer-name) (buffer-list)))
+     (add-hook 'kill-buffer-query-functions
+               ;; *scratch* バッファで kill-buffer したら内容を消去するだけにする
+               (function (lambda ()
+                           (if (string= "*scratch*" (buffer-name))
+                               (progn (my:make-scratch 0) nil)
+                             t))))
+     (add-hook 'after-save-hook
+               ;; *scratch* バッファの内容を保存したら
+               ;; *scratch* バッファを新しく作る.
+               (function
+                (lambda ()
+                  (unless (member "*scratch*" (my:buffer-name-list))
+                    (my:make-scratch 1)))))
+  #+END_SRC
+* モードラインのファイル名にディレクトリも表示:
+  =uniquify= を使用
+  #+BEGIN_SRC emacs-lisp
+     (require 'uniquify)
+     (setq uniquify-buffer-name-style 'post-forward-angle-brackets)
+     (setq uniquify-min-dir-content 1)
+  #+END_SRC
+* saveplace で前回の修正位置を記憶する.
+  記憶の保存先は =~/.emacs.d/tmp/emacs-places= に変更.
+  #+BEGIN_SRC emacs-lisp
+     (require 'saveplace)
+     (setq-default save-place t)
+     (setq save-place-file
+           (convert-standard-filename
+            (concat my:user-emacs-temporary-directory "emacs-places")))
+  #+END_SRC
+* timestamp の自動更新
+  ファイル内に =$Lastupdate: $= (＄は小文字)がある場合には,
+  save する度に timestamp を更新する.
+  #+BEGIN_SRC emacs-lisp
+    (require 'time-stamp)
+    (add-hook 'before-save-hook 'time-stamp)
+    (setq time-stamp-active t)
+    (setq time-stamp-line-limit 10)
+    (setq time-stamp-start "$Lastupdate: ")
+    (setq time-stamp-format "%04y/%02m/%02d %02H:%02M:%02S")
+    (setq time-stamp-end "\\$")
+  #+END_SRC
+* emacs-server
+  既に =emacs-server= が起動しているならば何もせず,
+  起動していない場合には =emacs-server= を起動する.
+  #+BEGIN_SRC emacs-lisp
+    (eval-and-compile (require 'server))
+    (when (and (functionp 'server-running-p)
+               (not (server-running-p)))
+      (server-start))
+  #+END_SRC
+* browse-url
+  Firefox → emacs-w3m → w3 の順で探索
+  #+BEGIN_SRC emacs-lisp
+    (require 'browse-url)
+    (cond
+     ((executable-find "firefox")
+      (setq browse-url-browser-function 'browse-url-firefox))
+     ((and (executable-find "w3m")
+           (locate-library "w3m"))
+      (setq browse-url-browser-function 'w3m-browse-url))
+     (t
+      (setq browse-url-browser-function 'browse-url-w3)))
+    (global-set-key (kbd "C-c C-j") 'browse-url-at-point)
+  #+END_SRC
+* Undo/Redo
+  そのうち undohist と undo-tree を試そうと思っているのですが,
+  今のところ, 特に弄ってません.
+  #+BEGIN_SRC emacs-lisp
+    (setq undo-limit 160000) ; 無限にしたいができないので, 倍に
+    (setq undo-strong-limit 240000)
+    (savehist-mode 1)        ; ミニバッファの履歴を保存しリストア
+    (setq savehist-file
+          (concat my:user-emacs-temporary-directory "history"))
+    (setq history-length t)  ; t で無制限
+  #+END_SRC
+* 履歴の保存先と, 保存量を設定: recentf
+  #+BEGIN_SRC emacs-lisp
+    (add-hook 'after-init-hook 'recentf-mode)
+    '(progn
+       (setq recentf-max-saved-items 2000)
+       (setq recentf-save-file
+             (expand-file-name
+              (concat my:user-emacs-temporary-directory "recentf")))
+       (setq recentf-auto-cleanup 'never)
+       (run-with-idle-timer 300 t 'recentf-save-list)
+       (run-with-idle-timer 600 t 'recentf-cleanup)
+       )
+  #+END_SRC
+* Footnotes
+
+[fn:1] 鬼軍曹.el: [[https://github.com/k1LoW/emacs-drill-instructor/wiki/]]
+
+[fn:2] mode-line-formatをダイエットさす: [[http://homepage1.nifty.com/blankspace/emacs/mode-line.html]]
+
+[fn:3] customizing the mode-line: [[http://emacs-fu.blogspot.jp/2011/08/customizing-mode-line.html]]
+
+[fn:4] 無駄な行末の空白を削除する(Emacs Advent Calendar jp:2010): [[http://d.hatena.ne.jp/tototoshi/20101202/1291289625]]

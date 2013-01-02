@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2013/01/01 04:32:08$
+;; $Lastupdate: 2013/01/02 18:36:12$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -97,7 +97,7 @@
 (add-to-load-path
  "config"                  ; 分割した設定群の置き場所.
  "site-lisp/org-mode/lisp" ; org-mode (Git HEAD)
- "el-get/el-get"           ; el-get で install した物.
+ "el-get/el-get"           ; el-get 本体
  )
 ;; -----------------------------------------------------------
 ;;; el-get の install
@@ -112,36 +112,6 @@
 (add-to-list 'el-get-recipe-path
              (expand-file-name (concat user-emacs-directory "recipes")))
 (setq el-get-github-default-url-type 'https)
-;; -----------------------------------------------------------
-;;; bundle - an el-get wrapper
-;;
-;; @oarat による素敵 emacs-lisp を el-get の wrapper として使う
-;;
-(add-to-list 'el-get-sources
-             '(:name bundle
-                     :url "http://gist.github.com/raw/4414297/bundle.el"
-                     :type http
-                     :features (bundle)))
-(el-get 'sync 'bundle)
-;; -----------------------------------------------------------
-;;; eval-after-load-compile
-;;
-;; byte-compile version for eval-after-load
-;;
-(defmacro eval-after-load-compile (feature &rest form)
-  (declare (indent defun))
-  (let ((feat (if (and (listp feature) (eq (nth 0 feature) 'quote))
-                  (nth 1 feature) feature)))
-    (eval '(eval-when (compile)
-             (cond ((stringp feat) (load feat t))
-                   ((symbolp feat) (require feat nil t)))))
-    (if (cond ((stringp feat) (locate-library feat))
-              ((symbolp feat) (featurep feat)))
-        ;; byte-compiled version
-        `(eval-after-load ,feature
-           '(funcall ,(byte-compile `(lambda () ,@form))))
-      ;; normal version
-      `(eval-after-load ,feature '(progn ,@form)))))
 ;; -----------------------------------------------------------
 ;;; org-babel
 ;;

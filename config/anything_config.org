@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/01 04:49:05$
+# $Lastupdate: 2013/01/02 19:18:02$
 # License: Expat
 #
 #+TITLE: Anythingの設定
@@ -70,18 +70,14 @@ title: Anythingの設定
        (setq anything-su-or-sudo "sudo")
      #+END_SRC
 ** migemoの利用
-   C/Migemo があったら =anything-migemo= を有効に
+   C/Migemo があって, =migemo= が load 済みならば
+   =anything-migemo= を有効に.
      #+BEGIN_SRC emacs-lisp
        (require 'anything-match-plugin nil t)
-       (when (and (locate-library "migemo")
-                  (executable-find "cmigemo"))
-         (my:load-org-file "migemo_config.org")
+       (when (and (executable-find "cmigemo")
+                  (featurep 'migemo))
          (require 'anything-migemo nil t))
      #+END_SRC
-** キーバインドを anything
-   #+BEGIN_SRC emacs-lisp
-     (require 'descbinds-anything)
-   #+END_SRC
 * Footnotes
 
 [fn:1] Anything - EmacsWiki: [[http://emacswiki.org/emacs/Anything]]

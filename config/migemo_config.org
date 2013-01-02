@@ -1,16 +1,16 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/11/17 22:35:53$
+# $Lastupdate: 2013/01/02 19:29:13$
 # License: Expat.
-#+TITLE: Migemo の設定
+#+TITLE: C/Migemo の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
 #+SETUPFILE: ./export-config.org
 #+BEGIN_HTML
 ---
 layout: emacs
-title: Migemo の設定
+title: C/Migemo の設定
 ---
 #+END_HTML
 * はじめに
@@ -21,14 +21,6 @@ title: Migemo の設定
 
   ちなみに, Debian パッケージを使う場合には, 以下の設定は不要.
   install するだけで良きにはからってくれる(ようにしてある, ハズ).
-* インストール
-  Ruby版の本家Migemo はバージョンによっては UTF-8 で動作しないので
-  C/Migemo じゃない時には使わないように.
-  #+BEGIN_SRC emacs-lisp
-    (unless (locate-library "migemo")
-      (if (executable-find "cmigemo")
-          (el-get 'sync 'migemo)))
-  #+END_SRC
 * ユーザ辞書を使わない
   #+BEGIN_SRC emacs-lisp
   (eval-after-load "migemo"
@@ -48,18 +40,9 @@ title: Migemo の設定
   #+END_SRC
 * 読み込み
   #+BEGIN_SRC emacs-lisp
-  (eval-after-load "migemo"
-    '(progn
-       (file-executable-p "/usr/bin/cmigemo")
-       (setq migemo-command "/usr/bin/cmigemo")
-       (setq migemo-options '("-q" "--emacs"))
-       (setq migemo-dictionary "/usr/share/cmigemo/utf-8/migemo-dict")
-       (setq migemo-coding-system 'utf-8-unix))
-    )
-  (when (file-executable-p "/usr/bin/cmigemo")
     (load-library "migemo")
     (migemo-init)
-    (add-hook 'isearch-mode-hook 'migemo-init))
+    (add-hook 'isearch-mode-hook 'migemo-init)
   #+END_SRC
 * Footnotes
 

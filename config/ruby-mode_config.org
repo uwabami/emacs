@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/08/22 13:50:26$
+# $Lastupdate: 2013/01/02 21:13:30$
 # License: Expat
 #
 #+TITLE: Ruby関連の設定
@@ -45,8 +45,6 @@ title: Ruby関連の設定
   対応する括弧や end を補完してくれる.
   これは ruby のソースの SVN HEAD から.
   #+BEGIN_SRC emacs-lisp
-    (unless (locate-library "ruby-electric")
-      (el-get 'sync 'ruby-electric))
     (when (require 'ruby-electric nil t)
       (add-hook 'ruby-mode-hook
                 '(lambda ()
@@ -55,8 +53,6 @@ title: Ruby関連の設定
 * ruby-block
   対応する end をハイライトしてくれる素敵elisp
   #+BEGIN_SRC emacs-lisp
-    (unless (locate-library "ruby-block")
-      (el-get 'sync 'ruby-block))
     (when (require 'ruby-block nil t)
       (setq ruby-block-mode-highlight-toggle t)
       (defun ruby-mode-hook-ruby-block ()
@@ -65,8 +61,6 @@ title: Ruby関連の設定
   #+END_SRC
 * rd-mode
   #+BEGIN_SRC emacs-lisp
-     (unless (locate-library "rd-mode")
-       (el-get 'sync 'rd-mode))
      (eval-when-compile
        (require 'rd-mode))
      (autoload 'rd-mode "rd-mode" "major mode for ruby document formatter RD" nil t)
@@ -77,10 +71,6 @@ title: Ruby関連の設定
   #+END_SRC
 * rabbit-mode
   #+BEGIN_SRC emacs-lisp
-     (unless (locate-library "rabbit-mode")
-       (el-get 'sync 'rabbit-mode))
-     (eval-when-compile
-       (require 'rabbit-mode))
      (autoload 'rabbit-mode "rabbit-mode" "major mode for Rabbit" nil t)
      (add-to-list 'auto-mode-alist
                   '("\\.\\(rbt\\|rab\\)$" . rabbit-mode))

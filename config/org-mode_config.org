@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/01 04:39:02$
+# $Lastupdate: 2013/01/03 18:32:35$
 # License: Expat
 #
 #+TITLE: org-modeの設定
@@ -281,7 +281,7 @@ title: org-modeの設定
             ("public"
              :base-directory ,my:org-publish-webpage
              :recursive t
-             :exclude ".*\.el\\|^Makefile\\|.*\.gpg\\|sitemap\.org\\|^cc-env\\|^images\\|^_site\\|^README\.org\\|^export-config\.org"
+             :exclude ".*\.el\\|^Makefile\\|.*\.gpg\\|sitemap\.org\\|^cc-env\\|^images\\|^_site\\||^export-config\.org"
              :base-extension "org"
              :headline-level 4
              :htmlized-source t

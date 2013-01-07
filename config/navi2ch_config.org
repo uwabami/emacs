@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI <uwabami@gfd-dennou.org> All rights reserved.
-# $Lastupdate: 2013/01/03 00:36:59$
+# $Lastupdate: 2013/01/05 23:28:31$
 # License: Expat
 #
 # Permission is hereby granted, free of charge, to any person obtaining
@@ -80,10 +80,12 @@ title: navi2chの設定
   #+END_SRC
 * モナーフォント?
   #+BEGIN_SRC emacs-lisp
-    (eval-after-load "navi2ch"
-      (setq navi2ch-mona-enable t
-            ;; navi2ch-mona-face-variable 'navi2ch-mona16-face
-            ))
+    (when window-system
+      (eval-after-load "navi2ch"
+        '(progn
+           (set-face-attribute 'navi2ch-article-face nil :family "Monapo")
+           (aput 'face-font-rescale-alist '((".*Monapo.*" 1.2)))
+           )))
   #+END_SRC
 * ローカルルールの参照
   #+BEGIN_SRC emacs-lisp

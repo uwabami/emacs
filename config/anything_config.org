@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/02 19:18:02$
+# $Lastupdate: 2013/01/21 18:01:46$
 # License: Expat
 #
 #+TITLE: Anythingの設定
@@ -32,37 +32,36 @@ title: Anythingの設定
      #+END_SRC
 ** 読み込み
    anything-config で一通りの設定を読み込み.
-     #+BEGIN_SRC emacs-lisp
-      (require 'anything-config)
-     #+END_SRC
+   #+BEGIN_SRC emacs-lisp
+     (require 'anything-config)
+   #+END_SRC
 ** 雑多な設定
-     #+BEGIN_SRC emacs-lisp
-       (setq
-        ;; 候補を表示するまでの時間を 0.5 → 0.2 に
-        anything-idle-delay 0.2
-        ;; タイプしてから再描画するまでの時間を 0.1 に(default)
-        anything-input-idle-delay 0.1
-        ;; 最大候補表示数 50 (default)
-        anything-candidate-number-limit 50
-        ;; 体感速度向上
-        anything-quick-update t
-        ;; 選択候補のショートカットをアルファベットに
-        ;; これ大文字ファイル名の選択で嵌らないか?
-        anything-enable-shortcuts 'alphabet)
-     #+END_SRC
+   #+BEGIN_SRC emacs-lisp
+     (setq
+      ;; 候補を表示するまでの時間を 0.5 → 0.2 に
+      anything-idle-delay 0.2
+      ;; タイプしてから再描画するまでの時間を 0.1 に(default)
+      anything-input-idle-delay 0.1
+      ;; 最大候補表示数 50 (default)
+      anything-candidate-number-limit 50
+      ;; 体感速度向上
+      anything-quick-update t
+      ;; 選択候補のショートカットをアルファベットに
+      anything-enable-shortcuts 'alphabet)
+   #+END_SRC
 ** キーバインド
    C-o, C-z はそれぞれ elscreen と howm にわたすので nil に
-     #+BEGIN_SRC emacs-lisp
-       (define-key global-map   (kbd "C-x b")       'anything-for-files)
-       (define-key global-map   (kbd "C-x C-b")     'anything-for-files)
-       (define-key global-map   (kbd "C-x M-b")     'ibuffer-other-window)
-       (define-key global-map   (kbd "M-y")         'anything-show-kill-ring)
-       (define-key anything-map (kbd "C-l")         'anything-execute-persistent-action)
-       (define-key anything-map (kbd "C-z") nil) ; → howm の prefix
-       (define-key anything-map (kbd "C-o") nil) ; → elscreen の prefix
-       (define-key anything-map (kbd "C-M-n")       'anything-next-source)
-       (define-key anything-map (kbd "C-M-p")       'anything-previous-source)
-    #+END_SRC
+   #+BEGIN_SRC emacs-lisp
+     (define-key global-map   (kbd "C-x b")       'anything-for-files)
+     (define-key global-map   (kbd "C-x C-b")     'anything-for-files)
+     (define-key global-map   (kbd "C-x M-b")     'ibuffer-other-window)
+     (define-key global-map   (kbd "M-y")         'anything-show-kill-ring)
+     (define-key anything-map (kbd "C-l")         'anything-execute-persistent-action)
+     (define-key anything-map (kbd "C-z") nil) ; → howm の prefix
+     (define-key anything-map (kbd "C-o") nil) ; → elscreen の prefix
+     (define-key anything-map (kbd "C-M-n")       'anything-next-source)
+     (define-key anything-map (kbd "C-M-p")       'anything-previous-source)
+   #+END_SRC
 ** su→sudo
      #+BEGIN_SRC emacs-lisp
        (setq tramp-persistency-file-name

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/03 01:52:48$
+# $Lastupdate: 2013/01/22 00:45:42$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -40,6 +40,8 @@ title: Emacsの基本設定
   #+END_SRC
 * Recentf-Ext:  [[http://d.hatena.ne.jp/rubikitch/20091224/recentf][人は俺を「recentfマスター」と呼ぶ]]
   #+BEGIN_SRC emacs-lisp
+    (setq recentf-save-file
+          (expand-file-name (concat my:user-emacs-temporary-directory "recentf")))
     (el-get 'sync 'recentf-ext)
     (require 'recentf-ext nil t)
   #+END_SRC
@@ -177,6 +179,35 @@ title: Emacsの基本設定
     (setq elscreen-prefix-key (kbd "C-o"))
     (setq elscreen-display-tab 4)
     (require 'elscreen)
+
+    (defun elscreen-current-directory ()
+      (let* (current-dir
+             (active-file-name
+              (with-current-buffer
+                  (let* ((current-screen (car (elscreen-get-conf-list 'screen-history)))
+                         (property (cadr (assoc current-screen
+                                                (elscreen-get-conf-list 'screen-property)))))
+                    (marker-buffer (nth 2 property)))
+                (progn
+                  (setq current-dir (expand-file-name (cadr (split-string (pwd)))))
+                  (buffer-file-name)))))
+        (if active-file-name
+            (file-name-directory active-file-name)
+          current-dir)))
+
+    (defun non-elscreen-current-directory ()
+      (let* (current-dir
+             (current-buffer
+              (nth 1 (assoc 'buffer-list
+                            (nth 1 (nth 1 (current-frame-configuration))))))
+             (active-file-name
+              (with-current-buffer current-buffer
+                (progn
+                  (setq current-dir (expand-file-name (cadr (split-string (pwd)))))
+                  (buffer-file-name)))))
+        (if active-file-name
+            (file-name-directory active-file-name)
+          current-dir)))
   #+END_SRC
 * [[http://d.hatena.ne.jp/mooz/20101003/p1][zlc.el で Emacs のミニバッファ補完 zsh ライクに]]
   #+BEGIN_SRC emacs-lisp

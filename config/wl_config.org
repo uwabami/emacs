@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/03 00:45:31$
+# $Lastupdate: 2013/01/11 18:30:17$
 # License: Expat.
 #
 #+TITLE: Wanderlust の設定

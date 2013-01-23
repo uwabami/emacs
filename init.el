@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2013/01/23 23:27:43$
+;; $Lastupdate: 2013/01/24 02:23:52$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -53,7 +53,6 @@
 ;; 他にも以下の変数を定義
 ;; - my:user-emacs-config-directory    → ~/.emacs.d/config
 ;; - my:user-emacs-temporary-directory → ~/.emacs.d/tmp
-;; - my:user-emacs-etc-directory       → ~/.emacs.d/etc
 ;; - my:user-emacs-share-directory     → ~/.emacs.d/share
 ;;
 (when oldemacs-p
@@ -63,8 +62,6 @@
   (expand-file-name (concat user-emacs-directory "config/")))
 (defconst my:user-emacs-temporary-directory
   (expand-file-name (concat user-emacs-directory "tmp/")))
-(defconst my:user-emacs-etc-directory
-  (expand-file-name (concat user-emacs-directory "etc/")))
 (defconst my:user-emacs-share-directory
   (expand-file-name (concat user-emacs-directory "share/")))
 ;; -----------------------------------------------------------
@@ -95,8 +92,7 @@
 ;; -----------------------------------------------------------
 ;;; el-get の install
 ;;
-(setq-default el-get-dir (concat user-emacs-directory "el-get")
-              el-get-emacswiki-base-url
+(setq-default el-get-emacswiki-base-url
               "http://raw.github.com/emacsmirror/emacswiki.org/master/")
 (unless (require 'el-get nil 'noerror)
   (with-current-buffer
@@ -114,30 +110,14 @@
 ;; proxy 環境下を考慮して github は https でアクセス
 ;;
 (setq el-get-github-default-url-type 'https)
-;;
 ;; -----------------------------------------------------------
-;;; bundle - nice el-get wrapper!
-;; @see https://github.com/tarao/bundle-el
+;;; bundle - a nice el-get wrapper
+;;
+;;  @see https://github.com/tarao/bundle-el
 ;;
 (add-to-list 'el-get-sources
              '(:name bundle :type github :pkgname "tarao/bundle-el"))
 (el-get 'sync 'bundle)
-;;
-;; Check library is already installed via other package system
-;; befor `bundle
-;;
-(defadvice bundle (around bundle-around)
-  "If package is already installed via other pacakge system (e.g. deb/RPM),
-  do nothing."
-  (unless (locate-library (symbol-name (ad-get-arg 0)))
-    ad-do-it))
-;;
-;; (defun my:el-get-sync (list)
-;;   "Check packge is already installed via other pacakge system (e.g. deb/RPM)"
-;;   (interactive "p")
-;;   (dolist (package list)
-;;     (unless (locate-library (symbol-name package))
-;;       (el-get 'sync package))))
 ;; -----------------------------------------------------------
 ;;; org-babel
 ;;

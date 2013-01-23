@@ -1,0 +1,8 @@
+(:name ddskk
+       :description "Github mirror for Daredevil SKK"
+       :type github
+       :pkgname "hsaito/ddskk"
+       :autoloads nil
+       :build `(,(concat el-get-emacs
+                  " -batch -q -no-site-file -l SKK-MK -f SKK-MK-compile"))
+       )

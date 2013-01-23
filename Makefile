@@ -1,13 +1,15 @@
 # -*- mode: makefile -*-
 __ALLSRC__	:= $(wildcard *.el)
 include $(HOME)/.emacs.d/Mkinclude
-TARGET_DIR	:= site-lisp config
+TARGET_DIR	:= modules config
 
-all: TARGET $(ELCFiles)
+all: bootstrap TARGET $(ELCFiles)
 
-bootstrap:
-	( cd site-lisp && $(MAKE) ) 
+bootstrap: .bootstrap
+.bootstrap:
+	( cd modules && $(MAKE) ) 
 	$(EMACS) -nw
+	touch $@
 
 update:
 	git submodule foreach 'git fetch --all && git rebase origin/master'
@@ -33,4 +35,5 @@ distclean: clean
 	@for d in $(TARGET_DIR) ;\
 		do $(MAKE) clean -C $$d ;\
 	done
-	rm -fr tmp/* el-get
+	@rm -fr tmp/* bundle el-get auto-save-list
+	@rm -f .bootstrap

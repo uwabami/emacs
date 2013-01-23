@@ -13,7 +13,7 @@ bootstrap: .bootstrap
 
 update:
 	git submodule foreach 'git fetch --all && git rebase origin/master'
-	rm -f $(HOME)/.emacs.d/site-lisp/*-stamp
+	rm -f $(HOME)/.emacs.d/modules/*-stamp
 
 gc:
 	git submodule foreach 'git gc ; git repack'

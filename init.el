@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2013/01/12 04:24:03$
+;; $Lastupdate: 2013/01/23 23:27:43$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -27,20 +27,14 @@
 ;; -----------------------------------------------------------
 ;;; byte-compile 関連
 ;;
-;; 必要になることが多いので cl だけは読み込んでおく
-;;
-(require 'cl)
-;;
-;; 警告, Compile-Log の非表示
-;;
-(eval-when-compile (byte-compile-disable-warning 'cl-functions))
+;; Compile-Log の非表示
 (let ((win (get-buffer-window "*Compile-Log*")))
   (when win (delete-window win)))
 ;; -----------------------------------------------------------
 ;;; 自己紹介 -> 名前とメールアドレスの設定
 ;;
-(setq user-full-name "Youhei SASAKI")
-(setq user-mail-address "uwabami@gfd-dennou.org")
+(setq user-full-name (concat (getenv "DEBFULLNAME")))
+(setq user-mail-address (concat (getenv "DEBEMAIL")))
 ;; -----------------------------------------------------------
 ;;; Emacs の種類/バージョンを判別するための変数を定義
 ;;
@@ -63,7 +57,8 @@
 ;; - my:user-emacs-share-directory     → ~/.emacs.d/share
 ;;
 (when oldemacs-p
-  (defvar user-emacs-directory (expand-file-name "~/.emacs.d/")))
+  (defvar user-emacs-directory
+    (expand-file-name (concat (getenv "HOME") "/.emacs.d/"))))
 (defconst my:user-emacs-config-directory
   (expand-file-name (concat user-emacs-directory "config/")))
 (defconst my:user-emacs-temporary-directory
@@ -72,8 +67,6 @@
   (expand-file-name (concat user-emacs-directory "etc/")))
 (defconst my:user-emacs-share-directory
   (expand-file-name (concat user-emacs-directory "share/")))
-(defconst my:user-emacs-template-directory
-  (expand-file-name (concat user-emacs-directory "template/")))
 ;; -----------------------------------------------------------
 ;;; load-path 追加用の関数の定義
 ;;
@@ -96,22 +89,55 @@
 ;;
 (add-to-load-path
  "config"                  ; 分割した設定群の置き場所.
- "site-lisp/org-mode/lisp" ; org-mode (Git HEAD)
+ "modules/org-mode/lisp"   ; org-mode (Git HEAD)
  "el-get/el-get"           ; el-get 本体
  )
 ;; -----------------------------------------------------------
 ;;; el-get の install
 ;;
+(setq-default el-get-dir (concat user-emacs-directory "el-get")
+              el-get-emacswiki-base-url
+              "http://raw.github.com/emacsmirror/emacswiki.org/master/")
 (unless (require 'el-get nil 'noerror)
   (with-current-buffer
       (url-retrieve-synchronously
-       "http://raw.github.com/dimitri/el-get/master/el-get-install.el")
+       "https://raw.github.com/dimitri/el-get/master/el-get-install.el")
     (let (el-get-master-branch)
-      (goto-char (point-max))
-      (eval-print-last-sexp))))
+     (goto-char (point-max))
+     (eval-print-last-sexp))))
+;;
+;; recipe の置き場所: default
+;;
 (add-to-list 'el-get-recipe-path
              (expand-file-name (concat user-emacs-directory "recipes")))
+;;
+;; proxy 環境下を考慮して github は https でアクセス
+;;
 (setq el-get-github-default-url-type 'https)
+;;
+;; -----------------------------------------------------------
+;;; bundle - nice el-get wrapper!
+;; @see https://github.com/tarao/bundle-el
+;;
+(add-to-list 'el-get-sources
+             '(:name bundle :type github :pkgname "tarao/bundle-el"))
+(el-get 'sync 'bundle)
+;;
+;; Check library is already installed via other package system
+;; befor `bundle
+;;
+(defadvice bundle (around bundle-around)
+  "If package is already installed via other pacakge system (e.g. deb/RPM),
+  do nothing."
+  (unless (locate-library (symbol-name (ad-get-arg 0)))
+    ad-do-it))
+;;
+;; (defun my:el-get-sync (list)
+;;   "Check packge is already installed via other pacakge system (e.g. deb/RPM)"
+;;   (interactive "p")
+;;   (dolist (package list)
+;;     (unless (locate-library (symbol-name package))
+;;       (el-get 'sync package))))
 ;; -----------------------------------------------------------
 ;;; org-babel
 ;;

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/21 18:01:46$
+# $Lastupdate: 2013/01/24 05:19:29$
 # License: Expat
 #
 #+TITLE: Anythingの設定
@@ -20,63 +20,61 @@ title: Anythingの設定
   最近の Emacs 界隈(ドコ?)では,
   「Anything が使えないと人じゃない(違」みたいな空気があって
   挫折しては戻ってきて挫折しては戻ってきて, を繰り返しています.
-* 設定
-** history の位置変更
-     #+BEGIN_SRC emacs-lisp
-       (setq anything-c-adaptive-history-file
-             (concat my:user-emacs-temporary-directory "anything-c-adaptive-history"))
-     #+END_SRC
-** non-X 用の ad hoc な対応
-     #+BEGIN_SRC emacs-lisp
-       (setq anything-c-find-files-icons-directory nil)
-     #+END_SRC
-** 読み込み
-   anything-config で一通りの設定を読み込み.
-   #+BEGIN_SRC emacs-lisp
-     (require 'anything-config)
-   #+END_SRC
-** 雑多な設定
-   #+BEGIN_SRC emacs-lisp
-     (setq
-      ;; 候補を表示するまでの時間を 0.5 → 0.2 に
-      anything-idle-delay 0.2
-      ;; タイプしてから再描画するまでの時間を 0.1 に(default)
-      anything-input-idle-delay 0.1
-      ;; 最大候補表示数 50 (default)
-      anything-candidate-number-limit 50
-      ;; 体感速度向上
-      anything-quick-update t
-      ;; 選択候補のショートカットをアルファベットに
-      anything-enable-shortcuts 'alphabet)
-   #+END_SRC
-** キーバインド
-   C-o, C-z はそれぞれ elscreen と howm にわたすので nil に
-   #+BEGIN_SRC emacs-lisp
-     (define-key global-map   (kbd "C-x b")       'anything-for-files)
-     (define-key global-map   (kbd "C-x C-b")     'anything-for-files)
-     (define-key global-map   (kbd "C-x M-b")     'ibuffer-other-window)
-     (define-key global-map   (kbd "M-y")         'anything-show-kill-ring)
-     (define-key anything-map (kbd "C-l")         'anything-execute-persistent-action)
-     (define-key anything-map (kbd "C-z") nil) ; → howm の prefix
-     (define-key anything-map (kbd "C-o") nil) ; → elscreen の prefix
-     (define-key anything-map (kbd "C-M-n")       'anything-next-source)
-     (define-key anything-map (kbd "C-M-p")       'anything-previous-source)
-   #+END_SRC
-** su→sudo
-     #+BEGIN_SRC emacs-lisp
-       (setq tramp-persistency-file-name
-             (concat my:user-emacs-temporary-directory "tramp"))
-       (setq anything-su-or-sudo "sudo")
-     #+END_SRC
-** migemoの利用
-   C/Migemo があって, =migemo= が load 済みならば
-   =anything-migemo= を有効に.
-     #+BEGIN_SRC emacs-lisp
-       (require 'anything-match-plugin nil t)
-       (when (and (executable-find "cmigemo")
-                  (featurep 'migemo))
-         (require 'anything-migemo nil t))
-     #+END_SRC
+* install
+  #+BEGIN_SRC emacs-lisp
+    (unless (locate-library "anything")
+      (bundle anything))
+  #+END_SRC
+* history の位置変更
+  #+BEGIN_SRC emacs-lisp
+    (setq anything-c-adaptive-history-file
+          (concat my:user-emacs-temporary-directory "anything-c-adaptive-history"))
+  #+END_SRC
+* non-X 用の ad hoc な対応
+  #+BEGIN_SRC emacs-lisp
+    (setq anything-c-find-files-icons-directory nil)
+  #+END_SRC
+* 読み込み
+  anything-config で一通りの設定を読み込み.
+  #+BEGIN_SRC emacs-lisp
+    (require 'anything-config)
+  #+END_SRC
+* 雑多な設定
+  #+BEGIN_SRC emacs-lisp
+    (setq
+     ;; 候補を表示するまでの時間を 0.5 → 0.2 に
+     anything-idle-delay 0.2
+     ;; タイプしてから再描画するまでの時間を 0.1 に(default)
+     anything-input-idle-delay 0.1
+     ;; 最大候補表示数 50 (default)
+     anything-candidate-number-limit 50
+     ;; 体感速度向上
+     anything-quick-update t
+     ;; 選択候補のショートカットをアルファベットに
+     anything-enable-shortcuts 'alphabet)
+  #+END_SRC
+* キーバインド
+  C-o, C-z はそれぞれ elscreen と howm にわたすので nil に
+  #+BEGIN_SRC emacs-lisp
+    (define-key global-map   (kbd "C-x b")       'anything-for-files)
+    (define-key global-map   (kbd "C-x C-b")     'anything-for-files)
+    (define-key global-map   (kbd "C-x M-b")     'ibuffer-other-window)
+    (define-key global-map   (kbd "M-y")         'anything-show-kill-ring)
+    (define-key anything-map (kbd "C-l")         'anything-execute-persistent-action)
+    (define-key anything-map (kbd "C-z") nil) ; → howm の prefix
+    (define-key anything-map (kbd "C-o") nil) ; → elscreen の prefix
+    (define-key anything-map (kbd "C-M-n")       'anything-next-source)
+    (define-key anything-map (kbd "C-M-p")       'anything-previous-source)
+  #+END_SRC
+* migemoの利用
+  C/Migemo があって, =migemo= が load 済みならば
+  =anything-migemo= を有効に.
+    #+BEGIN_SRC emacs-lisp
+      (require 'anything-match-plugin nil t)
+      (when (and (executable-find "cmigemo")
+                 (featurep 'migemo))
+        (require 'anything-migemo nil t))
+    #+END_SRC
 * Footnotes
 
 [fn:1] Anything - EmacsWiki: [[http://emacswiki.org/emacs/Anything]]

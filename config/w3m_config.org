@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/03 00:26:06$
+# $Lastupdate: 2013/01/24 04:05:06$
 # License: Expat
 #
 #+TITLE: emacs-w3mの設定
@@ -49,7 +49,7 @@ title: emacs-w3m の設定
      (setq w3m-form-textarea-directory
            (concat my:user-emacs-temporary-directory "w3m-textarea"))
      (setq w3m-bookmark-file
-           (concat my:user-emacs-etc-directory "w3m/bookmark"))
+           (concat my:user-emacs-temporary-directory "w3m-bookmark"))
    #+END_SRC
 * 右端の 10 文字前で折り返し
   #+BEGIN_SRC emacs-lisp

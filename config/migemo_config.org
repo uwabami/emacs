@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/02 19:29:13$
+# $Lastupdate: 2013/01/24 03:31:50$
 # License: Expat.
 #+TITLE: C/Migemo の設定
 #+AUTHOR: Youhei SASAKI
@@ -17,26 +17,34 @@ title: C/Migemo の設定
   [[http://0xcc.net/migemo][Migemo]] はローマ字のまま日本語をインクリメンタルサーチするためのプログラム.
   ないと結構途方に暮れるのだけれど,
   pure ruby の実装が ruby(>=1.9) だと動作しないので,
-  C/Migemo を使うことにしている[fn:1].
+  C/Migemo を使うことにしている.
+* install
+  Debian パッケージ [fn:1] を使う場合には, 特に設定は不要(なハズ).
+  install するだけで良きにはからってくれる.
 
-  ちなみに, Debian パッケージを使う場合には, 以下の設定は不要.
-  install するだけで良きにはからってくれる(ようにしてある, ハズ).
+  無い場合には el-get.
+  #+BEGIN_SRC emacs-lisp
+    (unless (locate-library "migemo")
+      (el-get 'sync 'migemo))
+  #+END_SRC
 * ユーザ辞書を使わない
   #+BEGIN_SRC emacs-lisp
-  (eval-after-load "migemo"
-    '(progn
-       (setq migemo-user-dictionary nil)
-       (setq migemo-regex-dictionary nil)))
+    (eval-after-load 'migemo
+      (progn
+        (setq migemo-user-dictionary nil)
+        (setq migemo-regex-dictionary nil)
+        ))
   #+END_SRC
 * キャッシュ機能を利用する
   #+BEGIN_SRC emacs-lisp
-  (eval-after-load "migemo"
-    '(progn
-       (setq migemo-use-pattern-alist t)
-       (setq migemo-pattern-alist-file (concat user-emacs-directory "tmp/migemo-pattern"))
-       (setq migemo-use-frequent-pattern-alist t)
-       (setq migemo-frequent-pattern-alist-file (concat user-emacs-directory "tmp/migemo-frequent"))
-       (setq migemo-pattern-alist-length 2048)))
+    (eval-after-load 'migemo
+      (progn
+        (setq migemo-use-pattern-alist t)
+        (setq migemo-pattern-alist-file (concat user-emacs-directory "tmp/migemo-pattern"))
+        (setq migemo-use-frequent-pattern-alist t)
+        (setq migemo-frequent-pattern-alist-file (concat user-emacs-directory "tmp/migemo-frequent"))
+        (setq migemo-pattern-alist-length 2048)
+        ))
   #+END_SRC
 * 読み込み
   #+BEGIN_SRC emacs-lisp

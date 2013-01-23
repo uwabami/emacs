@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/02 23:57:04$
+# $Lastupdate: 2013/01/24 03:11:37$
 # License: Expat
 #
 #+TITLE: DDSKKの設定
@@ -29,12 +29,12 @@ title: DDSKKの設定
   を設定しているので, 設定ファイルの構成は
   #+BEGIN_EXAMPLE
     skk-init-file          ~/.emacs.d/config/ddskk_config.{org,el,elc}
-    skk-jisyo              ~/.emacs.d/etc/skk/jisyo
-    skk-backup-jisyo       ~/.emacs.d/etc/skk/jisyo.bak
-    skk-emacs-id-file      ~/.emacs.d/etc/skk/emacs-id
-    skk-record-file        ~/.emacs.d/etc/skk/record
-    skk-study-file         ~/.emacs.d/etc/skk/study
-    skk-study-backup-file  ~/.emacs.d/etc/skk/study.bak
+    skk-jisyo              ~/.emacs.d/tmp/skk/jisyo
+    skk-backup-jisyo       ~/.emacs.d/tmp/skk/jisyo.bak
+    skk-emacs-id-file      ~/.emacs.d/tmp/skk/emacs-id
+    skk-record-file        ~/.emacs.d/tmp/skk/record
+    skk-study-file         ~/.emacs.d/tmp/skk/study
+    skk-study-backup-file  ~/.emacs.d/tmp/skk/study.bak
   #+END_EXAMPLE
   となっている(このファイルは ddskk.org).
 * byte-compile 用の設定

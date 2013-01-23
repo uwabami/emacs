@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/02 19:59:19$
+# $Lastupdate: 2013/01/24 04:35:52$
 # License: Expat
 #
 #+TITLE: バージョン依存しない(はず)の雑多な設定
@@ -21,17 +21,16 @@ title: バージョン依存しない(はず)の雑多な設定
   慣習的に =0= 以下の数字を指定すると明示的に無効化できる.
 * 常に $HOME から開始
   以前 Meadow を使っていた時に, Cygwin の =$HOME= から始めないと
-  ファイルを開くのが大変だったので, 指定しています.
+  ファイルを開くのが大変だったので, 指定している.
   これを指定していると byte-compile 時に常に =CURDIR= を指定する必要があって,
-  それなりに面倒なのですが, 体が慣れてしまったので残しています.
+  それなりに面倒なのだが, 体が慣れてしまったのでこのまま残している.
   #+BEGIN_SRC emacs-lisp
   (cd "~/")
   #+END_SRC
 * キーバインドの設定
   既に手癖になってしまっているので,
-  鬼軍曹.el [fn:1] とかで強制した方が良いのかも, とか, 偶に思いますが, 捨てられません.
-  とはいえ =[home]= と =[end]= は無いと途方に暮れます.
-  鬼軍曹.el [fn:1] とかで強制した方が良いのかもしれません.
+  鬼軍曹.el [fn:1] とかで強制した方が良いのかも, とか, ごく偶に思うけれども.
+  とはいえ =[home]= と =[end]= は無いと途方に暮れる
   #+BEGIN_SRC emacs-lisp
     (global-set-key (kbd "C-h")     'backward-delete-char)
     (global-set-key (kbd "C-c M-a") 'align-regexp)
@@ -295,19 +294,6 @@ title: バージョン依存しない(はず)の雑多な設定
     (setq savehist-file
           (concat my:user-emacs-temporary-directory "history"))
     (setq history-length t)  ; t で無制限
-  #+END_SRC
-* 履歴の保存先と, 保存量を設定: recentf
-  #+BEGIN_SRC emacs-lisp
-    (add-hook 'after-init-hook 'recentf-mode)
-    '(progn
-       (setq recentf-max-saved-items 2000)
-       (setq recentf-save-file
-             (expand-file-name
-              (concat my:user-emacs-temporary-directory "recentf")))
-       (setq recentf-auto-cleanup 'never)
-       (run-with-idle-timer 300 t 'recentf-save-list)
-       (run-with-idle-timer 600 t 'recentf-cleanup)
-       )
   #+END_SRC
 * Footnotes
 

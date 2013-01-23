@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/11 18:30:17$
+# $Lastupdate: 2013/01/24 05:00:15$
 # License: Expat.
 #
 #+TITLE: Wanderlust の設定
@@ -20,7 +20,7 @@ title: Wanderlustの設定
   一時配布元がどこになるのか良くわかりません.
 
   Emacs24 で動く版は配布先が github になっています. [fn:1]
-* 依存/追加ライブラリの読み込み
+* 依存/追加ライブラリのインストールと読み込み
   インストールしているのは今のところ以下の通り:
   - rail
   - elscreen-wl
@@ -29,7 +29,9 @@ title: Wanderlustの設定
 ** rail
    SEMI や FLIM などの UA の表示に [[http://uwabami.github.com/rail/][rail]] [fn:2]を使っている.
    #+BEGIN_SRC emacs-lisp
-     (eval-and-compile (require 'rail))
+   (unless (locate-library "rail")
+     (bundle rail))
+   (eval-and-compile (require 'rail))
    #+END_SRC
    ちなみに rail を有効にすると, 以下の様に User-Agent が表示される
    #+ATTR_HTML: with="50%"
@@ -41,7 +43,7 @@ title: Wanderlustの設定
    #+BEGIN_SRC emacs-lisp
      (eval-when-compile
        (add-to-list 'load-path
-                    (concat user-emacs-directory "el-get/elscreen-knu-branch")))
+                    (concat user-emacs-directory "el-get/elscreen")))
      (require 'elscreen-wl)
    #+END_SRC
 ** cp5022x を使う
@@ -240,7 +242,8 @@ title: Wanderlustの設定
    #+BEGIN_SRC emacs-lisp
      (setq wl-use-petname t)
      (setq wl-address-file   "~/.mua/Address")
-     (require 'google-contacts-wl)
+     (bundle google-contacts-wl
+       (require 'google-contacts-wl))
    #+END_SRC
    LDAP サーバからアドレスを引くことも可能.
    以前は GCALDaemon を使って local に ldap サーバを上げていたのだけれども,
@@ -340,7 +343,7 @@ title: Wanderlustの設定
   #+END_SRC
   =C-o= を elscreen にあけわたす -> auto-refile は =M-o= で (Mew 風)
   #+BEGIN_SRC emacs-lisp
-     (define-key wl-summary-mode-map "\C-o" elscreen-map)
+    ;;  (define-key wl-summary-mode-map "\C-o" elscreen-map)
   #+END_SRC
   =M-o= で =auto-refile=
   #+BEGIN_SRC emacs-lisp
@@ -678,16 +681,16 @@ title: Wanderlustの設定
 ** face の指定
    実際の色指定は [[https://github.com/uwabami/color-theme-darkpastel][color-theme-darkpastel]] 参照のこと[fn:5]
    color-theme を使わないならば
-   #+BEGIN_EXAMPLE
+   #+BEGIN_SRC emacs-lisp
      (defun my:wl-set-face (face spec)
        (make-face face)
        (cond ((fboundp 'face-spec-set)
               (face-spec-set face spec))
              (t
               (wl-declare-face face spec))))
-   #+END_EXAMPLE
+   #+END_SRC
    とかやっておいて, 以下の様に指定する, とか?
-   #+BEGIN_EXAMPLE
+   #+BEGIN_SRC emacs-lisp
      ;; Mew 風の font-lock
      (my:wl-set-face 'wl-highlight-message-subject-header-contents
                      '((t (:foreground "red" :bold t))))
@@ -767,7 +770,7 @@ title: Wanderlustの設定
                      '((t (:foreground "red"))))
      (my:wl-set-face 'wl-highlight-folder-many-face
                      '((t (:foreground "pink"))))
-   #+END_EXAMPLE
+   #+END_SRC
 * GPG 署名
   以前は mailcrypt を使っていたけれど,
   epa があるので主にキーバインドの設定のみ.

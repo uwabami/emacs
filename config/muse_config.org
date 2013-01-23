@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/02 21:16:00$
+# $Lastupdate: 2013/01/24 05:02:22$
 # License: Expat
 #
 #+TITLE: muse-mode の設定
@@ -14,14 +14,15 @@ layout: emacs
 title: muse-mode の設定
 ---
 #+END_HTML
-
 * 始めに
   [[http://www.gfd-dennou.org/member/uwabami/cc-env/][計算機関連のメモ]] はほとんど全て [[http://mwolson.org/projects/EmacsMuse.html][muse-mode]] [fn:1] で書いています.
 * インストールと読み込み
   #+BEGIN_SRC emacs-lisp
+    (unless (locate-library "muse")
+      (bundle muse))
     (eval-and-compile
      (unless (locate-library "htmlize")
-       (add-to-load-path "site-lisp/org-mode/contrib/lisp")))
+       (add-to-load-path "modules/org-mode/contrib/lisp")))
     (require 'htmlize)
     (require 'muse)
     (require 'muse-mode)

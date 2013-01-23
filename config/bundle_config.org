@@ -1,0 +1,145 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# $Lastupdate: 2013/01/24 05:01:55$
+# License: Expat
+#
+#+TITLE: bundle/el-get で install した雑多な物
+#+AUTHOR: Youhei SASAKI
+#+EMAIL: uwabami@gfd-dennou.org
+#+SETUPFILE: ./export-config.org
+#+BEGIN_HTML
+---
+layout: emacs
+title: bundle/el-get で install した雑多な物
+---
+#+END_HTML
+* 始めに
+  Emacs 24 から =package.el= が公式に同梱されるようになった.
+  これを用いることで, ELPA(Emacs Lisp Package Archive) にある
+  膨大なパッケージ群を導入する事ができる.
+  ...が, 個人的にはちょっと気にくわない.
+  (どこが嫌なのかはそのうちちゃんと考えてまとめておこうと思う).
+
+  そこで =el-get= [fn:1] を使っている
+  (el-get がいかに便利か, をちゃんと書く. 多分 [fn:2] や [fn:3] が参考になる, だろう).
+
+  el-get の install 自体は
+  =~/.emacs.d/init.el= ([[file:~/.emacs.d/EmacsBasic.html][解説]]) で行なっているので,
+  ここでは実際のパッケージの install を記述しておく.
+* [[http://www.morishima.net/~naoto/elscreen-en/][ElScreen]]
+  Emacsのバッファを GNU Screen っぽく扱う素敵 elisp.
+  最近新しいリリースが無い & APEL 依存があるのが難点だろうか.
+
+  ここでは [[https://github.com/knu][MUSHA]] さんが folk している branch から
+  取得する [[https://raw.github.com/uwabami/dot.emacs.d/master/recipes/elscreen.rcp][recipes/elscreen.rcp]] を使っている.
+
+  設定はキーバインドを =\C-o= に変えたくらい.
+  #+BEGIN_SRC emacs-lisp
+    (bundle elscreen
+      (setq elscreen-prefix-key (kbd "C-o"))
+      (setq elscreen-display-tab 4)
+      (require 'elscreen)
+      ;; zsh <-> elscreen の蜜月
+      ;; @see http://d.hatena.ne.jp/syohex/20111026/1319606395
+      (defun elscreen-current-directory ()
+        (let* (current-dir
+               (active-file-name
+                (with-current-buffer
+                    (let* ((current-screen (car (elscreen-get-conf-list 'screen-history)))
+                           (property (cadr (assoc current-screen
+                                                  (elscreen-get-conf-list 'screen-property)))))
+                      (marker-buffer (nth 2 property)))
+                  (progn
+                    (setq current-dir (expand-file-name (cadr (split-string (pwd)))))
+                    (buffer-file-name)))))
+          (if active-file-name
+              (file-name-directory active-file-name)
+            current-dir)))
+      (defun non-elscreen-current-directory ()
+        (let* (current-dir
+               (current-buffer
+                (nth 1 (assoc 'buffer-list
+                              (nth 1 (nth 1 (current-frame-configuration))))))
+               (active-file-name
+                (with-current-buffer current-buffer
+                  (progn
+                    (setq current-dir (expand-file-name (cadr (split-string (pwd)))))
+                    (buffer-file-name)))))
+          (if active-file-name
+              (file-name-directory active-file-name)
+            current-dir)))
+      )
+  #+END_SRC
+* [[http://d.hatena.ne.jp/mooz/20101003/p1][zlc.el で Emacs のミニバッファ補完 zsh ライクに]]
+  #+BEGIN_SRC emacs-lisp
+    (bundle zlc
+      (require 'zlc)
+      (let ((map minibuffer-local-map))
+        (define-key map (kbd "<backtab>") 'zlc-select-previous)
+        (define-key map (kbd "S-<tab>")   'zlc-select-previous)
+        (define-key map (kbd "C-p")       'zlc-select-previous-vertical)
+        (define-key map (kbd "C-n")       'zlc-select-next-vertical)
+        (define-key map (kbd "C-b")       'zlc-select-previous)
+        (define-key map (kbd "C-f")       'zlc-select-next)
+        (define-key map (kbd "C-d")       'zlc-reset)))
+  #+END_SRC
+* [[http://d.hatena.ne.jp/tarao/20101011/1286804507][Yet another icompelete]]
+  zlc をさらに素敵にしてくれる.
+  #+BEGIN_SRC emacs-lisp
+   (bundle yaicomplete
+     (require 'yaicomplete nil t)
+     (yaicomplete-mode))
+  #+END_SRC
+* [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727][パスワード管理ツール id-manager.el]]
+  無いと途方に暮れるくらい, 依存しまくり.
+  レシピは [[https://raw.github.com/uwabami/dot.emacs.d/master/recipes/id-manager.rcp][recipes/id-manager.rcp]] を参照の事.
+  #+BEGIN_SRC emacs-lisp
+    (bundle id-manager
+      (require 'id-manager)
+      (global-set-key (kbd "M-7") 'id-manager)
+      (setq idm-database-file
+            (expand-file-name
+             (concat (getenv "HOME") "/.gnupg/idm-db.gpg"))))
+  #+END_SRC
+* [[http://emacswiki.org/emacs/auto-async-byte-compile.el][auto-async-byte-compile.el]]
+  emacs-lisp を編集している時には save 時に勝手に byte-compile
+  #+BEGIN_SRC emacs-lisp
+    (bundle auto-async-byte-compile
+      (require 'auto-async-byte-compile)
+      (add-hook 'emacs-lisp-mode-hook
+                'enable-auto-async-byte-compile-mode))
+  #+END_SRC
+* [[http://d.hatena.ne.jp/rubikitch/20091224/recentf][人は俺を「recentfマスター」と呼ぶ]] [fn:8]
+  recentf-ext
+  #+BEGIN_SRC emacs-lisp
+    (bundle recentf-ext
+            (add-hook 'after-init-hook 'recentf-mode)
+            (progn
+              (setq recentf-max-saved-items 2000)
+              (setq recentf-save-file
+                    (expand-file-name
+                     (concat my:user-emacs-temporary-directory "recentf")))
+              (setq recentf-auto-cleanup 'never)
+              (run-with-idle-timer 300 t 'recentf-save-list)
+              (run-with-idle-timer 600 t 'recentf-cleanup)
+              )
+            (require 'recentf-ext nil t))
+  #+END_SRC
+* Footnotes
+
+[fn:1] el-get: [[http://www.emacswiki.org/emacs/el-get]]
+
+[fn:2] [[http://shishithefool.blogspot.jp/2012/04/el-get-emacs.html][It's just same as dust ahead of a wind: el-get を使って Emacs でパッケージ管理]]
+
+[fn:3] [[http://sheephead.homelinux.org/2012/04/27/6989/][Emacs24で標準となるパッケージ管理システムとその周辺まとめ - sheephead]]
+
+[fn:4] zlc.el で Emacs のミニバッファ補完 zsh ライクに: [[http://d.hatena.ne.jp/mooz/20101003/p1]]
+
+[fn:5] Yet another icompelete: [[http://d.hatena.ne.jp/tarao/20101011/1286804507]]
+
+[fn:6] パスワード管理ツール id-manager.el: [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727]]
+
+[fn:7] auto-async-byte-compile.el: [[http://emacswiki.org/emacs/auto-async-byte-compile.el]]
+
+[fn:8] 人は俺を「recentfマスター」と呼ぶ: [[http://d.hatena.ne.jp/rubikitch/20091224/recentf]]

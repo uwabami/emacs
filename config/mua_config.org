@@ -1,0 +1,56 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# $Lastupdate: 2013/01/24 04:39:50$
+# License: Expat
+#
+#+TITLE: MUA の設定
+#+AUTHOR: Youhei SASAKI
+#+EMAIL: uwabami@gfd-dennou.org
+#+SETUPFILE: ./export-config.org
+#+BEGIN_HTML
+---
+layout: emacs
+title: MUA の設定
+---
+#+END_HTML
+* 始めに
+  MUA として Mew もしくは [[https://github.com/wanderlust/wanderlust][Wanderlust]] を使っている.
+  それぞれの設定ファイルは別にある.
+  ここでは =mail-user-agent= 上記いずれかを呼び出す設定のみをしている.
+
+  Mew の設定自体は
+  Wanderlust の設定自体は [[file:wl_config.org][Wanderlust の設定]] を参照の事
+* MUA の設定
+  =mail-user-agent= での呼出を設定
+  #+BEGIN_SRC emacs-lisp
+    (autoload 'wl "wl" "Wanderlust" t)
+    (autoload 'wl-other-frame "wl" "Wanderlust on new frame" t)
+    (autoload 'wl-draft "wl-draft" "Write draft with Wanderlust." t)
+    (if (boundp 'mail-user-agent)
+        (setq mail-user-agent 'wl-user-agent))
+    (if (boundp 'read-mail-command)
+        (setq read-mail-command 'wl))
+    (if (fboundp 'define-mail-user-agent)
+        (define-mail-user-agent
+          'wl-user-agent
+          'wl-user-agent-compose
+          'wl-draft-send
+          'wl-draft-kill
+          'mail-send-hook))
+  #+END_SRC
+* Wanderlust の呼び出し設定
+  やっていることは
+  - =~/.elmo= の場所の変更
+  - org で書かれた設定ファイルから elisp を抽出して compile
+  - 設定ファイルの位置の変更
+  である.
+
+  Wanderlust の設定自体は [[file:wl_config.org][Wanderlust の設定]] を参照の事
+  #+BEGIN_SRC emacs-lisp
+    (setq elmo-msgdb-directory "~/Mail/elmo")
+    (my:org-babel-tangle-and-compile-file
+     (concat my:user-emacs-config-directory "wl_config.org"))
+    (setq wl-init-file
+          (concat my:user-emacs-config-directory "wl_config"))
+  #+END_SRC

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/02 17:42:47$
+# $Lastupdate: 2013/01/24 04:50:04$
 # License: Expat
 #
 #+TITLE: AutoInsert の設定
@@ -16,7 +16,7 @@ title: AutoInsert の設定
 #+END_HTML
 * 始めに
   ファイル作成時にテンプレートを挿入してくれる素敵機能.
-  テンプレートファイルは =~/.emacs.d/template/= 以下に集約している.
+  テンプレートファイルは =~/.emacs.d/share/template/= 以下に集約している.
 * 読み込み
    #+BEGIN_SRC emacs-lisp
      (require 'autoinsert)
@@ -29,7 +29,7 @@ title: AutoInsert の設定
 * テンプレートディレクトリの設定
   末尾に "/" が必要なので注意
   #+BEGIN_SRC emacs-lisp
-    (setq auto-insert-directory "~/.emacs.d/template/")
+    (setq auto-insert-directory "~/.emacs.d/share/template/")
   #+END_SRC
 * hook の追加
   #+BEGIN_SRC emacs-lisp

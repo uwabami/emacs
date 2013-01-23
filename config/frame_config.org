@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/02 02:30:51$
+# $Lastupdate: 2013/01/24 05:52:43$
 # License: Expat
 #
 #+TITLE: フォントとフレームの設定
@@ -14,34 +14,16 @@ layout: emacs
 title: フォントとフレームの設定
 ---
 #+END_HTML
+* theme
+  #+BEGIN_SRC emacs-lisp
+    ;; (when emacs24-p
+    ;;   (load-theme 'wombat))
+  #+END_SRC
 * カーソルのある位置の face を調べる関数
   #+BEGIN_SRC emacs-lisp
     (defun describe-face-at-point ()
       (interactive)
       (message "%s" (get-char-property (point) 'face)))
-  #+END_SRC
-* [[http://d.hatena.ne.jp/khiker/20090809/emacs_opacity][フレームを半透明にする]] [fn:1]
-  飽きたら止めると思うけれど.
-  #+BEGIN_SRC emacs-lisp
-    (defun my-opacity-change (action)
-      (let* ((op
-              (frame-parameter
-               (selected-frame) 'alpha)) val)
-        (unless op
-          (setq op 100))
-        (when (setq val
-                    (cond
-                     ((eq action 'up)
-                      (if (> op 90) 100 (+ op 10)))
-                     ((eq action 'down)
-                      (if (> 10 op) 10 (- op 10)))
-                     ((eq action 'clear) 100)
-                     ((numberp action) action)
-                     (t nil)))
-          (set-frame-parameter (selected-frame) 'alpha val))))
-    (when window-system
-      (my-opacity-change 95)     ; default の透明度は 90 に
-      )
   #+END_SRC
 * フォントの設定
   #+BEGIN_SRC emacs-lisp
@@ -124,5 +106,3 @@ title: フォントとフレームの設定
     (ad-activate 'font-lock-mode)
   #+END_SRC
 * Footnotes
-
-[fn:1] フレームを半透明にする: http://d.hatena.ne.jp/khiker/20090809/emacs_opacity

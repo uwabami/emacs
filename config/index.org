@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/24 04:57:56$
+# $Lastupdate: 2013/01/24 05:41:00$
 # License: Expat
 #
 #+TITLE: Emacsの基本設定
@@ -28,6 +28,10 @@ title: Emacsの基本設定
 * [[file:basic_config.org][バージョン依存しない(はず)の雑多な設定]]
   #+BEGIN_SRC emacs-lisp
     (my:load-org-file "basic_config.org")
+  #+END_SRC
+* [[file:frame_config.org][フォントとフレームの設定]]
+  #+BEGIN_SRC emacs-lisp
+  (my:load-org-file "frame_config.org")
   #+END_SRC
 * 日本語入力: [[http://openlab.ring.gr.jp/skk/ddskk-ja.html][Daredevil SKK (DDSKK)]]
   SKK をメインで使用中. 無いと途方に暮れる.

@@ -23,7 +23,7 @@
 auto
 *.synctex.gz
 .bootstrap
-*-use
+.*-use
 bundle
 config/*.el
 config/sitemap.org

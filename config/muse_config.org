@@ -24,13 +24,13 @@ title: muse-mode の設定
      (unless (locate-library "htmlize")
        (add-to-load-path "modules/org-mode/contrib/lisp")))
     (require 'htmlize)
-    (require 'muse)
-    (require 'muse-mode)
-    (require 'muse-colors)
-    (require 'muse-project)
-    (require 'muse-html)
-    (require 'muse-latex)
-    (require 'muse-latex2png)
+    (require 'muse nil 'noerror)
+    (require 'muse-mode nil 'noerror)
+    (require 'muse-colors nil 'noerror)
+    (require 'muse-project nil 'noerror)
+    (require 'muse-html nil 'noerror)
+    (require 'muse-latex nil 'noerror)
+    (require 'muse-latex2png nil 'noerror)
   #+END_SRC
 * 雑多な設定
 ** キーバインド

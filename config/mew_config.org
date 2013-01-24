@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/25 03:15:52$
+# $Lastupdate: 2013/01/25 03:54:40$
 # License: Expat
 #
 #+TITLE: Mew の設定
@@ -27,9 +27,9 @@ title: Mew の設定
 ** rail
    SEMI や FLIM などの UA の表示に [[http://uwabami.github.com/rail/][rail]] [fn:2]を使っている.
    #+BEGIN_SRC emacs-lisp
-   (unless (locate-library "rail")
-     (bundle rail))
-   (eval-and-compile (require 'rail))
+     (unless (locate-library "rail")
+       (bundle rail)
+       (require 'rail))
    #+END_SRC
    ちなみに rail を有効にすると, 以下の様に User-Agent が表示される
    #+ATTR_HTML: with="50%"

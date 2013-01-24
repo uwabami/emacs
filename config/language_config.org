@@ -34,7 +34,7 @@ title: 言語の設定
   また, [[http://d.hatena.ne.jp/kiwanami/about][kiwanami]] さんが [[http://d.hatena.ne.jp/kiwanami/20091103/1257243524][Wanderlustと文字コード]] [fn:4]
   というエントリで素晴しい解説を書いて下さっています.
   #+BEGIN_SRC emacs-lisp
-    (bundle 'cp5022x)
+    (bundle cp5022x)
   #+END_SRC
 * East Asian Ambiguos 対応
   CJK 以外の East Asian Ambiguos も2文字幅にするようにしています.

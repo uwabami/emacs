@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/24 05:19:29$
+# $Lastupdate: 2013/01/25 05:46:03$
 # License: Expat
 #
 #+TITLE: Anythingの設定
@@ -22,7 +22,7 @@ title: Anythingの設定
   挫折しては戻ってきて挫折しては戻ってきて, を繰り返しています.
 * install
   #+BEGIN_SRC emacs-lisp
-    (unless (locate-library "anything")
+    (unless (my:dpkg-status 'anything-el)
       (bundle anything))
   #+END_SRC
 * history の位置変更
@@ -37,7 +37,7 @@ title: Anythingの設定
 * 読み込み
   anything-config で一通りの設定を読み込み.
   #+BEGIN_SRC emacs-lisp
-    (require 'anything-config)
+    (require 'anything-config nil 'noerror)
   #+END_SRC
 * 雑多な設定
   #+BEGIN_SRC emacs-lisp

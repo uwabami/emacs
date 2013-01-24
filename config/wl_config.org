@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/25 03:10:19$
+# $Lastupdate: 2013/01/25 06:17:01$
 # License: Expat.
 #
 #+TITLE: Wanderlust の設定
@@ -29,7 +29,7 @@ title: Wanderlustの設定
 ** rail
    SEMI や FLIM などの UA の表示に [[http://uwabami.github.com/rail/][rail]] [fn:2]を使っている.
    #+BEGIN_SRC emacs-lisp
-   (unless (locate-library "rail")
+   (unless (my:dpkg-status 'rail)
      (bundle rail))
    (eval-and-compile (require 'rail))
    #+END_SRC
@@ -650,7 +650,7 @@ title: Wanderlustの設定
 ** c-sig
    署名の選択に c-sig を使用している.
   #+BEGIN_SRC emacs-lisp
-    (unless (locate-library "c-sig")
+    (unless (my:dpkg-status 'c-sig)
       (bundle c-sig))
   #+END_SRC
   設定は以下の通り. Mew 風に =C-c <tab>= で signature を挿入するようにしている

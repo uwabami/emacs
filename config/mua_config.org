@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/25 02:52:08$
+# $Lastupdate: 2013/01/25 03:25:55$
 # License: Expat
 #
 #+TITLE: MUA の設定
@@ -92,6 +92,7 @@ title: MUA の設定
       (progn
         (setq mew-rc-file
               (concat my:user-emacs-config-directory "mew_config"))
+        (setq mew-addrbook-file "~/.mua/Addrbook.mew")
         (my:org-babel-tangle-and-compile-file
          (concat my:user-emacs-config-directory "mew_config.org"))))
   #+END_SRC

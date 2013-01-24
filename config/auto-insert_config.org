@@ -4,14 +4,14 @@
 # $Lastupdate: 2013/01/24 04:50:04$
 # License: Expat
 #
-#+TITLE: AutoInsert の設定
+#+TITLE: Auto-insert の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
 #+SETUPFILE: ./export-config.org
 #+BEGIN_HTML
 ---
 layout: emacs
-title: AutoInsert の設定
+title: Auto-insert の設定
 ---
 #+END_HTML
 * 始めに

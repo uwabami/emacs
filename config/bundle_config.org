@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/24 05:01:55$
+# $Lastupdate: 2013/01/25 03:53:14$
 # License: Expat
 #
 #+TITLE: bundle/el-get で install した雑多な物
@@ -38,7 +38,7 @@ title: bundle/el-get で install した雑多な物
   という点が気にいっています.
 
   ついでに, 設定がそれほど長くならないパッケージに関しては
-  [[https://twitter.com/oarat][@oarat]] さん作の [[https://github.com/tarao/bundle-el][tarao/bundle-el]] を使っています. これは素敵です. 
+  [[https://twitter.com/oarat][@oarat]] さん作の [[https://github.com/tarao/bundle-el][tarao/bundle-el]] を使っています. これは素敵です.
 
   el-get と bundle の install 自体は =~/.emacs.d/init.el= ([[file:~/.emacs.d/EmacsBasic.html][解説]]) で行なっているので,
   ここでは実際のパッケージの install を記述しておきます.
@@ -60,8 +60,8 @@ title: bundle/el-get で install した雑多な物
   インストールと設定.
   elscreen 自体の設定は, 設定はキーバインドを =\C-o= に変えたくらい.
   ついでに
-  =zsh= と =elscreen= の連携も設定している. 
-  元ネタは [[http://d.hatena.ne.jp/syohex/20111026/1319606395][cdeを改良 - Life is very short]] 
+  =zsh= と =elscreen= の連携も設定している.
+  元ネタは [[http://d.hatena.ne.jp/syohex/20111026/1319606395][cdeを改良 - Life is very short]]
   #+BEGIN_SRC emacs-lisp
     (bundle elscreen
       (setq elscreen-prefix-key (kbd "C-o"))
@@ -82,7 +82,7 @@ title: bundle/el-get で install した雑多な物
           (if active-file-name
               (file-name-directory active-file-name)
             current-dir)))
-      
+
       (defun non-elscreen-current-directory ()
         (let* (current-dir
                (current-buffer
@@ -122,20 +122,13 @@ title: bundle/el-get で install した雑多な物
   無いと途方に暮れるくらい, 依存しまくり.
   レシピは [[https://raw.github.com/uwabami/dot.emacs.d/master/recipes/id-manager.rcp][recipes/id-manager.rcp]] を参照の事.
   #+BEGIN_SRC emacs-lisp
-    (bundle id-manager
-      (require 'id-manager)
-      (global-set-key (kbd "M-7") 'id-manager)
-      (setq idm-database-file
-            (expand-file-name
-             (concat (getenv "HOME") "/.gnupg/idm-db.gpg"))))
-  #+END_SRC 
-* [[http://emacswiki.org/emacs/auto-async-byte-compile.el][auto-async-byte-compile.el]] [fn:6]
-  emacs-lisp を編集している時には save 時に勝手に byte-compile
-  #+BEGIN_SRC emacs-lisp
-    (bundle auto-async-byte-compile
-      (require 'auto-async-byte-compile)
-      (add-hook 'emacs-lisp-mode-hook
-                'enable-auto-async-byte-compile-mode))
+    (when (file-exists-p (concat user-emacs-directory ".id-manager-use"))
+      (bundle id-manager
+        (require 'id-manager)
+        (global-set-key (kbd "M-7") 'id-manager)
+        (setq idm-database-file
+              (expand-file-name
+               (concat (getenv "HOME") "/.gnupg/idm-db.gpg")))))
   #+END_SRC
 * [[http://d.hatena.ne.jp/rubikitch/20091224/recentf][人は俺を「recentfマスター」と呼ぶ]] [fn:7]
   recentf と recentf-ext の設定

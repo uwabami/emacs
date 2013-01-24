@@ -1,0 +1,5 @@
+(:name google-contacts-mew
+       :description "Create/Update/Import Mew Address from Google Contacts"
+       :type github
+       :pkgname "masutaka/google-contacts-mew"
+       )

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/24 05:51:22$
+# $Lastupdate: 2013/01/25 03:10:19$
 # License: Expat.
 #
 #+TITLE: Wanderlust の設定
@@ -79,6 +79,12 @@ title: Wanderlustの設定
    text/plain を html より優先
    #+BEGIN_SRC emacs-lisp
      (set-alist 'mime-view-type-subtype-score-alist '(text . html) 0)
+   #+END_SRC
+** google-contacts-wl
+   GoogleContacts から Wanderlust の AddressBook へ変換する
+   #+BEGIN_SRC emacs-lisp
+     (bundle google-contacts-wl
+       (require 'google-contacts-wl))
    #+END_SRC
 * ssl.elの代わりにopentlsを使う
   ついで(あれば) =/etc/ssl/certs/ca-ceritficats.crt= で証明書を検証.
@@ -241,9 +247,7 @@ title: Wanderlustの設定
    アドレス帳 -> google-contacts-wl を使う
    #+BEGIN_SRC emacs-lisp
      (setq wl-use-petname t)
-     (setq wl-address-file   "~/.mua/Address")
-     (bundle google-contacts-wl
-       (require 'google-contacts-wl))
+     (setq wl-address-file   "~/.mua/Address.wl")
    #+END_SRC
    LDAP サーバからアドレスを引くことも可能.
    以前は GCALDaemon を使って local に ldap サーバを上げていたのだけれども,
@@ -343,7 +347,7 @@ title: Wanderlustの設定
   #+END_SRC
   =C-o= を elscreen にあけわたす -> auto-refile は =M-o= で (Mew 風)
   #+BEGIN_SRC emacs-lisp
-    ;;  (define-key wl-summary-mode-map "\C-o" elscreen-map)
+    (define-key wl-summary-mode-map "\C-o" elscreen-map)
   #+END_SRC
   =M-o= で =auto-refile=
   #+BEGIN_SRC emacs-lisp
@@ -646,7 +650,8 @@ title: Wanderlustの設定
 ** c-sig
    署名の選択に c-sig を使用している.
   #+BEGIN_SRC emacs-lisp
-    (eval-when-compile (require 'c-sig))
+    (unless (locate-library "c-sig")
+      (bundle c-sig))
   #+END_SRC
   設定は以下の通り. Mew 風に =C-c <tab>= で signature を挿入するようにしている
   #+BEGIN_SRC emacs-lisp
@@ -662,115 +667,22 @@ title: Wanderlustの設定
                    'insert-signature-eref)))
   #+END_SRC
 * Face の設定
-** header 毎の face の追加
-   color-theme で細かく指定するために, 幾つかの face 定義を追加
-   #+BEGIN_SRC emacs-lisp
-     (setq wl-highlight-message-header-alist
-           '(("Subject[ \t]*:"
-              . wl-highlight-message-subject-header-contents)
-             ("From[ \t]*:"
-              . wl-highlight-message-from-header-contents)
-             ("Date[ \t]*:"
-              . wl-highlight-message-date-header-contents)
-             ("\\(.*To\\|Cc\\|Newsgroups\\)[ \t]*:"
-              . wl-highlight-message-important-header-contents)
-             ("\\(User-Agent\\|X-Mailer\\|X-Newsreader\\)[ \t]*:" .
-              wl-highlight-message-unimportant-header-contents)
-             ))
-   #+END_SRC
-** face の指定
-   実際の色指定は [[https://github.com/uwabami/color-theme-darkpastel][color-theme-darkpastel]] 参照のこと[fn:5]
-   color-theme を使わないならば
-   #+BEGIN_SRC emacs-lisp
-     (defun my:wl-set-face (face spec)
-       (make-face face)
-       (cond ((fboundp 'face-spec-set)
-              (face-spec-set face spec))
-             (t
-              (wl-declare-face face spec))))
-   #+END_SRC
-   とかやっておいて, 以下の様に指定する, とか?
-   #+BEGIN_SRC emacs-lisp
-     ;; Mew 風の font-lock
-     (my:wl-set-face 'wl-highlight-message-subject-header-contents
-                     '((t (:foreground "red" :bold t))))
-     (my:wl-set-face 'wl-highlight-message-from-header-contents
-                     '((t (:foreground "yellow" :bold t))))
-     (my:wl-set-face 'wl-highlight-message-important-header-contents
-                     '((t (:foreground "magenta" :bold t))))
-     (my:wl-set-face 'wl-highlight-message-unimportant-header-contents
-                     '((t (:foreground "grey" :bold t))))
-     (my:wl-set-face 'wl-highlight-message-date-header-contents
-                     '((t (:foreground "green" :bold t))))
-     (my:wl-set-face 'wl-highlight-message-headers
-                     '((t (:foreground "cyan" :bold t))))
-     (my:wl-set-face 'wl-highlight-message-header-contents
-                     '((t (:foreground "grey" :bold t))))
-     ;; citation
-     (my:wl-set-face 'wl-highlight-message-citation-header
-                     '((t (:foreground "lightgreen"))))
-     (my:wl-set-face 'wl-highlight-message-cited-text-1
-                     '((t (:foreground "emerald"))))
-     (my:wl-set-face 'wl-highlight-message-cited-text-2
-                     '((t (:foreground "cyan"))))
-     (my:wl-set-face 'wl-highlight-message-cited-text-3
-                     '((t (:foreground "lightblue"))))
-     (my:wl-set-face 'wl-highlight-message-cited-text-4
-                     '((t (:foreground "blue"))))
-     (my:wl-set-face 'wl-highlight-message-cited-text-5
-                     '((t (:foreground "purple"))))
-     (my:wl-set-face 'wl-highlight-message-cited-text-6
-                     '((t (:foreground "magenta"))))
-     (my:wl-set-face 'wl-highlight-message-cited-text-7
-                     '((t (:foreground "pink"))))
-     (my:wl-set-face 'wl-highlight-message-cited-text-8
-                     '((t (:foreground "red"))))
-     (my:wl-set-face 'wl-highlight-message-cited-text-9
-                     '((t (:foreground "orange"))))
-     (my:wl-set-face 'wl-highlight-message-cited-text-10
-                     '((t (:foreground "yellow"))))
-     (my:wl-set-face 'wl-highlight-message-signature
-                     '((t (:foreground "white"))))
-     ;; summary
-     (my:wl-set-face 'wl-highlight-summary-thread-top-face
-                     '((t (:foreground "white"))))
-     (my:wl-set-face 'wl-highlight-summary-normal-face
-                     '((t (:foreground "white"))))
-     (my:wl-set-face 'wl-highlight-summary-new-face
-                     '((t (:foreground "red"))))
-     (my:wl-set-face 'wl-highlight-summary-unread-face
-                     '((t (:foreground "red"))))
-     (my:wl-set-face 'wl-highlight-summary-important-face
-                     '((t (:foreground "cyan"))))
-     (my:wl-set-face 'wl-highlight-summary-flagged-face
-                     '((t (:foreground "yellow"))))
-     (my:wl-set-face 'wl-highlight-summary-displaying-face
-                     '((t (:underline t))))
-     (my:wl-set-face 'wl-highlight-summary-forwarded-face
-                     '((t (:forground "yellow"))))
-     (my:wl-set-face 'wl-highlight-summary-answered-face
-                     '((t (:forground "lightblue"))))
-     (my:wl-set-face 'wl-highlight-summary-deleted-face
-                     '((t (:foreground "darkblue"))))
-     (my:wl-set-face 'wl-highlight-summary-refiled-face
-                     '((t (:foreground "green"))))
-     (my:wl-set-face 'wl-highlight-summary-target-face
-                     '((t (:foreground "cyan"))))
-     (my:wl-set-face 'wl-highlight-thread-indent-face
-                     '((t (:underline t))))
-     (my:wl-set-face 'wl-highlight-folder-zero-face
-                     '((t (:foreground "white"))))
-     (my:wl-set-face 'wl-highlight-folder-opened-face
-                     '((t (:foreground "cyan"))))
-     (my:wl-set-face 'wl-highlight-folder-unread-face
-                     '((t (:foreground "blue"))))
-     (my:wl-set-face 'wl-highlight-folder-unknown-face
-                     '((t (:foreground "cyan"))))
-     (my:wl-set-face 'wl-highlight-folder-few-face
-                     '((t (:foreground "red"))))
-     (my:wl-set-face 'wl-highlight-folder-many-face
-                     '((t (:foreground "pink"))))
-   #+END_SRC
+  color-theme で細かく指定するために, 幾つかの face 定義を追加.
+  実際の色指定は [[https://github.com/uwabami/color-theme-darkpastel][color-theme-darkpastel]] 参照のこと[fn:5]
+  #+BEGIN_SRC emacs-lisp
+    (setq wl-highlight-message-header-alist
+          '(("Subject[ \t]*:"
+             . wl-highlight-message-subject-header-contents)
+            ("From[ \t]*:"
+             . wl-highlight-message-from-header-contents)
+            ("Date[ \t]*:"
+             . wl-highlight-message-date-header-contents)
+            ("\\(.*To\\|Cc\\|Newsgroups\\)[ \t]*:"
+             . wl-highlight-message-important-header-contents)
+            ("\\(User-Agent\\|X-Mailer\\|X-Newsreader\\)[ \t]*:" .
+             wl-highlight-message-unimportant-header-contents)
+            ))
+  #+END_SRC
 * GPG 署名
   以前は mailcrypt を使っていたけれど,
   epa があるので主にキーバインドの設定のみ.

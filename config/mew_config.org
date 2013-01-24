@@ -1,0 +1,204 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# $Lastupdate: 2013/01/25 03:15:52$
+# License: Expat
+#
+#+TITLE: Mew の設定
+#+AUTHOR: Youhei SASAKI
+#+EMAIL: uwabami@gfd-dennou.org
+#+SETUPFILE: ./export-config.org
+#+BEGIN_HTML
+---
+layout: emacs
+title: Mew の設定
+---
+#+END_HTML
+* 始めに
+  最近は Wanderlust で読み書きすることが多いのですが,
+  サーバ側では Mew を使っています.
+  imap の動作がいまいち慣れないですが, まあこういうモンだと思えば.
+* 依存/外部ライブラリのインストールと読み込み
+  インストールしているのは今の所以下の通り:
+   - rail
+   - elscreen-mew
+   - google-contacts-mew
+   - c-sig
+** rail
+   SEMI や FLIM などの UA の表示に [[http://uwabami.github.com/rail/][rail]] [fn:2]を使っている.
+   #+BEGIN_SRC emacs-lisp
+   (unless (locate-library "rail")
+     (bundle rail))
+   (eval-and-compile (require 'rail))
+   #+END_SRC
+   ちなみに rail を有効にすると, 以下の様に User-Agent が表示される
+   #+ATTR_HTML: with="50%"
+   [[file:https:/raw.github.com/uwabami/rail/gh-pages/images/wanderlust_with_or_without_rail.png]]
+** elscreen-mew
+   elscreen と Mew の連携
+   メール作成時に draft 用の screen を追加して,
+   送信後に screen を閉じる.
+   #+BEGIN_SRC emacs-lisp
+    (unless (locate-library "elscreen-mew")
+      (bundle elscreen-mew
+        (require 'elscreen-mew)))
+   #+END_SRC
+** google-contacts-mew
+   Google Contacts を Mew のアドレス帳にコピーする.
+   個人情報は =~/.mua/mew-info.gpg= に記載
+   #+BEGIN_SRC emacs-lisp
+    (unless (locate-library "google-contacts-mew")
+      (bundle google-contacts-mew
+        (require 'google-contacts-mew)
+        (setq google-contacts-mew-renew-when-status-update t)
+        (setq google-contacts-mew-ask nil)))
+   #+END_SRC
+** c-sig
+   署名の選択に c-sig を使用している.
+  #+BEGIN_SRC emacs-lisp
+    (unless (locate-library "c-sig")
+      (bundle c-sig))
+  #+END_SRC
+   設定は以下の通り
+   #+BEGIN_SRC emacs-lisp
+  ;; c-sig の設定
+  (autoload 'add-signature "c-sig" "c-sig" t)
+  (autoload 'delete-signature "c-sig" "c-sig" t)
+  (autoload 'insert-signature-eref "c-sig" "c-sig" t)
+  (autoload 'insert-signature-automatically "c-sig" "c-sig" t)
+  (autoload 'insert-signature-randomly "c-sig" "c-sig" t)
+  (setq sig-insert-end t)
+  (setq sig-save-to-sig-name-alist nil)
+  (setq message-signature-file nil)
+  (add-hook 'mew-real-send-hook
+    (lambda ()
+        (goto-char (point-min))
+          (insert "X-C-sig-version: " (c-sig-version) "\n")
+    )
+  )
+  (setq mew-draft-mode-hook
+     (function
+      (lambda ()
+         (define-key mew-draft-body-map "\C-c\t" 'insert-signature-eref)
+         (let ((p (point)))
+           (goto-char (point-max))
+           ))))
+   #+END_SRC
+** HTML メールを表示するための設定
+   emacs-w3m が導入されていたら, それを使うようにする.
+  #+BEGIN_SRC emacs-lisp
+    (defvar my:mew-w3m-enabled nil)
+    (when (locate-library "mime-w3m")
+      (require 'mew-w3m)
+      (require 'mime-w3m)
+      (setq my:mew-w3m-enabled t)
+      )
+  #+END_SRC
+* 個人情報
+  具体的な内容は =~/.mua/mew-info.gpg= に書いて読み込んでいる.
+  #+BEGIN_SRC emacs-lisp
+    (setq mew-from user-mail-address)
+    (load (concat (getenv "HOME") "/.mua/mew-info.gpg"))
+  #+END_SRC
+  パスワードはキャッシュする/master-passwd は使わない.
+  #+BEGIN_SRC emacs-lisp
+  (setq mew-use-master-passwd nil)
+  (setq mew-use-cached-passwd t)
+  #+END_SRC
+* 受信/送信の動作設定
+  サイズ制限の回避
+  #+BEGIN_SRC emacs-lisp
+    (setq mew-pop-size 0)   ;; もう POP 使ってないけれど.
+    (setq mew-imap-size 0)
+  #+END_SRC
+  起動時に自動的にメールをとりにいかないように
+  #+BEGIN_SRC emacs-lisp
+  (setq mew-auto-get nil)
+  #+END_SRC
+* 表示
+  マークのついた行に色つけ
+  #+BEGIN_SRC emacs-lisp
+  (setq mew-use-highlight-mark t)
+  #+END_SRC
+  ヘッダに色つけ
+  #+BEGIN_SRC emacs-lisp
+  (setq mew-use-highlight-header t)
+  #+END_SRC
+  本文に色つけ
+  #+BEGIN_SRC emacs-lisp
+  (setq mew-use-highlight-body t)
+  ;; 色付けする深さ: default x10
+  (setq mew-highlight-body-max-size 100000)
+  #+END_SRC
+  URL に色付け
+  #+BEGIN_SRC emacs-lisp
+  (setq mew-use-highlight-url t)
+  #+END_SRC
+  カーソルのある行に下線
+  #+BEGIN_SRC emacs-lisp
+  (setq mew-use-highlight-cursor-line t)
+  #+END_SRC
+  カーソル行にマーク
+  #+BEGIN_SRC emacs-lisp
+  (setq mew-use-cursor-mark t)
+  #+END_SRC
+  すべてのフォルダでマークを色づけする
+  #+BEGIN_SRC emacs-lisp
+  (setq mew-highlight-mark-folder-list t)
+  #+END_SRC
+  Cc: の省略表示をしない.
+  #+BEGIN_SRC emacs-lisp
+  (setq mew-use-header-veil nil)
+  #+END_SRC
+  未読マークを付ける
+  #+BEGIN_SRC emacs-lisp
+  (setq mew-use-unread-mark t)
+  #+END_SRC
+  ヘッダーのカスタマイズ:非表示ヘッダの設定を上に追い出す.
+  #+BEGIN_SRC emacs-lisp
+    ;;   (if (fboundp 'mew-addq)
+    ;;       (progn
+    ;;         ;; (mew-addq mew-field-spec '("^User-Agent:$" nil))
+    ;;         ;; (mew-addq mew-field-spec '("^X-Mailer:$" nil))
+    ;;         (mew-addq mew-field-spec '("^Authentication-Results:$" nil))
+    ;;         (mew-addq mew-field-spec '("^Sender:$" nil))
+    ;;         (mew-addq mew-field-spec '("^Resent-From:$" nil))
+    ;;         (mew-addq mew-field-spec '("^Resent-Sender:$" nil))
+    ;;         (mew-addq mew-field-spec '("^Resent-Date:$" nil))
+    ;;         (setq mew-field-other-visible nil)
+    ;;         ))
+    ;; (setq mew-header-max-depth 4000)
+  #+END_SRC
+  メールのソートは日付で行なう
+  #+BEGIN_SRC emacs-lisp
+  (setq mew-sort-default-key "date")
+  #+END_SRC
+* mime の解釈
+  mime を解釈して外部プログラムを起動する.
+  #+BEGIN_SRC emacs-lisp
+    (setq mew-prog-image/*-ext "display")
+    (setq mew-prog-pdf "evince")
+    (setq mew-prog-msword '("soffice" nil t))
+    (setq mew-prog-msexcel '("soffice" nil t))
+    (setq mew-prog-mspowerpoint '("soffice" nil t))
+    (when my:mew-w3m-enabled
+      (setq mew-prog-html '(mew-mime-text/html-w3m nil nil))
+      (setq mew-use-w3m-minor-mode t)
+      (add-hook 'mew-message-hook 'mew-w3m-minor-mode-setter))
+  #+END_SRC
+* 返信
+  To: には Cc: しない
+  #+BEGIN_SRC emacs-lisp
+  (setq mew-replyto-cc-list '("Cc:"))
+  #+END_SRC
+  引用のしかた
+  #+BEGIN_SRC emacs-lisp
+  (setq mew-cite-fields '("Date:" "From:"))
+  (setq mew-cite-format "Timeline: %s:\n[%s] wrote:\n")
+  (setq mew-addrbook-for-cite-label 'nickname)
+  #+END_SRC
+* 振り分け
+  #+BEGIN_SRC emacs-lisp
+    (load "~/.mua/refile.gpg")
+    (setq mew-refile-guess-alist my:refile-list)
+  #+END_SRC

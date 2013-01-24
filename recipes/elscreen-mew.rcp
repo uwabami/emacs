@@ -1,0 +1,6 @@
+(:name elscreen-mew
+       :description "elscreen plugin for Mew"
+       :type github
+       :pkgname "masutaka/elscreen-mew"
+       :autoloads nil
+       )

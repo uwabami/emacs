@@ -1,0 +1,9 @@
+(:name auto-complete
+       :website "http://cx4a.org/software/auto-complete/"
+       :description "The most intelligent auto-completion extension."
+       :type github
+       :submodule nil
+       :pkgname "auto-complete/auto-complete"
+       :depends (popup fuzzy)
+       :prepare
+       (autoload 'global-auto-complete-mode "auto-complete" nil t))

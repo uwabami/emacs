@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/02 19:35:46$
+# $Lastupdate: 2013/01/25 04:15:51$
 # License: Expat
 #
 #+TITLE: howm の設定
@@ -14,7 +14,6 @@ layout: emacs
 title: howm の設定
 ---
 #+END_HTML
-
 * 始めに
   [[http://howm.sourceforge.jp/index-j.html][Howm]] [fn:1]は お手軽なメモ環境です. 本家によれば
   #+BEGIN_QUOTE
@@ -29,12 +28,10 @@ title: howm の設定
 * ディレクトリの設定
   メモの内容は dropbox で同期することに
   #+BEGIN_SRC emacs-lisp
-    (when (file-exists-p
-           (expand-file-name (concat (getenv "HOME") "/Dropbox/org")))
-      (setq howm-directory "~/Dropbox/org")
-      (setq howm-keyword-file "~/Dropbox/org/.howm-keys")
-      (setq howm-history-file "~/Dropbox/org/.howm-history")
-      (setq howm-menu-file "~/Dropbox/org/.howm-menu"))
+    (setq howm-directory "~/Dropbox/org")
+    (setq howm-keyword-file "~/Dropbox/org/.howm-keys")
+    (setq howm-history-file "~/Dropbox/org/.howm-history")
+    (setq howm-menu-file "~/Dropbox/org/.howm-menu")
     (setq howm-file-name-format "%Y%m%d-%H%M%S.howm")
   #+END_SRC
 * org-mode でメモを書くためにその1

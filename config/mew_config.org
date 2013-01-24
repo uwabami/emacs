@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/25 03:54:40$
+# $Lastupdate: 2013/01/25 04:18:52$
 # License: Expat
 #
 #+TITLE: Mew の設定
@@ -196,9 +196,4 @@ title: Mew の設定
   (setq mew-cite-fields '("Date:" "From:"))
   (setq mew-cite-format "Timeline: %s:\n[%s] wrote:\n")
   (setq mew-addrbook-for-cite-label 'nickname)
-  #+END_SRC
-* 振り分け
-  #+BEGIN_SRC emacs-lisp
-    (load "~/.mua/refile.gpg")
-    (setq mew-refile-guess-alist my:refile-list)
   #+END_SRC

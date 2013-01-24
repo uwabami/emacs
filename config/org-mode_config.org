@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/24 06:42:48$
+# $Lastupdate: 2013/01/25 04:13:21$
 # License: Expat
 #
 #+TITLE: org-modeの設定
@@ -14,6 +14,8 @@ layout: emacs
 title: org-modeの設定
 ---
 #+END_HTML
+* 始めに
+  まだ設定が半端なので, そのうちちゃんと書かないと駄目な気がしている.
 * 基本設定
   #+BEGIN_SRC emacs-lisp
     (require 'org)

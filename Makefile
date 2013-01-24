@@ -35,5 +35,4 @@ distclean: clean
 	@for d in $(TARGET_DIR) ;\
 		do $(MAKE) clean -C $$d ;\
 	done
-	@rm -fr tmp/* bundle el-get 
-	@rm -f .bootstrap
+	rm -fr tmp/* el-get .bootstrap

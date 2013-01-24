@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/24 03:31:50$
+# $Lastupdate: 2013/01/25 01:37:15$
 # License: Expat.
 #+TITLE: C/Migemo の設定
 #+AUTHOR: Youhei SASAKI
@@ -22,7 +22,7 @@ title: C/Migemo の設定
   Debian パッケージ [fn:1] を使う場合には, 特に設定は不要(なハズ).
   install するだけで良きにはからってくれる.
 
-  無い場合には el-get.
+  無い場合には el-get で導入.
   #+BEGIN_SRC emacs-lisp
     (unless (locate-library "migemo")
       (el-get 'sync 'migemo))
@@ -54,4 +54,4 @@ title: C/Migemo の設定
   #+END_SRC
 * Footnotes
 
-[fn:1] C/Migemo の Debian パッケージは私がメンテ中 : [[http://packages.qa.debian.org/c/cmigemo.html]]
+[fn:1] C/Migemo の Debian パッケージは私がメンテ中: [[http://packages.qa.debian.org/c/cmigemo.html]]

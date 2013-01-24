@@ -37,7 +37,7 @@ title: 言語の設定
     (bundle 'cp5022x)
   #+END_SRC
 * East Asian Ambiguos 対応
-  CJK 以外の East Asian Ambiguos も2文字幅にする
+  CJK 以外の East Asian Ambiguos も2文字幅にするようにしています.
   #+BEGIN_SRC emacs-lisp
     (defun set-east-asian-ambiguous-width (width)
       (dolist (range
@@ -84,19 +84,19 @@ title: 言語の設定
     (set-east-asian-ambiguous-width 2)
   #+END_SRC
 * OSの違いに起因する条件分岐
-  Mac と Linux では同じ Unicode でも正規化が異なる.
-  (具体的には Mac のファイルシステムである HFS+ ではUnicode の正規化が異なる).
-
-  日本語のファイル名を扱うことは滅多にないものの,
-  たまに祟りがあるのでそれを回避するための設定をしておく.
-
+  Mac と Linux では同じ Unicode でも正規化が異なります
+  (具体的には Mac のファイルシステムである
+  HFS+ ではUnicode の正規化が異なります).
   Unicode の正規化と Mac OS X 特有の事情については
    - [[http://homepage1.nifty.com/nomenclator/unicode/normalization.htm][Unicode正規化とは]] [fn:5]
    - [[http://www.sakito.com/2010/05/mac-os-x-normalization.html][Mac OS X におけるファイル名に関するメモ(NFC, NFD等)]] [fn:6]
-  等を参考に.
+  等が参考になるでしょう.
+
+  日本語のファイル名を扱うことは滅多にないものの,
+  たまに祟りがあるのでそれを回避するための設定をしています.
 
   Windows の場合はファイル名などは cp932 にしているものの,
-  最近 Windows 使っていないので良く知らない...
+  最近 Windows 使っていないので良く知りません.
   #+BEGIN_SRC emacs-lisp
     (cond
      (darwin-p

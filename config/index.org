@@ -1,23 +1,24 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/24 05:41:00$
+# $Lastupdate: 2013/01/25 01:48:32$
 # License: Expat
 #
-#+TITLE: Emacsの基本設定
+#+TITLE: Emacsの設定 - 主に org ファイルの読み込み集
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
 #+SETUPFILE: ./export-config.org
 #+BEGIN_HTML
 ---
 layout: emacs
-title: Emacsの基本設定
+title: Emacsの基本設定 - 主に org ファイルの読み込み集
 ---
 #+END_HTML
 * 始めに
-  =~/.emacs= → =~/.emacs.d/init.el= ([[http://www.gfd-dennou.org/member/uwabami/cc-env/EmacsBasic.html][解説]]) ときて,
+  =~/.emacs= → =~/.emacs.d/init.el= ([[http://www.gfd-dennou.org/member/uwabami/cc-env/EmacsBasic.html][解説]]) ときて
   このファイルで設定ファイルの読み込みを行なっています.
-* bundle/el-get
+  具体的な設定例は, 個々のファイルをご覧下さい.
+* [[file:bundle_config.org][bundle/el-get で install した雑多な物]]
   #+BEGIN_SRC emacs-lisp
     (my:load-org-file "bundle_config.org")
   #+END_SRC
@@ -29,10 +30,6 @@ title: Emacsの基本設定
   #+BEGIN_SRC emacs-lisp
     (my:load-org-file "basic_config.org")
   #+END_SRC
-* [[file:frame_config.org][フォントとフレームの設定]]
-  #+BEGIN_SRC emacs-lisp
-  (my:load-org-file "frame_config.org")
-  #+END_SRC
 * 日本語入力: [[http://openlab.ring.gr.jp/skk/ddskk-ja.html][Daredevil SKK (DDSKK)]]
   SKK をメインで使用中. 無いと途方に暮れる.
   ちなみにGTKが有効になっていると =gtk-immodule= なんかと衝突するので
@@ -43,18 +40,30 @@ title: Emacsの基本設定
      Emacs*useXIM: false
   #+END_EXAMPLE
   =skk-user-directory= を設定しているので, 辞書や id なんかは
-  =~/.emacs.d/etc/skk= 以下に置かれるが,
+  =~/.emacs.d/tmp/skk= 以下に置かれるが,
   実際の設定は [[file:ddskk_config.org][ddskkの設定]] で行なっている.
 ** install
    ddskk がインストールされていない/古い ddskk が install されている場合には
-   最新版を入手することに.
-   ただし el-get の recipe CVSを使っている(= proxy を越えられない)ので
+   最新版を el-get する.
+   ただし標準の el-get の recipe は
+   CVSを使っている(= 本家 CVS は proxy を越えられない)ので
    [[https://github.com/hsaito/ddskk][github:hsaito/ddskk]] を使わせて頂くことに.
-   recipe は [[https://raw.github.com/uwabami/dot.emacs.d/master/recipes/ddskk.rcp][recipes/ddskk.rcp]] を参照.
-  #+BEGIN_SRC emacs-lisp
+   recipe は [[https://raw.github.com/uwabami/dot.emacs.d/master/recipes/ddskk.rcp][recipes/ddskk.rcp]] を参照:
+   #+BEGIN_EXAMPLE
+   (:name ddskk
+       :description "Github mirror for Daredevil SKK"
+       :type github
+       :pkgname "hsaito/ddskk"
+       :autoloads nil
+       :build `(,(concat el-get-emacs
+                  " -batch -q -no-site-file -l SKK-MK -f SKK-MK-compile"))
+       )
+   #+END_EXAMPLE
+   実際のインストールは以下:
+   #+BEGIN_SRC emacs-lisp
     (unless (locate-library "skk-sticky")
-      (el-get 'sync 'ddskk))
-  #+END_SRC
+      (bundle 'sync 'ddskk))
+   #+END_SRC
 ** 読み込み前の設定
    設定ファイルの位置変更
    #+BEGIN_SRC emacs-lisp
@@ -84,56 +93,23 @@ title: Emacsの基本設定
     (when (executable-find "cmigemo")
       (my:load-org-file "migemo_config.org"))
   #+END_SRC
-* テンプレートの自動挿入: [[file:autoinsert_config.org][autoinsert]]
+
+* テンプレートの自動挿入: [[file:auto-insert_config.org][auto-insert]]
   #+BEGIN_SRC emacs-lisp
-    (my:load-org-file "autoinsert_config.org")
+    (my:load-org-file "auto-insert_config.org")
   #+END_SRC
 * [[file:w3m_config.org][emacs-w3mの設定]]
   #+BEGIN_SRC emacs-lisp
     (when (locate-library "w3m")
       (my:load-org-file "w3m_config.org"))
   #+END_SRC
-* MUAの設定
-  手元では Wanderlust を使っている.
-
-  Wanderlust の設定自体は [[file:wl_config.org][Wanderlust の設定]] を参照の事.
+* [[file:mua_config.org][MUAの設定]]
+  MUA として Mew もしくは Wanderlust を使っている.
+  =mua_config.org= では =mail-user-agent= の呼び出しを必要に応じて switch している.
   #+BEGIN_SRC emacs-lisp
-    (when (and (locate-library "wl")
-               (file-exists-p (concat user-emacs-directory ".wl-use")))
+    (when (or (and (locate-library "wl")
+                   (file-exists-p (concat user-emacs-directory ".wl-use")))
+              (and (locate-library "mew")
+                   (file-exists-p (concat user-emacs-directory ".mew-use"))))
       (my:load-org-file "mua_config.org"))
   #+END_SRC
-* [[file:auto-complete_config.org][AutoComplete]]
-  Debianでは [[http://packages.qa.debian.org/a/auto-complete-el.html][auto-complete-el]] [fn:3] としてパッケージ化されている.
-  #+BEGIN_SRC emacs-lisp
-    (my:load-org-file "auto-complete_config.org")
-  #+END_SRC
-* [[file:anything_config.org][Anything]]
-  Debianでは [[http://packages.qa.debian.org/a/anything-el.html][anything-el]] としてパッケージ化されている.
-  #+BEGIN_SRC emacs-lisp
-    (my:load-org-file "anything_config.org")
-  #+END_SRC
-* [[file:flyspell_config.org][flyspell-mode]]
-  #+BEGIN_SRC emacs-lisp
-    (my:load-org-file "flyspell_config.org")
-  #+END_SRC
-* [[file:lookup_config.org][lookup-el]]
-  =lookup= がインストールされていて, 辞書が存在する場合にだけ読み込む.
-  #+BEGIN_SRC emacs-lisp
-    (if (and (locate-library "lookup")
-             (file-exists-p "/usr/local/share/dict/lookup-enabled"))
-        (my:load-org-file "lookup_config.org"))
-  #+END_SRC
-* [[file:fortran-mode_config.org][fortran-mode]]
-  #+BEGIN_SRC emacs-lisp
-    (my:load-org-file "fortran-mode_config.org")
-  #+END_SRC
-* [[file:flynamke_config.org][flymakeの設定]]
-  #+BEGIN_SRC emacs-lisp
-    (my:load-org-file "flymake_config.org")
-  #+END_SRC
-* [[file:navi2ch_config.org][navi2chの設定]]
-  #+BEGIN_SRC emacs-lisp
-    (if (file-exists-p (concat user-emacs-directory ".navi2ch-use"))
-        (my:load-org-file "navi2ch_config.org"))
-  #+END_SRC
-* Footnotes

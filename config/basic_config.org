@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/25 02:44:29$
+# $Lastupdate: 2013/01/25 03:41:01$
 # License: Expat
 #
 #+TITLE: バージョン依存しない(はず)の雑多な設定
@@ -299,6 +299,7 @@ title: バージョン依存しない(はず)の雑多な設定
 * EPA: EasyPG Assistant
   #+BEGIN_SRC emacs-lisp
     (require 'epa-file)
+    (setq epa-file-enable)
     (setq epa-file-cache-passphrase-for-symmetric-encryption t)
   #+END_SRC
 * Footnotes

@@ -29,11 +29,11 @@ TARGET:
 
 clean:
 	(cd config && $(MAKE) distclean)
-	rm -f $(ELCFiles) *~
+	rm -rf $(ELCFiles) *~ bundle auto-save-list
 
 distclean: clean
 	@for d in $(TARGET_DIR) ;\
 		do $(MAKE) clean -C $$d ;\
 	done
-	@rm -fr tmp/* bundle el-get auto-save-list
+	@rm -fr tmp/* bundle el-get 
 	@rm -f .bootstrap

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI <uwabami@gfd-dennou.org> All rights reserved.
-# $Lastupdate: 2013/01/24 05:04:43$
+# $Lastupdate: 2013/01/24 19:43:29$
 # License: Expat
 #
 # Permission is hereby granted, free of charge, to any person obtaining
@@ -39,9 +39,10 @@ title: navi2chの設定
   ２ちゃんねるナビゲータです。
   #+END_QUOTE
 * install
+  bundle で install
   #+BEGIN_SRC emacs-lisp
     (unless (locate-library "navi2ch")
-      (bundle navi2ch))
+       (bundle navi2ch))
   #+END_SRC
 * 読み込み
   #+BEGIN_SRC emacs-lisp

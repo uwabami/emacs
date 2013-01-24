@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2013/01/24 02:23:52$
+;; $Lastupdate: 2013/01/25 01:28:09$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -30,6 +30,19 @@
 ;; Compile-Log の非表示
 (let ((win (get-buffer-window "*Compile-Log*")))
   (when win (delete-window win)))
+;; Warning の抑制
+(setq byte-compile-warnings
+      '(not
+        free-vars
+        unresolved
+        callargs
+        redefine
+        ;; obsolete
+        noruntime
+        cl-functions
+        interactive-only
+        ;; make-local
+        ))
 ;; -----------------------------------------------------------
 ;;; 自己紹介 -> 名前とメールアドレスの設定
 ;;

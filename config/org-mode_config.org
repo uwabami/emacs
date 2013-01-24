@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/03 18:32:35$
+# $Lastupdate: 2013/01/24 06:42:48$
 # License: Expat
 #
 #+TITLE: org-modeの設定
@@ -75,12 +75,6 @@ title: org-modeの設定
              :prepend t
              :unnarrowed t
              :kill-buffer t)
-            ("e" "Email" entry
-             (file my:org-capture-howm-file)
-             "* <%<%Y-%m-%d %H:%M:%S>>+ %?\n  %i\n  %a\n\n"
-             :prepend t
-             :unnarrowed t
-             :kill-buffer t)
             ("d" "Diary" entry
              (file my:org-capture-howm-file)
              "* DIARY <%<%Y-%m-%d %H:%M:%S>> %?\n  %i\n  %a\n\n"
@@ -90,6 +84,26 @@ title: org-modeの設定
             ))
   #+END_SRC
 * org-agenda & mobileorg
+  org-ical との連携テスト
+  #+BEGIN_SRC emacs-lisp
+    (setq org-refile-targes
+          (quote (("ToDo.org" :level 1))))
+    (require 'org-icalendar)
+    (defun my-org-export-icalendar ()
+      (interactive)
+      (org-export-icalendar nil "~/Dropbox/org/org-ical.org"))
+    (define-key org-mode-map (kbd "C-c 1") 'my-org-export-icalendar)
+    ;; iCal の説明文
+    (setq org-icalendar-combined-description "OrgModeのスケジュール出力")
+    ;; カレンダーに適切なタイムゾーンを設定する（google 用には nil が必要）
+    (setq org-icalendar-timezone "Asia/Tokyo")
+    ;; DONE になった TODO は出力対象から除外する
+    (setq org-icalendar-include-todo t)
+    ;; （通常は，<>--<> で区間付き予定をつくる．非改行入力で日付がNoteに入らない）
+    (setq org-icalendar-use-scheduled '(event-if-todo))
+    ;; DL 付きで終日予定にする：締め切り日（スタンプで時間を指定しないこと）
+    (setq org-icalendar-use-deadline '(event-if-todo))
+  #+END_SRC
   #+BEGIN_SRC emacs-lisp
     (require 'org-mobile)
     (setq org-mobile-directory

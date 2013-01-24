@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/24 05:52:43$
+# $Lastupdate: 2013/01/24 19:44:18$
 # License: Expat
 #
 #+TITLE: フォントとフレームの設定
@@ -16,8 +16,19 @@ title: フォントとフレームの設定
 #+END_HTML
 * theme
   #+BEGIN_SRC emacs-lisp
-    ;; (when emacs24-p
-    ;;   (load-theme 'wombat))
+    ;; (when (locate-library "color-theme")
+    ;;   (bundle 'color-theme-darkpastel
+    ;;     (progn
+    ;;       (load "term/xterm")
+    ;;       (unless (window-system)
+    ;;         (xterm-register-default-colors))
+    ;;       (when (window-system)
+    ;;         (set-background-color "#242424")
+    ;;         (set-foreground-color "#f6f3e8"))
+    ;;       (setq color-theme-load-all-themes nil)
+    ;;       (setq color-theme-libraries nil)
+    ;;       (require 'color-theme-darkpastel)
+    ;;       (color-theme-darkpastel))))
   #+END_SRC
 * カーソルのある位置の face を調べる関数
   #+BEGIN_SRC emacs-lisp

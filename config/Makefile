@@ -1,8 +1,8 @@
 include $(HOME)/.emacs.d/Mkinclude
 BATCH		:= $(EMACS) --batch -l $(HOME)/.emacs.d/init.el --no-site-file 
 __ALL_SRC__ := index.org
-ELFILES		:= $(filter-out index.el,$(wildcard *.el))
-ELCFILES	:= $(filter-out index.elc,$(wildcard *.elc))
+ELFILES		:= $(wildcard *.el)
+ELCFILES	:= $(wildcard *.elc)
 
 all: index.elc
 	@rm -f *.el

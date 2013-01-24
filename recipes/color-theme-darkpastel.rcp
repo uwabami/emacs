@@ -3,16 +3,4 @@
        :pkgname "uwabami/color-theme-darkpastel"
        :description "darkbackground + pastel color font-lock"
        :autoloads nil
-       :post-init
-       (progn
-         (load "term/xterm")
-         (unless (window-system)
-           (xterm-register-default-colors))
-         (when (window-system)
-           (set-background-color "#242424")
-           (set-foreground-color "#f6f3e8"))
-         (setq color-theme-load-all-themes nil)
-         (setq color-theme-libraries nil)
-         (require 'color-theme-darkpastel)
-         (color-theme-darkpastel))
        )

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/25 04:55:46$
+# $Lastupdate: 2013/01/25 11:35:00$
 # License: Expat
 #
 #+TITLE: フォントとフレームの設定
@@ -14,21 +14,21 @@ layout: emacs
 title: フォントとフレームの設定
 ---
 #+END_HTML
-* theme
+* Theme
+  自作の [[https://github.com/uwabami/color-theme-darkpastel][uwabami/color-theme-darkpastel · GitHub]] を使っている.
   #+BEGIN_SRC emacs-lisp
     (when (locate-library "color-theme")
-      (bundle 'color-theme-darkpastel
-        (progn
-          (load "term/xterm")
-          (unless (window-system)
-            (xterm-register-default-colors))
-          (when (window-system)
-            (set-background-color "#242424")
-            (set-foreground-color "#f6f3e8"))
-          (setq color-theme-load-all-themes nil)
-          (setq color-theme-libraries nil)
-          (require 'color-theme-darkpastel)
-          (color-theme-darkpastel))))
+      (el-get 'sync '(color-theme-darkpastel))
+      (load "term/xterm")
+      (unless (window-system)
+        (xterm-register-default-colors))
+      (when (window-system)
+        (set-background-color "#242424")
+        (set-foreground-color "#f6f3e8"))
+      (setq color-theme-load-all-themes nil)
+      (setq color-theme-libraries nil)
+      (when (require 'color-theme-darkpastel nil t)
+        (color-theme-darkpastel)))
   #+END_SRC
 * カーソルのある位置の face を調べる関数
   #+BEGIN_SRC emacs-lisp

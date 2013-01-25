@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/25 04:18:52$
+# $Lastupdate: 2013/01/25 11:37:49$
 # License: Expat
 #
 #+TITLE: Mew の設定
@@ -27,9 +27,9 @@ title: Mew の設定
 ** rail
    SEMI や FLIM などの UA の表示に [[http://uwabami.github.com/rail/][rail]] [fn:2]を使っている.
    #+BEGIN_SRC emacs-lisp
-     (unless (locate-library "rail")
-       (bundle rail)
-       (require 'rail))
+     (unless (my:dpkg-status 'rail)
+       (el-get 'sync 'rail))
+     (require 'rail nil 'noerror)
    #+END_SRC
    ちなみに rail を有効にすると, 以下の様に User-Agent が表示される
    #+ATTR_HTML: with="50%"
@@ -39,50 +39,48 @@ title: Mew の設定
    メール作成時に draft 用の screen を追加して,
    送信後に screen を閉じる.
    #+BEGIN_SRC emacs-lisp
-    (unless (locate-library "elscreen-mew")
-      (bundle elscreen-mew
-        (require 'elscreen-mew)))
+     (unless (locate-library "elscreen-mew")
+       (el-get 'sync '(elscreen-mew)))
+     (require 'elscreen-mew nil 'noerror)
    #+END_SRC
 ** google-contacts-mew
    Google Contacts を Mew のアドレス帳にコピーする.
    個人情報は =~/.mua/mew-info.gpg= に記載
    #+BEGIN_SRC emacs-lisp
-    (unless (locate-library "google-contacts-mew")
-      (bundle google-contacts-mew
-        (require 'google-contacts-mew)
-        (setq google-contacts-mew-renew-when-status-update t)
-        (setq google-contacts-mew-ask nil)))
+     (el-get 'sync '(google-contacts-mew))
+     (require 'google-contacts-mew nil 'noerror)
+     (setq google-contacts-mew-renew-when-status-update t)
+     (setq google-contacts-mew-ask nil)
    #+END_SRC
 ** c-sig
    署名の選択に c-sig を使用している.
   #+BEGIN_SRC emacs-lisp
-    (unless (locate-library "c-sig")
-      (bundle c-sig))
+    (unless (my:dpkg-status 'c-sig)
+      (el-get 'sync '(c-sig)))
   #+END_SRC
    設定は以下の通り
    #+BEGIN_SRC emacs-lisp
-  ;; c-sig の設定
-  (autoload 'add-signature "c-sig" "c-sig" t)
-  (autoload 'delete-signature "c-sig" "c-sig" t)
-  (autoload 'insert-signature-eref "c-sig" "c-sig" t)
-  (autoload 'insert-signature-automatically "c-sig" "c-sig" t)
-  (autoload 'insert-signature-randomly "c-sig" "c-sig" t)
-  (setq sig-insert-end t)
-  (setq sig-save-to-sig-name-alist nil)
-  (setq message-signature-file nil)
-  (add-hook 'mew-real-send-hook
-    (lambda ()
-        (goto-char (point-min))
-          (insert "X-C-sig-version: " (c-sig-version) "\n")
-    )
-  )
-  (setq mew-draft-mode-hook
-     (function
-      (lambda ()
-         (define-key mew-draft-body-map "\C-c\t" 'insert-signature-eref)
-         (let ((p (point)))
-           (goto-char (point-max))
-           ))))
+     (autoload 'add-signature "c-sig" "c-sig" t)
+     (autoload 'delete-signature "c-sig" "c-sig" t)
+     (autoload 'insert-signature-eref "c-sig" "c-sig" t)
+     (autoload 'insert-signature-automatically "c-sig" "c-sig" t)
+     (autoload 'insert-signature-randomly "c-sig" "c-sig" t)
+     (setq sig-insert-end t)
+     (setq sig-save-to-sig-name-alist nil)
+     (setq message-signature-file nil)
+     (add-hook 'mew-real-send-hook
+       (lambda ()
+           (goto-char (point-min))
+             (insert "X-C-sig-version: " (c-sig-version) "\n")
+       )
+     )
+     (setq mew-draft-mode-hook
+        (function
+         (lambda ()
+            (define-key mew-draft-body-map "\C-c\t" 'insert-signature-eref)
+            (let ((p (point)))
+              (goto-char (point-max))
+              ))))
    #+END_SRC
 ** HTML メールを表示するための設定
    emacs-w3m が導入されていたら, それを使うようにする.

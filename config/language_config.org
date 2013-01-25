@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/24 02:38:22$
+# $Lastupdate: 2013/01/25 11:35:44$
 # License: Expat
 #
 #+TITLE: 言語の設定
@@ -34,7 +34,7 @@ title: 言語の設定
   また, [[http://d.hatena.ne.jp/kiwanami/about][kiwanami]] さんが [[http://d.hatena.ne.jp/kiwanami/20091103/1257243524][Wanderlustと文字コード]] [fn:4]
   というエントリで素晴しい解説を書いて下さっています.
   #+BEGIN_SRC emacs-lisp
-    (bundle cp5022x)
+    (el-get 'sync '(cp5022x))
   #+END_SRC
 * East Asian Ambiguos 対応
   CJK 以外の East Asian Ambiguos も2文字幅にするようにしています.

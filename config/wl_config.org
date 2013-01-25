@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/25 06:17:01$
+# $Lastupdate: 2013/01/25 11:40:10$
 # License: Expat.
 #
 #+TITLE: Wanderlust の設定
@@ -29,9 +29,9 @@ title: Wanderlustの設定
 ** rail
    SEMI や FLIM などの UA の表示に [[http://uwabami.github.com/rail/][rail]] [fn:2]を使っている.
    #+BEGIN_SRC emacs-lisp
-   (unless (my:dpkg-status 'rail)
-     (bundle rail))
-   (eval-and-compile (require 'rail))
+     (unless (my:dpkg-status 'rail)
+       (el-get 'sync '(rail)))
+     (require 'rail nil 'noerror)
    #+END_SRC
    ちなみに rail を有効にすると, 以下の様に User-Agent が表示される
    #+ATTR_HTML: with="50%"
@@ -83,8 +83,8 @@ title: Wanderlustの設定
 ** google-contacts-wl
    GoogleContacts から Wanderlust の AddressBook へ変換する
    #+BEGIN_SRC emacs-lisp
-     (bundle google-contacts-wl
-       (require 'google-contacts-wl))
+     (el-get 'sync '(google-contacts-wl))
+     (require 'google-contacts-wl nil 'noerror)
    #+END_SRC
 * ssl.elの代わりにopentlsを使う
   ついで(あれば) =/etc/ssl/certs/ca-ceritficats.crt= で証明書を検証.
@@ -651,7 +651,7 @@ title: Wanderlustの設定
    署名の選択に c-sig を使用している.
   #+BEGIN_SRC emacs-lisp
     (unless (my:dpkg-status 'c-sig)
-      (bundle c-sig))
+      (el-get 'sync '(c-sig)))
   #+END_SRC
   設定は以下の通り. Mew 風に =C-c <tab>= で signature を挿入するようにしている
   #+BEGIN_SRC emacs-lisp

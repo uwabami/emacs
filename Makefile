@@ -29,7 +29,7 @@ TARGET:
 
 clean:
 	(cd config && $(MAKE) distclean)
-	rm -rf $(ELCFiles) *~ bundle auto-save-list
+	rm -rf $(ELCFiles) *~ auto-save-list
 
 distclean: clean
 	@for d in $(TARGET_DIR) ;\

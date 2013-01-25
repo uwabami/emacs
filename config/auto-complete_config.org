@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/25 05:46:24$
+# $Lastupdate: 2013/01/25 11:24:36$
 # License: Expat
 #
 #+TITLE: AutoCompleteの設定
@@ -21,7 +21,7 @@ title: AutoCompleteの設定
 * install
   #+BEGIN_SRC emacs-lisp
     (unless (my:dpkg-status 'auto-complete-el)
-      (bundle auto-complete))
+      (el-get 'sync 'auto-complete))
   #+END_SRC
 * 読み込みと初期設定
   #+BEGIN_SRC emacs-lisp

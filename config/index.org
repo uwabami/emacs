@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/25 05:39:28$
+# $Lastupdate: 2013/01/25 11:35:23$
 # License: Expat
 #
 #+TITLE: Emacsの設定 - 主に org ファイルの読み込み集
@@ -18,9 +18,9 @@ title: Emacsの基本設定 - 主に org ファイルの読み込み集
   =~/.emacs= → =~/.emacs.d/init.el= ([[http://www.gfd-dennou.org/member/uwabami/cc-env/EmacsBasic.html][解説]]) ときて
   このファイルで設定ファイルの読み込みを行なっています.
   具体的な設定例は, 個々のファイルをご覧下さい.
-* [[file:bundle_config.org][bundle/el-get で install した雑多な物]]
+* [[file:el-get_config.org][el-get で install した物]]
   #+BEGIN_SRC emacs-lisp
-    (my:load-org-file "bundle_config.org")
+    (my:load-org-file "el-get_config.org")
   #+END_SRC
 * [[file:language_config.org][言語の設定]]
   #+BEGIN_SRC emacs-lisp
@@ -65,8 +65,8 @@ title: Emacsの基本設定 - 主に org ファイルの読み込み集
    #+END_EXAMPLE
    実際のインストールは以下:
    #+BEGIN_SRC emacs-lisp
-    (unless (locate-library "skk-sticky")
-      (bundle 'sync 'ddskk))
+     (unless (locate-library "skk-sticky")
+       (el-get 'sync 'ddskk))
    #+END_SRC
 ** 読み込み前の設定
    設定ファイルの位置変更

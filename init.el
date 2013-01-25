@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2013/01/25 05:43:58$
+;; $Lastupdate: 2013/01/25 11:23:32$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -124,15 +124,7 @@
 ;;
 (setq el-get-github-default-url-type 'https)
 ;; -----------------------------------------------------------
-;;; bundle - a nice el-get wrapper
-;;
-;;  @see https://github.com/tarao/bundle-el
-;;
-(add-to-list 'el-get-sources
-             '(:name bundle :type github :pkgname "tarao/bundle-el"))
-(el-get 'sync 'bundle)
-;; -----------------------------------------------------------
-;;; Check dpkg status befor el-get
+;;; Check dpkg status by 'el-get-dpkg-package-status
 ;;
 (defun my:dpkg-status (string)
   "Check dpkg status"

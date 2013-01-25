@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/25 11:37:49$
+# $Lastupdate: 2013/01/25 12:31:25$
 # License: Expat
 #
 #+TITLE: Mew の設定
@@ -98,9 +98,9 @@ title: Mew の設定
     (setq mew-from user-mail-address)
     (load (concat (getenv "HOME") "/.mua/mew-info.gpg"))
   #+END_SRC
-  パスワードはキャッシュする/master-passwd は使わない.
+  パスワードはキャッシュする/master-passwd を使う
   #+BEGIN_SRC emacs-lisp
-  (setq mew-use-master-passwd nil)
+  (setq mew-use-master-passwd t)
   (setq mew-use-cached-passwd t)
   #+END_SRC
 * 受信/送信の動作設定
@@ -154,6 +154,16 @@ title: Mew の設定
   #+END_SRC
   ヘッダーのカスタマイズ:非表示ヘッダの設定を上に追い出す.
   #+BEGIN_SRC emacs-lisp
+    (setq mew-field-spec
+          (append '(
+                    ("^Authentication-Results:$" nil)
+                    ("^Sender:$" nil)
+                    ("^Resent-From:$" nil)
+                    ("^Resent-Sender:$" nil)
+                    ("^Resent-Date:$" nil)
+                    )
+                  mew-field-spec))
+    (setq mew-field-other-visible nil)
     ;;   (if (fboundp 'mew-addq)
     ;;       (progn
     ;;         ;; (mew-addq mew-field-spec '("^User-Agent:$" nil))
@@ -165,7 +175,7 @@ title: Mew の設定
     ;;         (mew-addq mew-field-spec '("^Resent-Date:$" nil))
     ;;         (setq mew-field-other-visible nil)
     ;;         ))
-    ;; (setq mew-header-max-depth 4000)
+    ;; (setq mew-header-max-depth 8000)
   #+END_SRC
   メールのソートは日付で行なう
   #+BEGIN_SRC emacs-lisp

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/02 21:13:30$
+# $Lastupdate: 2013/01/25 11:54:00$
 # License: Expat
 #
 #+TITLE: Ruby関連の設定
@@ -22,8 +22,7 @@ title: Ruby関連の設定
   autoload を設定するだけで良い.
   Rakefile は ruby-mode にならないので, auto-mode-alist に追加しておく.
   #+BEGIN_SRC emacs-lisp
-    (eval-when-compile
-      (require 'ruby-mode))
+    (require 'ruby-mode nil 'noerror)
     (autoload 'ruby-mode "ruby-mode"
       "Major mode for ruby files" nil t)
     (add-to-list 'auto-mode-alist
@@ -41,39 +40,34 @@ title: Ruby関連の設定
     (add-to-list 'interpreter-mode-alist
                  '("ruby" . ruby-mode))
   #+END_SRC
-* ruby-electric
-  対応する括弧や end を補完してくれる.
-  これは ruby のソースの SVN HEAD から.
-  #+BEGIN_SRC emacs-lisp
-    (when (require 'ruby-electric nil t)
-      (add-hook 'ruby-mode-hook
-                '(lambda ()
-                   (ruby-electric-mode t))))
-  #+END_SRC
 * ruby-block
   対応する end をハイライトしてくれる素敵elisp
   #+BEGIN_SRC emacs-lisp
-    (when (require 'ruby-block nil t)
-      (setq ruby-block-mode-highlight-toggle t)
-      (defun ruby-mode-hook-ruby-block ()
-        (ruby-block-mode t))
-      (add-hook 'ruby-mode-hook 'ruby-mode-hook-ruby-block))
+    (el-get 'sync '(ruby-block))
+    (require 'ruby-block nil 'noerror)
+    (setq ruby-block-mode-highlight-toggle t)
+    (defun ruby-mode-hook-ruby-block ()
+      (ruby-block-mode t))
+    (add-hook 'ruby-mode-hook 'ruby-mode-hook-ruby-block)
   #+END_SRC
 * rd-mode
   #+BEGIN_SRC emacs-lisp
-     (eval-when-compile
-       (require 'rd-mode))
-     (autoload 'rd-mode "rd-mode" "major mode for ruby document formatter RD" nil t)
-     ;; rd-mode が起動した際に, =end \n\n =begin を省略しない.
-     (add-hook 'rd-mode-hook 'rd-show-other-block-all)
-     (add-to-list 'auto-mode-alist
-                  '("\\.rd$" . rd-mode))
+    (unless (my:dpkg-status 'rdtool-elisp)
+      (el-get 'sync '(rd-mode)))
+    (require 'rd-mode nil 'noerror)
+    (autoload 'rd-mode "rd-mode" "major mode for ruby document formatter RD" nil t)
+    ;; rd-mode が起動した際に, =end \n\n =begin を省略しない.
+    (add-hook 'rd-mode-hook 'rd-show-other-block-all)
+    (add-to-list 'auto-mode-alist
+                 '("\\.rd$" . rd-mode))
   #+END_SRC
 * rabbit-mode
   #+BEGIN_SRC emacs-lisp
-     (autoload 'rabbit-mode "rabbit-mode" "major mode for Rabbit" nil t)
-     (add-to-list 'auto-mode-alist
-                  '("\\.\\(rbt\\|rab\\)$" . rabbit-mode))
+    (unless (my:dpkg-status 'rabbit-mode)
+      (el-get 'sync '(rabbit-mode)))
+    (autoload 'rabbit-mode "rabbit-mode" "major mode for Rabbit" nil t)
+    (add-to-list 'auto-mode-alist
+                 '("\\.\\(rbt\\|rab\\)$" . rabbit-mode))
   #+END_SRC
 * outline-minor-mode
   多少 ad hoc ではあるけれど, とりあえず設定しておく

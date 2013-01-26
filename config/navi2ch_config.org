@@ -1,12 +1,13 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/25 11:39:04$
+# $Lastupdate: 2013/01/27 00:27:04$
 # License: Expat
 #
 #+AUTHOR: Youhei SASAKI
 #+EMAIL:  uwabami@gfd-dennou.org
 #+TITLE: navi2ch の設定
+#+SETUPFILE: ./export-config.org
 #+BEGIN_HTML
 ---
 layout: emacs

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/25 12:31:25$
+# $Lastupdate: 2013/01/27 00:29:39$
 # License: Expat
 #
 #+TITLE: Mew の設定
@@ -25,7 +25,7 @@ title: Mew の設定
    - google-contacts-mew
    - c-sig
 ** rail
-   SEMI や FLIM などの UA の表示に [[http://uwabami.github.com/rail/][rail]] [fn:2]を使っている.
+   SEMI や FLIM などの UA の表示に [[http://uwabami.github.com/rail/][rail]] [fn:1] を使っている.
    #+BEGIN_SRC emacs-lisp
      (unless (my:dpkg-status 'rail)
        (el-get 'sync 'rail))
@@ -205,3 +205,7 @@ title: Mew の設定
   (setq mew-cite-format "Timeline: %s:\n[%s] wrote:\n")
   (setq mew-addrbook-for-cite-label 'nickname)
   #+END_SRC
+
+* Footnotes
+
+[fn:1] rail: [[http://uwabami.github.com/rail/]]

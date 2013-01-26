@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/25 11:33:09$
+# $Lastupdate: 2013/01/27 00:32:56$
 # License: Expat
 #
 #+TITLE: el-get で install した雑多な物
@@ -111,7 +111,7 @@ title: el-get で install した雑多な物
             (file-name-directory active-file-name)
           current-dir)))
   #+END_SRC
-* [[http://d.hatena.ne.jp/mooz/20101003/p1][zlc.el で Emacs のミニバッファ補完 zsh ライクに]] [fn:4]
+* [[http://d.hatena.ne.jp/mooz/20101003/p1][zlc.el で Emacs のミニバッファ補完 zsh ライクに]] [fn:2]
   anything の候補搾り込みはあんまり好きではないので.
   #+BEGIN_SRC emacs-lisp
     (el-get 'sync '(zlc))
@@ -125,7 +125,7 @@ title: el-get で install した雑多な物
       (define-key map (kbd "C-f")       'zlc-select-next)
       (define-key map (kbd "C-d")       'zlc-reset))
   #+END_SRC
-* [[http://d.hatena.ne.jp/tarao/20101011/1286804507][Yet another icompelete]] [fn:5]
+* [[http://d.hatena.ne.jp/tarao/20101011/1286804507][Yet another icompelete]] [fn:4]
   zlc をさらに素敵にしてくれる.
   #+BEGIN_SRC emacs-lisp
     (el-get 'sync '(yaicomplete))
@@ -152,7 +152,7 @@ title: el-get で install した雑多な物
              (concat (getenv "HOME") "/.gnupg/idm-db.gpg"))))
   #+END_SRC
   - [ ] KeePassX に import できる形式に変換できないだろうか?
-* [[http://d.hatena.ne.jp/rubikitch/20091224/recentf][人は俺を「recentfマスター」と呼ぶ]] [fn:7]
+* [[http://d.hatena.ne.jp/rubikitch/20091224/recentf][人は俺を「recentfマスター」と呼ぶ]] [fn:6]
   recentf と recentf-ext の設定.
   #+BEGIN_SRC emacs-lisp
     (el-get 'sync '(recentf-ext))
@@ -172,14 +172,10 @@ title: el-get で install した雑多な物
 
 [fn:2] [[http://shishithefool.blogspot.jp/2012/04/el-get-emacs.html][It's just same as dust ahead of a wind: el-get を使って Emacs でパッケージ管理]]
 
-[fn:3] [[http://sheephead.homelinux.org/2012/04/27/6989/][Emacs24で標準となるパッケージ管理システムとその周辺まとめ - sheephead]]
+[fn:3] zlc.el で Emacs のミニバッファ補完 zsh ライクに: [[http://d.hatena.ne.jp/mooz/20101003/p1]]
 
-[fn:4] zlc.el で Emacs のミニバッファ補完 zsh ライクに: [[http://d.hatena.ne.jp/mooz/20101003/p1]]
+[fn:4] Yet another icompelete: [[http://d.hatena.ne.jp/tarao/20101011/1286804507]]
 
-[fn:5] Yet another icompelete: [[http://d.hatena.ne.jp/tarao/20101011/1286804507]]
+[fn:5] パスワード管理ツール id-manager.el: [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727]]
 
-[fn:6] パスワード管理ツール id-manager.el: [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727]]
-
-[fn:7] auto-async-byte-compile.el: [[http://emacswiki.org/emacs/auto-async-byte-compile.el]]
-
-[fn:8] 人は俺を「recentfマスター」と呼ぶ: [[http://d.hatena.ne.jp/rubikitch/20091224/recentf]]
+[fn:6] 人は俺を「recentfマスター」と呼ぶ: [[http://d.hatena.ne.jp/rubikitch/20091224/recentf]]

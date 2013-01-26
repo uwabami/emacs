@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/25 04:13:21$
+# $Lastupdate: 2013/01/27 04:19:19$
 # License: Expat
 #
 #+TITLE: org-modeの設定
@@ -66,20 +66,20 @@ title: org-modeの設定
     (setq org-capture-templates
           '(
             ("t" "Todo" entry
-             (file "~/Dropbox/org/ToDo.org")
-             "* TODO <%<%Y-%m-%d %H:%M:%S>>+ %?\n  %i\n  %a\n"
+             (file "~/Dropbox/org/todo.org")
+             "* TODO <%<%Y-%m-%d>>+ %?\n  %i\n  %a\n"
              :prepend nil
              :unnarrowed nil
              :kill-buffer t)
             ("m" "Memo" entry
              (file my:org-capture-howm-file)
-             "* <%<%Y-%m-%d %H:%M:%S>>  %?\n  %i\n  %a\n\n"
+             "* <%<%Y-%m-%d>>  %?\n  %i\n  %a\n\n"
              :prepend t
              :unnarrowed t
              :kill-buffer t)
             ("d" "Diary" entry
              (file my:org-capture-howm-file)
-             "* DIARY <%<%Y-%m-%d %H:%M:%S>> %?\n  %i\n  %a\n\n"
+             "* DIARY <%<%Y-%m-%d>> %?\n  %i\n  %a\n\n"
              :prepend t
              :unnarrowed t
              :kill-buffer t)
@@ -89,7 +89,8 @@ title: org-modeの設定
   org-ical との連携テスト
   #+BEGIN_SRC emacs-lisp
     (setq org-refile-targes
-          (quote (("ToDo.org" :level 1))))
+          (quote (("todo.org" :level 1))))
+    (define-key global-map (kbd "C-c a") 'org-agenda)
     (require 'org-icalendar)
     (defun my-org-export-icalendar ()
       (interactive)
@@ -112,7 +113,7 @@ title: org-modeの設定
           (concat  "~/Dropbox/MobileOrg"))
     (defvar org-agenda-files nil)
     (setq org-agenda-files
-          `("~/Dropbox/org/ToDo.org"))
+          `("~/Dropbox/org/todo.org" "~/Dropbox/org/mobile-pull.org"))
     (setq org-mobile-files org-agenda-files)
     (setq org-refile-targets '((org-agenda-files :level . 1)))
     (setq org-mobile-inbox-for-pull

@@ -1,0 +1,8 @@
+(:name popup-color-at-point
+       :type git
+       :description "popup color at point"
+       :url "https://gist.github.com/762297.git"
+       :depends popup
+       :autoloads nil
+       :after (load (concat el-get-dir "popup-color-at-point/popup-color-at-point"))
+       )

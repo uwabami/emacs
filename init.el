@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2013/01/25 11:23:32$
+;; $Lastupdate: 2013/01/27 01:39:56$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -137,7 +137,7 @@
 ;; @see Emacsの設定ファイルをorgで書く:
 ;;      http://uwabami.junkhub.org/log/20111213.html#p01
 ;;
-(require 'org)
+(require 'org-install)
 ;; -----------------------------------------------------------
 ;;; ob-tangle より自分用に幾つか関数を設定
 ;;

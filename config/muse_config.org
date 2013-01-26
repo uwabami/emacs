@@ -98,7 +98,6 @@ title: muse-mode の設定
 ** style
    #+BEGIN_SRC emacs-lisp
      (muse-derive-style "my:cc-env" "html"
-                        :author "Youhei SASAKI <uwabami@gfd-dennou.org>"
                         :header "~/Public/_config/muse-header.html"
                         :footer "~/Public/_config/muse-footer.html"
                         )

@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2013/01/27 01:39:56$
+;; $Lastupdate: 2013/01/27 14:47:17$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -128,7 +128,15 @@
 ;;
 (defun my:dpkg-status (string)
   "Check dpkg status"
+  (interactive)
   (string-match (el-get-dpkg-package-status (symbol-name string)) "ok"))
+;; -----------------------------------------------------------
+;;; Check dropbox is installed
+;;
+(defun my:check-dropbox ()
+  "Check dropbox is installed"
+  (interactive)
+  (file-exists-p (concat (getenv "HOME") "/Dropbox")))
 ;; -----------------------------------------------------------
 ;;; org-babel
 ;;

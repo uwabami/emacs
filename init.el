@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2013/01/27 14:47:17$
+;; $Lastupdate: 2013/01/27 23:17:19$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -133,10 +133,10 @@
 ;; -----------------------------------------------------------
 ;;; Check dropbox is installed
 ;;
-(defun my:check-dropbox ()
-  "Check dropbox is installed"
-  (interactive)
+(defvar my:check-dropbox
   (file-exists-p (concat (getenv "HOME") "/Dropbox")))
+(if my:check-dropbox
+    (defvar my:dropbox (concat (getenv "HOME") "/Dropbox/")))
 ;; -----------------------------------------------------------
 ;;; org-babel
 ;;
@@ -145,7 +145,7 @@
 ;; @see Emacsの設定ファイルをorgで書く:
 ;;      http://uwabami.junkhub.org/log/20111213.html#p01
 ;;
-(require 'org-install)
+(require 'org)
 ;; -----------------------------------------------------------
 ;;; ob-tangle より自分用に幾つか関数を設定
 ;;

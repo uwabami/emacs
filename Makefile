@@ -5,6 +5,9 @@ TARGET_DIR	:= modules config
 
 all: bootstrap TARGET $(ELCFiles)
 
+recompile:
+	( touch config/index.org && make)
+
 bootstrap: .bootstrap
 .bootstrap:
 	( cd modules && $(MAKE) ) 

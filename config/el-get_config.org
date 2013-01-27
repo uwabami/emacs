@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/27 00:32:56$
+# $Lastupdate: 2013/01/27 22:19:52$
 # License: Expat
 #
 #+TITLE: el-get で install した雑多な物
@@ -165,6 +165,19 @@ title: el-get で install した雑多な物
     (run-with-idle-timer 300 t 'recentf-save-list)
     (run-with-idle-timer 600 t 'recentf-cleanup)
     (require 'recentf-ext nil 'noerror)
+  #+END_SRC
+* auto-async-byte-compile
+  #+BEGIN_SRC emacs-lisp
+    (when emacs24-p
+      (progn
+        (el-get 'sync '(auto-async-byte-compile))
+        (add-hook 'emacs-lisp-mode-hook 'enable-auto-async-byte-compile-mode)))
+  #+END_SRC
+* RGBコードを popup で表示する
+  #+BEGIN_SRC emacs-lisp
+    (el-get 'sync '(popup-color-at-point))
+    (load (concat el-get-dir "popup-color-at-point/popup-color-at-point"))
+    (global-set-key (kbd "C-c c") 'popup-color-at-point)
   #+END_SRC
 * Footnotes
 

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/27 04:19:19$
+# $Lastupdate: 2013/01/28 03:49:29$
 # License: Expat
 #
 #+TITLE: org-modeの設定
@@ -15,218 +15,198 @@ title: org-modeの設定
 ---
 #+END_HTML
 * 始めに
-  まだ設定が半端なので, そのうちちゃんと書かないと駄目な気がしている.
+  あとで書く.
+  #+BEGIN_SRC emacs-lisp
+  ;;
+  #+END_SRC
 * 基本設定
+** キーバインド
+   =org-agenda= と =org-capture= の設定のみ.
+   =org-capture= は changelog memo [fn:2] のキーバインドにしている.
+   #+BEGIN_SRC emacs-lisp
+     (define-key global-map (kbd "C-x m") 'org-capture)
+   #+END_SRC
+** auto-mode-alist
+   拡張子が =.org= もしくは =.howm= なら自動的に =org-mode= に
+   #+BEGIN_SRC emacs-lisp
+   (add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
+   #+END_SRC
+** 保存先の設定
+   #+BEGIN_SRC emacs-lisp
+     (setq org-directory (concat my:dropbox "org/"))
+     (setq org-default-notes-file (concat org-directory "todo.org"))
+   #+END_SRC
+** link を return で追う
+   #+BEGIN_SRC emacs-lisp
+     (setq org-return-follows-link t)
+   #+END_SRC
+** 時刻のフォーマット
+   #+BEGIN_SRC emacs-lisp
+     ;; (setq org-display-custom-times "<%Y-%m-%d %H:%M:%S>")
+     ;; (setq org-time-stamp-custom-formats "<%Y-%m-%d %H:%M:%S>")
+   #+END_SRC
+** ファイルを開いた時は畳んだ状態で表示
+   #+BEGIN_SRC emacs-lisp
+     (setq org-startup-folded t)
+   #+END_SRC
+** 表示を打ち切らない
+   #+BEGIN_SRC emacs-lisp
+     (setq org-startup-truncated nil)
+   #+END_SRC
+** font-lock を有効化
+   #+BEGIN_SRC emacs-lisp
+     (add-hook 'org-mode-hook 'turn-on-font-lock)
+   #+END_SRC
+** アプリケーションの関連付け
+   #+BEGIN_SRC emacs-lisp
+     ;; (cond
+     ;;  (darwin-p
+     ;;   (setq org-file-apps-defaults-macosx nil)
+     ;;   (setq org-file-apps-defaults-macosx '((t . "open '%s'")))
+     ;;   (setq org-file-apps org-file-apps-defaults-macosx)
+     ;;   )
+     ;;  (nt-p
+     ;;   ;; 良く知らない fiber とか使うん?
+     ;;   ;; (setq org-file-apps-defaults-windowsnt nil)
+     ;;   ;; (setq org-file-apps-defaults-windowsnt '((t . "open '%s'")))
+     ;;   ;; (setq org-file-apps org-file-apps-defaults-windowsnt)
+     ;;   )
+     ;;  (t
+     ;;   (setq org-file-apps-defaults-gnu nil)
+     ;;   (setq org-file-apps-defaults-gnu '((t . "xdg-open '%s'")))
+     ;;   (setq org-file-apps org-file-apps-defaults-gnu)
+     ;;   )
+     ;;  )
+   #+END_SRC
+* org-agenda で GTD
+** Agenda で表示するファイル
+   =org-directory= 以下の全てのファイル
+   #+BEGIN_SRC emacs-lisp
+     (setq org-agenda-files
+           '("~/Dropbox/org/schedule.org"))
+             ;; (expand-file-name (concat org-directory "schedule.org"))
+             ;; ))
+   #+END_SRC
+** Agenda表示で下線を使う
+   #+BEGIN_SRC emacs-lisp
+     (add-hook 'org-agenda-mode-hook '(lambda () (hl-line-mode 1)))
+     (setq hl-line-face 'underline)
+   #+END_SRC
+** 標準の祝日を利用しない
+   #+BEGIN_SRC emacs-lisp
+     (setq calendar-holidays t)
+   #+END_SRC
+** ToDo 状態
+   #+BEGIN_SRC emacs-lisp
+     (setq org-todo-keywords
+           '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)" "SOMEDAY(s)")))
+   #+END_SRC
+** DONEの時刻を記録
+   #+BEGIN_SRC emacs-lisp
+     ;; (setq org-log-done 'time)
+     (setq org-log-done nil)
+   #+END_SRC
+** GTD用のタグの追加
+   #+BEGIN_SRC emacs-lisp
+     (setq org-tag-alist
+       '(
+         ("@OFFICE" . ?o)
+         ("@HOME" . ?h)
+         ("SHOPPING" . ?s)
+         ("MAIL" . ?m)
+         ("PROJECT" . ?p)
+         ))
+   #+END_SRC
+** Refile 対象の設定
+   #+BEGIN_SRC emacs-lisp
+     (setq org-refile-targets
+           '(
+             ((concat org-directory "todo.org") :level .1)
+             ((concat org-directory "schedule.org") :level .1)
+             ))
+   #+END_SRC
+* メモ取り: org-capture
+  1メモ1ファイル + howm 連携のための設定
+** org-cature の際に howm 形式のファイルを作成
+   #+BEGIN_SRC emacs-lisp
+     (defun my:org-capture-howm-file ()
+       (expand-file-name
+        (format-time-string "%Y%m%d-%H%M%S.howm") org-directory))
+   #+END_SRC
+** org-capture template
+   bookmark は使わない
+   #+BEGIN_SRC emacs-lisp
+     (setq org-capture-bookmark nil)
+   #+END_SRC
+   カテゴリの追加
+   #+BEGIN_SRC emacs-lisp
+     (setq org-capture-templates
+           '(
+             ("t" "Todo" entry
+              (file (concat org-directory "todo.org"))
+              "* TODO <%<%Y-%m-%d>> %?\n  %i\n  %a\n"
+              :prepend nil
+              :unnarrowed nil
+              :kill-buffer t)
+             ("s" "schedule" entry
+              (file (concat org-directory "schedule.org"))
+              "* <%<%Y-%m-%d>> %?\n  %i\n  %a\n"
+              :prepend nil
+              :unnarrowed nil
+              :kill-buffer t)
+             ("m" "memo" entry
+              (file my:org-capture-howm-file)
+              "* <%<%Y-%m-%d>>  %?\n  %i\n  %a\n\n"
+              :prepend t
+              :unnarrowed t
+              :kill-buffer t)
+             ("d" "diary" entry
+              (file my:org-capture-howm-file)
+              "* DIARY <%<%Y-%m-%d>> %?\n  %i\n  %a\n\n"
+              :prepend t
+              :unnarrowed t
+              :kill-buffer t)
+             ))
+   #+END_SRC
+* export icalendar
   #+BEGIN_SRC emacs-lisp
-    (require 'org)
-    ;; 打ち切らない.
-    (setq org-startup-truncated nil)
-    ;; ファイルを開く時は項目を折り畳んだ状態にする
-    (setq org-startup-folded t)
-    ;; 開いた時に画像を inline で表示しない
-    (setq org-startup-with-inline-images nil)
-    ;; ;; link を return で追う
-    (setq org-return-follows-link t)
-    ;; フォントロックを有効に
-    (add-hook 'org-mode-hook 'turn-on-font-lock)
-    ;; 基本ディレクトリ
-    (setq org-directory "~/Dropbox/org/")
-    ;; 時刻のフォーマット
-    (setq org-display-custom-times "<%Y-%m-%d %H:%M:%S>")
-    (setq org-time-stamp-custom-formats "<%Y-%m-%d %H:%M:%S>")
-    ;; アプリケーションの関連付け
-    ;; (cond
-    ;;  (darwin-p
-    ;;   (setq org-file-apps-defaults-macosx nil)
-    ;;   (setq org-file-apps-defaults-macosx '((t . "open '%s'")))
-    ;;   (setq org-file-apps org-file-apps-defaults-macosx)
-    ;;   )
-    ;;  (nt-p
-    ;;   (setq org-file-apps-defaults-windowsnt nil)
-    ;;   (setq org-file-apps-defaults-windowsnt '((t . "open '%s'")))
-    ;;   (setq org-file-apps org-file-apps-defaults-windowsnt)
-    ;;   )
-    ;;  (t
-    ;;   (setq org-file-apps-defaults-gnu nil)
-    ;;   (setq org-file-apps-defaults-gnu '((t . "xdg-open '%s'")))
-    ;;   (setq org-file-apps org-file-apps-defaults-gnu)
-    ;;   )
-    ;;  )
-  #+END_SRC
-* org-capture
-  1日1ファイル + howm での一覧表示のための小細工
-  #+BEGIN_SRC emacs-lisp
-    ;; org-capture
-    (require 'org-capture)
-    (setq org-capture-bookmark nil)
-    (defun my:org-capture-howm-file ()
-      (expand-file-name
-       (format-time-string "%Y%m%d-%H%M%S.howm") org-directory))
-    (global-set-key (kbd "C-x m") 'org-capture)
-    (setq org-capture-templates
-          '(
-            ("t" "Todo" entry
-             (file "~/Dropbox/org/todo.org")
-             "* TODO <%<%Y-%m-%d>>+ %?\n  %i\n  %a\n"
-             :prepend nil
-             :unnarrowed nil
-             :kill-buffer t)
-            ("m" "Memo" entry
-             (file my:org-capture-howm-file)
-             "* <%<%Y-%m-%d>>  %?\n  %i\n  %a\n\n"
-             :prepend t
-             :unnarrowed t
-             :kill-buffer t)
-            ("d" "Diary" entry
-             (file my:org-capture-howm-file)
-             "* DIARY <%<%Y-%m-%d>> %?\n  %i\n  %a\n\n"
-             :prepend t
-             :unnarrowed t
-             :kill-buffer t)
-            ))
-  #+END_SRC
-* org-agenda & mobileorg
-  org-ical との連携テスト
-  #+BEGIN_SRC emacs-lisp
-    (setq org-refile-targes
-          (quote (("todo.org" :level 1))))
-    (define-key global-map (kbd "C-c a") 'org-agenda)
-    (require 'org-icalendar)
-    (defun my-org-export-icalendar ()
-      (interactive)
-      (org-export-icalendar nil "~/Dropbox/org/org-ical.org"))
-    (define-key org-mode-map (kbd "C-c 1") 'my-org-export-icalendar)
+    ;; 保存先
+    (setq org-combined-agenda-icalendar-file
+          (concat my:dropbox "ical/org-export.ics"))
     ;; iCal の説明文
-    (setq org-icalendar-combined-description "OrgModeのスケジュール出力")
+    (setq org-icalendar-combined-description "OrgMode schedule")
     ;; カレンダーに適切なタイムゾーンを設定する（google 用には nil が必要）
     (setq org-icalendar-timezone "Asia/Tokyo")
-    ;; DONE になった TODO は出力対象から除外する
+    ;; TODO は出力対象から除外 <-- 動作してない?
     (setq org-icalendar-include-todo t)
     ;; （通常は，<>--<> で区間付き予定をつくる．非改行入力で日付がNoteに入らない）
     (setq org-icalendar-use-scheduled '(event-if-todo))
     ;; DL 付きで終日予定にする：締め切り日（スタンプで時間を指定しないこと）
     (setq org-icalendar-use-deadline '(event-if-todo))
+    (run-with-idle-timer 600 t 'reload-ical-export)
+    ;;
+    (define-key global-map (kbd "C-c 1") 'org-export-icalendar-combine-agenda-files)
+    ;; timer で動作
+    (run-with-idle-timer 600 t 'reload-ical-export)
+    (defun reload-ical-export ()
+      "Export org files as an iCal format file"
+      (interactive)
+      (when (string= major-mode 'org-mode)
+        (org-export-icalendar-combine-agenda-files)))
   #+END_SRC
-  #+BEGIN_SRC emacs-lisp
-    (require 'org-mobile)
-    (setq org-mobile-directory
-          (concat  "~/Dropbox/MobileOrg"))
-    (defvar org-agenda-files nil)
-    (setq org-agenda-files
-          `("~/Dropbox/org/todo.org" "~/Dropbox/org/mobile-pull.org"))
-    (setq org-mobile-files org-agenda-files)
-    (setq org-refile-targets '((org-agenda-files :level . 1)))
-    (setq org-mobile-inbox-for-pull
-          (concat org-directory "mobile-pull.org"))
-    (setq org-mobile-creating-agendas nil)
-    (setq org-todo-keywords
-          '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)" "SOMEDAY(s)")))
-    ;; 上で定義した ToDo だけを Agenda として抽出
-    (setq org-mobile-agendas 'custom)
-    ;; 起動時に sync...?
-    ;; (defun org-mobile-sync ()
-    ;;   (interactive)
-    ;;   (let
-    ;;       (org-mobile-sync-type
-    ;;        (read-from-minibuffer "How do you sync the org files? (pull or push) "))
-    ;;     (message "%s" org-mobile-sync-type)
-    ;;     (cond
-    ;;      ((string= "pull" org-mobile-sync-type)(org-mobile-pull))
-    ;;      ((string= "push" org-mobile-sync-type)(org-mobile-push)))))
-    ;; 起動時にモバイルで環境で編集したファイルを読み込む
-    ;; (eval-after-load "org"
-    ;;   '(progn
-    ;;      (message "%s" "MobileOrg sync ... [pull]")
-    ;;      (org-mobile-pull)))
-    ;; need org-mode
-    ;; (defadvice org-mobile-create-sumo-agenda (after org-mobile-create-sumo-agenda-fixup activate)
-    ;;   "MobileOrgのAgenda Viewsを見やすくする"
-    ;;   (let ((agendas (expand-file-name "agendas.org" org-mobile-directory)))
-    ;;     (while (get-file-buffer agendas) (kill-buffer (get-file-buffer agendas)))
-    ;;     (find-file agendas)
-    ;;     (goto-char (point-min))
-    ;;     (while (re-search-forward "\\* .*<after>KEYS=. TITLE: \\(.*\\)</after>\\(\n+\\)" nil t)
-    ;;       (if (save-match-data (looking-at "\\* "))
-    ;;           (replace-match "" t)
-    ;;         (replace-match "* \\1\\2" t))
-    ;;       )
-    ;;     (save-buffer)
-    ;;     (dolist (entry org-mobile-checksum-files)
-    ;;       (when (string= "agendas.org" (car entry))
-    ;;         (setcdr entry (md5 (current-buffer)))
-    ;;         ))
-    ;;     ))
-    ;; (defadvice org-mobile-push (around org-mobile-push-safe activate)
-    ;;   "もしコンフリクトがあれば一覧を表示する。
-    ;; そうで無ければ、全ファイルをTODO順にソートし、余分な入力日時を除去し、プッシュする。"
-    ;;   (when (org-occur-in-agenda-files "^\\*\\* End of edit$")
-    ;;     (dolist (file (org-agenda-files))
-    ;;       (with-current-buffer (find-file-noselect file)
-    ;;         (let ((before (buffer-substring-no-properties (point-min) (point-max))))
-    ;;           (goto-char (point-min))
-    ;;           (while (re-search-forward "^\\[[0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\} . [0-9]\\{2\\}:[0-9]\\{2\\}\\]\n" nil t)
-    ;;             (replace-match "" t))
-    ;;           (condition-case nil
-    ;;               (org-sort-entries nil ?o)
-    ;;             (error nil))
-    ;;           (if (string= before (buffer-substring-no-properties (point-min) (point-max)))
-    ;;               (set-buffer-modified-p nil)
-    ;;             (save-buffer))
-    ;;           )))
-    ;;     ad-do-it
-    ;;     (org-export-icalendar-combine-agenda-files)
-    ;;     )
-    ;;   )
-
-    ;; (defadvice org-mobile-pull (around org-mobile-pull-and-push activate)
-    ;;   "mobileorg.orgに何かデータが入っていれば、プル＆プッシュする。"
-    ;;   (when (<= 2 (nth 7 (file-attributes (expand-file-name org-mobile-capture-file org-mobile-directory))))
-    ;;     ad-do-it
-    ;;     (org-mobile-push)
-    ;;     )
-    ;;   )
-    ;; timestamp の記録
-    ;; (setq org-log-done)
-    ;; (setq org-mobile-directory
-    ;;       "~/Documents/Dropbox/MobileOrg")
-    ;; (setq org-mobile-index-for-pull
-    ;;       "~/Documents/Dropbox/org/mobile-flagged.org")
-    ;; ;; agenda ファイルの一覧
-    ;; (setq org-agenda-files (list org-directory))
-    ;; ;; 拡張子 -> howm
-    ;; (setq org-agenda-file-regexp "[^.].*\.howm")
-    ;; ;; アジェンダ表示で下線を用いる
-    ;; (add-hook 'org-agenda-mode-hook '(lambda () (hl-line-mode 1)))
-    ;; (setq hl-line-face 'underline)
-    ;; ;; 標準の祝日を利用しない
-    ;; (setq calendar-holidays nil)
-  #+END_SRC
-* org-babel
-  使う言語の追加
-  #+BEGIN_SRC emacs-lisp
-    (org-babel-do-load-languages
-     'org-babel-load-languages
-     '(
-       (ruby       . t)
-       (sh         . t)
-       (emacs-lisp . t)
-       (ditaa      . t)
-       (dot        . t)
-       (R          . t)
-       (gnuplot    . t)
-       ))
-  #+END_SRC
-  block 評価時の問い合わせの無効化
-  #+BEGIN_SRC emacs-lisp
-    (setq org-confirm-babel-evaluate nil)
-  #+END_SRC
-* LaTeX export の設定
+* export LaTeX
   主に日本語LaTeX → pTeX 用の設定とか.
+** 読み込み
+   =(require 'org)= で良いかと思ってみたら, 以下は読み込まないと
+   =byte-compile= できなかった.
+   #+BEGIN_SRC emacs-lisp
+     (require 'org-latex)
+     (require 'org-beamer)
+   #+END_SRC
 ** 日本語LaTeX用の設定
    (squeeze 以前の)DebianのpLaTeXはまだUTF-8を処理できないので,
    EUC-JPでexportする.
    #+BEGIN_SRC emacs-lisp
-     (require 'org-latex)
      (setq org-export-latex-coding-system 'euc-jp-unix)
      (setq org-export-latex-date-format "%Y年%m月%d日")
    #+END_SRC
@@ -247,7 +227,7 @@ title: org-modeの設定
                       ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
      (setq org-export-latex-default-class "jsarticle")
    #+END_SRC
-   強調等の変換
+** 強調等の変換
    #+BEGIN_SRC emacs-lisp
    (setq org-export-latex-emphasis-alist
      '(
@@ -263,24 +243,19 @@ title: org-modeの設定
    PDF作成にはlatexmkを使う
    #+BEGIN_SRC emacs-lisp
      (setq org-latex-to-pdf-process
-           '("latexmk -pdfdvi %f"))
+           '("latexmk -kanji=euc -pdfdvi %f"))
    #+END_SRC
-* Beamer export の設定
-  beamer でプレゼンするための設定
-  #+BEGIN_SRC emacs-lisp
-    (require 'org-beamer)
-    ;; デフォルトのヘッドラインレベル -> 2
-    (setq org-beamer-frame-level 2)
-    ;; frame のオプション
-    (setq org-beamer-frame-default-options "[fragile]")
-    (setq org-export-with-sub-superscripts nil)
-  #+END_SRC
-* HTML export の設定
+** beamer export の設定
+   #+BEGIN_SRC emacs-lisp
+     ;; デフォルトのヘッドラインレベル -> 2
+     (setq org-beamer-frame-level 2)
+     ;; frame のオプション
+     (setq org-beamer-frame-default-options "[fragile]")
+     (setq org-export-with-sub-superscripts nil)
+   #+END_SRC
+* export HTML
   [[http://jekyllrb.com/][Jekyll]] [fn:1] でサイト構築を行なっているので, それにまつわる設定
   #+BEGIN_SRC emacs-lisp
-    ;; org-html, org-publish
-    (require 'org-html)
-    (require 'org-publish)
     (defvar my:org-publish-webpage
       (expand-file-name
        (concat (getenv "HOME") "/Public/")))
@@ -349,3 +324,5 @@ title: org-modeの設定
 * Footnotes
 
 [fn:1] Jeykll: [[http://jekyllrb.com/]]
+
+[fn:2] 横着プログラミング 第1回: Unixのメモ技術: [[http://0xcc.net/unimag/1/]]

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/25 14:04:52$
+# $Lastupdate: 2013/01/27 23:40:48$
 # License: Expat
 #
 #+TITLE: Emacsの設定 - 主に org ファイルの読み込み集
@@ -97,7 +97,6 @@ title: Emacsの基本設定 - 主に org ファイルの読み込み集
     (when (executable-find "cmigemo")
       (my:load-org-file "migemo_config.org"))
   #+END_SRC
-
 * テンプレートの自動挿入: [[file:auto-insert_config.org][auto-insert]]
   #+BEGIN_SRC emacs-lisp
     (my:load-org-file "auto-insert_config.org")
@@ -136,21 +135,18 @@ title: Emacsの基本設定 - 主に org ファイルの読み込み集
              (file-exists-p "/usr/local/share/dict/lookup-enabled"))
         (my:load-org-file "lookup_config.org"))
   #+END_SRC
-* [[file:org-mode_config.org][org-modeの設定]]
-  Howm と併用する.
+* メモ環境
+  個々の設定はそれぞれ [[file:org-mode_config.org][org-modeの設定]], [[file:howm_config.org][howm の設定]], [[file:calfw_config.org][calfw: カレンダーの設定]] を参照の事.
+  メモ取りには Howm と =org-capture= を併用し, カレンダーの表示には Calfw を使う.
   保存先は Dropbox なので, Dropbox が無い時には load しない.
   #+BEGIN_SRC emacs-lisp
-    (if (file-exists-p
-         (concat (getenv "HOME") "/Dropbox/org"))
-        (my:load-org-file "org-mode_config.org"))
-  #+END_SRC
-* [[file:howm_config.org][howm の設定]]
-  =org-capture= と併用する.
-  保存先は Dropbox なので, Dropbox が無い時には load しない.
-  #+BEGIN_SRC emacs-lisp
-    (if (file-exists-p
-         (concat (getenv "HOME") "/Dropbox/org"))
-        (my:load-org-file "howm_config.org"))
+    (if my:check-dropbox
+        (progn
+          (my:load-org-file "org-mode_config.org")
+          (my:load-org-file "howm_config.org")
+          (my:load-org-file "calfw_config.org")
+          )
+      )
   #+END_SRC
 * [[file:muse_config.org][muse-mode の設定]]
   #+BEGIN_SRC emacs-lisp

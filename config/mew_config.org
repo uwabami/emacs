@@ -29,6 +29,7 @@ title: Mew の設定
    #+BEGIN_SRC emacs-lisp
      (unless (my:dpkg-status 'rail)
        (el-get 'sync 'rail))
+     (setq rail-emulate-genjis t)
      (require 'rail nil 'noerror)
    #+END_SRC
    ちなみに rail を有効にすると, 以下の様に User-Agent が表示される

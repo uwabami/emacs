@@ -175,9 +175,11 @@ title: el-get で install した雑多な物
   #+END_SRC
 * RGBコードを popup で表示する
   #+BEGIN_SRC emacs-lisp
-    (el-get 'sync '(popup-color-at-point))
-    (load (concat el-get-dir "popup-color-at-point/popup-color-at-point"))
-    (global-set-key (kbd "C-c c") 'popup-color-at-point)
+    (when emacs24-p
+      (progn
+        (el-get 'sync '(popup-color-at-point))
+        (load (concat el-get-dir "popup-color-at-point/popup-color-at-point"))
+        (global-set-key (kbd "C-c c") 'popup-color-at-point)))
   #+END_SRC
 * Footnotes
 

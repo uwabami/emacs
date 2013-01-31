@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/28 03:49:29$
+# $Lastupdate: 2013/01/31 19:16:17$
 # License: Expat
 #
 #+TITLE: org-modeの設定
@@ -25,11 +25,14 @@ title: org-modeの設定
    =org-capture= は changelog memo [fn:2] のキーバインドにしている.
    #+BEGIN_SRC emacs-lisp
      (define-key global-map (kbd "C-x m") 'org-capture)
+     (define-key global-map (kbd "C-c 1") 'org-export-icalendar-combine-agenda-files)
    #+END_SRC
 ** auto-mode-alist
    拡張子が =.org= もしくは =.howm= なら自動的に =org-mode= に
    #+BEGIN_SRC emacs-lisp
-   (add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
+     (add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
+     (add-to-list 'auto-mode-alist '("\\.howm$" . org-mode))
+     (add-to-list 'auto-mode-alist '("\\.org_archive$" . org-mode))
    #+END_SRC
 ** 保存先の設定
    #+BEGIN_SRC emacs-lisp
@@ -79,31 +82,31 @@ title: org-modeの設定
      ;;  )
    #+END_SRC
 * org-agenda で GTD
+  Agenda 表示は使わない -> メモの一覧は howm で確認
 ** Agenda で表示するファイル
-   =org-directory= 以下の全てのファイル
+   日付付きの TODO は ical に export されるので
+   =schedule.org= のみを Agenda の対象にする
    #+BEGIN_SRC emacs-lisp
      (setq org-agenda-files
+     ;;      (list org-directory))
            '("~/Dropbox/org/schedule.org"))
-             ;; (expand-file-name (concat org-directory "schedule.org"))
-             ;; ))
    #+END_SRC
-** Agenda表示で下線を使う
-   #+BEGIN_SRC emacs-lisp
-     (add-hook 'org-agenda-mode-hook '(lambda () (hl-line-mode 1)))
-     (setq hl-line-face 'underline)
-   #+END_SRC
-** 標準の祝日を利用しない
-   #+BEGIN_SRC emacs-lisp
-     (setq calendar-holidays t)
-   #+END_SRC
-** ToDo 状態
+** ToDo 状態の追加
    #+BEGIN_SRC emacs-lisp
      (setq org-todo-keywords
            '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)" "SOMEDAY(s)")))
    #+END_SRC
-** DONEの時刻を記録
+** ToDo を DONE にした際に ARCHIVE タグを付ける
    #+BEGIN_SRC emacs-lisp
-     ;; (setq org-log-done 'time)
+     (require 'org-archive nil 'noerror)
+     (defun my:org-archive-done-tasks ()
+       (interactive)
+       (org-map-entries 'org-archive-set-tag "/DONE" 'file))
+     (add-hook 'org-todo-statistics-hook 'my:org-archive-done-tasks)
+     (add-hook 'org-todo-after-statistics-hook 'my:org-archive-done-tasks)
+   #+END_SRC
+** DONEの時刻を記録しない
+   #+BEGIN_SRC emacs-lisp
      (setq org-log-done nil)
    #+END_SRC
 ** GTD用のタグの追加
@@ -119,10 +122,12 @@ title: org-modeの設定
    #+END_SRC
 ** Refile 対象の設定
    #+BEGIN_SRC emacs-lisp
+     (setq org-refile-allow-creating-parent-nodes t)
      (setq org-refile-targets
            '(
-             ((concat org-directory "todo.org") :level .1)
-             ((concat org-directory "schedule.org") :level .1)
+             ("todo.org" :level . 1)
+             ("schedule.org" :level . 1)
+             ("archive.org" :level . 1)
              ))
    #+END_SRC
 * メモ取り: org-capture
@@ -138,7 +143,7 @@ title: org-modeの設定
    #+BEGIN_SRC emacs-lisp
      (setq org-capture-bookmark nil)
    #+END_SRC
-   カテゴリの追加
+** カテゴリの追加
    #+BEGIN_SRC emacs-lisp
      (setq org-capture-templates
            '(
@@ -169,39 +174,43 @@ title: org-modeの設定
              ))
    #+END_SRC
 * export icalendar
-  #+BEGIN_SRC emacs-lisp
-    ;; 保存先
+** 保存先
+   #+BEGIN_SRC emacs-lisp
     (setq org-combined-agenda-icalendar-file
           (concat my:dropbox "ical/org-export.ics"))
-    ;; iCal の説明文
+   #+END_SRC
+** ical の説明文
+   #+BEGIN_SRC emacs-lisp
     (setq org-icalendar-combined-description "OrgMode schedule")
-    ;; カレンダーに適切なタイムゾーンを設定する（google 用には nil が必要）
+   #+END_SRC
+** Description の長さ
+   Google Calendar の説明の所って, 適当な syntax 使えないのかな.
+   #+BEGIN_SRC emacs-lisp
+    (setq org-icalendar-include-body 4096)
+    (setq org-export-exclude-tags "DONE")
+   #+END_SRC
+** TimeZone
+   カレンダーに適切なタイムゾーンを設定
+   #+BEGIN_SRC emacs-lisp
     (setq org-icalendar-timezone "Asia/Tokyo")
-    ;; TODO は出力対象から除外 <-- 動作してない?
-    (setq org-icalendar-include-todo t)
-    ;; （通常は，<>--<> で区間付き予定をつくる．非改行入力で日付がNoteに入らない）
-    (setq org-icalendar-use-scheduled '(event-if-todo))
-    ;; DL 付きで終日予定にする：締め切り日（スタンプで時間を指定しないこと）
-    (setq org-icalendar-use-deadline '(event-if-todo))
-    (run-with-idle-timer 600 t 'reload-ical-export)
-    ;;
-    (define-key global-map (kbd "C-c 1") 'org-export-icalendar-combine-agenda-files)
-    ;; timer で動作
-    (run-with-idle-timer 600 t 'reload-ical-export)
-    (defun reload-ical-export ()
-      "Export org files as an iCal format file"
-      (interactive)
-      (when (string= major-mode 'org-mode)
-        (org-export-icalendar-combine-agenda-files)))
-  #+END_SRC
+   #+END_SRC
+** 出力対象
+   #+BEGIN_SRC emacs-lisp
+     ;; TODO は出力対象から除外
+     (setq org-icalendar-include-todo nil)
+     ;; （通常は，<>--<> で区間付き予定をつくる．非改行入力で日付がNoteに入らない）
+     (setq org-icalendar-use-scheduled '(event-if-todo event-if-not-todo))
+     ;; DL 付きで終日予定にする：締め切り日（スタンプで時間を指定しないこと）
+     (setq org-icalendar-use-deadline '(event-if-todo event-if-not-todo))
+   #+END_SRC
 * export LaTeX
   主に日本語LaTeX → pTeX 用の設定とか.
 ** 読み込み
    =(require 'org)= で良いかと思ってみたら, 以下は読み込まないと
    =byte-compile= できなかった.
    #+BEGIN_SRC emacs-lisp
-     (require 'org-latex)
-     (require 'org-beamer)
+     (require 'org-latex nil 'noerror)
+     (require 'org-beamer nil 'noerror)
    #+END_SRC
 ** 日本語LaTeX用の設定
    (squeeze 以前の)DebianのpLaTeXはまだUTF-8を処理できないので,
@@ -255,72 +264,79 @@ title: org-modeの設定
    #+END_SRC
 * export HTML
   [[http://jekyllrb.com/][Jekyll]] [fn:1] でサイト構築を行なっているので, それにまつわる設定
-  #+BEGIN_SRC emacs-lisp
-    (defvar my:org-publish-webpage
-      (expand-file-name
-       (concat (getenv "HOME") "/Public/")))
-    (defvar my:org-publish-webpage-img
-      (expand-file-name
-       (concat my:org-publish-webpage "images/")))
-    (defvar my:org-publish-gh-pages
-      (expand-file-name
-       (concat (getenv "HOME") "/Sources/gh-pages")))
-    (defvar my:org-publish-emacs-pages
-      (expand-file-name
-       (concat my:org-publish-webpage "cc-env/Emacs/")))
-    (setq org-publish-project-alist
-          `(
-            ("public"
-             :base-directory ,my:org-publish-webpage
-             :recursive t
-             :exclude ".*\.el\\|^Makefile\\|.*\.gpg\\|sitemap\.org\\|^cc-env\\|^images\\|^_site\\||^export-config\.org"
-             :base-extension "org"
-             :headline-level 4
-             :htmlized-source t
-             :publishing-directory ,my:org-publish-webpage
-             :publishing-function org-publish-org-to-html
-             :body-only t
-             )
-            ("img"
-             :base-directory ,my:org-publish-webpage-img
-             :base-extension "jpg\\|png"
-             :publishing-directory ,my:org-publish-webpage-img
-             :publishing-function org-publish-attachment
-             )
-            ("gh-pages"
-             :base-directory ,my:org-publish-gh-pages
-             :base-extension "org"
-             :recursive nil
-             :htmlized-source t
-             :exclude ".*\.el\\|^Makefile\\|.*\.gpg\\|sitemap\.org\\|^cc-env\\|^images\\|^_site\\|^export-config\.org"
-             :headline-level 4
-             :publishing-directory my:org-publish-gh-pages
-             :publishing-function org-publish-org-to-html
-             :body-only t
-             )
-            ("Emacs"
-             :base-directory ,my:user-emacs-config-directory
-             :base-extension "org"
-             :htmlized-source t
-             :recursive nil
-             :exclude "^export-config\.org"
-             :headline-level 4
-             :publishing-directory ,my:org-publish-emacs-pages
-             :publishing-function org-publish-org-to-html
-             :body-only t
-             :auto-sitemap t
-             :sitemap-filename "sitemap.org"
-             :sitemap-title ""
-             )
-            ("web" :components ("public" "img"))
-            ("github" :components ("gh-pages"))
-            ("emacs" :components ("Emacs"))
-            ))
-    ;; cache の置き場所を ~/.emacs.d/tmp/org-timestamps/ に変える
-    (setq org-publish-timestamp-directory
-          (concat my:user-emacs-temporary-directory "org-timestamps/"))
-    (setq org-publish-use-timestamps-flag nil)
-  #+END_SRC
+** Project 用の変数定義
+   #+BEGIN_SRC emacs-lisp
+     (defvar my:org-publish-webpage
+       (expand-file-name
+        (concat (getenv "HOME") "/Public/")))
+     (defvar my:org-publish-webpage-img
+       (expand-file-name
+        (concat my:org-publish-webpage "images/")))
+     (defvar my:org-publish-gh-pages
+       (expand-file-name
+        (concat (getenv "HOME") "/Sources/gh-pages")))
+     (defvar my:org-publish-emacs-pages
+       (expand-file-name
+        (concat my:org-publish-webpage "cc-env/Emacs/")))
+   #+END_SRC
+** Project の定義
+   #+BEGIN_SRC emacs-lisp
+     (setq org-publish-project-alist
+           `(
+             ("public"
+              :base-directory ,my:org-publish-webpage
+              :recursive t
+              :exclude ".*\.el\\|^Makefile\\|.*\.gpg\\|sitemap\.org\\|^cc-env\\|^images\\|^_site\\||^export-config\.org"
+              :base-extension "org"
+              :headline-level 4
+              :htmlized-source t
+              :publishing-directory ,my:org-publish-webpage
+              :publishing-function org-publish-org-to-html
+              :body-only t
+              )
+             ("img"
+              :base-directory ,my:org-publish-webpage-img
+              :base-extension "jpg\\|png"
+              :publishing-directory ,my:org-publish-webpage-img
+              :publishing-function org-publish-attachment
+              )
+             ("gh-pages"
+              :base-directory ,my:org-publish-gh-pages
+              :base-extension "org"
+              :recursive nil
+              :htmlized-source t
+              :exclude ".*\.el\\|^Makefile\\|.*\.gpg\\|sitemap\.org\\|^cc-env\\|^images\\|^_site\\|^export-config\.org"
+              :headline-level 4
+              :publishing-directory my:org-publish-gh-pages
+              :publishing-function org-publish-org-to-html
+              :body-only t
+              )
+             ("Emacs"
+              :base-directory ,my:user-emacs-config-directory
+              :base-extension "org"
+              :htmlized-source t
+              :recursive nil
+              :exclude "^export-config\.org"
+              :headline-level 4
+              :publishing-directory ,my:org-publish-emacs-pages
+              :publishing-function org-publish-org-to-html
+              :body-only t
+              :auto-sitemap t
+              :sitemap-filename "sitemap.org"
+              :sitemap-title ""
+              )
+             ("web" :components ("public" "img"))
+             ("github" :components ("gh-pages"))
+             ("emacs" :components ("Emacs"))
+             ))
+   #+END_SRC
+** Cache の置き場所の変更
+   #+BEGIN_SRC emacs-lisp
+     ;; cache の置き場所を ~/.emacs.d/tmp/org-timestamps/ に変える
+     (setq org-publish-timestamp-directory
+           (concat my:user-emacs-temporary-directory "org-timestamps/"))
+     (setq org-publish-use-timestamps-flag nil)
+   #+END_SRC
 * Footnotes
 
 [fn:1] Jeykll: [[http://jekyllrb.com/]]

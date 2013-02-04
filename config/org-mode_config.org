@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/02/02 06:24:14$
+# $Lastupdate: 2013/02/04 21:55:23$
 # License: Expat
 #
 #+TITLE: org-modeの設定
@@ -21,33 +21,34 @@ title: org-modeの設定
   #+END_SRC
 * 基本設定
 ** キーバインド
-   =org-agenda= と =org-capture= の設定のみ.
+   =org-capture=,  =org-export-icalendar-combine-agenda-files=, =org-agenda=.
    =org-capture= は changelog memo [fn:2] のキーバインドにしている.
    #+BEGIN_SRC emacs-lisp
      (define-key global-map (kbd "C-x m") 'org-capture)
      (define-key global-map (kbd "C-c 1") 'org-export-icalendar-combine-agenda-files)
-     (define-key global-map (kbd "C-c a") 'howm-menu)
+     (define-key global-map (kbd "C-c a") 'org-agenda)
    #+END_SRC
 ** auto-mode-alist
-   拡張子が =.org= もしくは =.howm= なら自動的に =org-mode= に
+   拡張子が =.org=, もしくは =.howm= なら自動的に =org-mode= に
    #+BEGIN_SRC emacs-lisp
      (add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
      (add-to-list 'auto-mode-alist '("\\.howm$" . org-mode))
-     (add-to-list 'auto-mode-alist '("\\.org_archive$" . org-mode))
    #+END_SRC
 ** 保存先の設定
+   デフォルトで Dropbox に保存するように.
    #+BEGIN_SRC emacs-lisp
      (setq org-directory (concat my:dropbox "org/"))
-     (setq org-default-notes-file (concat org-directory "todo.org"))
+     (setq org-default-notes-file (concat org-directory "schedule.org"))
    #+END_SRC
 ** link を return で追う
+   URL だけじゃなくて Wanderlust のメールなども追跡できる.
    #+BEGIN_SRC emacs-lisp
      (setq org-return-follows-link t)
    #+END_SRC
 ** 時刻のフォーマット
    #+BEGIN_SRC emacs-lisp
-     ;; (setq org-display-custom-times "<%Y-%m-%d %H:%M:%S>")
-     ;; (setq org-time-stamp-custom-formats "<%Y-%m-%d %H:%M:%S>")
+     (setq org-display-custom-times "<%Y-%m-%d %H:%M:%S>")
+     (setq org-time-stamp-custom-formats "<%Y-%m-%d %H:%M:%S>")
    #+END_SRC
 ** ファイルを開いた時は畳んだ状態で表示
    #+BEGIN_SRC emacs-lisp
@@ -82,35 +83,45 @@ title: org-modeの設定
      ;;   )
      ;;  )
    #+END_SRC
+** 日付表記
+   #+BEGIN_SRC emacs-lisp
+     (add-hook 'org-mode-hook
+               (lambda ()
+                 (set (make-local-variable 'system-time-locale) "C")))
+   #+END_SRC
 * org-agenda で GTD
-  Agenda 表示は使わない -> メモの一覧は howm で確認
 ** Agenda で表示するファイル
-   日付付きの TODO は ical に export されるので
-   =schedule.org= のみを Agenda の対象にする
+   日付付きの TODO は ical に export されるので =schedule.org= のみを Agenda の対象に.
    #+BEGIN_SRC emacs-lisp
      (setq org-agenda-files
-     ;;      (list org-directory))
            '("~/Dropbox/org/schedule.org"))
    #+END_SRC
 ** ToDo 状態の追加
    #+BEGIN_SRC emacs-lisp
      (setq org-todo-keywords
-           '((sequence "TODO(t!)" "WAIT(w!)" "|" "DONE(d!)" "SOMEDAY(s!)")))
+           '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)" "SOMEDAY(s)")))
    #+END_SRC
-** ToDo を DONE にした際に ARCHIVE タグを付ける
+** ToDo を DONE にした際の挙動
+   =ARCHIVE= タグを付けて =archive.org= に refile する
    #+BEGIN_SRC emacs-lisp
      (require 'org-archive nil 'noerror)
+     (setq org-archive-location "archive.org::")
      (defun my:org-archive-done-tasks ()
        (interactive)
+     ;; ARCHIVE タグを付けるだけなら以下
+     ;;   (org-map-entries 'org-archive-set-tag "/DONE" 'file))
+     ;; org-archive-location に refile したいなら以下
        (org-map-entries 'org-archive-set-tag "/DONE" 'file))
      (add-hook 'org-todo-statistics-hook 'my:org-archive-done-tasks)
      (add-hook 'org-todo-after-statistics-hook 'my:org-archive-done-tasks)
    #+END_SRC
 ** DONEの時刻を記録しない
+   icalendar export に必要?
    #+BEGIN_SRC emacs-lisp
      (setq org-log-done nil)
    #+END_SRC
 ** GTD用のタグの追加
+   とりあえず. そのうち適当に追加するかも.
    #+BEGIN_SRC emacs-lisp
      (setq org-tag-alist
        '(
@@ -122,26 +133,35 @@ title: org-modeの設定
          ))
    #+END_SRC
 ** Refile 対象の設定
+   subtree ではなく ファイルに refile する
    #+BEGIN_SRC emacs-lisp
+     (setq org-outline-path-complete-in-steps t)
      (setq org-refile-allow-creating-parent-nodes t)
+     (setq org-refile-use-outline-path 'file)
      (setq org-refile-targets
            '(
-             ("todo.org" :level . 1)
-             ("schedule.org" :level . 1)
-             ("someday.org" :level . 1)
-             ("archive.org" :level . 1)
+             ("todo.org" :maxlevel . 1)
+             ("schedule.org" :maxlevel . 1)
+             ("someday.org" :maxlevel . 1)
              ))
+   #+END_SRC
+** Refile 時の bookmark の置き場所の変更
+   デフォルトは =user-emacs-config-directory= 以下に置かれる.
+   #+BEGIN_SRC emacs-lisp
+     (setq bookmark-default-file
+           (concat my:user-emacs-temporary-directory "bookmarks"))
    #+END_SRC
 * メモ取り: org-capture
   1メモ1ファイル + howm 連携のための設定
 ** org-cature の際に howm 形式のファイルを作成
+   単なるメモは 1メモ1ファイルで保存
    #+BEGIN_SRC emacs-lisp
      (defun my:org-capture-howm-file ()
        (expand-file-name
         (format-time-string "%Y%m%d-%H%M%S.howm") org-directory))
    #+END_SRC
-** org-capture template
-   bookmark は使わない
+** org-capture での bookmark の使用禁止
+   refile 時には使われるので, 実はあんまり意味が無い?
    #+BEGIN_SRC emacs-lisp
      (setq org-capture-bookmark nil)
    #+END_SRC
@@ -156,6 +176,7 @@ title: org-modeの設定
               :unnarrowed nil
               :kill-buffer t)
              ("s" "schedule" entry
+              ;; (file+datetree (concat org-directory "schedule.org"))
               (file (concat org-directory "schedule.org"))
               "* <%<%Y-%m-%d>> %?\n  %i\n  %a\n"
               :prepend nil
@@ -182,17 +203,18 @@ title: org-modeの設定
    #+END_SRC
 ** ディレクトリの設定
    #+BEGIN_SRC emacs-lisp
-     (setq org-mobile-directory
-           (concat  my:dropbox "MobileOrg"))
-     (setq my:mobile-sync-files
-           `("~/Dropbox/org/schedule.org"
-             "~/Dropbox/org/todo.org"
-             ))
-     (setq org-mobile-files my:mobile-sync-files)
-     (setq org-mobile-inbox-for-pull
-           (concat org-directory "mobile-pull.org"))
-     (setq org-mobile-creating-agendas t)
-     (setq org-mobile-agendas 'custom)
+          (setq org-mobile-directory
+                (concat  my:dropbox "MobileOrg"))
+          (setq my:mobile-sync-files
+                `("~/Dropbox/org/schedule.org"
+                  "~/Dropbox/org/todo.org"
+                  "~/Dropbox/org/someday.org"
+                  ))
+          (setq org-mobile-files my:mobile-sync-files)
+          (setq org-mobile-inbox-for-pull
+                (concat org-directory "mobile-pull.org"))
+          (setq org-mobile-creating-agendas t)
+          (setq org-mobile-agendas 'custom)
    #+END_SRC
 * export icalendar
 ** 保存先
@@ -219,10 +241,11 @@ title: org-modeの設定
    #+BEGIN_SRC emacs-lisp
      ;; TODO は出力対象から除外
      (setq org-icalendar-include-todo nil)
-     ;; （通常は，<>--<> で区間付き予定をつくる．非改行入力で日付がNoteに入らない）
-     (setq org-icalendar-use-scheduled '(event-if-todo event-if-not-todo))
-     ;; DL 付きで終日予定にする：締め切り日（スタンプで時間を指定しないこと）
-     (setq org-icalendar-use-deadline '(event-if-todo event-if-not-todo))
+     ;;（通常は，<>--<> で区間付き予定をつくる. 非改行入力で日付がNoteに入らない）
+     ;; (setq org-icalendar-use-scheduled '(event-if-not-todo))
+     (setq org-icalendar-use-scheduled '(event-if-not-todo))
+     ;; DL 付きで終日予定にする: 締め切り日（スタンプで時間を指定しないこと）
+     (setq org-icalendar-use-deadline '(event-if-not-todo))
    #+END_SRC
 * export LaTeX
   主に日本語LaTeX → pTeX 用の設定とか.

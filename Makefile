@@ -5,10 +5,15 @@ TARGET_DIR	:= modules config
 
 all: bootstrap TARGET $(ELCFiles)
 
-recompile:
+check:
+	@if [ $(shell cat $(HOME)/.emacs | wc -l) -ne 1 ]; then \
+	  echo "Check Your Emacs !!! Local settings may be exists." ; exit 1 ; \
+	fi
+
+recompile: check
 	( touch config/index.org && make)
 
-bootstrap: .set_permission .bootstrap 
+bootstrap: .set_permission .bootstrap check
 .bootstrap:
 	( cd modules && $(MAKE) ) 
 	$(EMACS) -nw

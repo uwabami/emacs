@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/31 18:29:15$
+# $Lastupdate: 2013/02/04 21:47:22$
 # License: Expat
 #
 #+TITLE: howm の設定
@@ -28,10 +28,11 @@ title: howm の設定
 * ディレクトリの設定
   メモの内容は dropbox で同期することに
   #+BEGIN_SRC emacs-lisp
-    (setq howm-directory "~/Dropbox/org")
-    (setq howm-keyword-file "~/Dropbox/org/.howm-keys")
-    (setq howm-history-file "~/Dropbox/org/.howm-history")
-    (setq howm-menu-file "~/Dropbox/org/.howm-menu")
+    (setq howm-directory (concat my:dropbox "org"))
+    ;; メニューと履歴を検索対象から除外するために別ディレクトリへ
+    (setq howm-keyword-file (concat my:dropbox ".howm/keys"))
+    (setq howm-history-file (concat my:dropbox ".howm/history"))
+    (setq howm-menu-file (concat my:dropbox ".howm/menu"))
     (setq howm-file-name-format "%Y%m%d-%H%M%S.howm")
   #+END_SRC
 * org-mode でメモを書くためにその1
@@ -71,7 +72,7 @@ title: howm の設定
   ちょっと真面目に設定した方が良いかも. あるいは grep 使わない?
 ** 検索で大文字小文字を区別しない
     #+BEGIN_SRC emacs-lisp
-    (setq howm-keyword-case-fold-search t)
+      (setq howm-keyword-case-fold-search t)
     #+END_SRC
 ** grep の設定
     #+BEGIN_SRC emacs-lisp

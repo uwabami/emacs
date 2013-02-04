@@ -23,6 +23,7 @@
 auto
 *.synctex.gz
 .bootstrap
+.set_permission
 .*-use
 bundle
 config/*.el

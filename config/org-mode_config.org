@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/31 19:16:17$
+# $Lastupdate: 2013/02/02 06:24:14$
 # License: Expat
 #
 #+TITLE: org-modeの設定
@@ -26,6 +26,7 @@ title: org-modeの設定
    #+BEGIN_SRC emacs-lisp
      (define-key global-map (kbd "C-x m") 'org-capture)
      (define-key global-map (kbd "C-c 1") 'org-export-icalendar-combine-agenda-files)
+     (define-key global-map (kbd "C-c a") 'howm-menu)
    #+END_SRC
 ** auto-mode-alist
    拡張子が =.org= もしくは =.howm= なら自動的に =org-mode= に
@@ -94,7 +95,7 @@ title: org-modeの設定
 ** ToDo 状態の追加
    #+BEGIN_SRC emacs-lisp
      (setq org-todo-keywords
-           '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)" "SOMEDAY(s)")))
+           '((sequence "TODO(t!)" "WAIT(w!)" "|" "DONE(d!)" "SOMEDAY(s!)")))
    #+END_SRC
 ** ToDo を DONE にした際に ARCHIVE タグを付ける
    #+BEGIN_SRC emacs-lisp
@@ -127,6 +128,7 @@ title: org-modeの設定
            '(
              ("todo.org" :level . 1)
              ("schedule.org" :level . 1)
+             ("someday.org" :level . 1)
              ("archive.org" :level . 1)
              ))
    #+END_SRC
@@ -172,6 +174,25 @@ title: org-modeの設定
               :unnarrowed t
               :kill-buffer t)
              ))
+   #+END_SRC
+* sync: org-mobile
+** 読み込み
+   #+BEGIN_SRC emacs-lisp
+   (require 'org-mobile nil 'noerror)
+   #+END_SRC
+** ディレクトリの設定
+   #+BEGIN_SRC emacs-lisp
+     (setq org-mobile-directory
+           (concat  my:dropbox "MobileOrg"))
+     (setq my:mobile-sync-files
+           `("~/Dropbox/org/schedule.org"
+             "~/Dropbox/org/todo.org"
+             ))
+     (setq org-mobile-files my:mobile-sync-files)
+     (setq org-mobile-inbox-for-pull
+           (concat org-directory "mobile-pull.org"))
+     (setq org-mobile-creating-agendas t)
+     (setq org-mobile-agendas 'custom)
    #+END_SRC
 * export icalendar
 ** 保存先

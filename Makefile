@@ -8,10 +8,15 @@ all: bootstrap TARGET $(ELCFiles)
 recompile:
 	( touch config/index.org && make)
 
-bootstrap: .bootstrap
+bootstrap: .set_permission .bootstrap 
 .bootstrap:
 	( cd modules && $(MAKE) ) 
 	$(EMACS) -nw
+	touch $@
+
+set_permission : .set_permission
+.set_permission:
+	chmod 700 tmp
 	touch $@
 
 update:
@@ -38,4 +43,4 @@ distclean: clean
 	@for d in $(TARGET_DIR) ;\
 		do $(MAKE) clean -C $$d ;\
 	done
-	rm -fr tmp/* el-get .bootstrap
+	rm -fr tmp/* el-get .bootstrap .set_permission

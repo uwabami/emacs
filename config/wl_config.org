@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/25 11:40:10$
+# $Lastupdate: 2013/02/05 00:13:43$
 # License: Expat.
 #
 #+TITLE: Wanderlust の設定
@@ -26,6 +26,7 @@ title: Wanderlustの設定
   - elscreen-wl
   - google-contacts-wl
   - c-sig
+  - offlineimap-el
 ** rail
    SEMI や FLIM などの UA の表示に [[http://uwabami.github.com/rail/][rail]] [fn:2]を使っている.
    #+BEGIN_SRC emacs-lisp
@@ -63,6 +64,11 @@ title: Wanderlustの設定
    #+BEGIN_SRC emacs-lisp
      (setq mime-setup-enable-inline-html nil)
    #+END_SRC
+   MIME の例の保存先の変更
+   #+BEGIN_SRC emacs-lisp
+     (setq mime-situation-examples-file
+           (concat my:user-emacs-temporary-directory "mime-example"))
+   #+END_SRC
    HTML パートの表示に w3m を使う
    #+BEGIN_SRC emacs-lisp
      (require 'mime-setup)
@@ -85,6 +91,25 @@ title: Wanderlustの設定
    #+BEGIN_SRC emacs-lisp
      (el-get 'sync '(google-contacts-wl))
      (require 'google-contacts-wl nil 'noerror)
+   #+END_SRC
+** offlineimap-el
+   #+BEGIN_SRC emacs-lisp
+     (el-get 'sync 'offlineimap-el)
+     (require 'offlineimap nil 'noerror)
+     (setq offlineimap-command "offlineimap -u machineui -o ")
+     (setq offlineimap-mode-line-style 'symbol)
+     (setq offlineimap-mode-line-symbol "imap")
+     (setq offlineimap-enable-mode-line-p
+           '(member
+             major-mode
+             '(offlineimap-mode
+               wl-folder-mode
+               wl-summary-mode
+               wl-folder-mode
+               wl-message-mode
+               wl-draft-mode
+               )))
+     (global-set-key [f1] 'offlineimap)
    #+END_SRC
 * ssl.elの代わりにopentlsを使う
   ついで(あれば) =/etc/ssl/certs/ca-ceritficats.crt= で証明書を検証.
@@ -310,7 +335,7 @@ title: Wanderlustの設定
 ** misc.
    スレッドは常に閉じる
    #+BEGIN_SRC emacs-lisp
-      (setq wl-thread-insert-opened nil)
+     (setq wl-thread-insert-opened nil)
    #+END_SRC
    3 pain 表示 -> 使わない
    #+BEGIN_SRC emacs-lisp
@@ -327,6 +352,10 @@ title: Wanderlustの設定
    icon を使わない → GUI でもメニュー表示してないし, 体感的には遅くなる
    #+BEGIN_SRC emacs-lisp
      (setq wl-highlight-folder-with-icon nil)
+   #+END_SRC
+   折り返しの設定 -> message は折り返す.
+   #+BEGIN_SRC emacs-lisp
+     (setq wl-message-truncate-lines nil)
    #+END_SRC
 * キーバインド関連
   =<f2>= で Addrbook の更新
@@ -561,20 +590,18 @@ title: Wanderlustの設定
 
 * 添付ファイルの扱い
   =/etc/mailcap= と =~/.mailcap= の二つに
-  同じエントリがあると, 動作が微妙になる
-  - [[http://comments.gmane.org/gmane.mail.wanderlust.general.japanese/8618]]
-
+  同じエントリがあると, 動作が微妙になるらしい [fn:6] .
   ここでは =~/.mailcap= だけを見にいくように
   #+BEGIN_SRC emacs-lisp
     (setq mime-view-mailcap-files '("~/.mailcap"))
   #+END_SRC
   ちなみに
   =~/.mailcap= 自体は
-  #+BEGIN_SRC example
+  #+BEGIN_EXAMPLE
   applications/*; xdg-open %s;
   image/*; xdg-open %s;
   video/*; xdg-open %s;
-  #+END_SRC
+  #+END_EXAMPLE
   として xdg-open に丸投げ.
 * メッセージ表示
 ** いったん全て非表示に
@@ -725,3 +752,5 @@ title: Wanderlustの設定
 [fn:4] Wanderlustで自分宛てのメールをGMailのように「>」で強調する : [[http://d.hatena.ne.jp/khiker/20080206/wanderlust]]
 
 [fn:5] color-theme-darkpastel : [[https://github.com/uwabami/color-theme-darkpastel]]
+
+[fn:6] [[http://comments.gmane.org/gmane.mail.wanderlust.general.japanese/8618]]

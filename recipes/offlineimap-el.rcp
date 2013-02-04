@@ -1,0 +1,6 @@
+(:name offlineimap-el
+       :type git
+       :description "OfflineIMAP support for Emacs"
+       :url "http://git.naquadah.org/git/offlineimap-el.git"
+       :autoloads nil
+       )

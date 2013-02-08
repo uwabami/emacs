@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/02/04 21:55:23$
+# $Lastupdate: 2013/02/06 00:46:28$
 # License: Expat
 #
 #+TITLE: org-modeの設定
@@ -111,7 +111,7 @@ title: org-modeの設定
      ;; ARCHIVE タグを付けるだけなら以下
      ;;   (org-map-entries 'org-archive-set-tag "/DONE" 'file))
      ;; org-archive-location に refile したいなら以下
-       (org-map-entries 'org-archive-set-tag "/DONE" 'file))
+       (org-map-entries 'org-archive-subtree "/DONE" 'file))
      (add-hook 'org-todo-statistics-hook 'my:org-archive-done-tasks)
      (add-hook 'org-todo-after-statistics-hook 'my:org-archive-done-tasks)
    #+END_SRC
@@ -129,7 +129,7 @@ title: org-modeの設定
          ("@HOME" . ?h)
          ("SHOPPING" . ?s)
          ("MAIL" . ?m)
-         ("PROJECT" . ?p)
+         ("WORK" . ?w)
          ))
    #+END_SRC
 ** Refile 対象の設定

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/02/05 00:13:43$
+# $Lastupdate: 2013/02/05 16:33:28$
 # License: Expat.
 #
 #+TITLE: Wanderlust の設定
@@ -353,9 +353,14 @@ title: Wanderlustの設定
    #+BEGIN_SRC emacs-lisp
      (setq wl-highlight-folder-with-icon nil)
    #+END_SRC
-   折り返しの設定 -> message は折り返す.
+** 折り返しの設定
+   message は折り返す.
    #+BEGIN_SRC emacs-lisp
      (setq wl-message-truncate-lines nil)
+   #+END_SRC
+   draft も折り返す
+   #+BEGIN_SRC emacs-lisp
+     (setq wl-draft-truncate-lines nil)
    #+END_SRC
 * キーバインド関連
   =<f2>= で Addrbook の更新

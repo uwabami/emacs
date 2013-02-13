@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/02/05 16:33:28$
+# $Lastupdate: 2013/02/13 22:17:31$
 # License: Expat.
 #
 #+TITLE: Wanderlust の設定
@@ -518,6 +518,7 @@ title: Wanderlustの設定
            '(
              "List-Post"
              "List-Id"
+             "List-ID"
              "Resent-CC"
              "Mailing-List"
              "X-Mailing-List"

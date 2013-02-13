@@ -13,7 +13,7 @@ check:
 recompile: check
 	( touch config/index.org && make)
 
-bootstrap: .set_permission .bootstrap check
+bootstrap: .set_permission check .bootstrap
 .bootstrap:
 	( cd modules && $(MAKE) ) 
 	$(EMACS) -nw

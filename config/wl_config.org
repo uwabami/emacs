@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/02/13 22:17:31$
+# $Lastupdate: 2013/03/22 02:24:26$
 # License: Expat.
 #
 #+TITLE: Wanderlust の設定
@@ -76,6 +76,7 @@ title: Wanderlustの設定
        (require 'w3m-ems)
        (require 'w3m-load)
        (require 'mime-w3m)
+       (setq mime-w3m-safe-url-regexp nil)
        )
    #+END_SRC
    大きいメッセージを送信時に分割しない

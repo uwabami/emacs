@@ -1,0 +1,5 @@
+(:name darkpastel-theme
+       :type github
+       :pkgname "uwabami/color-theme-darkpastel"
+       :description "darkbackground + pastel color font-lock"
+       :prepare (add-to-list 'custom-theme-load-path default-directory))

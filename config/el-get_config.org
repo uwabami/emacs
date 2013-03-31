@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/31 09:58:04$
+# $Lastupdate: 2013/02/28 04:25:54$
 # License: Expat
 #
 #+TITLE: el-get で install した雑多な物
@@ -116,6 +116,7 @@ title: el-get で install した雑多な物
   #+BEGIN_SRC emacs-lisp
     (el-get 'sync '(zlc))
     (require 'zlc nil 'noerror)
+    (zlc-mode t)
     (let ((map minibuffer-local-map))
       (define-key map (kbd "<backtab>") 'zlc-select-previous)
       (define-key map (kbd "S-<tab>")   'zlc-select-previous)
@@ -124,6 +125,7 @@ title: el-get で install した雑多な物
       (define-key map (kbd "C-b")       'zlc-select-previous)
       (define-key map (kbd "C-f")       'zlc-select-next)
       (define-key map (kbd "C-d")       'zlc-reset))
+    ;; (setq zlc-select-completion-immediately t)
   #+END_SRC
 * [[http://d.hatena.ne.jp/tarao/20101011/1286804507][Yet another icompelete]] [fn:4]
   zlc をさらに素敵にしてくれる.

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/02/06 00:46:28$
+# $Lastupdate: 2013/02/28 18:27:14$
 # License: Expat
 #
 #+TITLE: org-modeの設定
@@ -89,7 +89,7 @@ title: org-modeの設定
                (lambda ()
                  (set (make-local-variable 'system-time-locale) "C")))
    #+END_SRC
-* org-agenda で GTD
+* GTD: Org-Agenda
 ** Agenda で表示するファイル
    日付付きの TODO は ical に export されるので =schedule.org= のみを Agenda の対象に.
    #+BEGIN_SRC emacs-lisp
@@ -151,7 +151,7 @@ title: org-modeの設定
      (setq bookmark-default-file
            (concat my:user-emacs-temporary-directory "bookmarks"))
    #+END_SRC
-* メモ取り: org-capture
+* メモ環境: Org-Capture
   1メモ1ファイル + howm 連携のための設定
 ** org-cature の際に howm 形式のファイルを作成
    単なるメモは 1メモ1ファイルで保存
@@ -196,76 +196,14 @@ title: org-modeの設定
               :kill-buffer t)
              ))
    #+END_SRC
-* sync: org-mobile
-** 読み込み
+* LaTeX Export
+  日本語LaTeXとして pLaTeX を使うための設定.
+  XeLaTeX 使うようにした方が良いのかなぁ.
+** documentclass として jsarticle を使う
+   inputenc は使わないことに.
    #+BEGIN_SRC emacs-lisp
-   (require 'org-mobile nil 'noerror)
-   #+END_SRC
-** ディレクトリの設定
-   #+BEGIN_SRC emacs-lisp
-          (setq org-mobile-directory
-                (concat  my:dropbox "MobileOrg"))
-          (setq my:mobile-sync-files
-                `("~/Dropbox/org/schedule.org"
-                  "~/Dropbox/org/todo.org"
-                  "~/Dropbox/org/someday.org"
-                  ))
-          (setq org-mobile-files my:mobile-sync-files)
-          (setq org-mobile-inbox-for-pull
-                (concat org-directory "mobile-pull.org"))
-          (setq org-mobile-creating-agendas t)
-          (setq org-mobile-agendas 'custom)
-   #+END_SRC
-* export icalendar
-** 保存先
-   #+BEGIN_SRC emacs-lisp
-    (setq org-combined-agenda-icalendar-file
-          (concat my:dropbox "ical/org-export.ics"))
-   #+END_SRC
-** ical の説明文
-   #+BEGIN_SRC emacs-lisp
-    (setq org-icalendar-combined-description "OrgMode schedule")
-   #+END_SRC
-** Description の長さ
-   Google Calendar の説明の所って, 適当な syntax 使えないのかな.
-   #+BEGIN_SRC emacs-lisp
-    (setq org-icalendar-include-body 4096)
-    (setq org-export-exclude-tags "DONE")
-   #+END_SRC
-** TimeZone
-   カレンダーに適切なタイムゾーンを設定
-   #+BEGIN_SRC emacs-lisp
-    (setq org-icalendar-timezone "Asia/Tokyo")
-   #+END_SRC
-** 出力対象
-   #+BEGIN_SRC emacs-lisp
-     ;; TODO は出力対象から除外
-     (setq org-icalendar-include-todo nil)
-     ;;（通常は，<>--<> で区間付き予定をつくる. 非改行入力で日付がNoteに入らない）
-     ;; (setq org-icalendar-use-scheduled '(event-if-not-todo))
-     (setq org-icalendar-use-scheduled '(event-if-not-todo))
-     ;; DL 付きで終日予定にする: 締め切り日（スタンプで時間を指定しないこと）
-     (setq org-icalendar-use-deadline '(event-if-not-todo))
-   #+END_SRC
-* export LaTeX
-  主に日本語LaTeX → pTeX 用の設定とか.
-** 読み込み
-   =(require 'org)= で良いかと思ってみたら, 以下は読み込まないと
-   =byte-compile= できなかった.
-   #+BEGIN_SRC emacs-lisp
-     (require 'org-latex nil 'noerror)
-     (require 'org-beamer nil 'noerror)
-   #+END_SRC
-** 日本語LaTeX用の設定
-   (squeeze 以前の)DebianのpLaTeXはまだUTF-8を処理できないので,
-   EUC-JPでexportする.
-   #+BEGIN_SRC emacs-lisp
-     (setq org-export-latex-coding-system 'euc-jp-unix)
-     (setq org-export-latex-date-format "%Y年%m月%d日")
-   #+END_SRC
-** jsarticle classの追加
-   inputenc 等は読み込まないことにしてファイル毎にスタイルを設定する.
-   #+BEGIN_SRC emacs-lisp
+     (unless (boundp 'org-export-latex-classes)
+       (setq org-export-latex-classes nil))
      (add-to-list 'org-export-latex-classes
                   '("jsarticle"
                     "\\documentclass{jsarticle}
@@ -273,12 +211,58 @@ title: org-modeの設定
      [NO-PACKAGES]
      [EXTRA]
      "
-                      ("\\section{%s}" . "\\section*{%s}")
-                      ("\\subsection{%s}" . "\\subsection*{%s}")
-                      ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-                      ("\\paragraph{%s}" . "\\paragraph*{%s}")
-                      ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+                    ("\\section{%s}" . "\\section*{%s}")
+                    ("\\subsection{%s}" . "\\subsection*{%s}")
+                    ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                    ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                    ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
      (setq org-export-latex-default-class "jsarticle")
+   #+END_SRC
+** beamer の設定
+   こちらも同様.
+   #+BEGIN_SRC emacs-lisp
+     (add-to-list 'org-export-latex-classes
+                  '("beamer"
+                    "\\documentclass{beamer}
+     [NO-DEFAULT-PACKAGES]
+     [NO-PACKAGES]
+     [EXTRA]
+     "
+     org-beamer-sectioning
+     ))
+   #+END_SRC
+   常に =fragile= で使用
+   #+BEGIN_SRC emacs-lisp
+   (setq org-beamer-frame-default-options "[fragile]")
+   #+END_SRC
+** pdf 生成コマンド: pLaTeX を使う
+   こんな感じのスクリプトを用意して
+   #+BEGIN_SRC sh
+     #!/bin/zsh
+     NKF=`which nkf 1>/dev/null 2>&1` || exit 1
+     CODE=`nkf -guess $1`
+     case $CODE in
+         EUC-JP*|euc-jp*)
+             platex -shell-escape -src-specials -kanji=euc $1 && \
+                 dvipdfmx "`basename "$1" .tex`"
+             ;;
+         ISO-2022-JP*|iso-2022-jp*)
+             platex -shell-escape -src-specials -kanji=jis $1 && \
+                 dvipdfmx "`basename "$1" .tex`"
+             ;;
+         UTF-8*|utf-8*)
+             platex -shell-escape -src-specials -kanji=utf8 $1 && \
+                 dvipdfmx "`basename "$1" .tex`"
+             ;;
+
+         ,*)
+             ;;
+     esac
+   #+END_SRC
+   PDF を生成する際には上記スクリプトを実行することに.
+   #+BEGIN_SRC emacs-lisp
+     (setq org-latex-to-pdf-process
+           '("pdfplatex %f"))
    #+END_SRC
 ** 強調等の変換
    #+BEGIN_SRC emacs-lisp
@@ -292,21 +276,8 @@ title: org-modeの設定
         ("~" "\\verb" t)
         ))
    #+END_SRC
-** latexmk
-   PDF作成にはlatexmkを使う
-   #+BEGIN_SRC emacs-lisp
-     (setq org-latex-to-pdf-process
-           '("latexmk -kanji=euc -pdfdvi %f"))
-   #+END_SRC
-** beamer export の設定
-   #+BEGIN_SRC emacs-lisp
-     ;; デフォルトのヘッドラインレベル -> 2
-     (setq org-beamer-frame-level 2)
-     ;; frame のオプション
-     (setq org-beamer-frame-default-options "[fragile]")
-     (setq org-export-with-sub-superscripts nil)
-   #+END_SRC
-* export HTML
+
+* HTML Export
   [[http://jekyllrb.com/][Jekyll]] [fn:1] でサイト構築を行なっているので, それにまつわる設定
 ** Project 用の変数定義
    #+BEGIN_SRC emacs-lisp

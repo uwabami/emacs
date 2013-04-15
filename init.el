@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2013/02/28 10:44:28$
+;; $Lastupdate: 2013/04/15 21:05:23$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -27,6 +27,8 @@
 ;; -----------------------------------------------------------
 ;;; byte-compile 関連
 ;;
+;;
+(eval-and-compile (require 'cl))
 ;; Compile-Log の非表示
 (let ((win (get-buffer-window "*Compile-Log*")))
   (when win (delete-window win)))
@@ -158,7 +160,7 @@
   "export emacs-lisp and byte-compile from org files (not load).
    originally ob-tangle.el"
   (interactive "fFile to load: ")
-  (flet ((age (file)
+  (cl-flet ((age (file)
               (float-time
                (time-subtract (current-time)
                               (nth 5 (or (file-attributes (file-truename file))

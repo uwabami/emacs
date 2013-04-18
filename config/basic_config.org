@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/02/04 21:34:01$
+# $Lastupdate: 2013/04/18 21:00:59$
 # License: Expat
 #
 #+TITLE: バージョン依存しない(はず)の雑多な設定
@@ -15,11 +15,14 @@ title: バージョン依存しない(はず)の雑多な設定
 ---
 #+END_HTML
 * 始めに
+
   Emacs そのものの設定集. 多分機種依存しないように書けている(ハズ).
 
   ちなみに =line-number-mode= など「有効無効をtoggleする関数」は,
-  慣習的に =0= 以下の数字を指定すると明示的に無効化できます.
+  慣習的に =0= 以下の数字を指定すると明示的に無効化できる.
+
 * 常に $HOME から開始
+
   以前 Meadow を使っていた時に, Cygwin の =$HOME= から始めないと
   ファイルを開くのが大変だったので, 指定しています.
   これを指定していると byte-compile 時に常に =CURDIR= を指定する必要があって,
@@ -268,6 +271,8 @@ title: バージョン依存しない(はず)の雑多な設定
     (setq time-stamp-format "%04y/%02m/%02d %02H:%02M:%02S")
     (setq time-stamp-end "\\$")
   #+END_SRC
+  最近は殆ど全ての資源を git で管理するようになってきたので,
+  これは不要かもしれない.
 * emacs-server
   既に =emacs-server= が起動しているならば何もせず,
   起動していない場合には =emacs-server= を起動する.
@@ -303,10 +308,13 @@ title: バージョン依存しない(はず)の雑多な設定
     (setq history-length t)  ; t で無制限
   #+END_SRC
 * EPA: EasyPG Assistant
+  GPG 暗号化されたファイルを透過的に扱える素敵 elisp.
+  Emacs23 から標準に入っているので, emacs >=23 以上で有効に.
   #+BEGIN_SRC emacs-lisp
-    (require 'epa-file)
-    (setq epa-file-enable)
-    (setq epa-file-cache-passphrase-for-symmetric-encryption t)
+    (unless oldemacs-p
+      (require 'epa-file)
+      (setq epa-file-enable)
+      (setq epa-file-cache-passphrase-for-symmetric-encryption t))
   #+END_SRC
 * Footnotes
 

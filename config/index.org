@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/27 23:40:48$
+# $Lastupdate: 2013/04/19 01:12:13$
 # License: Expat
 #
 #+TITLE: Emacsの設定 - 主に org ファイルの読み込み集
@@ -50,7 +50,7 @@ title: Emacsの基本設定 - 主に org ファイルの読み込み集
    ddskk がインストールされていない/古い ddskk が install されている場合には
    最新版を el-get する.
    ただし標準の el-get の recipe は
-   CVSを使っている(= 本家 CVS は proxy を越えられない)ので
+   CVSを使っている(= CVS は proxy を越えられない)ので
    [[https://github.com/hsaito/ddskk][github:hsaito/ddskk]] を使わせて頂くことに.
    recipe は [[https://raw.github.com/uwabami/dot.emacs.d/master/recipes/ddskk.rcp][recipes/ddskk.rcp]] を参照:
    #+BEGIN_EXAMPLE

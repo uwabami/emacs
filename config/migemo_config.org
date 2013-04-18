@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/25 01:37:15$
+# $Lastupdate: 2013/04/18 23:31:07$
 # License: Expat.
 #+TITLE: C/Migemo の設定
 #+AUTHOR: Youhei SASAKI
@@ -35,15 +35,13 @@ title: C/Migemo の設定
         (setq migemo-regex-dictionary nil)
         ))
   #+END_SRC
-* キャッシュ機能を利用する
+* キャッシュ機能
+  使わないことに.
   #+BEGIN_SRC emacs-lisp
     (eval-after-load 'migemo
       (progn
-        (setq migemo-use-pattern-alist t)
-        (setq migemo-pattern-alist-file (concat user-emacs-directory "tmp/migemo-pattern"))
-        (setq migemo-use-frequent-pattern-alist t)
-        (setq migemo-frequent-pattern-alist-file (concat user-emacs-directory "tmp/migemo-frequent"))
-        (setq migemo-pattern-alist-length 2048)
+        (setq migemo-use-pattern-alist nil)
+        (setq migemo-use-frequent-pattern-alist nil)
         ))
   #+END_SRC
 * 読み込み

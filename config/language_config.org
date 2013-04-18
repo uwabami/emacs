@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/25 11:35:44$
+# $Lastupdate: 2013/04/18 20:57:05$
 # License: Expat
 #
 #+TITLE: 言語の設定
@@ -25,6 +25,7 @@ title: 言語の設定
 
   というわけで OS 依存の条件分岐だけを記述しています.
 * cp5022x
+
   Emacs23 から内部が Unicode ベースになっています.
   しかし文字コードの変換は GNU libc の iconv をベースにしているため,
   環境によっては文字の変換がうまく行なえません.
@@ -36,7 +37,9 @@ title: 言語の設定
   #+BEGIN_SRC emacs-lisp
     (el-get 'sync '(cp5022x))
   #+END_SRC
+
 * East Asian Ambiguos 対応
+
   CJK 以外の East Asian Ambiguos も2文字幅にするようにしています.
   #+BEGIN_SRC emacs-lisp
     (defun set-east-asian-ambiguous-width (width)
@@ -84,9 +87,9 @@ title: 言語の設定
     (set-east-asian-ambiguous-width 2)
   #+END_SRC
 * OSの違いに起因する条件分岐
+
   Mac と Linux では同じ Unicode でも正規化が異なります
-  (具体的には Mac のファイルシステムである
-  HFS+ ではUnicode の正規化が異なります).
+  (具体的には Mac のファイルシステムである HFS+ では Unicode の正規化が異なります).
   Unicode の正規化と Mac OS X 特有の事情については
    - [[http://homepage1.nifty.com/nomenclator/unicode/normalization.htm][Unicode正規化とは]] [fn:5]
    - [[http://www.sakito.com/2010/05/mac-os-x-normalization.html][Mac OS X におけるファイル名に関するメモ(NFC, NFD等)]] [fn:6]

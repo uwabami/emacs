@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/02/28 04:25:54$
+# $Lastupdate: 2013/04/18 19:17:34$
 # License: Expat
 #
 #+TITLE: el-get で install した雑多な物
@@ -120,11 +120,11 @@ title: el-get で install した雑多な物
     (let ((map minibuffer-local-map))
       (define-key map (kbd "<backtab>") 'zlc-select-previous)
       (define-key map (kbd "S-<tab>")   'zlc-select-previous)
-      (define-key map (kbd "C-p")       'zlc-select-previous-vertical)
-      (define-key map (kbd "C-n")       'zlc-select-next-vertical)
-      (define-key map (kbd "C-b")       'zlc-select-previous)
-      (define-key map (kbd "C-f")       'zlc-select-next)
-      (define-key map (kbd "C-d")       'zlc-reset))
+     (define-key map (kbd "C-p")       'zlc-select-previous-vertical)
+     (define-key map (kbd "C-n")       'zlc-select-next-vertical)
+     (define-key map (kbd "C-b")       'zlc-select-previous)
+     (define-key map (kbd "C-f")       'zlc-select-next)
+     (define-key map (kbd "C-d")       'zlc-reset))
     ;; (setq zlc-select-completion-immediately t)
   #+END_SRC
 * [[http://d.hatena.ne.jp/tarao/20101011/1286804507][Yet another icompelete]] [fn:4]
@@ -182,11 +182,6 @@ title: el-get で install した雑多な物
         (el-get 'sync '(popup-color-at-point))
         (load (concat el-get-dir "popup-color-at-point/popup-color-at-point"))
         (global-set-key (kbd "C-c c") 'popup-color-at-point)))
-  #+END_SRC
-* wc-mode
-  文字列を数える関数
-  #+BEGIN_SRC emacs-lisp
-    (el-get 'sync 'wc-mode)
   #+END_SRC
 * Footnotes
 

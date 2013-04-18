@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2013/04/15 21:05:23$
+;; $Lastupdate: 2013/04/16 19:52:19$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -27,6 +27,7 @@
 ;; -----------------------------------------------------------
 ;;; byte-compile 関連
 ;;
+(setq debug-on-error t)
 ;;
 (eval-and-compile (require 'cl))
 ;; Compile-Log の非表示
@@ -129,6 +130,7 @@
 ;; -----------------------------------------------------------
 ;;; Check dpkg status by 'el-get-dpkg-package-status
 ;;
+(eval-when-compile (require 'el-get-apt-get))
 (defun my:dpkg-status (string)
   "Check dpkg status"
   (interactive)

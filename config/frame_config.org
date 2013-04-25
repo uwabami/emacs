@@ -20,18 +20,11 @@ title: フォントとフレームの設定
     (load "term/xterm")
     (unless (window-system)
       (xterm-register-default-colors))
-    (cond
-     (emacs24-p
-      (el-get 'sync '(darkpastel-theme))
-      (load-theme 'darkpastel t))
-     (emacs23-p
-      (when (locate-library "color-theme")
-        (el-get 'sync '(color-theme-darkpastel))
-        (setq color-theme-load-all-themes nil)
-        (setq color-theme-libraries nil)
-        (when (require 'color-theme-darkpastel nil t)
-          (color-theme-darkpastel)))
-      ))
+    (when emacs24-p
+      (progn
+        (el-get 'sync '(darkpastel-theme))
+        (load-theme 'darkpastel t)))
+    
   #+END_SRC
 * カーソルのある位置の face を調べる関数
   #+BEGIN_SRC emacs-lisp

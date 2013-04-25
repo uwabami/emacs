@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/03/22 12:21:24$
+# $Lastupdate: 2013/04/26 01:51:15$
 # License: Expat
 #
 #+TITLE: AUCTeX の設定
@@ -33,7 +33,6 @@ title: AUCTeX の設定
          '(("pxdvi" "pxdvi -watchfile 1 %d")
            ("xdvi"  "xdvi -watchfile 1 %d")
            ("Preview.app" "/usr/bin/open -a Preview.app %o")
-           ("fwdevince" "fwdevince %o %n \"%b\"")
            ))
    (cond
     (darwin-p
@@ -96,36 +95,7 @@ title: AUCTeX の設定
                 (add-to-list 'TeX-command-list
                              '("Evince" "evince %s.pdf"
                                TeX-run-discard-or-function t t :help "Run Evince"))
-                (add-to-list 'TeX-command-list
-                             '("fwdevince" "fwdevince %s.pdf %n \"%b\""
-                               TeX-run-discard-or-function t t :help "Forward search with Evince"))
                 )))
-  #+END_SRC
-  =fwdevince= 用の dbus 関連の設定は以下の通り
-  #+BEGIN_SRC emacs-lisp
-    (when (locate-library "dbus")
-      (require 'dbus)
-      (defun un-urlify (fname-or-url)
-        "A trivial function that replaces a prefix of file:/// with just /."
-        (if (string= (substring fname-or-url 0 8) "file:///")
-            (substring fname-or-url 7)
-          fname-or-url))
-      (defun evince-inverse-search (file linecol &rest ignored)
-        (let* ((fname (un-urlify file))
-               (buf (find-file fname))
-               (line (car linecol))
-               (col (cadr linecol)))
-          (if (null buf)
-              (message "[Synctex]: %s is not opened..." fname)
-            (switch-to-buffer buf)
-            (goto-line (car linecol))
-            (unless (= col -1)
-              (move-to-column col)))))
-      (dbus-register-signal
-       :session nil "/org/gnome/evince/Window/0"
-       "org.gnome.evince.Window" "SyncSource"
-       'evince-inverse-search)
-      )
   #+END_SRC
 * フォント表示関連
   サイズ可変の無効

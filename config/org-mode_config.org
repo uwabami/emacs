@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/02/28 18:27:14$
+# $Lastupdate: 2013/04/26 00:48:29$
 # License: Expat
 #
 #+TITLE: org-modeの設定
@@ -25,7 +25,7 @@ title: org-modeの設定
    =org-capture= は changelog memo [fn:2] のキーバインドにしている.
    #+BEGIN_SRC emacs-lisp
      (define-key global-map (kbd "C-x m") 'org-capture)
-     (define-key global-map (kbd "C-c 1") 'org-export-icalendar-combine-agenda-files)
+     ;; (define-key global-map (kbd "C-c 1") 'org-export-icalendar-combine-agenda-files)
      (define-key global-map (kbd "C-c a") 'org-agenda)
    #+END_SRC
 ** auto-mode-alist
@@ -276,7 +276,6 @@ title: org-modeの設定
         ("~" "\\verb" t)
         ))
    #+END_SRC
-
 * HTML Export
   [[http://jekyllrb.com/][Jekyll]] [fn:1] でサイト構築を行なっているので, それにまつわる設定
 ** Project 用の変数定義
@@ -301,12 +300,13 @@ title: org-modeの設定
              ("public"
               :base-directory ,my:org-publish-webpage
               :recursive t
-              :exclude ".*\.el\\|^Makefile\\|.*\.gpg\\|sitemap\.org\\|^cc-env\\|^images\\|^_site\\||^export-config\.org"
+              :exclude ".*\.el\\|^Makefile\\|.*\.gpg\\|sitemap\.org\\|^cc-env\\|^images\\|^_config\\|^_site\\|^export-config\.org"
               :base-extension "org"
               :headline-level 4
               :htmlized-source t
               :publishing-directory ,my:org-publish-webpage
-              :publishing-function org-publish-org-to-html
+              ;; :publishing-function org-publish-org-to-html
+              :publishing-function org-html-publish-to-html
               :body-only t
               )
              ("img"
@@ -323,7 +323,8 @@ title: org-modeの設定
               :exclude ".*\.el\\|^Makefile\\|.*\.gpg\\|sitemap\.org\\|^cc-env\\|^images\\|^_site\\|^export-config\.org"
               :headline-level 4
               :publishing-directory my:org-publish-gh-pages
-              :publishing-function org-publish-org-to-html
+              ;; :publishing-function org-publish-org-to-html
+              :publishing-function org-html-publish-to-html
               :body-only t
               )
              ("Emacs"
@@ -334,7 +335,7 @@ title: org-modeの設定
               :exclude "^export-config\.org"
               :headline-level 4
               :publishing-directory ,my:org-publish-emacs-pages
-              :publishing-function org-publish-org-to-html
+              :publishing-function org-html-publish-to-html
               :body-only t
               :auto-sitemap t
               :sitemap-filename "sitemap.org"
@@ -350,7 +351,7 @@ title: org-modeの設定
      ;; cache の置き場所を ~/.emacs.d/tmp/org-timestamps/ に変える
      (setq org-publish-timestamp-directory
            (concat my:user-emacs-temporary-directory "org-timestamps/"))
-     (setq org-publish-use-timestamps-flag nil)
+     (setq org-publish-use-timestamps-flag t)
    #+END_SRC
 * Footnotes
 

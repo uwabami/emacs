@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/04/18 23:25:41$
+# $Lastupdate: 2013/04/25 18:58:57$
 # License: Expat
 #
 #+TITLE: フォントとフレームの設定
@@ -39,55 +39,13 @@ title: フォントとフレームの設定
       (interactive)
       (message "%s" (get-char-property (point) 'face)))
   #+END_SRC
-* フォントの設定 [0/1]
-  - [ ] これを設定すると, 描画が耐えきれないくらい遅くなる. 何故だろうか...
+* フォントの設定 [1/1]
+  Ricty 必須.
   #+BEGIN_SRC emacs-lisp
-    ;; (defun my:font-ja-spec (spec)
-    ;;   (set-fontset-font nil 'japanese-jisx0208 spec)
-    ;;   (set-fontset-font nil 'katakana-jisx0201 spec)
-    ;;   (set-fontset-font nil 'japanese-jisx0212 spec)
-    ;;   (set-fontset-font nil '(#x0080 . #x024F) spec)
-    ;;   (set-fontset-font nil '(#x0370 . #x03FF) spec)
-    ;;   (set-fontset-font nil 'mule-unicode-0100-24ff spec)
-    ;;   )
-    ;; (defun my:font-ascii-spec (spec)
-    ;;    (set-fontset-font nil 'ascii spec))
-    ;; (defvar my:ja-font nil
-    ;;   "Set japanese font. In Unix/Linux, use fc-list output name")
-    ;; (cond
-    ;;  (darwin-p
-    ;;   (setq my:ja-font "Hiragino Maru Gothic Pro"))
-    ;;  (nt-p
-    ;;   (setq my:ja-font "メイリオ"))
-    ;;  (t
-    ;;   (setq my:ja-font "Migu 2M"))
-    ;;   ;; (setq my:ja-font "Ricty Discord"))
-    ;;  )
-    ;; (when window-system
-    ;;   (let
-    ;;       (
-    ;;        (font-size 16)
-    ;;        (ascii-font "Inconsolata")
-    ;;        ;; (ascii-font "Anonymous Pro")
-    ;;        ;; (ascii-font "Migu 2M")
-    ;;        ;; (ascii-font "Ricty Discord")
-    ;;        (ja-font my:ja-font)
-    ;;        )
-    ;;     (my:font-ascii-spec (font-spec :family ascii-font :size font-size))
-    ;;     (my:font-ja-spec (font-spec :family ja-font :size font-size))
-    ;;     (custom-set-faces
-    ;;      '(variable-pitch ((t (:family ascii-font :size font-size nil 'prepend))))
-    ;;      '(fixed-pitch ((t (:family ascii-font :size font-size nil 'prepend))))
-    ;;      )
-    ;;     )
-    ;;   (setq face-font-rescale-alist
-    ;;         '(
-    ;;           (".*Inconsolata.*" 1.0)
-    ;;           (".*Migu.*" 1.2)
-    ;;           ("-cdac$" . 1.0)))           ; 1.3
-    ;;   ;; Space between lines
-    ;;   (set-default 'line-spacing 1)
-    ;;   )
+    (add-to-list 'default-frame-alist '(font . "ricty-13.5"))
+    (custom-set-faces
+     '(variable-pitch ((t (:family "Ricty"))))
+     )
   #+END_SRC
 * Space や Tab に色付け
   whitespace-mode の方が良いのかもしれないけれど,

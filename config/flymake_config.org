@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/25 04:15:51$
+# $Lastupdate: 2013/04/25 19:07:44$
 # License: Expat
 #
 #+TITLE: flymake の設定
@@ -19,7 +19,7 @@ title: flymakeの設定
 * 読み込み
   #+BEGIN_SRC emacs-lisp
     (require 'flymake)
-    ;; (add-hook 'find-file-hook 'flymake-find-file-hook)
+    (add-hook 'find-file-hook 'flymake-find-file-hook)
   #+END_SRC
 * Makefile の有無によるコマンドの振り分け
   元ネタ: [[http://moimoitei.blogspot.jp/2010/05/flymake-in-emacs.html][Emacs で文法チェック]] [fn:1]

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/24 04:05:06$
+# $Lastupdate: 2013/04/25 19:02:36$
 # License: Expat
 #
 #+TITLE: emacs-w3mの設定
@@ -56,4 +56,4 @@ title: emacs-w3m の設定
      (setq w3m-fill-column -10)
   #+END_SRC
 * Footnotes
-** Emacs 上で w3m を動かそう: [[http://emacs-w3m.namazu.org/index-ja.html]]
+  - Emacs 上で w3m を動かそう: [[http://emacs-w3m.namazu.org/index-ja.html]]

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/24 04:50:04$
+# $Lastupdate: 2013/04/25 19:16:46$
 # License: Expat
 #
 #+TITLE: Auto-insert の設定
@@ -64,7 +64,6 @@ title: Auto-insert の設定
           (nconc '(
                    ("\\.el$"   . ["template.el"   my:template])
                    ("\\.rb$"   . ["template.rb"   my:template])
-                   ("\\.rbt$"  . ["template.rbt"  my:template])
                    ("\\.zsh$"  . ["template.zsh"  my:template])
                    ("\\.sh$"   . ["template.sh"   my:template])
                    ("\\.f90$"  . ["template.f90"  my:template])
@@ -75,5 +74,4 @@ title: Auto-insert の設定
                    ("\\.muse$" . ["template.muse" my:template])
                    ) auto-insert-alist))
   #+END_SRC
-  - [ ] ディレクトリに合わせてテンプレートを切り替えたい.
-    - 具体的には, org ファイルのテンプレート展開をちょっとゴニョゴニョしたいのだけれど, どうしたら良いかな...
+  - [ ] ディレクトリに合わせてテンプレートを切り替えたい. 具体的には, org ファイルのテンプレート展開をちょっとゴニョゴニョしたいのだけれど, どうしたら良いかな...

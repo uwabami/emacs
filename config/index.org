@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/04/19 01:12:13$
+# $Lastupdate: 2013/04/26 01:28:01$
 # License: Expat
 #
 #+TITLE: Emacsの設定 - 主に org ファイルの読み込み集
@@ -11,7 +11,7 @@
 #+BEGIN_HTML
 ---
 layout: emacs
-title: Emacsの基本設定 - 主に org ファイルの読み込み集
+title: Emacsの基本設定
 ---
 #+END_HTML
 * 始めに
@@ -52,18 +52,8 @@ title: Emacsの基本設定 - 主に org ファイルの読み込み集
    ただし標準の el-get の recipe は
    CVSを使っている(= CVS は proxy を越えられない)ので
    [[https://github.com/hsaito/ddskk][github:hsaito/ddskk]] を使わせて頂くことに.
-   recipe は [[https://raw.github.com/uwabami/dot.emacs.d/master/recipes/ddskk.rcp][recipes/ddskk.rcp]] を参照:
-   #+BEGIN_EXAMPLE
-   (:name ddskk
-       :description "Github mirror for Daredevil SKK"
-       :type github
-       :pkgname "hsaito/ddskk"
-       :autoloads nil
-       :build `(,(concat el-get-emacs
-                  " -batch -q -no-site-file -l SKK-MK -f SKK-MK-compile"))
-       )
-   #+END_EXAMPLE
-   実際のインストールは以下:
+   recipe は [[https://raw.github.com/uwabami/dot.emacs.d/master/recipes/ddskk.rcp][recipes/ddskk.rcp]] を参照.
+   実際のインストールは以下で.
    #+BEGIN_SRC emacs-lisp
      (unless (locate-library "skk-sticky")
        (el-get 'sync 'ddskk))
@@ -71,10 +61,10 @@ title: Emacsの基本設定 - 主に org ファイルの読み込み集
 ** 読み込み前の設定
    設定ファイルの位置変更
    #+BEGIN_SRC emacs-lisp
-        (setq skk-user-directory
-              (concat my:user-emacs-temporary-directory "skk"))
-        (setq skk-init-file
-              (concat my:user-emacs-config-directory "ddskk_config"))
+     (setq skk-user-directory
+           (concat my:user-emacs-temporary-directory "skk"))
+     (setq skk-init-file
+           (concat my:user-emacs-config-directory "ddskk_config"))
    #+END_SRC
    org で設定を書くためのアレコレ
    #+BEGIN_SRC emacs-lisp
@@ -96,10 +86,6 @@ title: Emacsの基本設定 - 主に org ファイルの読み込み集
   #+BEGIN_SRC emacs-lisp
     (when (executable-find "cmigemo")
       (my:load-org-file "migemo_config.org"))
-  #+END_SRC
-* テンプレートの自動挿入: [[file:auto-insert_config.org][auto-insert]]
-  #+BEGIN_SRC emacs-lisp
-    (my:load-org-file "auto-insert_config.org")
   #+END_SRC
 * [[file:w3m_config.org][emacs-w3mの設定]]
   #+BEGIN_SRC emacs-lisp
@@ -135,19 +121,6 @@ title: Emacsの基本設定 - 主に org ファイルの読み込み集
              (file-exists-p "/usr/local/share/dict/lookup-enabled"))
         (my:load-org-file "lookup_config.org"))
   #+END_SRC
-* メモ環境
-  個々の設定はそれぞれ [[file:org-mode_config.org][org-modeの設定]], [[file:howm_config.org][howm の設定]], [[file:calfw_config.org][calfw: カレンダーの設定]] を参照の事.
-  メモ取りには Howm と =org-capture= を併用し, カレンダーの表示には Calfw を使う.
-  保存先は Dropbox なので, Dropbox が無い時には load しない.
-  #+BEGIN_SRC emacs-lisp
-    (if my:check-dropbox
-        (progn
-          (my:load-org-file "org-mode_config.org")
-          (my:load-org-file "howm_config.org")
-          (my:load-org-file "calfw_config.org")
-          )
-      )
-  #+END_SRC
 * [[file:muse_config.org][muse-mode の設定]]
   #+BEGIN_SRC emacs-lisp
     (my:load-org-file "muse_config.org")
@@ -176,4 +149,20 @@ title: Emacsの基本設定 - 主に org ファイルの読み込み集
   #+BEGIN_SRC emacs-lisp
     (if (file-exists-p (concat user-emacs-directory ".navi2ch-use"))
           (my:load-org-file "navi2ch_config.org"))
+  #+END_SRC
+* テンプレートの自動挿入: [[file:auto-insert_config.org][auto-insert]]
+  #+BEGIN_SRC emacs-lisp
+    (my:load-org-file "auto-insert_config.org")
+  #+END_SRC
+* メモ環境
+  個々の設定はそれぞれ [[file:org-mode_config.org][org-modeの設定]], [[file:howm_config.org][howm の設定]] を参照の事.
+  メモ取りには Howm と =org-capture= を併用し, カレンダーの表示には Calfw を使う.
+  保存先は Dropbox なので, Dropbox が無い時には load しない.
+  #+BEGIN_SRC emacs-lisp
+    (if my:check-dropbox
+        (progn
+          (my:load-org-file "org-mode_config.org")
+          (my:load-org-file "howm_config.org")
+          )
+      )
   #+END_SRC

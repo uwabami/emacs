@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/02/04 21:47:22$
+# $Lastupdate: 2013/04/25 19:18:22$
 # License: Expat
 #
 #+TITLE: howm の設定
@@ -41,7 +41,7 @@ title: howm の設定
   howm の prefix は C-xC-z にしておきます
   #+BEGIN_SRC emacs-lisp
     ;; org と howm の連携
-    (add-hook 'org-mode-hook 'howm-mode)
+    ;; (add-hook 'org-mode-hook 'howm-mode)
     (global-unset-key (kbd "C-x C-z"))
     (setq howm-prefix (kbd "C-x C-z"))
     ;; title header は "*"

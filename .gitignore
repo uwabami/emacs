@@ -34,3 +34,4 @@ share/*
 tmp/*
 modules/*-stamp
 .org-id-locations
+tramp

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/04/26 00:48:29$
+# $Lastupdate: 2013/04/26 06:03:23$
 # License: Expat
 #
 #+TITLE: org-modeの設定
@@ -199,6 +199,11 @@ title: org-modeの設定
 * LaTeX Export
   日本語LaTeXとして pLaTeX を使うための設定.
   XeLaTeX 使うようにした方が良いのかなぁ.
+** 読み込み
+   #+BEGIN_SRC emacs-lisp
+     (require 'ox-latex)
+     (require 'ox-beamer)
+   #+END_SRC
 ** documentclass として jsarticle を使う
    inputenc は使わないことに.
    #+BEGIN_SRC emacs-lisp
@@ -278,6 +283,11 @@ title: org-modeの設定
    #+END_SRC
 * HTML Export
   [[http://jekyllrb.com/][Jekyll]] [fn:1] でサイト構築を行なっているので, それにまつわる設定
+** 読み込み
+   #+BEGIN_SRC emacs-lisp
+     (require 'ox-html)
+     (require 'ox-publish)
+   #+END_SRC
 ** Project 用の変数定義
    #+BEGIN_SRC emacs-lisp
      (defvar my:org-publish-webpage
@@ -352,6 +362,16 @@ title: org-modeの設定
      (setq org-publish-timestamp-directory
            (concat my:user-emacs-temporary-directory "org-timestamps/"))
      (setq org-publish-use-timestamps-flag t)
+   #+END_SRC
+** 変換後の Tag の定義
+   #+BEGIN_SRC emacs-lisp
+     (setq org-html-text-markup-alist
+           '((bold . "<em>%s</em>")
+             (code . "<code>%s</code>")
+             (italic . "<span class=\"italic\">%s</span>")
+             (strike-through . "<span class=\"strike\">%s</span>")
+             (underline . "<span class=\"underline\">%s</span>")
+             (verbatim . "<code>%s</code>")))
    #+END_SRC
 * Footnotes
 

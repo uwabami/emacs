@@ -1,5 +1,5 @@
 (:name zlc
        :description "Provides zsh like completion for minibuffer in Emacs."
        :type github
-       :pkgname "uwabami/emacs-zlc"
+       :pkgname "mooz/emacs-zlc"
        :autoloads nil)

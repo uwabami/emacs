@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/04/25 19:07:44$
+# $Lastupdate: 2013/04/27 17:41:28$
 # License: Expat
 #
 #+TITLE: flymake の設定
@@ -127,6 +127,12 @@ title: flymakeの設定
         @ch = nil
       end
     end
+  #+END_SRC
+* TeX
+  #+BEGIN_SRC emacs-lisp
+    (defun flymake-get-tex-args (file-name)
+      (list "platex"
+            (list "-file-line-error" "-draftmode" "-interaction=nonstopmode" file-name)))
   #+END_SRC
 * Footnotes
 

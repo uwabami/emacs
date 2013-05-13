@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/04/26 06:03:23$
+# $Lastupdate: 2013/05/09 01:52:55$
 # License: Expat
 #
 #+TITLE: org-modeの設定
@@ -198,47 +198,47 @@ title: org-modeの設定
    #+END_SRC
 * LaTeX Export
   日本語LaTeXとして pLaTeX を使うための設定.
-  XeLaTeX 使うようにした方が良いのかなぁ.
 ** 読み込み
    #+BEGIN_SRC emacs-lisp
      (require 'ox-latex)
-     (require 'ox-beamer)
+     ;; (require 'ox-beamer)
+   #+END_SRC
+** export 時のエンコーディング
+   #+BEGIN_SRC emacs-lisp
+     (setq org-export-coding-system nil)
    #+END_SRC
 ** documentclass として jsarticle を使う
    inputenc は使わないことに.
    #+BEGIN_SRC emacs-lisp
-     (unless (boundp 'org-export-latex-classes)
-       (setq org-export-latex-classes nil))
-     (add-to-list 'org-export-latex-classes
+     (add-to-list 'org-latex-classes
                   '("jsarticle"
                     "\\documentclass{jsarticle}
      [NO-DEFAULT-PACKAGES]
      [NO-PACKAGES]
-     [EXTRA]
-     "
+     [EXTRA]"
                     ("\\section{%s}" . "\\section*{%s}")
                     ("\\subsection{%s}" . "\\subsection*{%s}")
                     ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
                     ("\\paragraph{%s}" . "\\paragraph*{%s}")
                     ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
-     (setq org-export-latex-default-class "jsarticle")
+     (setq org-latex-default-class "jsarticle")
    #+END_SRC
 ** beamer の設定
    こちらも同様.
    #+BEGIN_SRC emacs-lisp
-     (add-to-list 'org-export-latex-classes
+     (add-to-list 'org-latex-classes
                   '("beamer"
-                    "\\documentclass{beamer}
+                    "\\documentclass[presentation]{beamer}
      [NO-DEFAULT-PACKAGES]
      [NO-PACKAGES]
-     [EXTRA]
-     "
-     org-beamer-sectioning
-     ))
+     [EXTRA]"
+                         ("\\section{%s}" . "\\section*{%s}")
+                         ("\\subsection{%s}" . "\\subsection*{%s}")
+                         ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))
    #+END_SRC
    常に =fragile= で使用
    #+BEGIN_SRC emacs-lisp
-   (setq org-beamer-frame-default-options "[fragile]")
+   (setq org-beamer-frame-default-options "fragile")
    #+END_SRC
 ** pdf 生成コマンド: pLaTeX を使う
    こんな感じのスクリプトを用意して
@@ -266,8 +266,7 @@ title: org-modeの設定
    #+END_SRC
    PDF を生成する際には上記スクリプトを実行することに.
    #+BEGIN_SRC emacs-lisp
-     (setq org-latex-to-pdf-process
-           '("pdfplatex %f"))
+     (setq org-latex-pdf-process '("pdfplatex %f"))
    #+END_SRC
 ** 強調等の変換
    #+BEGIN_SRC emacs-lisp

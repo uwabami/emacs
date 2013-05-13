@@ -127,7 +127,7 @@ title: Emacsの基本設定
   #+END_SRC
 * [[file:flynamke_config.org][flymakeの設定]]
   #+BEGIN_SRC emacs-lisp
-    (my:load-org-file "flymake_config.org")
+    ;; (my:load-org-file "flymake_config.org")
   #+END_SRC
 * [[file:fortran-mode_config.org][fortran-mode]]
   #+BEGIN_SRC emacs-lisp

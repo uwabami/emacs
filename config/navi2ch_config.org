@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/27 00:27:04$
+# $Lastupdate: 2013/05/05 00:25:56$
 # License: Expat
 #
 #+AUTHOR: Youhei SASAKI
@@ -67,12 +67,12 @@ title: navi2chの設定
   #+END_SRC
 * モナーフォント?
   #+BEGIN_SRC emacs-lisp
-    (when window-system
-      (eval-after-load "navi2ch"
-        '(progn
-           (set-face-attribute 'navi2ch-article-face nil :family "Monapo")
-           (aput 'face-font-rescale-alist '((".*Monapo.*" 1.2)))
-           )))
+    ;; (when window-system
+    ;;   (eval-after-load "navi2ch"
+    ;;     '(progn
+    ;;        (set-face-attribute 'navi2ch-article-face nil :family "Monapo")
+    ;;        (aput 'face-font-rescale-alist '((".*Monapo.*" 1.2)))
+    ;;        )))
   #+END_SRC
 * ローカルルールの参照
   #+BEGIN_SRC emacs-lisp

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/04/26 01:51:15$
+# $Lastupdate: 2013/04/27 17:48:49$
 # License: Expat
 #
 #+TITLE: AUCTeX の設定
@@ -75,22 +75,22 @@ title: AUCTeX の設定
                              '("pLaTeX-jis" "platex -kanji=jis -src-special -shell-escape %S %(mode) %t"
                                TeX-run-TeX nil (latex-mode) :help "Run pLaTeX(jis)"))
                 (add-to-list 'TeX-command-list
-                             '("Latexmk-euc" "latexmk -e '$latex=q/platex -kanji=euc -src-special -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=euc/' -e '$makeindex=q/mendex/' -e '$dvipdf=q/dvipdfmx %%O -o %%D %%S/'  -gg -pdfdvi %t"
+                             '("Latexmk-euc" "latexmk -e '$latex=q/platex -kanji=euc -src-special -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=euc/' -e '$makeindex=q/mendex -E/' -e '$dvipdf=q/dvipdfmx %%O -o %%D %%S/'  -gg -pdfdvi %t"
                                TeX-run-TeX nil (latex-mode) :help "Run Latexmk -pdfdvi(euc)"))
                 (add-to-list 'TeX-command-list
-                             '("Latexmk-utf8" "latexmk -e '$latex=q/platex -kanji=utf8 -src-special -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=utf8/' -e '$makeindex=q/mendex/' -e '$dvipdf=q/dvipdfmx %%O -o %%D %%S/'  -gg -pdfdvi %t"
+                             '("Latexmk-utf8" "latexmk -e '$latex=q/platex -kanji=utf8 -src-special -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=utf8/' -e '$makeindex=q/mendex -U/' -e '$dvipdf=q/dvipdfmx %%O -o %%D %%S/'  -gg -pdfdvi %t"
                                TeX-run-TeX nil (latex-mode) :help "Run Latexmk -pdfdvi(utf8)"))
                 (add-to-list 'TeX-command-list
-                             '("Latexmk-jis" "latexmk -e '$latex=q/platex -kanji=jis -src-special -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=jis/' -e '$makeindex=q/mendex/' -e '$dvipdf=q/dvipdfmx %%O -o %%D %%S/'  -gg -pdfdvi %t"
+                             '("Latexmk-jis" "latexmk -e '$latex=q/platex -kanji=jis -src-special -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=jis/' -e '$makeindex=q/mendex -J/' -e '$dvipdf=q/dvipdfmx %%O -o %%D %%S/'  -gg -pdfdvi %t"
                                TeX-run-TeX nil (latex-mode) :help "Run Latexmk -pdfdvi(jis)"))
                 (add-to-list 'TeX-command-list
-                             '("Latexmk-euc-ps2pdf" "latexmk -e '$latex=q/platex -kanji=euc -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=euc/' -e '$makeindex=q/mendex/' -e '$dvips=q/dvips %%O -z -f %%S | convbkmk -g > %%D/' -e '$ps2pdf=q/ps2pdfwr %%O %%S %%D/'  -gg -pdfps %t"
+                             '("Latexmk-euc-ps2pdf" "latexmk -e '$latex=q/platex -kanji=euc -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=euc/' -e '$makeindex=q/mendex -E/' -e '$dvips=q/dvips %%O -z -f %%S | convbkmk -g > %%D/' -e '$ps2pdf=q/ps2pdfwr %%O %%S %%D/'  -gg -pdfps %t"
                                TeX-run-TeX nil (latex-mode) :help "Run Latexmk -pdfps(euc)"))
                 (add-to-list 'TeX-command-list
-                             '("Latexmk-utf8-ps2pdf" "latexmk -e '$latex=q/platex -kanji=utf8 -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=utf8/' -e '$makeindex=q/mendex/' -e '$dvips=q/dvips %%O -z -f %%S | convbkmk -g > %%D/' -e '$ps2pdf=q/ps2pdfwr %%O %%S %%D/'  -gg -pdfps %t"
+                             '("Latexmk-utf8-ps2pdf" "latexmk -e '$latex=q/platex -kanji=utf8 -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=utf8/' -e '$makeindex=q/mendex -U/' -e '$dvips=q/dvips %%O -z -f %%S | convbkmk -g > %%D/' -e '$ps2pdf=q/ps2pdfwr %%O %%S %%D/'  -gg -pdfps %t"
                                TeX-run-TeX nil (latex-mode) :help "Run Latexmk -pdfps(utf8)"))
                 (add-to-list 'TeX-command-list
-                             '("Latexmk-jis-ps2pdf" "latexmk -e '$latex=q/platex -kanji=jis -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=jis/' -e '$makeindex=q/mendex/' -e '$dvips=q/dvips %%O -z -f %%S | convbkmk -g > %%D/' -e '$ps2pdf=q/ps2pdfwr %%O %%S %%D/'  -gg -pdfps %t"
+                             '("Latexmk-jis-ps2pdf" "latexmk -e '$latex=q/platex -kanji=jis -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=jis/' -e '$makeindex=q/mendex -J/' -e '$dvips=q/dvips %%O -z -f %%S | convbkmk -g > %%D/' -e '$ps2pdf=q/ps2pdfwr %%O %%S %%D/'  -gg -pdfps %t"
                                TeX-run-TeX nil (latex-mode) :help "Run Latexmk -pdfps(jis)"))
                 (add-to-list 'TeX-command-list
                              '("Evince" "evince %s.pdf"

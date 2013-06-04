@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/03/22 02:24:26$
+# $Lastupdate: 2013/05/27 16:27:45$
 # License: Expat.
 #
 #+TITLE: Wanderlust の設定
@@ -97,7 +97,7 @@ title: Wanderlustの設定
    #+BEGIN_SRC emacs-lisp
      (el-get 'sync 'offlineimap-el)
      (require 'offlineimap nil 'noerror)
-     (setq offlineimap-command "offlineimap -u machineui -o ")
+     (setq offlineimap-command "offlineimap -u machineui -a Gmail -o -f INBOX")
      (setq offlineimap-mode-line-style 'symbol)
      (setq offlineimap-mode-line-symbol "imap")
      (setq offlineimap-enable-mode-line-p

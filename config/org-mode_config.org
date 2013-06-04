@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/05/09 01:52:55$
+# $Lastupdate: 2013/05/29 21:54:56$
 # License: Expat
 #
 #+TITLE: org-modeの設定
@@ -288,6 +288,7 @@ title: org-modeの設定
      (require 'ox-publish)
    #+END_SRC
 ** Project 用の変数定義
+   主に出力場所などの設定
    #+BEGIN_SRC emacs-lisp
      (defvar my:org-publish-webpage
        (expand-file-name
@@ -302,6 +303,13 @@ title: org-modeの設定
        (expand-file-name
         (concat my:org-publish-webpage "cc-env/Emacs/")))
    #+END_SRC
+** Cache の置き場所の変更
+   #+BEGIN_SRC emacs-lisp
+     ;; cache の置き場所を $HOME/Public/_config/org-timestamps/ に変える
+     (setq org-publish-timestamp-directory
+           (concat my:org-publish-webpage "_config/org-timestamps/"))
+     (setq org-publish-use-timestamps-flag t)
+   #+END_SRC
 ** Project の定義
    #+BEGIN_SRC emacs-lisp
      (setq org-publish-project-alist
@@ -313,8 +321,8 @@ title: org-modeの設定
               :base-extension "org"
               :headline-level 4
               :htmlized-source t
+              :html-extension "html"
               :publishing-directory ,my:org-publish-webpage
-              ;; :publishing-function org-publish-org-to-html
               :publishing-function org-html-publish-to-html
               :body-only t
               )
@@ -324,54 +332,10 @@ title: org-modeの設定
               :publishing-directory ,my:org-publish-webpage-img
               :publishing-function org-publish-attachment
               )
-             ("gh-pages"
-              :base-directory ,my:org-publish-gh-pages
-              :base-extension "org"
-              :recursive nil
-              :htmlized-source t
-              :exclude ".*\.el\\|^Makefile\\|.*\.gpg\\|sitemap\.org\\|^cc-env\\|^images\\|^_site\\|^export-config\.org"
-              :headline-level 4
-              :publishing-directory my:org-publish-gh-pages
-              ;; :publishing-function org-publish-org-to-html
-              :publishing-function org-html-publish-to-html
-              :body-only t
-              )
-             ("Emacs"
-              :base-directory ,my:user-emacs-config-directory
-              :base-extension "org"
-              :htmlized-source t
-              :recursive nil
-              :exclude "^export-config\.org"
-              :headline-level 4
-              :publishing-directory ,my:org-publish-emacs-pages
-              :publishing-function org-html-publish-to-html
-              :body-only t
-              :auto-sitemap t
-              :sitemap-filename "sitemap.org"
-              :sitemap-title ""
-              )
              ("web" :components ("public" "img"))
-             ("github" :components ("gh-pages"))
-             ("emacs" :components ("Emacs"))
              ))
    #+END_SRC
-** Cache の置き場所の変更
-   #+BEGIN_SRC emacs-lisp
-     ;; cache の置き場所を ~/.emacs.d/tmp/org-timestamps/ に変える
-     (setq org-publish-timestamp-directory
-           (concat my:user-emacs-temporary-directory "org-timestamps/"))
-     (setq org-publish-use-timestamps-flag t)
-   #+END_SRC
-** 変換後の Tag の定義
-   #+BEGIN_SRC emacs-lisp
-     (setq org-html-text-markup-alist
-           '((bold . "<em>%s</em>")
-             (code . "<code>%s</code>")
-             (italic . "<span class=\"italic\">%s</span>")
-             (strike-through . "<span class=\"strike\">%s</span>")
-             (underline . "<span class=\"underline\">%s</span>")
-             (verbatim . "<code>%s</code>")))
-   #+END_SRC
+
 * Footnotes
 
 [fn:1] Jeykll: [[http://jekyllrb.com/]]

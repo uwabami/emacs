@@ -195,6 +195,18 @@ title: バージョン依存しない(はず)の雑多な設定
      (setq delete-old-versions t)
      (setq delete-auto-save-files t)
   #+END_SRC
+* recentf
+  最近使った
+  #+begin_src emacs-lisp
+    (add-hook 'after-init-hook 'recentf-mode)
+    (setq recentf-max-saved-items 2000)
+    (setq recentf-save-file
+          (expand-file-name
+           (concat my:user-emacs-temporary-directory "recentf")))
+    (setq recentf-auto-cleanup 'never)
+    (run-with-idle-timer 300 t 'recentf-save-list)
+    (run-with-idle-timer 600 t 'recentf-cleanup)
+  #+end_src
 * 空になったファイルを尋ねずに自動削除
   ゴミが残らないし, 地味に便利.
   #+BEGIN_SRC emacs-lisp

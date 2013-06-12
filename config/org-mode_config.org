@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/05/29 21:54:56$
+# $Lastupdate: 2013/06/12 21:46:23$
 # License: Expat
 #
 #+TITLE: org-modeの設定
@@ -175,20 +175,20 @@ title: org-modeの設定
               :prepend nil
               :unnarrowed nil
               :kill-buffer t)
-             ("s" "schedule" entry
+             ("s" "Schedule" entry
               ;; (file+datetree (concat org-directory "schedule.org"))
               (file (concat org-directory "schedule.org"))
               "* <%<%Y-%m-%d>> %?\n  %i\n  %a\n"
               :prepend nil
               :unnarrowed nil
               :kill-buffer t)
-             ("m" "memo" entry
+             ("m" "Memo" entry
               (file my:org-capture-howm-file)
-              "* <%<%Y-%m-%d>>  %?\n  %i\n  %a\n\n"
+              "* MEMO <%<%Y-%m-%d>> %?\n   %i\n  %a\n\n"
               :prepend t
               :unnarrowed t
               :kill-buffer t)
-             ("d" "diary" entry
+             ("d" "Diary" entry
               (file my:org-capture-howm-file)
               "* DIARY <%<%Y-%m-%d>> %?\n  %i\n  %a\n\n"
               :prepend t

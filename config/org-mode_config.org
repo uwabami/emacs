@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/06/12 21:46:23$
+# $Lastupdate: 2013/06/16 20:12:07$
 # License: Expat
 #
 #+TITLE: org-modeの設定
@@ -304,8 +304,8 @@ title: org-modeの設定
         (concat my:org-publish-webpage "cc-env/Emacs/")))
    #+END_SRC
 ** Cache の置き場所の変更
+   cache の置き場所を =$HOME/Public/_config/org-timestamps/= に変える
    #+BEGIN_SRC emacs-lisp
-     ;; cache の置き場所を $HOME/Public/_config/org-timestamps/ に変える
      (setq org-publish-timestamp-directory
            (concat my:org-publish-webpage "_config/org-timestamps/"))
      (setq org-publish-use-timestamps-flag t)
@@ -316,7 +316,7 @@ title: org-modeの設定
            `(
              ("public"
               :base-directory ,my:org-publish-webpage
-              :recursive t
+              :recursive nil
               :exclude ".*\.el\\|^Makefile\\|.*\.gpg\\|sitemap\.org\\|^cc-env\\|^images\\|^_config\\|^_site\\|^export-config\.org"
               :base-extension "org"
               :headline-level 4
@@ -335,7 +335,6 @@ title: org-modeの設定
              ("web" :components ("public" "img"))
              ))
    #+END_SRC
-
 * Footnotes
 
 [fn:1] Jeykll: [[http://jekyllrb.com/]]

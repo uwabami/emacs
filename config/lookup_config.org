@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/02 21:11:24$
+# $Lastupdate: 2013/07/01 17:19:32$
 # License: Expat.
 #+TITLE: lookupの設定
 #+AUTHOR: Youhei SASAKI

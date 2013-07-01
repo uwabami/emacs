@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/04/25 18:58:57$
+# $Lastupdate: 2013/07/01 17:19:25$
 # License: Expat
 #
 #+TITLE: フォントとフレームの設定
@@ -24,7 +24,7 @@ title: フォントとフレームの設定
       (progn
         (el-get 'sync '(darkpastel-theme))
         (load-theme 'darkpastel t)))
-    
+
   #+END_SRC
 * カーソルのある位置の face を調べる関数
   #+BEGIN_SRC emacs-lisp

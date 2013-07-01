@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/04/18 21:00:59$
+# $Lastupdate: 2013/07/01 17:19:12$
 # License: Expat
 #
 #+TITLE: バージョン依存しない(はず)の雑多な設定
@@ -163,7 +163,7 @@ title: バージョン依存しない(はず)の雑多な設定
   必要に応じて拡張子で判断して外している.
   #+BEGIN_SRC emacs-lisp
     (defvar my:delete-trailing-whitespace-exclude-suffix
-      (list "\\.rd$" "\\.md$" "\\.rbt$"))
+      (list "\\.rd$" "\\.md$" "\\.rbt$" "\\.rab$"))
     (defun my:delete-trailing-whitespace ()
       (interactive)
       (cond

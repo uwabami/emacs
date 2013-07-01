@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/02 21:10:04$
+# $Lastupdate: 2013/07/01 17:19:21$
 # License: Expat
 #
 #+TITLE: flyspell-modeの設定

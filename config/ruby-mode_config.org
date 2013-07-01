@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/25 11:54:00$
+# $Lastupdate: 2013/07/01 17:19:46$
 # License: Expat
 #
 #+TITLE: Ruby関連の設定
@@ -63,8 +63,8 @@ title: Ruby関連の設定
   #+END_SRC
 * rabbit-mode
   #+BEGIN_SRC emacs-lisp
-    (unless (my:dpkg-status 'rabbit-mode)
-      (el-get 'sync '(rabbit-mode)))
+    ;; (unless (my:dpkg-status 'rabbit-mode)
+    ;;   (el-get 'sync '(rabbit-mode)))
     (autoload 'rabbit-mode "rabbit-mode" "major mode for Rabbit" nil t)
     (add-to-list 'auto-mode-alist
                  '("\\.\\(rbt\\|rab\\)$" . rabbit-mode))

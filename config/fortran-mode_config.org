@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2012/12/24 15:30:53$
+# $Lastupdate: 2013/07/01 17:19:23$
 # License: Expat
 #
 #+TITLE: fortran-mode, f90-mode の設定

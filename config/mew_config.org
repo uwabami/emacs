@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/01/27 00:29:39$
+# $Lastupdate: 2013/07/01 17:19:34$
 # License: Expat
 #
 #+TITLE: Mew の設定

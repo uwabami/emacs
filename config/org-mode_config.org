@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/06/16 20:12:07$
+# $Lastupdate: 2013/07/01 17:34:26$
 # License: Expat
 #
 #+TITLE: org-modeの設定
@@ -296,12 +296,9 @@ title: org-modeの設定
      (defvar my:org-publish-webpage-img
        (expand-file-name
         (concat my:org-publish-webpage "images/")))
-     (defvar my:org-publish-gh-pages
-       (expand-file-name
-        (concat (getenv "HOME") "/Sources/gh-pages")))
      (defvar my:org-publish-emacs-pages
        (expand-file-name
-        (concat my:org-publish-webpage "cc-env/Emacs/")))
+        (concat my:org-publish-webpage "cc-env/Emacs/_drafts/")))
    #+END_SRC
 ** Cache の置き場所の変更
    cache の置き場所を =$HOME/Public/_config/org-timestamps/= に変える
@@ -332,8 +329,47 @@ title: org-modeの設定
               :publishing-directory ,my:org-publish-webpage-img
               :publishing-function org-publish-attachment
               )
+             ("Emacs"
+              :base-directory ,my:user-emacs-config-directory
+              :base-extension "org"
+              :htmlized-source t
+              :recursive nil
+              :exclude "^export-config\.org"
+              :headline-level 4
+              :publishing-directory ,my:org-publish-emacs-pages
+              :publishing-function org-html-publish-to-html
+              :body-only t
+              :auto-sitemap nil
+              )
              ("web" :components ("public" "img"))
+             ("emacs" :components ("Emacs"))
              ))
+   #+END_SRC
+** 変換設定
+   =<b></b>=, =<i></i>= はあまり好みではない.
+   #+BEGIN_SRC emacs-lisp
+     (setq org-html-text-markup-alist
+           '((bold . "<strong>%s</strong>")
+             (code . "<code>%s</code>")
+             (italic . "<span style=\"italic\">%s</span>")
+             (strike-through . "<span style=\"strike\">%s</span>")
+             (underline . "<span class=\"underline\">%s</span>")
+             (verbatim . "<code>%s</code>")))
+   #+END_SRC
+* Babel
+** 言語の追加
+  #+BEGIN_SRC emacs-lisp
+    (org-babel-do-load-languages
+     'org-babel-load-languages
+     '((emacs-lisp . t)
+       (sh .t)
+       (ruby .t))
+     )
+  #+END_SRC
+** 確認しない
+   Project を batch で出力する時だけ nil にした方が良いかなぁ...
+   #+BEGIN_SRC emacs-lisp
+     (setq org-confirm-babel-evaluate nil)
    #+END_SRC
 * Footnotes
 

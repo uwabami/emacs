@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/04/27 17:48:49$
+# $Lastupdate: 2013/07/01 17:19:06$
 # License: Expat
 #
 #+TITLE: AUCTeX の設定

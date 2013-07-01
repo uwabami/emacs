@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/04/25 19:16:46$
+# $Lastupdate: 2013/07/01 17:19:10$
 # License: Expat
 #
 #+TITLE: Auto-insert の設定

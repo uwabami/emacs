@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/07/01 17:19:49$
+# $Lastupdate: 2013/07/02 22:11:25$
 # License: Expat.
 #
 #+TITLE: Wanderlust の設定
@@ -701,8 +701,8 @@ title: Wanderlustの設定
                    'insert-signature-eref)))
   #+END_SRC
 * Face の設定
-  color-theme で細かく指定するために, 幾つかの face 定義を追加.
-  実際の色指定は [[https://github.com/uwabami/color-theme-darkpastel][color-theme-darkpastel]] 参照のこと[fn:5]
+** Face の追加
+  デフォルトより細かく指定するために幾つかの face 定義を追加.
   #+BEGIN_SRC emacs-lisp
     (setq wl-highlight-message-header-alist
           '(("Subject[ \t]*:"
@@ -717,6 +717,126 @@ title: Wanderlustの設定
              wl-highlight-message-unimportant-header-contents)
             ))
   #+END_SRC
+** Face の指定
+   ここまで細かくやる必要は無いのかもしれないけれど,
+   個人的には Mew 的な配色が好きなので, これに合うようにじたばたしたり.
+   #+BEGIN_SRC emacs-lisp
+     ;; うまく設定できてない?
+     (face-spec-set 'wl-highlight-demo-face
+                    '((t (:bold nil :italic nil :slant normal :weight normal))))
+     ;;; メッセージ表示
+     ;; ヘッダ
+     (face-spec-set 'wl-highlight-message-subject-header-contents
+                    '((t (:foreground "#ff4c4c" :bold nil :weight normal))))
+     (face-spec-set 'wl-highlight-message-from-header-contents
+                    '((t (:foreground "#ffff4c" :bold nil :weight normal))))
+     (face-spec-set 'wl-highlight-message-date-header-contents
+                    '((t (:foreground "#4cff4c" :bold nil :weight normal))))
+     (face-spec-set 'wl-highlight-message-important-header-contents
+                    '((t (:foreground "#ff4cff" :bold nil :weight normal))))
+     (face-spec-set 'wl-highlight-message-important-header-contents2
+                    '((t (:bold nil :foreground "#ffa54c" :weight normal))))
+     (face-spec-set 'wl-highlight-message-unimportant-header-contents
+                    '((t (:foreground "#aaaaaa" :bold nil :weight normal))))
+     (face-spec-set 'wl-highlight-message-headers
+                    '((t (:foreground "#4cffff" :bold nil :weight normal))))
+     (face-spec-set 'wl-highlight-message-header-contents
+                    '((t (:foreground "#aaaaaa" :bold nil :weight normal))))
+     ;; 引用
+     (face-spec-set 'wl-highlight-message-citation-header
+                    '((t (:foreground "#4cffa5"))))
+     (face-spec-set 'wl-highlight-message-cited-text-1
+                    '((t (:foreground "#4cffa5"))))
+     (face-spec-set 'wl-highlight-message-cited-text-2
+                    '((t (:foreground "#4cffff"))))
+     (face-spec-set 'wl-highlight-message-cited-text-3
+                    '((t (:foreground "#4ca5ff"))))
+     (face-spec-set 'wl-highlight-message-cited-text-4
+                    '((t (:foreground "#4c4cff"))))
+     (face-spec-set 'wl-highlight-message-cited-text-5
+                    '((t (:foreground "#a54cff"))))
+     (face-spec-set 'wl-highlight-message-cited-text-6
+                    '((t (:foreground "#ff4cff"))))
+     (face-spec-set 'wl-highlight-message-cited-text-7
+                    '((t (:foreground "#ff4ca5"))))
+     (face-spec-set 'wl-highlight-message-cited-text-8
+                    '((t (:foreground "#ff4c4c"))))
+     (face-spec-set 'wl-highlight-message-cited-text-9
+                    '((t (:foreground "#ffa54c"))))
+     (face-spec-set 'wl-highlight-message-cited-text-10
+                    '((t (:foreground "#ffff4c"))))
+     ;; signature
+     (face-spec-set 'wl-highlight-message-signature
+                    '((t (:foreground "#aaaaaa"))))
+     ;;; summary
+     (face-spec-set 'wl-highlight-summary-high-read-face
+                    '((t (:bold nil :foreground "#7fffbf" :weight normal))))
+     (face-spec-set 'wl-highlight-summary-high-unread-face
+                    '((t (:bold nil :foreground "#ffbf7f" :weight normal))))
+     (face-spec-set 'wl-highlight-summary-low-read-face
+                    '((t (:italic nil :foreground "#4cff4c"))))
+     (face-spec-set 'wl-highlight-summary-low-unread-face
+                    '((t (:italic nil :foreground "#7fbfff"))))
+     (face-spec-set 'wl-highlight-summary-normal-face
+                    '((t (:foreground "#f6f3e8"))))
+     (face-spec-set 'wl-highlight-summary-killed-face
+                    '((t (:foreground "#888888"))))
+     (face-spec-set 'wl-highlight-summary-new-face
+                    '((t (:foreground "#ff4c4c"))))
+     (face-spec-set 'wl-highlight-summary-unread-face
+                    '((t (:foreground "#ff4c4c"))))
+     (face-spec-set 'wl-highlight-summary-important-face
+                    '((t (:foreground "#4cffff"))))
+     (face-spec-set 'wl-highlight-summary-important-flag-face
+                    '((t (:foreground "#ffa54c"))))
+     (face-spec-set 'wl-highlight-summary-flagged-face
+                    '((t (:foreground "#ffff7f"))))
+     (face-spec-set 'wl-highlight-summary-displaying-face
+                    '((t (:underline t))))
+     (face-spec-set 'wl-highlight-summary-forwarded-face
+                    '((t ((:forground "#ffff4c")))))
+     (face-spec-set 'wl-highlight-summary-answered-face
+                    '((t ((:forground "#4ca5ff")))))
+     (face-spec-set 'wl-highlight-summary-copied-face
+                    '((t (:foreground "#4cffff"))))
+     (face-spec-set 'wl-highlight-summary-temp-face
+                    '((t (:foreground "#ff8fbf"))))
+     (face-spec-set 'wl-highlight-summary-resend-face
+                    '((t (:foreground "#ffbf7f"))))
+     (face-spec-set 'wl-highlight-summary-deleted-face
+                    '((t (:foreground "#483d8b"))))
+     (face-spec-set 'wl-highlight-summary-prefetch-face
+                    '((t (:foreground "#4c4cff"))))
+     (face-spec-set 'wl-highlight-summary-refiled-face
+                    '((t (:foreground "#4cff4c"))))
+     (face-spec-set 'wl-highlight-summary-target-face
+                    '((t (:foreground "#4cffff"))))
+     (face-spec-set 'wl-highlight-summary-disposed-face
+                    '((t (:foreground "#aaaaaa"))))
+     (face-spec-set 'wl-highlight-summary-thread-top-face
+                    '((t (:foreground "#ffffff"))))
+     (face-spec-set 'wl-highlight-thread-indent-face
+                    '((t (:underline t))))
+     (face-spec-set 'wl-highlight-folder-zero-face
+                    '((t (:foreground "#f6f3e8"))))
+     (face-spec-set 'wl-highlight-folder-opened-face
+                    '((t (:foreground "#4cffff"))))
+     (face-spec-set 'wl-highlight-folder-unread-face
+                    '((t (:foreground "#4c4cff"))))
+     (face-spec-set 'wl-highlight-folder-unknown-face
+                    '((t (:foreground "#4cffff"))))
+     (face-spec-set 'wl-highlight-folder-few-face
+                    '((t (:foreground "#ff4c4c"))))
+     (face-spec-set 'wl-highlight-folder-many-face
+                    '((t (:foreground "#ff7fbf"))))
+     (face-spec-set 'wl-highlight-folder-closed-face
+                    '((t (:foreground "#4cff4c"))))
+     (face-spec-set 'wl-highlight-folder-killed-face
+                    '((t (:foreground "#444444"))))
+     (face-spec-set 'wl-highlight-folder-path-face
+                    '((t (:bold nil :underline t :weight normal))))
+
+   #+END_SRC
 * GPG 署名
   以前は mailcrypt を使っていたけれど,
   epa があるので主にキーバインドの設定のみ.

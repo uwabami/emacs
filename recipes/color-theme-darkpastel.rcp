@@ -1,6 +1,0 @@
-(:name color-theme-darkpastel
-       :type github
-       :pkgname "uwabami/color-theme-darkpastel"
-       :description "darkbackground + pastel color font-lock"
-       :autoloads nil
-       )

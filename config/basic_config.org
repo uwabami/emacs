@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/07/01 17:19:12$
+# $Lastupdate: 2013/07/05 05:16:13$
 # License: Expat
 #
 #+TITLE: バージョン依存しない(はず)の雑多な設定
@@ -137,7 +137,7 @@ title: バージョン依存しない(はず)の雑多な設定
   長い行の表示.
   デフォルトは折り返し無しで =\C-c M-l= で toggle.
   #+BEGIN_SRC emacs-lisp
-    (set-default 'truncate-lines t)
+    (set-default 'truncate-lines nil)
     (define-key global-map (kbd "C-c M-l") 'toggle-truncate-lines)
   #+END_SRC
   バッファ終端で newline を入れない
@@ -297,16 +297,22 @@ title: バージョン依存しない(はず)の雑多な設定
 * browse-url
   Firefox → emacs-w3m → w3 の順で探索
   #+BEGIN_SRC emacs-lisp
-    (require 'browse-url)
-    (cond
-     ((executable-find "firefox")
-      (setq browse-url-browser-function 'browse-url-firefox))
-     ((and (executable-find "w3m")
-           (locate-library "w3m"))
-      (setq browse-url-browser-function 'w3m-browse-url))
-     (t
-      (setq browse-url-browser-function 'browse-url-w3)))
-    (global-set-key (kbd "C-c C-j") 'browse-url-at-point)
+      (require 'browse-url)
+      (cond
+       ((and
+         (executable-find "chromium")
+         (file-exists-p (concat user-emacs-directory ".edit-server-use")))
+        (setq browse-url-browser-function 'browse-url-generic)
+        (setq browse-url-generic-program "/usr/bin/chromium"))
+       ((executable-find "firefox")
+        (setq browse-url-browser-function 'browse-url-firefox))
+       ((and (executable-find "w3m")
+             (locate-library "w3m"))
+        (setq browse-url-browser-function 'w3m-browse-url))
+       (t
+        (setq browse-url-browser-function 'browse-url-w3))
+       )
+      (global-set-key (kbd "C-c C-j") 'browse-url-at-point)
   #+END_SRC
 * Undo/Redo
   そのうち undohist と undo-tree を試そうと思っているのですが,

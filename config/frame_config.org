@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/07/01 17:19:25$
+# $Lastupdate: 2013/07/05 03:09:19$
 # License: Expat
 #
 #+TITLE: フォントとフレームの設定
@@ -17,14 +17,11 @@ title: フォントとフレームの設定
 * Theme
   自作の [[https://github.com/uwabami/color-theme-darkpastel][uwabami/color-theme-darkpastel · GitHub]] を使っている.
   #+BEGIN_SRC emacs-lisp
-    (load "term/xterm")
-    (unless (window-system)
-      (xterm-register-default-colors))
     (when emacs24-p
       (progn
         (el-get 'sync '(darkpastel-theme))
-        (load-theme 'darkpastel t)))
-
+        (load-theme 'darkpastel t))
+      )
   #+END_SRC
 * カーソルのある位置の face を調べる関数
   #+BEGIN_SRC emacs-lisp
@@ -38,29 +35,30 @@ title: フォントとフレームの設定
     (add-to-list 'default-frame-alist '(font . "ricty-13.5"))
     (custom-set-faces
      '(variable-pitch ((t (:family "Ricty"))))
+     '(fixed-pitch ((t (:family "Ricty"))))
      )
   #+END_SRC
 * Space や Tab に色付け
   whitespace-mode の方が良いのかもしれないけれど,
   設定が面倒なのと多少重いので...
   #+BEGIN_SRC emacs-lisp
-    (defface my-face-r-1 '((t (:background "#888888"))) nil)
-    (defface my-face-b-1 '((t (:background "#888888"))) nil)
-    (defface my-face-b-2 '((t (:background "#888888"))) nil)
-    (defface my-face-u-1 '((t (:foreground "#242424" :underline t))) nil)
-    (defvar my-face-r-1 'my-face-r-1)
-    (defvar my-face-b-1 'my-face-b-1)
-    (defvar my-face-b-2 'my-face-b-2)
-    (defvar my-face-u-1 'my-face-u-1)
-    (defadvice font-lock-mode (before my-font-lock-mode ())
-      (font-lock-add-keywords
-       major-mode
-       '(("\t" 0 my-face-b-2 append)
-         ("　" 0 my-face-b-1 append)
-         ("[ \t]+$" 0 my-face-u-1 append)
-         ;; ("[\r]*\n" 0 my-face-r-1 append)
-         )))
-    (ad-enable-advice 'font-lock-mode 'before 'my-font-lock-mode)
-    (ad-activate 'font-lock-mode)
+    ;; (defface my-face-r-1 '((t (:background "#888888"))) nil)
+    ;; (defface my-face-b-1 '((t (:background "#888888"))) nil)
+    ;; (defface my-face-b-2 '((t (:background "#888888"))) nil)
+    ;; (defface my-face-u-1 '((t (:foreground "#242424" :underline t))) nil)
+    ;; (defvar my-face-r-1 'my-face-r-1)
+    ;; (defvar my-face-b-1 'my-face-b-1)
+    ;; (defvar my-face-b-2 'my-face-b-2)
+    ;; (defvar my-face-u-1 'my-face-u-1)
+    ;; (defadvice font-lock-mode (before my-font-lock-mode ())
+    ;;   (font-lock-add-keywords
+    ;;    major-mode
+    ;;    '(("\t" 0 my-face-b-2 append)
+    ;;      ("　" 0 my-face-b-1 append)
+    ;;      ("[ \t]+$" 0 my-face-u-1 append)
+    ;;      ;; ("[\r]*\n" 0 my-face-r-1 append)
+    ;;      )))
+    ;; (ad-enable-advice 'font-lock-mode 'before 'my-font-lock-mode)
+    ;; (ad-activate 'font-lock-mode)
   #+END_SRC
 * Footnotes

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/07/01 17:19:16$
+# $Lastupdate: 2013/07/05 00:01:03$
 # License: Expat
 #
 #+TITLE: el-get で install した雑多な物
@@ -145,6 +145,16 @@ title: el-get で install した雑多な物
   #+END_SRC
   欲を言えば, KeePassX と相互運用したい所ですが, どうにかできないかなぁ...
   - [ ] KeePassX に import できる形式に相互変換できるように.
+* [[http://www.emacswiki.org/emacs/Edit_with_Emacs][edit-server]]
+  Chrome/Chromium で textarea を Emacs で編集する
+  #+BEGIN_SRC emacs-lisp
+    (when (and
+           (executable-find "chromium")
+           (file-exists-p (concat user-emacs-directory ".edit-server-use")))
+      (el-get 'sync '(edit-server))
+      (el-get 'sync '(elscreen-edit-server))
+      (edit-server-start))
+  #+END_SRC
 * Footnotes
 
 [fn:1] el-get: [[http://www.emacswiki.org/emacs/el-get]]

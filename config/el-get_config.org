@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/07/05 00:01:03$
+# $Lastupdate: 2013/07/06 19:59:24$
 # License: Expat
 #
 #+TITLE: el-get で install した雑多な物
@@ -54,6 +54,8 @@ title: el-get で install した雑多な物
   [[https://raw.github.com/uwabami/dot.emacs.d/master/recipes/apel.rcp][recipes/apel.rcp]] とを使っています.
   elscreen 自体の設定は, 設定はキーバインドを =\C-o= に変えたくらい.
   #+BEGIN_SRC emacs-lisp
+    (unless (locate-library "emu")
+      (el-get 'sync '(apel)))
     (el-get 'sync '(elscreen))
     (setq elscreen-prefix-key (kbd "C-o"))
     (setq elscreen-display-tab 4)

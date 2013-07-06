@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/07/01 17:19:34$
+# $Lastupdate: 2013/07/06 19:08:10$
 # License: Expat
 #
 #+TITLE: Mew の設定
@@ -27,7 +27,7 @@ title: Mew の設定
 ** rail
    SEMI や FLIM などの UA の表示に [[http://uwabami.github.com/rail/][rail]] [fn:1] を使っている.
    #+BEGIN_SRC emacs-lisp
-     (unless (my:dpkg-status 'rail)
+     (unless (locate-library "rail")
        (el-get 'sync 'rail))
      (setq rail-emulate-genjis t)
      (require 'rail nil 'noerror)

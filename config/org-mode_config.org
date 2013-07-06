@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/07/01 17:34:26$
+# $Lastupdate: 2013/07/05 05:37:19$
 # License: Expat
 #
 #+TITLE: org-modeの設定
@@ -201,7 +201,7 @@ title: org-modeの設定
 ** 読み込み
    #+BEGIN_SRC emacs-lisp
      (require 'ox-latex)
-     ;; (require 'ox-beamer)
+     (require 'ox-beamer)
    #+END_SRC
 ** export 時のエンコーディング
    #+BEGIN_SRC emacs-lisp

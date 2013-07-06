@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/07/02 22:11:25$
+# $Lastupdate: 2013/07/06 19:48:09$
 # License: Expat.
 #
 #+TITLE: Wanderlust の設定
@@ -30,7 +30,7 @@ title: Wanderlustの設定
 ** rail
    SEMI や FLIM などの UA の表示に [[http://uwabami.github.com/rail/][rail]] [fn:2]を使っている.
    #+BEGIN_SRC emacs-lisp
-     (unless (my:dpkg-status 'rail)
+     (unless (locate-library "rail")
        (el-get 'sync '(rail)))
      (require 'rail nil 'noerror)
    #+END_SRC
@@ -42,17 +42,14 @@ title: Wanderlustの設定
    メール作成時に draft 用の screen を追加して,
    送信後に screen を閉じる.
    #+BEGIN_SRC emacs-lisp
-     (eval-when-compile
-       (add-to-list 'load-path
-                    (concat user-emacs-directory "el-get/elscreen")))
      (require 'elscreen-wl)
    #+END_SRC
 ** cp5022x を使う
    ISO-2022-JP を CP50220 として扱う.
    [[http://d.hatena.ne.jp/kiwanami/20091103/1257243524][Wanderlustと文字コード]] [fn:3] も参照のこと.
    #+BEGIN_SRC emacs-lisp
-    (when (require 'cp5022x nil t)
-      (add-to-list 'mime-charset-coding-system-alist '(iso-2022-jp . cp50220)))
+     (when (require 'cp5022x nil t)
+       (add-to-list 'mime-charset-coding-system-alist '(iso-2022-jp . cp50220)))
    #+END_SRC
    default mime charset -> iso-2022-jp に
    #+BEGIN_SRC emacs-lisp
@@ -66,8 +63,8 @@ title: Wanderlustの設定
    #+END_SRC
    MIME の例の保存先の変更
    #+BEGIN_SRC emacs-lisp
-     (setq mime-situation-examples-file
-           (concat my:user-emacs-temporary-directory "mime-example"))
+      (setq mime-situation-examples-file
+            (concat my:user-emacs-temporary-directory "mime-example"))
    #+END_SRC
    HTML パートの表示に w3m を使う
    #+BEGIN_SRC emacs-lisp
@@ -684,7 +681,7 @@ title: Wanderlustの設定
 ** c-sig
    署名の選択に c-sig を使用している.
   #+BEGIN_SRC emacs-lisp
-    (unless (my:dpkg-status 'c-sig)
+    (unless (locate-library "c-sig")
       (el-get 'sync '(c-sig)))
   #+END_SRC
   設定は以下の通り. Mew 風に =C-c <tab>= で signature を挿入するようにしている

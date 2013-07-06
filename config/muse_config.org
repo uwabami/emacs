@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/07/01 17:26:06$
+# $Lastupdate: 2013/07/06 19:08:39$
 # License: Expat
 #
 #+TITLE: muse-mode の設定
@@ -22,7 +22,7 @@ title: muse-mode の設定
   OrgCapture と組み合わせれば, 全部いけるのかもしれませんけれど.
 * インストールと読み込み
   #+BEGIN_SRC emacs-lisp
-    (unless (my:dpkg-status 'muse-el)
+    (unless (locate-library "muse")
       (el-get 'sync '(muse)))
     (eval-and-compile
       (unless (locate-library "htmlize")

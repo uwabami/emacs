@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/07/01 17:19:41$
+# $Lastupdate: 2013/07/06 19:09:02$
 # License: Expat
 #
 #+AUTHOR: Youhei SASAKI
@@ -22,7 +22,7 @@ title: navi2chの設定
   #+END_QUOTE
 * install
   #+BEGIN_SRC emacs-lisp
-    (unless (my:dpkg-status 'navi2ch)
+    (unless (locate-library "navi2ch")
       (el-get 'sync '(navi2ch)))
   #+END_SRC
 * 読み込み

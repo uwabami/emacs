@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2013/06/26 19:18:38$
+;; $Lastupdate: 2013/07/06 19:06:00$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -127,14 +127,6 @@
 ;; proxy 環境下を考慮して github は https でアクセス
 ;;
 (setq el-get-github-default-url-type 'https)
-;; -----------------------------------------------------------
-;;; Check dpkg status by 'el-get-dpkg-package-status
-;;
-(eval-when-compile (require 'el-get-apt-get))
-(defun my:dpkg-status (string)
-  "Check dpkg status"
-  (interactive)
-  (string-match (el-get-dpkg-package-status (symbol-name string)) "ok"))
 ;; -----------------------------------------------------------
 ;;; Check dropbox is installed
 ;;

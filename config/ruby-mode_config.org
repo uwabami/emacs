@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/07/01 17:19:46$
+# $Lastupdate: 2013/07/06 19:09:48$
 # License: Expat
 #
 #+TITLE: Ruby関連の設定
@@ -52,7 +52,7 @@ title: Ruby関連の設定
   #+END_SRC
 * rd-mode
   #+BEGIN_SRC emacs-lisp
-    (unless (my:dpkg-status 'rdtool-elisp)
+    (unless (locate-library "rd-mode")
       (el-get 'sync '(rd-mode)))
     (require 'rd-mode nil 'noerror)
     (autoload 'rd-mode "rd-mode" "major mode for ruby document formatter RD" nil t)
@@ -63,8 +63,8 @@ title: Ruby関連の設定
   #+END_SRC
 * rabbit-mode
   #+BEGIN_SRC emacs-lisp
-    ;; (unless (my:dpkg-status 'rabbit-mode)
-    ;;   (el-get 'sync '(rabbit-mode)))
+    (unless (locate-library "rabbit-mode")
+      (el-get 'sync '(rabbit-mode)))
     (autoload 'rabbit-mode "rabbit-mode" "major mode for Rabbit" nil t)
     (add-to-list 'auto-mode-alist
                  '("\\.\\(rbt\\|rab\\)$" . rabbit-mode))

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/07/05 05:16:13$
+# $Lastupdate: 2013/07/10 18:43:45$
 # License: Expat
 #
 #+TITLE: バージョン依存しない(はず)の雑多な設定
@@ -137,7 +137,7 @@ title: バージョン依存しない(はず)の雑多な設定
   長い行の表示.
   デフォルトは折り返し無しで =\C-c M-l= で toggle.
   #+BEGIN_SRC emacs-lisp
-    (set-default 'truncate-lines nil)
+    (set-default 'truncate-lines t)
     (define-key global-map (kbd "C-c M-l") 'toggle-truncate-lines)
   #+END_SRC
   バッファ終端で newline を入れない

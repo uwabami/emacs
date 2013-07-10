@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/07/05 05:37:19$
+# $Lastupdate: 2013/07/10 18:45:11$
 # License: Expat
 #
 #+TITLE: org-modeの設定
@@ -153,47 +153,47 @@ title: org-modeの設定
    #+END_SRC
 * メモ環境: Org-Capture
   1メモ1ファイル + howm 連携のための設定
-** org-cature の際に howm 形式のファイルを作成
-   単なるメモは 1メモ1ファイルで保存
-   #+BEGIN_SRC emacs-lisp
-     (defun my:org-capture-howm-file ()
-       (expand-file-name
-        (format-time-string "%Y%m%d-%H%M%S.howm") org-directory))
-   #+END_SRC
+  #+BEGIN_SRC emacs-lisp
+    (require 'org-capture)
+  #+END_SRC
 ** org-capture での bookmark の使用禁止
    refile 時には使われるので, 実はあんまり意味が無い?
    #+BEGIN_SRC emacs-lisp
      (setq org-capture-bookmark nil)
    #+END_SRC
 ** カテゴリの追加
+   メモに関しては =howm= で取るので, その設定など.
    #+BEGIN_SRC emacs-lisp
      (setq org-capture-templates
-           '(
+           `(
              ("t" "Todo" entry
               (file (concat org-directory "todo.org"))
               "* TODO <%<%Y-%m-%d>> %?\n  %i\n  %a\n"
               :prepend nil
               :unnarrowed nil
-              :kill-buffer t)
+              :kill-buffer t
+              )
              ("s" "Schedule" entry
-              ;; (file+datetree (concat org-directory "schedule.org"))
               (file (concat org-directory "schedule.org"))
               "* <%<%Y-%m-%d>> %?\n  %i\n  %a\n"
               :prepend nil
               :unnarrowed nil
-              :kill-buffer t)
-             ("m" "Memo" entry
-              (file my:org-capture-howm-file)
+              :kill-buffer t
+              )
+             ("m" "Memo" plain
+              (file (concat org-directory (format-time-string "%Y%m%d-%H%M%S.howm")))
               "* MEMO <%<%Y-%m-%d>> %?\n   %i\n  %a\n\n"
               :prepend t
               :unnarrowed t
-              :kill-buffer t)
-             ("d" "Diary" entry
-              (file my:org-capture-howm-file)
+              :kill-buffer t
+              )
+             ("d" "Diary" plain
+              (file (concat org-directory (format-time-string "%Y%m%d-%H%M%S.howm")))
               "* DIARY <%<%Y-%m-%d>> %?\n  %i\n  %a\n\n"
               :prepend t
               :unnarrowed t
-              :kill-buffer t)
+              :kill-buffer t
+              )
              ))
    #+END_SRC
 * LaTeX Export

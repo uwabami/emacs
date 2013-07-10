@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/07/06 19:08:10$
+# $Lastupdate: 2013/07/09 09:34:49$
 # License: Expat
 #
 #+TITLE: Mew の設定
@@ -56,7 +56,7 @@ title: Mew の設定
 ** c-sig
    署名の選択に c-sig を使用している.
   #+BEGIN_SRC emacs-lisp
-    (unless (my:dpkg-status 'c-sig)
+    (unless (locate-library "c-sig")
       (el-get 'sync '(c-sig)))
   #+END_SRC
    設定は以下の通り

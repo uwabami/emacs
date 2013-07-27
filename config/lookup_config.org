@@ -1,18 +1,14 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/07/01 17:19:32$
 # License: Expat.
+#
 #+TITLE: lookupの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
+#+DATE: 2013-07-01 17:19:32
 #+SETUPFILE: ./export-config.org
-#+BEGIN_HTML
----
-layout: emacs
-title: lookupの設定
----
-#+END_HTML
+
 * 始めに
   辞書を引くための機能.
 * 読み込み

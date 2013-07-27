@@ -1,19 +1,14 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/07/11 20:49:56$
 # License: Expat
 #
 #+TITLE: org-modeの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
+#+DATE: 2013-07-27 22:47:57
 #+SETUPFILE: ./export-config.org
-#+BEGIN_HTML
----
-layout: emacs
-title: org-modeの設定
----
-#+END_HTML
+
 * 始めに
   あとで書く.
   #+BEGIN_SRC emacs-lisp
@@ -22,7 +17,7 @@ title: org-modeの設定
 * 基本設定
 ** キーバインド
    =org-capture=,  =org-export-icalendar-combine-agenda-files=, =org-agenda=.
-   =org-capture= は changelog memo [fn:2] のキーバインドにしている.
+   =org-capture= は changelog memo [fn:1] のキーバインドにしている.
    #+BEGIN_SRC emacs-lisp
      (define-key global-map (kbd "C-x m") 'org-capture)
      ;; (define-key global-map (kbd "C-c 1") 'org-export-icalendar-combine-agenda-files)
@@ -278,7 +273,7 @@ title: org-modeの設定
    #+END_SRC
    PDF を生成する際には上記スクリプトを実行することに.
    #+BEGIN_SRC emacs-lisp
-     (setq org-latex-pdf-process '("pdfplatex %f"))
+     (setq org-latex-pdf-process '("latexmk -pdfdvi %f"))
    #+END_SRC
 ** 強調等の変換
    #+BEGIN_SRC emacs-lisp
@@ -293,11 +288,21 @@ title: org-modeの設定
         ))
    #+END_SRC
 * HTML Export
-  [[http://jekyllrb.com/][Jekyll]] [fn:1] でサイト構築を行なっているので, それにまつわる設定
+  [[http://jekyllrb.com/][Jekyll]] [fn:2] でサイト構築を行なっているので, それにまつわる設定
 ** 読み込み
    #+BEGIN_SRC emacs-lisp
      (require 'ox-html)
      (require 'ox-publish)
+   #+END_SRC
+** Jekyll 用の HTML を出力する exporter
+   YAML Front matter を良い感じに生成する ox-jekyll を読み込む.
+   ox-jekyll 自体は [[https://github.com/yoshinari-nomura/org-octopress][yoshinari-nomura/org-octopress]] [fn:3] 参照のこと.
+   #+BEGIN_SRC emacs-lisp
+     (el-get 'sync '(ox-jekyll))
+     (require 'ox-jekyll nil 'noerror)
+     ;; (setq org-jekyll-layout "emacs")
+     ;; (setq org-jekyll-categories "[cc-env, emacs]")
+     ;; (setq org-jekyll-published "true")
    #+END_SRC
 ** Project 用の変数定義
    主に出力場所などの設定
@@ -310,7 +315,7 @@ title: org-modeの設定
         (concat my:org-publish-webpage "images/")))
      (defvar my:org-publish-emacs-pages
        (expand-file-name
-        (concat my:org-publish-webpage "cc-env/Emacs/_drafts/")))
+        (concat my:org-publish-webpage "cc-env/Emacs/")))
    #+END_SRC
 ** Cache の置き場所の変更
    cache の置き場所を =$HOME/Public/_config/org-timestamps/= に変える
@@ -332,8 +337,7 @@ title: org-modeの設定
               :htmlized-source t
               :html-extension "html"
               :publishing-directory ,my:org-publish-webpage
-              :publishing-function org-html-publish-to-html
-              :body-only t
+              :publishing-function org-jekyll-publish-to-html
               )
              ("img"
               :base-directory ,my:org-publish-webpage-img
@@ -349,8 +353,7 @@ title: org-modeの設定
               :exclude "^export-config\.org"
               :headline-level 4
               :publishing-directory ,my:org-publish-emacs-pages
-              :publishing-function org-html-publish-to-html
-              :body-only t
+              :publishing-function org-jekyll-publish-to-html
               :auto-sitemap nil
               )
              ("web" :components ("public" "img"))
@@ -385,6 +388,8 @@ title: org-modeの設定
    #+END_SRC
 * Footnotes
 
-[fn:1] Jeykll: [[http://jekyllrb.com/]]
+[fn:1] 横着プログラミング 第1回: Unixのメモ技術: [[http://0xcc.net/unimag/1/]]
 
-[fn:2] 横着プログラミング 第1回: Unixのメモ技術: [[http://0xcc.net/unimag/1/]]
+[fn:2] Jeykll: [[http://jekyllrb.com/]]
+
+[fn:3] yoshinari-nomura/org-octopress: [[https://github.com/yoshinari-nomura/org-octopress]]

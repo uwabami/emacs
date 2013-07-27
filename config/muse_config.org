@@ -1,19 +1,14 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/07/06 19:08:39$
 # License: Expat
 #
 #+TITLE: muse-mode の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
+#+DATE: 2013-07-27 03:33:05
 #+SETUPFILE: ./export-config.org
-#+BEGIN_HTML
----
-layout: emacs
-title: muse-mode の設定
----
-#+END_HTML
+
 * 始めに
   [[http://www.gfd-dennou.org/member/uwabami/cc-env/][計算機関連のメモ]] はほとんど全て [[http://mwolson.org/projects/EmacsMuse.html][muse-mode]] [fn:1] で書いています.
   Emacs 内で Wiki の様にページを辿れるのが気にいっています.
@@ -41,19 +36,6 @@ title: muse-mode の設定
    C-x M で muse-project-find-file
    #+BEGIN_SRC emacs-lisp
      (define-key ctl-x-map "M" 'muse-project-find-file)
-   #+END_SRC
-** orgstruct + outline-minor-mode で編集を org っぽく.
-   #+BEGIN_SRC emacs-lisp
-     (add-hook 'muse-mode-hook 'turn-on-orgstruct)
-     (add-hook 'muse-mode-hook 'turn-on-orgstruct++)
-     (add-hook 'muse-mode-hook
-               (lambda ()
-                 (footnote-mode)
-                 (outline-minor-mode)
-                 (if window-system
-                     (define-key muse-mode-map [tab] 'outline-toggle-children)
-                   (define-key muse-mode-map "\t" 'outline-toggle-children))
-                 ))
    #+END_SRC
 ** 文字コード関連
    #+BEGIN_SRC emacs-lisp
@@ -112,9 +94,13 @@ title: muse-mode の設定
      (setq muse-project-alist
                  '(
                    ("cc-env"
-                    ("~/Public/muse" :default "index")
-                    (:base "my:cc-env" :path "~/Public/cc-env/_drafts"))
+                    ("~/Public/cc-env" :default "index")
+                    (:base "my:cc-env" :path "~/Public/cc-env/"))
                    ))
+   #+END_SRC
+** htmlize 無効化
+   #+BEGIN_SRC emacs-lisp
+   (setq muse-html-src-allowed-modes nil)
    #+END_SRC
 * Footnotes
 

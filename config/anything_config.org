@@ -1,19 +1,14 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/07/06 19:07:25$
 # License: Expat
 #
 #+TITLE: Anythingの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
+#+DATE: 2013-07-06 19:07:25$
 #+SETUPFILE: ./export-config.org
-#+BEGIN_HTML
----
-layout: emacs
-title: Anythingの設定
----
-#+END_HTML
+
 * 始めに
   何度か挫折しては舞い戻ってくる [[http://emacswiki.org/emacs/Anything][Anything]] [fn:1] の設定.
   あまりに高機能すぎて, よく眩暈をおこして使うのを止めるのですが,

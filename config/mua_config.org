@@ -1,19 +1,14 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/07/01 17:19:38$
 # License: Expat
 #
 #+TITLE: MUA の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
+#+DATE: 2013-07-01 17:19:38
 #+SETUPFILE: ./export-config.org
-#+BEGIN_HTML
----
-layout: emacs
-title: MUA の設定
----
-#+END_HTML
+
 * 始めに
   MUA として [[http://www.mew.org/ja/][Mew]] [fn:1]
   もしくは  [[https://github.com/wanderlust/wanderlust][Wanderlust]] [fn:2] を使っている.

@@ -1,19 +1,14 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/07/01 17:19:06$
 # License: Expat
 #
 #+TITLE: AUCTeX の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
+#+DATE: 2013-07-27 22:39:08
 #+SETUPFILE: ./export-config.org
-#+BEGIN_HTML
----
-layout: emacs
-title: AUCTeX の設定
----
-#+END_HTML
+
 * 始めに
   TeX 編集用のモードとしては YaTeX と AUCTeX がありますが, YaTeX の font-lock が遅いことから AUCTeX を使うようになりました.
 * 読み込み

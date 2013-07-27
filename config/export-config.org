@@ -6,4 +6,5 @@
 #+HTML_CONTAINER: div
 #+MACRO: em @<em>$1@</em>
 #+MACRO: strong @<strong>$1@</strong>
-#+HTML_CONTAINER: div
+#+JEKYLL_LAYOUT: emacs
+#+JEKYLL_PUBLISHED: true

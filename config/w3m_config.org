@@ -1,19 +1,14 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/07/01 17:19:48$
 # License: Expat
 #
 #+TITLE: emacs-w3mの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
+#+DATE: 2013-07-01 17:19:48
 #+SETUPFILE: ./export-config.org
-#+BEGIN_HTML
----
-layout: emacs
-title: emacs-w3m の設定
----
-#+END_HTML
+
 * 始めに
   ブラウザ自体としてはあんまり使っていないけれど,
   Wanderlust での HTML メールの表示なんかに必要で割と重宝している.

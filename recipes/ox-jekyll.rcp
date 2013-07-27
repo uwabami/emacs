@@ -1,0 +1,5 @@
+(:name ox-jekyll
+       :description "Org exporter for HTML(body) width YAML front matter using Jekyll."
+       :type http
+       :url "https://raw.github.com/uwabami/org-octopress/master/ox-jekyll.el"
+       :prepare (add-to-list 'load-path default-directory))

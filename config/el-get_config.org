@@ -1,19 +1,14 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/07/06 19:59:24$
 # License: Expat
 #
 #+TITLE: el-get で install した雑多な物
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
+#+DATE: 2013-07-27 22:39:35
 #+SETUPFILE: ./export-config.org
-#+BEGIN_HTML
----
-layout: emacs
-title: el-get で install した雑多な物
----
-#+END_HTML
+
 * 始めに
   Emacs 24 から =package.el= が公式に同梱されるようになりました.
   これを用いることで, ELPA(Emacs Lisp Package Archive) にある

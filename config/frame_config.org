@@ -1,19 +1,14 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/07/05 03:09:19$
 # License: Expat
 #
 #+TITLE: フォントとフレームの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
+#+DATE: 2013-07-05 03:09:19
 #+SETUPFILE: ./export-config.org
-#+BEGIN_HTML
----
-layout: emacs
-title: フォントとフレームの設定
----
-#+END_HTML
+
 * Theme
   自作の [[https://github.com/uwabami/color-theme-darkpastel][uwabami/color-theme-darkpastel · GitHub]] を使っている.
   #+BEGIN_SRC emacs-lisp

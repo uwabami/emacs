@@ -1,19 +1,14 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/07/06 19:09:02$
 # License: Expat
 #
 #+AUTHOR: Youhei SASAKI
 #+EMAIL:  uwabami@gfd-dennou.org
 #+TITLE: navi2ch の設定
+#+DATE: 2013-07-06 19:09:02
 #+SETUPFILE: ./export-config.org
-#+BEGIN_HTML
----
-layout: emacs
-title: navi2chの設定
----
-#+END_HTML
+
 * 始めに
   本家 [[http://navi2ch.sourceforge.net/index.ja.html][Navi2ch Project Home Page]] より
   #+BEGIN_QUOTE

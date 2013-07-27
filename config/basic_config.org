@@ -1,19 +1,14 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/07/10 18:43:45$
 # License: Expat
 #
 #+TITLE: バージョン依存しない(はず)の雑多な設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
+#+DATE: 2013-07-27 22:27:27
 #+SETUPFILE: ./export-config.org
-#+BEGIN_HTML
----
-layout: emacs
-title: バージョン依存しない(はず)の雑多な設定
----
-#+END_HTML
+
 * 始めに
 
   Emacs そのものの設定集. 多分機種依存しないように書けている(ハズ).
@@ -272,16 +267,17 @@ title: バージョン依存しない(はず)の雑多な設定
             (concat my:user-emacs-temporary-directory "emacs-places")))
   #+END_SRC
 * timestamp の自動更新
-  ファイル内に =$Lastupdate: $= (＄は小文字)がある場合には,
+  ファイル内に =#+DATE:= がある場合には,
   save する度に timestamp を更新する.
   #+BEGIN_SRC emacs-lisp
     (require 'time-stamp)
     (add-hook 'before-save-hook 'time-stamp)
     (setq time-stamp-active t)
     (setq time-stamp-line-limit 10)
-    (setq time-stamp-start "$Lastupdate: ")
-    (setq time-stamp-format "%04y/%02m/%02d %02H:%02M:%02S")
-    (setq time-stamp-end "\\$")
+    (setq time-stamp-start "#\\+DATE: ")
+    (setq time-stamp-end "\$")
+    ;; (setq time-stamp-pattern nil)
+    (setq time-stamp-format "%04y-%02m-%02d %02H:%02M:%02S")
   #+END_SRC
   最近は殆ど全ての資源を git で管理するようになってきたので,
   これは不要かもしれない.

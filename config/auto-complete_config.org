@@ -1,19 +1,14 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #
 # Copyright(C) Youhei SASAKI All rights reserved.
-# $Lastupdate: 2013/07/06 19:07:43$
 # License: Expat
 #
 #+TITLE: AutoCompleteの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
+#+DATE: 2013-07-27 22:39:13
 #+SETUPFILE: ./export-config.org
-#+BEGIN_HTML
----
-layout: emacs
-title: AutoCompleteの設定
----
-#+END_HTML
+
 * 始めに
   [[http://cx4a.org/software/auto-complete/index.ja.html][Auto Complete Mode]] [fn:1] を参照のこと. 大変便利なのだけれども
   Org-mode や yasnippet と共存させようとすると, 結構面倒.

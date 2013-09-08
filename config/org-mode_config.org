@@ -6,7 +6,7 @@
 #+TITLE: org-modeの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-07-27 22:47:57
+#+DATE: 2013-09-09 02:38:45
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -298,11 +298,8 @@
    YAML Front matter を良い感じに生成する ox-jekyll を読み込む.
    ox-jekyll 自体は [[https://github.com/yoshinari-nomura/org-octopress][yoshinari-nomura/org-octopress]] [fn:3] 参照のこと.
    #+BEGIN_SRC emacs-lisp
-     (el-get 'sync '(ox-jekyll))
-     (require 'ox-jekyll nil 'noerror)
-     ;; (setq org-jekyll-layout "emacs")
-     ;; (setq org-jekyll-categories "[cc-env, emacs]")
-     ;; (setq org-jekyll-published "true")
+     (el-get 'sync '(ox-jekyll-simple))
+     (require 'ox-jekyll-simple nil 'noerror)
    #+END_SRC
 ** Project 用の変数定義
    主に出力場所などの設定

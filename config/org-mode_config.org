@@ -6,7 +6,7 @@
 #+TITLE: org-modeの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-09-09 02:38:45
+#+DATE: 2013-09-13 01:33:36
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -19,118 +19,115 @@
    =org-capture=,  =org-export-icalendar-combine-agenda-files=, =org-agenda=.
    =org-capture= は changelog memo [fn:1] のキーバインドにしている.
    #+BEGIN_SRC emacs-lisp
-     (define-key global-map (kbd "C-x m") 'org-capture)
-     ;; (define-key global-map (kbd "C-c 1") 'org-export-icalendar-combine-agenda-files)
-     (define-key global-map (kbd "C-c a") 'org-agenda)
+   (define-key global-map (kbd "C-x m") 'org-capture)
+   ;; (define-key global-map (kbd "C-c 1") 'org-export-icalendar-combine-agenda-files)
+   (define-key global-map (kbd "C-c a") 'org-agenda)
    #+END_SRC
 ** auto-mode-alist
    拡張子が =.org=, もしくは =.howm= なら自動的に =org-mode= に
    #+BEGIN_SRC emacs-lisp
-     (add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
-     (add-to-list 'auto-mode-alist '("\\.howm$" . org-mode))
+   (add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
+   (add-to-list 'auto-mode-alist '("\\.howm$" . org-mode))
    #+END_SRC
 ** 保存先の設定
    デフォルトで Dropbox に保存するように.
    #+BEGIN_SRC emacs-lisp
-     (setq org-directory (concat my:dropbox "org/"))
-     (setq org-default-notes-file (concat org-directory "schedule.org"))
+   (setq org-directory (concat my:dropbox "org/"))
+   (setq org-default-notes-file (concat org-directory "schedule.org"))
    #+END_SRC
 ** link を return で追う
    URL だけじゃなくて Wanderlust のメールなども追跡できる.
    #+BEGIN_SRC emacs-lisp
-     (setq org-return-follows-link t)
+   (setq org-return-follows-link t)
    #+END_SRC
 ** 時刻のフォーマット
    #+BEGIN_SRC emacs-lisp
-     (setq org-display-custom-times "<%Y-%m-%d %H:%M:%S>")
-     (setq org-time-stamp-custom-formats "<%Y-%m-%d %H:%M:%S>")
+   (setq org-display-custom-times "<%Y-%m-%d %H:%M:%S>")
+   (setq org-time-stamp-custom-formats "<%Y-%m-%d %H:%M:%S>")
    #+END_SRC
 ** ファイルを開いた時は畳んだ状態で表示
    #+BEGIN_SRC emacs-lisp
-     (setq org-startup-folded t)
+   (setq org-startup-folded t)
    #+END_SRC
 ** 表示を打ち切らない
    #+BEGIN_SRC emacs-lisp
-     (setq org-startup-truncated nil)
+   (setq org-startup-truncated nil)
    #+END_SRC
 ** font-lock を有効化
    #+BEGIN_SRC emacs-lisp
-     (add-hook 'org-mode-hook 'turn-on-font-lock)
+   (add-hook 'org-mode-hook 'turn-on-font-lock)
    #+END_SRC
 ** アプリケーションの関連付け
    #+BEGIN_SRC emacs-lisp
-     ;; (cond
-     ;;  (darwin-p
-     ;;   (setq org-file-apps-defaults-macosx nil)
-     ;;   (setq org-file-apps-defaults-macosx '((t . "open '%s'")))
-     ;;   (setq org-file-apps org-file-apps-defaults-macosx)
-     ;;   )
-     ;;  (nt-p
-     ;;   ;; 良く知らない fiber とか使うん?
-     ;;   ;; (setq org-file-apps-defaults-windowsnt nil)
-     ;;   ;; (setq org-file-apps-defaults-windowsnt '((t . "open '%s'")))
-     ;;   ;; (setq org-file-apps org-file-apps-defaults-windowsnt)
-     ;;   )
-     ;;  (t
-     ;;   (setq org-file-apps-defaults-gnu nil)
-     ;;   (setq org-file-apps-defaults-gnu '((t . "xdg-open '%s'")))
-     ;;   (setq org-file-apps org-file-apps-defaults-gnu)
-     ;;   )
-     ;;  )
+   ;; (cond
+   ;;  (darwin-p
+   ;;   (setq org-file-apps-defaults-macosx nil)
+   ;;   (setq org-file-apps-defaults-macosx '((t . "open '%s'")))
+   ;;   (setq org-file-apps org-file-apps-defaults-macosx)
+   ;;   )
+   ;;  (nt-p
+   ;;   ;; 良く知らない fiber とか使うん?
+   ;;   ;; (setq org-file-apps-defaults-windowsnt nil)
+   ;;   ;; (setq org-file-apps-defaults-windowsnt '((t . "open '%s'")))
+   ;;   ;; (setq org-file-apps org-file-apps-defaults-windowsnt)
+   ;;   )
+   ;;  (t
+   ;;   (setq org-file-apps-defaults-gnu nil)
+   ;;   (setq org-file-apps-defaults-gnu '((t . "xdg-open '%s'")))
+   ;;   (setq org-file-apps org-file-apps-defaults-gnu)
+   ;;   )
+   ;;  )
    #+END_SRC
 ** 日付表記
    #+BEGIN_SRC emacs-lisp
-     (add-hook 'org-mode-hook
-               (lambda ()
-                 (set (make-local-variable 'system-time-locale) "C")))
+   (add-hook 'org-mode-hook
+             (lambda ()
+               (set (make-local-variable 'system-time-locale) "C")))
    #+END_SRC
 * GTD: Org-Agenda
 ** Agenda で表示するファイル
-   日付付きの TODO は ical に export されるので =schedule.org= のみを Agenda の対象に.
    #+BEGIN_SRC emacs-lisp
      (setq org-agenda-files
            '(
-             "~/Dropbox/org/schedule.org"
              "~/Dropbox/org/todo.org"
-             "~/Dropbox/org/someday.org"
-             )
-           )
+             "~/Dropbox/org/schedule.org"
+             "~/Dropbox/org/someday.org"))
    #+END_SRC
 ** ToDo 状態の追加
    #+BEGIN_SRC emacs-lisp
-     (setq org-todo-keywords
-           '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)" "SOMEDAY(s)")))
+   (setq org-todo-keywords
+         '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)" "SOMEDAY(s)")))
    #+END_SRC
 ** ToDo を DONE にした際の挙動
    =ARCHIVE= タグを付けて =archive.org= に refile する
    #+BEGIN_SRC emacs-lisp
-     (require 'org-archive nil 'noerror)
-     (setq org-archive-location "archive.org::")
-     (defun my:org-archive-done-tasks ()
-       (interactive)
-     ;; ARCHIVE タグを付けるだけなら以下
-     ;;   (org-map-entries 'org-archive-set-tag "/DONE" 'file))
-     ;; org-archive-location に refile したいなら以下
-       (org-map-entries 'org-archive-subtree "/DONE" 'file))
-     (add-hook 'org-todo-statistics-hook 'my:org-archive-done-tasks)
-     (add-hook 'org-todo-after-statistics-hook 'my:org-archive-done-tasks)
+   (require 'org-archive nil 'noerror)
+   (setq org-archive-location "archive.org::")
+   (defun my:org-archive-done-tasks ()
+     (interactive)
+   ;; ARCHIVE タグを付けるだけなら以下
+   ;;   (org-map-entries 'org-archive-set-tag "/DONE" 'file))
+   ;; org-archive-location に refile したいなら以下
+     (org-map-entries 'org-archive-subtree "/DONE" 'file))
+   (add-hook 'org-todo-statistics-hook 'my:org-archive-done-tasks)
+   (add-hook 'org-todo-after-statistics-hook 'my:org-archive-done-tasks)
    #+END_SRC
 ** DONEの時刻を記録しない
    icalendar export に必要?
    #+BEGIN_SRC emacs-lisp
-     (setq org-log-done nil)
+   (setq org-log-done nil)
    #+END_SRC
 ** GTD用のタグの追加
    とりあえず. そのうち適当に追加するかも.
    #+BEGIN_SRC emacs-lisp
-     (setq org-tag-alist
-       '(
-         ("@OFFICE" . ?o)
-         ("@HOME" . ?h)
-         ("SHOPPING" . ?s)
-         ("MAIL" . ?m)
-         ("WORK" . ?w)
-         ))
+   (setq org-tag-alist
+     '(
+       ("@OFFICE" . ?o)
+       ("@HOME" . ?h)
+       ("SHOPPING" . ?s)
+       ("MAIL" . ?m)
+       ("WORK" . ?w)
+       ))
    #+END_SRC
 ** Refile 対象の設定
    subtree ではなく ファイルに refile する
@@ -139,109 +136,98 @@
      (setq org-refile-allow-creating-parent-nodes t)
      (setq org-refile-use-outline-path 'file)
      (setq org-refile-targets
-           '(
-             ("todo.org" :maxlevel . 1)
-             ("schedule.org" :maxlevel . 1)
-             ("someday.org" :maxlevel . 1)
-             ))
+           '((org-agenda-files :maxlevel . 1)))
    #+END_SRC
 ** Refile 時の bookmark の置き場所の変更
    デフォルトは =user-emacs-config-directory= 以下に置かれる.
    #+BEGIN_SRC emacs-lisp
-     (setq bookmark-default-file
-           (concat my:user-emacs-temporary-directory "bookmarks"))
+   (setq bookmark-default-file
+         (concat my:user-emacs-temporary-directory "bookmarks"))
    #+END_SRC
 * メモ環境: Org-Capture
   1メモ1ファイル + howm 連携のための設定
   #+BEGIN_SRC emacs-lisp
-    (require 'org-capture)
+  (require 'org-capture)
   #+END_SRC
 ** org-capture での bookmark の使用禁止
    refile 時には使われるので, 実はあんまり意味が無い?
    #+BEGIN_SRC emacs-lisp
-     (setq org-capture-bookmark nil)
+   (setq org-capture-bookmark nil)
    #+END_SRC
 ** カテゴリの追加
    メモに関しては =howm= で取るので, その設定など.
    #+BEGIN_SRC emacs-lisp
-     (setq org-capture-templates
-           `(
-             ("t" "Todo" entry
-              (file (concat org-directory "todo.org"))
-              "* TODO <%<%Y-%m-%d>> %?\n  %i\n  %a\n"
-              :prepend nil
-              :unnarrowed nil
-              :kill-buffer t
-              )
-             ("s" "Schedule" entry
-              (file (concat org-directory "schedule.org"))
-              "* <%<%Y-%m-%d>> %?\n  %i\n  %a\n"
-              :prepend nil
-              :unnarrowed nil
-              :kill-buffer t
-              )
-             ("m" "Memo" plain
-              (file (concat org-directory (format-time-string "%Y%m%d-%H%M%S.howm")))
-              "* MEMO <%<%Y-%m-%d>> %?\n   %i\n  %a\n\n"
-              :prepend t
-              :unnarrowed t
-              :kill-buffer t
-              )
-             ("d" "Diary" plain
-              (file (concat org-directory (format-time-string "%Y%m%d-%H%M%S.howm")))
-              "* DIARY <%<%Y-%m-%d>> %?\n  %i\n  %a\n\n"
-              :prepend t
-              :unnarrowed t
-              :kill-buffer t
-              )
-             ))
+   (setq org-capture-templates
+         `(
+           ("t" "Todo" entry
+            (file (concat org-directory "todo.org"))
+            "* TODO <%<%Y-%m-%d>> %?\n  %i\n  %a\n"
+            :prepend nil
+            :unnarrowed nil
+            :kill-buffer t
+            )
+           ("s" "Schedule" entry
+            (file (concat org-directory "schedule.org"))
+            "* <%<%Y-%m-%d>> %?\n  %i\n  %a\n"
+            :prepend nil
+            :unnarrowed nil
+            :kill-buffer t
+            )
+           ("m" "Memo" plain
+            (file (concat org-directory (format-time-string "%Y%m%d-%H%M%S.howm")))
+            "* MEMO <%<%Y-%m-%d>> %?\n   %i\n  %a\n\n"
+            :prepend t
+            :unnarrowed t
+            :kill-buffer t
+            )
+           ("d" "Diary" plain
+            (file (concat org-directory (format-time-string "%Y%m%d-%H%M%S.howm")))
+            "* DIARY <%<%Y-%m-%d>> %?\n  %i\n  %a\n\n"
+            :prepend t
+            :unnarrowed t
+            :kill-buffer t
+            )
+           ))
    #+END_SRC
-* MobileOrg
-  #+BEGIN_SRC emacs-lisp
-    (setq org-mobile-directory
-          (concat my:dropbox "MobileOrg"))
-    (setq org-mobile-inbox-for-pull
-          (concat org-directory "mobile-pull.org"))
-  #+END_SRC
 * LaTeX Export
   日本語LaTeXとして pLaTeX を使うための設定.
 ** 読み込み
    #+BEGIN_SRC emacs-lisp
-     (require 'ox-latex)
-     (require 'ox-beamer)
+   (require 'ox-latex)
+   (require 'ox-beamer)
    #+END_SRC
 ** export 時のエンコーディング
    #+BEGIN_SRC emacs-lisp
-     (setq org-export-coding-system nil)
+   (setq org-export-coding-system nil)
    #+END_SRC
 ** documentclass として jsarticle を使う
    inputenc は使わないことに.
    #+BEGIN_SRC emacs-lisp
-     (add-to-list 'org-latex-classes
-                  '("jsarticle"
-                    "\\documentclass{jsarticle}
-     [NO-DEFAULT-PACKAGES]
-     [NO-PACKAGES]
-     [EXTRA]"
-                    ("\\section{%s}" . "\\section*{%s}")
-                    ("\\subsection{%s}" . "\\subsection*{%s}")
-                    ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-                    ("\\paragraph{%s}" . "\\paragraph*{%s}")
-                    ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
-     (setq org-latex-default-class "jsarticle")
+   (add-to-list 'org-latex-classes
+                '("jsarticle"
+                  "\\documentclass{jsarticle}
+   [NO-DEFAULT-PACKAGES]
+   [NO-PACKAGES]
+   [EXTRA]"
+                  ("\\section{%s}" . "\\section*{%s}")
+                  ("\\subsection{%s}" . "\\subsection*{%s}")
+                  ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                  ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                  ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+   (setq org-latex-default-class "jsarticle")
    #+END_SRC
 ** beamer の設定
    こちらも同様.
    #+BEGIN_SRC emacs-lisp
-     (add-to-list 'org-latex-classes
-                  '("beamer"
-                    "\\documentclass[presentation]{beamer}
-     [NO-DEFAULT-PACKAGES]
-     [NO-PACKAGES]
-     [EXTRA]"
-                         ("\\section{%s}" . "\\section*{%s}")
-                         ("\\subsection{%s}" . "\\subsection*{%s}")
-                         ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))
+   (add-to-list 'org-latex-classes
+                '("beamer"
+                  "\\documentclass[presentation]{beamer}
+   [NO-DEFAULT-PACKAGES]
+   [NO-PACKAGES]
+   [EXTRA]"
+                       ("\\section{%s}" . "\\section*{%s}")
+                       ("\\subsection{%s}" . "\\subsection*{%s}")
+                       ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))
    #+END_SRC
    常に =fragile= で使用
    #+BEGIN_SRC emacs-lisp
@@ -250,30 +236,30 @@
 ** pdf 生成コマンド: pLaTeX を使う
    こんな感じのスクリプトを用意して
    #+BEGIN_SRC sh
-     #!/bin/zsh
-     NKF=`which nkf 1>/dev/null 2>&1` || exit 1
-     CODE=`nkf -guess $1`
-     case $CODE in
-         EUC-JP*|euc-jp*)
-             platex -shell-escape -src-specials -kanji=euc $1 && \
-                 dvipdfmx "`basename "$1" .tex`"
-             ;;
-         ISO-2022-JP*|iso-2022-jp*)
-             platex -shell-escape -src-specials -kanji=jis $1 && \
-                 dvipdfmx "`basename "$1" .tex`"
-             ;;
-         UTF-8*|utf-8*)
-             platex -shell-escape -src-specials -kanji=utf8 $1 && \
-                 dvipdfmx "`basename "$1" .tex`"
-             ;;
+   #!/bin/zsh
+   NKF=`which nkf 1>/dev/null 2>&1` || exit 1
+   CODE=`nkf -guess $1`
+   case $CODE in
+       EUC-JP*|euc-jp*)
+           platex -shell-escape -src-specials -kanji=euc $1 && \
+               dvipdfmx "`basename "$1" .tex`"
+           ;;
+       ISO-2022-JP*|iso-2022-jp*)
+           platex -shell-escape -src-specials -kanji=jis $1 && \
+               dvipdfmx "`basename "$1" .tex`"
+           ;;
+       UTF-8*|utf-8*)
+           platex -shell-escape -src-specials -kanji=utf8 $1 && \
+               dvipdfmx "`basename "$1" .tex`"
+           ;;
 
-         ,*)
-             ;;
-     esac
+       ,*)
+           ;;
+   esac
    #+END_SRC
    PDF を生成する際には上記スクリプトを実行することに.
    #+BEGIN_SRC emacs-lisp
-     (setq org-latex-pdf-process '("latexmk -pdfdvi %f"))
+   (setq org-latex-pdf-process '("latexmk -pdfdvi %f"))
    #+END_SRC
 ** 強調等の変換
    #+BEGIN_SRC emacs-lisp
@@ -290,98 +276,252 @@
 * HTML Export
   [[http://jekyllrb.com/][Jekyll]] [fn:2] でサイト構築を行なっているので, それにまつわる設定
 ** 読み込み
+   YAML Front matter を良い感じに生成する =ox-jekyll= を読み込む.
+   =ox-jekyll= 自体は [[https://github.com/yoshinari-nomura/org-octopress][yoshinari-nomura/org-octopress]] [fn:3] 参照のこと.
+   =ox-html= は =ox-jekyll= 内で読み込まれている.
    #+BEGIN_SRC emacs-lisp
+     (el-get 'sync '(ox-jekyll))
+     (require 'ox-jekyll nil 'noerror)
      (require 'ox-html)
      (require 'ox-publish)
-   #+END_SRC
-** Jekyll 用の HTML を出力する exporter
-   YAML Front matter を良い感じに生成する ox-jekyll を読み込む.
-   ox-jekyll 自体は [[https://github.com/yoshinari-nomura/org-octopress][yoshinari-nomura/org-octopress]] [fn:3] 参照のこと.
-   #+BEGIN_SRC emacs-lisp
-     (el-get 'sync '(ox-jekyll-simple))
-     (require 'ox-jekyll-simple nil 'noerror)
    #+END_SRC
 ** Project 用の変数定義
    主に出力場所などの設定
    #+BEGIN_SRC emacs-lisp
-     (defvar my:org-publish-webpage
-       (expand-file-name
-        (concat (getenv "HOME") "/Public/")))
-     (defvar my:org-publish-webpage-img
-       (expand-file-name
-        (concat my:org-publish-webpage "images/")))
-     (defvar my:org-publish-emacs-pages
-       (expand-file-name
-        (concat my:org-publish-webpage "cc-env/Emacs/")))
+   (defvar my:org-publish-webpage
+     (expand-file-name
+      (concat (getenv "HOME") "/Public/")))
+   (defvar my:org-publish-webpage-img
+     (expand-file-name
+      (concat my:org-publish-webpage "images/")))
+   (defvar my:org-publish-emacs-pages
+     (expand-file-name
+      (concat my:org-publish-webpage "_drafts")))
    #+END_SRC
-** Cache の置き場所の変更
-   cache の置き場所を =$HOME/Public/_config/org-timestamps/= に変える
+** Project 用, cache の置き場所の変更
+   cache の置き場所を =$HOME/Public/.org-timestamps/= に変える
    #+BEGIN_SRC emacs-lisp
-     (setq org-publish-timestamp-directory
-           (concat my:org-publish-webpage "_config/org-timestamps/"))
-     (setq org-publish-use-timestamps-flag t)
+   (setq org-publish-timestamp-directory
+         (concat my:org-publish-webpage ".org-timestamps/"))
+   (setq org-publish-use-timestamps-flag t)
    #+END_SRC
+** 変換関連の設定
+*** HTML バックエンドの設定
+    #+BEGIN_SRC emacs-lisp
+      (setq org-html-html5-fancy t)
+      (setq org-html-doctype "html5")
+      (setq org-html-use-infojs nil)
+      (setq org-html-allow-name-attribute-in-anchors nil)
+      (setq org-html-htmlize-output-type 'css)
+      (setq org-html-htmlize-font-prefix "htmlized-")
+      (setq org-html-text-markup-alist
+            '((bold           . "<strong>%s</strong>")
+              (italic         . "<em>%s</em>")
+              (code           . "<code>%s</code>")
+              (strike-through . "<span style=\"strike\">%s</span>")
+              (underline      . "<span class=\"underline\">%s</span>")
+              (verbatim       . "<code>%s</code>")))
+    #+END_SRC
+*** ox-jekyll の拡張
+    =ox-jekyll= で定義されている exporter をちょっと拡張して使う事にする
+    #+BEGIN_SRC emacs-lisp
+      ;; #+LANG から YAML Front Matter として `lang:' を生成
+      (defcustom org-jekyll-lang "ja"
+        "Default LANG used in Jekyll article."
+        :group 'org-export-jekyll
+        :type 'string)
+      ;; #+JEKYLL_TAGS から YAML Front Matter として `tags:' を生成
+      (defcustom org-jekyll-tags ""
+        "Default space-separated tags in Jekyll article."
+        :group 'org-export-jekyll
+        :type 'string)
+
+      ;; Define Back-End
+      (org-export-define-derived-backend 'my:jekyll 'jekyll
+        ;; メニューエントリーの追加
+        :menu-entry
+        '(?j "Jekyll: export to HTML with YAML front matter."
+             ((?c "As HTML buffer" my:org-jekyll-export-as-html)
+              (?C "As HTML file" my:org-jekyll-export-to-html)))
+        ;; テンプレートの上書き
+        :translate-alist
+        '((template  . my:org-jekyll-template)   ;; override
+          ;; (src-block . my:org-jekyll-src-block) ;; Add pygments
+          )
+        ;; オプションの追加
+        :options-alist
+        '((:lang   "LANG" nil org-jekyll-lang)
+          (:jekyll-tags "JEKYLL_TAGS" nil org-jekyll-tags)))
+
+      ;; Override Template
+      (defun my:org-jekyll-template (contents info)
+        "Override org-jekyll-template provided `org-jekyll-template'"
+        (concat
+         (my:org-jekyll--yaml-front-matter info)
+         contents))
+
+      (defun my:org-jekyll--yaml-front-matter (info)
+        "Override org-jekyll--yam-front-matter provided `org-jekyll-template'"
+        (let ((title
+               (org-jekyll--get-option info :title))
+              (date
+               (org-jekyll--get-option info :date))
+              (layout
+               (org-jekyll--get-option info :jekyll-layout org-jekyll-layout))
+              (lang
+               (org-jekyll--get-option info :lang org-jekyll-lang))
+              (categories
+               (org-jekyll--get-option info :jekyll-categories org-jekyll-categories))
+              (tags
+               (org-jekyll--get-option info :jekyll-tags org-jekyll-tags))
+              (published
+               (org-jekyll--get-option info :jekyll-published org-jekyll-published))
+              (comments
+               (org-jekyll--get-option info :jekyll-comments)))
+          (unless (equal published "true")
+            (setq title (concat "[PREVIEW] " title)))
+          (concat
+           "---"
+           "\ntitle: "      title
+           "\ndate: "       date
+           "\nlayout: "     layout
+           "\nlang: "       lang
+           "\ncategories: " categories
+           "\ntags: "       tags
+           "\npublished: "  published
+           "\ncomments: "   comments
+           "\n---\n")))
+
+      (defun my:org-jekyll-export-as-html
+        (&optional async subtreep visible-only body-only ext-plist)
+        "Override org-jekyll--yam-front-matter provided `org-jekyll-export-as-html'"
+        (interactive)
+        (if async
+            (org-export-async-start
+                (lambda (output)
+                  (with-current-buffer (get-buffer-create "*Org Jekyll HTML Export*")
+                    (erase-buffer)
+                    (insert output)
+                    (goto-char (point-min))
+                    (funcall org-html-display-buffer-mode)
+                    (org-export-add-to-stack (current-buffer) 'jekyll)))
+              `(org-export-as 'my:jekyll ,subtreep ,visible-only ,body-only ',ext-plist))
+          (let ((outbuf (org-export-to-buffer
+                            'my:jekyll "*Org Jekyll HTML Export*"
+                          subtreep visible-only body-only ext-plist)))
+            ;; Set major mode.
+            (with-current-buffer outbuf (set-auto-mode t))
+            (when org-export-show-temporary-export-buffer
+              (switch-to-buffer-other-window outbuf)))))
+
+      (defun my:org-jekyll-export-to-html
+        (&optional async subtreep visible-only body-only ext-plist)
+        "Override org-jekyll--yam-front-matter provided `org-jekyll-export-to-html'"
+        (interactive)
+        (let* ((extension (concat "." org-html-extension))
+               (file (org-export-output-file-name extension subtreep))
+               (org-export-coding-system org-html-coding-system))
+          (if async
+              (org-export-async-start
+                  (lambda (f) (org-export-add-to-stack f 'my:jekyll))
+                (let ((org-export-coding-system org-html-coding-system))
+                  `(expand-file-name
+                    (org-export-to-file
+                     'my:jekyll ,file ,subtreep ,visible-only ,body-only ',ext-plist))))
+            (let ((org-export-coding-system org-html-coding-system))
+              (org-export-to-file
+                  'my:jekyll file subtreep visible-only body-only ext-plist)))))
+
+      (defun my:org-jekyll-publish-to-html (plist filename pub-dir)
+        "Override org-jekyll--yam-front-matter provided `org-jekyll-publish-to-html'"
+        (org-publish-org-to 'my:jekyll filename ".html" plist pub-dir))
+
+      (defun my:org-jekyll-src-block (src-block contents info)
+        "Transcode src-block"
+        (let* ((lang  (org-element-property :language src-block))
+               (value (org-element-property :value    src-block))
+               (name  (org-element-property :name     src-block))
+               (header "---\n")
+               (footer "---\n"))
+        (concat
+         header lang value name footer contents)))
+    #+END_SRC
+*** フィルタの追加/登録
+    =org-info.js= は使わないので =<div>= タグが邪魔なのだが, 結構いたる所に処理が埋めこまれていて
+    修正するのが大変なので, filter で消すことにする.
+    閉じタグ =^</div>\n= も消すので, org ファイルに =</div>= を挿入する場合には, 明示的にコメントを付けること
+    #+BEGIN_SRC emacs-lisp
+     (defun my:org-jekyll-filter-html-tags (text backend info)
+       "Remove all <div ... class=\"outline.*\">, </div>\n tags"
+       (when (org-export-derived-backend-p backend 'jekyll)
+         (replace-regexp-in-string
+          "\\(<div.*?class=\"outline.*?>\\|<div.?class=\"org-src-container.*?>\\|^</div>\n\\)"
+          "" text)))
+    #+END_SRC
+    コードブロックが liquid で処理されるのを防ぐために raw タグで囲う.
+    #+BEGIN_SRC emacs-lisp
+     (defun my:org-jekyll-src-block (text backend info)
+       "Add raw tag for liquid escape"
+       (when (org-export-derived-backend-p backend 'jekyll)
+         (format "{%% raw %%}\n%s{%% endraw %%}" text)))
+    #+END_SRC
+    フィルタの登録
+    #+BEGIN_SRC emacs-lisp
+     (add-to-list 'org-export-filter-headline-functions
+                  'my:org-jekyll-filter-html-tags)
+     (add-to-list 'org-export-filter-src-block-functions
+                  'my:org-jekyll-src-block)
+    #+END_SRC
 ** Project の定義
    #+BEGIN_SRC emacs-lisp
-     (setq org-publish-project-alist
-           `(
-             ("public"
-              :base-directory ,my:org-publish-webpage
-              :recursive nil
-              :exclude ".*\.el\\|^Makefile\\|.*\.gpg\\|sitemap\.org\\|^cc-env\\|^images\\|^_config\\|^_site\\|^export-config\.org"
-              :base-extension "org"
-              :headline-level 4
-              :htmlized-source t
-              :html-extension "html"
-              :publishing-directory ,my:org-publish-webpage
-              :publishing-function org-jekyll-publish-to-html
-              )
-             ("img"
-              :base-directory ,my:org-publish-webpage-img
-              :base-extension "jpg\\|png"
-              :publishing-directory ,my:org-publish-webpage-img
-              :publishing-function org-publish-attachment
-              )
-             ("Emacs"
-              :base-directory ,my:user-emacs-config-directory
-              :base-extension "org"
-              :htmlized-source t
-              :recursive nil
-              :exclude "^export-config\.org"
-              :headline-level 4
-              :publishing-directory ,my:org-publish-emacs-pages
-              :publishing-function org-jekyll-publish-to-html
-              :auto-sitemap nil
-              )
-             ("web" :components ("public" "img"))
-             ("emacs" :components ("Emacs"))
-             ))
+   (setq org-publish-project-alist
+         `(
+           ("public"
+            :base-directory ,my:org-publish-webpage
+            :base-extension "org"
+            :exclude ".*\.el\\|^Makefile\\|.*\.gpg\\|sitemap\.org\\|^cc-env\\|^images\\|^_config\\|^_site\\|^export-config\.org"
+            :publishing-directory ,my:org-publish-webpage
+            :publishing-function my:org-jekyll-publish-to-html
+            :headline-level 4
+            :html-extension "html"
+            :auto-sitemap nil
+            :recursive nil
+            )
+           ("img"
+            :base-directory ,my:org-publish-webpage-img
+            :base-extension "jpg\\|png"
+            :publishing-directory ,my:org-publish-webpage-img
+            :publishing-function org-publish-attachment
+            )
+           ("Emacs"
+            :base-directory ,my:user-emacs-config-directory
+            :base-extension "org"
+            :exclude "^export-config\.org\\|^Makefile"
+            :publishing-directory ,my:org-publish-emacs-pages
+            :publishing-function my:org-jekyll-publish-to-html
+            :headline-level 4
+            :auto-sitemap nil
+            :recursive nil
+            )
+           ("web" :components ("public" "img"))
+           ("emacs" :components ("Emacs"))
+           ))
    #+END_SRC
-** 変換設定
-   =<b></b>=, =<i></i>= はあまり好みではない.
-   #+BEGIN_SRC emacs-lisp
-     (setq org-html-text-markup-alist
-           '((bold . "<strong>%s</strong>")
-             (code . "<code>%s</code>")
-             (italic . "<span style=\"italic\">%s</span>")
-             (strike-through . "<span style=\"strike\">%s</span>")
-             (underline . "<span class=\"underline\">%s</span>")
-             (verbatim . "<code>%s</code>")))
-   #+END_SRC
+
 * Babel
 ** 言語の追加
   #+BEGIN_SRC emacs-lisp
-    (org-babel-do-load-languages
-     'org-babel-load-languages
-     '((emacs-lisp . t)
-       (sh .t)
-       (ruby .t))
-     )
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((emacs-lisp . t)
+     (sh .t)
+     (ruby .t))
+   )
   #+END_SRC
 ** 確認しない
    Project を batch で出力する時だけ nil にした方が良いかなぁ...
    #+BEGIN_SRC emacs-lisp
-     (setq org-confirm-babel-evaluate nil)
+   (setq org-confirm-babel-evaluate nil)
    #+END_SRC
 * Footnotes
 

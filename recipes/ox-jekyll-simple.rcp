@@ -1,5 +1,0 @@
-(:name ox-jekyll-simple
-       :description "Org exporter for simple HTML(body) width YAML front matter using Jekyll."
-       :type github
-       :pkgname "uwabami/ox-jekyll-simple"
-       :prepare (add-to-list 'load-path default-directory))

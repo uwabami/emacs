@@ -6,7 +6,7 @@
 #+TITLE: バージョン依存しない(はず)の雑多な設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-07-27 22:27:27
+#+DATE: 2013-09-13 01:30:36
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -267,17 +267,17 @@
             (concat my:user-emacs-temporary-directory "emacs-places")))
   #+END_SRC
 * timestamp の自動更新
-  ファイル内に =#+DATE:= がある場合には,
+  ファイル内に =#+DATE: 2= がある場合には,
   save する度に timestamp を更新する.
   #+BEGIN_SRC emacs-lisp
     (require 'time-stamp)
     (add-hook 'before-save-hook 'time-stamp)
     (setq time-stamp-active t)
     (setq time-stamp-line-limit 10)
-    (setq time-stamp-start "#\\+DATE: ")
+    (setq time-stamp-start "#\\+DATE: 2")
     (setq time-stamp-end "\$")
     ;; (setq time-stamp-pattern nil)
-    (setq time-stamp-format "%04y-%02m-%02d %02H:%02M:%02S")
+    (setq time-stamp-format "%03y-%02m-%02d %02H:%02M:%02S")
   #+END_SRC
   最近は殆ど全ての資源を git で管理するようになってきたので,
   これは不要かもしれない.

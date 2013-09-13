@@ -296,7 +296,7 @@
       (concat my:org-publish-webpage "images/")))
    (defvar my:org-publish-emacs-pages
      (expand-file-name
-      (concat my:org-publish-webpage "_drafts")))
+      (concat my:org-publish-webpage "_posts/")))
    #+END_SRC
 ** Project 用, cache の置き場所の変更
    cache の置き場所を =$HOME/Public/.org-timestamps/= に変える

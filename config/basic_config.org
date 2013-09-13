@@ -6,7 +6,7 @@
 #+TITLE: バージョン依存しない(はず)の雑多な設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-09-13 01:30:36
+#+DATE: 2013-09-13 17:01:12
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -268,7 +268,7 @@
   #+END_SRC
 * timestamp の自動更新
   ファイル内に =#+DATE: 2= がある場合には,
-  save する度に timestamp を更新する.
+  save する度に timestamp を更新する. =org-mode= の timestamp の形式に揃えた感じ.
   #+BEGIN_SRC emacs-lisp
     (require 'time-stamp)
     (add-hook 'before-save-hook 'time-stamp)
@@ -279,8 +279,7 @@
     ;; (setq time-stamp-pattern nil)
     (setq time-stamp-format "%03y-%02m-%02d %02H:%02M:%02S")
   #+END_SRC
-  最近は殆ど全ての資源を git で管理するようになってきたので,
-  これは不要かもしれない.
+  これ以外はファイルモードに合わせて個別に設定する.
 * emacs-server
   既に =emacs-server= が起動しているならば何もせず,
   起動していない場合には =emacs-server= を起動する.

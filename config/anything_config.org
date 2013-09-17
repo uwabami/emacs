@@ -6,7 +6,7 @@
 #+TITLE: Anythingの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-07-06 19:07:25$
+#+DATE: 2013-07-06 19:07:25
 #+SETUPFILE: ./export-config.org
 
 * 始めに

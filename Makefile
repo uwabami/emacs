@@ -11,7 +11,7 @@ check:
 	fi
 
 recompile: check
-	( touch config/00index.org && make)
+	( touch config/index.org && make)
 
 bootstrap: .set_permission check .bootstrap
 .bootstrap:

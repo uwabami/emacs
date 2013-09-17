@@ -6,13 +6,13 @@
 #+TITLE: Emacsの設定 - 主に org ファイルの読み込み集
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-07-27 22:40:05
+#+DATE: 2013-09-14 15:24:43
 #+SETUPFILE: ./export-config.org
 
 * 始めに
   =~/.emacs= → =~/.emacs.d/init.el= ([[http://www.gfd-dennou.org/member/uwabami/cc-env/EmacsBasic.html][解説]]) ときて
   このファイルで設定ファイルの読み込みを行なっています.
-  具体的な設定例は, 個々のファイルをご覧下さい.
+  具体的な設定例は, 個々のファイルを参照のこと.
 * [[file:el-get_config.org][el-get で install した物]]
   #+BEGIN_SRC emacs-lisp
     (my:load-org-file "el-get_config.org")
@@ -71,7 +71,6 @@
    #+END_SRC
    実際の読み込み
    #+BEGIN_SRC emacs-lisp
-     ;; skk-autoloads で読み込み
      (require 'skk-leim)
      (setq default-input-method "japanese-skk")
      (require 'skk-autoloads)
@@ -151,7 +150,7 @@
   #+END_SRC
 * メモ環境
   個々の設定はそれぞれ [[file:org-mode_config.org][org-modeの設定]], [[file:howm_config.org][howm の設定]] を参照の事.
-  メモ取りには Howm と =org-capture= を併用し, カレンダーの表示には Calfw を使う.
+  メモ取りには Howm と =org-capture= を併用.
   保存先は Dropbox なので, Dropbox が無い時には load しない.
   #+BEGIN_SRC emacs-lisp
     (if my:check-dropbox

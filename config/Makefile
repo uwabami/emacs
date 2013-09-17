@@ -4,10 +4,10 @@ __ALL_SRC__ := index.org
 ELFILES		:= $(wildcard *.el)
 ELCFILES	:= $(wildcard *.elc)
 
-all: 00index.elc
+all: index.elc
 	@rm -f *.el
 
-00index.elc: 00index.org
+index.elc: index.org
 	@$(BATCH) --eval '(mapc (lambda (x) (my:org-babel-tangle-and-compile-file (symbol-name x))) (quote ($(CURDIR)/$<)))'
 
 clean:

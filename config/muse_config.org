@@ -86,7 +86,7 @@
      (setq muse-project-alist
                  '(
                    ("cc-env"
-                    ("~/Public/muse/" :default "index")
+                    ("~/Public/_posts/" :default "index")
                     (:base "my:cc-env" :path "~/Public/_posts/"))
                    ))
    #+END_SRC

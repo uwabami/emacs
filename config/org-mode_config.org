@@ -6,7 +6,7 @@
 #+TITLE: org-modeの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-09-13 01:33:36
+#+DATE: 2013-09-17 12:38:37
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -296,7 +296,7 @@
       (concat my:org-publish-webpage "images/")))
    (defvar my:org-publish-emacs-pages
      (expand-file-name
-      (concat my:org-publish-webpage "_posts/")))
+      (concat my:org-publish-webpage "_posts/emacs")))
    #+END_SRC
 ** Project 用, cache の置き場所の変更
    cache の置き場所を =$HOME/Public/.org-timestamps/= に変える

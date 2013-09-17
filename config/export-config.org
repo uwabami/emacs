@@ -1,8 +1,9 @@
 #+STARTUP: showall
+#+LANG: ja
 #+OPTIONS: ':t *:t -:t ::t ^:t arch:nil author:nil c:nil
 #+OPTIONS: creator:nil d:nil e:nil email:nil f:t H:2 inline:nil
 #+OPTIONS: num:nil p:nil pri:nil stat:nil tags:nil task:nil
 #+OPTIONS: tex:t timestamp:nil toc:nil todo:nil |:t
-#+JEKYLL_LAYOUT: emacs
+#+JEKYLL_LAYOUT: cc-env
 #+JEKYLL_CATEGORIES: [cc-env, emacs]
 #+JEKYLL_PUBLISHED: true

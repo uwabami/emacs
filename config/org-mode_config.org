@@ -6,7 +6,7 @@
 #+TITLE: org-modeの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-09-17 12:38:37
+#+DATE: 2013-09-18 17:04:26
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -291,6 +291,9 @@
    (defvar my:org-publish-webpage
      (expand-file-name
       (concat (getenv "HOME") "/Public/")))
+   (defvar my:org-publish-webpage-work
+     (expand-file-name
+      (concat my:org-publish-webpage "work/")))
    (defvar my:org-publish-webpage-img
      (expand-file-name
       (concat my:org-publish-webpage "images/")))
@@ -474,38 +477,49 @@
     #+END_SRC
 ** Project の定義
    #+BEGIN_SRC emacs-lisp
-   (setq org-publish-project-alist
-         `(
-           ("public"
-            :base-directory ,my:org-publish-webpage
-            :base-extension "org"
-            :exclude ".*\.el\\|^Makefile\\|.*\.gpg\\|sitemap\.org\\|^cc-env\\|^images\\|^_config\\|^_site\\|^export-config\.org"
-            :publishing-directory ,my:org-publish-webpage
-            :publishing-function my:org-jekyll-publish-to-html
-            :headline-level 4
-            :html-extension "html"
-            :auto-sitemap nil
-            :recursive nil
-            )
-           ("img"
-            :base-directory ,my:org-publish-webpage-img
-            :base-extension "jpg\\|png"
-            :publishing-directory ,my:org-publish-webpage-img
-            :publishing-function org-publish-attachment
-            )
-           ("Emacs"
-            :base-directory ,my:user-emacs-config-directory
-            :base-extension "org"
-            :exclude "^export-config\.org\\|^Makefile"
-            :publishing-directory ,my:org-publish-emacs-pages
-            :publishing-function my:org-jekyll-publish-to-html
-            :headline-level 4
-            :auto-sitemap nil
-            :recursive nil
-            )
-           ("web" :components ("public" "img"))
-           ("emacs" :components ("Emacs"))
-           ))
+     (setq org-publish-project-alist
+           `(
+             ("public"
+              :base-directory ,my:org-publish-webpage
+              :base-extension "org"
+              :exclude ".*\.el\\|^Makefile\\|.*\.gpg\\|sitemap\.org\\|^cc-env\\|^images\\|^_config\\|^_site\\|^export-config\.org"
+              :publishing-directory ,my:org-publish-webpage
+              :publishing-function my:org-jekyll-publish-to-html
+              :headline-level 4
+              :html-extension "html"
+              :auto-sitemap nil
+              :recursive nil
+              )
+             ("work"
+              :base-directory ,my:org-publish-webpage-work
+              :base-extension "org"
+              :exclude ".*\.el\\|^Makefile\\|.*\.gpg\\|sitemap\.org\\|^cc-env\\|^images\\|^_config\\|^_site\\|^export-config\.org"
+              :publishing-directory ,my:org-publish-webpage-work
+              :publishing-function my:org-jekyll-publish-to-html
+              :headline-level 4
+              :html-extension "html"
+              :auto-sitemap nil
+              :recursive nil
+              )
+             ("img"
+              :base-directory ,my:org-publish-webpage-img
+              :base-extension "jpg\\|png"
+              :publishing-directory ,my:org-publish-webpage-img
+              :publishing-function org-publish-attachment
+              )
+             ("emacs"
+              :base-directory ,my:user-emacs-config-directory
+              :base-extension "org"
+              :exclude "^export-config\.org\\|^Makefile"
+              :publishing-directory ,my:org-publish-emacs-pages
+              :publishing-function my:org-jekyll-publish-to-html
+              :headline-level 4
+              :auto-sitemap nil
+              :recursive nil
+              )
+             ("web" :components ("public" "work" "img"))
+             ("emacs" :components ("emacs"))
+             ))
    #+END_SRC
 
 * Babel

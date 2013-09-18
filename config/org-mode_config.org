@@ -6,7 +6,7 @@
 #+TITLE: org-modeの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-09-18 17:04:26
+#+DATE: 2013-09-18 20:56:05
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -308,173 +308,170 @@
          (concat my:org-publish-webpage ".org-timestamps/"))
    (setq org-publish-use-timestamps-flag t)
    #+END_SRC
-** 変換関連の設定
-*** HTML バックエンドの設定
-    #+BEGIN_SRC emacs-lisp
-      (setq org-html-html5-fancy t)
-      (setq org-html-doctype "html5")
-      (setq org-html-use-infojs nil)
-      (setq org-html-allow-name-attribute-in-anchors nil)
-      (setq org-html-htmlize-output-type 'css)
-      (setq org-html-htmlize-font-prefix "htmlized-")
-      (setq org-html-text-markup-alist
-            '((bold           . "<strong>%s</strong>")
-              (italic         . "<em>%s</em>")
-              (code           . "<code>%s</code>")
-              (strike-through . "<span style=\"strike\">%s</span>")
-              (underline      . "<span class=\"underline\">%s</span>")
-              (verbatim       . "<code>%s</code>")))
-    #+END_SRC
-*** ox-jekyll の拡張
-    =ox-jekyll= で定義されている exporter をちょっと拡張して使う事にする
-    #+BEGIN_SRC emacs-lisp
-      ;; #+LANG から YAML Front Matter として `lang:' を生成
-      (defcustom org-jekyll-lang "ja"
-        "Default LANG used in Jekyll article."
-        :group 'org-export-jekyll
-        :type 'string)
-      ;; #+JEKYLL_TAGS から YAML Front Matter として `tags:' を生成
-      (defcustom org-jekyll-tags ""
-        "Default space-separated tags in Jekyll article."
-        :group 'org-export-jekyll
-        :type 'string)
+** HTML バックエンドの設定
+   #+BEGIN_SRC emacs-lisp
+     (setq org-html-html5-fancy t)
+     (setq org-html-doctype "html5")
+     (setq org-html-use-infojs nil)
+     (setq org-html-allow-name-attribute-in-anchors nil)
+     (setq org-html-htmlize-output-type 'css)
+     (setq org-html-htmlize-font-prefix "htmlized-")
+     (setq org-html-text-markup-alist
+           '((bold           . "<strong>%s</strong>")
+             (italic         . "<em>%s</em>")
+             (code           . "<code>%s</code>")
+             (strike-through . "<span style=\"strike\">%s</span>")
+             (underline      . "<span class=\"underline\">%s</span>")
+             (verbatim       . "<code>%s</code>")))
+   #+END_SRC
+** ox-jekyll の拡張
+   =ox-jekyll= で定義されている exporter をちょっと拡張して使う事にする
+   #+BEGIN_SRC emacs-lisp
+     ;; #+LANG から YAML Front Matter として `lang:' を生成
+     (defcustom org-jekyll-lang "ja"
+       "Default LANG used in Jekyll article."
+       :group 'org-export-jekyll
+       :type 'string)
+     ;; #+JEKYLL_TAGS から YAML Front Matter として `tags:' を生成
+     (defcustom org-jekyll-tags ""
+       "Default space-separated tags in Jekyll article."
+       :group 'org-export-jekyll
+       :type 'string)
+     ;; Define Back-End
+     (org-export-define-derived-backend 'my:jekyll 'jekyll
+       ;; メニューエントリーの追加
+       :menu-entry
+       '(?j "Jekyll: export to HTML with YAML front matter."
+            ((?c "As HTML buffer" my:org-jekyll-export-as-html)
+             (?C "As HTML file" my:org-jekyll-export-to-html)))
+       ;; テンプレートの上書き
+       :translate-alist
+       '((template  . my:org-jekyll-template)   ;; override
+         )
+       ;; オプションの追加
+       :options-alist
+       '((:lang   "LANG" nil org-jekyll-lang)
+         (:jekyll-tags "JEKYLL_TAGS" nil org-jekyll-tags)))
 
-      ;; Define Back-End
-      (org-export-define-derived-backend 'my:jekyll 'jekyll
-        ;; メニューエントリーの追加
-        :menu-entry
-        '(?j "Jekyll: export to HTML with YAML front matter."
-             ((?c "As HTML buffer" my:org-jekyll-export-as-html)
-              (?C "As HTML file" my:org-jekyll-export-to-html)))
-        ;; テンプレートの上書き
-        :translate-alist
-        '((template  . my:org-jekyll-template)   ;; override
-          ;; (src-block . my:org-jekyll-src-block) ;; Add pygments
-          )
-        ;; オプションの追加
-        :options-alist
-        '((:lang   "LANG" nil org-jekyll-lang)
-          (:jekyll-tags "JEKYLL_TAGS" nil org-jekyll-tags)))
+     ;; Override Template
+     (defun my:org-jekyll-template (contents info)
+       "Override org-jekyll-template provided `org-jekyll-template'"
+       (concat
+        (my:org-jekyll--yaml-front-matter info)
+        contents))
 
-      ;; Override Template
-      (defun my:org-jekyll-template (contents info)
-        "Override org-jekyll-template provided `org-jekyll-template'"
-        (concat
-         (my:org-jekyll--yaml-front-matter info)
-         contents))
+     (defun my:org-jekyll--yaml-front-matter (info)
+       "Override org-jekyll--yam-front-matter provided `org-jekyll-template'"
+       (let ((title
+              (org-jekyll--get-option info :title))
+             (date
+              (org-jekyll--get-option info :date))
+             (layout
+              (org-jekyll--get-option info :jekyll-layout org-jekyll-layout))
+             (lang
+              (org-jekyll--get-option info :lang org-jekyll-lang))
+             (categories
+              (org-jekyll--get-option info :jekyll-categories org-jekyll-categories))
+             (tags
+              (org-jekyll--get-option info :jekyll-tags org-jekyll-tags))
+             (published
+              (org-jekyll--get-option info :jekyll-published org-jekyll-published))
+             (comments
+              (org-jekyll--get-option info :jekyll-comments)))
+         (unless (equal published "true")
+           (setq title (concat "[PREVIEW] " title)))
+         (concat
+          "---"
+          "\ntitle: "      title
+          "\ndate: "       date
+          "\nlayout: "     layout
+          "\nlang: "       lang
+          "\ncategories: " categories
+          "\ntags: "       tags
+          "\npublished: "  published
+          "\ncomments: "   comments
+          "\n---\n")))
 
-      (defun my:org-jekyll--yaml-front-matter (info)
-        "Override org-jekyll--yam-front-matter provided `org-jekyll-template'"
-        (let ((title
-               (org-jekyll--get-option info :title))
-              (date
-               (org-jekyll--get-option info :date))
-              (layout
-               (org-jekyll--get-option info :jekyll-layout org-jekyll-layout))
-              (lang
-               (org-jekyll--get-option info :lang org-jekyll-lang))
-              (categories
-               (org-jekyll--get-option info :jekyll-categories org-jekyll-categories))
-              (tags
-               (org-jekyll--get-option info :jekyll-tags org-jekyll-tags))
-              (published
-               (org-jekyll--get-option info :jekyll-published org-jekyll-published))
-              (comments
-               (org-jekyll--get-option info :jekyll-comments)))
-          (unless (equal published "true")
-            (setq title (concat "[PREVIEW] " title)))
-          (concat
-           "---"
-           "\ntitle: "      title
-           "\ndate: "       date
-           "\nlayout: "     layout
-           "\nlang: "       lang
-           "\ncategories: " categories
-           "\ntags: "       tags
-           "\npublished: "  published
-           "\ncomments: "   comments
-           "\n---\n")))
+     (defun my:org-jekyll-export-as-html
+       (&optional async subtreep visible-only body-only ext-plist)
+       "Override org-jekyll--yam-front-matter provided `org-jekyll-export-as-html'"
+       (interactive)
+       (if async
+           (org-export-async-start
+               (lambda (output)
+                 (with-current-buffer (get-buffer-create "*Org Jekyll HTML Export*")
+                   (erase-buffer)
+                   (insert output)
+                   (goto-char (point-min))
+                   (funcall org-html-display-buffer-mode)
+                   (org-export-add-to-stack (current-buffer) 'jekyll)))
+             `(org-export-as 'my:jekyll ,subtreep ,visible-only ,body-only ',ext-plist))
+         (let ((outbuf (org-export-to-buffer
+                           'my:jekyll "*Org Jekyll HTML Export*"
+                         subtreep visible-only body-only ext-plist)))
+           ;; Set major mode.
+           (with-current-buffer outbuf (set-auto-mode t))
+           (when org-export-show-temporary-export-buffer
+             (switch-to-buffer-other-window outbuf)))))
 
-      (defun my:org-jekyll-export-as-html
-        (&optional async subtreep visible-only body-only ext-plist)
-        "Override org-jekyll--yam-front-matter provided `org-jekyll-export-as-html'"
-        (interactive)
-        (if async
-            (org-export-async-start
-                (lambda (output)
-                  (with-current-buffer (get-buffer-create "*Org Jekyll HTML Export*")
-                    (erase-buffer)
-                    (insert output)
-                    (goto-char (point-min))
-                    (funcall org-html-display-buffer-mode)
-                    (org-export-add-to-stack (current-buffer) 'jekyll)))
-              `(org-export-as 'my:jekyll ,subtreep ,visible-only ,body-only ',ext-plist))
-          (let ((outbuf (org-export-to-buffer
-                            'my:jekyll "*Org Jekyll HTML Export*"
-                          subtreep visible-only body-only ext-plist)))
-            ;; Set major mode.
-            (with-current-buffer outbuf (set-auto-mode t))
-            (when org-export-show-temporary-export-buffer
-              (switch-to-buffer-other-window outbuf)))))
+     (defun my:org-jekyll-export-to-html
+       (&optional async subtreep visible-only body-only ext-plist)
+       "Override org-jekyll--yam-front-matter provided `org-jekyll-export-to-html'"
+       (interactive)
+       (let* ((extension (concat "." org-html-extension))
+              (file (org-export-output-file-name extension subtreep))
+              (org-export-coding-system org-html-coding-system))
+         (if async
+             (org-export-async-start
+                 (lambda (f) (org-export-add-to-stack f 'my:jekyll))
+               (let ((org-export-coding-system org-html-coding-system))
+                 `(expand-file-name
+                   (org-export-to-file
+                    'my:jekyll ,file ,subtreep ,visible-only ,body-only ',ext-plist))))
+           (let ((org-export-coding-system org-html-coding-system))
+             (org-export-to-file
+                 'my:jekyll file subtreep visible-only body-only ext-plist)))))
 
-      (defun my:org-jekyll-export-to-html
-        (&optional async subtreep visible-only body-only ext-plist)
-        "Override org-jekyll--yam-front-matter provided `org-jekyll-export-to-html'"
-        (interactive)
-        (let* ((extension (concat "." org-html-extension))
-               (file (org-export-output-file-name extension subtreep))
-               (org-export-coding-system org-html-coding-system))
-          (if async
-              (org-export-async-start
-                  (lambda (f) (org-export-add-to-stack f 'my:jekyll))
-                (let ((org-export-coding-system org-html-coding-system))
-                  `(expand-file-name
-                    (org-export-to-file
-                     'my:jekyll ,file ,subtreep ,visible-only ,body-only ',ext-plist))))
-            (let ((org-export-coding-system org-html-coding-system))
-              (org-export-to-file
-                  'my:jekyll file subtreep visible-only body-only ext-plist)))))
+     (defun my:org-jekyll-publish-to-html (plist filename pub-dir)
+       "Override org-jekyll--yam-front-matter provided `org-jekyll-publish-to-html'"
+       (org-publish-org-to 'my:jekyll filename ".html" plist pub-dir))
 
-      (defun my:org-jekyll-publish-to-html (plist filename pub-dir)
-        "Override org-jekyll--yam-front-matter provided `org-jekyll-publish-to-html'"
-        (org-publish-org-to 'my:jekyll filename ".html" plist pub-dir))
-
-      (defun my:org-jekyll-src-block (src-block contents info)
-        "Transcode src-block"
-        (let* ((lang  (org-element-property :language src-block))
-               (value (org-element-property :value    src-block))
-               (name  (org-element-property :name     src-block))
-               (header "---\n")
-               (footer "---\n"))
-        (concat
-         header lang value name footer contents)))
-    #+END_SRC
-*** フィルタの追加/登録
-    =org-info.js= は使わないので =<div>= タグが邪魔なのだが, 結構いたる所に処理が埋めこまれていて
-    修正するのが大変なので, filter で消すことにする.
-    閉じタグ =^</div>\n= も消すので, org ファイルに =</div>= を挿入する場合には, 明示的にコメントを付けること
-    #+BEGIN_SRC emacs-lisp
-     (defun my:org-jekyll-filter-html-tags (text backend info)
-       "Remove all <div ... class=\"outline.*\">, </div>\n tags"
-       (when (org-export-derived-backend-p backend 'jekyll)
-         (replace-regexp-in-string
-          "\\(<div.*?class=\"outline.*?>\\|<div.?class=\"org-src-container.*?>\\|^</div>\n\\)"
-          "" text)))
-    #+END_SRC
-    コードブロックが liquid で処理されるのを防ぐために raw タグで囲う.
-    #+BEGIN_SRC emacs-lisp
-     (defun my:org-jekyll-src-block (text backend info)
-       "Add raw tag for liquid escape"
-       (when (org-export-derived-backend-p backend 'jekyll)
-         (format "{%% raw %%}\n%s{%% endraw %%}" text)))
-    #+END_SRC
-    フィルタの登録
-    #+BEGIN_SRC emacs-lisp
-     (add-to-list 'org-export-filter-headline-functions
-                  'my:org-jekyll-filter-html-tags)
-     (add-to-list 'org-export-filter-src-block-functions
-                  'my:org-jekyll-src-block)
-    #+END_SRC
+     (defun my:org-jekyll-src-block (src-block contents info)
+       "Transcode src-block"
+       (let* ((lang  (org-element-property :language src-block))
+              (value (org-element-property :value    src-block))
+              (name  (org-element-property :name     src-block))
+              (header "---\n")
+              (footer "---\n"))
+       (concat
+        header lang value name footer contents)))
+   #+END_SRC
+** フィルタの追加/登録
+   =org-info.js= は使わないので =<div>= タグが邪魔なのだが, 結構いたる所に処理が埋めこまれていて
+   修正するのが大変なので, filter で消すことにする.
+   閉じタグ =^</div>\n= も消すので, org ファイルに =</div>= を挿入する場合には, 明示的にコメントを付けること
+   #+BEGIN_SRC emacs-lisp
+    (defun my:org-jekyll-filter-html-tags (text backend info)
+      "Remove all <div ... class=\"outline.*\">, </div>\n tags"
+      (when (org-export-derived-backend-p backend 'jekyll)
+        (replace-regexp-in-string
+         "\\(<div.*?class=\"outline.*?>\\|<div.?class=\"org-src-container.*?>\\|^</div>\n\\)"
+         "" text)))
+   #+END_SRC
+   コードブロックが liquid で処理されるのを防ぐために raw タグで囲う.
+   #+BEGIN_SRC emacs-lisp
+    (defun my:org-jekyll-src-block (text backend info)
+      "Add raw tag for liquid escape"
+      (when (org-export-derived-backend-p backend 'jekyll)
+        (format "{%% raw %%}\n%s{%% endraw %%}" text)))
+   #+END_SRC
+   フィルタの登録
+   #+BEGIN_SRC emacs-lisp
+    (add-to-list 'org-export-filter-headline-functions
+                 'my:org-jekyll-filter-html-tags)
+    (add-to-list 'org-export-filter-src-block-functions
+                 'my:org-jekyll-src-block)
+   #+END_SRC
 ** Project の定義
    #+BEGIN_SRC emacs-lisp
      (setq org-publish-project-alist
@@ -521,7 +518,6 @@
              ("emacs" :components ("emacs"))
              ))
    #+END_SRC
-
 * Babel
 ** 言語の追加
   #+BEGIN_SRC emacs-lisp

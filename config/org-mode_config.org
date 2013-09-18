@@ -507,7 +507,7 @@
              ("emacs"
               :base-directory ,my:user-emacs-config-directory
               :base-extension "org"
-              :exclude "^export-config\.org\\|^Makefile"
+              :exclude "^export-config\.org\\|^Makefile\\|sitemap\.org"
               :publishing-directory ,my:org-publish-emacs-pages
               :publishing-function my:org-jekyll-publish-to-html
               :headline-level 4

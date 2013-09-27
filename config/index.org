@@ -6,7 +6,7 @@
 #+TITLE: Emacsの設定 - 主に org ファイルの読み込み集
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-09-14 15:24:43
+#+DATE: 2013-09-23 01:56:06
 #+SETUPFILE: ./export-config.org
 
 * 始めに

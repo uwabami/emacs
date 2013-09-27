@@ -6,7 +6,7 @@
 #+TITLE: バージョン依存しない(はず)の雑多な設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-09-13 17:01:12
+#+DATE: 2013-09-23 19:56:54
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -271,13 +271,12 @@
   save する度に timestamp を更新する. =org-mode= の timestamp の形式に揃えた感じ.
   #+BEGIN_SRC emacs-lisp
     (require 'time-stamp)
-    (add-hook 'before-save-hook 'time-stamp)
     (setq time-stamp-active t)
     (setq time-stamp-line-limit 10)
-    (setq time-stamp-start "#\\+DATE: 2")
-    (setq time-stamp-end "\$")
-    ;; (setq time-stamp-pattern nil)
+    (setq time-stamp-start "$Lastupdate: 2")
+    (setq time-stamp-end "\\$")
     (setq time-stamp-format "%03y-%02m-%02d %02H:%02M:%02S")
+    (add-hook 'before-save-hook 'time-stamp)
   #+END_SRC
   これ以外はファイルモードに合わせて個別に設定する.
 * emacs-server

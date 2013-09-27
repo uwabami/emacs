@@ -6,7 +6,7 @@
 #+TITLE: muse-mode の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-09-13 17:01:36
+#+DATE: 2013-09-23 19:57:13
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -43,13 +43,15 @@
      (setq muse-html-encoding-default (quote utf-8))
      (setq muse-html-meta-content-encoding (quote utf-8))
    #+END_SRC
-** timestamp の書式設定
-   publish-directive で処理するために timestamp の書式を変更
+** timestamp の変更
+   muse の =publishing-directive= に合わせる
    #+BEGIN_SRC emacs-lisp
-     (add-hook 'muse-mode-hook
-               '(lambda ()
-                  (setq time-stamp-start "#date[ \t]+2")
-                  ))
+     (defun my:muse-timestamp-hook ()
+       "Change `time-stamp-start' in muse-mode"
+       (set (make-local-variable 'time-stamp-start) "#date[ \t]+2")
+       (set (make-local-variable 'time-stamp-end)   "\$")
+       )
+     (add-hook 'muse-mode-hook 'my:muse-timestamp-hook)
    #+END_SRC
 * Project の定義
   今のところ [[http://www.gfd-dennou.org/member/uwabami/cc-env/][計算機関連のメモ]] にしか使わないのでその設定のみ.

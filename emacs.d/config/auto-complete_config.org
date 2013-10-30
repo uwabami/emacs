@@ -6,7 +6,7 @@
 #+TITLE: AutoCompleteの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-07-27 22:39:13
+#+DATE: 2013-10-30 18:14:23
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -46,7 +46,8 @@
     (setq ac-use-menu-map t)                       ; キーバインド
     (define-key ac-menu-map (kbd "C-n")         'ac-next)
     (define-key ac-menu-map (kbd "C-p")         'ac-previous)
-    (define-key ac-completing-map (kbd "<tab>") 'ac-complete)
+    (define-key ac-completing-map (kbd "<tab>") 'nil)
+    ;; (define-key ac-completing-map (kbd "<tab>") 'ac-complete)
     (define-key ac-completing-map (kbd "M-/")   'ac-stop)
     (define-key ac-completing-map (kbd "RET") nil) ; return での補完禁止
   #+END_SRC

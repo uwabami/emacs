@@ -6,7 +6,7 @@
 #+TITLE: Anythingの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-07-06 19:07:25
+#+DATE: 2013-10-30 18:09:08
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -29,6 +29,24 @@
   #+BEGIN_SRC emacs-lisp
     (setq anything-c-find-files-icons-directory nil)
   #+END_SRC
+* 情報源の設定
+  #+BEGIN_SRC emacs-lisp
+    (defvar my:anything-basic-sources
+      '(anything-c-source-buffers+
+        anything-c-source-ffap-line
+        anything-c-source-ffap-guesser))
+    (defvar my:anything-other-sources
+      '(anything-c-source-recentf
+        anything-c-source-bookmarks
+        anything-c-source-locate))
+  #+END_SRC
+* locate の設定
+  #+BEGIN_SRC emacs-lisp
+    (defvar anything-c-locate-command
+      (cond
+       (darwin-p "locate -i %s")
+       (t "locate -i -r %s")))
+  #+END_SRC
 * 読み込み
   anything-config で一通りの設定を読み込み.
   #+BEGIN_SRC emacs-lisp
@@ -46,20 +64,29 @@
      ;; 体感速度向上
      anything-quick-update t
      ;; 選択候補のショートカットをアルファベットに
-     anything-enable-shortcuts 'alphabet)
+     anything-enable-shortcuts 'alphabet
+     ;; 情報源
+     anything-for-files-prefered-list
+     `(,@my:anything-basic-sources
+       anything-c-source-files-in-current-dir+
+       ,@my:anything-other-sources
+       )
+     ;;
+     anything-complete-sort-candidates t
+     )
   #+END_SRC
 * キーバインド
   C-o, C-z はそれぞれ elscreen と howm にわたすので nil に
   #+BEGIN_SRC emacs-lisp
-    (define-key global-map   (kbd "C-x b")       'anything-for-files)
-    (define-key global-map   (kbd "C-x C-b")     'anything-for-files)
-    (define-key global-map   (kbd "C-x M-b")     'ibuffer-other-window)
-    (define-key global-map   (kbd "M-y")         'anything-show-kill-ring)
-    (define-key anything-map (kbd "C-l")         'anything-execute-persistent-action)
-    (define-key anything-map (kbd "C-z") nil) ; → howm の prefix
-    (define-key anything-map (kbd "C-o") nil) ; → elscreen の prefix
-    (define-key anything-map (kbd "C-M-n")       'anything-next-source)
-    (define-key anything-map (kbd "C-M-p")       'anything-previous-source)
+      (define-key global-map   (kbd "C-x b")       'anything-for-files)
+      (define-key global-map   (kbd "C-x C-b")     'anything-for-files)
+      (define-key global-map   (kbd "C-x M-b")     'ibuffer-other-window)
+      (define-key global-map   (kbd "M-y")         'anything-show-kill-ring)
+      (define-key anything-map (kbd "C-l")         'anything-execute-persistent-action)
+      (define-key anything-map (kbd "C-z") nil) ; → howm の prefix
+      (define-key anything-map (kbd "C-o") nil) ; → elscreen の prefix
+      (define-key anything-map (kbd "C-M-n")       'anything-next-source)
+      (define-key anything-map (kbd "C-M-p")       'anything-previous-source)
   #+END_SRC
 * migemoの利用
   C/Migemo があって, =migemo= が load 済みならば

@@ -6,18 +6,15 @@
 #+TITLE: バージョン依存しない(はず)の雑多な設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-09-28 06:05:29
+#+DATE: 2013-10-30 18:02:58
 #+SETUPFILE: ./export-config.org
 
 * 始めに
-
-  Emacs そのものの設定集. 多分機種依存しないように書けている(ハズ).
+  Emacs の基本的(?)な設定集. 多分機種依存しないように書けている(ハズ).
 
   ちなみに =line-number-mode= など「有効無効をtoggleする関数」は,
   慣習的に =0= 以下の数字を指定すると明示的に無効化できる.
-
 * 常に $HOME から開始
-
   以前 Meadow を使っていた時に, Cygwin の =$HOME= から始めないと
   ファイルを開くのが大変だったので, 指定しています.
   これを指定していると byte-compile 時に常に =CURDIR= を指定する必要があって,
@@ -108,6 +105,10 @@
   #+BEGIN_SRC emacs-lisp
      (fset 'yes-or-no-p 'y-or-n-p)
   #+END_SRC
+  ファイル名の大文字小文字を区別しない(zsh風)
+  #+BEGIN_SRC emacs-lisp
+    (setq read-file-name-completion-ignore-case t)
+  #+END_SRC
   選択リージョンに色付け
   #+BEGIN_SRC emacs-lisp
      (setq transient-mark-mode t)
@@ -191,7 +192,7 @@
      (setq delete-auto-save-files t)
   #+END_SRC
 * recentf
-  最近使った
+  最近使ったファイル履歴の保管
   #+begin_src emacs-lisp
     (add-hook 'after-init-hook 'recentf-mode)
     (setq recentf-max-saved-items 2000)
@@ -289,24 +290,19 @@
       (server-start))
   #+END_SRC
 * browse-url
-  chrome/chromium → Firefox → emacs-w3m → w3 の順で探索
+  Firefox → emacs-w3m → w3 の順で探索
   #+BEGIN_SRC emacs-lisp
-      (require 'browse-url)
-      (cond
-       ((and
-         (executable-find "chromium")
-         (file-exists-p (concat user-emacs-directory ".edit-server-use")))
-        (setq browse-url-browser-function 'browse-url-generic)
-        (setq browse-url-generic-program "/usr/bin/chromium"))
-       ((executable-find "firefox")
-        (setq browse-url-browser-function 'browse-url-firefox))
-       ((and (executable-find "w3m")
-             (locate-library "w3m"))
-        (setq browse-url-browser-function 'w3m-browse-url))
-       (t
-        (setq browse-url-browser-function 'browse-url-w3))
-       )
-      (global-set-key (kbd "C-c C-j") 'browse-url-at-point)
+    (require 'browse-url)
+    (cond
+     ((executable-find "firefox")
+      (setq browse-url-browser-function 'browse-url-firefox))
+     ((and (executable-find "w3m")
+           (locate-library "w3m"))
+      (setq browse-url-browser-function 'w3m-browse-url))
+     (t
+      (setq browse-url-browser-function 'browse-url-w3))
+     )
+    (global-set-key (kbd "C-c C-j") 'browse-url-at-point)
   #+END_SRC
 * Undo/Redo
   そのうち undohist と undo-tree を試そうと思っているのですが,

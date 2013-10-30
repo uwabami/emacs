@@ -6,7 +6,7 @@
 #+TITLE: フォントとフレームの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-07-05 03:09:19
+#+DATE: 2013-10-30 17:48:58
 #+SETUPFILE: ./export-config.org
 
 * Theme

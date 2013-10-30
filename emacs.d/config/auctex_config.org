@@ -6,11 +6,12 @@
 #+TITLE: AUCTeX の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-07-27 22:39:08
+#+DATE: 2013-10-29 15:44:43
 #+SETUPFILE: ./export-config.org
 
 * 始めに
-  TeX 編集用のモードとしては YaTeX と AUCTeX がありますが, YaTeX の font-lock が遅いことから AUCTeX を使うようになりました.
+  TeX 編集用のモードとしては YaTeX と AUCTeX がありますが,
+  YaTeX の font-lock が遅いことから AUCTeX を使うようになりました.
 * 読み込み
   #+BEGIN_SRC emacs-lisp
     (load "auctex.el" nil t t)
@@ -28,6 +29,7 @@
          '(("pxdvi" "pxdvi -watchfile 1 %d")
            ("xdvi"  "xdvi -watchfile 1 %d")
            ("Preview.app" "/usr/bin/open -a Preview.app %o")
+           ("xdg-open" "/usr/bin/xdg-open %o")
            ))
    (cond
     (darwin-p
@@ -38,7 +40,7 @@
     (t
      (setq TeX-view-program-selection
            '((output-dvi "xdvi")
-             (output-pdf "Evince")
+             (output-pdf "xdg-open")
              ))
      )
     )
@@ -88,8 +90,8 @@
                              '("Latexmk-jis-ps2pdf" "latexmk -e '$latex=q/platex -kanji=jis -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=jis/' -e '$makeindex=q/mendex -J/' -e '$dvips=q/dvips %%O -z -f %%S | convbkmk -g > %%D/' -e '$ps2pdf=q/ps2pdfwr %%O %%S %%D/'  -gg -pdfps %t"
                                TeX-run-TeX nil (latex-mode) :help "Run Latexmk -pdfps(jis)"))
                 (add-to-list 'TeX-command-list
-                             '("Evince" "evince %s.pdf"
-                               TeX-run-discard-or-function t t :help "Run Evince"))
+                             '("xdg-open" "xdg-open %s.pdf"
+                               TeX-run-discard-or-function t t :help "Run xdg-open"))
                 )))
   #+END_SRC
 * フォント表示関連

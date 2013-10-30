@@ -6,7 +6,7 @@
 #+TITLE: el-get で install した雑多な物
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-07-27 22:39:35
+#+DATE: 2013-10-30 17:59:51
 #+SETUPFILE: ./export-config.org
 
 * 始めに

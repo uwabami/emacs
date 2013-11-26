@@ -6,7 +6,7 @@
 #+TITLE: el-get で install した雑多な物
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-10-30 17:59:51
+#+DATE: 2013-11-26 16:17:25
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -152,6 +152,11 @@
       (el-get 'sync '(elscreen-edit-server))
       (edit-server-start))
   #+END_SRC
+* [[http://d.hatena.ne.jp/tequilasunset/20110102/p1][その場で色を確認したい - Clipboard]] [fn:7]
+  #+BEGIN_SRC emacs-lisp
+    (el-get 'sync '(popup-color-at-point))
+    (load (concat el-get-dir "popup-color-at-point/popup-color-at-point.elc"))
+  #+END_SRC
 * Footnotes
 
 [fn:1] el-get: [[http://www.emacswiki.org/emacs/el-get]]
@@ -165,3 +170,5 @@
 [fn:5] パスワード管理ツール id-manager.el: [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727]]
 
 [fn:6] 人は俺を「recentfマスター」と呼ぶ: [[http://d.hatena.ne.jp/rubikitch/20091224/recentf]]
+
+[fn:7] その場で色を確認したい - Clipboard: [[http://d.hatena.ne.jp/tequilasunset/20110102/p1]]

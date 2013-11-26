@@ -6,7 +6,7 @@
 #+TITLE: Wanderlust の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-09-13 08:55:08
+#+DATE: 2013-11-26 17:35:54
 #+SETUPFILE: ./export-config.org
 
 * Wanderlust の設定
@@ -709,126 +709,7 @@
              wl-highlight-message-unimportant-header-contents)
             ))
   #+END_SRC
-** Face の指定
-   ここまで細かくやる必要は無いのかもしれないけれど,
-   個人的には Mew 的な配色が好きなので, これに合うようにじたばたしたり.
-   #+BEGIN_SRC emacs-lisp
-     ;; うまく設定できてない?
-     (face-spec-set 'wl-highlight-demo-face
-                    '((t (:bold nil :italic nil :slant normal :weight normal))))
-     ;;; メッセージ表示
-     ;; ヘッダ
-     (face-spec-set 'wl-highlight-message-subject-header-contents
-                    '((t (:foreground "#ff4c4c" :bold nil :weight normal))))
-     (face-spec-set 'wl-highlight-message-from-header-contents
-                    '((t (:foreground "#ffff4c" :bold nil :weight normal))))
-     (face-spec-set 'wl-highlight-message-date-header-contents
-                    '((t (:foreground "#4cff4c" :bold nil :weight normal))))
-     (face-spec-set 'wl-highlight-message-important-header-contents
-                    '((t (:foreground "#ff4cff" :bold nil :weight normal))))
-     (face-spec-set 'wl-highlight-message-important-header-contents2
-                    '((t (:bold nil :foreground "#ffa54c" :weight normal))))
-     (face-spec-set 'wl-highlight-message-unimportant-header-contents
-                    '((t (:foreground "#aaaaaa" :bold nil :weight normal))))
-     (face-spec-set 'wl-highlight-message-headers
-                    '((t (:foreground "#4cffff" :bold nil :weight normal))))
-     (face-spec-set 'wl-highlight-message-header-contents
-                    '((t (:foreground "#aaaaaa" :bold nil :weight normal))))
-     ;; 引用
-     (face-spec-set 'wl-highlight-message-citation-header
-                    '((t (:foreground "#4cffa5"))))
-     (face-spec-set 'wl-highlight-message-cited-text-1
-                    '((t (:foreground "#4cffa5"))))
-     (face-spec-set 'wl-highlight-message-cited-text-2
-                    '((t (:foreground "#4cffff"))))
-     (face-spec-set 'wl-highlight-message-cited-text-3
-                    '((t (:foreground "#4ca5ff"))))
-     (face-spec-set 'wl-highlight-message-cited-text-4
-                    '((t (:foreground "#4c4cff"))))
-     (face-spec-set 'wl-highlight-message-cited-text-5
-                    '((t (:foreground "#a54cff"))))
-     (face-spec-set 'wl-highlight-message-cited-text-6
-                    '((t (:foreground "#ff4cff"))))
-     (face-spec-set 'wl-highlight-message-cited-text-7
-                    '((t (:foreground "#ff4ca5"))))
-     (face-spec-set 'wl-highlight-message-cited-text-8
-                    '((t (:foreground "#ff4c4c"))))
-     (face-spec-set 'wl-highlight-message-cited-text-9
-                    '((t (:foreground "#ffa54c"))))
-     (face-spec-set 'wl-highlight-message-cited-text-10
-                    '((t (:foreground "#ffff4c"))))
-     ;; signature
-     (face-spec-set 'wl-highlight-message-signature
-                    '((t (:foreground "#aaaaaa"))))
-     ;;; summary
-     (face-spec-set 'wl-highlight-summary-high-read-face
-                    '((t (:bold nil :foreground "#7fffbf" :weight normal))))
-     (face-spec-set 'wl-highlight-summary-high-unread-face
-                    '((t (:bold nil :foreground "#ffbf7f" :weight normal))))
-     (face-spec-set 'wl-highlight-summary-low-read-face
-                    '((t (:italic nil :foreground "#4cff4c"))))
-     (face-spec-set 'wl-highlight-summary-low-unread-face
-                    '((t (:italic nil :foreground "#7fbfff"))))
-     (face-spec-set 'wl-highlight-summary-normal-face
-                    '((t (:foreground "#f6f3e8"))))
-     (face-spec-set 'wl-highlight-summary-killed-face
-                    '((t (:foreground "#888888"))))
-     (face-spec-set 'wl-highlight-summary-new-face
-                    '((t (:foreground "#ff4c4c"))))
-     (face-spec-set 'wl-highlight-summary-unread-face
-                    '((t (:foreground "#ff4c4c"))))
-     (face-spec-set 'wl-highlight-summary-important-face
-                    '((t (:foreground "#4cffff"))))
-     (face-spec-set 'wl-highlight-summary-important-flag-face
-                    '((t (:foreground "#ffa54c"))))
-     (face-spec-set 'wl-highlight-summary-flagged-face
-                    '((t (:foreground "#ffff7f"))))
-     (face-spec-set 'wl-highlight-summary-displaying-face
-                    '((t (:underline t))))
-     (face-spec-set 'wl-highlight-summary-forwarded-face
-                    '((t ((:forground "#ffff4c")))))
-     (face-spec-set 'wl-highlight-summary-answered-face
-                    '((t ((:forground "#4ca5ff")))))
-     (face-spec-set 'wl-highlight-summary-copied-face
-                    '((t (:foreground "#4cffff"))))
-     (face-spec-set 'wl-highlight-summary-temp-face
-                    '((t (:foreground "#ff8fbf"))))
-     (face-spec-set 'wl-highlight-summary-resend-face
-                    '((t (:foreground "#ffbf7f"))))
-     (face-spec-set 'wl-highlight-summary-deleted-face
-                    '((t (:foreground "#483d8b"))))
-     (face-spec-set 'wl-highlight-summary-prefetch-face
-                    '((t (:foreground "#4c4cff"))))
-     (face-spec-set 'wl-highlight-summary-refiled-face
-                    '((t (:foreground "#4cff4c"))))
-     (face-spec-set 'wl-highlight-summary-target-face
-                    '((t (:foreground "#4cffff"))))
-     (face-spec-set 'wl-highlight-summary-disposed-face
-                    '((t (:foreground "#aaaaaa"))))
-     (face-spec-set 'wl-highlight-summary-thread-top-face
-                    '((t (:foreground "#ffffff"))))
-     (face-spec-set 'wl-highlight-thread-indent-face
-                    '((t (:underline t))))
-     (face-spec-set 'wl-highlight-folder-zero-face
-                    '((t (:foreground "#f6f3e8"))))
-     (face-spec-set 'wl-highlight-folder-opened-face
-                    '((t (:foreground "#4cffff"))))
-     (face-spec-set 'wl-highlight-folder-unread-face
-                    '((t (:foreground "#4c4cff"))))
-     (face-spec-set 'wl-highlight-folder-unknown-face
-                    '((t (:foreground "#4cffff"))))
-     (face-spec-set 'wl-highlight-folder-few-face
-                    '((t (:foreground "#ff4c4c"))))
-     (face-spec-set 'wl-highlight-folder-many-face
-                    '((t (:foreground "#ff7fbf"))))
-     (face-spec-set 'wl-highlight-folder-closed-face
-                    '((t (:foreground "#4cff4c"))))
-     (face-spec-set 'wl-highlight-folder-killed-face
-                    '((t (:foreground "#444444"))))
-     (face-spec-set 'wl-highlight-folder-path-face
-                    '((t (:bold nil :underline t :weight normal))))
-
-   #+END_SRC
+  実際の font-lock は [[https://github.com/uwabami/color-theme-darkpastel][color-theme-darkpastel]] [fn:5] で行なっている.
 * GPG 署名
   以前は mailcrypt を使っていたけれど,
   epa があるので主にキーバインドの設定のみ.
@@ -846,7 +727,16 @@
                  (set-buffer-file-coding-system 'iso-2022-jp)
                  ))
     ;; 勝手に検証するのはちょっと嫌
-    (setq mime-setup-enable-epg nil)
+    ;; (eval-after-load "semi-setup"
+    ;;   '(eval-after-load "mime-view"
+    ;;      '(when mime-setup-enable-epg
+    ;;         (mime-add-condition
+    ;;          'preview
+    ;;          '((type . application)
+    ;;            (subtype . pgp-signature)
+    ;;            (body . invisible)
+    ;;            (body-presentation-method . mime-preview-application/*-signature))
+    ;;          'with-default "mime-pgp"))))
     (defun my:epa-wl-decrypt-message ()
       (interactive)
       (save-window-excursion
@@ -863,6 +753,32 @@
     (define-key wl-draft-mode-map "\C-c:s" 'epa-mail-sign)
     (define-key wl-draft-mode-map "\C-c:e" 'epa-mail-encrypt)
   #+END_SRC
+* spam フィルタ
+  サーバ側で bsfilter 通しているけど, 手元でも使うために
+  #+BEGIN_SRC emacs-lisp
+    (require 'wl-spam)
+    (wl-spam-setup)
+    (setq elmo-spam-scheme 'bsfilter)
+    (setq elmo-spam-bsfilter-shell-program "/usr/bin/ruby1.8")
+    (setq wl-spam-folder "%kusm/Junk")
+  #+END_SRC
+* mhc
+  メールからスケジュールを import する
+  #+BEGIN_SRC emacs-lisp
+    (autoload 'mhc-wl-setup "mhc-wl")
+    (add-hook 'wl-init-hook 'mhc-wl-setup)
+    (setq mhc-insert-overdue-todo t)
+    (setq mhc-use-wide-scope 14)
+    (setq mhc-base-folder "+schedule")
+    (setq mhc-mail-path
+          (expand-file-name (concat (getenv "HOME") "/Mail")))
+    (setq mhc-start-day-of-week 0)
+    (setq mhc-category-face-alist
+          '(
+            ("Work"      . (bold "black"  nil))      ;; お仕事一般
+            ("Party"     . (nil  "brown"  "pink"))   ;; 宴会
+            ("Private"   . (nil  "tan"    nil))))    ;; プライベート
+  #+END_SRC
 * Footnotes
 
 [fn:1] wanderlust - github : [[https://github.com/wanderlust/wanderlust]]
@@ -876,3 +792,5 @@
 [fn:5] color-theme-darkpastel : [[https://github.com/uwabami/color-theme-darkpastel]]
 
 [fn:6] [[http://comments.gmane.org/gmane.mail.wanderlust.general.japanese/8618]]
+
+[fn:7]

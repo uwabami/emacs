@@ -6,7 +6,7 @@
 #+TITLE: バージョン依存しない(はず)の雑多な設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-10-30 18:02:58
+#+DATE: 2013-12-21 03:43:58
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -153,6 +153,30 @@
   #+BEGIN_SRC emacs-lisp
     (global-auto-revert-mode 1)
   #+END_SRC
+  X とのクリップボードの共存.
+  - kill-ring を PRIMARY,CLIPBOARD 双方にコピー
+  - yank で CLIPBOARD からペースト
+  #+BEGIN_SRC emacs-lisp
+    (defun my:cut-function (text &optional rest)
+      "Cut region, Sync X PRIMARY using xsel"
+      (interactive)
+      (let* ((process-connection-type nil)
+             (proc (start-process "xsel" "*Messages*" "xsel" "-b" "-i")))
+        (process-send-string proc text)
+        (process-send-eof proc)))
+    (defun my:paste-function ()
+      "YANK from X PRIMARY using xsel"
+      (interactive)
+      (shell-command-to-string "xsel -b -o"))
+    (cond
+     (window-system
+      (progn
+        (setq x-select-enable-clipboard t)
+        (global-set-key "\C-y" 'x-clipboard-yank)))
+     ((executable-find "xsel")
+      (setq interprogram-paste-function 'my:paste-function)
+      (setq interprogram-cut-function 'my:cut-function)))
+  #+END_SRC
 * 行末の無駄な空白/改行を削除する
   元ネタ: (Emacs Advent Calendar jp:2010)[fn:4].
   ただし, RD や Markdown だと空白行に意味があったりするので,
@@ -268,8 +292,6 @@
             (concat my:user-emacs-temporary-directory "emacs-places")))
   #+END_SRC
 * timestamp の自動更新
-  ファイル内に =#+DATE: 2= がある場合には,
-  save する度に timestamp を更新する. =org-mode= の timestamp の形式に揃えた感じ.
   #+BEGIN_SRC emacs-lisp
     (require 'time-stamp)
     (setq time-stamp-active t)
@@ -279,7 +301,6 @@
     (setq time-stamp-format "%03y-%02m-%02d %02H:%02M:%02S")
     (add-hook 'before-save-hook 'time-stamp)
   #+END_SRC
-  これ以外はファイルモードに合わせて個別に設定する.
 * emacs-server
   既に =emacs-server= が起動しているならば何もせず,
   起動していない場合には =emacs-server= を起動する.

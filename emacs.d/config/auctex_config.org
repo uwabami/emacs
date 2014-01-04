@@ -6,141 +6,208 @@
 #+TITLE: AUCTeX の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-10-29 15:44:43
+#+DATE: 2014-01-05 01:56:49
 #+SETUPFILE: ./export-config.org
 
 * 始めに
   TeX 編集用のモードとしては YaTeX と AUCTeX がありますが,
   YaTeX の font-lock が遅いことから AUCTeX を使うようになりました.
 * 読み込み
+  Debian パッケージの場合, =/etc/emacs/site-start.d/50auctex.el= において
+  既に =auctex.el= と =preview-latex.el= が load されているため
+  特に読み込みの設定は必要無い.
+  Debian 以外の場合に, =auctex.el= と =preview-latex= を読み込む.
   #+BEGIN_SRC emacs-lisp
-    (load "auctex.el" nil t t)
+    (unless (file-exists-p "/etc/emacs/site-start.d/50auctex.el")
+      (load "auctex.el" nil t)
+      (load "preview-latex" nil t))
   #+END_SRC
-  以下, 設定はほぼ [[http://oku.edu.mie-u.ac.jp/~okumura/texwiki/?AUCTeX#ra10f739][TeXWiki - AUCTeX]] のまま.
-* pTeX, upTeX 用の基本設定
- #+BEGIN_SRC emacs-lisp
-   (setq TeX-default-mode 'japanese-latex-mode)
-   (setq japanese-LaTeX-command-default "pLaTeX")
-   (setq japanese-LaTeX-default-style "jsarticle")
-   (setq TeX-engine-alist '((ptex "pTeX" "eptex" "platex" "eptex")
-                            (uptex "upTeX" "euptex" "uplatex" "euptex")))
-   (setq TeX-engine 'ptex)
-   (setq TeX-view-program-list
-         '(("pxdvi" "pxdvi -watchfile 1 %d")
-           ("xdvi"  "xdvi -watchfile 1 %d")
-           ("Preview.app" "/usr/bin/open -a Preview.app %o")
-           ("xdg-open" "/usr/bin/xdg-open %o")
-           ))
-   (cond
-    (darwin-p
-     (setq TeX-view-program-selection
-           '((output-dvi "pxdvi")
-             (output-pdf "Preview.app")))
-     )
-    (t
-     (setq TeX-view-program-selection
-           '((output-dvi "xdvi")
-             (output-pdf "xdg-open")
-             ))
-     )
-    )
-   (setq preview-image-type 'dvipng)
-   (add-hook 'LaTeX-mode-hook 'TeX-interactive-mode)
-   (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
-   ;; 禁則
-   (setq kinsoku-limit 10)
-   ;; master file
-   (setq TeX-auto-save t)
-   (setq TeX-parse-self t)
-   (setq-default TeX-master nil)
-   #+END_SRC
-* コマンドの追加
-  個人的には upTeX, XeTeX, LuaTeX を使いたい/試したいが,
-  共同作業を考えると現状では無理なので, それらに関する設定を削除(そのうち復活する, かも).
-  #+BEGIN_SRC emacs-lisp
-   (add-hook 'LaTeX-mode-hook
-             (function
-              (lambda ()
-                ;; コマンド
-                (add-to-list 'TeX-command-list
-                             '("pLaTeX-utf8" "platex -kanji=utf8 -src-special -shell-escape %S %(mode) %t"
-                               TeX-run-TeX nil (latex-mode) :help "Run pLaTeX(utf8)"))
-                (add-to-list 'TeX-command-list
-                             '("pLaTeX-euc" "platex -kanji=euc -src-special -shell-escape %S %(mode) %t"
-                               TeX-run-TeX nil (latex-mode) :help "Run pLaTeX(euc)"))
-                (add-to-list 'TeX-command-list
-                             '("pLaTeX-jis" "platex -kanji=jis -src-special -shell-escape %S %(mode) %t"
-                               TeX-run-TeX nil (latex-mode) :help "Run pLaTeX(jis)"))
-                (add-to-list 'TeX-command-list
-                             '("Latexmk-euc" "latexmk -e '$latex=q/platex -kanji=euc -src-special -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=euc/' -e '$makeindex=q/mendex -E/' -e '$dvipdf=q/dvipdfmx %%O -o %%D %%S/'  -gg -pdfdvi %t"
-                               TeX-run-TeX nil (latex-mode) :help "Run Latexmk -pdfdvi(euc)"))
-                (add-to-list 'TeX-command-list
-                             '("Latexmk-utf8" "latexmk -e '$latex=q/platex -kanji=utf8 -src-special -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=utf8/' -e '$makeindex=q/mendex -U/' -e '$dvipdf=q/dvipdfmx %%O -o %%D %%S/'  -gg -pdfdvi %t"
-                               TeX-run-TeX nil (latex-mode) :help "Run Latexmk -pdfdvi(utf8)"))
-                (add-to-list 'TeX-command-list
-                             '("Latexmk-jis" "latexmk -e '$latex=q/platex -kanji=jis -src-special -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=jis/' -e '$makeindex=q/mendex -J/' -e '$dvipdf=q/dvipdfmx %%O -o %%D %%S/'  -gg -pdfdvi %t"
-                               TeX-run-TeX nil (latex-mode) :help "Run Latexmk -pdfdvi(jis)"))
-                (add-to-list 'TeX-command-list
-                             '("Latexmk-euc-ps2pdf" "latexmk -e '$latex=q/platex -kanji=euc -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=euc/' -e '$makeindex=q/mendex -E/' -e '$dvips=q/dvips %%O -z -f %%S | convbkmk -g > %%D/' -e '$ps2pdf=q/ps2pdfwr %%O %%S %%D/'  -gg -pdfps %t"
-                               TeX-run-TeX nil (latex-mode) :help "Run Latexmk -pdfps(euc)"))
-                (add-to-list 'TeX-command-list
-                             '("Latexmk-utf8-ps2pdf" "latexmk -e '$latex=q/platex -kanji=utf8 -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=utf8/' -e '$makeindex=q/mendex -U/' -e '$dvips=q/dvips %%O -z -f %%S | convbkmk -g > %%D/' -e '$ps2pdf=q/ps2pdfwr %%O %%S %%D/'  -gg -pdfps %t"
-                               TeX-run-TeX nil (latex-mode) :help "Run Latexmk -pdfps(utf8)"))
-                (add-to-list 'TeX-command-list
-                             '("Latexmk-jis-ps2pdf" "latexmk -e '$latex=q/platex -kanji=jis -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=jis/' -e '$makeindex=q/mendex -J/' -e '$dvips=q/dvips %%O -z -f %%S | convbkmk -g > %%D/' -e '$ps2pdf=q/ps2pdfwr %%O %%S %%D/'  -gg -pdfps %t"
-                               TeX-run-TeX nil (latex-mode) :help "Run Latexmk -pdfps(jis)"))
-                (add-to-list 'TeX-command-list
-                             '("xdg-open" "xdg-open %s.pdf"
-                               TeX-run-discard-or-function t t :help "Run xdg-open"))
-                )))
+* source parse
+  =auto= の位置を変更.
+  デフォルトではカレントディレクトリに =auto= が作成されて鬱陶しいので
+  =~/.emacs.d/tmp/auctex= 以下に置くことにする.
+    #+BEGIN_SRC emacs-lisp
+    (setq TeX-auto-save t)
+    (setq TeX-auto-local
+          (expand-file-name
+           (concat my:user-emacs-temporary-directory "auctex/auto")))
+    (setq TeX-style-local
+          (expand-file-name
+           (concat my:user-emacs-temporary-directory "auctex/style")))
+    (setq TeX-parse-self t)
+    (setq TeX-auto-untabify t)
+    (add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)
   #+END_SRC
-* フォント表示関連
-  サイズ可変の無効
-  #+BEGIN_SRC emacs-lisp
-    (setq font-latex-fontify-sectioning 1.0)
-  #+END_SRC
-  上付き, 下付きの無効化
-  #+BEGIN_SRC emacs-lisp
-    (setq font-latex-fontify-script nil)
-  #+END_SRC
-* SyncTex/SrcSpecial
-  とりあえず (p)xdvi の src-special を試すことに
- #+BEGIN_SRC emacs-lisp
-   (setq TeX-source-correlate-method 'synctex)
-   ;; (setq TeX-source-correlate-method 'source-specials)
-   (setq TeX-source-correlate-start-server t)
-   (add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)
- #+END_SRC
-  ちなみに xdvi-search は =apt-get= では install できない.
-* BibTeX
-  日本語文献用にyomiを追加
+* 日本語TeX用の設定
+  =japanese-latex-mode= を指定すると, =tex-jp.el= が読み込まれる.
+
+  =tex-jp.el= では =pTeX= や =jTeX= 用に, 文字コードの自動判定が行なわれ
+  たりするなど, なかなか良い感じに機能拡張が行なわれているものの,
+  新しいTeX 環境(具体的には TeXLive >= 2012) での変更に追従できていない? [fn:1]
+** 文字コード判定
+   =japanese-latex-mode= には =%(kanjiopt)= があって,
+   buffer の文字コードに合わせて =platex= 実行時に =-kanji=euc= 等が追加される.
+   同様の処理を =latex-mode= でも行なうために文字コード判定用の関数を定義しておく.
+
+   [[http://git.savannah.gnu.org/cgit/auctex.git/tree/tex-jp.el][auctex.git - GNU AUCTeX]]
+   では =TeX-master= について判定する処理が入っているけれど,
+   自分の用途では必要ないのでもう少しシンプルに(手抜き).
    #+BEGIN_SRC emacs-lisp
-     (setq bibtex-user-optional-fields
-           '(("annote" "Personal annotation (ignored)")
-             ("yomi" "Yomigana")
-             ("location" "where it is (ignored)")
-             ("memo" "Memorundum (ignored)")
-             ))
+     (defun my:coding-get (coding-system)
+       "Convert buffer-file-coding-syetem to pTeX mnemonic.(origin: tex-jp.el)"
+       (let ((base (coding-system-base coding-system)))
+         (cdr (assq base
+                    '((japanese-iso-8bit . "euc")
+                      (iso-2022-jp . "jis")
+                      (japanese-shift-jis . "sjis")
+                      (utf-8 . "utf8"))))))
+     (eval-after-load "tex"
+       '(progn
+          (setq TeX-expand-list
+                (append
+                 TeX-expand-list
+                 '(("%(kanji)"
+                    (lambda ()
+                      (let* ((str (my:coding-get buffer-file-coding-system)))
+                        (if str
+                            (format " -kanji=%s " str) ""))
+                      )))))))
    #+END_SRC
+** TeX-eingine の設定
+   =latex-mode= で, =C-c LaTeX= の際に
+   実際に実行されるコマンドの設定.
+   以下では常に =ep(La)TeX= を使うようにしている.
+   #+BEGIN_SRC emacs-lisp
+     (cond
+      ((executable-find "ptex2pdf")
+       (setq TeX-engine-alist
+             '((ptex "pTeX"
+                     "ptex2pdf -e -ot '%(kanji)%`%S%(PDFout)%(mode)%''"
+                     "ptex2pdf -e -l -ot '%(kanji)%`%S%(PDFout)%(mode)%''"
+                     "eptex")
+               (uptex "upTeX"
+                      "ptex2pdf -u -ot '%(kanji)%`%S%(PDFout)%(mode)%''"
+                      "ptex2pdf -u -l -ot '%(kanji)%`%S%(PDFout)%(mode)%''"
+                      "euptex"))))
+      (t
+       (setq TeX-engine-alist
+             '((ptex
+                "pTeX"
+                "ptex %(kanji)%`%S%(PDFout)%(mode)%"
+                "platex %(kanji)%`%S%(PDFout)%(mode)%"
+                "eptex")
+               (uptex
+                "upTeX"
+                "uptex %(kanji)%`%S%(PDFout)%(mode)%"
+                "uplatex %(kanji)%`%S%(PDFout)%(mode)%"
+                ))))
+      )
+     (setq TeX-engine 'ptex)
+   #+END_SRC
+** TeX-command の追加
+   必要なコマンドの追加. そのうち =latexmk= の設定も追加する予定
+   #+BEGIN_SRC emacs-lisp
+     (setq-default japanese-TeX-command-list nil)
+     (add-hook 'LaTeX-mode-hook
+               (function (lambda ()
+                           (add-to-list 'TeX-command-list
+                                        '("ptex2pdf" "ptex2pdf -l -u -ot '%(kanji) %S %(mode)' %t"
+                                          TeX-run-TeX nil (latex-mode) :help "Run platex (ptex2pdf, eplatex mode)"))
+                           (add-to-list 'TeX-command-list
+                                        '("pTeX+PS2PDF" "platex %(kanji) %S %(mode) %t && dvips -Ppdf -z -f %d | convkmk -u > %f && ps2pdfwr %f"
+                                          TeX-run-TeX nil (latex-mode) :help "Run platex, dvips, ps2pdfwr"))
+                           ))
+               )
+   #+END_SRC
+** japanese-latex-mode 用の細工
+   =TeX-engine-alist-builtin= において =ptex= が定義されているため,
+   =ptex2pdf= が =C-c= で実行されない.
+   ここではdefault値を上書きすることで対応.
+   #+BEGIN_SRC emacs-lisp
+     (eval-after-load "tex-jp"
+       '(progn
+          (setq japanese-LaTeX-default-style "jsarticle")
+          (cond
+           ((executable-find "ptex2pdf")
+            (setcar (cddr (assoc 'ptex TeX-engine-alist-builtin))
+                    "ptex2pdf -e -ot '%(kanjiopt)%`%S%(PDFout)%(mode)%''")
+            (setcdr (cddr (assoc 'ptex TeX-engine-alist-builtin))
+                    "ptex2pdf -e -l -ot '%(kanjiopt)%`%S%(PDFout)%(mode)%''")
+            (setcar (cddr (assoc 'uptex TeX-engine-alist-builtin))
+                    "ptex2pdf -u -ot '%(kanjiopt)%`%S%(PDFout)%(mode)%''")
+            (setcdr (cddr (assoc 'uptex TeX-engine-alist-builtin))
+                    "ptex2pdf -u -l -ot '%(kanjiopt)%`%S%(PDFout)%(mode)%''")
+            )
+           (t
+            (setcar (cddr (assoc 'ptex TeX-engine-alist-builtin))
+                    "ptex %(kanjiopt)%`%S%(PDFout)%(mode)%")
+            (setcdr (cddr (assoc 'ptex TeX-engine-alist-builtin))
+                    "platex %(kanjiopt)%`%S%(PDFout)%(mode)%")
+            (setcar (cddr (assoc 'uptex TeX-engine-alist-builtin))
+                    "uptex %(kanji)%`%S%(PDFout)%(mode)%")
+            (setcdr (cddr (assoc 'uptex TeX-engine-alist-builtin))
+                    "uplatex %(kanji)%`%S%(PDFout)%(mode)%")
+            )
+           )
+          (setq LaTeX-command-style
+                '(("\\`u[jt]\\(article\\|report\\|book\\)\\'\\|\\`uplatex\\'"
+                   "%(PDF)ptex2pdf -u -l -ot '%(kanjiopt)%S%(PDFout)'")
+                  ("\\`[jt]s?\\(article\\|report\\|book\\)\\'"
+                   "%(PDF)ptex2pdf -e -l -ot '%(kanjiopt)%S%(PDFout)'")
+                  ("\\`j-\\(article\\|report\\|book\\)\\'"
+                   "%(PDF)jlatex %(kanjiopt)%S%(PDFout)"))
+                )
+          ))
+   #+END_SRC
+* Viewer
+  =Evince= 自体は =TeX-view-program-list-builtin= で
+  既に定義されているが, =tex-jp.el= において
+  =TeX-view-program-list= の ='saved-value= の有無で設定が上書きされるので
+  ここでも定義しておく.
+  Mac 用に =Skim= の設定をしておいた方が良いのかもしれないが試していない.
+  #+BEGIN_SRC emacs-lisp
+    (setq TeX-view-program-list
+          '(("Evince" TeX-evince-sync-view)))
+  #+END_SRC
+  環境で場合分け(Windows は知らない).
+  #+BEGIN_SRC emacs-lisp
+    (cond
+     (darwin-p
+      (setq TeX-view-program-selection '((output-pdf "Preview.app"))))
+     (t
+      (setq TeX-view-program-selection '((output-pdf "Evince"))))
+     )
+  #+END_SRC
+* hook の追加
+  =TeX-PDF-mode= を有効にするために拡張子を追加しておく.
+  #+BEGIN_SRC emacs-lisp
+    (add-hook 'LaTeX-mode-hook 'TeX-PDF-mode)
+    (setq TeX-command-output-list
+          '(("ptex2pdf" ("pdf"))))
+    (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
+  #+END_SRC
+* 見た目(preview-latex?)
+** Windows System 時のフォントサイズ制御
+   フォントサイズの変更を無効化
+   #+BEGIN_SRC emacs-lisp
+      (setq font-latex-fontify-sectioning 1.0)
+   #+END_SRC
+   上付き, 下付きの無効化
+   #+BEGIN_SRC emacs-lisp
+      (setq font-latex-fontify-script nil)
+   #+END_SRC
+* SyncTeX
+  #+BEGIN_SRC emacs-lisp
+    (setq TeX-source-correlate-method 'synctex)
+    (setq TeX-source-correlate-start-server t)
+    (add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)
+  #+END_SRC
 * RefTeX
   #+BEGIN_SRC emacs-lisp
-    ;; (unless (locate-library "reftex")
-    ;;   (if (executable-find "platex")
-    ;;       (el-get 'sync 'reftex)))
-    ;;(autoload 'reftex-mode     "reftex" "RefTeX Minor Mode" t)
-    ;; (autoload 'turn-on-reftex  "reftex" "RefTeX Minor Mode" nil)
-    ;; (autoload 'reftex-citation "reftex-cite" "Make citation" nil)
-    ;; (autoload 'reftex-index-phrase-mode "reftex-index" "Phrase mode" t)
-    (add-hook 'LaTeX-mode-hook 'turn-on-reftex)   ; with AUCTeX LaTeX mode
-    ;; (add-hook 'latex-mode-hook 'turn-on-reftex)   ; with Emacs latex mode
+    (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
     (setq reftex-plug-into-AUCTeX t)
-    ;; Make RefTeX faster
-    (setq reftex-enable-partial-scans t)
-    ;; (setq reftex-save-parse-info t)
-    ;; (setq reftex-use-multiple-selection-buffers t)
   #+END_SRC
-* outline-minor-mode
-#+BEGIN_SRC emacs-lisp
-  (add-hook 'LaTeX-mode-hook
-            (function (lambda () (outline-minor-mode t))))
-#+END_SRC
+
+* Footnotes
+
+[fn:1] というより, 今となってはカスタマイズ性がよろしくない, 気がする. どうなっているのが良いのだろう?

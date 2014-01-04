@@ -6,7 +6,7 @@
 #+TITLE: AUCTeX の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-01-05 01:56:49
+#+DATE: 2014-01-05 08:50:44
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -73,7 +73,7 @@
                             (format " -kanji=%s " str) ""))
                       )))))))
    #+END_SRC
-** TeX-eingine の設定
+** TeX-engine の設定
    =latex-mode= で, =C-c LaTeX= の際に
    実際に実行されるコマンドの設定.
    以下では常に =ep(La)TeX= を使うようにしている.

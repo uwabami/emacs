@@ -125,6 +125,12 @@
   #+BEGIN_SRC emacs-lisp
     (el-get 'sync '(yaicomplete))
     (when (require 'yaicomplete nil 'noerror)
+      (custom-set-faces
+       ;; custom-set-faces was added by Custom.
+       ;; If you edit it by hand, you could mess it up, so be careful.
+       ;; Your init file should contain only one such instance.
+       ;; If there is more than one, they won't work right.
+       '(yaicomplete-completion-suffix-face ((t nil))))
       (yaicomplete-mode))
   #+END_SRC
 * [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727][パスワード管理ツール id-manager.el]] [fn:4]

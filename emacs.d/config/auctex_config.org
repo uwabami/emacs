@@ -6,7 +6,7 @@
 #+TITLE: AUCTeX の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-01-07 18:40:56
+#+DATE: 2014-01-07 18:50:44
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -128,7 +128,7 @@
    ちなみに
    =japanese-latex-mode= では
    =TeX-engine-alist-builtin= に =ptex, jtex, uptex= が追加(=setq=) されているため
-   上記設定は不要(かもしれない) [fn:3].
+   上記設定は不要(かも).
 ** japanese-latex-mode 用の細工
    =japanese-latex-mode= において, 幾つかのコマンドが追加/上書きされている.
    あまり使うことの無いコマンドが表示されるのが嫌なので,
@@ -191,5 +191,3 @@
 [fn:1] AUCTeX - TeX Wiki: [[http://oku.edu.mie-u.ac.jp/~okumura/texwiki/?AUCTeX]]
 
 [fn:2] auctex-latexmk: https://github.com/tom-tan/auctex-latexmk
-
-[fn:3] といか =TeX-engine= がどのタイミングで参照されているか, コード追っていないので良くわからない.

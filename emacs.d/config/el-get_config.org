@@ -6,7 +6,7 @@
 #+TITLE: el-get で install した雑多な物
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-01-01 18:25:46
+#+DATE: 2014-01-07 15:29:48
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -153,11 +153,12 @@
 * [[https://github.com/tom-tan/auctex-latexmk][auctex-latexmk]] [fn:6]
   [[http://www.gnu.org/software/auctex/][AUCTeX]] に LaTeXmk 用のコマンドを追加する.
   =pLaTeX= を使う場合には文字コードオプションも追加してくれる.
+  実際の設定は [[file:auctex_config.org][AUCTeXの設定]] で.
   #+BEGIN_SRC emacs-lisp
-    ;; (when (and (locate-library "tex-buf")
-    ;;            (executable-find "latexmk"))
-    ;;   (el-get 'sync '(auctex-latexmk))
-    ;;   )
+    (when (and (locate-library "tex-buf")
+               (executable-find "latexmk"))
+      (el-get 'sync '(auctex-latexmk))
+      )
   #+END_SRC
 * Footnotes
 

@@ -6,7 +6,7 @@
 #+TITLE: Wanderlust の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-11-26 17:35:54
+#+DATE: 2013-12-22 13:55:26
 #+SETUPFILE: ./export-config.org
 
 * Wanderlust の設定
@@ -258,8 +258,8 @@
    Gmail と同期すると大変な事になるので local に持つ.
    #+BEGIN_SRC emacs-lisp
      (setq wl-draft-folder "+Drafts")
-     ;;(setq wl-trash-folder "%ゴミ箱")
-     (setq wl-trash-folder "+Trash")
+     (setq wl-trash-folder "%ゴミ箱")
+     ;; (setq wl-trash-folder "+Trash")
      (setq wl-temporary-file-directory "~/Downloads/")
    #+END_SRC
    アドレス帳 -> google-contacts-wl を使う
@@ -719,24 +719,10 @@
   もっとうまい方法/正攻法がありそうな気がするけれど,
   使えてるから, まあ良いかな, とか.
   #+BEGIN_SRC emacs-lisp
-    (setq pgg-default-keyserver-address "pool.sks-keyservers.net")
-    (setq pgg-scheme "gpg")
-    (setq pgg-messages-coding-system 'utf-8)
     (add-hook 'wl-draft-mode-hook
               '(lambda ()
                  (set-buffer-file-coding-system 'iso-2022-jp)
                  ))
-    ;; 勝手に検証するのはちょっと嫌
-    ;; (eval-after-load "semi-setup"
-    ;;   '(eval-after-load "mime-view"
-    ;;      '(when mime-setup-enable-epg
-    ;;         (mime-add-condition
-    ;;          'preview
-    ;;          '((type . application)
-    ;;            (subtype . pgp-signature)
-    ;;            (body . invisible)
-    ;;            (body-presentation-method . mime-preview-application/*-signature))
-    ;;          'with-default "mime-pgp"))))
     (defun my:epa-wl-decrypt-message ()
       (interactive)
       (save-window-excursion

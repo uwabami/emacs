@@ -6,7 +6,7 @@
 #+TITLE: AUCTeX の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-01-07 18:50:44
+#+DATE: 2014-01-07 21:52:24
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -52,32 +52,39 @@
              '("\\.fdb_latexmk" "\\.aux.bak" "\\.synctex.gz") LaTeX-clean-intermediate-suffixes))
       (setq TeX-command-output-list
             '(("latexmk" ("pdf")))))
-
-    (setq auctex-latexmk-encding-alist
-          '((euc-jp           . "euc")
-            (euc-jp-unix      . "euc")
-            (iso-2022-jp      . "jis")
-            (iso-2022-jp-unix . "jis")
-            (utf-8            . "utf8")
-            (utf-8-unix       . "utf8"))
-          )
-
     (add-hook 'LaTeX-mode-hook
               (function (lambda ()
                           (require 'auctex-latexmk nil 'noerror)
                           (my:auctex-latexmk-setup)
+                          (add-to-list 'auctex-latexmk-encoding-alist
+                                       '(iso-2022-jp      . "jis"))
+                          (add-to-list 'auctex-latexmk-encoding-alist
+                                       '(iso-2022-jp-unix      . "jis"))
                           )))
   #+END_SRC
   =~/.latexmkrc= の設定は以下の通り
   #+BEGIN_SRC perl
+    #!/usr/bin/env perl
     $kanji  = "-kanji=$ENV{\"LATEXENC\"}" if defined $ENV{"LATEXENC"};
     $latex  = "platex -interaction=nonstopmode -src-specials -shell-escape --synctex=1 $kanji";
     $latex_silent = "platex -interaction=batchmode -src-specials -shell-escape --synctex=1 $kanji";
     $bibtex = "pbibtex $kanji";
+    # disable makeindex/mendex
+    $makeindex = "touch -m %D";
+    # if ( $ENV{"LATEXENC"} == "jis" ){
+    #     $makeindex = "mendex -J %O -c -r -o %D %S ";
+    # } elsif ( $ENV{"LATEXENC"} == "euc" ){
+    #     $makeindex = "mendex -E %O -c -r -o %D %S ";
+    # } elsif ( $ENV{"LATEXENC"} == "sjis" ){
+    #     $makeindex = "mendex -S %O -c -r -o %D %S";
+    # } else {
+    #     $makeindex = "mendex -U %O -c -r -o %D %S";
+    # }
     $dvipdf = "dvipdfmx %O -o %D %S";
     $dvips = 'dvips %O -z -f %S | convbkmk -u > %D';
     $ps2pdf = 'ps2pdfwr %O %S %D';
     $pdf_mode = 3;
+
   #+END_SRC
 * 日本語用の設定
   とはいえ, LaTeXmk にほぼ全て丸投げなので特に設定することは無かったりする.
@@ -179,11 +186,15 @@
     (add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)
   #+END_SRC
 * RefTeX
+  [[http://www.zotero.org/][Zotero]] で文献管理をするようになったので,
+  bibtex への export に [[https://github.com/vitoshka/zotelo][vitoshka/zotelo]] を使う: [[file:el-get_config.org][el-get で install した雑多な物]]
   #+BEGIN_SRC emacs-lisp
     (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
     (setq reftex-plug-into-AUCTeX t)
     ;; Make RefTeX faster
     (setq reftex-enable-partial-scans t)
+    (when (locate-library "zotero")
+      (add-hook 'TeX-mode-hook 'zotero-minor-mode))
   #+END_SRC
 
 * Footnotes

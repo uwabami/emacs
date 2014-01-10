@@ -6,7 +6,7 @@
 #+TITLE: el-get で install した雑多な物
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-01-07 15:29:48
+#+DATE: 2014-01-07 21:56:22
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -102,7 +102,7 @@
             (file-name-directory active-file-name)
           current-dir)))
   #+END_SRC
-* [[http://d.hatena.ne.jp/mooz/20101003/p1][zlc.el で Emacs のミニバッファ補完 zsh ライクに]] [fn:2]
+* [[http://d.hatena.ne.jp/mooz/20101003/p1][zlc.el で Emacs のミニバッファ補完 zsh ライクに]] [fn:3]
   anything の候補搾り込みはあんまり好きではないので.
   これは非常に便利です.
   #+BEGIN_SRC emacs-lisp
@@ -120,7 +120,7 @@
       (setq zlc-select-completion-immediately nil)
       )
   #+END_SRC
-* [[http://d.hatena.ne.jp/tarao/20101011/1286804507][Yet another icompelete]] [fn:3]
+* [[http://d.hatena.ne.jp/tarao/20101011/1286804507][Yet another icompelete]] [fn:4]
   zlc をさらに素敵にしてくれます.
   #+BEGIN_SRC emacs-lisp
     (el-get 'sync '(yaicomplete))
@@ -133,7 +133,7 @@
        '(yaicomplete-completion-suffix-face ((t nil))))
       (yaicomplete-mode))
   #+END_SRC
-* [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727][パスワード管理ツール id-manager.el]] [fn:4]
+* [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727][パスワード管理ツール id-manager.el]] [fn:5]
   無いと途方に暮れるくらい, 依存しまくり.
   レシピは [[https://raw.github.com/uwabami/dot.emacs.d/master/recipes/id-manager.rcp][recipes/id-manager.rcp]] を使っています.
   インストールと設定は以下.
@@ -151,12 +151,12 @@
   id-manager で取得したパスワードも
   =xsel= で X Clipboard に渡すようにしている.
   → [[file:basic_config.org][バージョン依存しない(はず)の雑多な設定]]
-* [[http://d.hatena.ne.jp/tequilasunset/20110102/p1][その場で色を確認したい - Clipboard]] [fn:5]
+* [[http://d.hatena.ne.jp/tequilasunset/20110102/p1][その場で色を確認したい - Clipboard]] [fn:6]
   #+BEGIN_SRC emacs-lisp
     (el-get 'sync '(popup-color-at-point))
     (load (concat el-get-dir "popup-color-at-point/popup-color-at-point.elc"))
   #+END_SRC
-* [[https://github.com/tom-tan/auctex-latexmk][auctex-latexmk]] [fn:6]
+* [[https://github.com/tom-tan/auctex-latexmk][auctex-latexmk]] [fn:7]
   [[http://www.gnu.org/software/auctex/][AUCTeX]] に LaTeXmk 用のコマンドを追加する.
   =pLaTeX= を使う場合には文字コードオプションも追加してくれる.
   実際の設定は [[file:auctex_config.org][AUCTeXの設定]] で.
@@ -166,18 +166,28 @@
       (el-get 'sync '(auctex-latexmk))
       )
   #+END_SRC
+* [[https://github.com/vitoshka/zotelo][zotelo.el]] [fn:8]
+  文献管理に [[http://www.zotero.org/][Zotero]] を使うようになったので
+  #+BEGIN_SRC emacs-lisp
+    (when (and (locate-library "tex-buf")
+               (executable-find "latexmk"))
+      (el-get 'sync '(zotelo)))
+  #+END_SRC
+
 * Footnotes
 
-[fn:1] el-get: [[http://www.emacswiki.org/emacs/el-get]]
+[fn:1] [[http://shishithefool.blogspot.jp/2012/04/el-get-emacs.html][It's just same as dust ahead of a wind: el-get を使って Emacs でパッケージ管理]]
 
-[fn:2] [[http://shishithefool.blogspot.jp/2012/04/el-get-emacs.html][It's just same as dust ahead of a wind: el-get を使って Emacs でパッケージ管理]]
+[fn:2] el-get: [[http://www.emacswiki.org/emacs/el-get]]
 
-[fn:7] zlc.el で Emacs のミニバッファ補完 zsh ライクに: [[http://d.hatena.ne.jp/mooz/20101003/p1]]
+[fn:3] zlc.el で Emacs のミニバッファ補完 zsh ライクに: [[http://d.hatena.ne.jp/mooz/20101003/p1]]
 
-[fn:3] Yet another icompelete: [[http://d.hatena.ne.jp/tarao/20101011/1286804507]]
+[fn:4] Yet another icompelete: [[http://d.hatena.ne.jp/tarao/20101011/1286804507]]
 
-[fn:4] パスワード管理ツール id-manager.el: [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727]]
+[fn:5] パスワード管理ツール id-manager.el: [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727]]
 
-[fn:5] その場で色を確認したい - Clipboard: [[http://d.hatena.ne.jp/tequilasunset/20110102/p1]]
+[fn:6] その場で色を確認したい - Clipboard: [[http://d.hatena.ne.jp/tequilasunset/20110102/p1]]
 
-[fn:6] auctex-latexmk: https://github.com/tom-tan/auctex-latexmk
+[fn:7] auctex-latexmk: https://github.com/tom-tan/auctex-latexmk
+
+[fn:8] zotelo.el: [[https://github.com/vitoshka/zotelo]]

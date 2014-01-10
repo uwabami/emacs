@@ -2,7 +2,7 @@
 CURDIR	:= $(shell pwd)
 UNAME	:= $(shell uname)
 ifeq ($(UNAME), Darwin)
-	EMACS	:= /Applications/MacPorts/Emacs.app/Contents/MacOS/Emacs
+	EMACS	:= /Applications/Emacs.app/Contents/MacOS/Emacs
 else
 	EMACS	:= /usr/bin/emacs
 endif

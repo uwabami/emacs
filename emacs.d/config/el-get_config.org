@@ -38,6 +38,12 @@
 
   el-get の install 自体は =~/.emacs.d/init.el= ([[file:~/.emacs.d/EmacsBasic.html][解説]]) で行なっているので,
   ここでは実際のパッケージの install を記述しておきます.
+* cl-lib
+  Emacs <= 23 では cl-lib を install しておかないとイロイロ嵌ります.
+  #+BEGIN_SRC emacs-lisp
+    (when emacs23-p 
+      (el-get 'sync '(cl-lib)))
+  #+END_SRC
 * [[http://www.morishima.net/~naoto/elscreen-en/][ElScreen]]
   Emacsのバッファを GNU Screen っぽく扱う素敵 elisp.
   最近新しいリリースが無い & APEL 依存があるのが難点ですかね.

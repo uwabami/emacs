@@ -13,6 +13,11 @@
   =~/.emacs= → =~/.emacs.d/init.el= ([[http://www.gfd-dennou.org/member/uwabami/cc-env/EmacsBasic.html][解説]]) ときて
   このファイルで設定ファイルの読み込みを行なっています.
   具体的な設定例は, 個々のファイルを参照のこと.
+* stop tramp
+  #+BEGIN_SRC emacs-lisp
+    (when (locate-library "tramp")
+      (tramp-unload-tramp))
+  #+END_SRC
 * [[file:el-get_config.org][el-get で install した物]]
   #+BEGIN_SRC emacs-lisp
     (my:load-org-file "el-get_config.org")

@@ -15,8 +15,7 @@
     (when emacs24-p
       (progn
         (el-get 'sync '(darkpastel-theme))
-        (load-theme 'darkpastel t))
-      )
+        (load-theme 'darkpastel t)))
   #+END_SRC
 * カーソルのある位置の face を調べる関数
   #+BEGIN_SRC emacs-lisp

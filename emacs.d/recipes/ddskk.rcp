@@ -2,6 +2,6 @@
        :description "Github mirror for Daredevil SKK"
        :type github
        :pkgname "hsaito/ddskk"
+       :build `(,(concat "make install-elc EMACS=" el-get-emacs " PREFIX=."))
        :autoloads nil
-       :features ("skk-setup")
        )

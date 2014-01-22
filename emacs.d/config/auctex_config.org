@@ -6,7 +6,7 @@
 #+TITLE: AUCTeX の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-01-07 21:52:24
+#+DATE: 2014-01-16 23:46:56
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -156,10 +156,10 @@
     (setq TeX-auto-save t)
     (setq TeX-auto-local
           (expand-file-name
-           (concat my:user-emacs-temporary-directory "auctex/auto")))
+           (concat my:user-emacs-temporary-directory ".auctex/auto")))
     (setq TeX-style-local
           (expand-file-name
-           (concat my:user-emacs-temporary-directory "auctex/style")))
+           (concat my:user-emacs-temporary-directory ".auctex/style")))
     (setq TeX-parse-self t)
     (setq TeX-auto-untabify t)
     (add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)

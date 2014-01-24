@@ -6,7 +6,7 @@
 #+TITLE: バージョン依存しない(はず)の雑多な設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-12-21 03:43:58
+#+DATE: 2013-12-21 06:45:35
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -115,9 +115,12 @@
   #+END_SRC
   対応する括弧を色付け
   #+BEGIN_SRC emacs-lisp
-     (setq show-paren-delay 0)           ; 初期値は 0.125
-     (setq show-paren-style 'expression) ; 括弧内も強調表示
-     (show-paren-mode t)                 ; 有効化
+    (show-paren-mode t)                 ; 有効化
+    (setq show-paren-delay 0)           ; 初期値は 0.125
+    (setq show-paren-style 'expression) ; 括弧内も強調表示
+    (set-face-attribute 'show-paren-match-face nil
+                        :background nil :foreground nil
+                        :underline "#ffff00" :weight 'bold)
   #+END_SRC
   tab 幅 4, tab でのインデントはしない
   #+BEGIN_SRC emacs-lisp
@@ -156,6 +159,7 @@
   X とのクリップボードの共存.
   - kill-ring を PRIMARY,CLIPBOARD 双方にコピー
   - yank で CLIPBOARD からペースト
+  - [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727][id-manager]] で管理しているパスワードを X CLIPBOARD へ → [[file:el-get_config.org][el-get で install した雑多な物]]
   #+BEGIN_SRC emacs-lisp
     (defun my:cut-function (text &optional rest)
       "Cut region, Sync X PRIMARY using xsel"
@@ -175,7 +179,9 @@
         (global-set-key "\C-y" 'x-clipboard-yank)))
      ((executable-find "xsel")
       (setq interprogram-paste-function 'my:paste-function)
-      (setq interprogram-cut-function 'my:cut-function)))
+      (setq interprogram-cut-function 'my:cut-function)
+      (setq idm-copy-action 'my:cut-function)
+      ))
   #+END_SRC
 * 行末の無駄な空白/改行を削除する
   元ネタ: (Emacs Advent Calendar jp:2010)[fn:4].

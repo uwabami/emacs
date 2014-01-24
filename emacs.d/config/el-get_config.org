@@ -6,7 +6,7 @@
 #+TITLE: el-get で install した雑多な物
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-11-26 16:17:25
+#+DATE: 2014-01-07 21:56:22
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -38,6 +38,12 @@
 
   el-get の install 自体は =~/.emacs.d/init.el= ([[file:~/.emacs.d/EmacsBasic.html][解説]]) で行なっているので,
   ここでは実際のパッケージの install を記述しておきます.
+* cl-lib
+  Emacs <= 23 では cl-lib を install しておかないとイロイロ嵌ります.
+  #+BEGIN_SRC emacs-lisp
+    (when emacs23-p 
+      (el-get 'sync '(cl-lib)))
+  #+END_SRC
 * [[http://www.morishima.net/~naoto/elscreen-en/][ElScreen]]
   Emacsのバッファを GNU Screen っぽく扱う素敵 elisp.
   最近新しいリリースが無い & APEL 依存があるのが難点ですかね.
@@ -102,7 +108,7 @@
             (file-name-directory active-file-name)
           current-dir)))
   #+END_SRC
-* [[http://d.hatena.ne.jp/mooz/20101003/p1][zlc.el で Emacs のミニバッファ補完 zsh ライクに]] [fn:2]
+* [[http://d.hatena.ne.jp/mooz/20101003/p1][zlc.el で Emacs のミニバッファ補完 zsh ライクに]] [fn:3]
   anything の候補搾り込みはあんまり好きではないので.
   これは非常に便利です.
   #+BEGIN_SRC emacs-lisp
@@ -125,12 +131,18 @@
   #+BEGIN_SRC emacs-lisp
     (el-get 'sync '(yaicomplete))
     (when (require 'yaicomplete nil 'noerror)
+      (custom-set-faces
+       ;; custom-set-faces was added by Custom.
+       ;; If you edit it by hand, you could mess it up, so be careful.
+       ;; Your init file should contain only one such instance.
+       ;; If there is more than one, they won't work right.
+       '(yaicomplete-completion-suffix-face ((t nil))))
       (yaicomplete-mode))
   #+END_SRC
-* [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727][パスワード管理ツール id-manager.el]] [fn:5] [0/1]
+* [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727][パスワード管理ツール id-manager.el]] [fn:5]
   無いと途方に暮れるくらい, 依存しまくり.
   レシピは [[https://raw.github.com/uwabami/dot.emacs.d/master/recipes/id-manager.rcp][recipes/id-manager.rcp]] を使っています.
-  インストールと設定は以下. 特に凝った事はしていない...筈
+  インストールと設定は以下.
   #+BEGIN_SRC emacs-lisp
     (when (file-exists-p (concat user-emacs-directory ".id-manager-use"))
       (el-get 'sync '(id-manager))
@@ -138,30 +150,41 @@
       (global-set-key (kbd "M-7") 'id-manager)
       (setq idm-database-file
             (expand-file-name
-             (concat (getenv "HOME") "/.gnupg/idm-db.gpg"))))
+             (concat (getenv "HOME") "/.gnupg/idm-db.gpg")))
+      (setq idm-clipboard-expire-time-sec 15))
   #+END_SRC
-  欲を言えば, KeePassX と相互運用したい所ですが, どうにかできないかなぁ...
-  - [ ] KeePassX に import できる形式に相互変換できるように.
-* [[http://www.emacswiki.org/emacs/Edit_with_Emacs][edit-server]]
-  Chrome/Chromium で textarea を Emacs で編集する
-  #+BEGIN_SRC emacs-lisp
-    (when (and
-           (executable-find "chromium")
-           (file-exists-p (concat user-emacs-directory ".edit-server-use")))
-      (el-get 'sync '(edit-server))
-      (el-get 'sync '(elscreen-edit-server))
-      (edit-server-start))
-  #+END_SRC
-* [[http://d.hatena.ne.jp/tequilasunset/20110102/p1][その場で色を確認したい - Clipboard]] [fn:7]
+  ターミナルで emacs を起動していることが多いので,
+  id-manager で取得したパスワードも
+  =xsel= で X Clipboard に渡すようにしている.
+  → [[file:basic_config.org][バージョン依存しない(はず)の雑多な設定]]
+* [[http://d.hatena.ne.jp/tequilasunset/20110102/p1][その場で色を確認したい - Clipboard]] [fn:6]
   #+BEGIN_SRC emacs-lisp
     (el-get 'sync '(popup-color-at-point))
     (load (concat el-get-dir "popup-color-at-point/popup-color-at-point.elc"))
   #+END_SRC
+* [[https://github.com/tom-tan/auctex-latexmk][auctex-latexmk]] [fn:7]
+  [[http://www.gnu.org/software/auctex/][AUCTeX]] に LaTeXmk 用のコマンドを追加する.
+  =pLaTeX= を使う場合には文字コードオプションも追加してくれる.
+  実際の設定は [[file:auctex_config.org][AUCTeXの設定]] で.
+  #+BEGIN_SRC emacs-lisp
+    (when (and (locate-library "tex-buf")
+               (executable-find "latexmk"))
+      (el-get 'sync '(auctex-latexmk))
+      )
+  #+END_SRC
+* [[https://github.com/vitoshka/zotelo][zotelo.el]] [fn:8]
+  文献管理に [[http://www.zotero.org/][Zotero]] を使うようになったので
+  #+BEGIN_SRC emacs-lisp
+    (when (and (locate-library "tex-buf")
+               (executable-find "latexmk"))
+      (el-get 'sync '(zotelo)))
+  #+END_SRC
+
 * Footnotes
 
-[fn:1] el-get: [[http://www.emacswiki.org/emacs/el-get]]
+[fn:1] [[http://shishithefool.blogspot.jp/2012/04/el-get-emacs.html][It's just same as dust ahead of a wind: el-get を使って Emacs でパッケージ管理]]
 
-[fn:2] [[http://shishithefool.blogspot.jp/2012/04/el-get-emacs.html][It's just same as dust ahead of a wind: el-get を使って Emacs でパッケージ管理]]
+[fn:2] el-get: [[http://www.emacswiki.org/emacs/el-get]]
 
 [fn:3] zlc.el で Emacs のミニバッファ補完 zsh ライクに: [[http://d.hatena.ne.jp/mooz/20101003/p1]]
 
@@ -169,6 +192,8 @@
 
 [fn:5] パスワード管理ツール id-manager.el: [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727]]
 
-[fn:6] 人は俺を「recentfマスター」と呼ぶ: [[http://d.hatena.ne.jp/rubikitch/20091224/recentf]]
+[fn:6] その場で色を確認したい - Clipboard: [[http://d.hatena.ne.jp/tequilasunset/20110102/p1]]
 
-[fn:7] その場で色を確認したい - Clipboard: [[http://d.hatena.ne.jp/tequilasunset/20110102/p1]]
+[fn:7] auctex-latexmk: https://github.com/tom-tan/auctex-latexmk
+
+[fn:8] zotelo.el: [[https://github.com/vitoshka/zotelo]]

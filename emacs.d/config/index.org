@@ -6,13 +6,18 @@
 #+TITLE: Emacsの設定 - 主に org ファイルの読み込み集
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-09-23 01:56:06
+#+DATE: 2013-12-24 01:02:12
 #+SETUPFILE: ./export-config.org
 
 * 始めに
   =~/.emacs= → =~/.emacs.d/init.el= ([[http://www.gfd-dennou.org/member/uwabami/cc-env/EmacsBasic.html][解説]]) ときて
   このファイルで設定ファイルの読み込みを行なっています.
   具体的な設定例は, 個々のファイルを参照のこと.
+* Stop Tramp
+  滅多に使わないので無効化
+  #+BEGIN_SRC emacs-lisp
+    (setq tramp-mode nil)
+  #+END_SRC
 * [[file:el-get_config.org][el-get で install した物]]
   #+BEGIN_SRC emacs-lisp
     (my:load-org-file "el-get_config.org")
@@ -135,8 +140,6 @@
   #+BEGIN_SRC emacs-lisp
     (when (and (executable-find "platex")
                (locate-library "auctex"))
-      ;; (unless (locate-library "reftex")
-      ;;       (el-get 'sync 'reftex))
       (my:load-org-file "auctex_config.org"))
   #+END_SRC
 * [[file:navi2ch_config.org][navi2chの設定]]

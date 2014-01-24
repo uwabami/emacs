@@ -35,16 +35,6 @@
     (add-to-list 'interpreter-mode-alist
                  '("ruby" . ruby-mode))
   #+END_SRC
-* ruby-block
-  対応する end をハイライトしてくれる素敵elisp
-  #+BEGIN_SRC emacs-lisp
-    (el-get 'sync '(ruby-block))
-    (require 'ruby-block nil 'noerror)
-    (setq ruby-block-mode-highlight-toggle t)
-    (defun ruby-mode-hook-ruby-block ()
-      (ruby-block-mode t))
-    (add-hook 'ruby-mode-hook 'ruby-mode-hook-ruby-block)
-  #+END_SRC
 * rd-mode
   #+BEGIN_SRC emacs-lisp
     (unless (locate-library "rd-mode")

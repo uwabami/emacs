@@ -6,141 +6,199 @@
 #+TITLE: AUCTeX の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-10-29 15:44:43
+#+DATE: 2014-01-16 23:46:56
 #+SETUPFILE: ./export-config.org
 
 * 始めに
   TeX 編集用のモードとしては YaTeX と AUCTeX がありますが,
-  YaTeX の font-lock が遅いことから AUCTeX を使うようになりました.
+  YaTeX の font-lock が遅いことから AUCTeX を使うようになった.
+
+  以下の設定は
+  - Latexmk を使い, pLaTeX でタイプセットする
+  ことを前提にしている.
+  =XeLaTeX= や =LuaTeX= の処理は想定していないので,
+  そういう場合には [[http://oku.edu.mie-u.ac.jp/~okumura/texwiki/?AUCTeX][TeXWiki の AUCTeX のページ]] [fn:1] なんかを参照されたい.
 * 読み込み
+  Debian パッケージの場合, =/etc/emacs/site-start.d/50auctex.el= において
+  既に =auctex.el= と =preview-latex.el= が load されているため
+  特に読み込みの設定は必要無い.
+  Debian 以外の場合に, =auctex.el= と =preview-latex= を読み込む.
   #+BEGIN_SRC emacs-lisp
-    (load "auctex.el" nil t t)
+    (unless (file-exists-p "/etc/emacs/site-start.d/50auctex.el")
+      (load "auctex.el" nil t)
+      (load "preview-latex" nil t))
   #+END_SRC
-  以下, 設定はほぼ [[http://oku.edu.mie-u.ac.jp/~okumura/texwiki/?AUCTeX#ra10f739][TeXWiki - AUCTeX]] のまま.
-* pTeX, upTeX 用の基本設定
- #+BEGIN_SRC emacs-lisp
-   (setq TeX-default-mode 'japanese-latex-mode)
-   (setq japanese-LaTeX-command-default "pLaTeX")
-   (setq japanese-LaTeX-default-style "jsarticle")
-   (setq TeX-engine-alist '((ptex "pTeX" "eptex" "platex" "eptex")
-                            (uptex "upTeX" "euptex" "uplatex" "euptex")))
-   (setq TeX-engine 'ptex)
-   (setq TeX-view-program-list
-         '(("pxdvi" "pxdvi -watchfile 1 %d")
-           ("xdvi"  "xdvi -watchfile 1 %d")
-           ("Preview.app" "/usr/bin/open -a Preview.app %o")
-           ("xdg-open" "/usr/bin/xdg-open %o")
-           ))
-   (cond
-    (darwin-p
-     (setq TeX-view-program-selection
-           '((output-dvi "pxdvi")
-             (output-pdf "Preview.app")))
-     )
-    (t
-     (setq TeX-view-program-selection
-           '((output-dvi "xdvi")
-             (output-pdf "xdg-open")
-             ))
-     )
-    )
-   (setq preview-image-type 'dvipng)
-   (add-hook 'LaTeX-mode-hook 'TeX-interactive-mode)
-   (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
-   ;; 禁則
-   (setq kinsoku-limit 10)
-   ;; master file
-   (setq TeX-auto-save t)
-   (setq TeX-parse-self t)
-   (setq-default TeX-master nil)
+* [[https://github.com/tom-tan/auctex-latexmk][auctex-latexmk]] [fn:2]
+  AUCTeX で [[http://users.phys.psu.edu/~collins/software/latexmk-jcc/][Latexmk]] を使い,
+  かつ platex 実行時に文字コード指定も追加してくれる.
+  インストール自体は el-get を使用している: [[file:el-get_config.org][el-get で install した雑多な物]]
+
+  ここでは,
+  - default の "LaTeX" を上書き
+  - =dvips + ps2pdfwr= での処理の追加
+  をしている.
+  #+BEGIN_SRC emacs-lisp
+    (defun my:auctex-latexmk-setup ()
+      "Add LatexMk command to TeX-command-list."
+      (delq (assoc "LaTeX" TeX-command-list) TeX-command-list)
+      (add-to-list 'TeX-command-list
+                   '("LaTeX" "latexmk -gg -pdfdvi %t" TeX-run-latexmk nil
+                     (plain-tex-mode latex-mode doctex-mode) :help "Run LatexMk, with epLaTeX, dvipdfmx"))
+      (add-to-list 'TeX-command-list
+                   '("LaTeXMk(ps2pdfwr)" "latexmk -gg -pdfps %t" TeX-run-latexmk nil
+                     (plain-tex-mode latex-mode doctex-mode) :help "Run LatexMk, with (e)pLaTeX, dvips, ps2pdfwr"))
+      (setq LaTeX-clean-intermediate-suffixes
+            (append
+             '("\\.fdb_latexmk" "\\.aux.bak" "\\.synctex.gz") LaTeX-clean-intermediate-suffixes))
+      (setq TeX-command-output-list
+            '(("latexmk" ("pdf")))))
+    (add-hook 'LaTeX-mode-hook
+              (function (lambda ()
+                          (require 'auctex-latexmk nil 'noerror)
+                          (my:auctex-latexmk-setup)
+                          (add-to-list 'auctex-latexmk-encoding-alist
+                                       '(iso-2022-jp      . "jis"))
+                          (add-to-list 'auctex-latexmk-encoding-alist
+                                       '(iso-2022-jp-unix      . "jis"))
+                          )))
+  #+END_SRC
+  =~/.latexmkrc= の設定は以下の通り
+  #+BEGIN_SRC perl
+    #!/usr/bin/env perl
+    $kanji  = "-kanji=$ENV{\"LATEXENC\"}" if defined $ENV{"LATEXENC"};
+    $latex  = "platex -interaction=nonstopmode -src-specials -shell-escape --synctex=1 $kanji";
+    $latex_silent = "platex -interaction=batchmode -src-specials -shell-escape --synctex=1 $kanji";
+    $bibtex = "pbibtex $kanji";
+    # disable makeindex/mendex
+    $makeindex = "touch -m %D";
+    # if ( $ENV{"LATEXENC"} == "jis" ){
+    #     $makeindex = "mendex -J %O -c -r -o %D %S ";
+    # } elsif ( $ENV{"LATEXENC"} == "euc" ){
+    #     $makeindex = "mendex -E %O -c -r -o %D %S ";
+    # } elsif ( $ENV{"LATEXENC"} == "sjis" ){
+    #     $makeindex = "mendex -S %O -c -r -o %D %S";
+    # } else {
+    #     $makeindex = "mendex -U %O -c -r -o %D %S";
+    # }
+    $dvipdf = "dvipdfmx %O -o %D %S";
+    $dvips = 'dvips %O -z -f %S | convbkmk -u > %D';
+    $ps2pdf = 'ps2pdfwr %O %S %D';
+    $pdf_mode = 3;
+
+  #+END_SRC
+* 日本語用の設定
+  とはいえ, LaTeXmk にほぼ全て丸投げなので特に設定することは無かったりする.
+** 文字コード自動判定関数
+   =japanese-latex-mode= には =%(kanjiopt)= があって,
+   buffer の文字コードに合わせて =platex= 実行時に =-kanji=euc= 等が追加される.
+   同様の処理を =latex-mode= でも行なうために文字コード判定用の関数を定義しておく.
+
+   [[http://git.savannah.gnu.org/cgit/auctex.git/tree/tex-jp.el][auctex.git - GNU AUCTeX]]
+   では =TeX-master= について判定する処理が入っているけれど,
+   自分の用途では必要ないのでもう少しシンプルに(手抜き).
+   #+BEGIN_SRC emacs-lisp
+     (defun my:coding-get (coding-system)
+       "Convert buffer-file-coding-syetem to pTeX mnemonic.(origin: tex-jp.el)"
+       (let ((base (coding-system-base coding-system)))
+         (cdr (assq base
+                    '((japanese-iso-8bit . "euc")
+                      (iso-2022-jp . "jis")
+                      (japanese-shift-jis . "sjis")
+                      (utf-8 . "utf8"))))))
+     (eval-after-load "tex"
+       '(progn
+          (setq TeX-expand-list
+                (append
+                 TeX-expand-list
+                 '(("%(kanji)"
+                    (lambda ()
+                      (let* ((str (my:coding-get buffer-file-coding-system)))
+                        (if str
+                            (format " -kanji=%s " str) ""))
+                      )))))))
    #+END_SRC
-* コマンドの追加
-  個人的には upTeX, XeTeX, LuaTeX を使いたい/試したいが,
-  共同作業を考えると現状では無理なので, それらに関する設定を削除(そのうち復活する, かも).
-  #+BEGIN_SRC emacs-lisp
-   (add-hook 'LaTeX-mode-hook
-             (function
-              (lambda ()
-                ;; コマンド
-                (add-to-list 'TeX-command-list
-                             '("pLaTeX-utf8" "platex -kanji=utf8 -src-special -shell-escape %S %(mode) %t"
-                               TeX-run-TeX nil (latex-mode) :help "Run pLaTeX(utf8)"))
-                (add-to-list 'TeX-command-list
-                             '("pLaTeX-euc" "platex -kanji=euc -src-special -shell-escape %S %(mode) %t"
-                               TeX-run-TeX nil (latex-mode) :help "Run pLaTeX(euc)"))
-                (add-to-list 'TeX-command-list
-                             '("pLaTeX-jis" "platex -kanji=jis -src-special -shell-escape %S %(mode) %t"
-                               TeX-run-TeX nil (latex-mode) :help "Run pLaTeX(jis)"))
-                (add-to-list 'TeX-command-list
-                             '("Latexmk-euc" "latexmk -e '$latex=q/platex -kanji=euc -src-special -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=euc/' -e '$makeindex=q/mendex -E/' -e '$dvipdf=q/dvipdfmx %%O -o %%D %%S/'  -gg -pdfdvi %t"
-                               TeX-run-TeX nil (latex-mode) :help "Run Latexmk -pdfdvi(euc)"))
-                (add-to-list 'TeX-command-list
-                             '("Latexmk-utf8" "latexmk -e '$latex=q/platex -kanji=utf8 -src-special -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=utf8/' -e '$makeindex=q/mendex -U/' -e '$dvipdf=q/dvipdfmx %%O -o %%D %%S/'  -gg -pdfdvi %t"
-                               TeX-run-TeX nil (latex-mode) :help "Run Latexmk -pdfdvi(utf8)"))
-                (add-to-list 'TeX-command-list
-                             '("Latexmk-jis" "latexmk -e '$latex=q/platex -kanji=jis -src-special -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=jis/' -e '$makeindex=q/mendex -J/' -e '$dvipdf=q/dvipdfmx %%O -o %%D %%S/'  -gg -pdfdvi %t"
-                               TeX-run-TeX nil (latex-mode) :help "Run Latexmk -pdfdvi(jis)"))
-                (add-to-list 'TeX-command-list
-                             '("Latexmk-euc-ps2pdf" "latexmk -e '$latex=q/platex -kanji=euc -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=euc/' -e '$makeindex=q/mendex -E/' -e '$dvips=q/dvips %%O -z -f %%S | convbkmk -g > %%D/' -e '$ps2pdf=q/ps2pdfwr %%O %%S %%D/'  -gg -pdfps %t"
-                               TeX-run-TeX nil (latex-mode) :help "Run Latexmk -pdfps(euc)"))
-                (add-to-list 'TeX-command-list
-                             '("Latexmk-utf8-ps2pdf" "latexmk -e '$latex=q/platex -kanji=utf8 -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=utf8/' -e '$makeindex=q/mendex -U/' -e '$dvips=q/dvips %%O -z -f %%S | convbkmk -g > %%D/' -e '$ps2pdf=q/ps2pdfwr %%O %%S %%D/'  -gg -pdfps %t"
-                               TeX-run-TeX nil (latex-mode) :help "Run Latexmk -pdfps(utf8)"))
-                (add-to-list 'TeX-command-list
-                             '("Latexmk-jis-ps2pdf" "latexmk -e '$latex=q/platex -kanji=jis -shell-escape %S %(mode)/' -e '$bibtex=q/pbibtex -kanji=jis/' -e '$makeindex=q/mendex -J/' -e '$dvips=q/dvips %%O -z -f %%S | convbkmk -g > %%D/' -e '$ps2pdf=q/ps2pdfwr %%O %%S %%D/'  -gg -pdfps %t"
-                               TeX-run-TeX nil (latex-mode) :help "Run Latexmk -pdfps(jis)"))
-                (add-to-list 'TeX-command-list
-                             '("xdg-open" "xdg-open %s.pdf"
-                               TeX-run-discard-or-function t t :help "Run xdg-open"))
-                )))
+** TeX-engine の設定
+   どのタイミングで使われているのか良くわかっていないのだけれど, 一応設定しておく.
+   #+BEGIN_SRC emacs-lisp
+     (setq TeX-engine-alist
+           '((ptex "pTeX"
+                   "ptex %(kanji)%`%S%(PDFout)%(mode)% -shell-escape"
+                   "platex %(kanji)%`%S%(PDFout)%(mode)% -shell-escape"
+                   "eptex")
+             (uptex "upTeX"
+                    "uptex %(kanji)%`%S%(PDFout)%(mode)% -shell-escape"
+                    "uplatex %(kanji)%`%S%(PDFout)%(mode)% -shell-escape"
+                    "uptex"
+                    )))
+     (setq TeX-engine 'ptex)
+   #+END_SRC
+   ちなみに
+   =japanese-latex-mode= では
+   =TeX-engine-alist-builtin= に =ptex, jtex, uptex= が追加(=setq=) されているため
+   上記設定は不要(かも).
+** japanese-latex-mode 用の細工
+   =japanese-latex-mode= において, 幾つかのコマンドが追加/上書きされている.
+   あまり使うことの無いコマンドが表示されるのが嫌なので,
+   それらを削除したり.
+   #+BEGIN_SRC emacs-lisp
+     (eval-after-load "tex-jp"
+       '(progn
+          (setq japanese-LaTeX-default-style "jsarticle")
+          (dolist (command '("pTeX" "pLaTeX" "pBibTeX" "jTeX" "jLaTeX" "jBibTeX"))
+            (delq (assoc command TeX-command-list) TeX-command-list))
+          ))
+   #+END_SRC
+* source parse
+  =auto= の位置を変更.
+  デフォルトではカレントディレクトリに =auto= が作成されて鬱陶しいので
+  =~/.emacs.d/tmp/auctex= 以下に置くことにする.
+    #+BEGIN_SRC emacs-lisp
+    (setq TeX-auto-save t)
+    (setq TeX-auto-local
+          (expand-file-name
+           (concat my:user-emacs-temporary-directory ".auctex/auto")))
+    (setq TeX-style-local
+          (expand-file-name
+           (concat my:user-emacs-temporary-directory ".auctex/style")))
+    (setq TeX-parse-self t)
+    (setq TeX-auto-untabify t)
+    (add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)
   #+END_SRC
-* フォント表示関連
-  サイズ可変の無効
+* hook の追加
+  =TeX-PDF-mode= を有効にするために拡張子を追加しておく.
   #+BEGIN_SRC emacs-lisp
-    (setq font-latex-fontify-sectioning 1.0)
+    (add-hook 'LaTeX-mode-hook 'TeX-PDF-mode)
+    (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
+  #+END_SRC
+* 見た目(preview-latex?)
+  フォントサイズの変更を無効化
+  #+BEGIN_SRC emacs-lisp
+     (setq font-latex-fontify-sectioning 1.0)
   #+END_SRC
   上付き, 下付きの無効化
   #+BEGIN_SRC emacs-lisp
-    (setq font-latex-fontify-script nil)
+     (setq font-latex-fontify-script nil)
   #+END_SRC
-* SyncTex/SrcSpecial
-  とりあえず (p)xdvi の src-special を試すことに
- #+BEGIN_SRC emacs-lisp
-   (setq TeX-source-correlate-method 'synctex)
-   ;; (setq TeX-source-correlate-method 'source-specials)
-   (setq TeX-source-correlate-start-server t)
-   (add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)
- #+END_SRC
-  ちなみに xdvi-search は =apt-get= では install できない.
-* BibTeX
-  日本語文献用にyomiを追加
-   #+BEGIN_SRC emacs-lisp
-     (setq bibtex-user-optional-fields
-           '(("annote" "Personal annotation (ignored)")
-             ("yomi" "Yomigana")
-             ("location" "where it is (ignored)")
-             ("memo" "Memorundum (ignored)")
-             ))
-   #+END_SRC
-* RefTeX
+* SyncTeX
   #+BEGIN_SRC emacs-lisp
-    ;; (unless (locate-library "reftex")
-    ;;   (if (executable-find "platex")
-    ;;       (el-get 'sync 'reftex)))
-    ;;(autoload 'reftex-mode     "reftex" "RefTeX Minor Mode" t)
-    ;; (autoload 'turn-on-reftex  "reftex" "RefTeX Minor Mode" nil)
-    ;; (autoload 'reftex-citation "reftex-cite" "Make citation" nil)
-    ;; (autoload 'reftex-index-phrase-mode "reftex-index" "Phrase mode" t)
-    (add-hook 'LaTeX-mode-hook 'turn-on-reftex)   ; with AUCTeX LaTeX mode
-    ;; (add-hook 'latex-mode-hook 'turn-on-reftex)   ; with Emacs latex mode
+    (setq TeX-source-correlate-method 'synctex)
+    (setq TeX-source-correlate-start-server t)
+    (add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)
+  #+END_SRC
+* RefTeX
+  [[http://www.zotero.org/][Zotero]] で文献管理をするようになったので,
+  bibtex への export に [[https://github.com/vitoshka/zotelo][vitoshka/zotelo]] を使う: [[file:el-get_config.org][el-get で install した雑多な物]]
+  #+BEGIN_SRC emacs-lisp
+    (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
     (setq reftex-plug-into-AUCTeX t)
     ;; Make RefTeX faster
     (setq reftex-enable-partial-scans t)
-    ;; (setq reftex-save-parse-info t)
-    ;; (setq reftex-use-multiple-selection-buffers t)
+    (when (locate-library "zotero")
+      (add-hook 'TeX-mode-hook 'zotero-minor-mode))
   #+END_SRC
-* outline-minor-mode
-#+BEGIN_SRC emacs-lisp
-  (add-hook 'LaTeX-mode-hook
-            (function (lambda () (outline-minor-mode t))))
-#+END_SRC
+
+* Footnotes
+
+[fn:1] AUCTeX - TeX Wiki: [[http://oku.edu.mie-u.ac.jp/~okumura/texwiki/?AUCTeX]]
+
+[fn:2] auctex-latexmk: https://github.com/tom-tan/auctex-latexmk

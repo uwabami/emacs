@@ -6,7 +6,7 @@
 #+TITLE: org-modeの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-09-23 19:55:43
+#+DATE: 2014-01-28 05:34:21
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -151,6 +151,11 @@
    (setq bookmark-default-file
          (concat my:user-emacs-temporary-directory "bookmarks"))
    #+END_SRC
+* MobileOrg
+  #+BEGIN_SRC emacs-lisp
+    (setq org-mobile-directory "~/Dropbox/MobileOrg")
+    (setq org-mobile-inbox-for-pull "~/Dropbox/org/mobile.org")
+  #+END_SRC
 * メモ環境: Org-Capture
   1メモ1ファイル + howm 連携のための設定
   #+BEGIN_SRC emacs-lisp

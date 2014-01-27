@@ -6,7 +6,7 @@
 #+TITLE: Wanderlust の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-12-22 13:55:26
+#+DATE: 2014-01-28 05:11:34
 #+SETUPFILE: ./export-config.org
 
 * Wanderlust の設定
@@ -497,6 +497,10 @@
            '(
              (".*" . hide)
              ))
+   #+END_SRC
+** sort 順
+   #+BEGIN_SRC emacs-lisp
+     (add-to-list 'wl-summary-sort-specs 'rdate)
    #+END_SRC
 * 振り分け設定
   =$= 以外を振り分け対象に

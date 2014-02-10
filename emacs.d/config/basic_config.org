@@ -177,7 +177,7 @@
       (progn
         (setq x-select-enable-clipboard t)
         (global-set-key "\C-y" 'x-clipboard-yank)))
-     ((executable-find "xsel")
+     ((file-exists-p (concat user-emacs-directory ".xsel-use"))
       (setq interprogram-paste-function 'my:paste-function)
       (setq interprogram-cut-function 'my:cut-function)
       (setq idm-copy-action 'my:cut-function)

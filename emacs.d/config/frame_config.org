@@ -22,7 +22,10 @@
         (unless (locate-library "color-theme")
           (el-get 'sync '(color-theme)))
         (color-theme-initialize)
-        (color-theme-ld-dark))))
+        (color-theme-dark-laptop)
+        (set-face-attribute 'show-paren-match-face nil
+                            :background nil :foreground nil
+                            :underline "#ffff00" :weight 'bold))))
   #+END_SRC
 * カーソルのある位置の face を調べる関数
   #+BEGIN_SRC emacs-lisp

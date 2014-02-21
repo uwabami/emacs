@@ -1,0 +1,7 @@
+(:name http-el
+       :website "https://github.com/tdiary/tdiary-contrib/tree/master/util"
+       :description "utils for HTTP"
+       :type http
+       :url "https://raw2.github.com/tdiary/tdiary-contrib/master/util/tdiary-mode/http.el"
+       :prepare (add-to-list 'load-path default-directory)
+       )

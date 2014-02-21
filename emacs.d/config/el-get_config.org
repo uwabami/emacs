@@ -6,7 +6,7 @@
 #+TITLE: el-get で install した雑多な物
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-01-07 21:56:22
+#+DATE: 2014-02-11 04:32:11
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -41,7 +41,7 @@
 * cl-lib
   Emacs <= 23 では cl-lib を install しておかないとイロイロ嵌ります.
   #+BEGIN_SRC emacs-lisp
-    (when emacs23-p 
+    (when emacs23-p
       (el-get 'sync '(cl-lib)))
   #+END_SRC
 * [[http://www.morishima.net/~naoto/elscreen-en/][ElScreen]]
@@ -178,6 +178,24 @@
     (when (and (locate-library "tex-buf")
                (executable-find "latexmk"))
       (el-get 'sync '(zotelo)))
+  #+END_SRC
+
+* tdiary-mode
+  tDiary を emacs から編集/更新
+  #+BEGIN_SRC emacs-lisp
+    (when (file-exists-p (concat user-emacs-directory ".tdiary-use"))
+      (el-get 'sync '(tdiary-mode))
+      (setq tdiary-init-file "~/Dropbox/tdiary/tdiary-mode.gpg")
+      (setq tdiary-browser-function 'browse-url)
+      (setq tdiary-style-mode 'rd-mode)
+      (setq tdiary-hour-offset 2)
+      (setq tdiary-text-save-p t)
+      (setq tdiary-text-suffix ".rd")
+      (autoload 'tdiary-mode "tdiary-mode" nil t)
+      (autoload 'tdiary-new "tdiary-mode" nil t)
+      (autoload 'tdiary-new-diary "tdiary-mode" nil t)
+      (autoload 'tdiary-replace "tdiary-mode" nil t)
+      )
   #+END_SRC
 
 * Footnotes

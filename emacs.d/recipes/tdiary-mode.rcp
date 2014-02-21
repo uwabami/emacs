@@ -1,0 +1,8 @@
+(:name tdiary-mode
+       :website "https://github.com/tdiary/tdiary-contrib/tree/master/util"
+       :description "Major mode for tDiary editing"
+       :depends http-el
+       :type http
+       :url "https://raw2.github.com/tdiary/tdiary-contrib/master/util/tdiary-mode/tdiary-mode.el"
+       :prepare (add-to-list 'load-path default-directory)
+       )

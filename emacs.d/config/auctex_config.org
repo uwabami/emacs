@@ -6,7 +6,7 @@
 #+TITLE: AUCTeX の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-01-16 23:46:56
+#+DATE: 2014-02-24 01:01:52
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -44,6 +44,9 @@
       (add-to-list 'TeX-command-list
                    '("LaTeX" "latexmk -gg -pdfdvi %t" TeX-run-latexmk nil
                      (plain-tex-mode latex-mode doctex-mode) :help "Run LatexMk, with epLaTeX, dvipdfmx"))
+      (add-to-list 'TeX-command-list
+                   '("LaTeXMk" "latexmk %t" TeX-run-latexmk nil
+                     (plain-tex-mode latex-mode doctex-mode) :help "Run LatexMk without any options"))
       (add-to-list 'TeX-command-list
                    '("LaTeXMk(ps2pdfwr)" "latexmk -gg -pdfps %t" TeX-run-latexmk nil
                      (plain-tex-mode latex-mode doctex-mode) :help "Run LatexMk, with (e)pLaTeX, dvips, ps2pdfwr"))

@@ -6,7 +6,7 @@
 #+TITLE: バージョン依存しない(はず)の雑多な設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-12-21 06:45:35
+#+DATE: 2014-03-18 15:50:48
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -161,17 +161,18 @@
   - yank で CLIPBOARD からペースト
   - [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727][id-manager]] で管理しているパスワードを X CLIPBOARD へ → [[file:el-get_config.org][el-get で install した雑多な物]]
   #+BEGIN_SRC emacs-lisp
+    (set-clipboard-coding-system 'compound-text)
     (defun my:cut-function (text &optional rest)
       "Cut region, Sync X PRIMARY using xsel"
       (interactive)
       (let* ((process-connection-type nil)
-             (proc (start-process "xsel" "*Messages*" "xsel" "-b" "-i")))
+             (proc (start-process "xsel" "*Messages*" "xsel" "-p" "-i")))
         (process-send-string proc text)
         (process-send-eof proc)))
     (defun my:paste-function ()
       "YANK from X PRIMARY using xsel"
       (interactive)
-      (shell-command-to-string "xsel -b -o"))
+      (shell-command-to-string "xsel -p -o"))
     (cond
      (window-system
       (progn

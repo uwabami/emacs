@@ -6,7 +6,7 @@
 #+TITLE: org-modeの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-01-28 05:34:21
+#+DATE: 2014-03-17 22:45:07
 #+SETUPFILE: ./export-config.org
 
 * 始めに

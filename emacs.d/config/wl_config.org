@@ -6,7 +6,7 @@
 #+TITLE: Wanderlust の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-01-28 05:11:34
+#+DATE: 2014-02-23 02:47:21
 #+SETUPFILE: ./export-config.org
 
 * Wanderlust の設定
@@ -723,6 +723,8 @@
   もっとうまい方法/正攻法がありそうな気がするけれど,
   使えてるから, まあ良いかな, とか.
   #+BEGIN_SRC emacs-lisp
+    (setq mime-pgp-verify-when-preview nil)
+
     (add-hook 'wl-draft-mode-hook
               '(lambda ()
                  (set-buffer-file-coding-system 'iso-2022-jp)

@@ -1,0 +1,5 @@
+(:name gntp
+       :description "GNTP implementation for Emacs"
+       :type github
+       :pkgname "myuhe/gntp.el"
+       )

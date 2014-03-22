@@ -1,0 +1,6 @@
+(:name org-gcal
+       :description "Org sync with Google Calendar"
+       :type github
+       :depends (emacs-request gntp deferred)
+       :pkgname "myuhe/org-gcal.el"
+       )

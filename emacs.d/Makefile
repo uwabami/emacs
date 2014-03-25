@@ -49,3 +49,4 @@ distclean: clean
 		do $(MAKE) clean -C $$d ;\
 	done
 	rm -fr tmp/* el-get .bootstrap .set_permission
+	touch tmp/.gitkeep

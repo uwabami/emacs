@@ -6,7 +6,7 @@
 #+TITLE: Wanderlust の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-02-23 02:47:21
+#+DATE: 2014-04-02 14:08:14
 #+SETUPFILE: ./export-config.org
 
 * Wanderlust の設定
@@ -770,6 +770,18 @@
             ("Work"      . (bold "black"  nil))      ;; お仕事一般
             ("Party"     . (nil  "brown"  "pink"))   ;; 宴会
             ("Private"   . (nil  "tan"    nil))))    ;; プライベート
+  #+END_SRC
+* 検索
+  imap の検索か maildir-utils の検索か?
+  #+BEGIN_SRC emacs-lisp
+    ;; (require 'elmo-search)
+    ;; (elmo-search-register-engine
+    ;;     'mu 'local-file
+    ;;     :prog "/usr/bin/mu" ;; or wherever you've installed it
+    ;;     :args '("find" pattern "--fields" "l") :charset 'utf-8)
+    ;; (setq elmo-search-default-engine 'mu)
+    ;; for when you type "g" in folder or summary.
+    ;; (setq wl-default-spec "[")
   #+END_SRC
 * Footnotes
 

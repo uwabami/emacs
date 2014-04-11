@@ -6,7 +6,7 @@
 #+TITLE: AUCTeX の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-02-24 01:01:52
+#+DATE: 2014-03-28 16:07:38
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -156,14 +156,14 @@
   デフォルトではカレントディレクトリに =auto= が作成されて鬱陶しいので
   =~/.emacs.d/tmp/auctex= 以下に置くことにする.
     #+BEGIN_SRC emacs-lisp
-    (setq TeX-auto-save t)
+    (setq TeX-auto-save nil)
     (setq TeX-auto-local
           (expand-file-name
            (concat my:user-emacs-temporary-directory ".auctex/auto")))
     (setq TeX-style-local
           (expand-file-name
            (concat my:user-emacs-temporary-directory ".auctex/style")))
-    (setq TeX-parse-self t)
+    (setq TeX-parse-self nil)
     (setq TeX-auto-untabify t)
     (add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)
   #+END_SRC
@@ -196,6 +196,9 @@
     (setq reftex-plug-into-AUCTeX t)
     ;; Make RefTeX faster
     (setq reftex-enable-partial-scans t)
+    (setq reftex-keep-temporary-buffers nil)
+    (setq reftex-enable-partial-scans t)
+    (setq reftex-allow-automatic-rescan nil)
     (when (locate-library "zotero")
       (add-hook 'TeX-mode-hook 'zotero-minor-mode))
   #+END_SRC

@@ -98,7 +98,7 @@
  "modules/org-mode/lisp"   ; org-mode
  )
 ;; -----------------------------------------------------------
-;;; install el-get
+;;; install el-get/bundle
 ;; set el-get dir: ~/.emacs.d/.el-get/<emacs-version>
 (setq el-get-dir
       (concat (file-name-as-directory user-emacs-directory)
@@ -111,15 +111,26 @@
        "https://raw.github.com/dimitri/el-get/master/el-get-install.el")
     (goto-char (point-max))
     (eval-print-last-sexp)))
-;; recipe 置き場
-;; (add-to-list ' el-get-recipe-path
-;;              (expand-file-name (concat my:user-emacs-share-directory "recipes/")))
+;; recipe 置き場: ~/.emacs.d/shared/recipes/
+(add-to-list 
+ 'el-get-recipe-path
+ (expand-file-name (concat my:user-emacs-share-directory "recipes/")))
 ;; verbose mode
 (setq el-get-verbose t)
 ;; proxy 環境下を考慮して github は https でアクセス
 (setq el-get-github-default-url-type 'https)
 ;; always shallow clone: 動いていない?
 (setq el-get-git-shallow-clone t)
+;; set bundle/init dir: ~/.emacs.d/.bundle/init/<emacs-version>
+(setq bundle-init-directory
+      (concat (file-name-as-directory user-emacs-directory)
+              ".bundle/init/"
+              (file-name-as-directory emacs-version)
+              ))
+;; install bundle-el
+(add-to-list
+ 'el-get-sources '(:name bundle :type github :pkgname "tarao/bundle-el"))
+(el-get 'sync 'bundle)
 ;; -----------------------------------------------------------
 ;;; org-babel
 ;;

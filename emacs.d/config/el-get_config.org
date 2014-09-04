@@ -3,7 +3,7 @@
 # Copyright(C) Youhei SASAKI All rights reserved.
 # License: Expat
 #
-#+TITLE: el-get での package install
+#+TITLE: [[file:el-get_config.org][el-get/bundle-el の install]]
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
 #+DATE: 2014-09-03 08:54:48
@@ -32,148 +32,20 @@
                   ".elpa/"
                   (file-name-as-directory emacs-version)
                   ))
-    ;; (when (require 'el-get-elpa nil 'noerror)
-    ;;   (unless (file-exists-p (concat el-get-dir "/.package-stamp"))
-    ;;     (progn
-    ;;       (el-get-elpa-build-local-recipes)
-    ;;       (shell-command (concat "touch " (concat el-get-dir "/.package-stamp")))
-    ;;       )))
   #+END_SRC
-* local recipe の定義
+* bundle-el
   #+BEGIN_SRC emacs-lisp
-    (setq
-     el-get-sources
-     '((:name cp5022x
+    (setq bundle-init-directory
+          (concat (file-name-as-directory user-emacs-directory)
+                  ".bundle/init/"
+                  (file-name-as-directory emacs-version)
+                  ))
+    (add-to-list
+     'el-get-sources
+     '(:name bundle
               :type github
-              :pkgname "awasira/cp5022x.el")
-       (:name elscreen
-              :type github
-              :pkgname "emacs-jp/elscreen")
-       (:name ddskk_debian
-           :type git
-           :url "https://anonscm.debian.org/git/collab-maint/ddskk.git"
-           :info "doc/skk.info"
-           :load-path "."
-           :autoloads "skk-autoloads"
-           :build `((,el-get-emacs "-batch" "-q" "-no-site-file" "-l" "SKK-MK" "-f" "SKK-MK-compile")
-                    (,el-get-emacs "-batch" "-q" "-no-site-file" "-l" "SKK-MK" "-f" "SKK-MK-compile-info")
-                    ("mv" "skk-setup.el.in" "skk-setup.el")))
-       (:name id-manager
-              :type github
-              :pkgname "kiwanami/emacs-id-manager")
-       (:name zlc
-              :type github
-              :pkgname "mooz/emacs-zlc"
-              :autoloads nil
-              )
-       (:name yaicomplete
-              :type http
-              :url "https://raw.githubusercontent.com/tarao/elisp/master/yaicomplete.el"
-              )
-       (:name auto-complete
-              :type github
-              :pkgname "auto-complete/auto-complete"
-              :depends (popup fuzzy cl-lib)
-              )
-       ))
-  #+END_SRC
-* el-get で定義されているレシピから install するパッケージ
-  #+BEGIN_SRC emacs-lisp
-    (setq
-     my:el-get-packages
-     '("el-get"
-       "package"
-       "exec-path-from-shell"
-       ))
-  #+END_SRC
-* 環境依存するパッケージの定義
-** TeX 関連
-   #+BEGIN_SRC emacs-lisp
-     (when (and (el-get-executable-find "platex")
-                (el-get-executable-find "latexmk"))
-       (progn
-         (setq el-get-sources
-               (append
-                el-get-sources
-                '(
-                  (:name auctex-latexmk
-                         :type github
-                         :pkgname "tom-tan/auctex-latexmk"))))
-         (setq my:el-get-packages
-               (append
-                my:el-get-packages
-                '("zotelo")))
-         ))
-   #+END_SRC
-** MUA:: Wanderlust 関連
-   #+BEGIN_SRC emacs-lisp
-     (when (and (locate-library "wl")
-                (file-exists-p (concat user-emacs-directory ".wl-use")))
-       (progn
-         (setq el-get-sources
-               (append
-                el-get-sources
-                '(
-                  (:name c-sig
-                         :description "insert custimizable signature"
-                         :type git
-                         :url "https://anonscm.debian.org/git/collab-maint/c-sig.git"
-                         :autoloads nil)
-                  (:name google-contacts-wl
-                         :type github
-                         :pkgname "uwabami/google-contacts-wl"
-                         )
-                  (:name rail
-                         :type github
-                         :pkgname "uwabami/rail"
-                         :autoloads nil
-                         :build `(("make" ,(concat " EMACS=" el-get-emacs)))
-                         )
-                  )))
-         (setq my:el-get-packages
-               (append
-                my:el-get-packages
-                '("offlineimap")
-                ))
-         ))
-   #+END_SRC
-** theme
-   #+BEGIN_SRC emacs-lisp
-          (cond
-           ((>= emacs-major-version 24)
-            (setq el-get-sources
-                  (append
-                   el-get-sources
-                   '(
-                     (:name darkpastel-theme
-                           :type github
-                           :pkgname "uwabami/darkpastel-theme"
-                           :prepare (add-to-list 'custom-theme-load-path default-directory)
-                           )
-                     )
-                   )))
-           (t
-            (setq el-get-sources
-                  (append
-                   el-get-sources
-                   '(
-                     (:name color-theme-darkpastel
-                            :type github
-                            :pkgname "uwabami/color-theme-darkpastel"
-                            :depends color-theme
-                            :prepare
-                            (autoload 'color-theme-darkpastel
-                              "color-theme-darkpastel" "color-theme: darkpastel" t)
-                            )
-                     )
-                   )))
-           )
-   #+END_SRC
-* 実際のインストール作業
-  #+BEGIN_SRC emacs-lisp
-    (setq my:el-get-packages
-          (append
-           my:el-get-packages
-           (loop for src in el-get-sources collect (el-get-source-name src))))
-    (el-get 'sync my:el-get-packages)
+              :pkgname "tarao/bundle-el")
+       )
+    (el-get 'sync 'bundle)
+    (bundle "exec-path-from-shell")
   #+END_SRC

@@ -5,6 +5,7 @@ emacs.d/modules/skkdic
 emacs.d/config/*.el
 emacs.d/config/sitemap.org
 emacs.d/.el-get
+emacs.d/.bundle
 emacs.d/.elpa
 emacs.d/share/*
 emacs.d/tmp/*

@@ -21,3 +21,16 @@
   #+END_SRC
   - [ ] そのうち調べる
   
+* shell から環境変数を引き継ぐ: exec-path-from-shell
+  シェルで =DEBFULLNAME=, =DEBEMAIL= を設定しているので、それを使います
+  #+BEGIN_SRC emacs-lisp
+    (bundle! exec-path-from-shell
+      (exec-path-from-shell-copy-envs
+       '("http_proxy" "DEBFULLNAME" "DEBEMAIL"))
+      (setq user-full-name (concat (getenv "DEBFULLNAME")))
+      (setq user-mail-address (concat (getenv "DEBEMAIL"))))
+  #+END_SRC
+* [[file:language_config.org][言語の設定]]
+  #+BEGIN_SRC emacs-lisp
+    (my:load-org-file "language_config.org")
+  #+END_SRC

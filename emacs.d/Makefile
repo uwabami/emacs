@@ -7,7 +7,6 @@ CURDIR		:= $(shell pwd)
 EMACS	?= emacs
 
 all: bootstrap $(ELCFiles)
-	@rm -f config/*.el
 	-@find . -name \-f | xargs rm -fr
 bootstrap: .bootstrap-stamp
 .bootstrap-stamp: .modules-stamp

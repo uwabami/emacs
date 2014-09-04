@@ -130,9 +130,9 @@
   #+END_SRC
 * [[file:anything_config.org][Anything]]
   #+BEGIN_SRC emacs-lisp
-    (setq anything-c-adaptive-history-file
-          (concat my:user-emacs-temporary-directory "anything-c-adaptive-history"))
-    (my:load-org-file "anything_config.org")
+    ;; (setq anything-c-adaptive-history-file
+    ;;      (concat my:user-emacs-temporary-directory "anything-c-adaptive-history"))
+    ;; (my:load-org-file "anything_config.org")
   #+END_SRC
 * TeX関連: [[file:auctex_config.org][AUCTeX の設定]]
   [[http://www.gnu.org/software/auctex/][AUCTeX]] に LaTeXmk 用のコマンドを追加する.

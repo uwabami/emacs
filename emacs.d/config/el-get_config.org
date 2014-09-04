@@ -83,7 +83,6 @@
      my:el-get-packages
      '("el-get"
        "package"
-       "anything"
        "exec-path-from-shell"
        ))
   #+END_SRC

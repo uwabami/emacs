@@ -1,4 +1,4 @@
-#+STARTUP: showall
+#+STARTUP: overview
 #+LANG: ja
 #+OPTIONS: ':t *:t -:t ::t ^:t arch:nil author:nil c:nil
 #+OPTIONS: creator:nil d:nil e:nil email:nil f:t H:2 inline:nil

@@ -112,13 +112,13 @@
     (goto-char (point-max))
     (eval-print-last-sexp)))
 ;; recipe 置き場
-;; (add-to-list 'el-get-recipe-path
+;; (add-to-list ' el-get-recipe-path
 ;;              (expand-file-name (concat my:user-emacs-share-directory "recipes/")))
 ;; verbose mode
 (setq el-get-verbose t)
 ;; proxy 環境下を考慮して github は https でアクセス
 (setq el-get-github-default-url-type 'https)
-;; always shallow clone
+;; always shallow clone: 動いていない?
 (setq el-get-git-shallow-clone t)
 ;; -----------------------------------------------------------
 ;;; org-babel

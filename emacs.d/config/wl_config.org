@@ -6,7 +6,7 @@
 #+TITLE: Wanderlust の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-04-02 14:08:14
+#+DATE: 2014-06-13 02:00:56
 #+SETUPFILE: ./export-config.org
 
 * Wanderlust の設定
@@ -15,29 +15,23 @@
   一時配布元がどこになるのか良くわかりません.
 
   Emacs24 で動く版は配布先が github になっています. [fn:1]
+  #+BEGIN_SRC emacs-lisp
+    (eval-when-compile (require 'wl))
+  #+END_SRC
 * 依存/追加ライブラリのインストールと読み込み
   インストールしているのは今のところ以下の通り:
   - rail
-  - elscreen-wl
   - google-contacts-wl
   - c-sig
   - offlineimap-el
 ** rail
    SEMI や FLIM などの UA の表示に [[http://uwabami.github.com/rail/][rail]] [fn:2]を使っている.
-   #+BEGIN_SRC emacs-lisp
-     (unless (locate-library "rail")
-       (el-get 'sync '(rail)))
-     (require 'rail nil 'noerror)
-   #+END_SRC
    ちなみに rail を有効にすると, 以下の様に User-Agent が表示される
    #+ATTR_HTML: with="50%"
    [[file:https:/raw.github.com/uwabami/rail/gh-pages/images/wanderlust_with_or_without_rail.png]]
-** elscreen-wl
-   elscreen と Wanderlust の連携.
-   メール作成時に draft 用の screen を追加して,
-   送信後に screen を閉じる.
    #+BEGIN_SRC emacs-lisp
-     (require 'elscreen-wl)
+     (setq rail-emulate-genjis t)
+     (require 'rail nil 'noerror)
    #+END_SRC
 ** cp5022x を使う
    ISO-2022-JP を CP50220 として扱う.
@@ -48,7 +42,12 @@
    #+END_SRC
    default mime charset -> iso-2022-jp に
    #+BEGIN_SRC emacs-lisp
-   (setq wl-mime-charset 'iso-2022-jp)
+     (setq wl-mime-charset 'utf-8)
+   #+END_SRC
+** (あれば) elscreen-wl を使う
+   #+BEGIN_SRC emacs-lisp
+     (when (locate-library "elscreen-wl")
+       (require 'elscreen-wl nil 'noerror))
    #+END_SRC
 ** emacs-w3m + SEMI の追加設定
    HTML メールを表示するための設定.
@@ -82,12 +81,10 @@
 ** google-contacts-wl
    GoogleContacts から Wanderlust の AddressBook へ変換する
    #+BEGIN_SRC emacs-lisp
-     (el-get 'sync '(google-contacts-wl))
      (require 'google-contacts-wl nil 'noerror)
    #+END_SRC
 ** offlineimap-el
    #+BEGIN_SRC emacs-lisp
-     (el-get 'sync 'offlineimap-el)
      (require 'offlineimap nil 'noerror)
      (setq offlineimap-command "offlineimap -u machineui -a Gmail -o -f INBOX")
      (setq offlineimap-mode-line-style 'symbol)
@@ -229,8 +226,8 @@
    デフォルトの認証設定
    #+BEGIN_SRC emacs-lisp
     (setq elmo-imap4-default-authenticate-type 'clear)
-    (setq elmo-imap4-default-port '993)
-    (setq elmo-imap4-default-stream-type 'opentls)
+    (setq elmo-imap4-default-port '143)
+    ;; (setq elmo-imap4-default-stream-type 'opentls)
    #+END_SRC
    フォルダ名は UTF-7 でエンコードされているので,
    表示する際にこれをデコードする
@@ -239,7 +236,6 @@
    #+END_SRC
 ** フォルダの位置の default からの変更
    =~/Mail/= もしくは =~/.mua/= 以下に集約している
-
    local の Mail folder の位置
    #+BEGIN_SRC emacs-lisp
     (setq elmo-maildir-folder-path "~/Mail")
@@ -254,12 +250,11 @@
    #+BEGIN_SRC emacs-lisp
      (setq wl-folders-file "~/.mua/wl-folders.gpg")
    #+END_SRC
-   draft や trash は
+   Draft は
    Gmail と同期すると大変な事になるので local に持つ.
    #+BEGIN_SRC emacs-lisp
      (setq wl-draft-folder "+Drafts")
      (setq wl-trash-folder "%ゴミ箱")
-     ;; (setq wl-trash-folder "+Trash")
      (setq wl-temporary-file-directory "~/Downloads/")
    #+END_SRC
    アドレス帳 -> google-contacts-wl を使う
@@ -372,9 +367,9 @@
   #+BEGIN_SRC emacs-lisp
      (define-key wl-summary-mode-map "i" 'wl-summary-sync-update)
   #+END_SRC
-  =C-o= を elscreen にあけわたす -> auto-refile は =M-o= で (Mew 風)
+  =C-o= は tabbar で使う auto-refile は =M-o= で (Mew 風)
   #+BEGIN_SRC emacs-lisp
-    (define-key wl-summary-mode-map "\C-o" elscreen-map)
+     (define-key wl-summary-mode-map "\C-o" nil )
   #+END_SRC
   =M-o= で =auto-refile=
   #+BEGIN_SRC emacs-lisp
@@ -385,11 +380,11 @@
   実際にメッセージのあるフォルダを行き来する.
   Gmail の「スター付き」フォルダでも有効
   #+BEGIN_SRC emacs-lisp
+    (require 'elmo)
     (defun my:wl-summary-jump-to-referer-message ()
       (interactive)
       (when (wl-summary-message-number)
-        (if (equal
-             (elmo-folder-type-internal wl-summary-buffer-elmo-folder) 'flag)
+        (if (eq (elmo-folder-type-internal wl-summary-buffer-elmo-folder) 'flag)
             (progn
               (let* ((referer (elmo-flag-folder-referrer
                                wl-summary-buffer-elmo-folder
@@ -402,12 +397,10 @@
                                (car (car referer)))))
                 (wl-summary-goto-folder-subr folder 'no-sync nil nil t)
                 (wl-summary-jump-to-msg (cdr (assoc folder referer)))))
-          (when (equal (elmo-folder-type wl-summary-last-visited-folder)
-                       'internal)
+          (when (eq (elmo-folder-type wl-summary-last-visited-folder) 'internal)
             (wl-summary-goto-last-visited-folder)))))
     (define-key wl-summary-mode-map "=" 'my:wl-summary-jump-to-referer-message)
   #+END_SRC
-
 * summary-mode の表示のカスタマイズ
 ** 自分が差出人である mail は To:某 と表示
    #+BEGIN_SRC emacs-lisp
@@ -432,7 +425,6 @@
            wl-thread-vertical-str "|"
            wl-thread-horizontal-str "-"
            wl-thread-space-str " ")
-
    #+END_SRC
    以下の二つの設定を有効にするには
    =elmo-msgdb-extra-fields= を設定する必要がある.
@@ -493,10 +485,10 @@
 ** 重複メッセージを非表示に
    フォルダ内の Message-ID が同じメールを非表示にする
    #+BEGIN_SRC emacs-lisp
-     (setq wl-folder-process-duplicates-alist
-           '(
-             (".*" . hide)
-             ))
+     ;; (setq wl-folder-process-duplicates-alist
+     ;;       '(
+     ;;         (".*" . hide)
+     ;;         ))
    #+END_SRC
 ** sort 順
    #+BEGIN_SRC emacs-lisp
@@ -590,7 +582,6 @@
     ;; 二重エスケープを回避
     (defun shell-quote-argument (file) file)
   #+END_SRC
-
 * 添付ファイルの扱い
   =/etc/mailcap= と =~/.mailcap= の二つに
   同じエントリがあると, 動作が微妙になるらしい [fn:6] .
@@ -646,7 +637,6 @@
        '(define-key wl-summary-mode-map
           "\M-T" 'wl-summary-w3m-safe-toggle-inline-images))
    #+END_SRC
-
 * 返信設定
   自分宛のメールに返信する場合は =To:=, =Cc:= から自分のアドレスを削除
   #+BEGIN_SRC emacs-lisp
@@ -679,23 +669,19 @@
   #+END_SRC
 ** c-sig
    署名の選択に c-sig を使用している.
-  #+BEGIN_SRC emacs-lisp
-    (unless (locate-library "c-sig")
-      (el-get 'sync '(c-sig)))
-  #+END_SRC
-  設定は以下の通り. Mew 風に =C-c <tab>= で signature を挿入するようにしている
-  #+BEGIN_SRC emacs-lisp
-    (eval-and-compile (require 'c-sig))
-    (setq sig-insert-end t)
-    (setq sig-save-to-sig-name-alist nil)
-    (setq message-signature-file nil)
-    ;; Mew 風に \C-c \t で c-sig -> signature 挿入
-    (define-key wl-draft-mode-map "\C-c\t" 'insert-signature-eref)
-    (add-hook 'wl-draft-mode-hook
-              '(lambda ()
-                 (define-key (current-local-map) "\C-c\C-w"
-                   'insert-signature-eref)))
-  #+END_SRC
+   設定は以下の通り. Mew 風に =C-c <tab>= で signature を挿入するようにしている
+   #+BEGIN_SRC emacs-lisp
+     (eval-and-compile (require 'c-sig))
+     (setq sig-insert-end t)
+     (setq sig-save-to-sig-name-alist nil)
+     (setq message-signature-file nil)
+     ;; Mew 風に \C-c \t で c-sig -> signature 挿入
+     (define-key wl-draft-mode-map "\C-c\t" 'insert-signature-eref)
+     (add-hook 'wl-draft-mode-hook
+               '(lambda ()
+                  (define-key (current-local-map) "\C-c\C-w"
+                    'insert-signature-eref)))
+   #+END_SRC
 * Face の設定
 ** Face の追加
   デフォルトより細かく指定するために幾つかの face 定義を追加.
@@ -748,40 +734,39 @@
 * spam フィルタ
   サーバ側で bsfilter 通しているけど, 手元でも使うために
   #+BEGIN_SRC emacs-lisp
-    (require 'wl-spam)
-    (wl-spam-setup)
-    (setq elmo-spam-scheme 'bsfilter)
-    (setq elmo-spam-bsfilter-shell-program "/usr/bin/ruby1.8")
-    (setq wl-spam-folder "%kusm/Junk")
+    ;; (require 'wl-spam)
+    ;; (wl-spam-setup)
+    ;; (setq elmo-spam-scheme 'bsfilter)
+    ;; (setq elmo-spam-bsfilter-shell-program "/usr/bin/ruby1.8")
+    ;; (setq wl-spam-folder "%kusm/Junk")
   #+END_SRC
 * mhc
   メールからスケジュールを import する
   #+BEGIN_SRC emacs-lisp
-    (autoload 'mhc-wl-setup "mhc-wl")
-    (add-hook 'wl-init-hook 'mhc-wl-setup)
-    (setq mhc-insert-overdue-todo t)
-    (setq mhc-use-wide-scope 14)
-    (setq mhc-base-folder "+schedule")
-    (setq mhc-mail-path
-          (expand-file-name (concat (getenv "HOME") "/Mail")))
-    (setq mhc-start-day-of-week 0)
-    (setq mhc-category-face-alist
-          '(
-            ("Work"      . (bold "black"  nil))      ;; お仕事一般
-            ("Party"     . (nil  "brown"  "pink"))   ;; 宴会
-            ("Private"   . (nil  "tan"    nil))))    ;; プライベート
+    ;; (unless (locate-library "mhc")
+    ;;   (el-get 'sync '(mhc)))
+    ;; (autoload 'mhc-wl-setup "mhc-wl")
+    ;; (add-hook 'wl-init-hook 'mhc-wl-setup)
+    ;; (setq mhc-insert-overdue-todo t)
+    ;; (setq mhc-use-wide-scope 14)
+    ;; (setq mhc-base-folder "+schedule")
+    ;; (setq mhc-mail-path
+    ;;       (expand-file-name (concat (getenv "HOME") "/Mail")))
+    ;; (setq mhc-start-day-of-week 0)
+    ;; (setq mhc-category-face-alist
+    ;;       '(
+    ;;         ("Work"      . (bold "black"  nil))      ;; お仕事一般
+    ;;         ("Private"   . (nil  "tan"    nil))))    ;; プライベート
   #+END_SRC
 * 検索
   imap の検索か maildir-utils の検索か?
   #+BEGIN_SRC emacs-lisp
-    ;; (require 'elmo-search)
-    ;; (elmo-search-register-engine
-    ;;     'mu 'local-file
-    ;;     :prog "/usr/bin/mu" ;; or wherever you've installed it
-    ;;     :args '("find" pattern "--fields" "l") :charset 'utf-8)
-    ;; (setq elmo-search-default-engine 'mu)
-    ;; for when you type "g" in folder or summary.
-    ;; (setq wl-default-spec "[")
+    (require 'elmo-search)
+    (elmo-search-register-engine
+        'mu 'local-file
+        :prog "/usr/bin/mu" ;; or wherever you've installed it
+        :args '("find" pattern "--fields" "l") :charset 'utf-8)
+    (setq elmo-search-default-engine 'mu)
   #+END_SRC
 * Footnotes
 
@@ -796,5 +781,3 @@
 [fn:5] color-theme-darkpastel : [[https://github.com/uwabami/color-theme-darkpastel]]
 
 [fn:6] [[http://comments.gmane.org/gmane.mail.wanderlust.general.japanese/8618]]
-
-[fn:7]

@@ -6,7 +6,7 @@
 #+TITLE: muse-mode の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-12-03 13:09:36
+#+DATE: 2014-04-29 15:11:58
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -17,8 +17,6 @@
   OrgCapture と組み合わせれば, 全部いけるのかもしれませんけれど.
 * インストールと読み込み
   #+BEGIN_SRC emacs-lisp
-    (unless (locate-library "muse")
-      (el-get 'sync '(muse)))
     (eval-and-compile
       (unless (locate-library "htmlize")
         (add-to-load-path "modules/org-mode/contrib/lisp")))
@@ -52,6 +50,13 @@
        (set (make-local-variable 'time-stamp-end)   "\$")
        )
      (add-hook 'muse-mode-hook 'my:muse-timestamp-hook)
+   #+END_SRC
+** longlines-mode の無効化
+   いつの頃からか, muse のタグを挿入する際にエラーが出るので
+   #+BEGIN_SRC emacs-lisp
+     (add-hook 'muse-mode-hook
+               '(lambda ()
+                  (longlines-mode -1)))
    #+END_SRC
 * Project の定義
   今のところ [[http://www.gfd-dennou.org/member/uwabami/cc-env/][計算機関連のメモ]] にしか使わないのでその設定のみ.

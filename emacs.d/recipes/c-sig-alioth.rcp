@@ -1,6 +1,0 @@
-(:name c-sig-alioth
-       :website "http://www.emacswiki.org/emacs/c-sig"
-       :description "insert custimizable signature"
-       :type git
-       :url "git://anonscm.debian.org/collab-maint/c-sig.git"
-       :autoloads nil)

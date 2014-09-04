@@ -6,11 +6,11 @@
 #+TITLE: flymake の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-07-01 17:19:19
+#+DATE: 2014-05-28 16:59:29
 #+SETUPFILE: ./export-config.org
 
 * はじめに
-  [[http://flymake.sourceforge.net/][flymake]] はリアルタイムに動作する文法チェッカです.
+  [[http://flymake.sourceforge.net/][flymake]] はリアルタイムに動作する素敵文法チェッカです.
 * 読み込み
   #+BEGIN_SRC emacs-lisp
     (require 'flymake)

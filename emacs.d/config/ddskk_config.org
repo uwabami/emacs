@@ -190,23 +190,8 @@
                    '(skk-comp-by-server-completion) t)
       )
      (t
-      (setq skk-large-jisyo "~/.skkdic/SKK-JISYO.L")
-      ;; 地球物理辞書の追加
-      (add-to-list
-       'skk-search-prog-list
-       '(skk-search-jisyo-file "~/.skkdic/SKK-JISYO.chibutsu" 10000) t)
-       ;; 天文・物理辞書(tandic4)の追加
-      (add-to-list
-       'skk-search-prog-list
-       '(skk-search-jisyo-file "~/.skkdic/SKK-JISYO.tanudic4" 10000) t)
-      ;; はてな辞書
-      (add-to-list
-       'skk-search-prog-list
-       '(skk-search-jisyo-file "~/.skkdic/SKK-JISYO.hatenakey" 10000) t)
-      ;; 2ch 顔文字辞書
-      (add-to-list
-       'skk-search-prog-list
-       '(skk-search-jisyo-file "~/.skkdic/SKK-JISYO.matsucon" 10000) t)
+      (setq skk-large-jisyo
+            (concat user-emacs-directory "modules/skkdic/SKK-JISYO.L"))
       ))
     ;; 辞書登録の際に送り仮名を削除
     (setq skk-check-okurigana-on-touroku 'auto)

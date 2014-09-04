@@ -1,6 +1,0 @@
-(:name japanese-holidays
-       :description "Add Japanese Holiday into Calendar"
-       :type http
-       :url "http://www.meadowy.org/meadow/netinstall/export/972/branches/3.00/pkginfo/japanese-holidays/japanese-holidays.el"
-       :autloads t
-       )

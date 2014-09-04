@@ -1,4 +1,0 @@
-(:name id-manager
-       :description "ID/Password management tool for emacs users."
-       :type github
-       :pkgname "kiwanami/emacs-id-manager")

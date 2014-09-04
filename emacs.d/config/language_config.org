@@ -18,22 +18,7 @@
   ...え, そうなの?
 
   というわけで OS 依存の条件分岐だけを記述しています.
-* cp5022x
-
-  Emacs23 から内部が Unicode ベースになっています.
-  しかし文字コードの変換は GNU libc の iconv をベースにしているため,
-  環境によっては文字の変換がうまく行なえません.
-
-  そこで言語設定の前に =cp5022x.el= を読み込むことにしています.
-  cp5022x については [[http://nijino.homelinux.net/emacs/emacs23-ja.html][Emacs23 日本語向け設定例]]  [fn:3] を参照して下さい.
-  また, [[http://d.hatena.ne.jp/kiwanami/about][kiwanami]] さんが [[http://d.hatena.ne.jp/kiwanami/20091103/1257243524][Wanderlustと文字コード]] [fn:4]
-  というエントリで素晴しい解説を書いて下さっています.
-  #+BEGIN_SRC emacs-lisp
-    (el-get 'sync '(cp5022x))
-  #+END_SRC
-
 * East Asian Ambiguos 対応
-
   CJK 以外の East Asian Ambiguos も2文字幅にするようにしています.
   #+BEGIN_SRC emacs-lisp
     (defun set-east-asian-ambiguous-width (width)
@@ -81,12 +66,11 @@
     (set-east-asian-ambiguous-width 2)
   #+END_SRC
 * OSの違いに起因する条件分岐
-
   Mac と Linux では同じ Unicode でも正規化が異なります
   (具体的には Mac のファイルシステムである HFS+ では Unicode の正規化が異なります).
   Unicode の正規化と Mac OS X 特有の事情については
-   - [[http://homepage1.nifty.com/nomenclator/unicode/normalization.htm][Unicode正規化とは]] [fn:5]
-   - [[http://www.sakito.com/2010/05/mac-os-x-normalization.html][Mac OS X におけるファイル名に関するメモ(NFC, NFD等)]] [fn:6]
+   - [[http://homepage1.nifty.com/nomenclator/unicode/normalization.htm][Unicode正規化とは]] [fn:4]
+   - [[http://www.sakito.com/2010/05/mac-os-x-normalization.html][Mac OS X におけるファイル名に関するメモ(NFC, NFD等)]] [fn:5]
   等が参考になるでしょう.
 
   日本語のファイル名を扱うことは滅多にないものの,
@@ -114,20 +98,20 @@
       (setq locale-coding-system 'utf-8))
     )
   #+END_SRC
-** 補足
-   =prefer-coding-system= を設定すると
-   =default-file-name-coding-system= が設定される.
-   優先順位は
-   1. =file-name-coding-system= を見る
-   2. =file-name-coding-system=  が nil なら =default-file-name-coding-system= を利用
-   となっている。
+* 補足
+  =prefer-coding-system= を設定すると
+  =default-file-name-coding-system= が設定される.
+  優先順位は
+  1. =file-name-coding-system= を見る
+  2. =file-name-coding-system=  が nil なら =default-file-name-coding-system= を利用
+  となっている。
 
-   =darwin-p= と =nt-p= は =~/.emacs.d/init.el= ([[http://www.gfd-dennou.org/member/uwabami/cc-env/EmacsBasic.html][解説]])
-   で設定した環境判定用の以下の変数:
-   #+BEGIN_EXAMPLE
-   (defvar darwin-p (eq system-type 'darwin))      ; Mac OS X 用
-   (defvar nt-p (eq system-type 'windows-nt))      ; Windows 用
-   #+END_EXAMPLE
+  =darwin-p= と =nt-p= は =~/.emacs.d/init.el= ([[http://www.gfd-dennou.org/member/uwabami/cc-env/EmacsBasic.html][解説]])
+  で設定した環境判定用の以下の変数:
+  #+BEGIN_EXAMPLE
+  (defvar darwin-p (eq system-type 'darwin))      ; Mac OS X 用
+  (defvar nt-p (eq system-type 'windows-nt))      ; Windows 用
+  #+END_EXAMPLE
 * Footnotes
 
 [fn:1] Emacs講座 -第7回- 文字コード / マスタカの ChangeLog メモ:  [[http://masutaka.net/chalow/2009-07-09-1.html]]
@@ -136,8 +120,6 @@
 
 [fn:3] Emacs23 日本語向け設定例: [[http://nijino.homelinux.net/emacs/emacs23-ja.html]]
 
-[fn:4] Wanderlustと文字コード: [[http://d.hatena.ne.jp/kiwanami/20091103/1257243524]]
+[fn:4] Unicode正規化とは: [[http://homepage1.nifty.com/nomenclator/unicode/normalization.htm]]
 
-[fn:5] Unicode正規化とは: [[http://homepage1.nifty.com/nomenclator/unicode/normalization.htm]]
-
-[fn:6] Mac OS X におけるファイル名に関するメモ(NFC, NFD等): [[http://www.sakito.com/2010/05/mac-os-x-normalization.html]]
+[fn:5] Mac OS X におけるファイル名に関するメモ(NFC, NFD等): [[http://www.sakito.com/2010/05/mac-os-x-normalization.html]]

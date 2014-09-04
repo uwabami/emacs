@@ -6,7 +6,7 @@
 #+AUTHOR: Youhei SASAKI
 #+EMAIL:  uwabami@gfd-dennou.org
 #+TITLE: navi2ch の設定
-#+DATE: 2013-07-06 19:09:02
+#+DATE: 2014-05-31 02:26:55
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -15,11 +15,6 @@
   Navi2ch は、Emacs、XEmacs、Meadow などの Emacsen で動作する、
   ２ちゃんねるナビゲータです。
   #+END_QUOTE
-* install
-  #+BEGIN_SRC emacs-lisp
-    (unless (locate-library "navi2ch")
-      (el-get 'sync '(navi2ch)))
-  #+END_SRC
 * 読み込み
   #+BEGIN_SRC emacs-lisp
     (autoload 'navi2ch "navi2ch" "Navigator for 2ch for Emacs" t)

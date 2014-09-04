@@ -4,11 +4,10 @@ emacs.d/.set_permission
 emacs.d/.*-use
 emacs.d/config/*.el
 emacs.d/config/sitemap.org
-emacs.d/el-get
-emacs.detc/*
+emacs.d/.el-get
+emacs.d/.elpa
 emacs.d/share/*
 emacs.d/tmp/*
 emacs.d/modules/*-stamp
 emacs.d/.org-id-locations
 emacs.d/tramp
-emacs.d/elpa

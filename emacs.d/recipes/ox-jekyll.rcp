@@ -1,6 +1,0 @@
-(:name ox-jekyll
-       :description "Export Jekyll articles using org-mode."
-       :type http
-       :url "https://raw.github.com/yoshinari-nomura/org-octopress/master/ox-jekyll.el"
-       :prepare (add-to-list 'load-path default-directory)
-       )

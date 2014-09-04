@@ -3,7 +3,7 @@
 # Copyright(C) Youhei SASAKI All rights reserved.
 # License: Expat.
 #
-#+TITLE: C/Migemo の設定
+#+TITLE: C/Migemo
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
 #+DATE: 2013-07-01 17:19:36
@@ -14,13 +14,22 @@
   ないと結構途方に暮れるのだけれど,
   pure ruby の実装が ruby(>=1.9) だと動作しないので,
   C/Migemo を使うことにしている.
-* install
-  Debian パッケージ [fn:1] を使う場合には, 特に設定は不要(なハズ).
-  install するだけで良きにはからってくれる.
-  無い場合には el-get で導入.
+* 基本設定
   #+BEGIN_SRC emacs-lisp
-    (unless (locate-library "migemo")
-      (el-get 'sync 'migemo))
+    ;; C/Migemo settings
+    (when (and (executable-find "cmigemo")
+               (locate-library "migemo"))
+      (progn
+        (require 'migemo nil 'noerror)
+        (setq migemo-command "cmigemo")
+        (setq migemo-options '("-q" "--emacs"))
+        (if (file-exists-p "/usr/local/share/migemo/utf-8")
+            (setq migemo-dictionary "/usr/local/share/migemo/utf-8/migemo-dict"))
+        (if (file-exists-p "/usr/share/cmigemo/utf-8/migemo-dict")
+            (setq migemo-dictionary "/usr/share/cmigemo/utf-8/migemo-dict"))
+        (setq migemo-coding-system 'utf-8-unix)
+        )
+      )
   #+END_SRC
 * ユーザ辞書を使わない
   #+BEGIN_SRC emacs-lisp

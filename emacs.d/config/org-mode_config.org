@@ -28,9 +28,9 @@
    (add-to-list 'auto-mode-alist '("\\.howm$" . org-mode))
    #+END_SRC
 ** 保存先の設定
-   デフォルトで Dropbox に保存するように.
+   デフォルトで ownCloud に保存するように.
    #+BEGIN_SRC emacs-lisp
-   (setq org-directory (concat my:dropbox "org/"))
+   (setq org-directory (concat (file-name-as-directory (getenv "HOME")) "ownCloud/org/"))
    (setq org-default-notes-file (concat org-directory "schedule.org"))
    #+END_SRC
 ** link を return で追う
@@ -96,9 +96,9 @@
    #+BEGIN_SRC emacs-lisp
      (setq org-agenda-files
            '(
-             "~/Dropbox/org/todo.org"
-             "~/Dropbox/org/schedule.org"
-             "~/Dropbox/org/someday.org"))
+             "~/ownCloud/org/todo.org"
+             "~/ownCloud/org/schedule.org"
+             "~/ownCloud/org/someday.org"))
    #+END_SRC
 ** ToDo 状態の追加
    #+BEGIN_SRC emacs-lisp
@@ -153,8 +153,8 @@
    #+END_SRC
 * MobileOrg
   #+BEGIN_SRC emacs-lisp
-    (setq org-mobile-directory "~/Dropbox/MobileOrg")
-    (setq org-mobile-inbox-for-pull "~/Dropbox/org/mobile.org")
+    (setq org-mobile-directory "~/ownCluod/MobileOrg")
+    (setq org-mobile-inbox-for-pull "~/ownCloud/org/mobile.org")
   #+END_SRC
 * メモ環境: Org-Capture
   1メモ1ファイル + howm 連携のための設定
@@ -292,7 +292,6 @@
    =ox-jekyll= 自体は [[https://github.com/yoshinari-nomura/org-octopress][yoshinari-nomura/org-octopress]] [fn:3] 参照のこと.
    =ox-html= は =ox-jekyll= 内で読み込まれている.
    #+BEGIN_SRC emacs-lisp
-     (el-get 'sync '(ox-jekyll))
      (require 'ox-jekyll nil 'noerror)
      (require 'ox-html)
      (require 'ox-publish)

@@ -1,7 +1,0 @@
-(:name text-translator-bzr-head
-       :website "http://www.emacswiki.org/emacs/TextTranslator"
-       :description "translates the character string on Emacs."
-       :type bzr
-       :url "http://bazaar.launchpad.net/~khiker/+junk/text-translator/"
-       :build ("make")
-       )

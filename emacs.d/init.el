@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2013/07/06 19:06:00$
+;; $Lastupdate: 2014-09-03 14:06:21$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -40,23 +40,17 @@
         unresolved
         callargs
         redefine
-        ;; obsolete
+        obsolete
         noruntime
         cl-functions
         interactive-only
-        ;; make-local
+        make-local
         ))
-;; -----------------------------------------------------------
-;;; 自己紹介 -> 名前とメールアドレスの設定
-;;
-(setq user-full-name (concat (getenv "DEBFULLNAME")))
-(setq user-mail-address (concat (getenv "DEBEMAIL")))
 ;; -----------------------------------------------------------
 ;;; Emacs の種類/バージョンを判別するための変数を定義
 ;;
 ;; 元々は以下のURLにあった関数. 必要な物だけ抜粋
 ;; @see http://github.com/elim/dotemacs/blob/master/init.el
-;;
 (defvar oldemacs-p (<= emacs-major-version 22)) ; 22 以下
 (defvar emacs23-p (<= emacs-major-version 23))  ; 23 以下
 (defvar emacs24-p (>= emacs-major-version 24))  ; 24 以上
@@ -74,18 +68,17 @@
 (when oldemacs-p
   (defvar user-emacs-directory
     (expand-file-name (concat (getenv "HOME") "/.emacs.d/"))))
+(defconst my:user-emacs-share-directory
+  (expand-file-name (concat user-emacs-directory "share/")))
 (defconst my:user-emacs-config-directory
   (expand-file-name (concat user-emacs-directory "config/")))
 (defconst my:user-emacs-temporary-directory
   (expand-file-name (concat user-emacs-directory "tmp/")))
-(defconst my:user-emacs-share-directory
-  (expand-file-name (concat user-emacs-directory "share/")))
 ;; -----------------------------------------------------------
 ;;; load-path 追加用の関数の定義
 ;;
 ;; 最後に add したものが先頭にくるようになっている. 読み込みたくないファ
 ;; イルは, 先頭に "." や "_" をつけると良い.
-;;
 (defun add-to-load-path (&rest paths)
   (let (path)
     (dolist (path paths paths)
@@ -99,41 +92,34 @@
 ;; load-path の優先順位が気になる場合には
 ;;      M-x list-load-path-shadows
 ;; で確認する.
-;;
 (add-to-load-path
  "config"                  ; 分割した設定群の置き場所.
- "modules/org-mode/lisp"   ; org-mode (Git HEAD)
- ;; "modules/org-mode/contrib/lisp"
- "el-get/el-get"           ; el-get 本体
+ (concat ".el-get/" (file-name-as-directory emacs-version) "el-get")
+ "modules/org-mode/lisp"   ; org-mode
  )
 ;; -----------------------------------------------------------
-;;; el-get の install
-;;
-(setq-default el-get-emacswiki-base-url
-              "http://raw.github.com/emacsmirror/emacswiki.org/master/")
+;;; install el-get
+;; set el-get dir: ~/.emacs.d/.el-get/<emacs-version>
+(setq el-get-dir
+      (concat (file-name-as-directory user-emacs-directory)
+              ".el-get/"
+              (file-name-as-directory emacs-version)
+              ))
 (unless (require 'el-get nil 'noerror)
   (with-current-buffer
       (url-retrieve-synchronously
        "https://raw.github.com/dimitri/el-get/master/el-get-install.el")
-    (let (el-get-master-branch)
-     (goto-char (point-max))
-     (eval-print-last-sexp))))
-;;
-;; recipe の置き場所: default
-;;
-(add-to-list 'el-get-recipe-path
-             (expand-file-name (concat user-emacs-directory "recipes")))
-;;
+    (goto-char (point-max))
+    (eval-print-last-sexp)))
+;; recipe 置き場
+;; (add-to-list 'el-get-recipe-path
+;;              (expand-file-name (concat my:user-emacs-share-directory "recipes/")))
+;; verbose mode
+(setq el-get-verbose t)
 ;; proxy 環境下を考慮して github は https でアクセス
-;;
 (setq el-get-github-default-url-type 'https)
-;; -----------------------------------------------------------
-;;; Check dropbox is installed
-;;
-(defvar my:check-dropbox
-  (file-exists-p (concat (getenv "HOME") "/Dropbox")))
-(if my:check-dropbox
-    (defvar my:dropbox (concat (getenv "HOME") "/Dropbox/")))
+;; always shallow clone
+(setq el-get-git-shallow-clone t)
 ;; -----------------------------------------------------------
 ;;; org-babel
 ;;
@@ -141,7 +127,6 @@
 ;;
 ;; @see Emacsの設定ファイルをorgで書く:
 ;;      http://uwabami.junkhub.org/log/20111213.html#p01
-;;
 (require 'org)
 ;; -----------------------------------------------------------
 ;;; ob-tangle より自分用に幾つか関数を設定
@@ -149,7 +134,6 @@
 ;; my:org-babel-tangle-and-compile-file
 ;; 指定された org ファイルから emacs-lisp を export してbyte-compile
 ;; する. Make から呼ぶ事も想定しているのでこの段階では load はしない.
-;;
 (defun my:org-babel-tangle-and-compile-file (file)
   "export emacs-lisp and byte-compile from org files (not load).
    originally ob-tangle.el"
@@ -171,7 +155,6 @@
 ;;; my:org-babel-load-file
 ;;
 ;; my:org-babel-tangle-and-comile-file してから load する
-;;
 (defun my:org-babel-load-file (file)
   "load after byte-compile"
   (interactive "fFile to load: ")
@@ -182,7 +165,6 @@
 ;;
 ;; my:org-babel-load-file の際にディレクトリ名を
 ;; ~/.emacs.d/config/ に決め打ち
-;;
 (defun my:load-org-file (file)
   "my:user-emacs-config-directory 以下から my:org-babel-load-file"
   (my:org-babel-load-file
@@ -192,8 +174,8 @@
 ;;
 (my:load-org-file "index.org")
 ;; -----------------------------------------------------------
-;;; calculate bootup time/ スピード狂に捧ぐ.
-;;
+;;; calculate bootup time/ スピード狂に捧ぐ.;
+;
 ;; 目標: 3000ms 圏内
 ;;
 (unless oldemacs-p
@@ -205,3 +187,4 @@
         1000)))
   (add-hook 'after-init-hook 'message-startup-time))
 ;;; init.el ends here
+

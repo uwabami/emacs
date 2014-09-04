@@ -1,7 +1,0 @@
-(:name navi2ch
-       :website "http://navi2ch.sourceforge.net/index.ja.html"
-       :description "navigator for 2ch with emacsen"
-       :type git
-       :url "git://navi2ch.git.sourceforge.net/gitroot/navi2ch/navi2ch"
-       :build `(("./configure" ,(concat "--with-emacs=" el-get-emacs)) "make")
-       :autloads nil)

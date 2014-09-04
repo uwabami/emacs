@@ -1,4 +1,0 @@
-(:name cp5022x
-       :description "Handling CP5022x"
-       :type github
-       :pkgname "awasira/cp5022x.el")

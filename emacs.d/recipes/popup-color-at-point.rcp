@@ -1,7 +1,0 @@
-(:name popup-color-at-point
-       :type git
-       :description "popup color at point"
-       :url "https://gist.github.com/762297.git"
-       :depends popup
-       :autoloads nil
-       )

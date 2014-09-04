@@ -31,7 +31,6 @@
 * [[https://github.com/tom-tan/auctex-latexmk][auctex-latexmk]] [fn:2]
   AUCTeX で [[http://users.phys.psu.edu/~collins/software/latexmk-jcc/][Latexmk]] を使い,
   かつ platex 実行時に文字コード指定も追加してくれる.
-  インストール自体は el-get を使用している: [[file:el-get_config.org][el-get で install した雑多な物]]
 
   ここでは,
   - default の "LaTeX" を上書き
@@ -190,7 +189,7 @@
   #+END_SRC
 * RefTeX
   [[http://www.zotero.org/][Zotero]] で文献管理をするようになったので,
-  bibtex への export に [[https://github.com/vitoshka/zotelo][vitoshka/zotelo]] を使う: [[file:el-get_config.org][el-get で install した雑多な物]]
+  bibtex への export に [[https://github.com/vitoshka/zotelo][vitoshka/zotelo]] を使う
   #+BEGIN_SRC emacs-lisp
     (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
     (setq reftex-plug-into-AUCTeX t)

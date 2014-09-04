@@ -37,8 +37,6 @@
   #+END_SRC
 * rd-mode
   #+BEGIN_SRC emacs-lisp
-    (unless (locate-library "rd-mode")
-      (el-get 'sync '(rd-mode)))
     (require 'rd-mode nil 'noerror)
     (autoload 'rd-mode "rd-mode" "major mode for ruby document formatter RD" nil t)
     ;; rd-mode が起動した際に, =end \n\n =begin を省略しない.
@@ -48,11 +46,10 @@
   #+END_SRC
 * rabbit-mode
   #+BEGIN_SRC emacs-lisp
-    (unless (locate-library "rabbit-mode")
-      (el-get 'sync '(rabbit-mode)))
-    (autoload 'rabbit-mode "rabbit-mode" "major mode for Rabbit" nil t)
-    (add-to-list 'auto-mode-alist
-                 '("\\.\\(rbt\\|rab\\)$" . rabbit-mode))
+    (when (locate-library "rabbit-mode")
+      (autoload 'rabbit-mode "rabbit-mode" "major mode for Rabbit" nil t)
+      (add-to-list 'auto-mode-alist
+                   '("\\.\\(rbt\\|rab\\)$" . rabbit-mode)))
   #+END_SRC
 * outline-minor-mode
   多少 ad hoc ではあるけれど, とりあえず設定しておく

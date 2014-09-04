@@ -6,7 +6,7 @@
 #+TITLE: Anythingの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-10-30 18:09:08
+#+DATE: 2014-05-31 12:18:25
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -15,11 +15,6 @@
   最近の Emacs 界隈(ドコ?)では,
   「Anything が使えないと人じゃない(違」みたいな空気があって
   挫折しては戻ってきて挫折しては戻ってきて, を繰り返しています.
-* install
-  #+BEGIN_SRC emacs-lisp
-    (unless (locate-library "anything-config")
-      (el-get 'sync '(anything)))
-  #+END_SRC
 * history の位置変更
   #+BEGIN_SRC emacs-lisp
     (setq anything-c-adaptive-history-file
@@ -76,7 +71,7 @@
      )
   #+END_SRC
 * キーバインド
-  C-o, C-z はそれぞれ elscreen と howm にわたすので nil に
+  C-o, C-z はそれぞれ tabbar と howm にわたすので nil に
   #+BEGIN_SRC emacs-lisp
       (define-key global-map   (kbd "C-x b")       'anything-for-files)
       (define-key global-map   (kbd "C-x C-b")     'anything-for-files)
@@ -84,7 +79,7 @@
       (define-key global-map   (kbd "M-y")         'anything-show-kill-ring)
       (define-key anything-map (kbd "C-l")         'anything-execute-persistent-action)
       (define-key anything-map (kbd "C-z") nil) ; → howm の prefix
-      (define-key anything-map (kbd "C-o") nil) ; → elscreen の prefix
+      (define-key anything-map (kbd "C-o") nil) ; → tabbar の prefix
       (define-key anything-map (kbd "C-M-n")       'anything-next-source)
       (define-key anything-map (kbd "C-M-p")       'anything-previous-source)
   #+END_SRC

@@ -1,5 +1,0 @@
-(:name emacs-request
-       :description "Request.el -- Easy HTTP request for Emacs Lisp"
-       :type github
-       :pkgname "tkf/emacs-request"
-       )

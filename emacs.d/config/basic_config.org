@@ -6,7 +6,7 @@
 #+TITLE: バージョン依存しない(はず)の雑多な設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-03-18 15:50:48
+#+DATE: 2014-06-14 14:24:27
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -17,8 +17,6 @@
 * 常に $HOME から開始
   以前 Meadow を使っていた時に, Cygwin の =$HOME= から始めないと
   ファイルを開くのが大変だったので, 指定しています.
-  これを指定していると byte-compile 時に常に =CURDIR= を指定する必要があって,
-  それなりに面倒なんですが, 体が慣れてしまったのでこのまま残しています.
   #+BEGIN_SRC emacs-lisp
   (cd "~/")
   #+END_SRC
@@ -36,32 +34,6 @@
     (global-set-key (kbd "C-c r")   'replace-string)
     (global-set-key (kbd "<home>")  'beginning-of-buffer)
     (global-set-key (kbd "<end>")   'end-of-buffer)
-  #+END_SRC
-* モードラインのダイエット
-  デフォルトでは結構煩いので, いろいろと消します.
-  元ネタは
-  [[http://homepage1.nifty.com/blankspace/emacs/mode-line.html][mode-line-formatをダイエットさす]]モードラインのダイエット [fn:2].
-  しかし世の中にはもっと過激な人もいらっしゃって
-  [[http://emacs-fu.blogspot.jp/2011/08/customizing-mode-line.html][customizing the mode-line]] [fn:3]なんてこともできます.
-  そのうちもっと細かく設定するかもしれません.
-  #+BEGIN_SRC emacs-lisp
-    (setq-default mode-line-format
-                  '("-"
-                    mode-line-mule-info
-                    mode-line-modified
-                    " "
-                    mode-line-buffer-identification
-                    " "
-                     global-mode-string
-                     " %[("
-                     mode-name
-                     mode-line-process
-                     minor-mode-alist
-                     "%n" ")%]"
-                     (which-func-mode ("" which-func-format "-"))
-                    "-%-"
-                    )
-                  )
   #+END_SRC
 * 行番号, 桁番号の表示
   必要に応じて =linum-mode= を有効にするので,
@@ -83,7 +55,7 @@
   スクロールバーは使用しない.
   #+BEGIN_SRC emacs-lisp
     (if (fboundp 'set-scroll-bar-mode)
-        (set-scroll-bar-mode nil))
+        (set-scroll-bar-mode -1))
   #+END_SRC
   メニューバーを表示しない.
   #+BEGIN_SRC emacs-lisp
@@ -96,9 +68,10 @@
   #+END_SRC
   可能ならば \C-x f で画像を表示
   #+BEGIN_SRC emacs-lisp
-    (when (window-system)
-      (setq auto-image-file-mode t)
-      (setq auto-image-file-mode nil))
+    (when (display-graphic-p)
+      '(progn
+         (setq auto-image-file-mode t)
+         (setq auto-image-file-mode nil)))
   #+END_SRC
 * 編集/表示関連
   yes or no を y or n に
@@ -115,12 +88,15 @@
   #+END_SRC
   対応する括弧を色付け
   #+BEGIN_SRC emacs-lisp
-    (show-paren-mode t)                 ; 有効化
-    (setq show-paren-delay 0)           ; 初期値は 0.125
-    (setq show-paren-style 'expression) ; 括弧内も強調表示
-    (set-face-attribute 'show-paren-match-face nil
-                        :background nil :foreground nil
-                        :underline "#ffff00" :weight 'bold)
+    ;; (show-paren-mode 1)                 ; 有効化
+    ;; (setq show-paren-delay 0)           ; 初期値は 0.125
+    ;; (setq show-paren-style 'expression) ; 括弧内も強調表示
+    ;; (set-face-attribute 'show-paren-match-face nil
+    ;;                     :background "#02023c" :foreground nil
+    ;;                     :underline "#ffff7f" :weight 'bold :bold t)
+    ;; (set-face-attribute 'show-paren-mismatch-face nil
+    ;;                     :background "#3c0202" :foreground nil
+    ;;                     :underline "#ff4c4c" :weight 'bold :bold t)
   #+END_SRC
   tab 幅 4, tab でのインデントはしない
   #+BEGIN_SRC emacs-lisp
@@ -159,7 +135,7 @@
   X とのクリップボードの共存.
   - kill-ring を PRIMARY,CLIPBOARD 双方にコピー
   - yank で CLIPBOARD からペースト
-  - [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727][id-manager]] で管理しているパスワードを X CLIPBOARD へ → [[file:el-get_config.org][el-get で install した雑多な物]]
+  - [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727][id-manager]] で管理しているパスワードを X CLIPBOARD へ
   #+BEGIN_SRC emacs-lisp
     (set-clipboard-coding-system 'compound-text)
     (defun my:cut-function (text &optional rest)
@@ -177,12 +153,56 @@
      (window-system
       (progn
         (setq x-select-enable-clipboard t)
-        (global-set-key "\C-y" 'x-clipboard-yank)))
-     ((file-exists-p (concat user-emacs-directory ".xsel-use"))
+        (global-set-key (kbd "C-y") 'x-clipboard-yank)))
+     ((and (executable-find "xsel")
+           (file-exists-p (concat user-emacs-directory ".xsel-use")))
       (setq interprogram-paste-function 'my:paste-function)
       (setq interprogram-cut-function 'my:cut-function)
       (setq idm-copy-action 'my:cut-function)
-      ))
+      (global-set-key (kbd "M-w") 'kill-ring-save)
+      (global-set-key (kbd "M-y") 'yank)
+      )
+     )
+  #+END_SRC
+* 空白の表示: whitespace-mode
+  #+BEGIN_SRC emacs-lisp
+    (require 'whitespace)
+    (setq whitespace-style
+          '(face ; faceで可視化
+            ;; trailing ; 行末
+            tabs ; タブ
+            spaces ; スペース
+            ;; empty ; 先頭/末尾の空行
+            space-mark ; 表示のマッピング
+            tab-mark
+            ))
+    (setq whitespace-display-mappings
+          '((space-mark ?\u3000 [?\u25a1])
+            ;; WARNING: the mapping below has a problem. When a TAB
+            ;; occupies exactly one column, it will display the character
+            ;; ?\xBB at that column followed by a TAB which goes to the
+            ;; next TAB column. If this is a problem for you, please,
+            ;; comment the line below.
+            (tab-mark ?\t [?\u00BB ?\t] [?\\ ?\t])))
+    ;; スペースは全角のみを可視化
+    (setq whitespace-space-regexp "\\(\u3000+\\)")
+    ;; 有効化
+    (global-whitespace-mode 1)
+    ;; (set-face-attribute 'whitespace-trailing nil
+    ;;                     ;; :background my/bg-c
+    ;;                     :foreground "DeepPink"
+    ;;                     :underline t)
+    (set-face-attribute 'whitespace-tab nil
+                        ;; :background my/bg-color
+                        :foreground "LightSkyBlue"
+                        :underline t)
+    (set-face-attribute 'whitespace-space nil
+                        ;; :background my/bg-color
+                        :foreground "GreenYellow"
+                        :weight 'bold)
+    ;; (set-face-attribute 'whitespace-empty nil
+    ;;                     )
+
   #+END_SRC
 * 行末の無駄な空白/改行を削除する
   元ネタ: (Emacs Advent Calendar jp:2010)[fn:4].
@@ -355,9 +375,5 @@
 * Footnotes
 
 [fn:1] 鬼軍曹.el: [[https://github.com/k1LoW/emacs-drill-instructor/wiki/]]
-
-[fn:2] mode-line-formatをダイエットさす: [[http://homepage1.nifty.com/blankspace/emacs/mode-line.html]]
-
-[fn:3] customizing the mode-line: [[http://emacs-fu.blogspot.jp/2011/08/customizing-mode-line.html]]
 
 [fn:4] 無駄な行末の空白を削除する(Emacs Advent Calendar jp:2010): [[http://d.hatena.ne.jp/tototoshi/20101202/1291289625]]

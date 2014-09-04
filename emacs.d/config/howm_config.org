@@ -6,7 +6,7 @@
 #+TITLE: howm の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-07-27 22:40:00
+#+DATE: 2014-06-12 23:25:11
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -21,13 +21,13 @@
 
   ちなみに私はメモの形式は Org にしています.
 * ディレクトリの設定
-  メモの内容は dropbox で同期することに
+  メモの内容は ownCloud で同期することに
   #+BEGIN_SRC emacs-lisp
-    (setq howm-directory (concat my:dropbox "org"))
+    (setq howm-directory "~/ownCloud/org")
     ;; メニューと履歴を検索対象から除外するために別ディレクトリへ
-    (setq howm-keyword-file (concat my:dropbox ".howm/keys"))
-    (setq howm-history-file (concat my:dropbox ".howm/history"))
-    (setq howm-menu-file (concat my:dropbox ".howm/menu"))
+    (setq howm-keyword-file "~/ownCloud/.howm/keys")
+    (setq howm-history-file "~/ownCloud/.howm/history")
+    (setq howm-menu-file "~/ownCloud/.howm/menu")
     (setq howm-file-name-format "%Y%m%d-%H%M%S.howm")
   #+END_SRC
 * org-mode でメモを書くためにその1
@@ -43,21 +43,16 @@
     (setq howm-view-title-header "*")
    #+END_SRC
 * 読み込み
-  elscreen-howm で define-key (kbd "C-c C-c") されていることに注意.
-  これは org と被る.
   #+BEGIN_SRC emacs-lisp
     (require 'howm nil 'noerror)
-    (require 'elscreen-howm nil 'noerror)
   #+END_SRC
 * org-mode でメモを書くためにその2
   #+BEGIN_SRC emacs-lisp
     (eval-after-load "howm-mode"
       '(progn
-         ;; \C-c \C-c は org に渡す
-         (define-key howm-mode-map (kbd "C-c C-c") nil)
-         ;; メモ書いたら elscreen を kill -> 要 elscreen-howm
-         (define-key howm-mode-map (kbd "C-x C-z C-c")
-           'howm-save-and-kill-buffer/screen)))
+        ;; \C-c \C-c は org に渡す
+        (define-key howm-mode-map (kbd "C-c C-c") nil)
+        ))
     ;; skk と併用するための設定(Dired-X に C-xC-j を奪われないように)
     (setq dired-bind-jump nil)
   #+END_SRC

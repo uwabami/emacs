@@ -1,6 +1,0 @@
-(:name howm
-       :website "http://howm.sourceforge.jp/"
-       :description "Write fragmentarily and read collectively."
-       :type git
-       :url "git://anonscm.debian.org/collab-maint/howm.git"
-       :build `(("./configure" ,(concat "--with-emacs=" el-get-emacs)) "make"))

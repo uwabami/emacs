@@ -1,0 +1,50 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# License: Expat
+#
+#+TITLE: Yasnippetの設定
+#+AUTHOR: Youhei SASAKI
+#+EMAIL: uwabami@gfd-dennou.org
+#+DATE: 2014-05-30 16:56:40
+#+SETUPFILE: ./export-config.org
+
+* 読み込み
+  #+BEGIN_SRC emacs-lisp
+    (require 'yasnippet nil 'noerror)
+    (setq yas-snippet-dirs
+          (list "~/.emacs.d/share/snippets"
+                (when yas--load-file-name
+                  (concat (file-name-directory yas--load-file-name) "snippets"))))
+    (yas-global-mode 1)
+    ;; 単語展開キーバインド (ver8.0から明記しないと機能しない)
+    (custom-set-variables '(yas-trigger-key (kbd "C-<tab>")))
+    (setq yas-trigger-key (kbd "C-<tab>"))
+    ;; 既存スニペットを挿入する
+    (define-key yas-minor-mode-map (kbd "C-c C-x i i") 'yas-insert-snippet)
+    ;; 新規スニペットを作成するバッファを用意する
+    (define-key yas-minor-mode-map (kbd "C-c C-x i n") 'yas-new-snippet)
+    ;; 既存スニペットを閲覧・編集する
+    (define-key yas-minor-mode-map (kbd "C-c C-x i v") 'yas-visit-snippet-file)
+  #+END_SRC
+* anything連携
+  #+BEGIN_SRC emacs-lisp
+    ;; anything interface
+    (eval-after-load "anything-config"
+      '(progn
+         (defun my-yas/prompt (prompt choices &optional display-fn)
+           (let* ((names (loop for choice in choices
+                               collect (or (and display-fn (funcall display-fn choice))
+                                           choice)))
+                  (selected (anything-other-buffer
+                             `(((name . ,(format "%s" prompt))
+                                (candidates . names)
+                                (action . (("Insert snippet" . (lambda (arg) arg))))))
+                             "*anything yas/prompt*")))
+             (if selected
+                 (let (((not) (position selected names :test 'equal)))
+                   (nth n choices))
+               (signal 'quit "user quit!"))))
+         (custom-set-variables '(yas/prompt-functions '(my-yas/prompt)))))
+    ;; (define-key anything-command-map (kbd "y") 'yas/insert-snippet)))
+  #+END_SRC

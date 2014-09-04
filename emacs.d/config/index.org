@@ -22,7 +22,8 @@
   - [ ] そのうち調べる
   
 * shell から環境変数を引き継ぐ: exec-path-from-shell
-  シェルで =DEBFULLNAME=, =DEBEMAIL= を設定しているので、それを使います
+  シェルで =DEBFULLNAME=, =DEBEMAIL= を設定しているので、
+  =use-full-name=, =user-mail-address= にそれを使います。
   #+BEGIN_SRC emacs-lisp
     (bundle! exec-path-from-shell
       (exec-path-from-shell-copy-envs
@@ -34,3 +35,59 @@
   #+BEGIN_SRC emacs-lisp
     (my:load-org-file "language_config.org")
   #+END_SRC
+* [[file:basic_config.org][バージョン依存しない(はず)の雑多な設定]]
+  #+BEGIN_SRC emacs-lisp
+    (my:load-org-file "basic_config.org")
+  #+END_SRC
+* 日本語入力: [[http://openlab.ring.gr.jp/skk/ddskk-ja.html][Daredevil SKK (DDSKK)]]
+  SKK をメインで使用中. 無いと途方に暮れる.
+  ちなみにGTKが有効になっていると =gtk-immodule= なんかと衝突するので
+  =~/.Xresources= で xim を無効にしておくと良い.
+  例えば以下の様に:
+  #+BEGIN_EXAMPLE
+     ! disable XIM
+     Emacs*useXIM: false
+  #+END_EXAMPLE
+  =skk-user-directory= を設定しているので, 辞書や id なんかは
+  =~/.emacs.d/tmp/skk= 以下に置かれるが,
+  実際の設定は [[file:ddskk_config.org][ddskkの設定]] で行なっている.
+  
+  ddskk が install されていない場合には Debian パッケージの git リポジトリから
+  bundle で install します(ddskk の upstream は CVS なので辛い...).
+** 読み込み前の設定
+   設定ファイルの位置変更
+   #+BEGIN_SRC emacs-lisp
+     (setq skk-user-directory
+           (concat my:user-emacs-temporary-directory "skk"))
+     (setq skk-init-file
+           (concat my:user-emacs-config-directory "ddskk_config"))
+   #+END_SRC
+** 必要に応じて bundle でインストール
+   #+BEGIN_SRC emacs-lisp
+     (unless (locate-library "skk-sticky")
+       (bundle ddskk
+         :type git
+         :url "https://anonscm.debian.org/git/collab-maint/ddskk.git"
+         :autoloads nil
+         :info "doc/skk.info"
+         :build `((,el-get-emacs "-batch" "-q" "-no-site-file" "-l" "SKK-MK" "-f" "SKK-MK-compile")
+                  (,el-get-emacs "-batch" "-q" "-no-site-file" "-l" "SKK-MK" "-f" "SKK-MK-compile-info")
+                  ("mv" "skk-setup.el.in" "skk-setup.el"))
+         ))
+   #+END_SRC
+** 設定等
+   org で設定を書くためのアレコレ
+   #+BEGIN_SRC emacs-lisp
+     ;; org で書かれた設定ファイルから elisp を抽出
+     (my:org-babel-tangle-and-compile-file
+      (concat my:user-emacs-config-directory "ddskk_config.org"))
+     ;; ddskk の設定ファイルは読み込み時に byte-compile する
+     (setq skk-byte-compile-init-file t)
+   #+END_SRC
+   実際の読み込み
+   #+BEGIN_SRC emacs-lisp
+     (require 'skk-leim nil 'noerror)
+     (setq default-input-method "japanese-skk")
+     (require 'skk-autoloads nil 'noerror)
+     (require 'skk-cus nil 'noerror)
+   #+END_SRC

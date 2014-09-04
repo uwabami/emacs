@@ -20,7 +20,7 @@
         (setq tramp-mode nil))
   #+END_SRC
   - [ ] そのうち調べる
-  
+
 * shell から環境変数を引き継ぐ: exec-path-from-shell
   シェルで =DEBFULLNAME=, =DEBEMAIL= を設定しているので、
   =use-full-name=, =user-mail-address= にそれを使います。
@@ -39,6 +39,11 @@
   #+BEGIN_SRC emacs-lisp
     (my:load-org-file "basic_config.org")
   #+END_SRC
+* [[file:elscreen_config.org][Elscreenの設定]]
+  #+BEGIN_SRC emacs-lisp
+    (bundle elscreen :type github :pkgname "emacs-jp/elscreen")
+    (my:load-org-file "elscreen_config.org")
+  #+END_SRC
 * 日本語入力: [[http://openlab.ring.gr.jp/skk/ddskk-ja.html][Daredevil SKK (DDSKK)]]
   SKK をメインで使用中. 無いと途方に暮れる.
   ちなみにGTKが有効になっていると =gtk-immodule= なんかと衝突するので
@@ -51,7 +56,7 @@
   =skk-user-directory= を設定しているので, 辞書や id なんかは
   =~/.emacs.d/tmp/skk= 以下に置かれるが,
   実際の設定は [[file:ddskk_config.org][ddskkの設定]] で行なっている.
-  
+
   ddskk が install されていない場合には Debian パッケージの git リポジトリから
   bundle で install します(ddskk の upstream は CVS なので辛い...).
 ** 読み込み前の設定
@@ -91,3 +96,78 @@
      (require 'skk-autoloads nil 'noerror)
      (require 'skk-cus nil 'noerror)
    #+END_SRC
+* [[file:frame_config.org][フォントとフレームの設定]]
+  #+BEGIN_SRC emacs-lisp
+  (my:load-org-file "frame_config.org")
+  #+END_SRC
+* [[file:mua_config.org][MUAの設定]]
+  MUA として Wanderlust を使っている.
+  #+BEGIN_SRC emacs-lisp
+    (when (and (locate-library "wl")
+               (file-exists-p (concat user-emacs-directory ".wl-use")))
+      (autoload 'wl "wl" "Wanderlust" t)
+      (autoload 'wl-other-frame "wl" "Wanderlust on new frame" t)
+      (autoload 'wl-draft "wl-draft" "Write draft with Wanderlust." t)
+      (if (boundp 'mail-user-agent)
+          (setq mail-user-agent 'wl-user-agent))
+      (if (boundp 'read-mail-command)
+          (setq read-mail-command 'wl))
+      (if (fboundp 'define-mail-user-agent)
+          (define-mail-user-agent
+            'wl-user-agent
+            'wl-user-agent-compose
+            'wl-draft-send
+            'wl-draft-kill
+            'mail-send-hook))
+      (setq elmo-msgdb-directory "~/Mail/elmo")
+      (my:org-babel-tangle-and-compile-file
+       (concat my:user-emacs-config-directory "wl_config.org"))
+      (setq wl-init-file
+            (concat my:user-emacs-config-directory "wl_config"))
+      )
+  #+END_SRC
+* [[http://d.hatena.ne.jp/mooz/20101003/p1][zlc.el で Emacs のミニバッファ補完 zsh ライクに]]
+  anything の候補搾り込みはあんまり好きではないので.
+  これは非常に便利です.
+  #+BEGIN_SRC emacs-lisp
+    (bundle! zlc :type github :pkgname "mooz/emacs-zlc"
+      (require 'zlc nil 'noerror)
+      (zlc-mode t)
+      (let ((map minibuffer-local-map))
+        ;; (define-key map (kbd "<backtab>") 'zlc-select-previous)
+        ;; (define-key map (kbd "S-<tab>")   'zlc-select-previous)
+        (define-key map (kbd "C-p")       'zlc-select-previous-vertical)
+        (define-key map (kbd "C-n")       'zlc-select-next-vertical)
+        (define-key map (kbd "C-b")       'zlc-select-previous)
+        (define-key map (kbd "C-f")       'zlc-select-next)
+        (define-key map (kbd "C-d")       'zlc-reset))
+      (setq zlc-select-completion-immediately nil)
+      )
+  #+END_SRC
+
+* [[http://d.hatena.ne.jp/tarao/20101011/1286804507][Yet another icompelete]]
+  zlc をさらに素敵にしてくれます.
+  #+BEGIN_SRC emacs-lisp
+    (bundle yaicomplete
+      :type http
+      :url "https://raw.github.com/tarao/elisp/master/yaicomplete.el"
+      :features "yaicomplete"
+      (custom-set-faces
+       '(yaicomplete-completion-suffix-face ((t nil))))
+      (yaicomplete-mode)
+      )
+  #+END_SRC
+* [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727][パスワード管理ツール id-manager.el]]
+  無いと途方に暮れるくらい, 依存しまくり.
+  インストールと設定は以下.
+  #+BEGIN_SRC emacs-lisp
+    (when (file-exists-p (concat (getenv "HOME") "/.gnupg/idm-db.gpg"))
+      (bundle id-manager :type github :pkgname "kiwanami/emacs-id-manager"
+        (require 'id-manager nil 'noerror)
+        (global-set-key (kbd "M-7") 'id-manager)
+        (setq idm-database-file
+              (expand-file-name
+               (concat (getenv "HOME") "/.gnupg/idm-db.gpg")))
+        (setq idm-clipboard-expire-time-sec 15)))
+  #+END_SRC
+* Footnote

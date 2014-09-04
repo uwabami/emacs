@@ -30,17 +30,18 @@
    #+ATTR_HTML: with="50%"
    [[file:https:/raw.github.com/uwabami/rail/gh-pages/images/wanderlust_with_or_without_rail.png]]
    #+BEGIN_SRC emacs-lisp
-     (setq rail-emulate-genjis t)
+     (unless (locate-library "rail")
+       (bundle rail :type gthub :pkgname "uwabami/rail"))
      (require 'rail nil 'noerror)
+     (setq rail-emulate-genjis t)
    #+END_SRC
 ** cp5022x を使う
    ISO-2022-JP を CP50220 として扱う.
    [[http://d.hatena.ne.jp/kiwanami/20091103/1257243524][Wanderlustと文字コード]] [fn:3] も参照のこと.
    #+BEGIN_SRC emacs-lisp
-     (when (require 'cp5022x nil t)
-       (add-to-list 'mime-charset-coding-system-alist '(iso-2022-jp . cp50220)))
+     (add-to-list 'mime-charset-coding-system-alist '(iso-2022-jp . cp50220))
    #+END_SRC
-   default mime charset -> iso-2022-jp に
+   default mime charset: utf-8 に
    #+BEGIN_SRC emacs-lisp
      (setq wl-mime-charset 'utf-8)
    #+END_SRC
@@ -81,11 +82,11 @@
 ** google-contacts-wl
    GoogleContacts から Wanderlust の AddressBook へ変換する
    #+BEGIN_SRC emacs-lisp
-     (require 'google-contacts-wl nil 'noerror)
+     (bundle! google-contacts-wl :type github :pkgname "uwabami/google-contacts-wl")
    #+END_SRC
 ** offlineimap-el
    #+BEGIN_SRC emacs-lisp
-     (require 'offlineimap nil 'noerror)
+     (bundle! offlineimap)
      (setq offlineimap-command "offlineimap -u machineui -a Gmail -o -f INBOX")
      (setq offlineimap-mode-line-style 'symbol)
      (setq offlineimap-mode-line-symbol "imap")
@@ -254,7 +255,7 @@
    Gmail と同期すると大変な事になるので local に持つ.
    #+BEGIN_SRC emacs-lisp
      (setq wl-draft-folder "+Drafts")
-     (setq wl-trash-folder "%ゴミ箱")
+     (setq wl-trash-folder "%Trash")
      (setq wl-temporary-file-directory "~/Downloads/")
    #+END_SRC
    アドレス帳 -> google-contacts-wl を使う

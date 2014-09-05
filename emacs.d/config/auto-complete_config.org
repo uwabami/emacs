@@ -16,10 +16,12 @@
 * 読み込みと初期設定
   #+BEGIN_SRC emacs-lisp
     (require 'auto-complete-config nil 'noerror)
-    (add-to-list 'ac-dictionary-directories
-                 (concat my:user-emacs-share-directory "ac-dict"))
-    (setq ac-comphist-file
-          (concat my:user-emacs-temporary-directory "ac-comphist.dat"))
+    (eval-after-load "auto-complete-config"
+      (progn
+        (add-to-list 'ac-dictionary-directories
+                     (concat my:user-emacs-share-directory "ac-dict"))
+        (setq ac-comphist-file
+              (concat my:user-emacs-temporary-directory "ac-comphist.dat"))))
     (ac-config-default)
     (ac-flyspell-workaround)
   #+END_SRC

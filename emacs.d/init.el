@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2014-09-05 16:55:47$
+;; $Lastupdate: 2014-09-05 22:13:23$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -126,6 +126,9 @@
 ;; set elpa dir: ~/.emacs.d/packages/elpa/
 (setq package-user-dir
       (concat (file-name-as-directory my:user-emacs-package-directory) "elpa/"))
+;; cl-lib の導入
+(when (<= emacs-major-version 23)
+  (el-get 'sync '(cl-lib)))
 ;; -----------------------------------------------------------
 ;;; org-babel
 ;;

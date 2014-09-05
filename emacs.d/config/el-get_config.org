@@ -51,13 +51,43 @@
 * 環境依存するパッケージの定義
 ** emacs <= 23
    #+BEGIN_SRC emacs-lisp
-     (when emacs23-p
-       (el-get 'sync '(cl-lib)))
+     (cond
+      ((<= emacs-major-version 23)
+       (progn
+         (setq el-get-sources
+               (append
+                el-get-sources
+                '(
+                  (:name color-theme-darkpastel
+                         :type github
+                         :pkgname "uwabami/color-theme-darkpastel"
+                         :prepare (autoload 'color-theme-darkpastel "color-theme-darkpastel"
+                                    "color-theme: darkpastel" t)
+                         )
+                  )))
+         (setq my:el-get-packages
+               (append
+                my:el-get-packages
+                '("color-theme")))
+         )
+       )
+      (t
+       (setq el-get-sources
+             (append
+              el-get-sources
+              '(
+                (:name darkpastel-theme
+                       :type github
+                       :pkgname "uwabami/darkpastel-theme"
+                       :prepare (add-to-list 'custom-theme-load-path default-directory)
+                       )
+                )))
+       )
+      )
    #+END_SRC
 ** id-manager
    #+BEGIN_SRC emacs-lisp
      (when (ignore-errors (file-exists-p (concat (getenv "HOME") "/.gnupg/idm-db.gpg")))
-       ;;  (bundle! id-manager :url "https://github.com/kiwanami/emacs-id-manager.git"
        (setq el-get-sources
              (append
               el-get-sources

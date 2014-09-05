@@ -100,7 +100,7 @@
  "modules/org-mode/lisp"   ; org-mode
  )
 ;; -----------------------------------------------------------
-;;; install/configure - el-get,packages, bundle
+;;; install/configure - el-get and package.el
 ;; set el-get dir: ~/.emacs.d/packages/el-get/<emacs-version>
 (setq el-get-dir
       (concat (file-name-as-directory my:user-emacs-package-directory)
@@ -126,16 +126,16 @@
 ;; set elpa dir: ~/.emacs.d/packages/elpa/
 (setq package-user-dir
       (concat (file-name-as-directory my:user-emacs-package-directory) "elpa/"))
-;; set bundle-el dir: ~/.emacs.d/packages/bundle/init/<emacs-version>/
-(setq bundle-init-directory
-      (concat (file-name-as-directory my:user-emacs-package-directory)
-              "bundle/init/"
-              (file-name-as-directory emacs-version)
-              ))
-;; install bundle-el
-(add-to-list
- 'el-get-sources '(:name bundle :type github :pkgname "tarao/bundle-el"))
-(el-get 'sync 'bundle)
+;; for emacs <= 23
+(when emacs23-p
+  (el-get 'sync '(package cl-lib)))
+;; 初回 sync
+(when (require 'el-get-elpa nil 'noerror)
+  (unless (file-exists-p (concat user-emacs-directory ".package-stamp"))
+    (progn
+      (el-get-elpa-build-local-recipes)
+      (shell-command (concat "touch " (concat user-emacs-directory ".package-stamp")))
+      )))
 ;; -----------------------------------------------------------
 ;;; org-babel
 ;;

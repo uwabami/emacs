@@ -24,18 +24,63 @@
   #+BEGIN_SRC emacs-lisp
   (my:load-org-file "el-get_config.org")
   #+END_SRC
+* exec-path-from-shell: 環境変数の取得
+  Terminal 上で Emacs を起動する場合は問題無いですが
+  GUI 環境で Emacs を開くと環境変数が読み込まれない事がしばしばあって難儀していました.
+  exec-path-from-shell はこれを解決してくれる小粋な
+  #+BEGIN_SRC emacs-lisp
+    (require 'exec-path-from-shell nil 'noerror)
+    (exec-path-from-shell-copy-envs
+     '("http_proxy" "DEBFULLNAME" "DEBEMAIL"))
+    (setq user-full-name (concat (getenv "DEBFULLNAME")))
+    (setq user-mail-address (concat (getenv "DEBEMAIL")))
+  #+END_SRC
 * [[file:language_config.org][言語の設定]]
-** cp5022x
-   Emacs23 から内部が Unicode ベースになっています.
-   しかし文字コードの変換は GNU libc の iconv をベースにしているため,
-   環境によっては文字の変換がうまく行なえません.
+  Emacs23 から内部が Unicode ベースになっています.
+  しかし文字コードの変換は GNU libc の iconv をベースにしているため,
+  環境によっては文字の変換がうまく行なえません.
+  
+  そこで言語設定
+  前に =cp5022x.el= をインストールすることにしています.
+  #+BEGIN_SRC emacs-lisp
+    (require 'cp5022x nil 'noerror)
+    (my:load-org-file "language_config.org")
+  #+END_SRC
+* [[file:basic_config.org][バージョン依存しない(はず)の雑多な設定]]
+  #+BEGIN_SRC emacs-lisp
+    (my:load-org-file "basic_config.org")
+  #+END_SRC
+* 日本語入力: [[http://openlab.ring.gr.jp/skk/ddskk-ja.html][Daredevil SKK (DDSKK)]]
+  DDSKK をメインで使用中. 無いと途方に暮れる.
+  ちなみにGTKが有効になっていると =gtk-immodule= なんかと衝突するので
+  =~/.Xresources= で xim を無効にしておくと良い.
+  例えば以下の様に:
+  #+BEGIN_EXAMPLE
+     ! disable XIM
+     Emacs*useXIM: false
+  #+END_EXAMPLE
+  =skk-user-directory= を設定しているので, 辞書や id なんかは
+  =~/.emacs.d/tmp/skk= 以下に置かれるが,
 
-   そこで言語設定を読み込む前に =cp5022x.el= をインストールすることにしています.
-   #+BEGIN_SRC emacs-lisp
-     ;; (add-to-list
-     ;;  'el-get-sources '(:name cp5022x :type github :pkgname "awasira/cp5022x.el"))
-     ;; (unless (locate-library "cp5022x")
-     ;;   (el-get 'sync 'cp5022x))
-     ;; (require 'cp5022x nil 'noerror)
-     (my:load-org-file "language_config.org")
-   #+END_SRC
+  実際の設定は [[file:ddskk_config.org][ddskkの設定]] で行なっているため, 設定ファイルの位置変更を変更する
+  #+BEGIN_SRC emacs-lisp
+    (setq skk-user-directory
+          (concat my:user-emacs-temporary-directory "skk"))
+    (setq skk-init-file
+          (concat my:user-emacs-config-directory "ddskk_config"))
+  #+END_SRC
+  org で設定を書くために, 一旦 elisp を抽出しておく
+  #+BEGIN_SRC emacs-lisp
+    ;; org で書かれた設定ファイルから elisp を抽出
+    (my:org-babel-tangle-and-compile-file
+     (concat my:user-emacs-config-directory "ddskk_config.org"))
+    ;; ddskk の設定ファイルは読み込み時に byte-compile する
+    (setq skk-byte-compile-init-file t)
+  #+END_SRC
+  実際の読み込み
+  #+BEGIN_SRC emacs-lisp
+    (require 'skk-leim nil 'noerror)
+    (setq default-input-method "japanese-skk")
+    (require 'skk-autoloads nil 'noerror)
+    (require 'skk-cus nil 'noerror)
+  #+END_SRC

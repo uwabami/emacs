@@ -36,9 +36,7 @@ bootstrap: .bootstrap-stamp
 	$(EMACS) -l $(HOME)/.emacs.d/init \
 	  -batch -f batch-byte-compile $(CURDIR)/$<
 
-recompile: touch all
-touch: conf-clean
-	touch $(__SRC__) config/index.org
+recompile: clean all
 conf-clean:
 	rm -f config/*.elc config/*.el
 clean: conf-clean

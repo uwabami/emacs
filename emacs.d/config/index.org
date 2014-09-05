@@ -20,154 +20,22 @@
         (setq tramp-mode nil))
   #+END_SRC
   - [ ] そのうち調べる
-
-* shell から環境変数を引き継ぐ: exec-path-from-shell
-  シェルで =DEBFULLNAME=, =DEBEMAIL= を設定しているので、
-  =use-full-name=, =user-mail-address= にそれを使います。
+* [[file:el-get_config.org][el-get での package install]]
   #+BEGIN_SRC emacs-lisp
-    (bundle! exec-path-from-shell
-      (exec-path-from-shell-copy-envs
-       '("http_proxy" "DEBFULLNAME" "DEBEMAIL"))
-      (setq user-full-name (concat (getenv "DEBFULLNAME")))
-      (setq user-mail-address (concat (getenv "DEBEMAIL"))))
+  (my:load-org-file "el-get_config.org")
   #+END_SRC
 * [[file:language_config.org][言語の設定]]
-  #+BEGIN_SRC emacs-lisp
-    (my:load-org-file "language_config.org")
-  #+END_SRC
-* [[file:basic_config.org][バージョン依存しない(はず)の雑多な設定]]
-  #+BEGIN_SRC emacs-lisp
-    (my:load-org-file "basic_config.org")
-  #+END_SRC
-* [[file:elscreen_config.org][Elscreenの設定]]
-  #+BEGIN_SRC emacs-lisp
-    (bundle elscreen :type github :pkgname "emacs-jp/elscreen")
-    (my:load-org-file "elscreen_config.org")
-  #+END_SRC
-* 日本語入力: [[http://openlab.ring.gr.jp/skk/ddskk-ja.html][Daredevil SKK (DDSKK)]]
-  SKK をメインで使用中. 無いと途方に暮れる.
-  ちなみにGTKが有効になっていると =gtk-immodule= なんかと衝突するので
-  =~/.Xresources= で xim を無効にしておくと良い.
-  例えば以下の様に:
-  #+BEGIN_EXAMPLE
-     ! disable XIM
-     Emacs*useXIM: false
-  #+END_EXAMPLE
-  =skk-user-directory= を設定しているので, 辞書や id なんかは
-  =~/.emacs.d/tmp/skk= 以下に置かれるが,
-  実際の設定は [[file:ddskk_config.org][ddskkの設定]] で行なっている.
+** cp5022x
+   Emacs23 から内部が Unicode ベースになっています.
+   しかし文字コードの変換は GNU libc の iconv をベースにしているため,
+   環境によっては文字の変換がうまく行なえません.
 
-  ddskk が install されていない場合には Debian パッケージの git リポジトリから
-  bundle で install します(ddskk の upstream は CVS なので辛い...).
-** 読み込み前の設定
-   設定ファイルの位置変更
+   そこで言語設定を読み込む前に =cp5022x.el= をインストールすることにしています.
    #+BEGIN_SRC emacs-lisp
-     (setq skk-user-directory
-           (concat my:user-emacs-temporary-directory "skk"))
-     (setq skk-init-file
-           (concat my:user-emacs-config-directory "ddskk_config"))
+     ;; (add-to-list
+     ;;  'el-get-sources '(:name cp5022x :type github :pkgname "awasira/cp5022x.el"))
+     ;; (unless (locate-library "cp5022x")
+     ;;   (el-get 'sync 'cp5022x))
+     ;; (require 'cp5022x nil 'noerror)
+     (my:load-org-file "language_config.org")
    #+END_SRC
-** 必要に応じて bundle でインストール
-   #+BEGIN_SRC emacs-lisp
-     (unless (locate-library "skk-sticky")
-       (bundle ddskk
-         :type git
-         :url "https://anonscm.debian.org/git/collab-maint/ddskk.git"
-         :autoloads nil
-         :info "doc/skk.info"
-         :build `((,el-get-emacs "-batch" "-q" "-no-site-file" "-l" "SKK-MK" "-f" "SKK-MK-compile")
-                  (,el-get-emacs "-batch" "-q" "-no-site-file" "-l" "SKK-MK" "-f" "SKK-MK-compile-info")
-                  ("mv" "skk-setup.el.in" "skk-setup.el"))
-         ))
-   #+END_SRC
-** 設定等
-   org で設定を書くためのアレコレ
-   #+BEGIN_SRC emacs-lisp
-     ;; org で書かれた設定ファイルから elisp を抽出
-     (my:org-babel-tangle-and-compile-file
-      (concat my:user-emacs-config-directory "ddskk_config.org"))
-     ;; ddskk の設定ファイルは読み込み時に byte-compile する
-     (setq skk-byte-compile-init-file t)
-   #+END_SRC
-   実際の読み込み
-   #+BEGIN_SRC emacs-lisp
-     (require 'skk-leim nil 'noerror)
-     (setq default-input-method "japanese-skk")
-     (require 'skk-autoloads nil 'noerror)
-     (require 'skk-cus nil 'noerror)
-   #+END_SRC
-* [[file:frame_config.org][フォントとフレームの設定]]
-  #+BEGIN_SRC emacs-lisp
-  (my:load-org-file "frame_config.org")
-  #+END_SRC
-* [[file:mua_config.org][MUAの設定]]
-  MUA として Wanderlust を使っている.
-  #+BEGIN_SRC emacs-lisp
-    (when (and (locate-library "wl")
-               (file-exists-p (concat user-emacs-directory ".wl-use")))
-      (autoload 'wl "wl" "Wanderlust" t)
-      (autoload 'wl-other-frame "wl" "Wanderlust on new frame" t)
-      (autoload 'wl-draft "wl-draft" "Write draft with Wanderlust." t)
-      (if (boundp 'mail-user-agent)
-          (setq mail-user-agent 'wl-user-agent))
-      (if (boundp 'read-mail-command)
-          (setq read-mail-command 'wl))
-      (if (fboundp 'define-mail-user-agent)
-          (define-mail-user-agent
-            'wl-user-agent
-            'wl-user-agent-compose
-            'wl-draft-send
-            'wl-draft-kill
-            'mail-send-hook))
-      (setq elmo-msgdb-directory "~/Mail/elmo")
-      (my:org-babel-tangle-and-compile-file
-       (concat my:user-emacs-config-directory "wl_config.org"))
-      (setq wl-init-file
-            (concat my:user-emacs-config-directory "wl_config"))
-      )
-  #+END_SRC
-* [[http://d.hatena.ne.jp/mooz/20101003/p1][zlc.el で Emacs のミニバッファ補完 zsh ライクに]]
-  anything の候補搾り込みはあんまり好きではないので.
-  これは非常に便利です.
-  #+BEGIN_SRC emacs-lisp
-    (bundle! zlc :type github :pkgname "mooz/emacs-zlc"
-      (require 'zlc nil 'noerror)
-      (zlc-mode t)
-      (let ((map minibuffer-local-map))
-        ;; (define-key map (kbd "<backtab>") 'zlc-select-previous)
-        ;; (define-key map (kbd "S-<tab>")   'zlc-select-previous)
-        (define-key map (kbd "C-p")       'zlc-select-previous-vertical)
-        (define-key map (kbd "C-n")       'zlc-select-next-vertical)
-        (define-key map (kbd "C-b")       'zlc-select-previous)
-        (define-key map (kbd "C-f")       'zlc-select-next)
-        (define-key map (kbd "C-d")       'zlc-reset))
-      (setq zlc-select-completion-immediately nil)
-      )
-  #+END_SRC
-
-* [[http://d.hatena.ne.jp/tarao/20101011/1286804507][Yet another icompelete]]
-  zlc をさらに素敵にしてくれます.
-  #+BEGIN_SRC emacs-lisp
-    (bundle yaicomplete
-      :type http
-      :url "https://raw.github.com/tarao/elisp/master/yaicomplete.el"
-      :features "yaicomplete"
-      (custom-set-faces
-       '(yaicomplete-completion-suffix-face ((t nil))))
-      (yaicomplete-mode)
-      )
-  #+END_SRC
-* [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727][パスワード管理ツール id-manager.el]]
-  無いと途方に暮れるくらい, 依存しまくり.
-  インストールと設定は以下.
-  #+BEGIN_SRC emacs-lisp
-    (when (file-exists-p (concat (getenv "HOME") "/.gnupg/idm-db.gpg"))
-      (bundle id-manager :type github :pkgname "kiwanami/emacs-id-manager"
-        (require 'id-manager nil 'noerror)
-        (global-set-key (kbd "M-7") 'id-manager)
-        (setq idm-database-file
-              (expand-file-name
-               (concat (getenv "HOME") "/.gnupg/idm-db.gpg")))
-        (setq idm-clipboard-expire-time-sec 15)))
-  #+END_SRC
-* Footnote

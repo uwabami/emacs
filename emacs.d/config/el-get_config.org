@@ -22,30 +22,23 @@
   el-get の install 自体は =~/.emacs.d/init.el= ([[file:~/.emacs.d/EmacsBasic.html][解説]]) で行なっているので,
   ここでは実際のパッケージの install を記述しておきます.
   #+BEGIN_SRC emacs-lisp
-  (require 'el-get nil 'noerror)
+    (require 'el-get nil 'noerror)
+    ;; (locate-library "bundle")
+    ;;(require 'bundle-el)
   #+END_SRC
-* el-get recipes update from package.el
+* shell から環境変数を引き継ぐ: exec-path-from-shell
+  シェルで =DEBFULLNAME=, =DEBEMAIL= を設定しているので、
+  =use-full-name=, =user-mail-address= にそれを使います。
   #+BEGIN_SRC emacs-lisp
-    ;; package の置き場:  ~/.emacs.d/.elpa/<emacs-version>
-    (setq package-user-dir
-          (concat (file-name-as-directory user-emacs-directory)
-                  ".elpa/"
-                  (file-name-as-directory emacs-version)
-                  ))
+    (bundle! exec-path-from-shell
+             (exec-path-from-shell-copy-envs
+              '("http_proxy" "DEBFULLNAME" "DEBEMAIL"))
+             (setq user-full-name (concat (getenv "DEBFULLNAME")))
+             (setq user-mail-address (concat (getenv "DEBEMAIL"))))
   #+END_SRC
-* bundle-el
+* cp5022x
   #+BEGIN_SRC emacs-lisp
-    (setq bundle-init-directory
-          (concat (file-name-as-directory user-emacs-directory)
-                  ".bundle/init/"
-                  (file-name-as-directory emacs-version)
-                  ))
-    (add-to-list
-     'el-get-sources
-     '(:name bundle
-              :type github
-              :pkgname "tarao/bundle-el")
-       )
-    (el-get 'sync 'bundle)
-    (bundle "exec-path-from-shell")
+    ;; (add-to-list
+    ;;  'el-get-sources '(:name cp5022x :type github :pkgname "awasira/cp5022x-el"))
+    ;;(el-get 'sync 'cp5022x)
   #+END_SRC

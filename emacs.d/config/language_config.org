@@ -18,16 +18,6 @@
   ...え, そうなの?
 
   というわけで OS 依存の条件分岐だけを記述しています.
-* cp5022x
-  Emacs23 から内部が Unicode ベースになっています.
-  しかし文字コードの変換は GNU libc の iconv をベースにしているため,
-  環境によっては文字の変換がうまく行なえません.
-
-  そこで言語設定の前に =cp5022x.el= を読み込むことにしています.
-  というエントリで素晴しい解説を書いて下さっています.
-  #+BEGIN_SRC emacs-lisp
-    (bundle! cp5022x :type github :pkgname "awasira/cp5022x.el")
-  #+END_SRC
 * East Asian Ambiguos 対応
   CJK 以外の East Asian Ambiguos も2文字幅にするようにしています.
   #+BEGIN_SRC emacs-lisp

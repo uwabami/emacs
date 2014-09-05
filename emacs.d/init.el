@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2014-09-03 14:06:21$
+;; $Lastupdate: 2014-09-05 13:21:34$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -74,6 +74,8 @@
   (expand-file-name (concat user-emacs-directory "config/")))
 (defconst my:user-emacs-temporary-directory
   (expand-file-name (concat user-emacs-directory "tmp/")))
+(defconst my:user-emacs-package-directory
+  (expand-file-name (concat user-emacs-directory "packages/")))
 ;; -----------------------------------------------------------
 ;;; load-path 追加用の関数の定義
 ;;
@@ -94,37 +96,40 @@
 ;; で確認する.
 (add-to-load-path
  "config"                  ; 分割した設定群の置き場所.
- (concat ".el-get/" (file-name-as-directory emacs-version) "el-get")
+ (concat "packages/el-get/" (file-name-as-directory emacs-version) "el-get")
  "modules/org-mode/lisp"   ; org-mode
  )
 ;; -----------------------------------------------------------
-;;; install el-get/bundle
-;; set el-get dir: ~/.emacs.d/.el-get/<emacs-version>
+;;; install/configure - el-get,packages, bundle
+;; set el-get dir: ~/.emacs.d/packages/el-get/<emacs-version>
 (setq el-get-dir
-      (concat (file-name-as-directory user-emacs-directory)
-              ".el-get/"
+      (concat (file-name-as-directory my:user-emacs-package-directory)
+              "el-get/"
               (file-name-as-directory emacs-version)
               ))
 (unless (require 'el-get nil 'noerror)
   (with-current-buffer
       (url-retrieve-synchronously
-       "https://raw.github.com/dimitri/el-get/master/el-get-install.el")
+       "https://raw.githubusercontent.com/dimitri/el-get/master/el-get-install.el")
     (goto-char (point-max))
     (eval-print-last-sexp)))
 ;; recipe 置き場: ~/.emacs.d/shared/recipes/
-(add-to-list 
+(add-to-list
  'el-get-recipe-path
- (expand-file-name (concat my:user-emacs-share-directory "recipes/")))
+ (expand-file-name (concat my:user-emacs-package-directory "recipes/")))
 ;; verbose mode
 (setq el-get-verbose t)
 ;; proxy 環境下を考慮して github は https でアクセス
 (setq el-get-github-default-url-type 'https)
-;; always shallow clone: 動いていない?
+;; always shallow clone → 動いていない?
 (setq el-get-git-shallow-clone t)
-;; set bundle/init dir: ~/.emacs.d/.bundle/init/<emacs-version>
+;; set elpa dir: ~/.emacs.d/packages/elpa/
+(setq package-user-dir
+      (concat (file-name-as-directory my:user-emacs-package-directory) "elpa/"))
+;; set bundle-el dir: ~/.emacs.d/packages/bundle/init/<emacs-version>/
 (setq bundle-init-directory
-      (concat (file-name-as-directory user-emacs-directory)
-              ".bundle/init/"
+      (concat (file-name-as-directory my:user-emacs-package-directory)
+              "bundle/init/"
               (file-name-as-directory emacs-version)
               ))
 ;; install bundle-el

@@ -45,5 +45,6 @@ clean: conf-clean
 	rm -fr $(ELCFiles)
 	-@find . -name \-f | xargs rm -fr
 distclean: clean
-	rm -fr auto-save-list .elpa .el-get modules/skkdic
+	rm -fr auto-save-list modules/skkdic
+	rm -fr packages/elpa packages/el-get packages/bundle
 	rm -fr .*-stamp .*-use

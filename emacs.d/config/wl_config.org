@@ -30,8 +30,6 @@
    #+ATTR_HTML: with="50%"
    [[file:https:/raw.github.com/uwabami/rail/gh-pages/images/wanderlust_with_or_without_rail.png]]
    #+BEGIN_SRC emacs-lisp
-     (unless (locate-library "rail")
-       (bundle rail :type gthub :pkgname "uwabami/rail"))
      (require 'rail nil 'noerror)
      (setq rail-emulate-genjis t)
    #+END_SRC
@@ -44,11 +42,6 @@
    default mime charset: utf-8 に
    #+BEGIN_SRC emacs-lisp
      (setq wl-mime-charset 'utf-8)
-   #+END_SRC
-** (あれば) elscreen-wl を使う
-   #+BEGIN_SRC emacs-lisp
-     (when (locate-library "elscreen-wl")
-       (require 'elscreen-wl nil 'noerror))
    #+END_SRC
 ** emacs-w3m + SEMI の追加設定
    HTML メールを表示するための設定.
@@ -82,11 +75,10 @@
 ** google-contacts-wl
    GoogleContacts から Wanderlust の AddressBook へ変換する
    #+BEGIN_SRC emacs-lisp
-     (bundle! google-contacts-wl :type github :pkgname "uwabami/google-contacts-wl")
+     (require 'google-contacts-wl nil 'noerror)
    #+END_SRC
 ** offlineimap-el
    #+BEGIN_SRC emacs-lisp
-     (bundle! offlineimap)
      (setq offlineimap-command "offlineimap -u machineui -a Gmail -o -f INBOX")
      (setq offlineimap-mode-line-style 'symbol)
      (setq offlineimap-mode-line-symbol "imap")

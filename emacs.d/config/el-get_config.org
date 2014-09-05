@@ -27,9 +27,6 @@
        (:name elscreen
               :type github
               :pkgname "emacs-jp/elscreen")
-       (:name id-manager
-              :type github
-              :pkgname "kiwanami/emacs-id-manager")
        (:name zlc
               :type github
               :pkgname "mooz/emacs-zlc"
@@ -48,6 +45,7 @@
      my:el-get-packages
      '("el-get"
        "exec-path-from-shell"
+       "auto-complete"
        ))
   #+END_SRC
 * 環境依存するパッケージの定義
@@ -55,6 +53,20 @@
    #+BEGIN_SRC emacs-lisp
      (when emacs23-p
        (el-get 'sync '(cl-lib)))
+   #+END_SRC
+** id-manager
+   #+BEGIN_SRC emacs-lisp
+     (when (ignore-errors (file-exists-p (concat (getenv "HOME") "/.gnupg/idm-db.gpg")))
+       ;;  (bundle! id-manager :url "https://github.com/kiwanami/emacs-id-manager.git"
+       (setq el-get-sources
+             (append
+              el-get-sources
+              '(
+                (:name id-manager
+                       :type github
+                       :pkgname "kiwanami/emacs-id-manager")
+                )))
+       )
    #+END_SRC
 ** DDSKK
    #+BEGIN_SRC emacs-lisp

@@ -26,26 +26,26 @@
   #+END_SRC
 * theme
   #+BEGIN_SRC emacs-lisp
-    (defun my:terminal-init-screen ()
-      "Terminal initialization function for screen."
-      (load "term/xterm")
-      (xterm-register-default-colors)
-      (tty-set-up-initial-frame-faces))
-    (unless (display-graphic-p)
-      (my:terminal-init-screen))
-    (cond
-     ((>= emacs-major-version 24)
-      (bundle darkpastel :type github :pkgname "uwabami/darkpastel-theme"
-              (load-theme 'darkpastel t)))
-     (t
-      (bundle color-theme)
-      (bundle color-theme-darkpastel
-        :type github :pkgname "uwabami/color-theme-darkpastel"
-        :prepare (autoload 'color-theme-darkpastel "color-theme-darkpastel"
-                   "color-theme: darkpastel" t))
-      (color-theme-initialize)
-      (color-theme-darkpastel))
-     )
+    ;; (defun my:terminal-init-screen ()
+    ;;   "Terminal initialization function for screen."
+    ;;   (load "term/xterm")
+    ;;   (xterm-register-default-colors)
+    ;;   (tty-set-up-initial-frame-faces))
+    ;; (unless (display-graphic-p)
+    ;;   (my:terminal-init-screen))
+    ;; (cond
+    ;;  ((>= emacs-major-version 24)
+    ;;   (bundle darkpastel :type github :pkgname "uwabami/darkpastel-theme"
+    ;;           (load-theme 'darkpastel t)))
+    ;;  (t
+    ;;   (bundle color-theme)
+    ;;   (bundle color-theme-darkpastel
+    ;;     :type github :pkgname "uwabami/color-theme-darkpastel"
+    ;;     :prepare (autoload 'color-theme-darkpastel "color-theme-darkpastel"
+    ;;                "color-theme: darkpastel" t))
+    ;;   (color-theme-initialize)
+    ;;   (color-theme-darkpastel))
+    ;;  )
   #+END_SRC
 * Space や Tab に色付け
   whitespace-mode の方が良いのかもしれないけれど,

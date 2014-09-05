@@ -16,7 +16,7 @@
     (require 'el-get nil 'noerror)
   #+END_SRC
 * local recipe の定義
-  el-get で定義されていない recipe を定義します. 
+  el-get で定義されていない recipe を定義します.
   気がむいたら
   #+BEGIN_SRC emacs-lisp
     (setq
@@ -30,9 +30,15 @@
        (:name id-manager
               :type github
               :pkgname "kiwanami/emacs-id-manager")
+       (:name zlc
+              :type github
+              :pkgname "mooz/emacs-zlc"
+              :autloads nil
+              )
        (:name yaicomplete
               :type http
               :url "https://raw.githubusercontent.com/tarao/elisp/master/yaicomplete.el"
+              :autloads nil
               )
        ))
   #+END_SRC
@@ -42,10 +48,14 @@
      my:el-get-packages
      '("el-get"
        "exec-path-from-shell"
-       "zlc"
        ))
   #+END_SRC
 * 環境依存するパッケージの定義
+** emacs <= 23
+   #+BEGIN_SRC emacs-lisp
+     (when emacs23-p
+       (el-get 'sync '(cl-lib)))
+   #+END_SRC
 ** DDSKK
    #+BEGIN_SRC emacs-lisp
      (unless (locate-library "skk-sticky")
@@ -137,5 +147,5 @@
     (el-get 'sync my:el-get-packages)
   #+END_SRC
 * Footnotes
-  
+
 [fn:1] el-get: http://tapoueh.org/emacs/el-get.html

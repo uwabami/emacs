@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2014-09-05 13:21:34$
+;; $Lastupdate: 2014-09-05 16:55:47$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -126,16 +126,6 @@
 ;; set elpa dir: ~/.emacs.d/packages/elpa/
 (setq package-user-dir
       (concat (file-name-as-directory my:user-emacs-package-directory) "elpa/"))
-;; for emacs <= 23
-(when emacs23-p
-  (el-get 'sync '(package cl-lib)))
-;; 初回 sync
-(when (require 'el-get-elpa nil 'noerror)
-  (unless (file-exists-p (concat user-emacs-directory ".package-stamp"))
-    (progn
-      (el-get-elpa-build-local-recipes)
-      (shell-command (concat "touch " (concat user-emacs-directory ".package-stamp")))
-      )))
 ;; -----------------------------------------------------------
 ;;; org-babel
 ;;

@@ -17,7 +17,6 @@
   #+END_SRC
 * local recipe の定義
   el-get で定義されていない recipe を定義します.
-  気がむいたら
   #+BEGIN_SRC emacs-lisp
     (setq
      el-get-sources

@@ -19,6 +19,8 @@ bootstrap: .bootstrap-stamp
 	(cd modules/org-mode && \
 	  make compile EMACS="$(EMACS)" && \
 	  make autoloads EMACS="$(EMACS)" )
+	@echo "setup anything-config"
+	(cd modules/anything-config && make )
 	@echo "setup ddskkdic"
 	[ -d modules/skkdic ] || mkdir modules/skkdic
 	if [ ! -f modules/skkdic/SKK-JISYO.L ] ; then \

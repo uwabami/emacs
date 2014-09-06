@@ -182,3 +182,7 @@
     (when (locate-library "latexmk-auctex")
       (my:load-org-file "auctex_config.org"))
   #+END_SRC
+* [[file:anything_config.org][Anything]]
+  #+BEGIN_SRC emacs-lisp
+    (my:load-org-file "anything_config.org")
+  #+END_SRC

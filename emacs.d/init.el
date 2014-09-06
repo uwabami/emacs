@@ -97,6 +97,7 @@
 (add-to-load-path
  "config"                  ; 分割した設定群の置き場所.
  (concat "packages/el-get/" (file-name-as-directory emacs-version) "el-get")
+ "modules/anything-config" ; anything
  "modules/org-mode/lisp"   ; org-mode
  )
 ;; -----------------------------------------------------------

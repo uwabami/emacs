@@ -36,6 +36,11 @@
               :url "https://raw.githubusercontent.com/tarao/elisp/master/yaicomplete.el"
               :autloads nil
               )
+       (:name ox-jekyll
+              :type http
+              :url "https://raw.githubusercontent.com/yoshinari-nomura/org-octopress/master/ox-jekyll.el"
+              :prepare (add-to-list 'load-path default-directory)
+              )
        ))
   #+END_SRC
 * el-get で定義されているレシピから install するパッケージ

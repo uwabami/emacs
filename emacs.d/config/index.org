@@ -189,7 +189,8 @@
   #+END_SRC
 * muse-mode
   #+BEGIN_SRC emacs-lisp
-    (my:load-org-file "muse_config.org")
+    (when (file-exists-p (expand-file-name "~/Public"))
+      (my:load-org-file "muse_config.org"))
   #+END_SRC
 * メモ環境
   個々の設定はそれぞれ [[file:org-mode_config.org][org-modeの設定]], [[file:howm_config.org][howm の設定]] を参照の事.

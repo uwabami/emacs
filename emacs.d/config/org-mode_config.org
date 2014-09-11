@@ -6,7 +6,7 @@
 #+TITLE: org-modeの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-03-17 22:45:07
+#+DATE: 2014-09-11 15:29:12
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -151,9 +151,27 @@
    (setq bookmark-default-file
          (concat my:user-emacs-temporary-directory "bookmarks"))
    #+END_SRC
+* org-redmine
+  #+BEGIN_SRC emacs-lisp
+    (require 'org-redmine nil 'noerror)
+    (load (expand-file-name "~/ownCloud/org/redmine.gpg"))
+    (defun my:org-redmine-select-project()
+      (interactive)
+      (anything
+       `(((name . "Select Project")
+          (candidates . ,(mapcar 'car my:org-redmine-project-alist))
+          (volatile)
+          (action . (lambda (project-name)
+                      (progn
+                        (setq org-redmine-uri (cadr (assoc project-name my:org-redmine-project-alist)))
+                        (setq org-redmine-auth-api-key (caddr (assoc project-name my:org-redmine-project-alist)))
+                        (message (format "Redmine Project was changed to \"%s\"." project-name)))))))))
+    (setq org-redmine-template-header
+          "TODO <%u_date%> %s%")
+  #+END_SRC
 * MobileOrg
   #+BEGIN_SRC emacs-lisp
-    (setq org-mobile-directory "~/ownCluod/MobileOrg")
+    (setq org-mobile-directory (expand-file-name "~/ownCloud/MobileOrg"))
     (setq org-mobile-inbox-for-pull "~/ownCloud/org/mobile.org")
   #+END_SRC
 * メモ環境: Org-Capture
@@ -169,37 +187,44 @@
 ** カテゴリの追加
    メモに関しては =howm= で取るので, その設定など.
    #+BEGIN_SRC emacs-lisp
-   (setq org-capture-templates
-         `(
-           ("t" "Todo" entry
-            (file (concat org-directory "todo.org"))
-            "* TODO <%<%Y-%m-%d>> %?\n  %i\n  %a\n"
-            :prepend nil
-            :unnarrowed nil
-            :kill-buffer t
-            )
-           ("s" "Schedule" entry
-            (file (concat org-directory "schedule.org"))
-            "* <%<%Y-%m-%d>> %?\n  %i\n  %a\n"
-            :prepend nil
-            :unnarrowed nil
-            :kill-buffer t
-            )
-           ("m" "Memo" plain
-            (file (concat org-directory (format-time-string "%Y%m%d-%H%M%S.howm")))
-            "* MEMO <%<%Y-%m-%d>> %?\n   %i\n  %a\n\n"
-            :prepend t
-            :unnarrowed t
-            :kill-buffer t
-            )
-           ("d" "Diary" plain
-            (file (concat org-directory (format-time-string "%Y%m%d-%H%M%S.howm")))
-            "* DIARY <%<%Y-%m-%d>> %?\n  %i\n  %a\n\n"
-            :prepend t
-            :unnarrowed t
-            :kill-buffer t
-            )
-           ))
+     (setq org-capture-templates
+           `(
+             ("t" "Todo" entry
+              (file (concat org-directory "todo.org"))
+              "* TODO <%<%Y-%m-%d>> %?\n  %i\n  %a\n"
+              :prepend nil
+              :unnarrowed nil
+              :kill-buffer t
+              )
+             ("w" "Wait" entry
+              (file (concat org-directory "wait.org"))
+              "* WAIT <%<%Y-%m-%d>> %?\n  %i\n  %a\n"
+              :prepend nil
+              :unnarrowed nil
+              :kill-buffer t
+              )
+             ("s" "Someday" entry
+              (file (concat org-directory "someday.org"))
+              "* SOMEDAY <%<%Y-%m-%d>> %?\n  %i\n  %a\n"
+              :prepend nil
+              :unnarrowed nil
+              :kill-buffer t
+              )
+             ("m" "Memo" plain
+              (file (concat org-directory (format-time-string "%Y%m%d-%H%M%S.howm")))
+              "* MEMO <%<%Y-%m-%d>> %?\n   %i\n  %a\n\n"
+              :prepend t
+              :unnarrowed t
+              :kill-buffer t
+              )
+             ("d" "Diary" plain
+              (file (concat org-directory (format-time-string "%Y%m%d-%H%M%S.howm")))
+              "* DIARY <%<%Y-%m-%d>> %?\n  %i\n  %a\n\n"
+              :prepend t
+              :unnarrowed t
+              :kill-buffer t
+              )
+             ))
    #+END_SRC
 * LaTeX Export
   日本語LaTeXとして pLaTeX を使うための設定.
@@ -532,12 +557,15 @@
 * Babel
 ** 言語の追加
   #+BEGIN_SRC emacs-lisp
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((emacs-lisp . t)
-     (sh .t)
-     (ruby .t))
-   )
+    (org-babel-do-load-languages
+     'org-babel-load-languages
+     '(
+       (emacs-lisp . t)
+       (sh . t)
+       (ruby . t)
+       (ditaa . t)
+       )
+     )
   #+END_SRC
 ** 確認しない
    Project を batch で出力する時だけ nil にした方が良いかなぁ...

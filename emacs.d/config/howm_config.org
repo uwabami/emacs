@@ -6,7 +6,7 @@
 #+TITLE: howm の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-06-12 23:25:11
+#+DATE: 2014-09-11 21:05:31
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -45,6 +45,7 @@
 * 読み込み
   #+BEGIN_SRC emacs-lisp
     (require 'howm nil 'noerror)
+    (require 'elscreen-howm nil 'noerror)
   #+END_SRC
 * org-mode でメモを書くためにその2
   #+BEGIN_SRC emacs-lisp
@@ -52,6 +53,9 @@
       '(progn
         ;; \C-c \C-c は org に渡す
         (define-key howm-mode-map (kbd "C-c C-c") nil)
+        ;; メモを書いたら elscreen を kill
+        (define-key howm-mode-map (kbd "C-x C-z C-c")
+          'howm-save-and-kill-buffer/screen)
         ))
     ;; skk と併用するための設定(Dired-X に C-xC-j を奪われないように)
     (setq dired-bind-jump nil)
@@ -81,7 +85,7 @@
    ad hoc にどんどん増えていくなぁ...
    #+BEGIN_SRC emacs-lisp
      (setq howm-excluded-file-regexp
-           "/\\.#\\|[~#]$\\|\\.bak$\\|/CVS/\\|\\.doc\\|\\.pdf\\|\\.txt$\\|\\.html$\\|\\.tex$\\|\\.dvi$\\|\\.fdb_latexmk$\\|\\.ppt$\\|\\.xls$\\|\\.howm-menu$\\|.howm-keys$\\|\\.png$\\|\\.gif$\\|\\.tif$\\|\\.tiff$\\|\\.jpg$\\|\\.jpeg$\\|\\.el$\\|\\.aux$\\|\\.log$\\|Makefile\\|\\.txt$\\|EUC-UCS2\\|\\.fdb_latexmk$\\|latexmkrc")
+           "/\\.#\\|[~#]$\\|\\.bak$\\|/CVS/\\|\\.doc\\|\\.pdf\\|\\.txt$\\|\\.html$\\|\\.tex$\\|\\.dvi$\\|\\.fdb_latexmk$\\|\\.ppt$\\|\\.xls$\\|\\.howm-menu$\\|.howm-keys$\\|\\.png$\\|\\.gif$\\|\\.tif$\\|\\.tiff$\\|\\.jpg$\\|\\.jpeg$\\|\\.el$\\|\\.aux$\\|\\.log$\\|Makefile\\|\\.txt$\\|EUC-UCS2\\|\\.fdb_latexmk$\\|latexmkrc\\|\\.gpg$")
    #+END_SRC
 ** org-mode 連携用
     #+BEGIN_SRC emacs-lisp

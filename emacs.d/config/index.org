@@ -6,7 +6,7 @@
 #+TITLE: Emacsの設定 - 主に org ファイルの読み込み集
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-09-08 18:08:28
+#+DATE: 2014-09-10 20:44:14
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -34,6 +34,7 @@
      '("http_proxy" "DEBFULLNAME" "DEBEMAIL"))
     (setq user-full-name (concat (getenv "DEBFULLNAME")))
     (setq user-mail-address (concat (getenv "DEBEMAIL")))
+    (setenv "HTTPS_PROXY" (concat (getenv "http_proxy")))
   #+END_SRC
 * [[file:language_config.org][言語の設定]]
   Emacs23 から内部が Unicode ベースになっています.
@@ -186,6 +187,10 @@
   #+BEGIN_SRC emacs-lisp
     (my:load-org-file "anything_config.org")
   #+END_SRC
+* muse-mode
+  #+BEGIN_SRC emacs-lisp
+    (my:load-org-file "muse_config.org")
+  #+END_SRC
 * メモ環境
   個々の設定はそれぞれ [[file:org-mode_config.org][org-modeの設定]], [[file:howm_config.org][howm の設定]] を参照の事.
   メモ取りには Howm と =org-capture= を併用.
@@ -196,4 +201,32 @@
       (my:load-org-file "org-mode_config.org")
       (my:load-org-file "howm_config.org")
       )
+  #+END_SRC
+* ruby-mode
+  #+BEGIN_SRC emacs-lisp
+  (my:load-org-file "ruby-mode_config.org")
+  #+END_SRC
+* tDiary
+  #+BEGIN_SRC emacs-lisp
+    (when (file-exists-p (concat user-emacs-directory ".tdiary-use"))
+      (progn
+        (setq tdiary-init-file "~/ownCloud/tdiary/tdiary-mode.gpg")
+        (setq tdiary-browser-function 'browse-url)
+        (setq tdiary-style-mode 'rd-mode)
+        (setq tdiary-hour-offset 2)
+        (setq tdiary-text-save-p t)
+        (setq tdiary-text-suffix ".rd")
+        (autoload 'tdiary-mode "tdiary-mode" nil t)
+        (autoload 'tdiary-new "tdiary-mode" nil t)
+        (autoload 'tdiary-new-diary "tdiary-mode" nil t)
+        (autoload 'tdiary-replace "tdiary-mode" nil t)
+        )
+      )
+  #+END_SRC
+* [[file:lookup_config.org][lookup-el]]
+  =lookup= がインストールされていて, 辞書が存在する場合にだけ読み込む.
+  #+BEGIN_SRC emacs-lisp
+    (if (and (locate-library "lookup")
+             (file-exists-p "/usr/local/share/dict/lookup-enabled"))
+        (my:load-org-file "lookup_config.org"))
   #+END_SRC

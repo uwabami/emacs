@@ -6,7 +6,7 @@
 #+TITLE: muse-mode の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-04-29 15:11:58
+#+DATE: 2014-09-08 20:20:56
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -15,7 +15,7 @@
 
   いっそ全部 Org で書こうか, とか思案しますが「ページを辿る」ことが面倒でちょっと思案中.
   OrgCapture と組み合わせれば, 全部いけるのかもしれませんけれど.
-* インストールと読み込み
+* 読み込み
   #+BEGIN_SRC emacs-lisp
     (eval-and-compile
       (unless (locate-library "htmlize")

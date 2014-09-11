@@ -6,7 +6,7 @@
 #+TITLE: Wanderlust の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-06-13 02:00:56
+#+DATE: 2014-09-11 21:00:27
 #+SETUPFILE: ./export-config.org
 
 * Wanderlust の設定
@@ -42,6 +42,10 @@
    default mime charset: utf-8 に
    #+BEGIN_SRC emacs-lisp
      (setq wl-mime-charset 'utf-8)
+   #+END_SRC
+** elscreen-wl
+   #+BEGIN_SRC emacs-lisp
+   (require 'elscreen-wl nil 'noerror)
    #+END_SRC
 ** emacs-w3m + SEMI の追加設定
    HTML メールを表示するための設定.
@@ -736,20 +740,22 @@
 * mhc
   メールからスケジュールを import する
   #+BEGIN_SRC emacs-lisp
-    ;; (unless (locate-library "mhc")
-    ;;   (el-get 'sync '(mhc)))
-    ;; (autoload 'mhc-wl-setup "mhc-wl")
-    ;; (add-hook 'wl-init-hook 'mhc-wl-setup)
-    ;; (setq mhc-insert-overdue-todo t)
-    ;; (setq mhc-use-wide-scope 14)
-    ;; (setq mhc-base-folder "+schedule")
-    ;; (setq mhc-mail-path
-    ;;       (expand-file-name (concat (getenv "HOME") "/Mail")))
-    ;; (setq mhc-start-day-of-week 0)
-    ;; (setq mhc-category-face-alist
-    ;;       '(
-    ;;         ("Work"      . (bold "black"  nil))      ;; お仕事一般
-    ;;         ("Private"   . (nil  "tan"    nil))))    ;; プライベート
+    (when (locate-library "mhc")
+      (progn
+        (autoload 'mhc-wl-setup "mhc-wl")
+        (add-hook 'wl-init-hook 'mhc-wl-setup)
+        (setq mhc-insert-overdue-todo t)
+        (setq mhc-use-wide-scope 14)
+        (setq mhc-base-folder "+schedule")
+        (setq mhc-mail-path
+              (expand-file-name (concat (getenv "HOME") "/Mail")))
+        (setq mhc-start-day-of-week 0)
+        (setq mhc-category-face-alist
+              '(
+                ("Work"      . (bold "black"  nil))      ;; お仕事一般
+                ("Private"   . (nil  "tan"    nil))))    ;; プライベート
+        ))
+
   #+END_SRC
 * 検索
   imap の検索か maildir-utils の検索か?

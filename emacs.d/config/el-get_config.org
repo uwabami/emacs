@@ -6,7 +6,7 @@
 #+TITLE: [[file:el-get_config.org][el-get/bundle-el の install]]
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-09-11 22:17:35
+#+DATE: 2014-09-11 22:29:57
 #+SETUPFILE: ./export-config.org
 * 始めに
   [[http://tapoueh.org/emacs/el-get.html][el-get]] [fn:1] で必要なパッケージを追加インストールします.
@@ -198,8 +198,8 @@
    #+END_SRC
 ** muse
    #+BEGIN_SRC emacs-lisp
-     (unless (ignore-errors (and (locate-library "muse")
-                                 (el-get-executable-find "makeinfo")))
+     (when (ignore-errors (and (not (locate-library "muse"))
+                               (el-get-executable-find "makeinfo")))
        (setq my:el-get-packages
              (append
               my:el-get-packages

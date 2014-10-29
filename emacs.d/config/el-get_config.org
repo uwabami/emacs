@@ -3,10 +3,10 @@
 # Copyright(C) Youhei SASAKI All rights reserved.
 # License: Expat
 #
-#+TITLE: [[file:el-get_config.org][el-get/bundle-el の install]]
+#+TITLE: [[file:el-get_config.org][el-get での package の install]]
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-09-11 23:02:24
+#+DATE: 2014-10-26 04:49:25
 #+SETUPFILE: ./export-config.org
 * 始めに
   [[http://tapoueh.org/emacs/el-get.html][el-get]] [fn:1] で必要なパッケージを追加インストールします.
@@ -27,25 +27,6 @@
        (:name elscreen
               :type github
               :pkgname "emacs-jp/elscreen")
-       (:name zlc
-              :type github
-              :pkgname "mooz/emacs-zlc"
-              :autloads nil
-              )
-       (:name yaicomplete
-              :type http
-              :url "https://raw.githubusercontent.com/tarao/elisp/master/yaicomplete.el"
-              :autloads nil
-              )
-       (:name ox-jekyll
-              :type http
-              :url "https://raw.githubusercontent.com/yoshinari-nomura/org-octopress/master/ox-jekyll.el"
-              :prepare (add-to-list 'load-path default-directory)
-              )
-       (:name text-adjust
-              :type github
-              :pkgname "uwabami/text-adjust.el"
-              )
        ))
   #+END_SRC
 * el-get で定義されているレシピから install するパッケージ
@@ -54,47 +35,9 @@
      my:el-get-packages
      '("el-get"
        "exec-path-from-shell"
-       "auto-complete"
-       "yaml-mode"
        ))
   #+END_SRC
 * 環境依存するパッケージの定義
-** emacs <= 23
-   #+BEGIN_SRC emacs-lisp
-     (cond
-      ((<= emacs-major-version 23)
-       (progn
-         (setq el-get-sources
-               (append
-                el-get-sources
-                '(
-                  (:name color-theme-darkpastel
-                         :type github
-                         :pkgname "uwabami/color-theme-darkpastel"
-                         :prepare (autoload 'color-theme-darkpastel "color-theme-darkpastel"
-                                    "color-theme: darkpastel" t)
-                         )
-                  )))
-         (setq my:el-get-packages
-               (append
-                my:el-get-packages
-                '("color-theme")))
-         )
-       )
-      (t
-       (setq el-get-sources
-             (append
-              el-get-sources
-              '(
-                (:name darkpastel-theme
-                       :type github
-                       :pkgname "uwabami/darkpastel-theme"
-                       :prepare (add-to-list 'custom-theme-load-path default-directory)
-                       )
-                )))
-       )
-      )
-   #+END_SRC
 ** id-manager
    #+BEGIN_SRC emacs-lisp
      (when (ignore-errors (file-exists-p (concat (getenv "HOME") "/.gnupg/idm-db.gpg")))
@@ -127,25 +70,6 @@
                        ))))
        )
    #+END_SRC
-** TeX 関連
-   #+BEGIN_SRC emacs-lisp
-     (when (and (and (ignore-errors (el-get-executable-find "platex"))
-                     (ignore-errors (el-get-executable-find "latexmk")))
-                (locate-library "auctex"))
-       (progn
-         (setq el-get-sources
-               (append
-                el-get-sources
-                '(
-                  (:name auctex-latexmk
-                         :type github
-                         :pkgname "tom-tan/auctex-latexmk"))))
-         (setq my:el-get-packages
-               (append
-                my:el-get-packages
-                '("zotelo")))
-         ))
-   #+END_SRC
 ** MUA:: Wanderlust 関連
    #+BEGIN_SRC emacs-lisp
      (when (and (locate-library "wl")
@@ -157,18 +81,19 @@
                 '(
                   (:name google-contacts-wl
                          :type github
+                         :depends google-contacts
                          :pkgname "uwabami/google-contacts-wl"
                          )
                   (:name elscreen-wl
                          :type http
                          :url "https://raw.githubusercontent.com/knu/elscreen/master/elscreen-wl.el"
                          )
-                  (:name mhc
-                         :type github
-                         :pkgname "yoshinari-nomura/mhc"
-                         :build `(("make" "-C" "emacs"))
-                         :prepare (add-to-list 'load-path (concat default-directory "emacs"))
-                         )
+                  ;; (:name mhc
+                  ;;        :type github
+                  ;;        :pkgname "yoshinari-nomura/mhc"
+                  ;;        :depends (calfw)
+                  ;;        :prepare (add-to-list 'load-path (concat default-directory "emacs"))
+                  ;;        )
                   )))
          (unless (locate-library "c-sig")
            (setq el-get-sources
@@ -199,64 +124,6 @@
                 '("offlineimap")
                 ))
          ))
-   #+END_SRC
-** muse
-   #+BEGIN_SRC emacs-lisp
-     (when (ignore-errors (and (not (locate-library "muse"))
-                               (el-get-executable-find "makeinfo")))
-       (setq my:el-get-packages
-             (append
-              my:el-get-packages
-              '("muse")))
-       )
-   #+END_SRC
-** howm
-   #+BEGIN_SRC emacs-lisp
-     (when (and (file-exists-p (expand-file-name "~/ownCloud"))
-                (locate-library "howm"))
-       (setq el-get-sources
-             (append
-              el-get-sources
-              '(
-                (:name elscreen-howm
-                       :type http
-                       :url "https://raw.githubusercontent.com/knu/elscreen/master/elscreen-howm.el"
-                       )
-                ))))
-   #+END_SRC
-** org-redmine
-   #+BEGIN_SRC emacs-lisp
-     (when (ignore-errors (file-exists-p (concat user-emacs-directory ".redmine-use")))
-       (setq el-get-sources
-             (append
-              el-get-sources
-              '(
-                (:name org-redmine
-                       :type github
-                       :pkgname "gongo/org-redmine"
-                       )
-                ))))
-   #+END_SRC
-** tdiary-mode
-   #+BEGIN_SRC emacs-lisp
-     (when (ignore-errors (file-exists-p (concat user-emacs-directory ".tdiary-use")))
-       (setq el-get-sources
-             (append
-              el-get-sources
-              '(
-                (:name tdiary-mode
-                       :type http
-                       :url "https://raw2.github.com/tdiary/tdiary-contrib/master/util/tdiary-mode/tdiary-mode.el"
-                       :depends http-el
-                       :prepare (add-to-list 'load-path default-directory)
-                       )
-                (:name http-el
-                       :type http
-                       :url "https://raw2.github.com/tdiary/tdiary-contrib/master/util/tdiary-mode/http.el"
-                       :prepare (add-to-list 'load-path default-directory)
-                       )
-                ))))
-
    #+END_SRC
 * 実際のインストール作業
   #+BEGIN_SRC emacs-lisp

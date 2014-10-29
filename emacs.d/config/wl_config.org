@@ -6,7 +6,7 @@
 #+TITLE: Wanderlust の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-09-11 21:00:27
+#+DATE: 2014-10-03 01:49:13
 #+SETUPFILE: ./export-config.org
 
 * Wanderlust の設定
@@ -83,7 +83,7 @@
    #+END_SRC
 ** offlineimap-el
    #+BEGIN_SRC emacs-lisp
-     (setq offlineimap-command "offlineimap -u machineui -a Gmail -o -f INBOX")
+     (setq offlineimap-command "offlineimap -u machineui -o -f INBOX")
      (setq offlineimap-mode-line-style 'symbol)
      (setq offlineimap-mode-line-symbol "imap")
      (setq offlineimap-enable-mode-line-p
@@ -96,7 +96,7 @@
                wl-message-mode
                wl-draft-mode
                )))
-     (global-set-key [f1] 'offlineimap)
+     ;; (global-set-key [f1] 'offlineimap)
    #+END_SRC
 * ssl.elの代わりにopentlsを使う
   ついで(あれば) =/etc/ssl/certs/ca-ceritficats.crt= で証明書を検証.
@@ -487,10 +487,38 @@
      ;;         (".*" . hide)
      ;;         ))
    #+END_SRC
-** sort 順
+** sort 順 [0/1]
    #+BEGIN_SRC emacs-lisp
-     (add-to-list 'wl-summary-sort-specs 'rdate)
+     (defun wl-summary-overview-entity-compare-by-reply-date (a b)
+       "Compare entity A and B by latest date of replies."
+       (let ((fx
+              #'(lambda (x)
+                  (let* ((number (elmo-message-entity-number x))
+                         (list (cons number
+                                     (wl-thread-entity-get-descendant
+                                      (wl-thread-get-entity number))))
+                         max time)
+                    (while list
+                      (when (condition-case nil
+                                (elmo-time-less-p
+                                 max
+                                 (setq time
+                                       (elmo-message-entity-field
+                                        (elmo-message-entity
+                                         wl-summary-buffer-elmo-folder (car list))
+                                        'date)))
+                              (error nil))
+                        (setq max time))
+                      (setq list (cdr list)))
+                    max))))
+         (condition-case nil
+             (elmo-time-less-p (funcall fx a) (funcall fx b))
+           (error nil))))
+     (add-to-list 'wl-summary-sort-specs 'reply-date)
+     (setq wl-summary-default-sort-spec 'reply-date)
+     ;; (add-to-list 'wl-summary-sort-specs 'rdate)
    #+END_SRC
+   - [ ] ファイルの番号をそのままソートする方が高速だが, それで幸せになれるか?
 * 振り分け設定
   =$= 以外を振り分け対象に
   #+BEGIN_SRC emacs-lisp
@@ -740,22 +768,21 @@
 * mhc
   メールからスケジュールを import する
   #+BEGIN_SRC emacs-lisp
-    (when (locate-library "mhc")
-      (progn
-        (autoload 'mhc-wl-setup "mhc-wl")
-        (add-hook 'wl-init-hook 'mhc-wl-setup)
-        (setq mhc-insert-overdue-todo t)
-        (setq mhc-use-wide-scope 14)
-        (setq mhc-base-folder "+schedule")
-        (setq mhc-mail-path
-              (expand-file-name (concat (getenv "HOME") "/Mail")))
-        (setq mhc-start-day-of-week 0)
-        (setq mhc-category-face-alist
-              '(
-                ("Work"      . (bold "black"  nil))      ;; お仕事一般
-                ("Private"   . (nil  "tan"    nil))))    ;; プライベート
-        ))
-
+    ;; (autoload 'mhc-mua-setup "mhc-mua")
+    ;; (add-hook 'wl-init-hook 'mhc-mua-setup)
+    ;; (setq mhc-summary-language 'japanese)
+    ;; (setq mhc-start-day-of-week 0)
+    ;; (setq mhc-use-wide-scope nil)
+    ;; (setq mhc-summary-use-cw nil)
+    ;; (mhc-mua-setup)
+    ;; (setq mhc-default-category nil)
+    ;; (setq mhc-category-face-alist
+    ;;       '(
+    ;;         ("Work"      . (nil  "#f6f3e8"  nil))      ;; お仕事一般
+    ;;         ("Kusm"      . (nil  "#f6f3e8"  nil))         ;; 講議
+    ;;         ("Private"   . (nil  "#f6f3e8"    nil))      ;; プライベート
+    ;;         )
+    ;;       )
   #+END_SRC
 * 検索
   imap の検索か maildir-utils の検索か?

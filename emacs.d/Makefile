@@ -2,16 +2,16 @@
 __SRC__		:= $(wildcard *.el)
 ELFiles		:= $(__SRC__:%v.el=)
 ELCFiles	:= $(ELFiles:%.el=%.elc)
-CURDIR		:= $(shell pwd)
 
 EMACS	?= emacs
 
+%.elc: %.el
+	$(EMACS) -l init.el -batch -f batch-byte-compile $<
+
 all: bootstrap $(ELCFiles)
-	-@rm -f config/*.el ac-comphist.dat
 	-@find . -name \-f | xargs rm -fr
 bootstrap: .bootstrap-stamp
 .bootstrap-stamp: .modules-stamp
-	touch $@
 .modules-stamp: .permission-stamp
 	git submodule init
 	git submodule update
@@ -19,8 +19,6 @@ bootstrap: .bootstrap-stamp
 	(cd modules/org-mode && \
 	  make compile EMACS="$(EMACS)" && \
 	  make autoloads EMACS="$(EMACS)" )
-	@echo "setup anything-config"
-	(cd modules/anything-config && make )
 	@echo "setup ddskkdic"
 	[ -d modules/skkdic ] || mkdir modules/skkdic
 	if [ ! -f modules/skkdic/SKK-JISYO.L ] ; then \
@@ -35,17 +33,25 @@ bootstrap: .bootstrap-stamp
 	chmod 700 tmp
 	touch $@
 
-%.elc: %.el
-	$(EMACS) -l $(HOME)/.emacs.d/init \
-	  -batch -f batch-byte-compile $(CURDIR)/$<
+clean: conf-clean
+	-@find . -name \-f | xargs rm -fr
+	rm -fr $(ELCFiles)
+conf-clean:
+	(cd config && rm -fr *.el *.elc)
+
+distclean: clean
+	( cd modules/org-mode && $(MAKE) clean )
+	rm -fr auto-save-list modules/skkdic
+	rm -fr packages/elpa packages/el-get
+	rm -fr .*-stamp .*-use
 
 recompile: clean all
-conf-clean:
-	rm -f config/*.elc config/*.el
-clean: conf-clean
-	rm -fr $(ELCFiles)
-	-@find . -name \-f | xargs rm -fr
-distclean: clean
-	rm -fr auto-save-list modules/skkdic
-	rm -fr packages/elpa packages/el-get packages/bundle
-	rm -fr .*-stamp .*-use
+
+# conf-clean:
+# 	rm -f config/*.elc config/*.el
+# clean: conf-clean
+# 	rm -fr $(ELCFiles)
+# distclean: clean
+# 	rm -fr auto-save-list modules/skkdic
+# 	rm -fr packages/elpa packages/el-get packages/bundle
+# 	rm -fr .*-stamp .*-use

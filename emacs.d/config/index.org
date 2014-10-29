@@ -6,28 +6,23 @@
 #+TITLE: Emacsの設定 - 主に org ファイルの読み込み集
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-09-10 20:44:14
+#+DATE: 2014-10-26 04:47:18
 #+SETUPFILE: ./export-config.org
 
 * 始めに
   =~/.emacs= → =~/.emacs.d/init.el= ([[http://www.gfd-dennou.org/member/uwabami/cc-env/EmacsBasic.html][解説]]) ときて
   このファイルで設定ファイルの読み込みを行なっています.
   具体的な設定例は, 個々のファイルを参照のこと
-* Stop Tramp [0/1]
-  滅多に使わない/場所によっては読み込み時間がかかりすぎるので明示的に無効化.
-  #+BEGIN_SRC emacs-lisp
-    (if (fboundp 'tramp-version)
-        (setq tramp-mode nil))
-  #+END_SRC
-  - [ ] そのうち調べる
 * [[file:el-get_config.org][el-get での package install]]
   #+BEGIN_SRC emacs-lisp
   (my:load-org-file "el-get_config.org")
   #+END_SRC
 * exec-path-from-shell: 環境変数の取得
   Terminal 上で Emacs を起動する場合は問題無いですが
-  GUI 環境で Emacs を開くと環境変数が読み込まれない事がしばしばあって難儀していました.
-  exec-path-from-shell はこれを解決してくれる小粋な
+  GUI 環境で Emacs を開くと環境変数が読み込まれない事がしばしばあって
+  難儀していました.
+  =exec-path-from-shell= によって shell で設定した環境変数を読み込むことで,
+  これを解決します.
   #+BEGIN_SRC emacs-lisp
     (require 'exec-path-from-shell nil 'noerror)
     (exec-path-from-shell-copy-envs
@@ -38,9 +33,9 @@
   #+END_SRC
 * [[file:language_config.org][言語の設定]]
   Emacs23 から内部が Unicode ベースになっています.
+
   しかし文字コードの変換は GNU libc の iconv をベースにしているため,
   環境によっては文字の変換がうまく行なえません.
-
   そこで言語設定
   前に =cp5022x.el= をインストールすることにしています.
   #+BEGIN_SRC emacs-lisp
@@ -48,9 +43,11 @@
     (my:load-org-file "language_config.org")
   #+END_SRC
 * [[file:basic_config.org][バージョン依存しない(はず)の雑多な設定]]
+  GUI 周りの調整等の一般的な設定など
   #+BEGIN_SRC emacs-lisp
-    (my:load-org-file "basic_config.org")
+   (my:load-org-file "basic_config.org")
   #+END_SRC
+
 * 日本語入力: [[http://openlab.ring.gr.jp/skk/ddskk-ja.html][Daredevil SKK (DDSKK)]]
   DDSKK をメインで使用中. 無いと途方に暮れる.
   ちなみにGTKが有効になっていると =gtk-immodule= なんかと衝突するので
@@ -62,7 +59,6 @@
   #+END_EXAMPLE
   =skk-user-directory= を設定しているので, 辞書や id なんかは
   =~/.emacs.d/tmp/skk= 以下に置かれるが,
-
   実際の設定は [[file:ddskk_config.org][ddskkの設定]] で行なっているため, 設定ファイルの位置変更を変更する
   #+BEGIN_SRC emacs-lisp
     (setq skk-user-directory
@@ -78,47 +74,12 @@
     ;; ddskk の設定ファイルは読み込み時に byte-compile する
     (setq skk-byte-compile-init-file t)
   #+END_SRC
-  実際の読み込み
+  実際の読み込み:
   #+BEGIN_SRC emacs-lisp
     (require 'skk-leim nil 'noerror)
     (setq default-input-method "japanese-skk")
     (require 'skk-autoloads nil 'noerror)
     (require 'skk-cus nil 'noerror)
-  #+END_SRC
-* [[file:elscreen_config.org][Elscreenの設定]]
-  Emacs >=24 向けに APEL 非依存版が [[https://github.com/emacs-jp/elscreen][emacs-jp/elscreen]] で公開されていますので,
-  これを導入しておきます.
-  #+BEGIN_SRC emacs-lisp
-    (my:load-org-file "elscreen_config.org")
-  #+END_SRC
-* [[file:frame_config.org][フォントとフレームの設定]]
-  #+BEGIN_SRC emacs-lisp
-    (my:load-org-file "frame_config.org")
-  #+END_SRC
-* [[http://d.hatena.ne.jp/mooz/20101003/p1][zlc.el で Emacs のミニバッファ補完 zsh ライクに]] [fn:2]
-  anything の候補搾り込みはあんまり好きではないので.
-  これは非常に便利です.
-  #+BEGIN_SRC emacs-lisp
-    (when (require 'zlc nil 'noerror)
-      (zlc-mode t)
-      (let ((map minibuffer-local-map))
-        ;; (define-key map (kbd "<backtab>") 'zlc-select-previous)
-        ;; (define-key map (kbd "S-<tab>")   'zlc-select-previous)
-        (define-key map (kbd "C-p")       'zlc-select-previous-vertical)
-        (define-key map (kbd "C-n")       'zlc-select-next-vertical)
-        (define-key map (kbd "C-b")       'zlc-select-previous)
-        (define-key map (kbd "C-f")       'zlc-select-next)
-        (define-key map (kbd "C-d")       'zlc-reset))
-      (setq zlc-select-completion-immediately nil)
-      )
-  #+END_SRC
-* [[http://d.hatena.ne.jp/tarao/20101011/1286804507][Yet another icompelete]] [fn:3]
-  zlc をさらに素敵にしてくれます.
-  #+BEGIN_SRC emacs-lisp
-    (require 'yaicomplete nil 'noerror)
-    (custom-set-faces
-     '(yaicomplete-completion-suffix-face ((t nil))))
-    (yaicomplete-mode)
   #+END_SRC
 * [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727][パスワード管理ツール id-manager.el]]
   無いと途方に暮れるくらい, 依存しまくり.
@@ -137,6 +98,19 @@
   id-manager で取得したパスワードも
   =xsel= で X Clipboard に渡すように.
   → [[file:basic_config.org][バージョン依存しない(はず)の雑多な設定]]
+* [[file:elscreen_config.org][Elscreenの設定]]
+  install 先ですが,
+  Emacs >=24 向けに APEL 非依存版が [[https://github.com/emacs-jp/elscreen][emacs-jp/elscreen]] で公開されていますので,
+  これを導入しておきます.
+  #+BEGIN_SRC emacs-lisp
+    (my:load-org-file "elscreen_config.org")
+  #+END_SRC
+* [[file:migemo_config.org][C/Migemo]]
+  #+BEGIN_SRC emacs-lisp
+    (when (and (executable-find "cmigemo")
+               (locate-library "migemo"))
+      (my:load-org-file "migemo_config.org"))
+  #+END_SRC
 * [[file:mua_config.org][MUAの設定]]
   MUA として Wanderlust を使っている.
   #+BEGIN_SRC emacs-lisp
@@ -162,72 +136,4 @@
       (setq wl-init-file
             (concat my:user-emacs-config-directory "wl_config"))
       )
-  #+END_SRC
-* [[file:migemo_config.org][C/Migemo]]
-  #+BEGIN_SRC emacs-lisp
-    (when (and (executable-find "cmigemo")
-               (locate-library "migemo"))
-      (my:load-org-file "migemo_config.org"))
-  #+END_SRC
-
-* [[file:auto-complete_config.org][AutoComplete]]
-  #+BEGIN_SRC emacs-lisp
-    (my:load-org-file "auto-complete_config.org")
-  #+END_SRC
-* TeX関連: [[file:auctex_config.org][AUCTeX の設定]]
-  [[http://www.gnu.org/software/auctex/][AUCTeX]] に LaTeXmk 用のコマンドを追加する.
-  [[https://github.com/tom-tan/auctex-latexmk][auctex-latexmk]] を愛用中.
-  =pLaTeX= を使う場合には文字コードオプションも追加してくれる.
-  実際の設定は [[file:auctex_config.org][AUCTeXの設定]] で.
-  #+BEGIN_SRC emacs-lisp
-    (when (locate-library "auctex-latexmk")
-      (my:load-org-file "auctex_config.org"))
-  #+END_SRC
-* [[file:anything_config.org][Anything]]
-  #+BEGIN_SRC emacs-lisp
-    (my:load-org-file "anything_config.org")
-  #+END_SRC
-* muse-mode
-  #+BEGIN_SRC emacs-lisp
-    (when (file-exists-p (expand-file-name "~/Public"))
-      (my:load-org-file "muse_config.org"))
-  #+END_SRC
-* メモ環境
-  個々の設定はそれぞれ [[file:org-mode_config.org][org-modeの設定]], [[file:howm_config.org][howm の設定]] を参照の事.
-  メモ取りには Howm と =org-capture= を併用.
-  保存先は Dropbox なので, Dropbox が無い時には load しない.
-  #+BEGIN_SRC emacs-lisp
-    (when (and (file-exists-p (expand-file-name "~/ownCloud"))
-               (locate-library "howm"))
-      (my:load-org-file "org-mode_config.org")
-      (my:load-org-file "howm_config.org")
-      )
-  #+END_SRC
-* ruby-mode
-  #+BEGIN_SRC emacs-lisp
-  (my:load-org-file "ruby-mode_config.org")
-  #+END_SRC
-* tDiary
-  #+BEGIN_SRC emacs-lisp
-    (when (file-exists-p (concat user-emacs-directory ".tdiary-use"))
-      (progn
-        (setq tdiary-init-file "~/ownCloud/tdiary/tdiary-mode.gpg")
-        (setq tdiary-browser-function 'browse-url)
-        (setq tdiary-style-mode 'rd-mode)
-        (setq tdiary-hour-offset 2)
-        (setq tdiary-text-save-p t)
-        (setq tdiary-text-suffix ".rd")
-        (autoload 'tdiary-mode "tdiary-mode" nil t)
-        (autoload 'tdiary-new "tdiary-mode" nil t)
-        (autoload 'tdiary-new-diary "tdiary-mode" nil t)
-        (autoload 'tdiary-replace "tdiary-mode" nil t)
-        )
-      )
-  #+END_SRC
-* [[file:lookup_config.org][lookup-el]]
-  =lookup= がインストールされていて, 辞書が存在する場合にだけ読み込む.
-  #+BEGIN_SRC emacs-lisp
-    (if (and (locate-library "lookup")
-             (file-exists-p "/usr/local/share/dict/lookup-enabled"))
-        (my:load-org-file "lookup_config.org"))
   #+END_SRC

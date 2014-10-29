@@ -3,7 +3,7 @@
 # Copyright(C) Youhei SASAKI All rights reserved.
 # License: Expat
 #
-#+TITLE: 言語の設定
+#+TITLE: [[file:language_config.org][言語の設定]]
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
 #+DATE: 2013-07-08 19:34:24
@@ -18,6 +18,13 @@
   ...え, そうなの?
 
   というわけで OS 依存の条件分岐だけを記述しています.
+
+  ちなみに
+  =prefer-coding-system= を設定すると
+  =default-file-name-coding-system= が設定されます.
+  優先順位は以下の通り:
+  1. =file-name-coding-system= を見る
+  2. =file-name-coding-system=  が nil なら =default-file-name-coding-system= を利用
 * East Asian Ambiguos 対応
   CJK 以外の East Asian Ambiguos も2文字幅にするようにしています.
   #+BEGIN_SRC emacs-lisp
@@ -69,8 +76,8 @@
   Mac と Linux では同じ Unicode でも正規化が異なります
   (具体的には Mac のファイルシステムである HFS+ では Unicode の正規化が異なります).
   Unicode の正規化と Mac OS X 特有の事情については
-   - [[http://homepage1.nifty.com/nomenclator/unicode/normalization.htm][Unicode正規化とは]] [fn:4]
-   - [[http://www.sakito.com/2010/05/mac-os-x-normalization.html][Mac OS X におけるファイル名に関するメモ(NFC, NFD等)]] [fn:5]
+   - [[http://homepage1.nifty.com/nomenclator/unicode/normalization.htm][Unicode正規化とは]] [fn:3]
+   - [[http://www.sakito.com/2010/05/mac-os-x-normalization.html][Mac OS X におけるファイル名に関するメモ(NFC, NFD等)]] [fn:4]
   等が参考になるでしょう.
 
   日本語のファイル名を扱うことは滅多にないものの,
@@ -79,47 +86,31 @@
   Windows の場合はファイル名などは cp932 にしているものの,
   最近 Windows 使っていないので良く知りません.
   #+BEGIN_SRC emacs-lisp
-    (cond
-     (darwin-p
-      (require 'ucs-normalize)
-      (setq file-name-coding-system 'utf-8-hfs)
-      (setq locale-coding-system 'utf-8-hfs)
-      ;; ついでにキーバインド: Ctrl を Mac から奪い取る
-      (setq mac-pass-control-to-system t)
-      ;; Cmd と Option を逆にする
-      (setq ns-command-modifier 'meta)
-      (setq ns-alternate-modifier 'super)
-      (global-set-key [ns-drag-file] 'ns-find-file))
-     (nt-p
-      (setq file-name-coding-system 'cp932)
-      (setq locale-coding-system 'cp932))
-     (t
-      (setq file-name-coding-system 'utf-8)
-      (setq locale-coding-system 'utf-8))
-    )
+        (cond
+         ((eq system-type 'darwin)
+          (require 'ucs-normalize)
+          (setq file-name-coding-system 'utf-8-hfs)
+          (setq locale-coding-system 'utf-8-hfs)
+          ;; ついでにキーバインド: Ctrl を Mac から奪い取る
+          (setq mac-pass-control-to-system t)
+          ;; Cmd と Option を逆にする
+          (setq ns-command-modifier 'meta)
+          (setq ns-alternate-modifier 'super)
+          (global-set-key [ns-drag-file] 'ns-find-file))
+         ((eq system-type 'windows-nt)
+          (setq file-name-coding-system 'cp932)
+          (setq locale-coding-system 'cp932))
+         (t
+          (setq file-name-coding-system 'utf-8)
+          (setq locale-coding-system 'utf-8))
+         )
   #+END_SRC
-* 補足
-  =prefer-coding-system= を設定すると
-  =default-file-name-coding-system= が設定される.
-  優先順位は
-  1. =file-name-coding-system= を見る
-  2. =file-name-coding-system=  が nil なら =default-file-name-coding-system= を利用
-  となっている。
-
-  =darwin-p= と =nt-p= は =~/.emacs.d/init.el= ([[http://www.gfd-dennou.org/member/uwabami/cc-env/EmacsBasic.html][解説]])
-  で設定した環境判定用の以下の変数:
-  #+BEGIN_EXAMPLE
-  (defvar darwin-p (eq system-type 'darwin))      ; Mac OS X 用
-  (defvar nt-p (eq system-type 'windows-nt))      ; Windows 用
-  #+END_EXAMPLE
 * Footnotes
 
 [fn:1] Emacs講座 -第7回- 文字コード / マスタカの ChangeLog メモ:  [[http://masutaka.net/chalow/2009-07-09-1.html]]
 
 [fn:2] mule-ja-2009:09813 Re: language-environment v.s. default-coding-system: [[http://www.m17n.org/mlarchive/mule-ja/201106/msg00005.html]]
 
-[fn:3] Emacs23 日本語向け設定例: [[http://nijino.homelinux.net/emacs/emacs23-ja.html]]
+[fn:3] Unicode正規化とは: [[http://homepage1.nifty.com/nomenclator/unicode/normalization.htm]]
 
-[fn:4] Unicode正規化とは: [[http://homepage1.nifty.com/nomenclator/unicode/normalization.htm]]
-
-[fn:5] Mac OS X におけるファイル名に関するメモ(NFC, NFD等): [[http://www.sakito.com/2010/05/mac-os-x-normalization.html]]
+[fn:4] Mac OS X におけるファイル名に関するメモ(NFC, NFD等): [[http://www.sakito.com/2010/05/mac-os-x-normalization.html]]

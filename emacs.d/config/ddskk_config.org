@@ -6,7 +6,7 @@
 #+TITLE: DDSKKの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2013-07-27 22:39:28
+#+DATE: 2014-10-27 17:22:07
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -56,11 +56,11 @@
     ;; インジケータを左端に.
     (setq skk-status-indicator 'left)
     ;; skk モードの表示のカスタマイズ
-    (setq skk-latin-mode-string "[aa]")
-    (setq skk-hiragana-mode-string "[jj]")
-    (setq skk-katakana-mode-string "[qq]")
-    (setq skk-jisx0208-latin-mode-string "[AA]")
-    (setq skk-jisx0201-mode-string "[QQ]")
+    (setq skk-latin-mode-string "[_A]")
+    (setq skk-hiragana-mode-string "[あ]")
+    (setq skk-katakana-mode-string "[ア]")
+    (setq skk-jisx0208-latin-mode-string "[Ａ]")
+    (setq skk-jisx0201-mode-string "[_ｱ]")
     (setq skk-indicator-use-cursor-color nil)
     (setq skk-show-inline 'vertical)
     ;; (when skk-show-inline
@@ -135,7 +135,6 @@
     (add-hook 'isearch-mode-hook 'skk-isearch-mode-cleanup)
   #+END_SRC
 * 辞書の設定
-  一応ホスト名でふりわけている.
   追加している辞書の一覧は
   - [[http://www.chibutsu.org/jisho/][地球物理辞書]]
   - [[http://www.geocities.jp/living_with_plasma/tanudic.html][天文・天体物理用語の漢字変換用辞書]]
@@ -173,7 +172,6 @@
         end
       end
     }
-
   #+END_SRC
   他にも quote する必要あるような気もするけれど, それは気がついた時に.
   #+BEGIN_SRC emacs-lisp

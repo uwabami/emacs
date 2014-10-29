@@ -3,10 +3,10 @@
 # Copyright(C) Youhei SASAKI All rights reserved.
 # License: Expat
 #
-#+TITLE: バージョン依存しない(はず)の雑多な設定
+#+TITLE: [[file:basic_config.org][バージョン依存しない(はず)の雑多な設定]]
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-06-14 14:24:27
+#+DATE: 2014-10-26 16:59:27
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -14,15 +14,9 @@
 
   ちなみに =line-number-mode= など「有効無効をtoggleする関数」は,
   慣習的に =0= 以下の数字を指定すると明示的に無効化できる.
-* 常に $HOME から開始
-  以前 Meadow を使っていた時に, Cygwin の =$HOME= から始めないと
-  ファイルを開くのが大変だったので, 指定しています.
-  #+BEGIN_SRC emacs-lisp
-  (cd "~/")
-  #+END_SRC
 * キーバインドの設定
   既に手癖になってしまっているので...
-  鬼軍曹.el [fn:1] とかで強制した方が良いのかも, とか, ごく偶に思いますが,
+  鬼軍曹.el [fn:1] とかで強制した方が良いのかも, とか, ごく偶に思いますが.
   =[home]= と =[end]= は無いと途方に暮れます.
   #+BEGIN_SRC emacs-lisp
     (global-set-key (kbd "C-h")     'backward-delete-char)
@@ -35,45 +29,36 @@
     (global-set-key (kbd "<home>")  'beginning-of-buffer)
     (global-set-key (kbd "<end>")   'end-of-buffer)
   #+END_SRC
-* 行番号, 桁番号の表示
+* 表示関連
+** linum-mode
   必要に応じて =linum-mode= を有効にするので,
-  通常はモードラインに行番号や桁番号を表示しないように
+  通常はモードラインに行番号や桁番号を表示しないようする.
+  ついでに =linum-mode= を有効にした場合の桁表示を 5 桁に.
   #+BEGIN_SRC emacs-lisp
     (line-number-mode 0)
     (column-number-mode 0)
-  #+END_SRC
-  =linum-mode= を有効にした場合の桁表示を 5 桁に.
-  #+BEGIN_SRC emacs-lisp
     (setq linum-format "%5d ")
   #+END_SRC
-* フレーム, ツールバーなど
-  ツールバーは使用しない.
-  #+BEGIN_SRC emacs-lisp
-    (if (fboundp 'tool-bar-mode)
-        (tool-bar-mode -1))
-  #+END_SRC
-  スクロールバーは使用しない.
-  #+BEGIN_SRC emacs-lisp
-    (if (fboundp 'set-scroll-bar-mode)
-        (set-scroll-bar-mode -1))
-  #+END_SRC
-  メニューバーを表示しない.
-  #+BEGIN_SRC emacs-lisp
-    (if (fboundp 'menu-bar-mode)
-        (menu-bar-mode -1))
-  #+END_SRC
-  bell-mode 使用しない
-  #+BEGIN_SRC emacs-lisp
-    (setq ring-bell-function 'ignore)
-  #+END_SRC
-  可能ならば \C-x f で画像を表示
-  #+BEGIN_SRC emacs-lisp
-    (when (display-graphic-p)
-      '(progn
-         (setq auto-image-file-mode t)
-         (setq auto-image-file-mode nil)))
-  #+END_SRC
-* 編集/表示関連
+** フレーム, ツールバー, visual-bell などは基本非表示に
+   大抵の場合ターミナル内で =-nw= として起動するので, メニュー触ったことないし...
+   #+BEGIN_SRC emacs-lisp
+     (if (fboundp 'tool-bar-mode)
+         (tool-bar-mode -1))
+     (if (fboundp 'scroll-bar-mode)
+         (scroll-bar-mode -1))
+     (if (fboundp 'menu-bar-mode)
+         (menu-bar-mode -1))
+     (setq ring-bell-function 'ignore)
+    #+END_SRC
+
+** モードラインのファイル名にディレクトリも表示:
+   =uniquify= を使用
+   #+BEGIN_SRC emacs-lisp
+     (require 'uniquify)
+     (setq uniquify-buffer-name-style 'post-forward-angle-brackets)
+     (setq uniquify-min-dir-content 1)
+   #+END_SRC
+* 編集関連
   yes or no を y or n に
   #+BEGIN_SRC emacs-lisp
      (fset 'yes-or-no-p 'y-or-n-p)
@@ -88,8 +73,8 @@
   #+END_SRC
   対応する括弧を色付け
   #+BEGIN_SRC emacs-lisp
-    ;; (show-paren-mode 1)                 ; 有効化
-    ;; (setq show-paren-delay 0)           ; 初期値は 0.125
+    (show-paren-mode 1)                 ; 有効化
+    (setq show-paren-delay 0)           ; 初期値は 0.125
     ;; (setq show-paren-style 'expression) ; 括弧内も強調表示
     ;; (set-face-attribute 'show-paren-match-face nil
     ;;                     :background "#02023c" :foreground nil
@@ -109,8 +94,7 @@
      (setq paragraph-start '"^\\([ 　・○<\t\n\f]\\|(?[0-9a-zA-Z]+)\\)")
      (setq-default auto-fill-mode nil)
   #+END_SRC
-  長い行の表示.
-  デフォルトは折り返し無しで =\C-c M-l= で toggle.
+  長い行の表示: デフォルトは折り返し無しで =\C-c M-l= で toggle.
   #+BEGIN_SRC emacs-lisp
     (set-default 'truncate-lines t)
     (define-key global-map (kbd "C-c M-l") 'toggle-truncate-lines)
@@ -118,11 +102,6 @@
   バッファ終端で newline を入れない
   #+BEGIN_SRC emacs-lisp
      (setq next-line-add-newlines nil)
-  #+END_SRC
-  保存時に最終行に一行追加→とりあえず使わないことに
-  #+BEGIN_SRC emacs-lisp
-     ;; (setq require-final-newline t)
-     (put 'set-goal-column 'disabled nil)
   #+END_SRC
   symlink は常においかける
   #+BEGIN_SRC emacs-lisp
@@ -132,39 +111,7 @@
   #+BEGIN_SRC emacs-lisp
     (global-auto-revert-mode 1)
   #+END_SRC
-  X とのクリップボードの共存.
-  - kill-ring を PRIMARY,CLIPBOARD 双方にコピー
-  - yank で CLIPBOARD からペースト
-  - [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727][id-manager]] で管理しているパスワードを X CLIPBOARD へ
-  #+BEGIN_SRC emacs-lisp
-    (set-clipboard-coding-system 'compound-text)
-    (defun my:cut-function (text &optional rest)
-      "Cut region, Sync X PRIMARY using xsel"
-      (interactive)
-      (let* ((process-connection-type nil)
-             (proc (start-process "xsel" "*Messages*" "xsel" "-p" "-i")))
-        (process-send-string proc text)
-        (process-send-eof proc)))
-    (defun my:paste-function ()
-      "YANK from X PRIMARY using xsel"
-      (interactive)
-      (shell-command-to-string "xsel -p -o"))
-    (cond
-     (window-system
-      (progn
-        (setq x-select-enable-clipboard t)
-        (global-set-key (kbd "C-y") 'x-clipboard-yank)))
-     ((and (executable-find "xsel")
-           (file-exists-p (concat user-emacs-directory ".xsel-use")))
-      (setq interprogram-paste-function 'my:paste-function)
-      (setq interprogram-cut-function 'my:cut-function)
-      (setq idm-copy-action 'my:cut-function)
-      (global-set-key (kbd "M-w") 'kill-ring-save)
-      (global-set-key (kbd "M-y") 'yank)
-      )
-     )
-  #+END_SRC
-* 空白の表示: whitespace-mode
+** 空白の表示: whitespace-mode
   #+BEGIN_SRC emacs-lisp
     (require 'whitespace)
     (setq whitespace-style
@@ -192,35 +139,18 @@
     ;;                     ;; :background my/bg-c
     ;;                     :foreground "DeepPink"
     ;;                     :underline t)
-    (set-face-attribute 'whitespace-tab nil
-                        ;; :background my/bg-color
-                        :foreground "LightSkyBlue"
-                        :underline t)
-    (set-face-attribute 'whitespace-space nil
-                        ;; :background my/bg-color
-                        :foreground "GreenYellow"
-                        :weight 'bold)
+    ;; (set-face-attribute 'whitespace-tab nil
+    ;;                     ;; :background my/bg-color
+    ;;                     :foreground "LightSkyBlue"
+    ;;                     :underline t)
+    ;; (set-face-attribute 'whitespace-space nil
+    ;;                     ;; :background my/bg-color
+    ;;                     :foreground "GreenYellow"
+    ;;                     :weight 'bold)
     ;; (set-face-attribute 'whitespace-empty nil
     ;;                     )
-
   #+END_SRC
-* 行末の無駄な空白/改行を削除する
-  元ネタ: (Emacs Advent Calendar jp:2010)[fn:4].
-  ただし, RD や Markdown だと空白行に意味があったりするので,
-  必要に応じて拡張子で判断して外している.
-  #+BEGIN_SRC emacs-lisp
-    (defvar my:delete-trailing-whitespace-exclude-suffix
-      (list "\\.rd$" "\\.md$" "\\.rbt$" "\\.rab$"))
-    (defun my:delete-trailing-whitespace ()
-      (interactive)
-      (cond
-       ((equal nil
-               (loop for pattern in my:delete-trailing-whitespace-exclude-suffix
-                     thereis (string-match pattern buffer-file-name)))
-        (delete-trailing-whitespace))))
-    (add-hook 'before-save-hook 'my:delete-trailing-whitespace)
-  #+END_SRC
-* バックアップとauto-saveの作成/位置の変更
+** バックアップとauto-saveの作成/位置の変更
   =~/.emacs.d/init.el= にて =my:emacs-backup-dir= を設定して,
   =~/.emacs.d/tmp/= 以下に
   backup と auto-save ファイルを集約する
@@ -242,19 +172,23 @@
      (setq delete-old-versions t)
      (setq delete-auto-save-files t)
   #+END_SRC
-* recentf
-  最近使ったファイル履歴の保管
-  #+begin_src emacs-lisp
-    (add-hook 'after-init-hook 'recentf-mode)
-    (setq recentf-max-saved-items 2000)
-    (setq recentf-save-file
-          (expand-file-name
-           (concat my:user-emacs-temporary-directory "recentf")))
-    (setq recentf-auto-cleanup 'never)
-    (run-with-idle-timer 300 t 'recentf-save-list)
-    (run-with-idle-timer 600 t 'recentf-cleanup)
-  #+end_src
-* 空になったファイルを尋ねずに自動削除
+** 行末の無駄な空白/改行を削除する
+  元ネタ: (Emacs Advent Calendar jp:2010)[fn:2].
+  ただし, RD や Markdown だと空白行に意味があったりするので,
+  必要に応じて拡張子で判断して外している.
+  #+BEGIN_SRC emacs-lisp
+    (defvar my:delete-trailing-whitespace-exclude-suffix
+      (list "\\.rd$" "\\.md$" "\\.rbt$" "\\.rab$"))
+    (defun my:delete-trailing-whitespace ()
+      (interactive)
+      (cond
+       ((equal nil
+               (loop for pattern in my:delete-trailing-whitespace-exclude-suffix
+                     thereis (string-match pattern buffer-file-name)))
+        (delete-trailing-whitespace))))
+    (add-hook 'before-save-hook 'my:delete-trailing-whitespace)
+  #+END_SRC
+** 空になったファイルを尋ねずに自動削除
   ゴミが残らないし, 地味に便利.
   #+BEGIN_SRC emacs-lisp
      (if (not (memq 'delete-file-if-no-contents after-save-hook))
@@ -267,7 +201,7 @@
          (delete-file
           (buffer-file-name (current-buffer)))))
   #+END_SRC
-* scratch を殺さない. 消したら再生成
+** scratch を殺さない. 消したら再生成
   ...元ネタがどこだったのか忘れてしまった...
   #+BEGIN_SRC emacs-lisp
      (defun my:make-scratch (&optional arg)
@@ -302,14 +236,7 @@
                   (unless (member "*scratch*" (my:buffer-name-list))
                     (my:make-scratch 1)))))
   #+END_SRC
-* モードラインのファイル名にディレクトリも表示:
-  =uniquify= を使用
-  #+BEGIN_SRC emacs-lisp
-    (require 'uniquify)
-    (setq uniquify-buffer-name-style 'post-forward-angle-brackets)
-    (setq uniquify-min-dir-content 1)
-  #+END_SRC
-* saveplace で前回の修正位置を記憶する.
+** =saveplace= で前回の修正位置を記憶する.
   記憶の保存先は =~/.emacs.d/tmp/emacs-places= に変更.
   #+BEGIN_SRC emacs-lisp
      (require 'saveplace)
@@ -318,7 +245,8 @@
            (convert-standard-filename
             (concat my:user-emacs-temporary-directory "emacs-places")))
   #+END_SRC
-* timestamp の自動更新
+** timestamp の自動更新
+   いろいろ衝突したので =＄Lastupdate: 2= (＄は半角) があったら timestamp を更新することに
   #+BEGIN_SRC emacs-lisp
     (require 'time-stamp)
     (setq time-stamp-active t)
@@ -327,6 +255,29 @@
     (setq time-stamp-end "\\$")
     (setq time-stamp-format "%03y-%02m-%02d %02H:%02M:%02S")
     (add-hook 'before-save-hook 'time-stamp)
+  #+END_SRC
+** recentf
+  最近使ったファイル履歴の保管
+  #+begin_src emacs-lisp
+    (add-hook 'after-init-hook 'recentf-mode)
+    (setq recentf-max-saved-items 2000)
+    (setq recentf-save-file
+          (expand-file-name
+           (concat my:user-emacs-temporary-directory "recentf")))
+    (setq recentf-auto-cleanup 'never)
+    ;; (run-with-idle-timer 300 t 'recentf-save-list)
+    ;; (run-with-idle-timer 600 t 'recentf-cleanup)
+  #+end_src
+** Undo/Redo
+  そのうち undohist と undo-tree を試そうと思っているのですが,
+  今のところ, 特に弄ってません.
+  #+BEGIN_SRC emacs-lisp
+    (setq undo-limit 160000) ; 無限にしたいができないので, 倍に
+    (setq undo-strong-limit 240000)
+    (savehist-mode 1)        ; ミニバッファの履歴を保存しリストア
+    (setq savehist-file
+          (concat my:user-emacs-temporary-directory "history"))
+    (setq history-length t)  ; t で無制限
   #+END_SRC
 * emacs-server
   既に =emacs-server= が起動しているならば何もせず,
@@ -338,7 +289,7 @@
       (server-start))
   #+END_SRC
 * browse-url
-  Firefox → emacs-w3m → w3 の順で探索
+  Firefox → emacs-w3m → w3 の順で探索. eww もそのうち試す.
   #+BEGIN_SRC emacs-lisp
     (require 'browse-url)
     (cond
@@ -352,28 +303,16 @@
      )
     (global-set-key (kbd "C-c C-j") 'browse-url-at-point)
   #+END_SRC
-* Undo/Redo
-  そのうち undohist と undo-tree を試そうと思っているのですが,
-  今のところ, 特に弄ってません.
-  #+BEGIN_SRC emacs-lisp
-    (setq undo-limit 160000) ; 無限にしたいができないので, 倍に
-    (setq undo-strong-limit 240000)
-    (savehist-mode 1)        ; ミニバッファの履歴を保存しリストア
-    (setq savehist-file
-          (concat my:user-emacs-temporary-directory "history"))
-    (setq history-length t)  ; t で無制限
-  #+END_SRC
 * EPA: EasyPG Assistant
   GPG 暗号化されたファイルを透過的に扱える素敵 elisp.
-  Emacs23 から標準に入っているので, emacs >=23 以上で有効に.
+  Emacs23 から標準に入っている.
   #+BEGIN_SRC emacs-lisp
-    (unless oldemacs-p
-      (require 'epa-file)
-      (setq epa-file-enable)
-      (setq epa-file-cache-passphrase-for-symmetric-encryption t))
+    (require 'epa-file)
+    (setq epa-file-enable)
+    (setq epa-file-cache-passphrase-for-symmetric-encryption t)
   #+END_SRC
 * Footnotes
 
-[fn:1] 鬼軍曹.el: [[https://github.com/k1LoW/emacs-drill-instructor/wiki/]]
+[fn:1] 鬼軍曹.el: [[https://github.com/k1LoW/emacs-drill-instructor/wiki]]
 
-[fn:4] 無駄な行末の空白を削除する(Emacs Advent Calendar jp:2010): [[http://d.hatena.ne.jp/tototoshi/20101202/1291289625]]
+[fn:2] 無駄な行末の空白を削除する(Emacs Advent Calendar jp:2010): [[http://d.hatena.ne.jp/tototoshi/20101202/1291289625]]

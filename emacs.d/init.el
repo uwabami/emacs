@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2014-09-05 22:13:23$
+;; $Lastupdate: 2014-10-28 02:12:34$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -25,6 +25,23 @@
 ;;
 ;;; Code:
 ;; -----------------------------------------------------------
+;;; ディレクトリ構成の決定
+;;
+;; emacs -l init.el のように起動すると load-file-name に init.el のパス
+;; が入るので, user-emacs-directory をそのディレクトリに設定する
+;;
+(when load-file-name
+  (setq user-emacs-directory (file-name-directory load-file-name)))
+(add-to-list 'load-path user-emacs-directory)
+(defconst my:user-emacs-share-directory
+  (expand-file-name (concat user-emacs-directory "share/")))
+(defconst my:user-emacs-config-directory
+  (expand-file-name (concat user-emacs-directory "config/")))
+(defconst my:user-emacs-temporary-directory
+  (expand-file-name (concat user-emacs-directory "tmp/")))
+(defconst my:user-emacs-package-directory
+  (expand-file-name (concat user-emacs-directory "packages/")))
+;; -----------------------------------------------------------
 ;;; byte-compile 関連
 ;;
 (setq debug-on-error t)
@@ -47,40 +64,11 @@
         make-local
         ))
 ;; -----------------------------------------------------------
-;;; Emacs の種類/バージョンを判別するための変数を定義
-;;
-;; 元々は以下のURLにあった関数. 必要な物だけ抜粋
-;; @see http://github.com/elim/dotemacs/blob/master/init.el
-(defvar oldemacs-p (<= emacs-major-version 22)) ; 22 以下
-(defvar emacs23-p (<= emacs-major-version 23))  ; 23 以下
-(defvar emacs24-p (>= emacs-major-version 24))  ; 24 以上
-(defvar darwin-p (eq system-type 'darwin))      ; Mac OS X 用
-(defvar nt-p (eq system-type 'windows-nt))      ; Windows 用
-;; -----------------------------------------------------------
-;;; ディレクトリ構成を決めるための変数
-;;
-;; Emacs 22 以下用に user-emacs-directory を定義する.
-;; 他にも以下の変数を定義
-;; - my:user-emacs-config-directory    → ~/.emacs.d/config
-;; - my:user-emacs-temporary-directory → ~/.emacs.d/tmp
-;; - my:user-emacs-share-directory     → ~/.emacs.d/share
-;;
-(when oldemacs-p
-  (defvar user-emacs-directory
-    (expand-file-name (concat (getenv "HOME") "/.emacs.d/"))))
-(defconst my:user-emacs-share-directory
-  (expand-file-name (concat user-emacs-directory "share/")))
-(defconst my:user-emacs-config-directory
-  (expand-file-name (concat user-emacs-directory "config/")))
-(defconst my:user-emacs-temporary-directory
-  (expand-file-name (concat user-emacs-directory "tmp/")))
-(defconst my:user-emacs-package-directory
-  (expand-file-name (concat user-emacs-directory "packages/")))
-;; -----------------------------------------------------------
 ;;; load-path 追加用の関数の定義
 ;;
 ;; 最後に add したものが先頭にくるようになっている. 読み込みたくないファ
 ;; イルは, 先頭に "." や "_" をつけると良い.
+;;
 (defun add-to-load-path (&rest paths)
   (let (path)
     (dolist (path paths paths)
@@ -89,19 +77,21 @@
         (add-to-list 'load-path default-directory)
         (if (fboundp 'normal-top-level-add-subdirs-to-loadpath)
             (normal-top-level-add-subdirs-to-load-path))))))
+;; -----------------------------------------------------------
 ;;; load-path の設定
-;;
 ;; load-path の優先順位が気になる場合には
 ;;      M-x list-load-path-shadows
 ;; で確認する.
+;;
 (add-to-load-path
- "config"                  ; 分割した設定群の置き場所.
+ ;; "config"                  ; 分割した設定群の置き場所.
  (concat "packages/el-get/" (file-name-as-directory emacs-version) "el-get")
- "modules/anything-config" ; anything
  "modules/org-mode/lisp"   ; org-mode
+ ;; "modules/anything-config" ; anything
  )
 ;; -----------------------------------------------------------
 ;;; install/configure - el-get and package.el
+;;
 ;; set el-get dir: ~/.emacs.d/packages/el-get/<emacs-version>
 (setq el-get-dir
       (concat (file-name-as-directory my:user-emacs-package-directory)
@@ -123,20 +113,19 @@
 ;; proxy 環境下を考慮して github は https でアクセス
 (setq el-get-github-default-url-type 'https)
 ;; always shallow clone → 動いていない?
-(setq el-get-git-shallow-clone t)
+;; (setq el-get-git-shallow-clone t)
 ;; set elpa dir: ~/.emacs.d/packages/elpa/
 (setq package-user-dir
       (concat (file-name-as-directory my:user-emacs-package-directory) "elpa/"))
-;; cl-lib の導入
+;; Emacs 23 向けに cl-lib, package の導入
 (when (<= emacs-major-version 23)
-  (el-get 'sync '(cl-lib)))
+  (el-get 'sync '(cl-lib package)))
 ;; -----------------------------------------------------------
 ;;; org-babel
-;;
 ;; Emacs の設定はorg-mode で記述する.
-;;
 ;; @see Emacsの設定ファイルをorgで書く:
 ;;      http://uwabami.junkhub.org/log/20111213.html#p01
+;;
 (require 'org)
 ;; -----------------------------------------------------------
 ;;; ob-tangle より自分用に幾つか関数を設定
@@ -144,6 +133,7 @@
 ;; my:org-babel-tangle-and-compile-file
 ;; 指定された org ファイルから emacs-lisp を export してbyte-compile
 ;; する. Make から呼ぶ事も想定しているのでこの段階では load はしない.
+;;
 (defun my:org-babel-tangle-and-compile-file (file)
   "export emacs-lisp and byte-compile from org files (not load).
    originally ob-tangle.el"
@@ -165,6 +155,7 @@
 ;;; my:org-babel-load-file
 ;;
 ;; my:org-babel-tangle-and-comile-file してから load する
+;;
 (defun my:org-babel-load-file (file)
   "load after byte-compile"
   (interactive "fFile to load: ")
@@ -175,6 +166,7 @@
 ;;
 ;; my:org-babel-load-file の際にディレクトリ名を
 ;; ~/.emacs.d/config/ に決め打ち
+;;
 (defun my:load-org-file (file)
   "my:user-emacs-config-directory 以下から my:org-babel-load-file"
   (my:org-babel-load-file
@@ -184,17 +176,15 @@
 ;;
 (my:load-org-file "index.org")
 ;; -----------------------------------------------------------
-;;; calculate bootup time/ スピード狂に捧ぐ.;
-;
-;; 目標: 3000ms 圏内
+;;; calculate bootup time/ スピード狂に捧ぐ.
 ;;
-(unless oldemacs-p
-  (defun message-startup-time ()
-    (message
-     "Emacs loaded in %dms"
-     (/ (- (+ (third after-init-time) (* 1000000 (second after-init-time)))
-           (+ (third before-init-time) (* 1000000 (second before-init-time))))
-        1000)))
+;; 目標: 3000ms 圏内 -> 最近は daemon mode で使用することが多いので意味が無い?
+;;
+(defun message-startup-time ()
+  (message
+   "Emacs loaded in %dms"
+   (/ (- (+ (third after-init-time) (* 1000000 (second after-init-time)))
+         (+ (third before-init-time) (* 1000000 (second before-init-time))))
+      1000))
   (add-hook 'after-init-hook 'message-startup-time))
 ;;; init.el ends here
-

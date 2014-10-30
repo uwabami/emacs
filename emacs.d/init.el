@@ -63,13 +63,6 @@
         make-local
         ))
 ;; -----------------------------------------------------------
-;;; GnuTLS の設定: SSLv3 を無効化
-;;
-(eval-and-compile
-  (require 'gnutls nil t)
-  (setq gnutls-algorithm-priority "NORMAL:-VERS-SSL3.0")
-  )
-;; -----------------------------------------------------------
 ;;; load-path 追加用の関数の定義
 ;;
 ;; 最後に add したものが先頭にくるようになっている. 読み込みたくないファ

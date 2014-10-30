@@ -85,8 +85,9 @@
                          :pkgname "uwabami/google-contacts-wl"
                          )
                   (:name elscreen-wl
-                         :type http
-                         :url "https://raw.githubusercontent.com/knu/elscreen/master/elscreen-wl.el"
+                         :type github
+                         :depends elscreen
+                         :pkgname "syohex/emacs-elscreen-wl"
                          )
                   ;; (:name mhc
                   ;;        :type github

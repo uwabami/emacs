@@ -137,3 +137,10 @@
             (concat my:user-emacs-config-directory "wl_config"))
       )
   #+END_SRC
+
+
+* テスト
+  #+BEGIN_SRC emacs-lisp
+    (setq gnutls-algorithm-priority "NORMAL:-VERS-SSL3.0")
+    (setq gnutls-log-level 5)
+  #+END_SRC

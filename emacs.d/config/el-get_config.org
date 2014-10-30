@@ -16,17 +16,42 @@
     (require 'el-get nil 'noerror)
   #+END_SRC
 * local recipe の定義
-  el-get で定義されていない recipe を定義します.
+  el-get で定義されていない recipe を定義したり, 既存の recipe を上書きしたり.
+  とりあえず =package.el= から =marmalade= と =SC= を削除する(使わないし, 繋らないこと多いし).
   #+BEGIN_SRC emacs-lisp
     (setq
      el-get-sources
      '(
        (:name cp5022x
               :type github
+              :shallow t
               :pkgname "awasira/cp5022x.el")
        (:name elscreen
               :type github
+              :shallow t
               :pkgname "emacs-jp/elscreen")
+       (:name package
+              :type http
+              :url "http://repo.or.cz/w/emacs.git/blob_plain/1a0a666f941c99882093d7bd08ced15033bc3f0c:/lisp/emacs-lisp/package.el"
+              :shallow t
+              :features package
+              :post-init
+              (progn
+                (let ((old-package-user-dir
+                       (expand-file-name
+                        (convert-standard-filename
+                         (concat (file-name-as-directory
+                                  default-directory)
+                                 "elpa")))))
+                  (when (file-directory-p old-package-user-dir)
+                    (add-to-list 'package-directory-list old-package-user-dir)))
+                (setq package-archives (bound-and-true-p package-archives))
+                (mapc
+                 (lambda (pa)
+                   (add-to-list 'package-archives pa 'append))
+                 '(("ELPA" . "http://tromey.com/elpa/")
+                   ("melpa" . "http://melpa.org/packages/")
+                   ("gnu" . "http://elpa.gnu.org/packages/")))))
        ))
   #+END_SRC
 * el-get で定義されているレシピから install するパッケージ
@@ -38,6 +63,14 @@
        ))
   #+END_SRC
 * 環境依存するパッケージの定義
+** Emacs <= 23
+   #+BEGIN_SRC emacs-lisp
+     (setq my:el-get-packages
+           (append
+            my:el-get-packages
+            '("cl-lib")
+            ))
+   #+END_SRC
 ** id-manager
    #+BEGIN_SRC emacs-lisp
      (when (ignore-errors (file-exists-p (concat (getenv "HOME") "/.gnupg/idm-db.gpg")))

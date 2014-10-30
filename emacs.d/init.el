@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2014-10-28 02:12:34$
+;; $Lastupdate: 2014-10-30 14:11:22$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -32,7 +32,6 @@
 ;;
 (when load-file-name
   (setq user-emacs-directory (file-name-directory load-file-name)))
-(add-to-list 'load-path user-emacs-directory)
 (defconst my:user-emacs-share-directory
   (expand-file-name (concat user-emacs-directory "share/")))
 (defconst my:user-emacs-config-directory
@@ -63,6 +62,13 @@
         interactive-only
         make-local
         ))
+;; -----------------------------------------------------------
+;;; GnuTLS の設定: SSLv3 を無効化
+;;
+(eval-and-compile
+  (require 'gnutls nil t)
+  (setq gnutls-algorithm-priority "NORMAL:-VERS-SSL3.0")
+  )
 ;; -----------------------------------------------------------
 ;;; load-path 追加用の関数の定義
 ;;
@@ -117,9 +123,6 @@
 ;; set elpa dir: ~/.emacs.d/packages/elpa/
 (setq package-user-dir
       (concat (file-name-as-directory my:user-emacs-package-directory) "elpa/"))
-;; Emacs 23 向けに cl-lib, package の導入
-(when (<= emacs-major-version 23)
-  (el-get 'sync '(cl-lib package)))
 ;; -----------------------------------------------------------
 ;;; org-babel
 ;; Emacs の設定はorg-mode で記述する.

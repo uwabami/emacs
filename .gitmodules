@@ -1,6 +1,3 @@
 [submodule "emacs.d/modules/org-mode"]
 	path = emacs.d/modules/org-mode
 	url = git://orgmode.org/org-mode.git
-[submodule "emacs.d/modules/anything-config"]
-	path = emacs.d/modules/anything-config
-	url = http://repo.or.cz/anything-config.git

@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2014-10-30 14:11:22$
+;; $Lastupdate: 2014-11-04 22:55:47$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -44,6 +44,9 @@
 ;;; byte-compile 関連
 ;;
 (setq debug-on-error t)
+;;
+(when (boundp 'load-prefer-newer)
+  (setq load-prefer-newer t))
 ;;
 (eval-and-compile (require 'cl))
 ;; Compile-Log の非表示

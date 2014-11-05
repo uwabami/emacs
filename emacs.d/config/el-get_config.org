@@ -15,9 +15,10 @@
   #+BEGIN_SRC emacs-lisp
     (require 'el-get nil 'noerror)
   #+END_SRC
-* local recipe の定義
+* local recipe の定義 [0/1]
   el-get で定義されていない recipe を定義したり, 既存の recipe を上書きしたり.
   とりあえず =package.el= から =marmalade= と =SC= を削除する(使わないし, 繋らないこと多いし).
+  - [ ] もっと良い方法無いの?
   #+BEGIN_SRC emacs-lisp
     (setq
      el-get-sources
@@ -30,6 +31,11 @@
               :type github
               :shallow t
               :pkgname "emacs-jp/elscreen")
+       (:name yaicomplete
+              :type http
+              :url "https://raw.githubusercontent.com/tarao/elisp/master/yaicomplete.el"
+              :autloads nil
+              )
        (:name package
               :type http
               :url "http://repo.or.cz/w/emacs.git/blob_plain/1a0a666f941c99882093d7bd08ced15033bc3f0c:/lisp/emacs-lisp/package.el"
@@ -60,16 +66,35 @@
      my:el-get-packages
      '("el-get"
        "exec-path-from-shell"
+       "zlc"
        ))
   #+END_SRC
 * 環境依存するパッケージの定義
 ** Emacs <= 23
    #+BEGIN_SRC emacs-lisp
-     (setq my:el-get-packages
-           (append
-            my:el-get-packages
-            '("cl-lib")
-            ))
+     (when (<= emacs-major-version 23)
+       (setq my:el-get-packages
+             (append
+              my:el-get-packages
+              '("cl-lib")
+              ))
+       )
+   #+END_SRC
+** Theme
+   自作のテーマを使用中
+   #+BEGIN_SRC emacs-lisp
+     (when (>= emacs-major-version 24)
+       (setq el-get-sources
+             (append
+              el-get-sources
+              '(
+                (:name darkpastel-theme
+                       :type github
+                       :pkgname "uwabami/darkpastel-theme"
+                       :prepare (add-to-list 'custom-theme-load-path default-directory)
+                       )
+                )))
+       )
    #+END_SRC
 ** id-manager
    #+BEGIN_SRC emacs-lisp
@@ -157,6 +182,25 @@
                 my:el-get-packages
                 '("offlineimap")
                 ))
+         ))
+   #+END_SRC
+** TeX 関連
+   #+BEGIN_SRC emacs-lisp
+     (when (and (and (ignore-errors (el-get-executable-find "platex"))
+                     (ignore-errors (el-get-executable-find "latexmk")))
+                (locate-library "auctex"))
+       (progn
+         (setq el-get-sources
+               (append
+                el-get-sources
+                '(
+                  (:name auctex-latexmk
+                         :type github
+                         :pkgname "tom-tan/auctex-latexmk"))))
+         ;; (setq my:el-get-packages
+         ;;       (append
+         ;;        my:el-get-packages
+         ;;        '("zotelo")))
          ))
    #+END_SRC
 * 実際のインストール作業

@@ -6,7 +6,7 @@
 #+TITLE: Emacsの設定 - 主に org ファイルの読み込み集
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-10-26 04:47:18
+#+DATE: 2014-11-22 08:43:27
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -47,7 +47,6 @@
   #+BEGIN_SRC emacs-lisp
    (my:load-org-file "basic_config.org")
   #+END_SRC
-
 * 日本語入力: [[http://openlab.ring.gr.jp/skk/ddskk-ja.html][Daredevil SKK (DDSKK)]]
   DDSKK をメインで使用中. 無いと途方に暮れる.
   ちなみにGTKが有効になっていると =gtk-immodule= なんかと衝突するので
@@ -81,6 +80,17 @@
     (require 'skk-autoloads nil 'noerror)
     (require 'skk-cus nil 'noerror)
   #+END_SRC
+* [[file:frame_config.org][フォントとフレームの設定]]
+  #+BEGIN_SRC emacs-lisp
+    (my:load-org-file "frame_config.org")
+  #+END_SRC
+* [[file:elscreen_config.org][Elscreenの設定]]
+  install 先ですが,
+  Emacs >=24 向けに APEL 非依存版が [[https://github.com/emacs-jp/elscreen][emacs-jp/elscreen]] で公開されていますので,
+  これを導入しておきます.
+  #+BEGIN_SRC emacs-lisp
+    (my:load-org-file "elscreen_config.org")
+  #+END_SRC
 * [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727][パスワード管理ツール id-manager.el]]
   無いと途方に暮れるくらい, 依存しまくり.
   インストールと設定は以下.
@@ -94,16 +104,25 @@
                (concat (getenv "HOME") "/.gnupg/idm-db.gpg")))
         (setq idm-clipboard-expire-time-sec 15)))
   #+END_SRC
-  ターミナルで emacs を起動していることが多いので,
-  id-manager で取得したパスワードも
-  =xsel= で X Clipboard に渡すように.
-  → [[file:basic_config.org][バージョン依存しない(はず)の雑多な設定]]
-* [[file:elscreen_config.org][Elscreenの設定]]
-  install 先ですが,
-  Emacs >=24 向けに APEL 非依存版が [[https://github.com/emacs-jp/elscreen][emacs-jp/elscreen]] で公開されていますので,
-  これを導入しておきます.
+* [[http://d.hatena.ne.jp/mooz/20101003/p1][zlc.el で Emacs のミニバッファ補完 zsh ライクに]]
+  anything の候補搾り込みはあんまり好きではないので.
+  これは非常に便利です.
   #+BEGIN_SRC emacs-lisp
-    (my:load-org-file "elscreen_config.org")
+;;    (require 'zlc nil 'noerror)
+;;    (zlc-mode t)
+;;    (let ((map minibuffer-local-map))
+;;      (define-key map (kbd "C-p")       'zlc-select-previous-vertical)
+;;      (define-key map (kbd "C-n")       'zlc-select-next-vertical)
+;;      (define-key map (kbd "C-b")       'zlc-select-previous)
+;;      (define-key map (kbd "C-f")       'zlc-select-next)
+;;      (define-key map (kbd "C-d")       'zlc-reset))
+;;    (setq zlc-select-completion-immediately nil)
+  #+END_SRC
+* [[http://d.hatena.ne.jp/tarao/20101011/1286804507][Yet another icompelete]]
+  zlc をさらに素敵にしてくれます.
+  #+BEGIN_SRC emacs-lisp
+;;    (require 'yaicomplete nil 'noerror)
+;;    (yaicomplete-mode)
   #+END_SRC
 * [[file:migemo_config.org][C/Migemo]]
   #+BEGIN_SRC emacs-lisp
@@ -137,10 +156,32 @@
             (concat my:user-emacs-config-directory "wl_config"))
       )
   #+END_SRC
-
-
+* TeX関連: [[file:auctex_config.org][AUCTeX の設定]]
+  [[http://www.gnu.org/software/auctex/][AUCTeX]] に LaTeXmk 用のコマンドを追加する.
+  [[https://github.com/tom-tan/auctex-latexmk][auctex-latexmk]] を愛用中.
+  =pLaTeX= を使う場合には文字コードオプションも追加してくれる.
+  実際の設定は [[file:auctex_config.org][AUCTeXの設定]] で.
+  #+BEGIN_SRC emacs-lisp
+    (when (locate-library "auctex-latexmk")
+      (my:load-org-file "auctex_config.org"))
+  #+END_SRC
+* org-mode
+  #+BEGIN_SRC emacs-lisp
+    (my:load-org-file "org-mode_config.org")
+  #+END_SRC
+* [[file:lookup_config.org][lookup-el]]
+  =lookup= がインストールされていて, 辞書が存在する場合にだけ読み込む.
+  #+BEGIN_SRC emacs-lisp
+    (if (and (locate-library "lookup")
+             (file-exists-p "/usr/local/share/dict/lookup-enabled"))
+        (my:load-org-file "lookup_config.org"))
+  #+END_SRC
 * テスト
   #+BEGIN_SRC emacs-lisp
+    (define-key global-map   (kbd "C-x M-b")     'ibuffer-other-window)
     (setq gnutls-algorithm-priority "NORMAL:-VERS-SSL3.0")
-    (setq gnutls-log-level 5)
+    ;; (setq gnutls-log-level 5)
+    ;; (defun gnutls-available-p ()
+    ;;   "Function redefined in order not to use built-in GnuTLS support"
+    ;;   nil)
   #+END_SRC

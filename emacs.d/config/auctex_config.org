@@ -6,7 +6,7 @@
 #+TITLE: AUCTeX の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-03-28 16:07:38
+#+DATE: 2014-11-20 15:24:35
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -132,7 +132,7 @@
                     "uplatex %(kanji)%`%S%(PDFout)%(mode)% -shell-escape"
                     "uptex"
                     )))
-     (setq TeX-engine 'ptex)
+     ;; (setq TeX-engine 'ptex)
    #+END_SRC
    ちなみに
    =japanese-latex-mode= では
@@ -201,7 +201,6 @@
     (when (locate-library "zotero")
       (add-hook 'TeX-mode-hook 'zotero-minor-mode))
   #+END_SRC
-
 * Footnotes
 
 [fn:1] AUCTeX - TeX Wiki: [[http://oku.edu.mie-u.ac.jp/~okumura/texwiki/?AUCTeX]]

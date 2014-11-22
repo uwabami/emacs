@@ -94,7 +94,7 @@
      (setq paragraph-start '"^\\([ 　・○<\t\n\f]\\|(?[0-9a-zA-Z]+)\\)")
      (setq-default auto-fill-mode nil)
   #+END_SRC
-  長い行の表示: デフォルトは折り返し無しで =\C-c M-l= で toggle.
+  長い行の表示: デフォルトは折り返し有で =\C-c M-l= で toggle.
   #+BEGIN_SRC emacs-lisp
     (set-default 'truncate-lines t)
     (define-key global-map (kbd "C-c M-l") 'toggle-truncate-lines)

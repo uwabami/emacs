@@ -6,7 +6,7 @@
 #+TITLE: [[file:el-get_config.org][el-get での package の install]]
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-10-26 04:49:25
+#+DATE: 2014-11-13 22:56:56
 #+SETUPFILE: ./export-config.org
 * 始めに
   [[http://tapoueh.org/emacs/el-get.html][el-get]] [fn:1] で必要なパッケージを追加インストールします.
@@ -31,11 +31,11 @@
               :type github
               :shallow t
               :pkgname "emacs-jp/elscreen")
-       (:name yaicomplete
-              :type http
-              :url "https://raw.githubusercontent.com/tarao/elisp/master/yaicomplete.el"
-              :autloads nil
-              )
+;;       (:name yaicomplete
+;;              :type http
+;;              :url "https://raw.githubusercontent.com/tarao/elisp/master/yaicomplete.el"
+;;              :autloads nil
+;;              )
        (:name package
               :type http
               :url "http://repo.or.cz/w/emacs.git/blob_plain/1a0a666f941c99882093d7bd08ced15033bc3f0c:/lisp/emacs-lisp/package.el"
@@ -66,7 +66,7 @@
      my:el-get-packages
      '("el-get"
        "exec-path-from-shell"
-       "zlc"
+;;       "zlc"
        ))
   #+END_SRC
 * 環境依存するパッケージの定義

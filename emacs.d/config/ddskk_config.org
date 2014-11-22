@@ -6,7 +6,7 @@
 #+TITLE: DDSKKの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-10-27 17:22:07
+#+DATE: 2014-11-21 01:39:58
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -63,10 +63,10 @@
     (setq skk-jisx0201-mode-string "[_ｱ]")
     (setq skk-indicator-use-cursor-color nil)
     (setq skk-show-inline 'vertical)
-    ;; (when skk-show-inline
-    ;;   (if (boundp 'skk-inline-show-face)
-    ;;       (setq
-    ;;        skk-inline-show-background-color "black")))
+    (when skk-show-inline
+      (if (boundp 'skk-inline-show-face)
+          (setq
+           skk-inline-show-background-color "#2c2c88")))
     ;; カーソルには色をつけない
     (setq skk-use-color-cursor nil)
   #+END_SRC
@@ -86,11 +86,10 @@
     ;; 句読点変換ルール
     (setq skk-kuten-touten-alist
       '(
-        (jp . ("." . "," ))
+        (jp . ("．" . "，" ))
         (en . ("." . ","))
         ))
-    ;; jp でも ".""," を使う. ←最近不評でどうしたモンかしらん.
-    (setq skk-kutouten-type 'en)
+    ;;(setq skk-kutouten-type 'ja)
     ;; 全角記号の変換
     (setq skk-rom-kana-rule-list
           (append skk-rom-kana-rule-list
@@ -118,21 +117,26 @@
   #+BEGIN_SRC emacs-lisp
     ;; ddskk 起動時のみ, インクリメンタルサーチを使用
     ;;; Isearch setting.
-    (add-hook 'isearch-mode-hook
-              #'(lambda ()
-                  (when (and (boundp 'skk-mode)
-                             skk-mode
-                             skk-isearch-mode-enable)
-                    (skk-isearch-mode-setup))))
-    (add-hook 'isearch-mode-end-hook
-              #'(lambda ()
-                  (when (and (featurep 'skk-isearch)
-                             skk-isearch-mode-enable)
-                    (skk-isearch-mode-cleanup))))
+    ;; (add-hook 'isearch-mode-hook
+    ;;           #'(lambda ()
+    ;;               (when (and (boundp 'skk-mode)
+    ;;                          skk-mode
+    ;;                          skk-isearch-mode-enable)
+    ;;                 (skk-isearch-mode-setup))))
+    ;; (add-hook 'isearch-mode-end-hook
+    ;;           #'(lambda ()
+    ;;               (when (and (featurep 'skk-isearch)
+    ;;                          skk-isearch-mode-enable)
+    ;;                 (skk-isearch-mode-cleanup))))
     ;; migemo を使うので skk-isearch にはおとなしくしていて欲しい
     (setq skk-isearch-start-mode 'latin)
-    (add-hook 'isearch-mode-hook 'skk-isearch-mode-setup)
-    (add-hook 'isearch-mode-hook 'skk-isearch-mode-cleanup)
+    (setq skk-isearch-mode-enable 'never)
+    (add-hook 'skk-mode-hook
+              (lambda ()
+                (and (skk-in-minibuffer-p)
+                     (skk-mode-exit))))
+    ;; (add-hook 'isearch-mode-hook 'skk-isearch-mode-setup)
+    ;; (add-hook 'isearch-mode-hook 'skk-isearch-mode-cleanup)
   #+END_SRC
 * 辞書の設定
   追加している辞書の一覧は

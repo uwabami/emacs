@@ -6,33 +6,29 @@
 #+TITLE: フォントとフレームの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-05-17 07:49:54
+#+DATE: 2014-11-10 07:02:52
 #+SETUPFILE: ./export-config.org
 
 * カーソルのある位置の face を調べる関数
+  わりと良く使う. 地味に便利
   #+BEGIN_SRC emacs-lisp
     (defun describe-face-at-point ()
       (interactive)
       (message "%s" (get-char-property (point) 'face)))
   #+END_SRC
-* フォントの設定 [1/1]
-  Ricty 必須.
+* フォントの設定
+  Ricty Discord 必須.
   #+BEGIN_SRC emacs-lisp
     (add-to-list 'default-frame-alist '(font . "ricty-13.5"))
-    (custom-set-faces
-     '(variable-pitch ((t (:family "Ricty"))))
-     '(fixed-pitch ((t (:family "Ricty"))))
-     )
+    ;; (custom-set-faces
+    ;;  '(variable-pitch ((t (:family "Ricty"))))
+    ;;  '(fixed-pitch ((t (:family "Ricty"))))
+    ;;  )
   #+END_SRC
 * theme
   #+BEGIN_SRC emacs-lisp
-    (cond
-     ((>= emacs-major-version 24)
+    (when (>= emacs-major-version 24)
       (load-theme 'darkpastel t))
-     (t
-      (color-theme-initialize)
-      (color-theme-darkpastel))
-     )
   #+END_SRC
 * Space や Tab に色付け
   whitespace-mode の方が良いのかもしれないけれど,

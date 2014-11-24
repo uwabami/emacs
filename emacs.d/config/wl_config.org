@@ -6,7 +6,7 @@
 #+TITLE: Wanderlust の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-11-25 00:33:33
+#+DATE: 2014-11-25 00:39:19
 #+SETUPFILE: ./export-config.org
 
 * Wanderlust の設定
@@ -299,6 +299,11 @@
 ** 起動時に =%INBOX= のみをチェック
    #+BEGIN_SRC emacs-lisp
       (setq wl-auto-check-folder-name "%INBOX")
+   #+END_SRC
+** フォルダ選択時の初期設定
+   imap の namespace を毎度入力するのが面倒なので，これを追加しておく.
+   #+BEGIN_SRC emacs-lisp
+     (setq wl-default-spec "%INBOX.")
    #+END_SRC
 ** confirm 関連の設定
    スキャン時の問い合わせの無効化.

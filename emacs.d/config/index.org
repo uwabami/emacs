@@ -6,7 +6,7 @@
 #+TITLE: Emacsの設定 - 主に org ファイルの読み込み集
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-11-22 08:43:27
+#+DATE: 2014-11-24 23:24:15
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -149,7 +149,7 @@
             'wl-draft-send
             'wl-draft-kill
             'mail-send-hook))
-      (setq elmo-msgdb-directory "~/Mail/elmo")
+      (setq elmo-msgdb-directory "~/Maildir/elmo")
       (my:org-babel-tangle-and-compile-file
        (concat my:user-emacs-config-directory "wl_config.org"))
       (setq wl-init-file
@@ -179,7 +179,8 @@
 * テスト
   #+BEGIN_SRC emacs-lisp
     (define-key global-map   (kbd "C-x M-b")     'ibuffer-other-window)
-    (setq gnutls-algorithm-priority "NORMAL:-VERS-SSL3.0")
+    (setq gnutls-algorithm-priority "SECURE:-VERS-SSL3.0")
+    (setq gnutls-verify-error t)
     ;; (setq gnutls-log-level 5)
     ;; (defun gnutls-available-p ()
     ;;   "Function redefined in order not to use built-in GnuTLS support"

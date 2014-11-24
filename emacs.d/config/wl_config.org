@@ -6,7 +6,7 @@
 #+TITLE: Wanderlust の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-11-22 09:46:02
+#+DATE: 2014-11-24 23:39:52
 #+SETUPFILE: ./export-config.org
 
 * Wanderlust の設定
@@ -117,6 +117,7 @@
     ;;         '("gnutls-cli --insecure -p %p %h"))
     ;;   )
     ;;  )
+    ;; (setq smtp-use-gnutls nil)
   #+END_SRC
 * 個人情報の設定
   具体的な設定内容は
@@ -235,26 +236,26 @@
       (setq elmo-imap4-use-modified-utf7 t)
    #+END_SRC
 ** フォルダの位置の default からの変更
-   =~/Mail/= もしくは =~/.mua/= 以下に集約している
+   =~/Maildir/= もしくは =~/.mua/= 以下に集約している
    local の Mail folder の位置
    #+BEGIN_SRC emacs-lisp
-    (setq elmo-maildir-folder-path "~/Mail")
+    (setq elmo-maildir-folder-path "~/Maildir/elmo")
    #+END_SRC
-   lost+found フォルダの設定:
-   =elmo-maildir-folder-path= からの相対パスになっている
+   local フォルダの設定:
+   =.lost+found= は =elmo-maildir-folder-path= からの相対パスになっていることに注意
    #+BEGIN_SRC emacs-lisp
-   (setq elmo-lost+found-folder ".lost+found")
+     (setq elmo-lost+found-folder ".lost+found")
+     (setq wl-queue-folder ".~/Maildir/elmo/Queue")
    #+END_SRC
    folders の位置の変更
    =~/.mua/wl-folders.gpg= に変更
    #+BEGIN_SRC emacs-lisp
      (setq wl-folders-file "~/.mua/wl-folders.gpg")
    #+END_SRC
-   Draft は
    Gmail と同期すると大変な事になるので local に持つ.
    #+BEGIN_SRC emacs-lisp
-     (setq wl-draft-folder "+Drafts")
-     (setq wl-trash-folder "%Trash")
+     (setq wl-draft-folder "%INBOX.Drafts")
+     (setq wl-trash-folder "%INBOX.Trash")
      (setq wl-temporary-file-directory "~/Downloads/")
    #+END_SRC
    アドレス帳 -> google-contacts-wl を使う

@@ -6,7 +6,7 @@
 #+TITLE: Wanderlust の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-11-24 23:39:52
+#+DATE: 2014-11-25 00:33:33
 #+SETUPFILE: ./export-config.org
 
 * Wanderlust の設定
@@ -284,7 +284,7 @@
    #+END_SRC
 ** FCC, BCC の設定
    #+BEGIN_SRC emacs-lisp
-      (setq wl-fcc nil)
+      (setq wl-fcc "%INBOX.Sent")
    #+END_SRC
    送信済は既読にする → ちゃんと動いていない気がする
    #+BEGIN_SRC emacs-lisp
@@ -345,11 +345,11 @@
 ** 折り返しの設定
    message は折り返す.
    #+BEGIN_SRC emacs-lisp
-     (setq wl-message-truncate-lines nil)
+     (setq wl-message-truncate-lines t)
    #+END_SRC
    draft も折り返す
    #+BEGIN_SRC emacs-lisp
-     (setq wl-draft-truncate-lines nil)
+     (setq wl-draft-truncate-lines t)
    #+END_SRC
 * キーバインド関連
   =<f2>= で Addrbook の更新

@@ -791,12 +791,16 @@
 * 検索
   imap の検索か maildir-utils の検索か?
   #+BEGIN_SRC emacs-lisp
-    (require 'elmo-search)
-    (elmo-search-register-engine
-        'mu 'local-file
-        :prog "/usr/bin/mu" ;; or wherever you've installed it
-        :args '("find" pattern "--fields" "l") :charset 'utf-8)
-    (setq elmo-search-default-engine 'mu)
+    (when (and (locate-library "elmo-search")
+               (executable-find "mu"))
+      '(progn
+         (require 'elmo-search)
+         (elmo-search-register-engine
+          'mu 'local-file
+          :prog "/usr/bin/mu" ;; or wherever you've installed it
+          :args '("find" pattern "--fields" "l") :charset 'utf-8)
+         (setq elmo-search-default-engine 'mu)
+         ))
   #+END_SRC
 * Footnotes
 

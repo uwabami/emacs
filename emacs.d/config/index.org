@@ -6,7 +6,7 @@
 #+TITLE: Emacsの設定 - 主に org ファイルの読み込み集
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-11-24 23:24:15
+#+DATE: 2014-11-26 06:20:48
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -29,7 +29,6 @@
      '("http_proxy" "DEBFULLNAME" "DEBEMAIL"))
     (setq user-full-name (concat (getenv "DEBFULLNAME")))
     (setq user-mail-address (concat (getenv "DEBEMAIL")))
-    (setenv "HTTPS_PROXY" (concat (getenv "http_proxy")))
   #+END_SRC
 * [[file:language_config.org][言語の設定]]
   Emacs23 から内部が Unicode ベースになっています.
@@ -180,8 +179,8 @@
   #+BEGIN_SRC emacs-lisp
     (define-key global-map   (kbd "C-x M-b")     'ibuffer-other-window)
     (setq gnutls-algorithm-priority "SECURE:-VERS-SSL3.0")
+    (setq gnutls-log-level 0)
     (setq gnutls-verify-error t)
-    ;; (setq gnutls-log-level 5)
     ;; (defun gnutls-available-p ()
     ;;   "Function redefined in order not to use built-in GnuTLS support"
     ;;   nil)

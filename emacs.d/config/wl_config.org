@@ -6,7 +6,7 @@
 #+TITLE: Wanderlust の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-11-25 00:39:19
+#+DATE: 2014-11-26 05:59:23
 #+SETUPFILE: ./export-config.org
 
 * Wanderlust の設定
@@ -21,7 +21,7 @@
 * 依存/追加ライブラリのインストールと読み込み
   インストールしているのは今のところ以下の通り:
   - rail
-  - google-contacts-wl
+  - gcontacts-get-wl
   - c-sig
   - offlineimap-el
 ** rail
@@ -76,10 +76,12 @@
    #+BEGIN_SRC emacs-lisp
      (set-alist 'mime-view-type-subtype-score-alist '(text . html) 0)
    #+END_SRC
-** google-contacts-wl
-   GoogleContacts から Wanderlust の AddressBook へ変換する
+** gcontacts-get-wl
+   GoogleContacts から Wanderlust の AddressBook へ変換する.
+   WanderlustのAddressファイルは情報が少ないので，org-contactsあたりを使った方が良いのかもしれない．
    #+BEGIN_SRC emacs-lisp
-     (require 'google-contacts-wl nil 'noerror)
+     (require 'gcontacts-get-wl nil 'noerror)
+     (setq gcontacts-get-wl-ask nil)
    #+END_SRC
 ** offlineimap-el
    #+BEGIN_SRC emacs-lisp
@@ -258,7 +260,7 @@
      (setq wl-trash-folder "%INBOX.Trash")
      (setq wl-temporary-file-directory "~/Downloads/")
    #+END_SRC
-   アドレス帳 -> google-contacts-wl を使う
+   アドレス帳 -> gcontacts-get-wlを使う
    #+BEGIN_SRC emacs-lisp
      (setq wl-use-petname t)
      (setq wl-address-file   "~/.mua/Address.wl")
@@ -359,7 +361,7 @@
 * キーバインド関連
   =<f2>= で Addrbook の更新
   #+BEGIN_SRC emacs-lisp
-    (global-set-key [f2] 'google-contacts-wl-update-address)
+    (global-set-key [f2] 'gcontacts-update-wl-address)
   #+END_SRC
   =C-c C-j= を browse-url に明け渡す
   #+BEGIN_SRC emacs-lisp

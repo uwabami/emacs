@@ -6,7 +6,7 @@
 #+TITLE: [[file:el-get_config.org][el-get での package の install]]
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-11-27 01:22:16
+#+DATE: 2014-11-30 21:07:25
 #+SETUPFILE: ./export-config.org
 * 始めに
   [[http://tapoueh.org/emacs/el-get.html][el-get]] [fn:1] で必要なパッケージを追加インストールします.
@@ -15,47 +15,22 @@
   #+BEGIN_SRC emacs-lisp
     (require 'el-get nil 'noerror)
   #+END_SRC
-* local recipe の定義 [0/1]
+* local recipe の定義
   el-get で定義されていない recipe を定義したり, 既存の recipe を上書きしたり.
-  とりあえず =package.el= から =marmalade= と =SC= を削除する(使わないし, 繋らないこと多いし).
-  - [ ] もっと良い方法無いの?
   #+BEGIN_SRC emacs-lisp
-        (setq
-         el-get-sources
-         '(
-           (:name cp5022x
-                  :type github
-                  :pkgname "awasira/cp5022x.el")
-           (:name elscreen
-                  :type github
-                  :pkgname "emacs-jp/elscreen")
-    ;;       (:name yaicomplete
-    ;;              :type http
-    ;;              :url "https://raw.githubusercontent.com/tarao/elisp/master/yaicomplete.el"
-    ;;              :autloads nil
-    ;;              )
-           ;; (:name package
-           ;;        :type http
-           ;;        :url "http://repo.or.cz/w/emacs.git/blob_plain/1a0a666f941c99882093d7bd08ced15033bc3f0c:/lisp/emacs-lisp/package.el"
-           ;;        :features package
-           ;;        :post-init
-           ;;        (progn
-           ;;          (let ((old-package-user-dir
-           ;;                 (expand-file-name
-           ;;                  (convert-standard-filename
-           ;;                   (concat (file-name-as-directory
-           ;;                            default-directory)
-           ;;                           "elpa")))))
-           ;;            (when (file-directory-p old-package-user-dir)
-           ;;              (add-to-list 'package-directory-list old-package-user-dir)))
-           ;;          (setq package-archives (bound-and-true-p package-archives))
-           ;;          (mapc
-           ;;           (lambda (pa)
-           ;;             (add-to-list 'package-archives pa 'append))
-           ;;           '(("ELPA" . "http://tromey.com/elpa/")
-           ;;             ("melpa" . "http://melpa.org/packages/")
-           ;;             ("gnu" . "http://elpa.gnu.org/packages/")))))
-           ))
+    (setq
+     el-get-sources
+     '(
+       (:name cp5022x
+              :type github
+              :pkgname "awasira/cp5022x.el")
+       (:name elscreen
+              :website "https://github.com/knu/elscreen"
+              :type http
+              :url "https://raw.githubusercontent.com/knu/elscreen/master/elscreen.el"
+              :prepare (add-to-list 'load-path default-directory)
+              )
+       ))
   #+END_SRC
 * el-get で定義されているレシピから install するパッケージ
   #+BEGIN_SRC emacs-lisp
@@ -222,6 +197,60 @@
                          :type http
                          :url "https://raw.githubusercontent.com/tdiary/tdiary-contrib/master/util/tdiary-mode/http.el"
                          :prepare (add-to-list 'load-path default-directory)
+                         )
+                  )))
+         ))
+   #+END_SRC
+** calfw
+   #+BEGIN_SRC emacs-lisp
+     ;; (when (file-directory-p (expand-file-name "~/ownCloud/Calender"))
+     ;;   (setq my:el-get-packages
+     ;;         (append
+     ;;          my:el-get-packages
+     ;;          '("calfw")
+     ;;          ))
+     ;;   )
+   #+END_SRC
+** elscreen-howm
+   #+BEGIN_SRC emacs-lisp
+     (when (locate-library "howm")
+       (progn
+         (setq el-get-sources
+               (append
+                el-get-sources
+                '(
+                  (:name elscreen-howm
+                         :website "https://github.com/knu/elscreen"
+                         :type http
+                         :depends elscreen
+                         :url "https://raw.githubusercontent.com/knu/elscreen/master/elscreen-howm.el"
+                         :prepare (add-to-list 'load-path default-directory)
+                         )
+                  )))
+         ))
+   #+END_SRC
+** org-sync
+   #+BEGIN_SRC emacs-lisp
+     (when (file-directory-p "~/ownCloud/org")
+       (progn
+         (setq el-get-sources
+               (append
+                el-get-sources
+                '(
+                  (:name org-sync
+                         :website "http://orgmode.org/worg/org-contrib/gsoc2012/student-projects/org-sync/"
+                         :description "Synchronize Org documents with external services."
+                         :type git
+                         :url "git://orgmode.org/org-sync.git"
+                         ;; :depends (org-mode json) <-- skip org-mode because of install as git submodule
+                         :depends (json)
+                         :prepare (progn
+                                    (autoload 'os "os"
+                                      "Sync org-mode files with different online services" t)
+                                    (autoload 'os-import "os"
+                                      "Import information to sync with org-mode from different online services" t)
+                                    (autoload 'os-sync "os"
+                                      "Sync current org-mode file with service it is bound to" t))
                          )
                   )))
          ))

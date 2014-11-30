@@ -6,7 +6,7 @@
 #+TITLE: Wanderlust の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-11-26 05:59:23
+#+DATE: 2014-11-28 16:03:09
 #+SETUPFILE: ./export-config.org
 
 * Wanderlust の設定
@@ -85,7 +85,7 @@
    #+END_SRC
 ** offlineimap-el
    #+BEGIN_SRC emacs-lisp
-     (setq offlineimap-command "offlineimap -u machineui -o -f INBOX")
+     (setq offlineimap-command "offlineimap -u machineui -o")
      (setq offlineimap-mode-line-style 'symbol)
      (setq offlineimap-mode-line-symbol "imap")
      (setq offlineimap-enable-mode-line-p
@@ -254,10 +254,10 @@
    #+BEGIN_SRC emacs-lisp
      (setq wl-folders-file "~/.mua/wl-folders.gpg")
    #+END_SRC
-   Gmail と同期すると大変な事になるので local に持つ.
+   Drafts, Trash を IMAP 同期すると大変な事になるので local に持つことに.
    #+BEGIN_SRC emacs-lisp
-     (setq wl-draft-folder "%INBOX.Drafts")
-     (setq wl-trash-folder "%INBOX.Trash")
+     (setq wl-draft-folder ".~/Maildir/local/Drafts")
+     (setq wl-trash-folder ".~/Maildir/local/Trash")
      (setq wl-temporary-file-directory "~/Downloads/")
    #+END_SRC
    アドレス帳 -> gcontacts-get-wlを使う
@@ -286,15 +286,14 @@
    #+END_SRC
 ** FCC, BCC の設定
    #+BEGIN_SRC emacs-lisp
-      (setq wl-fcc "%INBOX.Sent")
+     ;;   (setq wl-fcc "%INBOX.Sent")
+     (setq wl-fcc nil)
    #+END_SRC
-   送信済は既読にする → ちゃんと動いていない気がする
+   fcc を既読にする場合は以下．=wl-fcc= が nil の場合には意味は無い
    #+BEGIN_SRC emacs-lisp
       (setq wl-fcc-force-as-read t)
    #+END_SRC
-   Gmail だと bcc でも Message-ID が同じなので表示されない
-   or ML への投稿のスレッドが切れる.
-   安直な対応として SMTP サーバとして gmail 以外を使えば良い.
+   bcc は常に自身に.
     #+BEGIN_SRC emacs-lisp
       (setq wl-bcc (concat user-mail-address))
     #+END_SRC
@@ -352,11 +351,11 @@
 ** 折り返しの設定
    message は折り返す.
    #+BEGIN_SRC emacs-lisp
-     (setq wl-message-truncate-lines t)
+     (setq wl-message-truncate-lines nil)
    #+END_SRC
    draft も折り返す
    #+BEGIN_SRC emacs-lisp
-     (setq wl-draft-truncate-lines t)
+     (setq wl-draft-truncate-lines nil)
    #+END_SRC
 * キーバインド関連
   =<f2>= で Addrbook の更新

@@ -6,7 +6,7 @@
 #+TITLE: [[file:basic_config.org][バージョン依存しない(はず)の雑多な設定]]
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-10-26 16:59:27
+#+DATE: 2014-11-26 17:16:41
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -96,7 +96,7 @@
   #+END_SRC
   長い行の表示: デフォルトは折り返し有で =\C-c M-l= で toggle.
   #+BEGIN_SRC emacs-lisp
-    (set-default 'truncate-lines t)
+    (set-default 'truncate-lines nil)
     (define-key global-map (kbd "C-c M-l") 'toggle-truncate-lines)
   #+END_SRC
   バッファ終端で newline を入れない

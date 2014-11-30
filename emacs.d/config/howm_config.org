@@ -6,7 +6,7 @@
 #+TITLE: howm の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-09-11 21:05:31
+#+DATE: 2014-11-28 01:55:27
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -20,6 +20,7 @@
   ということです. 非常に便利で, 無いと途方に暮れてしまします.
 
   ちなみに私はメモの形式は Org にしています.
+  メモ自体も org-capture で取り始めましたし，結局Agenda View にしか使っていませんね...．
 * ディレクトリの設定
   メモの内容は ownCloud で同期することに
   #+BEGIN_SRC emacs-lisp
@@ -59,6 +60,8 @@
         ))
     ;; skk と併用するための設定(Dired-X に C-xC-j を奪われないように)
     (setq dired-bind-jump nil)
+    ;; 色付けは org-mode 任せ: howm の font-lock を無効化
+    (setq howm-use-color nil)
   #+END_SRC
 * 検索などの設定
   結構きまり文句かも.
@@ -124,7 +127,7 @@
    #+END_SRC
 ** 「最近のメモ」の表示件数
    #+BEGIN_SRC emacs-lisp
-   (setq howm-menu-recent-num 15)
+   (setq howm-menu-recent-num 20)
    #+END_SRC
 ** メニューを 2 時間キャッシュ
    #+BEGIN_SRC emacs-lisp
@@ -144,20 +147,20 @@
                             formatter
                             (howm-first-n
                              (howm-sort-items-by-reverse-date
-                              (howm-view-search-folder-items   key (howm-folder) nil fixed-p)
+                              (howm-view-search-folder-items key (howm-folder) nil fixed-p)
                               ) howm-menu-recent-num)
                             )))
      (setq howm-menu-allow
            (append '(my:howm-menu-search) howm-menu-allow))
    #+END_SRC
 * 編集テンプレートの設定
-  最近は =org-capture= でメモを取る事が多いので, あんまり使っていないけれど.
+  最近は =org-capture= でメモを取る事が多いので, あんまり使っていないけれども．
   #+BEGIN_SRC emacs-lisp
     (setq howm-dtime-format (concat "<" howm-dtime-body-format ">"))
     (setq howm-insert-date-format "<%s>")
     (setq howm-template-date-format "<%Y-%m-%d %H:%M:%S>")
     (setq howm-template-file-format "==>%s")
-    (setq howm-template "* %date %cursor\n%file\n")
+    (setq howm-template "* MEMO %date %cursor\n%file\n")
     (setq howm-reminder-today-format (format howm-insert-date-format howm-date-format))
   #+END_SRC
 * Footnotes

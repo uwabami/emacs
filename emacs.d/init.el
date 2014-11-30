@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2014-11-04 22:55:47$
+;; $Lastupdate: 2014-11-30 03:24:14$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -88,9 +88,18 @@
 (add-to-load-path
  ;; "config"                  ; 分割した設定群の置き場所.
  (concat "packages/el-get/" (file-name-as-directory emacs-version) "el-get")
- "modules/org-mode/lisp"   ; org-mode
+ "modules/org-mode/contrib/lisp"  ; org-mode
+ "modules/org-mode/lisp"          ; org-mode
  ;; "modules/anything-config" ; anything
  )
+;; -----------------------------------------------------------
+;;; use gnutls-cli instead of gnutls.el
+;;
+(if (fboundp 'gnutls-available-p)
+    (fmakunbound 'gnutls-available-p))
+(setq tls-program
+      '("gnutls-cli --x509cafile /etc/ssl/certs/ca-certificates.crt -p %p %h"
+        "gnutls-cli --insecure -p %p %h"))
 ;; -----------------------------------------------------------
 ;;; install/configure - el-get and package.el
 ;;

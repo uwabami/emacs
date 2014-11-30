@@ -6,44 +6,45 @@
 #+TITLE: org-modeの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-11-20 16:21:11
+#+DATE: 2014-11-30 04:23:41
 #+SETUPFILE: ./export-config.org
-
 * 始めに
   多機能すぎて, 御託宣が書けません.
   もはや org-mode が無いと生きていけない体になってしまいました.
+
+  詳細は [[http://orgmode.org/][Org mode for Emacs – Your Life in Plain Text]] 参照．
+  「Your Life in Plain Text」とか，カッコ良すぎ．
+
+  =org-mode= 自体は =~/.emacs.d/modules/org-mode= に git submodule として取得し，
+  適当な release tag を checkout することで，使用するバージョンを揃えている
+  (以下は =8.2.10= の話)．
 * 基本設定
-** キーバインド
-   =org-capture=,  =org-export-icalendar-combine-agenda-files=, =org-agenda=.
-   =org-capture= は changelog memo [fn:1] のキーバインドにしている.
+** 読み込み
    #+BEGIN_SRC emacs-lisp
-   (define-key global-map (kbd "C-x m") 'org-capture)
-   ;; (define-key global-map (kbd "C-c 1") 'org-export-icalendar-combine-agenda-files)
-   (define-key global-map (kbd "C-c a") 'org-agenda)
+     (require 'org)    ;; ~/.emacs.d/init.el でも require しているけれど
    #+END_SRC
 ** auto-mode-alist
-   拡張子が =.org=, もしくは =.howm= なら自動的に =org-mode= に
+   メモの閲覧や整理は Agenda View ではなく [[http://howm.sourceforge.jp/index-j.html][howm: Hitori Otegaru Wiki Modoki]] で行なっているので，
+   拡張子が =.org= の場合だけではなく， =.howm= の場合も =org-mode= を有効に
    #+BEGIN_SRC emacs-lisp
    (add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
    (add-to-list 'auto-mode-alist '("\\.howm$" . org-mode))
    #+END_SRC
-** 保存先の設定
-   デフォルトで ownCloud に保存するように.
-   #+BEGIN_SRC emacs-lisp
-   (setq org-directory (concat (file-name-as-directory (getenv "HOME")) "ownCloud/org/"))
-   (setq org-default-notes-file (concat org-directory "schedule.org"))
-   #+END_SRC
 ** link を return で追う
    URL だけじゃなくて Wanderlust のメールなども追跡できる.
    #+BEGIN_SRC emacs-lisp
-   (setq org-return-follows-link t)
+     (when (locate-library "wl")
+       (require 'org-wl))
+     (setq org-return-follows-link t)
    #+END_SRC
-** 時刻のフォーマット
+** 時刻の形式
    #+BEGIN_SRC emacs-lisp
    (setq org-display-custom-times "<%Y-%m-%d %H:%M:%S>")
    (setq org-time-stamp-custom-formats "<%Y-%m-%d %H:%M:%S>")
    #+END_SRC
 ** timestamp の変更
+   保存時の timestamp 更新に引っかける正規表現をちょっと変更．
+   デフォルトでは $Lastupdate: ...$ を使っているけれど，org-mode では +DATE: を引っかける.
    #+BEGIN_SRC emacs-lisp
      (defun my:org-timestamp-hook ()
        "Change `time-stamp-start' in org-mode"
@@ -52,56 +53,141 @@
        )
      (add-hook 'org-mode-hook 'my:org-timestamp-hook)
    #+END_SRC
-** ファイルを開いた時は畳んだ状態で表示
-   #+BEGIN_SRC emacs-lisp
-   (setq org-startup-folded t)
-   #+END_SRC
-** 表示を打ち切る
-   #+BEGIN_SRC emacs-lisp
-   (setq org-startup-truncated t)
-   #+END_SRC
-** font-lock を有効化
-   #+BEGIN_SRC emacs-lisp
-   (add-hook 'org-mode-hook 'turn-on-font-lock)
-   #+END_SRC
-** アプリケーションの関連付け
-   #+BEGIN_SRC emacs-lisp
-   ;; (cond
-   ;;  (darwin-p
-   ;;   (setq org-file-apps-defaults-macosx nil)
-   ;;   (setq org-file-apps-defaults-macosx '((t . "open '%s'")))
-   ;;   (setq org-file-apps org-file-apps-defaults-macosx)
-   ;;   )
-   ;;  (nt-p
-   ;;   ;; 良く知らない fiber とか使うん?
-   ;;   ;; (setq org-file-apps-defaults-windowsnt nil)
-   ;;   ;; (setq org-file-apps-defaults-windowsnt '((t . "open '%s'")))
-   ;;   ;; (setq org-file-apps org-file-apps-defaults-windowsnt)
-   ;;   )
-   ;;  (t
-   ;;   (setq org-file-apps-defaults-gnu nil)
-   ;;   (setq org-file-apps-defaults-gnu '((t . "xdg-open '%s'")))
-   ;;   (setq org-file-apps org-file-apps-defaults-gnu)
-   ;;   )
-   ;;  )
-   #+END_SRC
 ** 日付表記
+   ロケール引っかけて日本語表記するよりも，YYYY-MM-DD の方が良いので.
    #+BEGIN_SRC emacs-lisp
    (add-hook 'org-mode-hook
              (lambda ()
                (set (make-local-variable 'system-time-locale) "C")))
    #+END_SRC
-* LaTeX Export
-  pLaTeX/upLaTeX/XeLaTeX/LuaLaTeX を使いわける + 日本語も通るようにじたばた.
-  内容はほぼ [fn:2] のまま.
+** default は ownCloud に保存
+   #+BEGIN_SRC emacs-lisp
+     (setq org-directory (concat (file-name-as-directory (getenv "HOME")) "ownCloud/org/"))
+   #+END_SRC
+* Capture: メモ取り
 ** 読み込み
    #+BEGIN_SRC emacs-lisp
-   (require 'ox-latex)
-   (require 'ox-beamer)
+   (require 'org-capture)
    #+END_SRC
-** export 時のエンコーディング
+** デフォルトのメモファイル
    #+BEGIN_SRC emacs-lisp
-   (setq org-export-coding-system nil)
+     (setq org-default-notes-file (concat org-directory "Memo.org"))
+   #+END_SRC
+** メモ取り用のキーバインド
+   以前 changelog memo をやっていた時の癖で =C-x m= をメモにしている
+   #+BEGIN_SRC emacs-lisp
+   (define-key global-map (kbd "C-x m") 'org-capture)
+   #+END_SRC
+** GTD: 状態の追加
+   #+BEGIN_SRC emacs-lisp
+   (setq org-todo-keywords
+         '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)" "SOMEDAY(s)")))
+   #+END_SRC
+** GTD: タグの追加
+   #+BEGIN_SRC emacs-lisp
+   (setq org-tag-alist
+     '(
+       ("Doing"  . "?d")
+       ("@OFFICE" . ?o)
+       ("@HOME" . ?h)
+       ("SHOPPING" . ?s)
+       ("MAIL" . ?m)
+       ("WORK" . ?w)
+       ))
+   #+END_SRC*
+** Archive の設定
+   TODO→...→DONE としたエントリを =Arhive.org= に移動
+    #+BEGIN_SRC emacs-lisp
+      (require 'org-archive)
+      (setq org-archive-location "Archive.org::")
+      (defun my:org-archive-done-tasks ()
+        (interactive)
+        ;; ARCHIVE タグを付けるだけなら以下
+        ;;   (org-map-entries 'org-archive-set-tag "/DONE" 'file))
+        ;; org-archive-location に refile したいなら以下
+        (org-map-entries 'org-archive-subtree "/DONE" 'file))
+      (add-hook 'org-todo-statistics-hook 'my:org-archive-done-tasks)
+      (add-hook 'org-todo-after-statistics-hook 'my:org-archive-done-tasks)
+    #+END_SRC
+** org-capture での bookmark の使用禁止
+   refile 時には使われるので, 実はあんまり意味が無い?
+   #+BEGIN_SRC emacs-lisp
+   (setq org-capture-bookmark nil)
+   #+END_SRC
+** Capture Template の追加
+   #+BEGIN_SRC emacs-lisp
+     (setq org-capture-templates
+           `(
+             ("t" "Todo" plain
+              (file (concat org-directory "Memo.org"))
+              ;; "* TODO <%<%Y-%m-%d>> %^{title} %^g\n  %?\n  %a\n  #+BEGIN_QUOTE\n%i\n  #+END_QUOTE"
+              "* TODO <%<%Y-%m-%d>> %^{title} %^g\n  %?\n  %a"
+              :prepend nil
+              :unnarrowed nil
+              :kill-buffer t
+              )
+             ("e" "Email Todo" plain
+              (file (concat org-directory "Memo.org"))
+              ;; "* TODO <%<%Y-%m-%d>> %:subject %^g\n  %?\n  %a\n  #+BEGIN_QUOTE\n%i\n  #+END_QUOTE"
+              "* TODO <%<%Y-%m-%d>> %:subject %^g\n  %?\n  %a"
+              :prepend nil
+              :unnarrowed nil
+              :kill-buffer t
+              )
+             ("s" "Schedule" plain
+              (file (concat org-directory "Schedule.org"))
+              ;; "* TODO <%<%Y-%m-%d>> %^{title} %^g\n  %?\n  %a\n  #+BEGIN_QUOTE\n%i\n  #+END_QUOTE"
+              "* TODO <%<%Y-%m-%d>> %^{title} %^g\n  %?\n  %a"
+              :prepend nil
+              :unnarrowed nil
+              :kill-buffer t
+              )
+             ("S" "Schedule from Email" plain
+              (file (concat org-directory "Schedule.org"))
+              ;; "* <%<%Y-%m-%d>> %:subject %^g\n  %?\n  %a\n  #+BEGIN_QUOTE\n%i\n  #+END_QUOTE"
+              "* <%<%Y-%m-%d>> %:subject %^g\n  %?\n  %a"
+              :prepend nil
+              :unnarrowed nil
+              :kill-buffer t
+              )
+             ("m" "Memo" plain
+              (file (concat org-directory "Memo.org"))
+              ;; (file (concat org-directory (format-time-string "%Y%m%d-%H%M%S.howm")))
+              ;; "* MEMO <%<%Y-%m-%d>> %?\n  %a\n  #+BEGIN_QUOTE\n%i\n  #+END_QUOTE"
+              "* MEMO <%<%Y-%m-%d>> %?\n  %a"
+              :prepend t
+              :unnarrowed nil
+              :kill-buffer t
+              )
+             ("d" "Diary" plain
+              (file (concat org-directory "Diary.org"))
+              ;; (file (concat org-directory (format-time-string "%Y%m%d-%H%M%S.howm")))
+              "* DIARY <%<%Y-%m-%d>> %^{title}\n  %?"
+              :prepend t
+              :unnarrowed nil
+              :kill-buffer t
+              )
+             ))
+   #+END_SRC
+* Agenda: メモの一覧表示
+** 読み込み
+   #+BEGIN_SRC emacs-lisp
+   (require 'org-agenda)
+   #+END_SRC
+** Agenda 表示のキーバインド
+   #+BEGIN_SRC emacs-lisp
+   (define-key global-map (kbd "C-c a") 'org-agenda)
+   #+END_SRC
+** Agenda 表示で使用するファイル
+   #+BEGIN_SRC emacs-lisp
+     (setq org-agenda-files nil)
+     (dolist (file '("Archive.org" "Diary.org" "Memo.org" "Schedule.org"))
+       (add-to-list 'org-agenda-files (concat org-directory file)))
+   #+END_SRC
+* Export
+** 読み込み
+   #+BEGIN_SRC emacs-lisp
+   (require 'ox)
    #+END_SRC
 ** 余計な空白の削除
    #+BEGIN_QUOTE
@@ -127,93 +213,3 @@
             (add-hook 'org-export-before-processing-hook
                       'my:remove-org-newlines-at-cjk-text)))
    #+END_SRC
-** class の設定
-   #+BEGIN_SRC emacs-lisp
-     (setq org-latex-classes
-           '(
-             ("ltjsarticle"
-              "\\documentclass{ltjsarticle}
-     \\usepackage[ipaex]{luatexja-preset}
-     \\usepackage{luatexja-otf}
-     \\usepackage{graphicx}
-     \\usepackage[pdfencoding=auto]{hyperref}
-     [NO-DEFAULT-PACKAGES]
-     [NO-PACKAGES]
-     [EXTRA]"
-              ("\\section{%s}" . "\\section*{%s}")
-              ("\\subsection{%s}" . "\\subsection*{%s}")
-              ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-              ("\\paragraph{%s}" . "\\paragraph*{%s}")
-              ("\\subparagraph{%s}" . "\\subparagraph*{%s}"))
-             ("ltjsbook"
-              "\\documentclass{ltjsbook}
-     \\usepackage[ipaex]{luatexja-preset}
-     \\usepackage{luatexja-otf}
-     \\usepackage{graphicx}
-     \\usepackage[pdfencoding=auto]{hyperref}
-     [NO-DEFAULT-PACKAGES]
-     [NO-PACKAGES]
-     [EXTRA]"
-              ("\\part{%s}" . "\\part*{%s}")
-              ("\\chapter{%s}" . "\\chapter*{%s}")
-              ("\\section{%s}" . "\\section*{%s}")
-              ("\\subsection{%s}" . "\\subsection*{%s}")
-              ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-              ("\\paragraph{%s}" . "\\paragraph*{%s}"))
-             ("jsarticle"
-              "\\documentclass[dvipdfmx,papersize]{jsarticle}
-     \\usepackage[dvipdfmx]{graphicx}
-     \\usepackage{url}
-     \\usepackage{atbegshi}
-     \\AtBeginShipoutFirst{\\special{pdf:tounicode EUC-UCS2}}
-     \\usepackage[dvipdfmx,setpagesize=false]{hyperref}
-     [NO-DEFAULT-PACKAGES]
-     [NO-PACKAGES]
-     [EXTRA]"
-              ("\\section{%s}" . "\\section*{%s}")
-              ("\\subsection{%s}" . "\\subsection*{%s}")
-              ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-              ("\\paragraph{%s}" . "\\paragraph*{%s}")
-              ("\\subparagraph{%s}" . "\\subparagraph*{%s}"))
-             ("jsbook"
-              "\\documentclass[dvipdfmx,papersize]{jsbook}
-     \\usepackage[dvipdfmx]{graphicx}
-     \\usepackage{url}
-     \\usepackage{atbegshi}
-     \\AtBeginShipoutFirst{\\special{pdf:tounicode EUC-UCS2}}
-     \\usepackage[dvipdfmx,setpagesize=false]{hyperref}
-     [NO-DEFAULT-PACKAGES]
-     [NO-PACKAGES]
-     [EXTRA]"
-              ("\\part{%s}" . "\\part*{%s}")
-              ("\\chapter{%s}" . "\\chapter*{%s}")
-              ("\\section{%s}" . "\\section*{%s}")
-              ("\\subsection{%s}" . "\\subsection*{%s}")
-              ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-              ("\\paragraph{%s}" . "\\paragraph*{%s}"))
-             ))
-   #+END_SRC
-** beamer の設定
-   常に =fragile= で使用
-   #+BEGIN_SRC emacs-lisp
-   (setq org-beamer-frame-default-options "fragile")
-   #+END_SRC
-** 強調等の変換
-   #+BEGIN_SRC emacs-lisp
-   (setq org-export-latex-emphasis-alist
-     '(
-        ("*" "{\\bfseries{%s}}" nil)
-        ("/" "{\\emph{%s}}" nil)
-        ("_" "\\underline{%s}" nil)
-        ("+" "\\st{%s}" nil)
-        ("=" "\\protectedtexttt" nil)
-        ("~" "\\verb" t)
-        ))
-   #+END_SRC
-* footnote
-
-* Footnotes
-
-[fn:1] 横着プログラミング 第1回: Unixのメモ技術: [[http://0xcc.net/unimag/1/]]
-
-[fn:2] Emacs - org-mode で日本語LaTeXを出力する方法 - Qiita: [[http://qiita.com/kawabata@github/items/1b56ec8284942ff2646b]]

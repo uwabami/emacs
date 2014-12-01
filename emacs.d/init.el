@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2014-11-30 03:24:14$
+;; $Lastupdate: 2014-12-02 03:44:23$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -93,41 +93,56 @@
  ;; "modules/anything-config" ; anything
  )
 ;; -----------------------------------------------------------
-;;; use gnutls-cli instead of gnutls.el
-;;
-(if (fboundp 'gnutls-available-p)
-    (fmakunbound 'gnutls-available-p))
-(setq tls-program
-      '("gnutls-cli --x509cafile /etc/ssl/certs/ca-certificates.crt -p %p %h"
-        "gnutls-cli --insecure -p %p %h"))
+;;; use `gnutls-cli' instead of gnutls.el, disable SSL ver.3
+;; (cond
+;;  ((executable-find "gnutls-cli")
+;;  (defun gnutls-available-p ()
+;;    "Function redefined in order not to use built-in GnuTLS support"
+;;    nil)
+;;  )
+;; (t
+  (setq gnutls-algorithm-priority "SECURE:-VERS-SSL3.0")
+  (setq gnutls-log-level 0)
+  (setq gnutls-verify-error t)
+;;  ))
 ;; -----------------------------------------------------------
 ;;; install/configure - el-get and package.el
 ;;
+(eval-and-compile
+  (when (fboundp 'package-initialize)
+    (progn
+      (package-initialize)
+      (setq package-user-dir
+            (concat (file-name-as-directory my:user-emacs-package-directory) "elpa/"))
+      (add-to-list 'package-archives
+                   '("melpa" . "http://melpa.milkbox.net/packages/"))
+      )))
 ;; set el-get dir: ~/.emacs.d/packages/el-get/<emacs-version>
 (setq el-get-dir
       (concat (file-name-as-directory my:user-emacs-package-directory)
               "el-get/"
               (file-name-as-directory emacs-version)
               ))
-(unless (require 'el-get nil 'noerror)
+(unless (require 'el-get nil 't)
   (with-current-buffer
-      (url-retrieve-synchronously
-       "https://raw.githubusercontent.com/dimitri/el-get/master/el-get-install.el")
-    (goto-char (point-max))
-    (eval-print-last-sexp)))
+    (url-retrieve-synchronously
+     "https://github.com/dimitri/el-get/raw/master/el-get-install.el")
+     (end-of-buffer)
+     (eval-print-last-sexp)))
 ;; recipe 置き場: ~/.emacs.d/shared/recipes/
 (add-to-list
- 'el-get-recipe-path
- (expand-file-name (concat my:user-emacs-package-directory "recipes/")))
+  'el-get-recipe-path
+  (expand-file-name (concat my:user-emacs-package-directory "recipes/")))
 ;; verbose mode
 (setq el-get-verbose t)
 ;; proxy 環境下を考慮して github は https でアクセス
 (setq el-get-github-default-url-type 'https)
-;; always shallow clone → 動いていない?
-;; (setq el-get-git-shallow-clone t)
+;; always shallow clone
+(setq el-get-git-shallow-clone t)
 ;; set elpa dir: ~/.emacs.d/packages/elpa/
-(setq package-user-dir
-      (concat (file-name-as-directory my:user-emacs-package-directory) "elpa/"))
+;; (eval-and-compile
+;;  (when (fboundp 'package-initialize)
+;;     (package-initialize)))
 ;; -----------------------------------------------------------
 ;;; org-babel
 ;; Emacs の設定はorg-mode で記述する.

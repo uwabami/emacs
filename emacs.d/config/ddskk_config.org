@@ -6,7 +6,7 @@
 #+TITLE: DDSKKの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-11-21 01:39:58
+#+DATE: 2014-12-19 17:51:10
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -55,13 +55,23 @@
     (setq skk-show-annotation nil)
     ;; インジケータを左端に.
     (setq skk-status-indicator 'left)
-    ;; skk モードの表示のカスタマイズ
-    (setq skk-latin-mode-string "[_A]")
+    ;; インジケータの表示のカスタマイズ
+    ;; (setq skk-latin-mode-string "[_A]")
     (setq skk-hiragana-mode-string "[あ]")
     (setq skk-katakana-mode-string "[ア]")
     (setq skk-jisx0208-latin-mode-string "[Ａ]")
     (setq skk-jisx0201-mode-string "[_ｱ]")
     (setq skk-indicator-use-cursor-color nil)
+    ;; mode-line が動くのが許せないので，ちょっと修正
+    (defadvice skk-make-indicator-alist
+        (after my:set-skk-default-indicator activate)
+      (dolist (elem
+               '((abbrev " [aA]" . "--[aA]:")
+                 (latin " [_A]" . "--[_A]:")
+                 (default " [--]" . "--[--]:")))
+        (setq ad-return-value
+              (append (cons elem nil)
+                      (delq (assoc (car elem) ad-return-value) ad-return-value)))))
     (setq skk-show-inline 'vertical)
     (when skk-show-inline
       (if (boundp 'skk-inline-show-face)
@@ -129,12 +139,12 @@
     ;;                          skk-isearch-mode-enable)
     ;;                 (skk-isearch-mode-cleanup))))
     ;; migemo を使うので skk-isearch にはおとなしくしていて欲しい
+    (setq skk-isearch-mode-enable nil)
     (setq skk-isearch-start-mode 'latin)
-    (setq skk-isearch-mode-enable 'never)
-    (add-hook 'skk-mode-hook
-              (lambda ()
-                (and (skk-in-minibuffer-p)
-                     (skk-mode-exit))))
+    ;; (add-hook 'skk-mode-hook
+    ;;           (lambda ()
+    ;;             (and (skk-in-minibuffer-p)
+    ;;                  (skk-mode-exit))))
     ;; (add-hook 'isearch-mode-hook 'skk-isearch-mode-setup)
     ;; (add-hook 'isearch-mode-hook 'skk-isearch-mode-cleanup)
   #+END_SRC

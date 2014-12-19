@@ -6,7 +6,7 @@
 #+TITLE: [[file:basic_config.org][バージョン依存しない(はず)の雑多な設定]]
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-11-26 17:16:41
+#+DATE: 2014-12-20 01:14:09
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -57,6 +57,25 @@
      (require 'uniquify)
      (setq uniquify-buffer-name-style 'post-forward-angle-brackets)
      (setq uniquify-min-dir-content 1)
+   #+END_SRC
+** major-mode, minor-mode の表示のカスタマイズ
+   とりあえず，minor-mode は非表示．major-mode はなるべく短縮形で．
+   #+BEGIN_SRC emacs-lisp
+     (defvar my:mode-line-cleaner-alist
+       '(
+         ;; major
+         (global-whitespace-mode . "")
+         (lisp-interaction-mode  . "LI")
+         (emacs-lisp-mode        . "EL")
+         ))
+     (defun my:clean-mode-line ()
+       (interactive)
+       (setq minor-mode-alist nil)
+       (loop for (mode . mode-str) in my:mode-line-cleaner-alist
+             do
+             (when (eq mode major-mode)
+               (setq mode-name mode-str))))
+     (add-hook 'after-change-major-mode-hook 'my:clean-mode-line)
    #+END_SRC
 * 編集関連
   yes or no を y or n に

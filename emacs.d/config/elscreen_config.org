@@ -6,62 +6,69 @@
 #+TITLE: Elscreen の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-06-06 20:55:50
+#+DATE: 2014-12-19 17:30:44
 #+SETUPFILE: ./export-config.org
 
 * 始めに
 
-[[http://www.morishima.net/~naoto/elscreen-en/][ElScreen]] はEmacsのバッファを GNU Screen っぽく扱う素敵 elisp.
-Emacs >=24 向けに APEL 非依存版が [[https://github.com/emacs-jp/elscreen][emacs-jp/elscreen]] で公開されていますので,
-これを導入しておきます.
-#+BEGIN_SRC emacs-lisp
-  (setq elscreen-prefix-key (kbd "C-o"))
-  (setq elscreen-display-tab 4)
-  (when (require 'elscreen nil 'noerror)
-    (elscreen-start))
-#+END_SRC
-ついでに
-=zsh= と =elscreen= の連携も設定している.
-元ネタは [[http://d.hatena.ne.jp/syohex/20111026/1319606395][cdeを改良 - Life is very short]]
-=~/.zshrc= あたりに
-#+BEGIN_SRC sh
-  function cde () {
-      EMACS_CWD=`emacsclient -e "
-      (if (featurep 'elscreen)
-            (elscreen-current-directory)
-          (non-elscreen-current-directory))" | sed 's/^"\(.*\)"$/\1/'`
-      echo "chdir to $EMACS_CWD"
-      cd "$EMACS_CWD"
-  }
-#+END_SRC
-と書いておいて, 以下を設定しておきます.
-#+BEGIN_SRC emacs-lisp
-  (defun elscreen-current-directory ()
-    (let* (current-dir
-           (active-file-name
-            (with-current-buffer
-                (let* ((current-screen (car (elscreen-get-conf-list 'screen-history)))
-                       (property (cadr (assoc current-screen
-                                              (elscreen-get-conf-list 'screen-property)))))
-                  (marker-buffer (nth 2 property)))
-              (progn
-                (setq current-dir (expand-file-name (cadr (split-string (pwd)))))
-                (buffer-file-name)))))
-      (if active-file-name
-          (file-name-directory active-file-name)
-        current-dir)))
+  [[http://www.morishima.net/~naoto/elscreen-en/][ElScreen]] はEmacsのバッファを GNU Screen っぽく扱う素敵 elisp.
+  Emacs >=24 向けに APEL 非依存版が [[https://github.com/emacs-jp/elscreen][emacs-jp/elscreen]] で公開されていますので,
+  これを導入しておきます.
+  #+BEGIN_SRC emacs-lisp
+    (setq elscreen-prefix-key (kbd "C-o"))
+    (setq elscreen-display-tab 4)
+    (setq elscreen-display-screen-number nil)
+    (when (require 'elscreen nil 'noerror)
+      (elscreen-start))
+  #+END_SRC
+  ついでに modeline の表示そのものを無効化しておく
+  #+BEGIN_SRC emacs-lisp
+    (defadvice elscreen-mode-line-update
+        (around my:disable-elscreen-mode-line-update activate)
+      )
+    (remove-hook 'elscreen-screen-update-hook 'elscreen-mode-line-update)
+  #+END_SRC
+** zsh と elscreen の連携
+   元ネタは [[http://d.hatena.ne.jp/syohex/20111026/1319606395][cdeを改良 - Life is very short]]
+   =~/.zshrc= あたりに
+   #+BEGIN_SRC sh
+     function cde () {
+         EMACS_CWD=`emacsclient -e "
+         (if (featurep 'elscreen)
+               (elscreen-current-directory)
+             (non-elscreen-current-directory))" | sed 's/^"\(.*\)"$/\1/'`
+         echo "chdir to $EMACS_CWD"
+         cd "$EMACS_CWD"
+     }
+   #+END_SRC
+   と書いておいて, 以下を設定しておきます.
+   #+BEGIN_SRC emacs-lisp
+     (defun elscreen-current-directory ()
+       (let* (current-dir
+              (active-file-name
+               (with-current-buffer
+                   (let* ((current-screen (car (elscreen-get-conf-list 'screen-history)))
+                          (property (cadr (assoc current-screen
+                                                 (elscreen-get-conf-list 'screen-property)))))
+                     (marker-buffer (nth 2 property)))
+                 (progn
+                   (setq current-dir (expand-file-name (cadr (split-string (pwd)))))
+                   (buffer-file-name)))))
+         (if active-file-name
+             (file-name-directory active-file-name)
+           current-dir)))
 
-  (defun non-elscreen-current-directory ()
-    (let* (current-dir
-           (current-buffer
-            (nth 1 (assoc 'buffer-list
-                          (nth 1 (nth 1 (current-frame-configuration))))))
-           (active-file-name
-            (with-current-buffer current-buffer
-              (progn
-                (setq current-dir (expand-file-name (cadr (split-string (pwd)))))
-                (buffer-file-name)))))
-      (if active-file-name
-          (file-name-directory active-file-name)
-        current-dir)))
-#+END_SRC
+     (defun non-elscreen-current-directory ()
+       (let* (current-dir
+              (current-buffer
+               (nth 1 (assoc 'buffer-list
+                             (nth 1 (nth 1 (current-frame-configuration))))))
+              (active-file-name
+               (with-current-buffer current-buffer
+                 (progn
+                   (setq current-dir (expand-file-name (cadr (split-string (pwd)))))
+                   (buffer-file-name)))))
+         (if active-file-name
+             (file-name-directory active-file-name)
+           current-dir)))
+   #+END_SRC

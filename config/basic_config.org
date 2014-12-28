@@ -1,0 +1,337 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# License: Expat
+#
+#+TITLE: [[file:basic_config.org][バージョン依存しない(はず)の雑多な設定]]
+#+AUTHOR: Youhei SASAKI
+#+EMAIL: uwabami@gfd-dennou.org
+#+DATE: 2014-12-20 01:14:09
+#+SETUPFILE: ./export-config.org
+
+* 始めに
+  Emacs の基本的(?)な設定集. 多分機種依存しないように書けている(ハズ).
+
+  ちなみに =line-number-mode= など「有効無効をtoggleする関数」は,
+  慣習的に =0= 以下の数字を指定すると明示的に無効化できる.
+* キーバインドの設定
+  既に手癖になってしまっているので...
+  鬼軍曹.el [fn:1] とかで強制した方が良いのかも, とか, ごく偶に思いますが.
+  =[home]= と =[end]= は無いと途方に暮れます.
+  #+BEGIN_SRC emacs-lisp
+    (global-set-key (kbd "C-h")     'backward-delete-char)
+    (global-set-key (kbd "C-c M-a") 'align-regexp)
+    (global-set-key (kbd "C-c ;")   'comment-region)
+    (global-set-key (kbd "C-c M-;") 'uncomment-region)
+    (global-set-key (kbd "C-/")     'undo)
+    (global-set-key (kbd "C-c M-r") 'replace-regexp)
+    (global-set-key (kbd "C-c r")   'replace-string)
+    (global-set-key (kbd "<home>")  'beginning-of-buffer)
+    (global-set-key (kbd "<end>")   'end-of-buffer)
+  #+END_SRC
+* 表示関連
+** linum-mode
+  必要に応じて =linum-mode= を有効にするので,
+  通常はモードラインに行番号や桁番号を表示しないようする.
+  ついでに =linum-mode= を有効にした場合の桁表示を 5 桁に.
+  #+BEGIN_SRC emacs-lisp
+    (line-number-mode 0)
+    (column-number-mode 0)
+    (setq linum-format "%5d ")
+  #+END_SRC
+** フレーム, ツールバー, visual-bell などは基本非表示に
+   大抵の場合ターミナル内で =-nw= として起動するので, メニュー触ったことないし...
+   #+BEGIN_SRC emacs-lisp
+     (if (fboundp 'tool-bar-mode)
+         (tool-bar-mode -1))
+     (if (fboundp 'scroll-bar-mode)
+         (scroll-bar-mode -1))
+     (if (fboundp 'menu-bar-mode)
+         (menu-bar-mode -1))
+     (setq ring-bell-function 'ignore)
+    #+END_SRC
+** モードラインのファイル名にディレクトリも表示:
+   =uniquify= を使用
+   #+BEGIN_SRC emacs-lisp
+     (require 'uniquify)
+     (setq uniquify-buffer-name-style 'post-forward-angle-brackets)
+     (setq uniquify-min-dir-content 1)
+   #+END_SRC
+** major-mode, minor-mode の表示のカスタマイズ
+   とりあえず，minor-mode は非表示．major-mode はなるべく短縮形で．
+   #+BEGIN_SRC emacs-lisp
+     (defvar my:mode-line-cleaner-alist
+       '(
+         ;; major
+         (global-whitespace-mode . "")
+         (lisp-interaction-mode  . "LI")
+         (emacs-lisp-mode        . "EL")
+         ))
+     (defun my:clean-mode-line ()
+       (interactive)
+       (setq minor-mode-alist nil)
+       (loop for (mode . mode-str) in my:mode-line-cleaner-alist
+             do
+             (when (eq mode major-mode)
+               (setq mode-name mode-str))))
+     (add-hook 'after-change-major-mode-hook 'my:clean-mode-line)
+   #+END_SRC
+* 編集関連
+  yes or no を y or n に
+  #+BEGIN_SRC emacs-lisp
+     (fset 'yes-or-no-p 'y-or-n-p)
+  #+END_SRC
+  ファイル名の大文字小文字を区別しない(zsh風)
+  #+BEGIN_SRC emacs-lisp
+    (setq read-file-name-completion-ignore-case t)
+  #+END_SRC
+  選択リージョンに色付け
+  #+BEGIN_SRC emacs-lisp
+     (setq transient-mark-mode t)
+  #+END_SRC
+  対応する括弧を色付け
+  #+BEGIN_SRC emacs-lisp
+    (show-paren-mode 1)                 ; 有効化
+    (setq show-paren-delay 0)           ; 初期値は 0.125
+    ;; (setq show-paren-style 'expression) ; 括弧内も強調表示
+    ;; (set-face-attribute 'show-paren-match-face nil
+    ;;                     :background "#02023c" :foreground nil
+    ;;                     :underline "#ffff7f" :weight 'bold :bold t)
+    ;; (set-face-attribute 'show-paren-mismatch-face nil
+    ;;                     :background "#3c0202" :foreground nil
+    ;;                     :underline "#ff4c4c" :weight 'bold :bold t)
+  #+END_SRC
+  tab 幅 4, tab でのインデントはしない
+  #+BEGIN_SRC emacs-lisp
+     (setq-default tab-width 4)
+     (setq-default indent-tabs-mode nil)
+  #+END_SRC
+  文字列は 72 文字で折り返し(RFC2822風味)
+  #+BEGIN_SRC emacs-lisp
+     (setq-default fill-column 72)
+     (setq paragraph-start '"^\\([ 　・○<\t\n\f]\\|(?[0-9a-zA-Z]+)\\)")
+     (setq-default auto-fill-mode nil)
+  #+END_SRC
+  長い行の表示: デフォルトは折り返し有で =\C-c M-l= で toggle.
+  #+BEGIN_SRC emacs-lisp
+    (set-default 'truncate-lines nil)
+    (define-key global-map (kbd "C-c M-l") 'toggle-truncate-lines)
+  #+END_SRC
+  バッファ終端で newline を入れない
+  #+BEGIN_SRC emacs-lisp
+     (setq next-line-add-newlines nil)
+  #+END_SRC
+  symlink は常においかける
+  #+BEGIN_SRC emacs-lisp
+    (setq vc-follow-symlinks t)
+  #+END_SRC
+  変更のあったファイルの自動再読み込み
+  #+BEGIN_SRC emacs-lisp
+    (global-auto-revert-mode 1)
+  #+END_SRC
+** 空白の表示: whitespace-mode
+  #+BEGIN_SRC emacs-lisp
+    (require 'whitespace)
+    (setq whitespace-style
+          '(face ; faceで可視化
+            ;; trailing ; 行末
+            tabs ; タブ
+            spaces ; スペース
+            ;; empty ; 先頭/末尾の空行
+            space-mark ; 表示のマッピング
+            tab-mark
+            ))
+    (setq whitespace-display-mappings
+          '((space-mark ?\u3000 [?\u25a1])
+            ;; WARNING: the mapping below has a problem. When a TAB
+            ;; occupies exactly one column, it will display the character
+            ;; ?\xBB at that column followed by a TAB which goes to the
+            ;; next TAB column. If this is a problem for you, please,
+            ;; comment the line below.
+            (tab-mark ?\t [?\u00BB ?\t] [?\\ ?\t])))
+    ;; スペースは全角のみを可視化
+    (setq whitespace-space-regexp "\\(\u3000+\\)")
+    ;; 有効化
+    (global-whitespace-mode 1)
+    ;; (set-face-attribute 'whitespace-trailing nil
+    ;;                     ;; :background my/bg-c
+    ;;                     :foreground "DeepPink"
+    ;;                     :underline t)
+    ;; (set-face-attribute 'whitespace-tab nil
+    ;;                     ;; :background my/bg-color
+    ;;                     :foreground "LightSkyBlue"
+    ;;                     :underline t)
+    ;; (set-face-attribute 'whitespace-space nil
+    ;;                     ;; :background my/bg-color
+    ;;                     :foreground "GreenYellow"
+    ;;                     :weight 'bold)
+    ;; (set-face-attribute 'whitespace-empty nil
+    ;;                     )
+  #+END_SRC
+** バックアップとauto-saveの作成/位置の変更
+  =~/.emacs.d/init.el= にて =my:emacs-backup-dir= を設定して,
+  =~/.emacs.d/tmp/= 以下に
+  backup と auto-save ファイルを集約する
+  #+BEGIN_SRC emacs-lisp
+     (setq auto-save-list-file-prefix
+           (concat my:user-emacs-temporary-directory ".saves-"))
+     (setq auto-save-default t)
+     (setq auto-save-timeout 15)
+     (setq auto-save-interval 60)
+     (setq make-backup-files t)
+     (setq backup-by-copying t) ; symlink は使わない
+     (setq backup-directory-alist
+           `(("." . ,my:user-emacs-temporary-directory)))
+     (setq auto-save-file-name-transforms
+           `((".*" ,my:user-emacs-temporary-directory t)))
+     (setq version-control t)
+     (setq kept-new-versions 5)
+     (setq kept-old-versions 5)
+     (setq delete-old-versions t)
+     (setq delete-auto-save-files t)
+  #+END_SRC
+** 行末の無駄な空白/改行を削除する
+  元ネタ: (Emacs Advent Calendar jp:2010)[fn:2].
+  ただし, RD や Markdown だと空白行に意味があったりするので,
+  必要に応じて拡張子で判断して外している.
+  #+BEGIN_SRC emacs-lisp
+    (defvar my:delete-trailing-whitespace-exclude-suffix
+      (list "\\.rd$" "\\.md$" "\\.rbt$" "\\.rab$"))
+    (defun my:delete-trailing-whitespace ()
+      (interactive)
+      (cond
+       ((equal nil
+               (loop for pattern in my:delete-trailing-whitespace-exclude-suffix
+                     thereis (string-match pattern buffer-file-name)))
+        (delete-trailing-whitespace))))
+    (add-hook 'before-save-hook 'my:delete-trailing-whitespace)
+  #+END_SRC
+** 空になったファイルを尋ねずに自動削除
+  ゴミが残らないし, 地味に便利.
+  #+BEGIN_SRC emacs-lisp
+     (if (not (memq 'delete-file-if-no-contents after-save-hook))
+         (setq after-save-hook
+               (cons 'delete-file-if-no-contents after-save-hook)))
+     (defun delete-file-if-no-contents ()
+       (when (and
+              (buffer-file-name (current-buffer))
+              (= (point-min) (point-max)))
+         (delete-file
+          (buffer-file-name (current-buffer)))))
+  #+END_SRC
+** scratch を殺さない. 消したら再生成
+  ...元ネタがどこだったのか忘れてしまった...
+  #+BEGIN_SRC emacs-lisp
+     (defun my:make-scratch (&optional arg)
+       (interactive)
+       (progn
+         ;; "*scratch*" を作成して buffer-list に放り込む
+         (set-buffer (get-buffer-create "*scratch*"))
+         (funcall initial-major-mode)
+         (erase-buffer)
+         (when (and initial-scratch-message (not inhibit-startup-message))
+           (insert initial-scratch-message))
+         (or arg
+             (progn
+               (setq arg 0)
+               (switch-to-buffer "*scratch*")))
+         (cond ((= arg 0) (message "*scratch* is cleared up."))
+               ((= arg 1) (message "another *scratch* is created")))))
+
+     (defun my:buffer-name-list ()
+       (mapcar (function buffer-name) (buffer-list)))
+     (add-hook 'kill-buffer-query-functions
+               ;; *scratch* バッファで kill-buffer したら内容を消去するだけにする
+               (function (lambda ()
+                           (if (string= "*scratch*" (buffer-name))
+                               (progn (my:make-scratch 0) nil)
+                             t))))
+     (add-hook 'after-save-hook
+               ;; *scratch* バッファの内容を保存したら
+               ;; *scratch* バッファを新しく作る.
+               (function
+                (lambda ()
+                  (unless (member "*scratch*" (my:buffer-name-list))
+                    (my:make-scratch 1)))))
+  #+END_SRC
+** =saveplace= で前回の修正位置を記憶する.
+  記憶の保存先は =~/.emacs.d/tmp/emacs-places= に変更.
+  #+BEGIN_SRC emacs-lisp
+     (require 'saveplace)
+     (setq-default save-place t)
+     (setq save-place-file
+           (convert-standard-filename
+            (concat my:user-emacs-temporary-directory "emacs-places")))
+  #+END_SRC
+** timestamp の自動更新
+   いろいろ衝突したので =＄Lastupdate: 2= (＄は半角) があったら timestamp を更新することに
+  #+BEGIN_SRC emacs-lisp
+    (require 'time-stamp)
+    (setq time-stamp-active t)
+    (setq time-stamp-line-limit 10)
+    (setq time-stamp-start "$Lastupdate: 2")
+    (setq time-stamp-end "\\$")
+    (setq time-stamp-format "%03y-%02m-%02d %02H:%02M:%02S")
+    (add-hook 'before-save-hook 'time-stamp)
+  #+END_SRC
+** recentf
+  最近使ったファイル履歴の保管
+  #+begin_src emacs-lisp
+    (add-hook 'after-init-hook 'recentf-mode)
+    (setq recentf-max-saved-items 2000)
+    (setq recentf-save-file
+          (expand-file-name
+           (concat my:user-emacs-temporary-directory "recentf")))
+    (setq recentf-auto-cleanup 'never)
+    ;; (run-with-idle-timer 300 t 'recentf-save-list)
+    ;; (run-with-idle-timer 600 t 'recentf-cleanup)
+  #+end_src
+** Undo/Redo
+  そのうち undohist と undo-tree を試そうと思っているのですが,
+  今のところ, 特に弄ってません.
+  #+BEGIN_SRC emacs-lisp
+    (setq undo-limit 160000) ; 無限にしたいができないので, 倍に
+    (setq undo-strong-limit 240000)
+    (savehist-mode 1)        ; ミニバッファの履歴を保存しリストア
+    (setq savehist-file
+          (concat my:user-emacs-temporary-directory "history"))
+    (setq history-length t)  ; t で無制限
+  #+END_SRC
+* emacs-server
+  既に =emacs-server= が起動しているならば何もせず,
+  起動していない場合には =emacs-server= を起動する.
+  #+BEGIN_SRC emacs-lisp
+    (eval-and-compile (require 'server))
+    (when (and (functionp 'server-running-p)
+               (not (server-running-p)))
+      (server-start))
+  #+END_SRC
+* browse-url
+  Firefox → emacs-w3m → w3 の順で探索. eww もそのうち試す.
+  #+BEGIN_SRC emacs-lisp
+    (require 'browse-url)
+    (cond
+     ((executable-find "firefox")
+      (setq browse-url-browser-function 'browse-url-firefox))
+     ((and (executable-find "w3m")
+           (locate-library "w3m"))
+      (setq browse-url-browser-function 'w3m-browse-url))
+     (t
+      (setq browse-url-browser-function 'browse-url-w3))
+     )
+    (global-set-key (kbd "C-c C-j") 'browse-url-at-point)
+  #+END_SRC
+* EPA: EasyPG Assistant
+  GPG 暗号化されたファイルを透過的に扱える素敵 elisp.
+  Emacs23 から標準に入っている.
+  #+BEGIN_SRC emacs-lisp
+    (use-package epa-file
+      :init
+      (setq epa-file-enable)
+      (setq epa-file-cache-passphrase-for-symmetric-encryption t))
+  #+END_SRC
+* Footnotes
+
+[fn:1] 鬼軍曹.el: [[https://github.com/k1LoW/emacs-drill-instructor/wiki]]
+
+[fn:2] 無駄な行末の空白を削除する(Emacs Advent Calendar jp:2010): [[http://d.hatena.ne.jp/tototoshi/20101202/1291289625]]

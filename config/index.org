@@ -1,0 +1,135 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# License: Expat
+#
+#+TITLE: Emacsの設定 - 主に org ファイルの読み込み集
+#+AUTHOR: Youhei SASAKI
+#+EMAIL: uwabami@gfd-dennou.org
+#+DATE: 2014-11-30 20:53:13
+#+SETUPFILE: ./export-config.org
+
+* 始めに
+  =~/.emacs= → =~/.emacs.d/init.el= ([[http://www.gfd-dennou.org/member/uwabami/cc-env/EmacsBasic.html][解説]]) ときて
+  このファイルで設定ファイルの読み込みを行なっています.
+  具体的な設定例は, 個々のファイルを参照のこと
+* exec-path-from-shell: 環境変数の取得
+  Terminal 上で Emacs を起動する場合は問題無いですが
+  GUI 環境で Emacs を開くと環境変数が読み込まれない事がしばしばあって
+  難儀していました.
+  =exec-path-from-shell= によって shell で設定した環境変数を読み込むことで,
+  これを解決します.
+  #+BEGIN_SRC emacs-lisp
+    (use-package exec-path-from-shell
+      :init
+      (progn
+        (exec-path-from-shell-copy-envs
+         '("http_proxy" "DEBFULLNAME" "DEBEMAIL"))
+        (setq user-full-name (concat (getenv "DEBFULLNAME")))
+        (setq user-mail-address (concat (getenv "DEBEMAIL")))
+        ))
+  #+END_SRC
+* [[file:language_config.org][言語の設定]]
+  Emacs23 から内部が Unicode ベースになっています.
+
+  しかし文字コードの変換は GNU libc の iconv をベースにしているため,
+  環境によっては文字の変換がうまく行なえません.
+  そこで言語設定
+  前に =cp5022x.el= をインストールすることにしています.
+  #+BEGIN_SRC emacs-lisp
+    (use-package cp5022x
+      :init
+      (my:load-org-file "language_config.org"))
+  #+END_SRC
+* [[file:basic_config.org][バージョン依存しない(はず)の雑多な設定]]
+  GUI 周りの調整等の一般的な設定など.
+  #+BEGIN_SRC emacs-lisp
+   (my:load-org-file "basic_config.org")
+  #+END_SRC
+* 日本語入力: [[http://openlab.ring.gr.jp/skk/ddskk-ja.html][Daredevil SKK (DDSKK)]]
+  DDSKK をメインで使用中. 無いと途方に暮れる.
+  ちなみにGTKが有効になっていると =gtk-immodule= なんかと衝突するので
+  =~/.Xresources= で xim を無効にしておくと良い.
+  例えば以下の様に:
+  #+BEGIN_EXAMPLE
+     ! disable XIM
+     Emacs*useXIM: false
+  #+END_EXAMPLE
+  =skk-user-directory= を設定しているので, 辞書や id なんかは
+  =~/.emacs.d/tmp/skk= 以下に置かれるが,
+  実際の設定は [[file:ddskk_config.org][ddskkの設定]] で行なっているため, 設定ファイルの位置変更を変更する
+  #+BEGIN_SRC emacs-lisp
+    (setq skk-user-directory
+          (concat my:user-emacs-temporary-directory "skk"))
+    (setq skk-init-file
+          (concat my:user-emacs-config-directory "ddskk_config"))
+  #+END_SRC
+  org で設定を書くために, 一旦 elisp を抽出しておく
+  #+BEGIN_SRC emacs-lisp
+    ;; org で書かれた設定ファイルから elisp を抽出
+    (when (locate-library "skk-sticky")
+      (my:org-babel-tangle-and-compile-file
+       (concat my:user-emacs-config-directory "ddskk_config.org")))
+    ;; ddskk の設定ファイルは読み込み時に byte-compile する
+    (setq skk-byte-compile-init-file t)
+  #+END_SRC
+  実際の読み込み:
+  #+BEGIN_SRC emacs-lisp
+    (use-package skk-leim
+      :init
+      (setq default-input-method "japanese-skk")
+      (require 'skk-autoloads nil 'noerror)
+      (require 'skk-cus nil 'noerror)
+      )
+  #+END_SRC
+* [[file:frame_config.org][フォントとフレームの設定]]
+  #+BEGIN_SRC emacs-lisp
+    (my:load-org-file "frame_config.org")
+  #+END_SRC
+* [[file:elscreen_config.org][Elscreenの設定]]
+  install 先ですが,
+  Emacs >=24 向けに APEL 非依存版が [[https://github.com/emacs-jp/elscreen][emacs-jp/elscreen]] で公開されていますので,
+  これを導入しておきます.
+  #+BEGIN_SRC emacs-lisp
+    (my:load-org-file "elscreen_config.org")
+  #+END_SRC
+* [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727][パスワード管理ツール id-manager.el]]
+  無いと途方に暮れるくらい, 依存しまくり.
+  インストールと設定は以下.
+  #+BEGIN_SRC emacs-lisp
+    (use-package id-manager
+      :init
+      (progn
+        (global-set-key (kbd "M-7") 'id-manager)
+        (setq idm-database-file
+              (expand-file-name
+               (concat (getenv "HOME") "/.gnupg/idm-db.gpg")))
+        (setq idm-clipboard-expire-time-sec 15)
+        ))
+  #+END_SRC
+* [[file:mua_config.org][MUAの設定]]
+  MUA として Wanderlust を使っている.
+  #+BEGIN_SRC emacs-lisp
+    (when (and (locate-library "wl")
+               (file-exists-p (concat user-emacs-directory ".wl-use")))
+      (autoload 'wl "wl" "Wanderlust" t)
+      (autoload 'wl-other-frame "wl" "Wanderlust on new frame" t)
+      (autoload 'wl-draft "wl-draft" "Write draft with Wanderlust." t)
+      (if (boundp 'mail-user-agent)
+          (setq mail-user-agent 'wl-user-agent))
+      (if (boundp 'read-mail-command)
+          (setq read-mail-command 'wl))
+      (if (fboundp 'define-mail-user-agent)
+          (define-mail-user-agent
+            'wl-user-agent
+            'wl-user-agent-compose
+            'wl-draft-send
+            'wl-draft-kill
+            'mail-send-hook))
+      (setq elmo-msgdb-directory "~/Maildir/elmo")
+      (my:org-babel-tangle-and-compile-file
+       (concat my:user-emacs-config-directory "wl_config.org"))
+      (setq wl-init-file
+            (concat my:user-emacs-config-directory "wl_config"))
+      )
+  #+END_SRC

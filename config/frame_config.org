@@ -1,0 +1,56 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# License: Expat
+#
+#+TITLE: フォントとフレームの設定
+#+AUTHOR: Youhei SASAKI
+#+EMAIL: uwabami@gfd-dennou.org
+#+DATE: 2014-11-10 07:02:52
+#+SETUPFILE: ./export-config.org
+
+* カーソルのある位置の face を調べる関数
+  わりと良く使う. 地味に便利
+  #+BEGIN_SRC emacs-lisp
+    (defun describe-face-at-point ()
+      (interactive)
+      (message "%s" (get-char-property (point) 'face)))
+  #+END_SRC
+* フォントの設定
+  Ricty Discord 必須.
+  #+BEGIN_SRC emacs-lisp
+    (add-to-list 'default-frame-alist '(font . "ricty-13.5"))
+    ;; (custom-set-faces
+    ;;  '(variable-pitch ((t (:family "Ricty"))))
+    ;;  '(fixed-pitch ((t (:family "Ricty"))))
+    ;;  )
+  #+END_SRC
+* theme
+  #+BEGIN_SRC emacs-lisp
+    (when (>= emacs-major-version 24)
+      (load-theme 'darkpastel t))
+  #+END_SRC
+* Space や Tab に色付け
+  whitespace-mode の方が良いのかもしれないけれど,
+  設定が面倒なのと多少重いので...
+  #+BEGIN_SRC emacs-lisp
+    ;; (defface my-face-r-1 '((t (:background "#888888"))) nil)
+    ;; (defface my-face-b-1 '((t (:background "#888888"))) nil)
+    ;; (defface my-face-b-2 '((t (:background "#888888"))) nil)
+    ;; (defface my-face-u-1 '((t (:foreground "#242424" :underline t))) nil)
+    ;; (defvar my-face-r-1 'my-face-r-1)
+    ;; (defvar my-face-b-1 'my-face-b-1)
+    ;; (defvar my-face-b-2 'my-face-b-2)
+    ;; (defvar my-face-u-1 'my-face-u-1)
+    ;; (defadvice font-lock-mode (before my-font-lock-mode ())
+    ;;   (font-lock-add-keywords
+    ;;    major-mode
+    ;;    '(("\t" 0 my-face-b-2 append)
+    ;;      ("　" 0 my-face-b-1 append)
+    ;;      ("[ \t]+$" 0 my-face-u-1 append)
+    ;;      ;; ("[\r]*\n" 0 my-face-r-1 append)
+    ;;      )))
+    ;; (ad-enable-advice 'font-lock-mode 'before 'my-font-lock-mode)
+    ;; (ad-activate 'font-lock-mode)
+  #+END_SRC
+* Footnotes

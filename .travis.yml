@@ -21,7 +21,8 @@ before_install:
   - sudo apt-get install -qq skkdic
 script:
   - cd $HOME/.emacs.d
-  - make EMACS=$EVM_EMACS
+  - ls -la 
+  - make all EMACS=$EVM_EMACS
   - make recompile EMACS=$EVM_EMACS
   - make clean
   - make distclean

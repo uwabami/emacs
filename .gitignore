@@ -1,6 +1,14 @@
 *.elc
 .*-stamp
 .*-use
+config/*.el
+config/sitemap.org
+modules/skkdic
+packages/*
+share/*
+tmp/*
+.org-id-locations
+tramp
 emacs.d/config/*.el
 emacs.d/config/sitemap.org
 emacs.d/modules/skkdic

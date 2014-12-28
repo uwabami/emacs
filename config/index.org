@@ -133,3 +133,7 @@
             (concat my:user-emacs-config-directory "wl_config"))
       )
   #+END_SRC
+* テスト
+  #+BEGIN_SRC emacs-lisp
+    (define-key global-map   (kbd "C-x M-b")     'ibuffer-other-window)
+  #+END_SRC

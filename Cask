@@ -6,7 +6,6 @@
 (depends-on "darkpastel-theme")
 (depends-on "elscreen")
 (depends-on "exec-path-from-shell")
-(depends-on "gcontacts-get-wl")
 (depends-on "id-manager")
 (depends-on "offlineimap")
 (depends-on "pallet")

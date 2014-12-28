@@ -30,8 +30,10 @@
    #+ATTR_HTML: with="50%"
    [[file:https:/raw.github.com/uwabami/rail/gh-pages/images/wanderlust_with_or_without_rail.png]]
    #+BEGIN_SRC emacs-lisp
-     (require 'rail nil 'noerror)
-     (setq rail-emulate-genjis t)
+     (use-package rail
+       :init
+       (setq rail-emulate-genjis t)
+       )
    #+END_SRC
 ** cp5022x を使う
    ISO-2022-JP を CP50220 として扱う.
@@ -45,7 +47,7 @@
    #+END_SRC
 ** elscreen-wl
    #+BEGIN_SRC emacs-lisp
-   (require 'elscreen-wl nil 'noerror)
+     (use-package elscreen-wl)
    #+END_SRC
 ** emacs-w3m + SEMI の追加設定
    HTML メールを表示するための設定.
@@ -60,11 +62,11 @@
    #+END_SRC
    HTML パートの表示に w3m を使う
    #+BEGIN_SRC emacs-lisp
-     (require 'mime-setup)
-     (when (locate-library "mime-w3m")
-       (require 'w3m-ems)
-       (require 'w3m-load)
-       (require 'mime-w3m)
+     (use-package mime-setup)
+     (use-package w3m-ems)
+     (use-package w3m-load)
+     (use-package mime-w3m
+       :init
        (setq mime-w3m-safe-url-regexp nil)
        )
    #+END_SRC

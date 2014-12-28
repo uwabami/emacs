@@ -1,3 +1,9 @@
 [submodule "emacs.d/modules/org-mode"]
 	path = emacs.d/modules/org-mode
 	url = git://orgmode.org/org-mode.git
+[submodule "modules/org-mode"]
+	path = modules/org-mode
+	url = git://orgmode.org/org-mode.git
+[submodule "modules/cask"]
+	path = modules/cask
+	url = https://github.com/cask/cask.git

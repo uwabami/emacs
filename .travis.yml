@@ -14,6 +14,7 @@ before_install:
   - curl -fsSkL https://gist.github.com/rejeep/7736123/raw | sh
   - mkdir -p $HOME/.emacs.d/
   - ln -s $TRAVIS_BUILD_DIR/* $HOME/.emacs.d/
+  - ln -s $TRAVIS_BUILD_DIR/.git $HOME/.emacs.d/.git
   - export PATH="/home/travis/.emacs.d/modules/cask/bin:$PATH"
   - export PATH="/home/travis/.evm/bin:$PATH"
   - sudo apt-get update -qq

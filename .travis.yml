@@ -15,6 +15,7 @@ before_install:
   - mkdir -p $HOME/.emacs.d/
   - ln -s $TRAVIS_BUILD_DIR/* $HOME/.emacs.d/
   - ln -s $TRAVIS_BUILD_DIR/.git $HOME/.emacs.d/.git
+  - ln -s $TRAVIS_BUILD_DIR/.gitmodules $HOME/.emacs.d/.gitmodules
   - export PATH="/home/travis/.emacs.d/modules/cask/bin:$PATH"
   - export PATH="/home/travis/.evm/bin:$PATH"
   - sudo apt-get update -qq

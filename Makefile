@@ -41,6 +41,6 @@ clean: conf-clean
 	rm -fr $(ELCFiles)
 distclean: clean
 	( cd modules/org-mode && $(MAKE) clean )
-	rm -fr modules/skkdic
+	rm -fr .cask modules/skkdic
 	rm -fr .*-stamp .*-use auto-save-list 
 recompile: clean all

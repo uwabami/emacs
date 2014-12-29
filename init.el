@@ -87,26 +87,11 @@
 ;;
 (add-to-load-path
  "config"                         ; 分割した設定群の置き場所
- "modules/cask"                   ; cask
  "modules/org-mode/contrib/lisp"  ; org-mode
  "modules/org-mode/lisp"          ; org-mode
  )
 ;; -----------------------------------------------------------
-;;; Handling package -- Cask, Pallet, Package.el
-;;
-(require 'cask)
-(cask-initialize)
-;;
-;;; setup use-pacakge
-;;
-(require 'use-package)
-(setq use-package-verbose t)
-;;
-;;; Pallet
-;;
-(use-package pallet
-  :init
-  (pallet-mode t))
+;;; Handling package
 ;;
 ;; -----------------------------------------------------------
 ;;; org-babel
@@ -162,7 +147,7 @@
 ;; -----------------------------------------------------------
 ;;; 実際に設定を読み込む.
 ;;
-(my:load-org-file "index.org")
+;; (my:load-org-file "index.org")
 ;; -----------------------------------------------------------
 ;;; calculate bootup time/ スピード狂に捧ぐ.
 ;;

@@ -4,18 +4,13 @@ ELFiles		:= $(__SRC__:%v.el=)
 ELCFiles	:= $(ELFiles:%.el=%.elc)
 
 EMACS	?= emacs
-CASK	?= cask
 
 all: bootstrap $(ELCFiles)
 
 bootstrap: .bootstrap-stamp
-.bootstrap-stamp: .modules-stamp .cask-stamp
-.cask-stamp:
-	$(CASK) install
-	touch $@
+.bootstrap-stamp: .modules-stamp
 .modules-stamp: .permission-stamp
-	git submodule init
-	git submodule update
+	git submodule update --init --depth 1
 	@echo "setup org-mode"
 	(cd modules/org-mode && \
 	  make compile EMACS="$(EMACS)" && \
@@ -41,6 +36,6 @@ clean: conf-clean
 	rm -fr $(ELCFiles)
 distclean: clean
 	( cd modules/org-mode && $(MAKE) clean )
-	rm -fr .cask modules/skkdic
-	rm -fr .*-stamp .*-use auto-save-list 
+	rm -fr modules/skkdic
+	rm -fr .*-stamp .*-use auto-save-list
 recompile: clean all

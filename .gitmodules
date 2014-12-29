@@ -1,3 +1,6 @@
 [submodule "modules/org-mode"]
 	path = modules/org-mode
 	url = git://orgmode.org/org-mode.git
+[submodule "modules/el-get"]
+	path = modules/el-get
+	url = https://github.com/dimitri/el-get.git

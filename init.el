@@ -87,12 +87,36 @@
 ;;
 (add-to-load-path
  "config"                         ; 分割した設定群の置き場所
+ "modules/el-get"                 ; el-get
  "modules/org-mode/contrib/lisp"  ; org-mode
  "modules/org-mode/lisp"          ; org-mode
  )
 ;; -----------------------------------------------------------
 ;;; Handling package
 ;;
+;; set el-get dir: ~/.emacs.d/packages/el-get/<emacs-version>
+(setq el-get-dir
+      (concat (file-name-as-directory my:user-emacs-package-directory)
+              "el-get/"
+              (file-name-as-directory emacs-version)
+              ))
+;; recipe 置き場: ~/.emacs.d/shared/recipes/
+(require 'el-get)
+(add-to-list
+ 'el-get-recipe-path
+ (expand-file-name (concat my:user-emacs-package-directory "recipes/")))
+;; verbose mode
+(setq el-get-verbose t)
+;; proxy 環境下を考慮して github は https でアクセス
+(setq el-get-github-default-url-type 'https)
+;; always shallow clone → 動いていない?
+(setq el-get-git-shallow-clone t)
+;; set elpa dir: ~/.emacs.d/packages/elpa/
+(setq package-user-dir
+      (concat (file-name-as-directory my:user-emacs-package-directory) "elpa/"))
+;; Emacs 23 向けに cl-lib, package の導入
+;; (when (<= emacs-major-version 23)
+;;  (el-get 'sync '(cl-lib package)))
 ;; -----------------------------------------------------------
 ;;; org-babel
 ;; Emacs の設定はorg-mode で記述する.

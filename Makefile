@@ -10,7 +10,8 @@ all: bootstrap $(ELCFiles)
 bootstrap: .bootstrap-stamp
 .bootstrap-stamp: .modules-stamp
 .modules-stamp: .permission-stamp
-	git submodule update --init --depth 1
+	git submodule init
+	git submodule update
 	@echo "setup org-mode"
 	(cd modules/org-mode && \
 	  make compile EMACS="$(EMACS)" && \

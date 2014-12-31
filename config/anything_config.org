@@ -1,0 +1,97 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# License: Expat
+#
+#+TITLE: Anythingの設定
+#+AUTHOR: Youhei SASAKI
+#+EMAIL: uwabami@gfd-dennou.org
+#+DATE: 2014-05-31 12:18:25
+#+SETUPFILE: ./export-config.org
+
+* 始めに
+  何度か挫折しては舞い戻ってくる [[http://emacswiki.org/emacs/Anything][Anything]] [fn:1] の設定.
+  あまりに高機能すぎて, よく眩暈をおこして使うのを止めるのですが,
+  最近の Emacs 界隈(ドコ?)では,
+  「Anything が使えないと人じゃない(違」みたいな空気があって
+  挫折しては戻ってきて挫折しては戻ってきて, を繰り返しています.
+* history の位置変更
+  #+BEGIN_SRC emacs-lisp
+    (setq anything-c-adaptive-history-file
+          (concat my:user-emacs-temporary-directory "anything-c-adaptive-history"))
+  #+END_SRC
+* non-X 用の ad hoc な対応
+  #+BEGIN_SRC emacs-lisp
+    (setq anything-c-find-files-icons-directory nil)
+  #+END_SRC
+* 情報源の設定
+  #+BEGIN_SRC emacs-lisp
+    (defvar my:anything-basic-sources
+      '(anything-c-source-buffers+
+        anything-c-source-ffap-line
+        anything-c-source-ffap-guesser))
+    (defvar my:anything-other-sources
+      '(anything-c-source-recentf
+        anything-c-source-bookmarks
+        anything-c-source-locate))
+  #+END_SRC
+* locate の設定
+  #+BEGIN_SRC emacs-lisp
+    (defvar anything-c-locate-command
+      (cond
+       (darwin-p "locate -i %s")
+       (t "locate -i -r %s")))
+  #+END_SRC
+* 読み込み
+  anything-config で一通りの設定を読み込み.
+  #+BEGIN_SRC emacs-lisp
+    (require 'anything-config nil 'noerror)
+  #+END_SRC
+* 雑多な設定
+  #+BEGIN_SRC emacs-lisp
+    (setq
+     ;; 候補を表示するまでの時間を 0.5 → 0.2 に
+     anything-idle-delay 0.2
+     ;; タイプしてから再描画するまでの時間を 0.1 に(default)
+     anything-input-idle-delay 0.1
+     ;; 最大候補表示数 50 (default)
+     anything-candidate-number-limit 50
+     ;; 体感速度向上
+     anything-quick-update t
+     ;; 選択候補のショートカットをアルファベットに
+     anything-enable-shortcuts 'alphabet
+     ;; 情報源
+     anything-for-files-prefered-list
+     `(,@my:anything-basic-sources
+       anything-c-source-files-in-current-dir+
+       ,@my:anything-other-sources
+       )
+     ;;
+     anything-complete-sort-candidates t
+     )
+  #+END_SRC
+* キーバインド
+  C-o, C-z はそれぞれ tabbar と howm にわたすので nil に
+  #+BEGIN_SRC emacs-lisp
+      (define-key global-map   (kbd "C-x b")       'anything-for-files)
+      (define-key global-map   (kbd "C-x C-b")     'anything-for-files)
+      (define-key global-map   (kbd "C-x M-b")     'ibuffer-other-window)
+      (define-key global-map   (kbd "M-y")         'anything-show-kill-ring)
+      (define-key anything-map (kbd "C-l")         'anything-execute-persistent-action)
+      (define-key anything-map (kbd "C-z") nil) ; → howm の prefix
+      (define-key anything-map (kbd "C-o") nil) ; → tabbar の prefix
+      (define-key anything-map (kbd "C-M-n")       'anything-next-source)
+      (define-key anything-map (kbd "C-M-p")       'anything-previous-source)
+  #+END_SRC
+* migemoの利用
+  C/Migemo があって, =migemo= が load 済みならば
+  =anything-migemo= を有効に.
+    #+BEGIN_SRC emacs-lisp
+      (require 'anything-match-plugin nil t)
+      (when (and (executable-find "cmigemo")
+                 (featurep 'migemo))
+        (require 'anything-migemo nil t))
+    #+END_SRC
+* Footnotes
+
+[fn:1] Anything - EmacsWiki: [[http://emacswiki.org/emacs/Anything]]

@@ -1,0 +1,114 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# License: Expat
+#
+#+TITLE: Ruby関連の設定
+#+AUTHOR: Youhei SASAKI
+#+EMAIL: uwabami@gfd-dennou.org
+#+DATE: 2013-07-06 19:09:48
+#+SETUPFILE: ./export-config.org
+
+* 始めに
+  Ruby 愛しているよ Ruby.
+  あと [[http://rabbit-shockers.org/][Rabbit]] の設定もしておく.
+* 基本設定
+  ruby-mode は Emacs23 以降は本体に同梱されているので
+  autoload を設定するだけで良い.
+  Rakefile は ruby-mode にならないので, auto-mode-alist に追加しておく.
+  #+BEGIN_SRC emacs-lisp
+    (require 'ruby-mode nil 'noerror)
+    (autoload 'ruby-mode "ruby-mode"
+      "Major mode for ruby files" nil t)
+    (add-to-list 'auto-mode-alist
+                 '("\\.rb$" . ruby-mode))
+    (add-to-list 'auto-mode-alist
+                 '("\\.rake$" . ruby-mode))
+    (add-to-list 'auto-mode-alist
+                 '("\\.ru$" . ruby-mode))
+    (add-to-list 'auto-mode-alist
+                 '("Rakefile" . ruby-mode))
+    (add-to-list 'auto-mode-alist
+                 '("Gemfile" . ruby-mode))
+    (add-to-list 'auto-mode-alist
+                 '("Capfile" . ruby-mode))
+    (add-to-list 'interpreter-mode-alist
+                 '("ruby" . ruby-mode))
+  #+END_SRC
+* rd-mode
+  #+BEGIN_SRC emacs-lisp
+    (require 'rd-mode nil 'noerror)
+    (autoload 'rd-mode "rd-mode" "major mode for ruby document formatter RD" nil t)
+    ;; rd-mode が起動した際に, =end \n\n =begin を省略しない.
+    (add-hook 'rd-mode-hook 'rd-show-other-block-all)
+    (add-to-list 'auto-mode-alist
+                 '("\\.rd$" . rd-mode))
+  #+END_SRC
+* rabbit-mode
+  #+BEGIN_SRC emacs-lisp
+    (when (locate-library "rabbit-mode")
+      (autoload 'rabbit-mode "rabbit-mode" "major mode for Rabbit" nil t)
+      (add-to-list 'auto-mode-alist
+                   '("\\.\\(rbt\\|rab\\)$" . rabbit-mode)))
+  #+END_SRC
+* outline-minor-mode
+  多少 ad hoc ではあるけれど, とりあえず設定しておく
+  #+BEGIN_SRC emacs-lisp
+    (add-hook
+     'rd-mode-hook
+     '(lambda ()
+        (let (
+              ;; level1
+              (shebang "^#!/")                         ; Shebang line
+              (hr "^##############+[ \t]*$")           ; 水平セパレータ
+              (h1 "^# ●")                             ; 大見出し
+              (rd "^=begin")                           ; RD 先頭
+              ;; level2
+              (h2 "^# ○")                             ; 中見出し
+              (def "^\\(def\\|class\\|module\\)[ \t]+"); 関数等定義先頭行
+              (debug "^# DEBUG OUT")                   ; デバッグ用ブロック
+              (rd-h1 "^=[^=]")                         ; Headline1
+              ;; level3
+              (h3 "^# ・")                             ; 小見出し
+              (rd-h2 "^==[^=]")                        ; Headline2
+              ;; level4 以下
+              (rd-h3 "^===[^=]")                       ; Headline3
+              (rd-h4 "^====[^=]")                      ; Headline4
+              (rd-h5 "^\\+[^+]")                       ; Headline5
+              (rd-h6 "^\\+\\+[^+]")                    ; Headline6
+              (b "\\(")
+              (m "\\)\\|\\(")
+              (e "\\)")
+              )
+          (setq outline-regexp (concat b shebang m hr m h1 m rd m h2 m def m
+                                       ;; block-head m
+                                       rd-h1 m
+                                       h3 m rd-h2 m
+                                       rd-h3 m rd-h4 m rd-h5 m rd-h6 m
+                                       debug
+                                       e ))
+          (setq outline-level
+                (function
+                 (lambda ()
+                   (save-excursion (looking-at outline-regexp)
+                                   (cond                       ;レベルを返す
+                                    ((match-string 1) 1)       ; ^#!/usr/bin/ruby
+                                    ((match-string 2) 1)       ; ^############....
+                                    ((match-string 3) 1)       ; ^# ●大見出し
+                                    ((match-string 4) 1)       ; ^=begin
+                                    ((match-string 5) 2)       ; ^# ○中見出し
+                                    ((match-string 6) 2)       ; ^def somem_ethod
+                                            ; 上パタンに括弧があることに注意
+                                    ((match-string 8) 2)       ; ^# DEBUG OUT
+                                    ((match-string 9) 2)       ; ^= Headline1
+                                    ((match-string 10) 3)      ; ^# ・小見出し
+                                    ((match-string 11) 3)      ; ^== Headline2
+                                    ((match-string 12) 4)      ; ^=== Headline3
+                                    ((match-string 13) 5)      ; ^==== Headline4
+                                    ((match-string 14) 6)      ; ^+ Headline5
+                                    ((match-string 15) 7)      ; ^++ Headline6
+                                    (t nil))
+                                   )))))
+        (outline-minor-mode t)
+        ))
+  #+END_SRC

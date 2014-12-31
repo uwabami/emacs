@@ -114,9 +114,6 @@
 ;; set elpa dir: ~/.emacs.d/packages/elpa/
 (setq package-user-dir
       (concat (file-name-as-directory my:user-emacs-package-directory) "elpa/"))
-;; Emacs 23 向けに cl-lib, package の導入
-;; (when (<= emacs-major-version 23)
-;;  (el-get 'sync '(cl-lib package)))
 ;; -----------------------------------------------------------
 ;;; org-babel
 ;; Emacs の設定はorg-mode で記述する.
@@ -171,7 +168,7 @@
 ;; -----------------------------------------------------------
 ;;; 実際に設定を読み込む.
 ;;
-;; (my:load-org-file "index.org")
+(my:load-org-file "index.org")
 ;; -----------------------------------------------------------
 ;;; calculate bootup time/ スピード狂に捧ぐ.
 ;;

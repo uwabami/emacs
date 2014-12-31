@@ -1,0 +1,50 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# License: Expat
+#
+#+TITLE: fortran-mode, f90-mode の設定
+#+AUTHOR: Youhei SASAKI
+#+EMAIL: uwabami@gfd-dennou.org
+#+DATE: 2013-07-01 17:19:23
+#+SETUPFILE: ./export-config.org
+
+* 始めに
+  数値計算屋さんにとっては FORTRAN (<=77) /fortran (>=90) でプログラムを
+  書くことが多いので.
+* 基本設定
+  #+BEGIN_SRC emacs-lisp
+    (autoload 'fortran-mode "fortran" "major mode for FORTRAN(<=77)" t)
+    (add-to-list 'auto-mode-alist
+                 '("\\.\\(f\\|F\\)$" . fortran-mode))
+    (autoload 'f90-mode "f90" "major mode for FORTRAN(>=90)" t)
+    (add-to-list 'auto-mode-alist
+                 '("\\.\\(f90\\|F90\\|f95\\|F95\\|g90\\|g95\\)$" . f90-mode))
+  #+END_SRC
+* indent とか
+  #+BEGIN_SRC emacs-lisp
+    (setq f90-mode-hook
+          '(lambda ()
+             (setq f90-do-indent 2
+                   f90-if-indent 2
+                   f90-type-indent 2
+                   f90-program-indent 2
+                   f90-continuation-indent 2
+                   f90-indented-comment-re "!"
+                   f90-comment-region "!!"
+                   f90-directive-comment-re "!omp\\$"
+                   f90-break-delimiters "[-+\\*/,><=% \t]"
+                   f90-break-before-delimiters t
+                   f90-beginning-ampersand t
+                   f90-smart-end 'blink
+                   f90-auto-keyword-case nil
+                   f90-leave-line-no  nil
+                   f90-startup-message t
+                   indent-tabs-mode nil
+                   f90-font-lock-keywords f90-font-lock-keywords-4)
+             ;;The rest is not default.
+             (turn-on-font-lock)         ; for highlighting
+             (if f90-auto-keyword-case   ; change case of all keywords on startup
+                 (f90-change-keywords f90-auto-keyword-case))
+             ))
+  #+END_SRC

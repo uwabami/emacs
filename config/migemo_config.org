@@ -1,0 +1,59 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# License: Expat.
+#
+#+TITLE: C/Migemo
+#+AUTHOR: Youhei SASAKI
+#+EMAIL: uwabami@gfd-dennou.org
+#+DATE: 2013-07-01 17:19:36
+#+SETUPFILE: ./export-config.org
+
+* はじめに
+  [[http://0xcc.net/migemo][Migemo]] はローマ字のまま日本語をインクリメンタルサーチするためのプログラム.
+  ないと結構途方に暮れるのだけれど,
+  pure ruby の実装が ruby(>=1.9) だと動作しないので,
+  C/Migemo を使うことにしている.
+* 基本設定
+  #+BEGIN_SRC emacs-lisp
+    ;; C/Migemo settings
+    (when (and (executable-find "cmigemo")
+               (locate-library "migemo"))
+      (progn
+        (require 'migemo nil 'noerror)
+        (setq migemo-command "cmigemo")
+        (setq migemo-options '("-q" "--emacs"))
+        (if (file-exists-p "/usr/local/share/migemo/utf-8")
+            (setq migemo-dictionary "/usr/local/share/migemo/utf-8/migemo-dict"))
+        (if (file-exists-p "/usr/share/cmigemo/utf-8/migemo-dict")
+            (setq migemo-dictionary "/usr/share/cmigemo/utf-8/migemo-dict"))
+        (setq migemo-coding-system 'utf-8-unix)
+        )
+      )
+  #+END_SRC
+* ユーザ辞書を使わない
+  #+BEGIN_SRC emacs-lisp
+    (eval-after-load 'migemo
+      (progn
+        (setq migemo-user-dictionary nil)
+        (setq migemo-regex-dictionary nil)
+        ))
+  #+END_SRC
+* キャッシュ機能
+  使わないことに.
+  #+BEGIN_SRC emacs-lisp
+    (eval-after-load 'migemo
+      (progn
+        (setq migemo-use-pattern-alist nil)
+        (setq migemo-use-frequent-pattern-alist nil)
+        ))
+  #+END_SRC
+* 読み込み
+  #+BEGIN_SRC emacs-lisp
+    (load-library "migemo")
+    (migemo-init)
+    (add-hook 'isearch-mode-hook 'migemo-init)
+  #+END_SRC
+* Footnotes
+
+[fn:1] C/Migemo の Debian パッケージは私がメンテ中: [[http://packages.qa.debian.org/c/cmigemo.html]]

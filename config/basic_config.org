@@ -50,6 +50,7 @@
          (menu-bar-mode -1))
      (setq ring-bell-function 'ignore)
     #+END_SRC
+
 ** モードラインのファイル名にディレクトリも表示:
    =uniquify= を使用
    #+BEGIN_SRC emacs-lisp
@@ -325,10 +326,9 @@
   GPG 暗号化されたファイルを透過的に扱える素敵 elisp.
   Emacs23 から標準に入っている.
   #+BEGIN_SRC emacs-lisp
-    (use-package epa-file
-      :init
-      (setq epa-file-enable)
-      (setq epa-file-cache-passphrase-for-symmetric-encryption t))
+    (require 'epa-file)
+    (setq epa-file-enable)
+    (setq epa-file-cache-passphrase-for-symmetric-encryption t)
   #+END_SRC
 * Footnotes
 

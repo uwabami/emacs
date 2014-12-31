@@ -1,0 +1,38 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# License: Expat.
+#
+#+TITLE: lookupの設定
+#+AUTHOR: Youhei SASAKI
+#+EMAIL: uwabami@gfd-dennou.org
+#+DATE: 2013-07-01 17:19:32
+#+SETUPFILE: ./export-config.org
+
+* 始めに
+  辞書を引くための機能.
+* 読み込み
+  #+BEGIN_SRC emacs-lisp
+    (autoload 'lookup "lookup" nil t)
+    (autoload 'lookup-region "lookup" nil t)
+    (autoload 'lookup-pattern "lookup" nil t)
+  #+END_SRC
+* キーバインドの設定
+  =\C-cw= で辞書を引く
+  #+BEGIN_SRC emacs-lisp
+    (global-set-key "\C-cw" 'lookup-pattern)
+    (global-set-key "\C-cW" 'lookup-word)
+#+END_SRC
+* 検索エージェント, 辞書の設定
+  #+BEGIN_SRC emacs-lisp
+    (setq lookup-search-agents
+          '(
+            (ndeb "/usr/local/share/dict/eijiro"    :alias "英辞郎")
+            (ndeb "/usr/local/share/dict/waeijiro"  :alias "和英辞郎")
+            (ndeb "/usr/local/share/dict/rikagaku5" :alias "理化学辞典 第5版")
+            (ndeb "/usr/local/share/dict/koujien4"  :alias "広辞苑 第4版")
+            (ndeb "/usr/local/share/dict/wadai5"    :alias "研究社 和英大辞典 第5版")
+            (ndeb "/usr/local/share/dict/eidai6"    :alias "研究社 英和大辞典 第6版")
+            (ndeb "/usr/local/share/dict/colloc"    :alias "研究社 英和活用大辞典 ")
+            ))
+  #+END_SRC

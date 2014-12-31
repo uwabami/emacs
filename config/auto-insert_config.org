@@ -1,0 +1,72 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#
+# Copyright(C) Youhei SASAKI All rights reserved.
+# License: Expat
+#
+#+TITLE: Auto-insert の設定
+#+AUTHOR: Youhei SASAKI
+#+EMAIL: uwabami@gfd-dennou.org
+#+DATE: 2013-07-01 17:19:10
+#+SETUPFILE: ./export-config.org
+
+* 始めに
+  ファイル作成時にテンプレートを挿入してくれる素敵機能.
+  テンプレートファイルは =~/.emacs.d/share/template/= 以下に集約している.
+* 読み込み
+   #+BEGIN_SRC emacs-lisp
+     (require 'autoinsert)
+     (auto-insert-mode 1)
+   #+END_SRC
+* insert 時の問い合わせ無効化
+  #+BEGIN_SRC emacs-lisp
+    (setq auto-insert-query nil)
+  #+END_SRC
+* テンプレートディレクトリの設定
+  末尾に "/" が必要なので注意
+  #+BEGIN_SRC emacs-lisp
+    (setq auto-insert-directory "~/.emacs.d/share/template/")
+  #+END_SRC
+* hook の追加
+  #+BEGIN_SRC emacs-lisp
+    (add-hook 'find-file-hooks 'auto-insert)
+  #+END_SRC
+* テンプレート内の置換変数/関数の定義
+  テンプレート内のファイル名や copyright header などを更新する関数
+  #+BEGIN_SRC emacs-lisp
+     (defvar my:autoinsert-template-replace-alist
+       '(("%file%" .
+          (lambda()
+            (file-name-nondirectory (buffer-file-name))))
+         ("%author%" . (lambda()(identity user-full-name)))
+         ("%email%"  . (lambda()(identity user-mail-address)))
+         ("%filewithoutext%" .
+          (lambda()
+            (file-name-sans-extension (file-name-nondirectory (buffer-file-name)))))
+         ))
+     (defun my:template ()
+       (time-stamp)
+       (mapc #'(lambda(c)
+                 (progn
+                   (goto-char (point-min))
+                   (replace-string (car c) (funcall (cdr c)) nil)))
+             my:autoinsert-template-replace-alist)
+       (goto-char (point-max))
+       (message "done."))
+  #+END_SRC
+* テンプレートの設定[0/1]
+  #+BEGIN_SRC emacs-lisp
+    (setq auto-insert-alist
+          (nconc '(
+                   ("\\.el$"   . ["template.el"   my:template])
+                   ("\\.rb$"   . ["template.rb"   my:template])
+                   ("\\.zsh$"  . ["template.zsh"  my:template])
+                   ("\\.sh$"   . ["template.sh"   my:template])
+                   ("\\.f90$"  . ["template.f90"  my:template])
+                   ("\\.cpp$"  . ["template.cpp"  my:template])
+                   ("\\.tex$"  . ["template.tex"  my:template])
+                   ("\\.howm$" . ["template.howm" my:template])
+                   ("\\.org$"  . ["template.org"  my:template])
+                   ("\\.muse$" . ["template.muse" my:template])
+                   ) auto-insert-alist))
+  #+END_SRC
+  - [ ] ディレクトリに合わせてテンプレートを切り替えたい. 具体的には, org ファイルのテンプレート展開をちょっとゴニョゴニョしたいのだけれど, どうしたら良いかな...

@@ -6,7 +6,7 @@
 #+TITLE: [[file:el-get_config.org][el-get での package の install]]
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-11-30 21:07:25
+#+DATE: 2014-12-31 16:03:06
 #+SETUPFILE: ./export-config.org
 * 始めに
   [[http://tapoueh.org/emacs/el-get.html][el-get]] [fn:1] で必要なパッケージを追加インストールします.
@@ -202,13 +202,13 @@
    #+END_SRC
 ** calfw
    #+BEGIN_SRC emacs-lisp
-     ;; (when (file-directory-p (expand-file-name "~/ownCloud/Calender"))
-     ;;   (setq my:el-get-packages
-     ;;         (append
-     ;;          my:el-get-packages
-     ;;          '("calfw")
-     ;;          ))
-     ;;   )
+     (when (file-directory-p (expand-file-name "~/ownCloud/Calender"))
+       (setq my:el-get-packages
+             (append
+              my:el-get-packages
+              '("calfw")
+              ))
+       )
    #+END_SRC
 ** elscreen-howm
    #+BEGIN_SRC emacs-lisp

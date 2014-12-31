@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2014-12-02 03:44:23$
+;; $Lastupdate: 2014-12-31 15:59:23$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -81,6 +81,7 @@
             (normal-top-level-add-subdirs-to-load-path))))))
 ;; -----------------------------------------------------------
 ;;; load-path の設定
+;;
 ;; load-path の優先順位が気になる場合には
 ;;      M-x list-load-path-shadows
 ;; で確認する.
@@ -92,9 +93,16 @@
  "modules/org-mode/lisp"          ; org-mode
  )
 ;; -----------------------------------------------------------
+;;; disable built-in GnuTLS library
+;;
+(defun gnutls-available-p ()
+  "Function redefined in order not to use built-in GnuTLS support"
+  nil)
+;; -----------------------------------------------------------
 ;;; Handling package
 ;;
 ;; set el-get dir: ~/.emacs.d/packages/el-get/<emacs-version>
+;;
 (setq el-get-dir
       (concat (file-name-as-directory my:user-emacs-package-directory)
               "el-get/"
@@ -172,13 +180,13 @@
 ;; -----------------------------------------------------------
 ;;; calculate bootup time/ スピード狂に捧ぐ.
 ;;
-;; 目標: 3000ms 圏内 -> 最近は daemon mode で使用することが多いので意味が無い?
+;; 目標: 3000ms 圏内 -> 最近は daemon mode で使用することが多いので意味が無い…
 ;;
-(defun message-startup-time ()
-  (message
-   "Emacs loaded in %dms"
-   (/ (- (+ (third after-init-time) (* 1000000 (second after-init-time)))
-         (+ (third before-init-time) (* 1000000 (second before-init-time))))
-      1000))
-  (add-hook 'after-init-hook 'message-startup-time))
+;; (defun message-startup-time ()
+;;   (message
+;;    "Emacs loaded in %dms"
+;;    (/ (- (+ (third after-init-time) (* 1000000 (second after-init-time)))
+;;          (+ (third before-init-time) (* 1000000 (second before-init-time))))
+;;       1000))
+;;   (add-hook 'after-init-hook 'message-startup-time))
 ;;; init.el ends here

@@ -6,7 +6,7 @@
 #+TITLE: Emacsの設定 - 主に org ファイルの読み込み集
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-12-31 16:05:41
+#+DATE: 2015-01-02 11:19:15
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -167,6 +167,11 @@
   #+BEGIN_SRC emacs-lisp
     (my:load-org-file "org-mode_config.org")
   #+END_SRC
+* MuseMode
+  #+BEGIN_SRC emacs-lisp
+    (when (locate-library "muse")
+      (my:load-org-file "muse_config.org"))
+  #+END_SRC
 * [[http://orgmode.org/worg/org-contrib/gsoc2012/student-projects/org-sync/][org-sync]]
   Redmine や Bugzilla なんかのチケットを org の Todo リストと同期
   #+BEGIN_SRC emacs-lisp
@@ -200,6 +205,96 @@
         (autoload 'tdiary-new "tdiary-mode" nil t)
         (autoload 'tdiary-new-diary "tdiary-mode" nil t)
         (autoload 'tdiary-replace "tdiary-mode" nil t)
+        ))
+  #+END_SRC
+* カレンダー関連
+  Google Calendar との同期に org-gcal, 表示に calfw を使う
+  #+BEGIN_SRC emacs-lisp
+    (when (and (locate-library "org-gcal")
+               (locate-library "calfw-org"))
+      (progn
+        (require 'japanese-holidays)
+        (setq calendar-holidays
+              (append japanese-holidays local-holidays other-holidays))
+        (add-hook 'calendar-load-hook
+                  (lambda ()
+                    (require 'japanese-holidays)
+                    (setq calendar-holidays
+                          (append japanese-holidays local-holidays other-holidays))))
+        ;; 月
+        (setq calendar-month-name-array
+              ["01" "02" "03" "04" "05" "06" "07" "08" "09" "10" "11" "12" ])
+        (setq calendar-day-name-array
+              ["日" "月" "火" "水" "木" "金" "土"])
+        ;; 週の先頭の曜日
+        (setq calendar-week-start-day 0) ; 日曜日は0, 月曜日は1
+        ;; calfw
+        (require 'calfw-org)
+        (define-key global-map (kbd "C-x <f2>") 'my:cfw:open-calendar)
+        (defun my:cfw:open-calendar ()
+          "open Org file as calfw calendar source"
+          (interactive)
+          (let* (
+                 (src1
+                  (lexical-let ((file "~/ownCloud/org/Schedule.org"))
+                    (make-cfw:source
+                     :name "個人"
+                     :data (lambda (begin end)
+                             (let ((org-agenda-files (list file)))
+                               (cfw:org-schedule-period-to-calendar begin end)))
+                     :color "#7f7fff"
+                     )))
+                 (src2
+                  (lexical-let ((file "~/ownCloud/org/Schedule_KUSM.org"))
+                    (make-cfw:source
+                     :name "京大数学"
+                     :data (lambda (begin end)
+                             (let ((org-agenda-files (list file)))
+                               (cfw:org-schedule-period-to-calendar begin end)))
+                     :color "#7fff7f"
+                     )))
+                 (src3
+                  (lexical-let ((file "~/ownCloud/org/Schedule_GFD.org"))
+                    (make-cfw:source
+                     :name "電脳倶楽部"
+                     :data (lambda (begin end)
+                             (let ((org-agenda-files (list file)))
+                               (cfw:org-schedule-period-to-calendar begin end)))
+                     :color "#ffff7f"
+                     )))
+                 (src4
+                  (lexical-let ((file "~/ownCloud/org/Schedule_DebianJP.org"))
+                    (make-cfw:source
+                     :name "DebianJP"
+                     :data (lambda (begin end)
+                             (let ((org-agenda-files (list file)))
+                               (cfw:org-schedule-period-to-calendar begin end)))
+                     :color "#ff7fff"
+                     )))
+                 (cp (cfw:create-calendar-component-buffer
+                      :view 'month
+                      :contents-sources (list src1 src2 src3 src4)
+                      :custom-map cfw:org-schedule-map
+                      :sorter 'cfw:org-schedule-sorter)))
+            (switch-to-buffer (cfw:cp-get-buffer cp)))
+            )
+        (setq request-storage-directory
+              (concat my:user-emacs-temporary-directory "request"))
+        (unless (file-directory-p request-storage-directory)
+          (make-directory request-storage-directory))
+        (require 'org-gcal nil 'noerror)
+        (require 'alert nil 'noerror)
+        (setq alert-default-style 'libnotify)
+        (setq org-gcal-up-days    356) ;; 1 years
+        (setq org-gcal-down-days  365) ;; 1 years
+        (setq org-gcal-auto-archive nil)
+        (setq org-gcal-dir
+              (concat my:user-emacs-temporary-directory "org-gcal"))
+        (unless (file-directory-p org-gcal-dir)
+          (make-directory org-gcal-dir))
+        (setq org-gcal-token-file
+              (expand-file-name ".org-gcal-token" org-gcal-dir))
+        (load "~/.mua/org-gcal-settings.gpg")
         ))
   #+END_SRC
 * テスト

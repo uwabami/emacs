@@ -6,7 +6,7 @@
 #+TITLE: [[file:el-get_config.org][el-get での package の install]]
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-12-31 16:03:06
+#+DATE: 2015-01-02 11:25:43
 #+SETUPFILE: ./export-config.org
 * 始めに
   [[http://tapoueh.org/emacs/el-get.html][el-get]] [fn:1] で必要なパッケージを追加インストールします.
@@ -30,6 +30,13 @@
               :url "https://raw.githubusercontent.com/knu/elscreen/master/elscreen.el"
               :prepare (add-to-list 'load-path default-directory)
               )
+       (:name ox-jekyll
+              :website "https://github.com/yoshinari-nomura/org-octpress"
+              :type http
+              :url "https://raw.githubusercontent.com/yoshinari-nomura/org-octopress/master/ox-jekyll.el"
+              :prepare (add-to-list 'load-path default-directory)
+              )
+
        ))
   #+END_SRC
 * el-get で定義されているレシピから install するパッケージ
@@ -200,15 +207,32 @@
                   )))
          ))
    #+END_SRC
-** calfw
+** カレンダー関連
    #+BEGIN_SRC emacs-lisp
-     (when (file-directory-p (expand-file-name "~/ownCloud/Calender"))
-       (setq my:el-get-packages
-             (append
-              my:el-get-packages
-              '("calfw")
+          (when (and (>= emacs-major-version 24)
+                     (file-exists-p (concat user-emacs-directory ".calendar-use")))
+            (progn
+              (setq el-get-sources
+                    (append
+                     el-get-sources
+                     '(
+                       (:name org-gcal
+                              :description "Org sync with Google Calendar."
+                              :website "https://github.com/myuhe/org-gcal"
+                              :type github
+                              :depends (deferred request alert cl-lib)
+                              :pkgname "myuhe/org-gcal.el"
+                              :prepare (add-to-list 'load-path default-directory)
+                              )
+                       )))
+              (setq my:el-get-packages
+                    (append
+                     my:el-get-packages
+                     '("calfw"
+                       "japanese-holidays"
+                       )
+                     ))
               ))
-       )
    #+END_SRC
 ** elscreen-howm
    #+BEGIN_SRC emacs-lisp

@@ -6,7 +6,7 @@
 #+TITLE: [[file:el-get_config.org][el-get での package の install]]
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2015-01-02 23:55:34
+#+DATE: 2015-01-03 00:16:42
 #+SETUPFILE: ./export-config.org
 * 始めに
   [[http://tapoueh.org/emacs/el-get.html][el-get]] [fn:1] で必要なパッケージを追加インストールします.
@@ -25,10 +25,8 @@
               :type github
               :pkgname "awasira/cp5022x.el")
        (:name elscreen
-              :website "https://github.com/knu/elscreen"
-              :type http
-              :url "https://raw.githubusercontent.com/knu/elscreen/master/elscreen.el"
-              :prepare (add-to-list 'load-path default-directory)
+              :type github
+              :pkgname "emacs-jp/elscreen"
               )
        ))
   #+END_SRC

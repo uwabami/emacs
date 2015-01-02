@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2014-12-31 15:59:23$
+;; $Lastupdate: 2015-01-02 18:17:17$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -98,6 +98,10 @@
 (defun gnutls-available-p ()
   "Function redefined in order not to use built-in GnuTLS support"
   nil)
+;; -----------------------------------------------------------
+;;; backward compatibility: emacs <= 23
+;;
+(defalias 'make-local-hook 'ignore)
 ;; -----------------------------------------------------------
 ;;; Handling package
 ;;

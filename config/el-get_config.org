@@ -6,7 +6,7 @@
 #+TITLE: [[file:el-get_config.org][el-get での package の install]]
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2015-01-02 11:25:43
+#+DATE: 2015-01-02 11:55:49
 #+SETUPFILE: ./export-config.org
 * 始めに
   [[http://tapoueh.org/emacs/el-get.html][el-get]] [fn:1] で必要なパッケージを追加インストールします.
@@ -36,7 +36,6 @@
               :url "https://raw.githubusercontent.com/yoshinari-nomura/org-octopress/master/ox-jekyll.el"
               :prepare (add-to-list 'load-path default-directory)
               )
-
        ))
   #+END_SRC
 * el-get で定義されているレシピから install するパッケージ
@@ -277,6 +276,16 @@
                          )
                   )))
          ))
+   #+END_SRC
+** Muse
+   #+BEGIN_SRC emacs-lisp
+     (unless (locate-library "muse")
+       (setq my:el-get-packages
+             (append
+              my:el-get-packages
+              '("muse")
+              ))
+       )
    #+END_SRC
 * 実際のインストール作業
   #+BEGIN_SRC emacs-lisp

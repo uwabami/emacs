@@ -6,7 +6,7 @@
 #+TITLE: Wanderlust の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-11-28 16:03:09
+#+DATE: 2015-01-02 18:07:57
 #+SETUPFILE: ./export-config.org
 
 * Wanderlust の設定
@@ -103,23 +103,23 @@
 * ssl.elの代わりにopentlsを使う
   ついで(あれば) =/etc/ssl/certs/ca-ceritficats.crt= で証明書を検証.
   #+BEGIN_SRC emacs-lisp
-    ;; (require 'tls)
-    ;; (set-alist 'elmo-network-stream-type-alist
-    ;;            "!opentls" '(opentls nil open-tls-stream))
-    ;; (set-alist 'elmo-network-stream-type-alist
-    ;;            "!" '(ssl ssl open-tls-stream))
-    ;; (cond
-    ;;  ((file-exists-p "/etc/ssl/certs/ca-certificates.crt")
-    ;;   (setq tls-program
-    ;;         '("gnutls-cli --x509cafile /etc/ssl/certs/ca-certificates.crt -p %p %h"
-    ;;           "gnutls-cli --insecure -p %p %h"
-    ;;           )))
-    ;;  (t
-    ;;   (setq tls-program
-    ;;         '("gnutls-cli --insecure -p %p %h"))
-    ;;   )
-    ;;  )
-    ;; (setq smtp-use-gnutls nil)
+    (setq smtp-use-gnutls nil)
+    (require 'tls)
+    (set-alist 'elmo-network-stream-type-alist
+               "!opentls" '(opentls nil open-tls-stream))
+    (set-alist 'elmo-network-stream-type-alist
+               "!" '(ssl ssl open-tls-stream))
+    (cond
+     ((file-exists-p "/etc/ssl/certs/ca-certificates.crt")
+      (setq tls-program
+            '("gnutls-cli --x509cafile /etc/ssl/certs/ca-certificates.crt -p %p %h"
+              "gnutls-cli --insecure -p %p %h"
+              )))
+     (t
+      (setq tls-program
+            '("gnutls-cli --insecure -p %p %h"))
+      )
+     )
   #+END_SRC
 * 個人情報の設定
   具体的な設定内容は

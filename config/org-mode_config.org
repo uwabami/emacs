@@ -6,7 +6,7 @@
 #+TITLE: org-modeの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2015-01-02 11:28:19
+#+DATE: 2015-01-02 17:54:53
 #+SETUPFILE: ./export-config.org
 * 始めに
   多機能すぎて, 御託宣が書けません.
@@ -456,6 +456,21 @@
              ("web" :components ("public" "work" "img"))
              ("emacs" :components ("emacs"))
              ))
+   #+END_SRC
+* Babel
+** 言語の追加
+  #+BEGIN_SRC emacs-lisp
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((emacs-lisp . t)
+     (sh .t)
+     (ruby .t))
+   )
+  #+END_SRC
+** 確認しない
+   Project を batch で出力する時だけ nil にした方が良いかなぁ...
+   #+BEGIN_SRC emacs-lisp
+   (setq org-confirm-babel-evaluate nil)
    #+END_SRC
 * Footnotes
 

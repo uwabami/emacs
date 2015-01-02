@@ -458,14 +458,20 @@
              ))
    #+END_SRC
 * Babel
+** 読み込み
+   #+BEGIN_SRC emacs-lisp
+     (require 'ob)
+   #+END_SRC
 ** 言語の追加
   #+BEGIN_SRC emacs-lisp
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((emacs-lisp . t)
-     (sh .t)
-     (ruby .t))
-   )
+    (org-babel-do-load-languages
+     'org-babel-load-languages
+     '(
+       (emacs-lisp . t)
+       (shell      . t)
+       (ruby       . t)
+       )
+     )
   #+END_SRC
 ** 確認しない
    Project を batch で出力する時だけ nil にした方が良いかなぁ...

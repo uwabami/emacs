@@ -6,7 +6,7 @@
 #+TITLE: org-modeの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2015-01-02 17:54:53
+#+DATE: 2015-01-03 18:31:28
 #+SETUPFILE: ./export-config.org
 * 始めに
   多機能すぎて, 御託宣が書けません.
@@ -220,7 +220,7 @@
    =ox-jekyll= 自体は [[https://github.com/yoshinari-nomura/org-octopress][yoshinari-nomura/org-octopress]] [fn:2] 参照のこと.
    =ox-html= は =ox-jekyll= 内で読み込まれている.
    #+BEGIN_SRC emacs-lisp
-     (require 'ox-jekyll nil 'noerror)
+     (require 'ox-jekyll)
      (require 'ox-html)
      (require 'ox-publish)
    #+END_SRC

@@ -1,7 +1,7 @@
 ;; -*- mode: emacs-lisp; coding: utf-8; indent-tabs-mode: nil -*-
 ;;
 ;; Copyright(C) Youhei SASAKI All rights reserved.
-;; $Lastupdate: 2015-01-02 18:17:17$
+;; $Lastupdate: 2015-01-05 23:09:30$
 ;;
 ;; Author: Youhei SASAKI <uwabami@gfd-dennou.org>
 ;; License: GPL-3+
@@ -193,4 +193,5 @@
 ;;          (+ (third before-init-time) (* 1000000 (second before-init-time))))
 ;;       1000))
 ;;   (add-hook 'after-init-hook 'message-startup-time))
+;;
 ;;; init.el ends here

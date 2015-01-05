@@ -6,7 +6,7 @@
 #+TITLE: org-modeの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2015-01-03 18:31:28
+#+DATE: 2015-01-05 23:45:44
 #+SETUPFILE: ./export-config.org
 * 始めに
   多機能すぎて, 御託宣が書けません.
@@ -181,9 +181,26 @@
 ** Agenda 表示で使用するファイル
    #+BEGIN_SRC emacs-lisp
      (setq org-agenda-files nil)
-     (dolist (file '("Archive.org" "Diary.org" "Memo.org" "Schedule.org"))
+     (dolist (file
+              '("Archive.org"
+                "Diary.org"
+                "Memo.org"
+                "Schedule.org"
+                "Schedule_KUSM.org"
+                "Schedule_GFD.org"
+                "Schedule_DebianJP.org"
+                ))
        (add-to-list 'org-agenda-files (concat org-directory file)))
    #+END_SRC
+** Agenda 表示のカスタマイズ
+*** 一月表示
+   #+BEGIN_SRC emacs-lisp
+     (setq org-agenda-span 'month) ;; default: 'week
+   #+END_SRC
+*** 時刻表示が一桁の時に 0 を付加
+    #+BEGIN_SRC emacs-lisp
+      (setq org-agenda-time-leading-zero t)
+    #+END_SRC
 * Export
 ** 読み込み
    #+BEGIN_SRC emacs-lisp

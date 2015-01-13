@@ -6,7 +6,7 @@
 #+TITLE: [[file:el-get_config.org][el-get での package の install]]
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2015-01-05 23:42:32
+#+DATE: 2015-01-10 01:18:50
 #+SETUPFILE: ./export-config.org
 * 始めに
   [[http://tapoueh.org/emacs/el-get.html][el-get]] [fn:1] で必要なパッケージを追加インストールします.
@@ -28,15 +28,23 @@
               :type github
               :pkgname "emacs-jp/elscreen"
               )
+       ;; (:name yaicomplete
+       ;;        :type http
+       ;;        :url "https://raw.githubusercontent.com/tarao/elisp/master/yaicomplete.el"
+       ;;        )
        ))
   #+END_SRC
 * el-get で定義されているレシピから install するパッケージ
   #+BEGIN_SRC emacs-lisp
-    (setq
-     my:el-get-packages
-     '(  "exec-path-from-shell"
-;;       "zlc"
-       ))
+        (setq
+         my:el-get-packages
+         '(  "exec-path-from-shell"
+             "auto-complete"
+    ;;         "ido-ubiquitous"
+    ;;         "ido-vertical-mode"
+    ;;         "smex"
+    ;;         "zlc"
+           ))
   #+END_SRC
 * 環境依存するパッケージの定義
 ** Emacs <= 23
@@ -46,6 +54,16 @@
              (append
               my:el-get-packages
               '("cl-lib")
+              ))
+       )
+   #+END_SRC
+** Flycheck
+   #+BEGIN_SRC emacs-lisp
+     (when (>= emacs-major-version 24)
+       (setq my:el-get-packages
+             (append
+              my:el-get-packages
+              '("flycheck")
               ))
        )
    #+END_SRC
@@ -270,7 +288,7 @@
                   )))
          ))
    #+END_SRC
-** Web pageMuse
+** Web page & Muse
    #+BEGIN_SRC emacs-lisp
      (setq el-get-sources
            (append
@@ -293,6 +311,25 @@
                 ))
          )
        )
+   #+END_SRC
+** navi2ch
+   #+BEGIN_SRC emacs-lisp
+     (when (file-exists-p (concat user-emacs-directory ".navi2ch-use"))
+       (progn
+         (setq el-get-sources
+               (append
+                el-get-sources
+                '(
+                  (:name navi2ch
+                         :website "http://navi2ch.sourceforge.net/index.ja.html"
+                         :description "navigator for 2ch with emacsen"
+                         :type github
+                         :pkgname "naota/navi2ch"
+                         :build `(("./configure" ,(concat "--with-emacs=" el-get-emacs)) "make")
+                         :autoloads nil
+                         )
+                  )))
+         ))
    #+END_SRC
 * 実際のインストール作業
   #+BEGIN_SRC emacs-lisp

@@ -1,8 +1,8 @@
+*.el
 *.elc
 .*-stamp
 .*-use
 .cask
-config/*.el
 config/sitemap.org
 modules/skkdic
 packages/*

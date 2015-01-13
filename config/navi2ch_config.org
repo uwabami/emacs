@@ -6,7 +6,7 @@
 #+AUTHOR: Youhei SASAKI
 #+EMAIL:  uwabami@gfd-dennou.org
 #+TITLE: navi2ch の設定
-#+DATE: 2014-05-31 02:26:55
+#+DATE: 2015-01-10 01:05:00
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -27,9 +27,9 @@
  #+END_SRC
 * proxy
   #+BEGIN_SRC emacs-lisp
-    (if (getenv "http_proxy")
-        (setq navi2ch-net-http-proxy
-              (replace-regexp-in-string "http://" "" (getenv "http_proxy"))))
+    ;; (if (getenv "http_proxy")
+    ;;     (setq navi2ch-net-http-proxy
+    ;;           (replace-regexp-in-string "http://" "" (getenv "http_proxy"))))
   #+END_SRC
 * 表示範囲
   #+BEGIN_SRC emacs-lisp

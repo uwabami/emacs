@@ -1,11 +1,7 @@
 # -*- mode: makefile -*-
-__SRC__		:= $(wildcard *.el)
-ELFiles		:= $(__SRC__:%v.el=)
-ELCFiles	:= $(ELFiles:%.el=%.elc)
-
 EMACS	?= emacs
 
-all: bootstrap $(ELCFiles)
+all: bootstrap init.elc
 
 bootstrap: .bootstrap-stamp
 .bootstrap-stamp: .modules-stamp
@@ -22,7 +18,8 @@ bootstrap: .bootstrap-stamp
 	  if [ -f /usr/share/skk/SKK-JISYO.L ] ; then \
 	    ln -s /usr/share/skk/SKK-JISYO.L modules/skkdic/SKK-JISYO.L ;\
 	  else \
-	    wget -q -O - http://openlab.jp/skk/dic/SKK-JISYO.L.gz | gzip -d > modules/skkdic/SKK-JISYO.L ;\
+	    wget -q -O - http://openlab.jp/skk/dic/SKK-JISYO.L.gz \
+	    | gzip -d > modules/skkdic/SKK-JISYO.L ;\
 	  fi  \
 	fi
 	touch $@
@@ -30,11 +27,14 @@ bootstrap: .bootstrap-stamp
 	chmod 700 tmp
 	touch $@
 %.elc: %.el
-	$(EMACS) -l init.el -batch -f batch-byte-compile $<
+	$(EMACS) -l $< -batch -f batch-byte-compile $<
+init.el: README.org
+	emacs -Q --batch -l "ob-tangle" \
+	  --eval "(org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\"))"
 conf-clean:
 	(cd config && rm -fr *.el *.elc)
 clean: conf-clean
-	rm -fr $(ELCFiles)
+	rm -fr init.elc init.el
 distclean: clean
 	( cd modules/org-mode && $(MAKE) clean )
 	rm -fr modules/skkdic

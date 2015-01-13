@@ -6,7 +6,7 @@
 #+TITLE: [[file:el-get_config.org][el-get での package の install]]
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2015-01-10 01:18:50
+#+DATE: 2015-01-14 02:18:25
 #+SETUPFILE: ./export-config.org
 * 始めに
   [[http://tapoueh.org/emacs/el-get.html][el-get]] [fn:1] で必要なパッケージを追加インストールします.
@@ -28,6 +28,14 @@
               :type github
               :pkgname "emacs-jp/elscreen"
               )
+       (:name auto-complete
+              :website "https://github.com/auto-complete/auto-complete"
+              :description "The most intelligent auto-completion extension."
+              :type github
+              :pkgname "auto-complete/auto-complete"
+              :depends (cl-lib popup fuzzy)
+              :features auto-complete-config
+              )
        ;; (:name yaicomplete
        ;;        :type http
        ;;        :url "https://raw.githubusercontent.com/tarao/elisp/master/yaicomplete.el"
@@ -39,7 +47,7 @@
         (setq
          my:el-get-packages
          '(  "exec-path-from-shell"
-             "auto-complete"
+    ;;         "auto-complete"
     ;;         "ido-ubiquitous"
     ;;         "ido-vertical-mode"
     ;;         "smex"
@@ -47,16 +55,6 @@
            ))
   #+END_SRC
 * 環境依存するパッケージの定義
-** Emacs <= 23
-   #+BEGIN_SRC emacs-lisp
-     (when (<= emacs-major-version 23)
-       (setq my:el-get-packages
-             (append
-              my:el-get-packages
-              '("cl-lib")
-              ))
-       )
-   #+END_SRC
 ** Flycheck
    #+BEGIN_SRC emacs-lisp
      (when (>= emacs-major-version 24)

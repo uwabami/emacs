@@ -1,7 +1,7 @@
 language: emacs-lisp
 cache:
   - apt: true
-  - http: false
+  - http: true
 env:
   - EMACS=emacs23
   - EMACS=emacs24

@@ -29,8 +29,12 @@ bootstrap: .bootstrap-stamp
 %.elc: %.el
 	$(EMACS) -l $< -batch -f batch-byte-compile $<
 init.el: README.org
-	emacs -Q --batch -l "module/org-mode/lisp/ob.el" \
-	  --eval "(org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\"))"
+	emacs -Q --batch \
+	  --eval "(progn \
+	            (add-to-list 'load-path \"$(shell pwd)/modules/org-mode/lisp/\") \
+	            (require 'ob) \
+	            (require 'ob-tangle) \
+	            (org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\")))"
 conf-clean:
 	(cd config && rm -fr *.el *.elc)
 clean: conf-clean

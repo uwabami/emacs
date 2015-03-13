@@ -6,7 +6,7 @@
 #+TITLE: Wanderlust の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2015-01-02 18:07:57
+#+DATE: 2015-03-14 00:19:34
 #+SETUPFILE: ./export-config.org
 
 * Wanderlust の設定
@@ -270,11 +270,11 @@
    Google Contacts の API が変わったらしく
    GCALDaemon で LDAP サーバは使えなくなったのでコメントアウト.
    #+BEGIN_SRC emacs-lisp
-     ;; ldap からアドレスを引く設定
+     ;; ;; ldap からアドレスを引く設定
      ;; (setq wl-use-ldap t)
      ;; (setq wl-ldap-server "localhost")
      ;; (setq wl-ldap-port "636")
-     ;; (setq wl-ldap-base "ou=People,dc=example,dc=com")
+     ;; (setq wl-ldap-base "dc=math,dc=kyoto-u,dc=ac,dc=jp")
    #+END_SRC
    パスワードの保存先
    #+BEGIN_SRC emacs-lisp
@@ -436,37 +436,37 @@
    以下の二つの設定を有効にするには
    =elmo-msgdb-extra-fields= を設定する必要がある.
    この変数は振り分け判定にも使用するのでそこで設定している
-*** Gmail 風に, 自分宛のメールに ">" をつけて表示する
-    元ネタ [fn:4]: [[http://d.hatena.ne.jp/khiker/20080206/wanderlust]]
-    #+BEGIN_SRC emacs-lisp
-      (setq wl-user-mail-address-regexp
-            "^uwabami.*\\|^sasakyh.*")
-      ;; 一覧表示での置き換え規則に追加
-      (defun my:wl-summary-line-for-me ()
-        (if (catch 'found
-              (let ((to (elmo-message-entity-field wl-message-entity 'to))
-                    (cc (elmo-message-entity-field wl-message-entity 'cc)))
-                (when (or (stringp to) cc)
-                  (setq to
-                        (append (if (stringp to) (list to) to)
-                                (when cc
-                                  (if (stringp cc) (list cc) cc)))))
-                (dolist (i to)
-                  (when (wl-address-user-mail-address-p (eword-decode-string i))
-                    (throw 'found t)))))
-            ">"
-          ""))
-      ;; > を summary-line-format に追加
-      (setq wl-summary-line-format-spec-alist
-            (append wl-summary-line-format-spec-alist
-                    '((?> (my:wl-summary-line-for-me)))))
-    #+END_SRC
-*** 添付ファイルがあったら, サマリ行に "@" を付ける
-    #+BEGIN_SRC emacs-lisp
-      (setq wl-summary-line-format-spec-alist
-            (append wl-summary-line-format-spec-alist
-                    '((?@ (wl-summary-line-attached)))))
-    #+END_SRC
+** Gmail 風に, 自分宛のメールに ">" をつけて表示する
+   元ネタ [fn:4]: [[http://d.hatena.ne.jp/khiker/20080206/wanderlust]]
+   #+BEGIN_SRC emacs-lisp
+     (setq wl-user-mail-address-regexp
+           "^uwabami.*\\|^sasakyh.*")
+     ;; 一覧表示での置き換え規則に追加
+     (defun my:wl-summary-line-for-me ()
+       (if (catch 'found
+             (let ((to (elmo-message-entity-field wl-message-entity 'to))
+                   (cc (elmo-message-entity-field wl-message-entity 'cc)))
+               (when (or (stringp to) cc)
+                 (setq to
+                       (append (if (stringp to) (list to) to)
+                               (when cc
+                                 (if (stringp cc) (list cc) cc)))))
+               (dolist (i to)
+                 (when (wl-address-user-mail-address-p (eword-decode-string i))
+                   (throw 'found t)))))
+           ">"
+         ""))
+     ;; > を summary-line-format に追加
+     (setq wl-summary-line-format-spec-alist
+           (append wl-summary-line-format-spec-alist
+                   '((?> (my:wl-summary-line-for-me)))))
+   #+END_SRC
+** 添付ファイルがあったら, サマリ行に "@" を付ける
+   #+BEGIN_SRC emacs-lisp
+     (setq wl-summary-line-format-spec-alist
+           (append wl-summary-line-format-spec-alist
+                   '((?@ (wl-summary-line-attached)))))
+   #+END_SRC
 ** クォートされた文字列もデコードする
    #+BEGIN_SRC emacs-lisp
      (setq mime-header-lexical-analyzer
@@ -560,25 +560,30 @@
              ))
    #+END_SRC
 ** 自動振り分け
-   =wl-expire= の設定
-*** log
-    良い感じになってきたら nil にして log を残さないようにすること
-    #+BEGIN_SRC emacs-lisp
-        (setq wl-expire-use-log t)
-    #+END_SRC
-*** 起動時に自動振り分けを有効化する
-    正規表現をミスすると致命的なので注意
-    #+BEGIN_SRC emacs-lisp
-    ;;  (add-hook 'wl-summary-prepared-pre-hook 'wl-summary-expire)
-    #+END_SRC
-*** 実際の expire rule
-    あまり細かい事は考えず, 一年前のメールは =hide= にしている.
-    #+BEGIN_SRC emacs-lisp
-      ;; (setq wl-expire-alist
-      ;;       '(
-      ;;         ("^\\%.*$" (date 365) hide)
-      ;;         ))
-    #+END_SRC
+   =wl-expire= の設定など。最近使っていないので、以下はほとんどコメントアウト
+
+   log: 良い感じになってきたら nil にして log を残さないようにすること
+   #+BEGIN_SRC emacs-lisp
+     ;; (setq wl-expire-use-log t)
+   #+END_SRC
+   起動時に自動振り分けを有効化: 正規表現をミスすると致命的なので注意
+   #+BEGIN_SRC emacs-lisp
+   ;;  (add-hook 'wl-summary-prepared-pre-hook 'wl-summary-expire)
+   #+END_SRC
+   実際の expire rule:
+   あまり細かい事は考えず, 一年前のメールは =hide= にしていた.
+   #+BEGIN_SRC emacs-lisp
+     ;; (setq elmo-localdir-folder-path "~/Maildir")
+     ;; (setq wl-expire-localdir-date-folder-name-fmt "%s.%%04d.%%02d/cur")
+     ;; (setq wl-expire-alist
+     ;;       '(
+     ;;       ("^%INBOX.archive.zz2006$" (date 365) wl-expire-localdir-date)
+     ;;         ))
+     ;; (setq wl-expire-alist
+     ;;       '(
+     ;;         ("^\\%.*$" (date 365) hide)
+     ;;         ))
+   #+END_SRC
 * 日本語添付ファイル名のデコード
   日本語の添付ファイルに関しては, いまだにうまくいかない時がある.
   #+BEGIN_SRC emacs-lisp

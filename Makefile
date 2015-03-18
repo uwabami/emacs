@@ -29,18 +29,20 @@ bootstrap: .bootstrap-stamp
 %.elc: %.el
 	$(EMACS) -l $< -batch -f batch-byte-compile $<
 init.el: README.org
-	emacs -Q --batch \
+	$(EMACS) -Q --batch \
 	  --eval "(progn \
-	            (add-to-list 'load-path \"$(shell pwd)/modules/org-mode/lisp/\") \
 	            (require 'ob) \
 	            (require 'ob-tangle) \
 	            (org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\")))"
+	$(EMACS) -Q -batch -l $@
+
 conf-clean:
 	(cd config && rm -fr *.el *.elc)
 clean: conf-clean
 	rm -fr init.elc init.el
 distclean: clean
-	( cd modules/org-mode && $(MAKE) clean )
+	-( cd modules/org-mode && $(MAKE) clean )
 	rm -fr modules/skkdic
+	rm -fr packages/* && touch packages/.gitkeep
 	rm -fr .*-stamp .*-use auto-save-list
 recompile: clean all

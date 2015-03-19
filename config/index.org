@@ -1,14 +1,26 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
-#+TITLE: Emacsの設定 - 主に org ファイルの読み込み集
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2015-01-13 12:27:39
+#+DATE: 2015-03-18 18:42:22
 #+SETUPFILE: ./export-config.org
 * Emacsの設定 - 主に org ファイルの読み込み集
 ** 始めに
    =~/.emacs= → =~/.emacs.d/init.el= ([[http://www.gfd-dennou.org/member/uwabami/cc-env/EmacsBasic.html][解説]]) ときて
    このファイルで設定ファイルの読み込みを行なっています.
    具体的な設定例は, 個々のファイルを参照のこと
+** exec-path-from-shell: 環境変数の取得
+   Terminal 上で Emacs を起動する場合は問題無いですが
+   GUI 環境で Emacs を開くと環境変数が読み込まれない事がしばしばあって
+   難儀していました.
+   =exec-path-from-shell= によって shell で設定した環境変数を読み込むことで,
+   これを解決します.
+   #+BEGIN_SRC emacs-lisp
+     (el-get-bundle exec-path-from-shell
+                    (exec-path-from-shell-copy-envs
+                     '("http_proxy" "DEBFULLNAME" "DEBEMAIL"))
+                    (setq user-full-name (concat (getenv "DEBFULLNAME")))
+                    (setq user-mail-address (concat (getenv "DEBEMAIL"))))
+   #+END_SRC
 ** [[file:language_config.org][言語の設定]]
    Emacs23 から内部が Unicode ベースになっています.
 
@@ -17,6 +29,9 @@
    そこで言語設定
    前に =cp5022x.el= をインストールすることにしています.
    #+BEGIN_SRC emacs-lisp
-     (require 'cp5022x nil 'noerror)
+     (el-get-bundle cp5022x
+                    :type github :pkgname "awasira/cp5022x.el"
+                    :features cp5022x
+                    )
      (my:load-org-file "language_config.org")
    #+END_SRC

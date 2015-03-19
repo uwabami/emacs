@@ -3,7 +3,7 @@ cache:
   - apt: true
   - http: true
 env:
-  - EMACS=emacs23
+  - EMACS=emacs232
   - EMACS=emacs24
   - EMACS=emacs-snapshot
 matrix:

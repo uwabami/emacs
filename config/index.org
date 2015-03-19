@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2015-03-18 18:42:22
+#+DATE: 2015-03-19 10:27:31
 #+SETUPFILE: ./export-config.org
 * Emacsの設定 - 主に org ファイルの読み込み集
 ** 始めに
@@ -34,4 +34,9 @@
                     :features cp5022x
                     )
      (my:load-org-file "language_config.org")
+   #+END_SRC
+** [[file:basic_config.org][バージョン依存しない(はず)の雑多な設定]]
+   GUI 周りの調整等の一般的な設定など
+   #+BEGIN_SRC emacs-lisp
+    (my:load-org-file "basic_config.org")
    #+END_SRC

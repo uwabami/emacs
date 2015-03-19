@@ -8,7 +8,7 @@ env:
   - EMACS=emacs-snapshot
 matrix:
   allow_failures:
-    - env: EMACS=emacs-snapshot
+    - env: EMACS=emacs23
 before_install:
   - ln -s $TRAVIS_BUILD_DIR $HOME/.emacs.d
   - sudo add-apt-repository -y ppa:cassou/emacs

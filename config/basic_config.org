@@ -6,7 +6,7 @@
 #+TITLE: [[file:basic_config.org][バージョン依存しない(はず)の雑多な設定]]
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2015-01-06 23:27:17
+#+DATE: 2015-03-19 10:36:06
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -175,16 +175,16 @@
   backup と auto-save ファイルを集約する
   #+BEGIN_SRC emacs-lisp
      (setq auto-save-list-file-prefix
-           (concat my:user-emacs-temporary-directory ".saves-"))
+           (concat my:temp-dir ".saves-"))
      (setq auto-save-default t)
      (setq auto-save-timeout 15)
      (setq auto-save-interval 60)
      (setq make-backup-files t)
      (setq backup-by-copying t) ; symlink は使わない
      (setq backup-directory-alist
-           `(("." . ,my:user-emacs-temporary-directory)))
+           `(("." . ,my:temp-dir)))
      (setq auto-save-file-name-transforms
-           `((".*" ,my:user-emacs-temporary-directory t)))
+           `((".*" ,my:temp-dir)))
      (setq version-control t)
      (setq kept-new-versions 5)
      (setq kept-old-versions 5)
@@ -262,7 +262,7 @@
      (setq-default save-place t)
      (setq save-place-file
            (convert-standard-filename
-            (concat my:user-emacs-temporary-directory "emacs-places")))
+            (concat my:temp-dir "emacs-places")))
   #+END_SRC
 ** timestamp の自動更新
    いろいろ衝突したので =＄Lastupdate: 2= (＄は半角) があったら timestamp を更新することに
@@ -282,7 +282,7 @@
     (setq recentf-max-saved-items 2000)
     (setq recentf-save-file
           (expand-file-name
-           (concat my:user-emacs-temporary-directory "recentf")))
+           (concat my:temp-dir "recentf")))
     (setq recentf-auto-cleanup 'never)
     ;; (run-with-idle-timer 300 t 'recentf-save-list)
     ;; (run-with-idle-timer 600 t 'recentf-cleanup)
@@ -295,7 +295,7 @@
     (setq undo-strong-limit 240000)
     (savehist-mode 1)        ; ミニバッファの履歴を保存しリストア
     (setq savehist-file
-          (concat my:user-emacs-temporary-directory "history"))
+          (concat my:temp-dir "history"))
     (setq history-length t)  ; t で無制限
   #+END_SRC
 * emacs-server

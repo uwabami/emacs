@@ -1,0 +1,164 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#+TITLE: Emacs の基本設定
+#+AUTHOR: Youhei SASAKI
+#+EMAIL: uwabami@gfd-dennou.org
+#+DATE: 2015-03-30 14:07:22
+#+LANG: ja
+* はじめに
+ ここでは、私の Emacs の設定についてまとめています。
+ 基本方針は以下の通り:
+** Emacs のパケージは [[http://tapoueh.org/emacs/el-get.html][El-Get]] で管理する.
+   以前はイロイロ書いていましたが。
+   - [[http://d.hatena.ne.jp/tarao/20150221/1424518030][Caskはもう古い、これからはEl-Get - いまどきのEmacsパッケージ管理 - 貳佰伍拾陸夜日記]]
+   さすが [[https://github.com/tarao][tarao (INA Lintaro)]] です。すごい。
+** Debian パッケージがインストールされているならば、それを優先する
+   はい、個人の我侭ですね。
+   Emacsに関連するDebianパッケージを幾つかメンテナンスしているので、 可能であれば
+   [[http://tapoueh.org/emacs/el-get.html][El-Get]] でパッケージをインストールする前にDebianパッケージを使うことにしています。
+
+   自分が root 持っていない場合にはしょうがないですけれどね。
+** 設定は [[http://orgmode.org/][Org mode]] で書きたい
+   以前こんなブログ記事を書きました: [[http://uwabami.junkhub.org/log/20111213.html#p01][Emacsの設定ファイルをorgで書く]]
+   というわけで、設定は [[http://orgmode.org/worg/org-contrib/babel/intro.html][Babel: Introduction]] で書きます。
+* =~/.emacs.d/init.el= の生成
+  本ファイル(=README.org=) から，
+  Makefile 内の以下のスクリプトで =~/init.el= を生成し，byte-compile します。
+  #+BEGIN_SRC makefile
+    %.elc: %.el
+        $(EMACS) -l $< -batch -f batch-byte-compile $<
+    init.el: README.org
+        emacs -Q --batch -l "ob-tangle" \
+          --eval "(org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\"))"
+  #+END_SRC
+* ディレクトリ構成
+  以前は =~/.emacs= に設定を書いていましたが、
+  最近は =~/.emacs.d/init.el= を使うのが主流ですね。
+  さらに、適切な設定を行なうことで、Emacs 起動時に読み込んだ elisp ファイルのある
+  ディレクトリを =user-emacs-directory= として扱えます。
+  分割した設定ファイル群や El-Get で install したパッケージの置き場所も
+  =user-emacs-directory= 以下にまとめています。
+
+  ディレクトリ構成は以下のようにしました:
+  #+BEGIN_EXAMPLE
+    ~/.emacs.d/
+     |-- Makefile        ←  byte-compile 用の rule
+     |-- README.org      ←  本ファイル．`org-babel-tangle' で init.el を生成
+     |-- config/         ←  分割された設定ファイル群
+     |-- packages/       ←  el-get で install されるパッケージの置き場所
+     |-- share/          ←  Emacs lisp が使用する(いじらない)ソースなど
+     `-- tmp/            ←  一次ファイル置き場
+  #+END_EXAMPLE
+  上記ディレクトリ構成を設定ファイルで使用するためにディレクトリ配置を宣言しておきます．
+  #+BEGIN_SRC emacs-lisp
+    (when load-file-name
+      (setq user-emacs-directory (file-name-directory load-file-name)))
+    (defconst my:share-dir
+      (expand-file-name "share/" user-emacs-directory))
+    (defconst my:config-dir
+      (expand-file-name "config/" user-emacs-directory))
+    (defconst my:temp-dir
+      (expand-file-name "tmp/" user-emacs-directory))
+  #+END_SRC
+* byte-compile 用の設定
+** debug は表示しない: 必要に応じて t に変更する
+   #+BEGIN_SRC emacs-lisp
+   (setq debug-on-error nil)
+   #+END_SRC
+** =.elc= と =.el= の timestamp を比較し，新しい方を読み込む
+   #+BEGIN_SRC emacs-lisp
+     (when (boundp 'load-prefer-newer)
+       (setq load-prefer-newer t))
+   #+END_SRC
+** 常に cl を読み込む
+   #+BEGIN_SRC emacs-lisp
+     (eval-and-compile (require 'cl))
+   #+END_SRC
+** Compile-Log の非表示
+   #+BEGIN_SRC emacs-lisp
+     (let ((win (get-buffer-window "*Compile-Log*")))
+       (when win (delete-window win)))
+   #+END_SRC
+** Warning の抑制
+   #+BEGIN_SRC emacs-lisp
+    (setq byte-compile-warnings
+          '(not
+            free-vars
+            unresolved
+            callargs
+            redefine
+            obsolete
+            noruntime
+            cl-functions
+            interactive-only
+            make-local
+            ))
+   #+END_SRC
+* 可能であれば built-in GnuTLS を使用しない [0/1]
+  built-in の GnuTLS がなんか変な気がするので、 =gnutlis-cli= があったら、そっちを使うように。
+  #+BEGIN_SRC emacs-lisp
+  (when (executable-find "gnutls-cli")
+    (defun gnutls-available-p ()
+      "Function redefined in order not to use built-in GnuTLS support"
+      nil))
+  #+END_SRC
+  - [ ] どの辺が変なのか、明記すること!
+* El-Get
+** インストールしたパッケージの置き場所
+   El-Get 関連は =~/.emacs.d/packages/el-get= 、
+   パッケージ関連は =~/.emacs.d/packages/elpa= に置かれる様にする。
+   #+BEGIN_SRC emacs-lisp
+     (let ((my:package-dir (locate-user-emacs-file "packages")))
+       (setq el-get-dir (expand-file-name "el-get" my:package-dir))
+       (setq package-user-dir (expand-file-name "el-get" my:package-dir)))
+   #+END_SRC
+** El-Get本体のインストール/読み込み
+   #+BEGIN_SRC emacs-lisp
+     (add-to-list 'load-path
+                  (expand-file-name "packages/el-get/el-get" user-emacs-directory) t)
+     (unless (require 'el-get nil 'noerror)
+       (with-current-buffer
+           (url-retrieve-synchronously
+            "https://raw.githubusercontent.com/dimitri/el-get/master/el-get-install.el")
+         (goto-char (point-max))
+         (eval-print-last-sexp)))
+   #+END_SRC
+** 常に verbose
+   #+BEGIN_SRC emacs-lisp
+     (setq el-get-verbose t)
+   #+END_SRC
+** proxy 環境下を考慮して github は https でアクセス
+   #+BEGIN_SRC emacs-lisp
+      (setq el-get-github-default-url-type 'https)
+   #+END_SRC
+* Org-Babel の設定
+  [[http://uwabami.junkhub.org/log/20111213.html#p01][Emacsの設定ファイルをorgで書く]] なんかを参考のこと。
+** 読み込み
+   #+BEGIN_SRC emacs-lisp
+     (require 'org)
+   #+END_SRC
+** org-babel-tangle → byte-compile → load
+   org ファイルを引数で渡すと、
+   timestamp を比較し、必要に応じて =org-babel-tangle= で ".el" を抽出
+   → byte-compile した後に load する関数の定義
+   設定ファイルは =<user-emacs-directory>/config= 以下に置くことを決め打ち。
+   #+BEGIN_SRC emacs-lisp
+     (defun my:org-babel-tangle-and-compile-file (file)
+       (interactive "fFile to load: ")
+       (let* ((base-name (file-name-sans-extension file))
+              (exported-file (concat base-name ".el"))
+              (compiled-file (concat base-name ".elc")))
+         (unless (and (file-exists-p compiled-file)
+                      (file-newer-than-file-p exported-file base-name))
+           (org-babel-tangle-file file exported-file "emacs-lisp")
+           (byte-compile-file exported-file))))
+     (defun my:load-org-file (file)
+       (interactive "fFile to load: ")
+       (let* ((config (expand-file-name file my:config-dir)))
+         (my:org-babel-tangle-and-compile-file config)
+         (load (file-name-sans-extension config))))
+   #+END_SRC
+** 実際に設定ファイルを load する
+   設定の詳細は [[file:config/index.org][Emacsの設定 - 主に org ファイルの読み込み集]] を参照
+   #+BEGIN_SRC emacs-lisp
+     (my:load-org-file "index.org")
+   #+END_SRC

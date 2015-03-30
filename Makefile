@@ -9,7 +9,7 @@ bootstrap: .permission-stamp
 	touch $@
 %.elc: %.el
 	$(EMACS) -l $< -batch -f batch-byte-compile $<
-init.el: index.org
+init.el: README.org
 	$(EMACS) -Q --batch \
 	  --eval "(progn \
 	            (require 'ob) \

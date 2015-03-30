@@ -1,9 +1,12 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2015-03-19 10:27:31
+#+DATE: 2015-03-30 14:09:25
 #+SETUPFILE: ./export-config.org
-* Emacsの設定 - 主に org ファイルの読み込み集
+#+LANG: ja
+#+LAYOUT: page
+#+CATEGORIES: cc-env emacs
+* Emacsの設定
 ** 始めに
    =~/.emacs= → =~/.emacs.d/init.el= ([[http://www.gfd-dennou.org/member/uwabami/cc-env/EmacsBasic.html][解説]]) ときて
    このファイルで設定ファイルの読み込みを行なっています.
@@ -15,11 +18,11 @@
    =exec-path-from-shell= によって shell で設定した環境変数を読み込むことで,
    これを解決します.
    #+BEGIN_SRC emacs-lisp
-     (el-get-bundle exec-path-from-shell
-                    (exec-path-from-shell-copy-envs
-                     '("http_proxy" "DEBFULLNAME" "DEBEMAIL"))
-                    (setq user-full-name (concat (getenv "DEBFULLNAME")))
-                    (setq user-mail-address (concat (getenv "DEBEMAIL"))))
+     (el-get-bundle exec-path-from-shell)
+     (exec-path-from-shell-copy-envs
+      '("http_proxy" "DEBFULLNAME" "DEBEMAIL"))
+     (setq user-full-name (concat (getenv "DEBFULLNAME")))
+     (setq user-mail-address (concat (getenv "DEBEMAIL")))
    #+END_SRC
 ** [[file:language_config.org][言語の設定]]
    Emacs23 から内部が Unicode ベースになっています.
@@ -38,5 +41,5 @@
 ** [[file:basic_config.org][バージョン依存しない(はず)の雑多な設定]]
    GUI 周りの調整等の一般的な設定など
    #+BEGIN_SRC emacs-lisp
-    (my:load-org-file "basic_config.org")
+   ;; (my:load-org-file "basic_config.org")
    #+END_SRC

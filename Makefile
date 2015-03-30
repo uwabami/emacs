@@ -17,13 +17,10 @@ init.el: README.org
 	            (org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\")))"
 	$(EMACS) -Q -batch -l $@
 
-conf-clean:
+clean:
 	(cd config && rm -fr *.el *.elc)
-clean: conf-clean
 	rm -fr init.elc init.el
 distclean: clean
-	-( cd modules/org-mode && $(MAKE) clean )
-	rm -fr modules/skkdic
 	rm -fr packages/* && touch packages/.gitkeep
 	rm -fr .*-stamp .*-use auto-save-list
 recompile: clean all

@@ -1,45 +1,44 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#+TITLE: Emacsの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2015-03-30 14:09:25
-#+SETUPFILE: ./export-config.org
+#+DATE: 2015-03-30 23:10:22
 #+LANG: ja
 #+LAYOUT: page
-#+CATEGORIES: cc-env emacs
-* Emacsの設定
-** 始めに
-   =~/.emacs= → =~/.emacs.d/init.el= ([[http://www.gfd-dennou.org/member/uwabami/cc-env/EmacsBasic.html][解説]]) ときて
-   このファイルで設定ファイルの読み込みを行なっています.
-   具体的な設定例は, 個々のファイルを参照のこと
-** exec-path-from-shell: 環境変数の取得
-   Terminal 上で Emacs を起動する場合は問題無いですが
-   GUI 環境で Emacs を開くと環境変数が読み込まれない事がしばしばあって
-   難儀していました.
-   =exec-path-from-shell= によって shell で設定した環境変数を読み込むことで,
-   これを解決します.
-   #+BEGIN_SRC emacs-lisp
-     (el-get-bundle exec-path-from-shell)
-     (exec-path-from-shell-copy-envs
-      '("http_proxy" "DEBFULLNAME" "DEBEMAIL"))
-     (setq user-full-name (concat (getenv "DEBFULLNAME")))
-     (setq user-mail-address (concat (getenv "DEBEMAIL")))
-   #+END_SRC
-** [[file:language_config.org][言語の設定]]
-   Emacs23 から内部が Unicode ベースになっています.
+#+PERMALINK: cc-env/emacs/index.html
+* 始めに
+  =~/.emacs= → =~/.emacs.d/init.el= ([[http://www.gfd-dennou.org/member/uwabami/cc-env/EmacsBasic.html][解説]]) ときて
+  このファイルで設定ファイルの読み込みを行なっています.
+  具体的な設定例は, 個々のファイルを参照のこと
+* exec-path-from-shell: 環境変数の取得
+  Terminal 上で Emacs を起動する場合は問題無いですが
+  GUI 環境で Emacs を開くと環境変数が読み込まれない事がしばしばあって
+  難儀していました.
+  =exec-path-from-shell= によって shell で設定した環境変数を読み込むことで,
+  これを解決します.
+  #+BEGIN_SRC emacs-lisp
+    (el-get-bundle exec-path-from-shell)
+    (exec-path-from-shell-copy-envs
+     '("http_proxy" "DEBFULLNAME" "DEBEMAIL"))
+    (setq user-full-name (concat (getenv "DEBFULLNAME")))
+    (setq user-mail-address (concat (getenv "DEBEMAIL")))
+  #+END_SRC
+* [[file:language_config.org][言語の設定]]
+  Emacs23 から内部が Unicode ベースになっています.
 
-   しかし文字コードの変換は GNU libc の iconv をベースにしているため,
-   環境によっては文字の変換がうまく行なえません.
-   そこで言語設定
-   前に =cp5022x.el= をインストールすることにしています.
-   #+BEGIN_SRC emacs-lisp
-     (el-get-bundle cp5022x
-                    :type github :pkgname "awasira/cp5022x.el"
-                    :features cp5022x
-                    )
-     (my:load-org-file "language_config.org")
-   #+END_SRC
-** [[file:basic_config.org][バージョン依存しない(はず)の雑多な設定]]
-   GUI 周りの調整等の一般的な設定など
-   #+BEGIN_SRC emacs-lisp
-   ;; (my:load-org-file "basic_config.org")
-   #+END_SRC
+  しかし文字コードの変換は GNU libc の iconv をベースにしているため,
+  環境によっては文字の変換がうまく行なえません.
+  そこで言語設定
+  前に =cp5022x.el= をインストールすることにしています.
+  #+BEGIN_SRC emacs-lisp
+    (el-get-bundle cp5022x
+                   :type github :pkgname "awasira/cp5022x.el"
+                   :features cp5022x
+                   )
+    ;; (my:load-org-file "language_config.org")
+  #+END_SRC
+* [[file:basic_config.org][バージョン依存しない(はず)の雑多な設定]]
+  GUI 周りの調整等の一般的な設定など
+  #+BEGIN_SRC emacs-lisp
+  ;; (my:load-org-file "basic_config.org")
+  #+END_SRC

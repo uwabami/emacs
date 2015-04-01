@@ -5,6 +5,7 @@
 #+DATE: 2015-03-30 23:10:22
 #+LANG: ja
 #+LAYOUT: page
+#+CATEGORIES: cc-env emacs
 #+PERMALINK: cc-env/emacs/index.html
 * 始めに
   =~/.emacs= → =~/.emacs.d/init.el= ([[http://www.gfd-dennou.org/member/uwabami/cc-env/EmacsBasic.html][解説]]) ときて
@@ -25,7 +26,6 @@
   #+END_SRC
 * [[file:language_config.org][言語の設定]]
   Emacs23 から内部が Unicode ベースになっています.
-
   しかし文字コードの変換は GNU libc の iconv をベースにしているため,
   環境によっては文字の変換がうまく行なえません.
   そこで言語設定
@@ -35,10 +35,10 @@
                    :type github :pkgname "awasira/cp5022x.el"
                    :features cp5022x
                    )
-    ;; (my:load-org-file "language_config.org")
+    (my:load-org-file "language_config")
   #+END_SRC
 * [[file:basic_config.org][バージョン依存しない(はず)の雑多な設定]]
   GUI 周りの調整等の一般的な設定など
   #+BEGIN_SRC emacs-lisp
-  ;; (my:load-org-file "basic_config.org")
+    (my:load-org-file "basic_config")
   #+END_SRC

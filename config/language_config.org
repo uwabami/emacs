@@ -1,20 +1,16 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
-#
-# Copyright(C) Youhei SASAKI All rights reserved.
-# License: Expat
-#
 #+TITLE: [[file:language_config.org][言語の設定]]
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
 #+DATE: 2013-07-08 19:34:24
-#+SETUPFILE: ./export-config.org
-
+#+LANG: ja
+#+LAYOUT: page
+#+CATEGORIES: cc-env emacs
+#+PERMALINK: cc-env/emacs/language_config.html
 * 始めに
   過去にはいろいろ設定していたのですが...
-
-  - [[http://masutaka.net/chalow/2009-07-09-1.html][Emacs講座 -第7回- 文字コード / マスタカの ChangeLog メモ]] [fn:1]
-  - [[http://www.m17n.org/mlarchive/mule-ja/201106/msg00005.html][mule-ja-2009:09813 Re: language-environment v.s. default-coding-system]] [fn:2]
-
+  - [[http://masutaka.net/chalow/2009-07-09-1.html][Emacs講座 -第7回- 文字コード / マスタカの ChangeLog メモ]]
+  - [[http://www.m17n.org/mlarchive/mule-ja/201106/msg00005.html][mule-ja-2009:09813 Re: language-environment v.s. default-coding-system]]
   ...え, そうなの?
 
   というわけで OS 依存の条件分岐だけを記述しています.
@@ -76,8 +72,8 @@
   Mac と Linux では同じ Unicode でも正規化が異なります
   (具体的には Mac のファイルシステムである HFS+ では Unicode の正規化が異なります).
   Unicode の正規化と Mac OS X 特有の事情については
-   - [[http://homepage1.nifty.com/nomenclator/unicode/normalization.htm][Unicode正規化とは]] [fn:3]
-   - [[http://www.sakito.com/2010/05/mac-os-x-normalization.html][Mac OS X におけるファイル名に関するメモ(NFC, NFD等)]] [fn:4]
+   - [[http://homepage1.nifty.com/nomenclator/unicode/normalization.htm][Unicode正規化とは]]
+   - [[http://www.sakito.com/2010/05/mac-os-x-normalization.html][Mac OS X におけるファイル名に関するメモ(NFC, NFD等)]]
   等が参考になるでしょう.
 
   日本語のファイル名を扱うことは滅多にないものの,
@@ -105,12 +101,3 @@
           (setq locale-coding-system 'utf-8))
          )
   #+END_SRC
-* Footnotes
-
-[fn:1] Emacs講座 -第7回- 文字コード / マスタカの ChangeLog メモ:  [[http://masutaka.net/chalow/2009-07-09-1.html]]
-
-[fn:2] mule-ja-2009:09813 Re: language-environment v.s. default-coding-system: [[http://www.m17n.org/mlarchive/mule-ja/201106/msg00005.html]]
-
-[fn:3] Unicode正規化とは: [[http://homepage1.nifty.com/nomenclator/unicode/normalization.htm]]
-
-[fn:4] Mac OS X におけるファイル名に関するメモ(NFC, NFD等): [[http://www.sakito.com/2010/05/mac-os-x-normalization.html]]

@@ -14,7 +14,7 @@
   慣習的に =0= 以下の数字を指定すると明示的に無効化できる.
 * キーバインドの設定
   既に手癖になってしまっているので...
-  鬼軍曹.el [fn:1] とかで強制した方が良いのかも, とか, ごく偶に思いますが.
+  [[https://github.com/k1LoW/emacs-drill-instructor/wiki][鬼軍曹.el]] とかで強制した方が良いのかも, とか, ごく偶に思いますが.
   =[home]= と =[end]= は無いと途方に暮れます.
   #+BEGIN_SRC emacs-lisp
     (global-set-key (kbd "C-h")     'backward-delete-char)
@@ -190,21 +190,22 @@
      (setq delete-auto-save-files t)
   #+END_SRC
 ** 行末の無駄な空白/改行を削除する
-  元ネタ: (Emacs Advent Calendar jp:2010)[fn:2].
-  ただし, RD や Markdown だと空白行に意味があったりするので,
-  必要に応じて拡張子で判断して外している.
-  #+BEGIN_SRC emacs-lisp
-    (defvar my:delete-trailing-whitespace-exclude-suffix
-      (list "\\.rd$" "\\.md$" "\\.rbt$" "\\.rab$"))
-    (defun my:delete-trailing-whitespace ()
-      (interactive)
-      (cond
-       ((equal nil
-               (loop for pattern in my:delete-trailing-whitespace-exclude-suffix
-                     thereis (string-match pattern buffer-file-name)))
-        (delete-trailing-whitespace))))
-    (add-hook 'before-save-hook 'my:delete-trailing-whitespace)
-  #+END_SRC
+   元ネタ: [[http://d.hatena.ne.jp/tototoshi/20101202/1291289625][無駄な行末の空白を削除する(Emacs Advent Calendar jp:2010)]]
+
+   ただし, RD や Markdown だと空白行に意味があったりするので,
+   必要に応じて拡張子で判断して外している.
+   #+BEGIN_SRC emacs-lisp
+     (defvar my:delete-trailing-whitespace-exclude-suffix
+       (list "\\.rd$" "\\.md$" "\\.rbt$" "\\.rab$"))
+     (defun my:delete-trailing-whitespace ()
+       (interactive)
+       (cond
+        ((equal nil
+                (loop for pattern in my:delete-trailing-whitespace-exclude-suffix
+                      thereis (string-match pattern buffer-file-name)))
+         (delete-trailing-whitespace))))
+     (add-hook 'before-save-hook 'my:delete-trailing-whitespace)
+   #+END_SRC
 ** 空になったファイルを尋ねずに自動削除
   ゴミが残らないし, 地味に便利.
   #+BEGIN_SRC emacs-lisp

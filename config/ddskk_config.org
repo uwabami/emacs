@@ -16,7 +16,6 @@
   で開発を行っています。
   #+END_QUOTE
   日本語入力は skk + sticky-shift が無いと駄目な体になってしまった.
-
   [[file:init.org][Emacsの基本設定]] で
   - skk-user-directory
   - skk-init-file
@@ -33,7 +32,7 @@
   となっている(このファイルは ddskk.org).
 * byte-compile 用の設定
   #+BEGIN_SRC emacs-lisp
-    (eval-when-compile
+    (eval-and-compile
       (require 'skk-vars)
       (require 'skk-autoloads)
       )
@@ -191,7 +190,7 @@
   #+BEGIN_SRC emacs-lisp
     ;; 辞書サーバの指定
     (cond
-     ((file-exists-p (concat user-emacs-directory ".skkserver-use"))
+     ((file-exists-p (concat my:temp-dir ".skkserver-use"))
       (setq skk-server-host "127.0.0.1")
       (setq skk-server-portnum "1178")
       (setq skk-large-jisyo nil)
@@ -203,7 +202,7 @@
       )
      (t
       (setq skk-large-jisyo
-            (concat user-emacs-directory "modules/skkdic/SKK-JISYO.L"))
+            (concat user-emacs-directory "share/skkdic/SKK-JISYO.L"))
       ))
     ;; 辞書登録の際に送り仮名を削除
     (setq skk-check-okurigana-on-touroku 'auto)

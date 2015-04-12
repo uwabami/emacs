@@ -2,7 +2,7 @@
 #+TITLE: Emacsの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2015-04-06 15:07:09
+#+DATE: 2015-04-13 00:58:45
 #+LANG: ja
 #+LAYOUT: page
 #+CATEGORIES: cc-env emacs
@@ -11,36 +11,36 @@
   =~/.emacs= → =~/.emacs.d/init.el= ([[http://www.gfd-dennou.org/member/uwabami/cc-env/EmacsBasic.html][解説]]) ときて
   このファイルで設定ファイルの読み込みを行なっています.
   具体的な設定例は, 個々のファイルを参照のこと
-* exec-path-from-shell: 環境変数の取得
-  Terminal 上で Emacs を起動する場合は問題無いですが
-  GUI 環境で Emacs を開くと環境変数が読み込まれない事がしばしばあって
-  難儀していました.
-  =exec-path-from-shell= によって shell で設定した環境変数を読み込むことで,
-  これを解決します.
+* 環境変数の読み込み
+  [[https://github.com/purcell/exec-path-from-shell][exec-path-from-shell]] で、=$PATH= 以外の環境変数等も設定しておく。
   #+BEGIN_SRC emacs-lisp
-    (el-get-bundle exec-path-from-shell
-                   (exec-path-from-shell-copy-envs
-                    '("http_proxy" "DEBFULLNAME" "DEBEMAIL"))
-                   (setq user-full-name (concat (getenv "DEBFULLNAME")))
-                   (setq user-mail-address (concat (getenv "DEBEMAIL"))))
+    (setq-default explicit-shell-file-name "zsh")
+    (setq shell-file-name "zsh"
+          shell-command-switch "-c")
+    (el-get-bundle! exec-path-from-shell
+                    (when (memq window-system '(mac ns))
+                      (exec-path-from-shell-initialize))
+                    (exec-path-from-shell-copy-envs
+                     '("http_proxy" "DEBFULLNAME" "DEBEMAIL"))
+                    (setq user-full-name (concat (getenv "DEBFULLNAME")))
+                    (setq user-mail-address (concat (getenv "DEBEMAIL"))))
   #+END_SRC
-* [[file:language_config.org][言語の設定]]
-  Emacs23 から内部が Unicode ベースになっています.
-  しかし文字コードの変換は GNU libc の iconv をベースにしているため,
-  環境によっては文字の変換がうまく行なえません.
-  そこで言語設定
-  前に =cp5022x.el= をインストールすることにしています.
-  #+BEGIN_SRC emacs-lisp
-    (el-get-bundle cp5022x
-                   :type github :pkgname "awasira/cp5022x.el"
-                   :features cp5022x
-                   )
-    (my:load-org-file "language_config")
-  #+END_SRC
-* [[file:basic_config.org][バージョン依存しない(はず)の雑多な設定]]
-  GUI 周りの調整等の一般的な設定など
+
+* 環境に依存しない筈の雑多な設定
+  設定が増えてきたら分割することに。
   #+BEGIN_SRC emacs-lisp
     (my:load-org-file "basic_config")
+  #+END_SRC
+* 言語の設定
+  主に East Asian Ambiguos Width に対応するための設定
+  #+BEGIN_SRC emacs-lisp
+    (my:load-org-file "language_config")
+  #+END_SRC
+* [[file:config/elscreen_config.org][Elscreenの設定]]
+  #+BEGIN_SRC emacs-lisp
+    (unless (string-match "ok" (el-get-dpkg-package-status "elscreen"))
+      (el-get-bundle emacs-jp/elscreen))
+    (my:load-org-file "elscreen_config")
   #+END_SRC
 * 日本語入力: [[http://openlab.ring.gr.jp/skk/ddskk-ja.html][Daredevil SKK (DDSKK)]]
   DDSKK をメインで使用中. 無いと途方に暮れる.
@@ -51,12 +51,6 @@
      ! disable XIM
      Emacs*useXIM: false
   #+END_EXAMPLE
-  インストール
-  #+BEGIN_SRC emacs-lisp
-    (unless (string-match "ok" (el-get-dpkg-package-status "ddskk"))
-      (el-get-bundle ddskk))
-  #+END_SRC
-  =skk-user-directory= を設定しているので, 辞書や id なんかは
   =~/.emacs.d/tmp/skk= 以下に置かれるが,
   実際の設定は [[file:ddskk_config.org][ddskkの設定]] で行なっているため, 設定ファイルの位置変更を変更する
   #+BEGIN_SRC emacs-lisp
@@ -65,19 +59,69 @@
     (setq skk-init-file
           (concat my:config-dir "ddskk_config"))
   #+END_SRC
+  Debian パッケージの ddskk がインストールされていない場合には
+  El-Get で install する。
+  #+BEGIN_SRC emacs-lisp
+    (unless (string-match "ok" (el-get-dpkg-package-status "ddskk"))
+      (el-get-bundle ddskk))
+  #+END_SRC
+  =skk-user-directory= を設定しているので, 辞書や id なんかは
   org で設定を書くために, 一旦 elisp を抽出しておく
   #+BEGIN_SRC emacs-lisp
-    ;; org で書かれた設定ファイルから elisp を抽出
     (org-babel-tangle-file
      (concat my:config-dir "ddskk_config.org")
      (concat my:config-dir "ddskk_config.el") "emacs-lisp")
-    ;; ddskk の設定ファイルは読み込み時に byte-compile
-    (setq skk-byte-compile-init-file t)
+  #+END_SRC
+  設定ファイルの byte-compile
+  #+BEGIN_SRC emacs-lisp
+    (setq skk-byte-compile-init-file nil)
+    (with-eval-after-load-feature skk
+      (progn
+        (require 'skk-vars)
+        (require 'skk-autoloads)
+        (byte-compile-file (concat my:config-dir "ddskk_config.el"))))
   #+END_SRC
   実際の読み込み:
   #+BEGIN_SRC emacs-lisp
     (require 'skk-leim nil 'noerror)
     (setq default-input-method "japanese-skk")
     (require 'skk-autoloads nil 'noerror)
-    ;; (require 'skk-cus nil 'noerror)
+  #+END_SRC
+* テーマ
+  自作のテーマを使用中
+  #+BEGIN_SRC emacs-lisp
+    (el-get-bundle uwabami/darkpastel-theme
+      :prepare (add-to-list 'custom-theme-load-path default-directory)
+      (load-theme 'darkpastel t)
+      )
+  #+END_SRC
+* [[file:frame_config.org][フォントとフレームの設定]]
+  #+BEGIN_SRC emacs-lisp
+    (my:load-org-file "frame_config")
+  #+END_SRC
+* [[file:mua_config.org][MUAの設定]]
+  MUA として Wanderlust を使っている.
+  #+BEGIN_SRC emacs-lisp
+    (when (string-match "ok" (el-get-dpkg-package-status "ddskk"))
+      (file-exists-p (concat my:temp-dir ".wl-use"))
+      (autoload 'wl "wl" "Wanderlust" t)
+      (autoload 'wl-other-frame "wl" "Wanderlust on new frame" t)
+      (autoload 'wl-draft "wl-draft" "Write draft with Wanderlust." t)
+      (if (boundp 'mail-user-agent)
+          (setq mail-user-agent 'wl-user-agent))
+      (if (boundp 'read-mail-command)
+          (setq read-mail-command 'wl))
+      (if (fboundp 'define-mail-user-agent)
+          (define-mail-user-agent
+            'wl-user-agent
+            'wl-user-agent-compose
+            'wl-draft-send
+            'wl-draft-kill
+            'mail-send-hook))
+      (setq elmo-msgdb-directory "~/Maildir/elmo")
+      (my:org-babel-tangle-and-compile-file
+       (concat my:config-dir "wl_config"))
+      (setq wl-init-file
+            (concat my:config-dir "wl_config"))
+      )
   #+END_SRC

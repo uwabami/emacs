@@ -6,7 +6,7 @@
 #+TITLE: Wanderlust の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2015-03-14 00:19:34
+#+DATE: 2015-03-19 17:00:44
 #+SETUPFILE: ./export-config.org
 
 * Wanderlust の設定
@@ -56,7 +56,7 @@
    MIME の例の保存先の変更
    #+BEGIN_SRC emacs-lisp
       (setq mime-situation-examples-file
-            (concat my:user-emacs-temporary-directory "mime-example"))
+            (concat my:temp-dir "mime-example"))
    #+END_SRC
    HTML パートの表示に w3m を使う
    #+BEGIN_SRC emacs-lisp

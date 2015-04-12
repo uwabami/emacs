@@ -6,7 +6,7 @@
 #+TITLE: DDSKKの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2014-12-19 17:51:10
+#+DATE: 2015-04-13 00:51:05
 #+SETUPFILE: ./export-config.org
 
 * 始めに
@@ -30,13 +30,6 @@
     skk-study-backup-file  ~/.emacs.d/tmp/skk/study.bak
   #+END_EXAMPLE
   となっている(このファイルは ddskk.org).
-* byte-compile 用の設定
-  #+BEGIN_SRC emacs-lisp
-    (eval-and-compile
-      (require 'skk-vars)
-      (require 'skk-autoloads)
-      )
-  #+END_SRC
 * sticky-shift
   sticky shift については
   [[http://homepage1.nifty.com/blankspace/emacs/sticky.html][sticky shift]] [fn:2] を参照のこと.
@@ -71,6 +64,11 @@
         (setq ad-return-value
               (append (cons elem nil)
                       (delq (assoc (car elem) ad-return-value) ad-return-value)))))
+    (defun my:update-modeline-for-ddskk ()
+      ""
+      (progn
+        (skk-mode) (skk-mode)))
+    (add-hook 'after-change-major-mode-hook 'my:update-modeline-for-ddskk)
     (setq skk-show-inline 'vertical)
     (when skk-show-inline
       (if (boundp 'skk-inline-show-face)

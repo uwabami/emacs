@@ -1,18 +1,16 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
-#
-# Copyright(C) Youhei SASAKI All rights reserved.
-# License: Expat
-#
 #+TITLE: フォントとフレームの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
 #+DATE: 2014-11-10 07:02:52
-#+SETUPFILE: ./export-config.org
-
+#+LANG: ja
+#+LAYOUT: page
+#+CATEGORIES: cc-env emacs
+#+PERMALINK: cc-env/emacs/frame_config.html
 * カーソルのある位置の face を調べる関数
   わりと良く使う. 地味に便利
   #+BEGIN_SRC emacs-lisp
-    (defun describe-face-at-point ()
+    (defun my:describe-face-at-point ()
       (interactive)
       (message "%s" (get-char-property (point) 'face)))
   #+END_SRC
@@ -20,15 +18,10 @@
   Ricty Discord 必須.
   #+BEGIN_SRC emacs-lisp
     (add-to-list 'default-frame-alist '(font . "ricty-13.5"))
-    ;; (custom-set-faces
-    ;;  '(variable-pitch ((t (:family "Ricty"))))
-    ;;  '(fixed-pitch ((t (:family "Ricty"))))
-    ;;  )
-  #+END_SRC
-* theme
-  #+BEGIN_SRC emacs-lisp
-    (when (>= emacs-major-version 24)
-      (load-theme 'darkpastel t))
+    (custom-set-faces
+     '(variable-pitch ((t (:family "Ricty"))))
+     '(fixed-pitch ((t (:family "Ricty"))))
+     )
   #+END_SRC
 * Space や Tab に色付け
   whitespace-mode の方が良いのかもしれないけれど,

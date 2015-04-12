@@ -15,6 +15,7 @@ before_install:
   - sudo apt-get install -qq gnutls-bin
   - sudo apt-get install -qq texinfo
   - sudo apt-get install -qq skkdic
+  - sudo apt-get install -qq zsh
   - sudo apt-get install -qq $EMACS
 script:
   - make

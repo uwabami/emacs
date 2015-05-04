@@ -1,23 +1,18 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
-#
-# Copyright(C) Youhei SASAKI All rights reserved.
-# License: Expat.
-#
 #+TITLE: Wanderlust の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2015-03-19 17:00:44
-#+SETUPFILE: ./export-config.org
-
+#+DATE: 2015-04-14 18:24:20
+#+LANG: ja
+#+LAYOUT: page
+#+CATEGORIES: cc-env emacs
+#+PERMALINK: cc-env/emacs/config/wl_config.html
 * Wanderlust の設定
   MUA として Wanderlust を愛用している.
   ちなみに, 配布御本尊である m17n.org が運用停止したので,
   一時配布元がどこになるのか良くわかりません.
 
   Emacs24 で動く版は配布先が github になっています. [fn:1]
-  #+BEGIN_SRC emacs-lisp
-    (eval-when-compile (require 'wl))
-  #+END_SRC
 * 依存/追加ライブラリのインストールと読み込み
   インストールしているのは今のところ以下の通り:
   - rail
@@ -60,7 +55,7 @@
    #+END_SRC
    HTML パートの表示に w3m を使う
    #+BEGIN_SRC emacs-lisp
-     (require 'mime-setup)
+     (require 'mime-setup nil 'noerror)
      (when (locate-library "mime-w3m")
        (require 'w3m-ems)
        (require 'w3m-load)
@@ -387,7 +382,7 @@
   実際にメッセージのあるフォルダを行き来する.
   Gmail の「スター付き」フォルダでも有効
   #+BEGIN_SRC emacs-lisp
-    (require 'elmo)
+    (require 'elmo nil 'noerror)
     (defun my:wl-summary-jump-to-referer-message ()
       (interactive)
       (when (wl-summary-message-number)
@@ -612,7 +607,7 @@
          "Decode encoded file name for BROKEN MUA."
          (when (stringp ad-return-value)
            (setq ad-return-value (my-mime-decode-filename ad-return-value)))))
-    (require 'std11)
+    (require 'std11 nil 'noerror)
     (eval-after-load "std11"
       '(defadvice std11-wrap-as-quoted-string
          (before encode-string activate)
@@ -627,7 +622,34 @@
   同じエントリがあると, 動作が微妙になるらしい [fn:6] .
   ここでは =~/.mailcap= だけを見にいくように
   #+BEGIN_SRC emacs-lisp
-    (setq mime-view-mailcap-files '("~/.mailcap"))
+    ;;  (setq mime-view-mailcap-files '("~/.mailcap"))
+    (defvar my:mime-preview-play-current-entity-appname "xdg-open"
+      "meadow なら fiber, mac なら open, linux なら xdg-open")
+    (unless (functionp #'mime-preview-play-current-entity-orig)
+      (fset #'mime-preview-play-current-entity-orig
+            (symbol-function #'mime-preview-play-current-entity)))
+    (setq mime-play-delete-file-immediately nil)
+    (defun mime-preview-play-current-entity (&optional ignore-examples mode)
+      (interactive "P")
+      (if (and mode (not (equal mode "play")))
+          (mime-preview-play-current-entity-orig ignore-examples mode)
+        (let* ((entity (get-text-property (point) 'mime-view-entity))
+               (name (mime-entity-safe-filename entity))
+               (filename (expand-file-name (if (and name (not (string= name "")))
+                                               name
+                                             (make-temp-name "EMI"))
+                                           (make-temp-file "EMI" 'directory))))
+          (mime-write-entity-content entity filename)
+          (message "External method is starting...")
+          (let* ((process-name
+                  (concat my:mime-preview-play-current-entity-appname " " filename))
+                 (process
+                  (start-process process-name
+                                 mime-echo-buffer-name
+                                 my:mime-preview-play-current-entity-appname
+                                 filename)))
+            (set-alist 'mime-mailcap-method-filename-alist process filename)
+            (set-process-sentinel process 'mime-mailcap-method-sentinel)))))
   #+END_SRC
   ちなみに
   =~/.mailcap= 自体は
@@ -711,7 +733,7 @@
    署名の選択に c-sig を使用している.
    設定は以下の通り. Mew 風に =C-c <tab>= で signature を挿入するようにしている
    #+BEGIN_SRC emacs-lisp
-     (eval-and-compile (require 'c-sig))
+     (require 'c-sig)
      (setq sig-insert-end t)
      (setq sig-save-to-sig-name-alist nil)
      (setq message-signature-file nil)

@@ -2,11 +2,11 @@
 #+TITLE: [[file:language_config.org][言語の設定]]
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2015-04-13 00:25:59
+#+DATE: 2015-04-13 14:10:30
 #+LANG: ja
 #+LAYOUT: page
 #+CATEGORIES: cc-env emacs
-#+PERMALINK: cc-env/emacs/language_config.html
+#+PERMALINK: cc-env/emacs/config/language.html
 * 始めに
   過去にはいろいろ設定していたのですが...
   - [[http://masutaka.net/chalow/2009-07-09-1.html][Emacs講座 -第7回- 文字コード / マスタカの ChangeLog メモ]]

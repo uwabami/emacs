@@ -1,25 +1,22 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
-#
-# Copyright(C) Youhei SASAKI All rights reserved.
-# License: Expat
-#
 #+TITLE: DDSKKの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2015-04-13 00:51:05
-#+SETUPFILE: ./export-config.org
-
+#+DATE: 2015-04-22 22:50:10
+#+LANG: ja
+#+LAYOUT: page
+#+CATEGORIES: cc-env emacs
+#+PERMALINK: cc-env/emacs/config/ddskk_config.html
 * 始めに
-  本家サイト[fn:1]より
+  本家: [[http://openlab.ring.gr.jp/skk/ddskk-ja.html][Daredevil SKK]] より
   #+BEGIN_QUOTE
   Daredevil SKK (DDSKK) は Emacs Lisp 版の SKK です。本家 SKK を受け継い
   で開発を行っています。
   #+END_QUOTE
-  日本語入力は skk + sticky-shift が無いと駄目な体になってしまった.
   [[file:init.org][Emacsの基本設定]] で
   - skk-user-directory
   - skk-init-file
-  を設定しているので, 設定ファイルの構成は
+  を設定しているので、設定ファイルの構成は
   #+BEGIN_EXAMPLE
     skk-init-file          ~/.emacs.d/config/ddskk_config.{org,el,elc}
     skk-jisyo              ~/.emacs.d/tmp/skk/jisyo
@@ -29,10 +26,9 @@
     skk-study-file         ~/.emacs.d/tmp/skk/study
     skk-study-backup-file  ~/.emacs.d/tmp/skk/study.bak
   #+END_EXAMPLE
-  となっている(このファイルは ddskk.org).
+  となっている(このファイルは ddskk_config.org)。
 * sticky-shift
-  sticky shift については
-  [[http://homepage1.nifty.com/blankspace/emacs/sticky.html][sticky shift]] [fn:2] を参照のこと.
+  sticky shift については   [[http://homepage1.nifty.com/blankspace/emacs/sticky.html][sticky shift]] を参照のこと.
   ddskk の 14.2 以降から同梱されるようになった(ありがたい)
   #+BEGIN_SRC emacs-lisp
     (setq skk-sticky-key ";")
@@ -93,7 +89,7 @@
     ;; 句読点変換ルール
     (setq skk-kuten-touten-alist
       '(
-        (jp . ("．" . "，" ))
+        (jp . ("。" . "、" ))
         (en . ("." . ","))
         ))
     ;;(setq skk-kutouten-type 'ja)
@@ -188,7 +184,7 @@
   #+BEGIN_SRC emacs-lisp
     ;; 辞書サーバの指定
     (cond
-     ((file-exists-p (concat my:temp-dir ".skkserver-use"))
+     ((getenv "SKKSERVER")
       (setq skk-server-host "127.0.0.1")
       (setq skk-server-portnum "1178")
       (setq skk-large-jisyo nil)
@@ -227,13 +223,8 @@
   #+END_SRC
 * 部首変換, 総画数変換
   #+BEGIN_SRC emacs-lisp
-    (require 'skk-tankan)
-    (add-to-list 'skk-search-prog-list
-                 '(skk-tankan-search 'skk-search-jisyo-file
-                                     skk-large-jisyo 10000))
+    ;; (require 'skk-tankan)
+    ;; (add-to-list 'skk-search-prog-list
+    ;;              '(skk-tankan-search 'skk-search-jisyo-file
+    ;;                                  skk-large-jisyo 10000))
   #+END_SRC
-* Footnotes
-
-[fn:1] Daredevil SKK: [[http://openlab.ring.gr.jp/skk/ddskk-ja.html]]
-
-[fn:2] sticky shift: [[http://homepage1.nifty.com/blankspace/emacs/sticky.html]]

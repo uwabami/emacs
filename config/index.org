@@ -2,38 +2,47 @@
 #+TITLE: Emacsの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2015-04-13 00:58:45
+#+DATE: 2015-04-22 22:51:12
 #+LANG: ja
 #+LAYOUT: page
 #+CATEGORIES: cc-env emacs
-#+PERMALINK: cc-env/emacs/index.html
+#+PERMALINK: cc-env/emacs/config/index.html
 * 始めに
   =~/.emacs= → =~/.emacs.d/init.el= ([[http://www.gfd-dennou.org/member/uwabami/cc-env/EmacsBasic.html][解説]]) ときて
-  このファイルで設定ファイルの読み込みを行なっています.
-  具体的な設定例は, 個々のファイルを参照のこと
-* 環境変数の読み込み
-  [[https://github.com/purcell/exec-path-from-shell][exec-path-from-shell]] で、=$PATH= 以外の環境変数等も設定しておく。
-  #+BEGIN_SRC emacs-lisp
-    (setq-default explicit-shell-file-name "zsh")
-    (setq shell-file-name "zsh"
-          shell-command-switch "-c")
-    (el-get-bundle! exec-path-from-shell
-                    (when (memq window-system '(mac ns))
-                      (exec-path-from-shell-initialize))
-                    (exec-path-from-shell-copy-envs
-                     '("http_proxy" "DEBFULLNAME" "DEBEMAIL"))
-                    (setq user-full-name (concat (getenv "DEBFULLNAME")))
-                    (setq user-mail-address (concat (getenv "DEBEMAIL"))))
-  #+END_SRC
-
-* 環境に依存しない筈の雑多な設定
-  設定が増えてきたら分割することに。
+  このファイルで設定ファイルの読み込みを行なっています。
+  具体的な設定例は、個々のファイルを参照のこと。
+* [[config/basic_config.org][環境に依存しない(筈の)設定]]
   #+BEGIN_SRC emacs-lisp
     (my:load-org-file "basic_config")
   #+END_SRC
-* 言語の設定
-  主に East Asian Ambiguos Width に対応するための設定
+* 環境変数の読み込み
+  zsh で設定した =PATH= などの環境変数を Emacs に引き継ぐために
+  [[https://github.com/purcell/exec-path-from-shell][purcell/exec-path-from-shell]] を使います。
   #+BEGIN_SRC emacs-lisp
+    (when (executable-find "zsh")
+      (progn
+        (setq-default explicit-shell-file-name "zsh")
+        (setq shell-file-name "zsh"
+              shell-command-switch "-c")))
+    (el-get-bundle! exec-path-from-shell)
+    (when (memq window-system '(mac ns))
+      (exec-path-from-shell-initialize))
+    (exec-path-from-shell-copy-envs
+     '("http_proxy" "DEBFULLNAME" "DEBEMAIL" "TEXMFHOME"))
+    (setq user-full-name (concat (getenv "DEBFULLNAME"))
+          user-mail-address (concat (getenv "DEBEMAIL")))
+  #+END_SRC
+* [[file:config/language_config.org][言語の設定]]
+  Emacs23 から内部が Unicode ベースになっています。
+
+  しかし文字コードの変換は GNU libc の iconv をベースにしているため、
+  環境によっては文字の変換がうまく行なえません。
+  そこで言語設定
+  前に =cp5022x.el= をインストールすることにしています.
+  #+BEGIN_SRC emacs-lisp
+    (el-get-bundle! cp5022x
+      :type github :pkgname "awasira/cp5022x.el"
+      :features cp5022x)
     (my:load-org-file "language_config")
   #+END_SRC
 * [[file:config/elscreen_config.org][Elscreenの設定]]
@@ -42,22 +51,20 @@
       (el-get-bundle emacs-jp/elscreen))
     (my:load-org-file "elscreen_config")
   #+END_SRC
-* 日本語入力: [[http://openlab.ring.gr.jp/skk/ddskk-ja.html][Daredevil SKK (DDSKK)]]
-  DDSKK をメインで使用中. 無いと途方に暮れる.
+* 日本語入力: [[file:config/ddskk_config.org][DDSKKの設定]]
+  [[http://openlab.ring.gr.jp/skk/ddskk-ja.html][Daredevil SKK (DDSKK)]] をメインで使用中。無いと途方に暮れる。
   ちなみにGTKが有効になっていると =gtk-immodule= なんかと衝突するので
-  =~/.Xresources= で xim を無効にしておくと良い.
+  =~/.Xresources= で xim を無効にしておくと良い。
   例えば以下の様に:
   #+BEGIN_EXAMPLE
      ! disable XIM
      Emacs*useXIM: false
   #+END_EXAMPLE
   =~/.emacs.d/tmp/skk= 以下に置かれるが,
-  実際の設定は [[file:ddskk_config.org][ddskkの設定]] で行なっているため, 設定ファイルの位置変更を変更する
+  実際の設定は [[file:ddskk_config.org][DDSKKの設定]] で行なっているため, 設定ファイルの位置変更を変更する
   #+BEGIN_SRC emacs-lisp
-    (setq skk-user-directory
-          (concat my:temp-dir "skk"))
-    (setq skk-init-file
-          (concat my:config-dir "ddskk_config"))
+    (setq skk-user-directory (concat my:temp-dir "skk"))
+    (setq skk-init-file (concat my:config-dir "ddskk_config"))
   #+END_SRC
   Debian パッケージの ddskk がインストールされていない場合には
   El-Get で install する。
@@ -65,63 +72,119 @@
     (unless (string-match "ok" (el-get-dpkg-package-status "ddskk"))
       (el-get-bundle ddskk))
   #+END_SRC
-  =skk-user-directory= を設定しているので, 辞書や id なんかは
-  org で設定を書くために, 一旦 elisp を抽出しておく
+  設定ファイルの byte-compile: skk 読み込み時に必要に応じて byte-compile する．
   #+BEGIN_SRC emacs-lisp
-    (org-babel-tangle-file
-     (concat my:config-dir "ddskk_config.org")
-     (concat my:config-dir "ddskk_config.el") "emacs-lisp")
+    (setq skk-byte-compile-init-file t)
+    (with-eval-after-load-feature 'skk
+     (my:org-babel-tangle-and-compile-file (concat my:config-dir "ddskk_config")))
   #+END_SRC
-  設定ファイルの byte-compile
-  #+BEGIN_SRC emacs-lisp
-    (setq skk-byte-compile-init-file nil)
-    (with-eval-after-load-feature skk
-      (progn
-        (require 'skk-vars)
-        (require 'skk-autoloads)
-        (byte-compile-file (concat my:config-dir "ddskk_config.el"))))
-  #+END_SRC
-  実際の読み込み:
+  実際の読み込み。
   #+BEGIN_SRC emacs-lisp
     (require 'skk-leim nil 'noerror)
     (setq default-input-method "japanese-skk")
     (require 'skk-autoloads nil 'noerror)
   #+END_SRC
 * テーマ
-  自作のテーマを使用中
+  自作のテーマを使用中: [[http://uwabami.github.io/darkpastel-theme/][Emacs theme: darkpastel]]
   #+BEGIN_SRC emacs-lisp
     (el-get-bundle uwabami/darkpastel-theme
-      :prepare (add-to-list 'custom-theme-load-path default-directory)
-      (load-theme 'darkpastel t)
-      )
+                   :prepare (add-to-list 'custom-theme-load-path default-directory))
+    (load-theme 'darkpastel t)
   #+END_SRC
-* [[file:frame_config.org][フォントとフレームの設定]]
+* フォントの設定
+  以前は Ricty を使用していましたが，最近 NasuM に変えました
   #+BEGIN_SRC emacs-lisp
-    (my:load-org-file "frame_config")
+    (add-to-list 'default-frame-alist '(font . "nasum-13.5"))
+    (custom-set-faces
+     '(variable-pitch ((t (:family "NasuM"))))
+     '(fixed-pitch ((t (:family "NasuM"))))
+     )
   #+END_SRC
 * [[file:mua_config.org][MUAの設定]]
-  MUA として Wanderlust を使っている.
+  MUA として Wanderlust を使っている．
   #+BEGIN_SRC emacs-lisp
-    (when (string-match "ok" (el-get-dpkg-package-status "ddskk"))
-      (file-exists-p (concat my:temp-dir ".wl-use"))
-      (autoload 'wl "wl" "Wanderlust" t)
-      (autoload 'wl-other-frame "wl" "Wanderlust on new frame" t)
-      (autoload 'wl-draft "wl-draft" "Write draft with Wanderlust." t)
-      (if (boundp 'mail-user-agent)
-          (setq mail-user-agent 'wl-user-agent))
-      (if (boundp 'read-mail-command)
-          (setq read-mail-command 'wl))
-      (if (fboundp 'define-mail-user-agent)
-          (define-mail-user-agent
-            'wl-user-agent
-            'wl-user-agent-compose
-            'wl-draft-send
-            'wl-draft-kill
-            'mail-send-hook))
-      (setq elmo-msgdb-directory "~/Maildir/elmo")
-      (my:org-babel-tangle-and-compile-file
-       (concat my:config-dir "wl_config"))
-      (setq wl-init-file
-            (concat my:config-dir "wl_config"))
-      )
+    (when (or (my:dpkg-status "wl")
+              (my:dpkg-status "wl-beta"))
+      (progn
+        (with-eval-after-load-feature 'elscreen
+          (el-get-bundle syohex/emacs-elscreen-wl
+                       :features elscreen-wl))
+        (autoload 'wl "wl" "Wanderlust" t)
+        (autoload 'wl-other-frame "wl" "Wanderlust on new frame" t)
+        (autoload 'wl-draft "wl-draft" "Write draft with Wanderlust." t)
+        (if (boundp 'mail-user-agent)
+            (setq mail-user-agent 'wl-user-agent))
+        (if (boundp 'read-mail-command)
+            (setq read-mail-command 'wl))
+        (if (fboundp 'define-mail-user-agent)
+            (define-mail-user-agent
+              'wl-user-agent
+              'wl-user-agent-compose
+              'wl-draft-send
+              'wl-draft-kill
+              'mail-send-hook))
+        (setq elmo-msgdb-directory "~/Maildir/elmo"
+              elmo-maildir-folder-path "~/Maildir/elmo"
+              wl-init-file (concat my:config-dir "wl_config"))
+        (with-eval-after-load-feature 'wl
+          (my:org-babel-tangle-and-compile-file (concat my:config-dir "wl_config")))
+        ))
+  #+END_SRC
+* [[http://d.hatena.ne.jp/kiwanami/20110221/1298293727][パスワード管理: id-manager.el]]
+  無いと途方に暮れるくらい，依存しまくり．
+  インストールと設定は以下:
+  #+BEGIN_SRC emacs-lisp
+    (setq idm-database-file
+          (expand-file-name
+           (concat (getenv "HOME") "/.gnupg/idm-db.gpg")))
+    (when (file-exists-p idm-database-file)
+      (progn
+        (el-get-bundle kiwanami/emacs-id-manager
+                       :features id-manager)
+        (require 'id-manager nil 'noerror)
+        (global-set-key (kbd "M-7") 'id-manager)
+        (setq idm-clipboard-expire-time-sec 15)))
+  #+END_SRC
+* [[file:migemo_config.org][C/Migemo]]
+  #+BEGIN_SRC emacs-lisp
+    (when (and (executable-find "cmigemo")
+               (locate-library "migemo"))
+      (my:load-org-file "migemo_config"))
+  #+END_SRC
+* TeX関連: [[file:auctex_config.org][AUCTeX の設定]]
+  [[http://www.gnu.org/software/auctex/][AUCTeX]] に LaTeXmk 用のコマンドを追加する.
+  [[https://github.com/tom-tan/auctex-latexmk][auctex-latexmk]] を愛用中.
+  =pLaTeX= を使う場合には文字コードオプションも追加してくれる.
+  実際の設定は [[file:auctex_config.org][AUCTeXの設定]] で.
+  #+BEGIN_SRC emacs-lisp
+    (when (and (and (ignore-errors (el-get-executable-find "platex"))
+                    (ignore-errors (el-get-executable-find "latexmk")))
+               (locate-library "auctex"))
+      (progn
+        (el-get-bundle tom-tan/auctex-latexmk)
+        (my:load-org-file "auctex_config")))
+  #+END_SRC
+* tdiary
+  #+BEGIN_SRC emacs-lisp
+    (when (and (file-directory-p "~/ownCloud/tdiary/")
+               (file-exists-p (concat my:temp-dir ".tdiary-use")))
+      (progn
+        (el-get-bundle http-el
+          :type http
+          :url "https://raw.githubusercontent.com/tdiary/tdiary-contrib/master/util/tdiary-mode/http.el")
+        (el-get-bundle tdiary-mode
+          :type http
+          :depends http-el
+          :url "https://raw.githubusercontent.com/tdiary/tdiary-contrib/master/util/tdiary-mode/tdiary-mode.el")
+        (setq tdiary-init-file "~/ownCloud/tdiary/tdiary-mode.gpg")
+        (setq tdiary-browser-function 'browse-url)
+        (setq tdiary-style-mode 'rd-mode)
+        (setq tdiary-hour-offset 2)
+        (setq tdiary-text-save-p t)
+        (setq tdiary-text-suffix ".rd")
+        (autoload 'tdiary-mode "tdiary-mode" nil t)
+        (autoload 'tdiary-new "tdiary-mode" nil t)
+        (autoload 'tdiary-new-diary "tdiary-mode" nil t)
+        (autoload 'tdiary-replace "tdiary-mode" nil t)
+        ))
   #+END_SRC

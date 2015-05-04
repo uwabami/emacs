@@ -2,11 +2,11 @@
 #+TITLE: Elscreen の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2015-04-13 00:34:07
+#+DATE: 2015-04-13 14:11:09
 #+LANG: ja
 #+LAYOUT: page
 #+CATEGORIES: cc-env emacs
-#+PERMALINK: cc-env/emacs/elscreen_config.html
+#+PERMALINK: cc-env/emacs/config/elscreen_config.html
 * 始めに
   [[http://www.morishima.net/~naoto/elscreen-en/][ElScreen]] はEmacsのバッファを GNU Screen っぽく扱う素敵 elisp.
   #+BEGIN_SRC emacs-lisp

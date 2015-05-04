@@ -1,8 +1,17 @@
 # -*- mode: makefile -*-
 EMACS	?= emacs
+SRC	?= $(wildcard config/*.org)
+EL		?= $(SRC:%.org=%.el)
+ELC	?= $(SRC:%.org=%.elc)
 
-all: bootstrap init.elc
+all: bootstrap $(EL) init.elc
 
+%.el: %.org
+	$(EMACS) -Q --batch --eval \
+	  "(progn \
+	     (require 'ob) \
+	     (require 'ob-tangle) \
+	     (org-babel-tangle-file \"$<\" \"$(patsubst config/%,%,$@)\" \"emacs-lisp\")))"
 bootstrap: tmp/.permission-stamp
 tmp/.permission-stamp: tmp/.skkdic-stamp
 	chmod 700 tmp
@@ -20,7 +29,7 @@ tmp/.skkdic-stamp:
 	  fi  \
 	fi
 	touch $@
-%.elc: %.el
+init.elc: init.el
 	$(EMACS) -q -l $< -batch -f batch-byte-compile $<
 init.el: README.org
 	$(EMACS) -q --batch \
@@ -28,9 +37,8 @@ init.el: README.org
 	            (require 'ob) \
 	            (require 'ob-tangle) \
 	            (org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\")))"
-	$(EMACS) -Q -batch -l $@
 clean:
-	(cd config && rm -fr *.el *.elc)
+	rm -f $(EL) $(ELC)
 	rm -fr init.elc init.el
 distclean: clean
 	rm -fr packages/* && touch packages/.gitkeep

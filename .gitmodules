@@ -1,0 +1,3 @@
+[submodule "share/el-get-cli"]
+	path = share/el-get-cli
+	url = https://github.com/tarao/el-get-cli.git

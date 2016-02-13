@@ -2,7 +2,7 @@
 #+TITLE: Wanderlust の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2015-04-14 18:24:20
+#+DATE: 2016-02-03 22:17:27
 #+LANG: ja
 #+LAYOUT: page
 #+CATEGORIES: cc-env emacs
@@ -18,7 +18,6 @@
   - rail
   - gcontacts-get-wl
   - c-sig
-  - offlineimap-el
 ** rail
    SEMI や FLIM などの UA の表示に [[http://uwabami.github.com/rail/][rail]] [fn:2]を使っている.
    ちなみに rail を有効にすると, 以下の様に User-Agent が表示される
@@ -78,22 +77,9 @@
      (require 'gcontacts-get-wl nil 'noerror)
      (setq gcontacts-get-wl-ask nil)
    #+END_SRC
-** offlineimap-el
+** mbsync
    #+BEGIN_SRC emacs-lisp
-     (setq offlineimap-command "offlineimap -u machineui -o")
-     (setq offlineimap-mode-line-style 'symbol)
-     (setq offlineimap-mode-line-symbol "imap")
-     (setq offlineimap-enable-mode-line-p
-           '(member
-             major-mode
-             '(offlineimap-mode
-               wl-folder-mode
-               wl-summary-mode
-               wl-folder-mode
-               wl-message-mode
-               wl-draft-mode
-               )))
-     ;; (global-set-key [f1] 'offlineimap)
+   (require 'mbsync nil 'noerror)
    #+END_SRC
 * ssl.elの代わりにopentlsを使う
   ついで(あれば) =/etc/ssl/certs/ca-ceritficats.crt= で証明書を検証.
@@ -236,29 +222,35 @@
    =~/Maildir/= もしくは =~/.mua/= 以下に集約している
    local の Mail folder の位置
    #+BEGIN_SRC emacs-lisp
-    (setq elmo-maildir-folder-path "~/Maildir/elmo")
+     (setq elmo-maildir-folder-path "~/Maildir/.elmo"
+           elmo-localdir-folder-path "~/Maildir/.elmo/local")
    #+END_SRC
    local フォルダの設定:
    =.lost+found= は =elmo-maildir-folder-path= からの相対パスになっていることに注意
    #+BEGIN_SRC emacs-lisp
      (setq elmo-lost+found-folder ".lost+found")
-     (setq wl-queue-folder ".~/Maildir/elmo/Queue")
+     (setq wl-queue-folder "+queue")
    #+END_SRC
    folders の位置の変更
    =~/.mua/wl-folders.gpg= に変更
    #+BEGIN_SRC emacs-lisp
      (setq wl-folders-file "~/.mua/wl-folders.gpg")
    #+END_SRC
-   Drafts, Trash を IMAP 同期すると大変な事になるので local に持つことに.
+   Drafts, Trash の置き場所
    #+BEGIN_SRC emacs-lisp
-     (setq wl-draft-folder ".~/Maildir/local/Drafts")
-     (setq wl-trash-folder ".~/Maildir/local/Trash")
+     (setq wl-draft-folder "+Drafts")
+     (setq wl-trash-folder "+Trash")
+     (setq elmo-lost+found-folder "+lost+found")
      (setq wl-temporary-file-directory "~/Downloads/")
    #+END_SRC
    アドレス帳 -> gcontacts-get-wlを使う
    #+BEGIN_SRC emacs-lisp
      (setq wl-use-petname t)
      (setq wl-address-file   "~/.mua/Address.wl")
+     ;; (when (locate-library "eweouz")
+     ;;   (progn
+     ;;     (require 'eweouz)
+     ;;     (add-hook 'wl-hook 'eweouz-insinuate-wl)))
    #+END_SRC
    LDAP サーバからアドレスを引くことも可能.
    以前は GCALDaemon を使って local に ldap サーバを上げていたのだけれども,
@@ -281,8 +273,7 @@
    #+END_SRC
 ** FCC, BCC の設定
    #+BEGIN_SRC emacs-lisp
-     ;;   (setq wl-fcc "%INBOX.Sent")
-     (setq wl-fcc nil)
+     (setq wl-fcc "%Sent")
    #+END_SRC
    fcc を既読にする場合は以下．=wl-fcc= が nil の場合には意味は無い
    #+BEGIN_SRC emacs-lisp
@@ -294,12 +285,12 @@
     #+END_SRC
 ** 起動時に =%INBOX= のみをチェック
    #+BEGIN_SRC emacs-lisp
-      (setq wl-auto-check-folder-name "%INBOX")
+      (setq wl-auto-check-folder-name "*%INBOX,%kusm.INBOX,%docomo.INBOX,%[Gmail].INBOX,%kuins.INBOX")
    #+END_SRC
 ** フォルダ選択時の初期設定
    imap の namespace を毎度入力するのが面倒なので，これを追加しておく.
    #+BEGIN_SRC emacs-lisp
-     (setq wl-default-spec "%INBOX.")
+     (setq wl-default-spec "%")
    #+END_SRC
 ** confirm 関連の設定
    スキャン時の問い合わせの無効化.
@@ -355,7 +346,7 @@
 * キーバインド関連
   =<f2>= で Addrbook の更新
   #+BEGIN_SRC emacs-lisp
-    (global-set-key [f2] 'gcontacts-update-wl-address)
+    ;; (global-set-key [f2] 'gcontacts-update-wl-address)
   #+END_SRC
   =C-c C-j= を browse-url に明け渡す
   #+BEGIN_SRC emacs-lisp
@@ -487,10 +478,10 @@
 ** 重複メッセージを非表示に
    フォルダ内の Message-ID が同じメールを非表示にする
    #+BEGIN_SRC emacs-lisp
-     ;; (setq wl-folder-process-duplicates-alist
-     ;;       '(
-     ;;         (".*" . hide)
-     ;;         ))
+     (setq wl-folder-process-duplicates-alist
+           '(
+             (".*" . hide)
+             ))
    #+END_SRC
 ** sort 順 [0/1]
    #+BEGIN_SRC emacs-lisp
@@ -554,31 +545,6 @@
              "Reply-To"
              ))
    #+END_SRC
-** 自動振り分け
-   =wl-expire= の設定など。最近使っていないので、以下はほとんどコメントアウト
-
-   log: 良い感じになってきたら nil にして log を残さないようにすること
-   #+BEGIN_SRC emacs-lisp
-     ;; (setq wl-expire-use-log t)
-   #+END_SRC
-   起動時に自動振り分けを有効化: 正規表現をミスすると致命的なので注意
-   #+BEGIN_SRC emacs-lisp
-   ;;  (add-hook 'wl-summary-prepared-pre-hook 'wl-summary-expire)
-   #+END_SRC
-   実際の expire rule:
-   あまり細かい事は考えず, 一年前のメールは =hide= にしていた.
-   #+BEGIN_SRC emacs-lisp
-     ;; (setq elmo-localdir-folder-path "~/Maildir")
-     ;; (setq wl-expire-localdir-date-folder-name-fmt "%s.%%04d.%%02d/cur")
-     ;; (setq wl-expire-alist
-     ;;       '(
-     ;;       ("^%INBOX.archive.zz2006$" (date 365) wl-expire-localdir-date)
-     ;;         ))
-     ;; (setq wl-expire-alist
-     ;;       '(
-     ;;         ("^\\%.*$" (date 365) hide)
-     ;;         ))
-   #+END_SRC
 * 日本語添付ファイル名のデコード
   日本語の添付ファイルに関しては, いまだにうまくいかない時がある.
   #+BEGIN_SRC emacs-lisp
@@ -622,34 +588,37 @@
   同じエントリがあると, 動作が微妙になるらしい [fn:6] .
   ここでは =~/.mailcap= だけを見にいくように
   #+BEGIN_SRC emacs-lisp
-    ;;  (setq mime-view-mailcap-files '("~/.mailcap"))
-    (defvar my:mime-preview-play-current-entity-appname "xdg-open"
-      "meadow なら fiber, mac なら open, linux なら xdg-open")
-    (unless (functionp #'mime-preview-play-current-entity-orig)
-      (fset #'mime-preview-play-current-entity-orig
-            (symbol-function #'mime-preview-play-current-entity)))
-    (setq mime-play-delete-file-immediately nil)
-    (defun mime-preview-play-current-entity (&optional ignore-examples mode)
-      (interactive "P")
-      (if (and mode (not (equal mode "play")))
-          (mime-preview-play-current-entity-orig ignore-examples mode)
-        (let* ((entity (get-text-property (point) 'mime-view-entity))
-               (name (mime-entity-safe-filename entity))
-               (filename (expand-file-name (if (and name (not (string= name "")))
-                                               name
-                                             (make-temp-name "EMI"))
-                                           (make-temp-file "EMI" 'directory))))
-          (mime-write-entity-content entity filename)
-          (message "External method is starting...")
-          (let* ((process-name
-                  (concat my:mime-preview-play-current-entity-appname " " filename))
-                 (process
-                  (start-process process-name
-                                 mime-echo-buffer-name
-                                 my:mime-preview-play-current-entity-appname
-                                 filename)))
-            (set-alist 'mime-mailcap-method-filename-alist process filename)
-            (set-process-sentinel process 'mime-mailcap-method-sentinel)))))
+    (setq mime-view-mailcap-files '("~/.mailcap"))
+    (setq mime-play-find-every-situations nil
+          mime-play-delete-file-immediately nil
+          process-connection-type nil)
+    ;; (defvar my:mime-preview-play-current-entity-appname "xdg-open"
+    ;;   "meadow なら fiber, mac なら open, linux なら xdg-open")
+    ;; (unless (functionp #'mime-preview-play-current-entity-orig)
+    ;;   (fset #'mime-preview-play-current-entity-orig
+    ;;         (symbol-function #'mime-preview-play-current-entity)))
+    ;; (setq mime-play-delete-file-immediately nil)
+    ;; (defun mime-preview-play-current-entity (&optional ignore-examples mode)
+    ;;   (interactive "P")
+    ;;   (if (and mode (not (equal mode "play")))
+    ;;       (mime-preview-play-current-entity-orig ignore-examples mode)
+    ;;     (let* ((entity (get-text-property (point) 'mime-view-entity))
+    ;;            (name (mime-entity-safe-filename entity))
+    ;;            (filename (expand-file-name (if (and name (not (string= name "")))
+    ;;                                            name
+    ;;                                          (make-temp-name "EMI"))
+    ;;                                        (make-temp-file "EMI" 'directory))))
+    ;;       (mime-write-entity-content entity filename)
+    ;;       (message "External method is starting...")
+    ;;       (let* ((process-name
+    ;;               (concat my:mime-preview-play-current-entity-appname " " filename))
+    ;;              (process
+    ;;               (start-process process-name
+    ;;                              mime-echo-buffer-name
+    ;;                              my:mime-preview-play-current-entity-appname
+    ;;                              filename)))
+    ;;         (set-alist 'mime-mailcap-method-filename-alist process filename)
+    ;;         (set-process-sentinel process 'mime-mailcap-method-sentinel)))))
   #+END_SRC
   ちなみに
   =~/.mailcap= 自体は
@@ -733,7 +702,7 @@
    署名の選択に c-sig を使用している.
    設定は以下の通り. Mew 風に =C-c <tab>= で signature を挿入するようにしている
    #+BEGIN_SRC emacs-lisp
-     (require 'c-sig)
+     (require 'c-sig nil 'noerror)
      (setq sig-insert-end t)
      (setq sig-save-to-sig-name-alist nil)
      (setq message-signature-file nil)
@@ -748,20 +717,81 @@
 ** Face の追加
   デフォルトより細かく指定するために幾つかの face 定義を追加.
   #+BEGIN_SRC emacs-lisp
-    ;; (setq wl-highlight-message-header-alist
-    ;;       '(("Subject[ \t]*:"
-    ;;          . wl-highlight-message-subject-header-contents)
-    ;;         ("From[ \t]*:"
-    ;;          . wl-highlight-message-from-header-contents)
-    ;;         ("Date[ \t]*:"
-    ;;          . wl-highlight-message-date-header-contents)
-    ;;         ("\\(.*To\\|Cc\\|Newsgroups\\)[ \t]*:"
-    ;;          . wl-highlight-message-important-header-contents)
-    ;;         ("\\(User-Agent\\|X-Mailer\\|X-Newsreader\\)[ \t]*:" .
-    ;;          wl-highlight-message-unimportant-header-contents)
-    ;;         ))
+    (setq wl-highlight-message-header-alist
+          '(("Subject[ \t]*:"
+             . wl-highlight-message-subject-header-contents)
+            ("From[ \t]*:"
+             . wl-highlight-message-from-header-contents)
+            ("Date[ \t]*:"
+             . wl-highlight-message-date-header-contents)
+            ("\\(.*To\\|Cc\\|Newsgroups\\)[ \t]*:"
+             . wl-highlight-message-important-header-contents)
+            ("\\(User-Agent\\|X-Mailer\\|X-Newsreader\\)[ \t]*:" .
+             wl-highlight-message-unimportant-header-contents)
+            ))
+    (defun my:wl-set-face (face spec)
+      (make-face face)
+      (cond ((fboundp 'face-spec-set)
+             (face-spec-set face spec))
+            (t
+             (wl-declare-face face spec))))
+    ;; (my:wl-set-face 'wl-highlight-folder-closed-face                  '((t (:foreground "#4cff4c" :bold nil :italic nil :weight normal ))))
+    (my:wl-set-face 'wl-highlight-folder-few-face                     '((t (:foreground "#FF4C4C" :bold t :italic nil :weight normal ))))
+    ;; (my:wl-set-face 'wl-highlight-folder-killed-face                  '((t (:foreground ,my:h:black :bold nil :italic nil :weight normal ))))
+    ;; (my:wl-set-face 'wl-highlight-folder-many-face                    '((t (:foreground ,my:h:magenta :bold nil :italic nil :weight normal ))))
+    ;; (my:wl-set-face 'wl-highlight-folder-opened-face                  '((t (:foreground "#4cffff" :bold nil :italic nil :weight normal ))))
+    ;; (my:wl-set-face 'wl-highlight-folder-path-face                    '((t (:underline t :bold nil :italic nil :weight normal ))))
+    ;; (my:wl-set-face 'wl-highlight-folder-unknown-face                 '((t (:foreground "#4cffff" :bold nil :italic nil :weight normal ))))
+    ;; (my:wl-set-face 'wl-highlight-folder-unread-face                  '((t (:foreground ,my:n:blue :bold nil :italic nil :weight normal ))))
+    (my:wl-set-face 'wl-highlight-folder-zero-face                    '((t (:foreground "#F6F3E8" :bold nil :italic nil :weight normal ))))
+    ;; (my:wl-set-face 'wl-highlight-header-separator-face               '((t (:inherit highlight :bold t ))))
+    ;; (my:wl-set-face 'wl-highlight-message-citation-header             '((t (:foreground ,my:h:green :bold nil :italic nil ))))
+    ;; (my:wl-set-face 'wl-highlight-message-cited-text-1                '((t (:foreground ,my:h:green :bold nil :italic nil ))))
+    ;; (my:wl-set-face 'wl-highlight-message-cited-text-10               '((t (:foreground "#4cffff" :bold nil :italic nil ))))
+    ;; (my:wl-set-face 'wl-highlight-message-cited-text-11               '((t (:foreground "#ff4cff" :bold nil :italic nil ))))
+    ;; (my:wl-set-face 'wl-highlight-message-cited-text-12               '((t (:foreground "#ff4c4c" :bold nil :italic nil ))))
+    ;; (my:wl-set-face 'wl-highlight-message-cited-text-2                '((t (:foreground ,my:h:yellow :bold nil :italic nil ))))
+    ;; (my:wl-set-face 'wl-highlight-message-cited-text-3                '((t (:foreground ,my:h:blue  :bold nil :italic nil ))))
+    ;; (my:wl-set-face 'wl-highlight-message-cited-text-4                '((t (:foreground ,my:h:cyan :bold nil :italic nil ))))
+    ;; (my:wl-set-face 'wl-highlight-message-cited-text-5                '((t (:foreground ,my:h:magenta :bold nil :italic nil ))))
+    ;; (my:wl-set-face 'wl-highlight-message-cited-text-6                '((t (:foreground ,my:h:red :bold nil :italic nil ))))
+    ;; (my:wl-set-face 'wl-highlight-message-cited-text-7                '((t (:foreground "#4cff4c" :bold nil :italic nil ))))
+    ;; (my:wl-set-face 'wl-highlight-message-cited-text-8                '((t (:foreground "#fff4c" :bold nil :italic nil ))))
+    ;; (my:wl-set-face 'wl-highlight-message-cited-text-9                '((t (:foreground ,my:n:blue :bold nil :italic nil ))))
+    (my:wl-set-face 'wl-highlight-message-date-header-contents        '((t (:foreground "#4CFF4C" :bold t :italic nil ))))
+    (my:wl-set-face 'wl-highlight-message-header-contents             '((t (:foreground "#aaaaaa" :bold nil :italic nil ))))
+    (my:wl-set-face 'wl-highlight-message-headers                     '((t (:foreground "#4CFFFF" :bold t :italic nil ))))
+    (my:wl-set-face 'wl-highlight-message-important-header-contents2  '((t (:foreground "#4CFF4C" :bold nil :italic nil ))))
+    (my:wl-set-face 'wl-highlight-message-signature                   '((t (:foreground "#aaaaaa" :bold nil :italic nil ))))
+    (my:wl-set-face 'wl-highlight-message-important-header-contents   '((t (:foreground "#FF4CFF" :bold t :italic nil ))))
+    (my:wl-set-face 'wl-highlight-message-subject-header-contents     '((t (:foreground "#FF4C4C" :bold t :italic nil ))))
+    (my:wl-set-face 'wl-highlight-message-from-header-contents        '((t (:foreground "#FFFF4C" :bold t :italic nil ))))
+    (my:wl-set-face 'wl-highlight-message-unimportant-header-contents '((t (:foreground "#aaaaaa" :bold nil :italic nil ))))
+    (my:wl-set-face 'wl-highlight-summary-answered-face               '((t (:foreground "#4CFF4C" :bold nil :italic nil :weight normal ))))
+    ;; (my:wl-set-face 'wl-highlight-summary-copied-face                 '((t (:foreground "#4CFFFF" :bold nil :italic nil :weight normal ))))
+    ;; (my:wl-set-face 'wl-highlight-summary-deleted-face                '((t (:foreground ,my:h:black :bold nil :italic nil :weight normal ))))
+    ;; (my:wl-set-face 'wl-highlight-summary-displaying-face             '((t (:underline t :bold nil :italic nil :weight normal ))))
+    ;; (my:wl-set-face 'wl-highlight-summary-disposed-face               '((t (:foreground "#aaaaaa" :bold nil :italic nil :weight normal ))))
+    ;; (my:wl-set-face 'wl-highlight-summary-flagged-face                '((t (:foreground ,my:h:yellow :bold nil :italic nil :weight normal ))))
+    ;; (my:wl-set-face 'wl-highlight-summary-forwarded-face              '((t (:foreground ,my:h:blue :bold nil :italic nil :weight normal ))))
+    ;; (my:wl-set-face 'wl-highlight-summary-high-read-face              '((t (:foreground ,my:h:green :bold nil :italic nil :weight normal ))))
+    ;; (my:wl-set-face 'wl-highlight-summary-high-unread-face            '((t (:foreground ,my:h:orange :bold nil :italic nil :weight normal ))))
+    ;; (my:wl-set-face 'wl-highlight-summary-important-face              '((t (:foreground "#ffff4c" :bold nil :italic nil :weight normal ))))
+    ;; (my:wl-set-face 'wl-highlight-summary-important-flag-face         '((t (:foreground "#ffff4c" :bold nil :italic nil :weight normal ))))
+    ;; (my:wl-set-face 'wl-highlight-summary-killed-face                 '((t (:foreground ,my:h:black :bold nil :italic nil :weight normal ))))
+    ;; (my:wl-set-face 'wl-highlight-summary-l:read-face                 '((t (:foreground "#4CFF4C" :bold nil :italic nil :weight normal ))))
+    ;; (my:wl-set-face 'wl-highlight-summary-l:unread-face               '((t (:foreground ,my:h:lightb :bold nil :italic nil :weight normal ))))
+    ;; (my:wl-set-face 'wl-highlight-summary-new-face                    '((t (:foreground "#ff4c4c" :bold nil :italic nil :weight normal ))))
+    ;; (my:wl-set-face 'wl-highlight-summary-normal-face                 '((t (:foreground "#f6f3e8" :bold nil :italic nil :weight normal ))))
+    ;; (my:wl-set-face 'wl-highlight-summary-prefetch-face               '((t (:foreground ,my:n:blue :bold nil :italic nil :weight normal ))))
+    (my:wl-set-face 'wl-highlight-summary-refiled-face                '((t (:foreground "#7F7FFF" :bold nil :italic nil :weight normal ))))
+    ;; (my:wl-set-face 'wl-highlight-summary-resend-face                 '((t (:foreground ,my:h:orange :bold nil :italic nil :weight normal ))))
+    ;; (my:wl-set-face 'wl-highlight-summary-target-face                 '((t (:foreground "#4CFFFF" :bold nil :italic nil :weight normal ))))
+    ;; (my:wl-set-face 'wl-highlight-summary-temp-face                   '((t (:foreground ,my:n:violet :bold nil :italic nil :weight normal ))))
+    (my:wl-set-face 'wl-highlight-summary-thread-top-face             '((t (:foreground "#F6F3E8" :bold t :italic nil :weight normal ))))
+    ;; (my:wl-set-face 'wl-highlight-summary-unread-face                 '((t (:foreground "#ff4c4c" :bold nil :italic nil :weight normal ))))
+    ;; (my:wl-set-face 'wl-highlight-thread-indent-face                  '((t (:underline t :bold nil :italic nil :weight normal ))))
   #+END_SRC
-  実際の font-lock は [[https://github.com/uwabami/color-theme-darkpastel][color-theme-darkpastel]] [fn:5] で行なっている.
 * GPG 署名
   以前は mailcrypt を使っていたけれど,
   epa があるので主にキーバインドの設定のみ.
@@ -835,6 +865,10 @@
          (setq elmo-search-default-engine 'mu)
          ))
   #+END_SRC
+** メールが多すぎると怒られるので.
+   #+BEGIN_SRC emacs-lisp
+     (setq elmo-multi-divide-number 2000000)
+   #+END_SRC
 * Footnotes
 
 [fn:1] wanderlust - github : [[https://github.com/wanderlust/wanderlust]]

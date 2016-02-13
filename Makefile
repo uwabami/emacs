@@ -29,8 +29,12 @@ tmp/.skkdic-stamp:
 	  fi  \
 	fi
 	touch $@
-init.elc: init.el
-	$(EMACS) -q -l $< -batch -f batch-byte-compile $<
+init.elc: tmp/.el-get-cli-run-stamp
+	$(EMACS) -q -l $< -batch -f batch-byte-compile init.el
+el-get-cli-run: tmp/.el-get-cli-run-stamp
+tmp/.el-get-cli-run-stamp: init.el
+	EMACS=$(EMACS) share/el-get-cli/bin/elget -f $< install
+	touch $@
 init.el: README.org
 	$(EMACS) -q --batch \
 	  --eval "(progn \
@@ -43,5 +47,8 @@ clean:
 distclean: clean
 	rm -fr packages/* && touch packages/.gitkeep
 	rm -fr share/skkdic
-	rm -fr tmp/.*-stamp tmp/.*-use auto-save-list
-recompile: clean all
+	rm -fr tmp/.*-stamp tmp/.*-use auto-save-list && touch tmp/.gitkeep
+	mkdir -p tmp/skk && touch tmp/skk/.gitkeep
+recompile:
+	touch README.org
+	$(MAKE) all

@@ -2,112 +2,25 @@
 #+TITLE: 環境に依存しない(筈の)設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2015-12-18 19:20:36
+#+DATE: 2016-08-17 10:58:15
 #+LANG: ja
 #+LAYOUT: page
 #+CATEGORIES: cc-env emacs
-#+PERMALINK: cc-env/emacs/config/basic.html
+#+PERMALINK: cc-env/emacs/config/basic_config.html
 * 始めに
-  Emacs の基本的な設定集。多分機種依存しない(筈)。
-** 無効化するための関数の定義
-   =line-number-mode= など「有効無効をtoggleする関数」は
-   慣習的に =0= 以下の数字を指定すると明示的に無効化できるので、
-   =-1= を設定する関数を定義しておく.
-   #+BEGIN_SRC emacs-lisp
-     (defun my:disable-builtin-mode (mode)
-       "与えられた mode が存在するのであれば -1 をセットして無効化"
-       (if (fboundp mode) (funcall mode -1)))
-   #+END_SRC
-* 環境変数の読み込み
-  zsh で設定した =PATH= などの環境変数を Emacs に引き継ぐために
-  [[https://github.com/purcell/exec-path-from-shell][purcell/exec-path-from-shell]] を使います。
+  主にEmacs本体に同梱されている拡張に関する設定集．
+* 無効化するための関数の定義
+  =line-number-mode= など「有効無効をtoggleする関数」は
+  慣習的に =0= 以下の数字を指定すると明示的に無効化できるので、
+  =-1= を設定する関数を定義しておく.
   #+BEGIN_SRC emacs-lisp
-    (when (executable-find "zsh")
-      (progn
-        (setq-default explicit-shell-file-name "zsh")
-        (setq shell-file-name "zsh"
-              shell-command-switch "-c")))
-    (el-get-bundle exec-path-from-shell)
-    (require 'exec-path-from-shell nil 'noerror)
-    (when (memq window-system '(mac ns))
-      (exec-path-from-shell-initialize))
-    (exec-path-from-shell-copy-envs
-     '("http_proxy" "DEBFULLNAME" "DEBEMAIL" "SKKSERVER" "TEXMFHOME" "GPG_KEY_ID"))
-    (setq user-full-name (concat (getenv "DEBFULLNAME"))
-          user-mail-address (concat (getenv "DEBEMAIL")))
+    (defun my:disable-builtin-mode (mode)
+      "与えられた mode が存在するのであれば -1 をセットして無効化"
+      (if (fboundp mode) (funcall mode -1)))
   #+END_SRC
-* 言語の設定
-  過去にはいろいろ設定していたのですが...
-  - [[http://masutaka.net/chalow/2009-07-09-1.html][Emacs講座 -第7回- 文字コード / マスタカの ChangeLog メモ]]
-  ...え, そうなの?
-
-  というわけで OS 依存の条件分岐だけを記述しています.
-
-  ちなみに
-  =prefer-coding-system= を設定すると
-  =default-file-name-coding-system= が設定されます.
-  優先順位は以下の通り:
-  1. =file-name-coding-system= を見る
-  2. =file-name-coding-system=  が nil なら =default-file-name-coding-system= を利用
-** cp5022x.el
-  Emacs23 から内部が Unicode ベースになっています。
-
-  しかし文字コードの変換は GNU libc の iconv をベースにしているため、
-  環境によっては文字の変換がうまく行なえません。
-  そこで言語設定前に =cp5022x.el= をインストールすることにしています。
-  #+BEGIN_SRC emacs-lisp
-    (el-get-bundle awasira/cp5022x.el
-      (require 'cp5022x nil 'noerror))
-  #+END_SRC
-** East Asian Ambiguos 対応
-   CJK 以外の East Asian Ambiguos も2文字幅にするようにしています.
-   #+BEGIN_SRC emacs-lisp
-     (el-get-bundle eaw_and_emoji
-       :type http
-       :url "https://raw.githubusercontent.com/uwabami/locale-eaw-emoji/master/eaw_and_emoji.el"
-       )
-     (require 'eaw_and_emoji nil t)
-     (eaw-and-emoji-fullwidth)
-     ;; (setq nobreak-char-display nil)
-   #+END_SRC
-** OSの違いに起因する条件分岐
-   Mac と Linux では同じ Unicode でも正規化が異なります
-   (具体的には Mac のファイルシステムである HFS+ では Unicode の正規化が異なります).
-   Unicode の正規化と Mac OS X 特有の事情については
-    - [[http://homepage1.nifty.com/nomenclator/unicode/normalization.htm][Unicode正規化とは]]
-    - [[http://www.sakito.com/2010/05/mac-os-x-normalization.html][Mac OS X におけるファイル名に関するメモ(NFC, NFD等)]]
-   等が参考になるでしょう.
-
-   日本語のファイル名を扱うことは滅多にないものの,
-   たまに祟りがあるのでそれを回避するための設定をしています.
-
-   Windows の場合はファイル名などは cp932 にしているものの,
-   最近 Windows 使っていないので良く知りません.
-   #+BEGIN_SRC emacs-lisp
-     ;; language and coding-system
-     (cond
-      ((eq system-type 'darwin)
-       (require 'ucs-normalize)
-       (setq file-name-coding-system 'utf-8-hfs)
-       (setq locale-coding-system 'utf-8-hfs)
-       ;; ついでにキーバインド: Ctrl を Mac から奪い取る
-       (setq mac-pass-control-to-system t)
-       ;; Cmd と Option を逆にする
-       (setq ns-command-modifier 'meta)
-       (setq ns-alternate-modifier 'super)
-       (global-set-key [ns-drag-file] 'ns-find-file))
-      ((eq system-type 'windows-nt)
-       (setq file-name-coding-system 'cp932)
-       (setq locale-coding-system 'cp932))
-      (t
-       (setq file-name-coding-system 'utf-8)
-       (setq locale-coding-system 'utf-8))
-      )
-   #+END_SRC
 * 基本的なキーバインドの設定
-  既に手癖になってしまっているアレコレ。
-  =[home]= と =[end]= は無いと途方に暮れます。
-  [[https://github.com/k1LoW/emacs-drill-instructor/wiki][鬼軍曹.el]] とかで強制した方が良いのかも、とかごく偶に思いますが(思うだけ)。
+  既に手癖になってしまっているアレコレ．
+  特に =[home]= と =[end]= は無いと途方に暮れます．
   #+BEGIN_SRC emacs-lisp
     (global-set-key (kbd "C-h")     'backward-delete-char)
     (global-set-key (kbd "C-c M-a") 'align-regexp)
@@ -118,33 +31,11 @@
     (global-set-key (kbd "C-c M-r") 'replace-regexp)
     (global-set-key (kbd "C-c r")   'replace-string)
     (global-set-key (kbd "<home>")  'beginning-of-buffer)
+    (global-set-key "\M-[7~"        'beginning-of-buffer)
     (global-set-key (kbd "<end>")   'end-of-buffer)
+    (global-set-key "\M-[8~"        'end-of-buffer)
   #+END_SRC
-* =diminish=: モードラインの短縮表示
-  #+BEGIN_SRC emacs-lisp
-    (el-get-bundle diminish
-      (require 'diminish nil t)
-      (with-eval-after-load "isearch" (diminish 'isearch-mode))
-      (with-eval-after-load "smooth-scroll" (diminish 'smooth-scroll-mode))
-      (with-eval-after-load "whitespace" (diminish 'global-whitespace-mode))
-      (with-eval-after-load "centered-cursor-mode"
-        (diminish 'centered-cursor-mode))
-      (with-eval-after-load "volatile-highlights"
-        (diminish 'volatile-highlights-mode))
-      (with-eval-after-load "aggressive-indent"
-        (diminish 'aggressive-indent-mode " Ai"))
-      (with-eval-after-load "emmet-mode" (diminish 'emmet-mode " e"))
-      (with-eval-after-load "abbrev" (diminish 'abbrev-mode " a"))
-      (with-eval-after-load "yasnippet" (diminish 'yas-minor-mode " y"))
-      (with-eval-after-load "doxymacs" (diminish 'doxymacs-mode " d"))
-      (with-eval-after-load "rainbow-mode" (diminish 'rainbow-mode))
-      )
-  #+END_SRC
-  メジャーモードは =hook= で設定.
-  #+BEGIN_SRC emacs-lisp
-    (add-hook 'emacs-lisp-mode-hook '(lambda () (setq mode-name "el")))
-    (add-hook 'lisp-interaction-mode-hook '(lambda () (setq mode-name "Lisp")))
-  #+END_SRC
+  [[https://github.com/k1LoW/emacs-drill-instructor/wiki][鬼軍曹.el]] とかで強制した方が良いのかも、とかごく偶に思いますが(思うだけ)．
 * Emacs server
   #+BEGIN_SRC emacs-lisp
     (require 'server)
@@ -152,19 +43,20 @@
       (server-start))
   #+END_SRC
 * 組み込みGnuTLS の無効化
-  なんか挙動が変な気がするので
+  なんか挙動が変な気がするので，とりあえず無効化しておく．
   #+BEGIN_SRC emacs-lisp
-    (defun gnutls-available-p ()
-      "Function redefined in order not to use built-in GnuTLS support"
-      nil)
+    ;; (defun gnutls-available-p ()
+    ;;   "Function redefined in order not to use built-in GnuTLS support"
+    ;;   nil)
   #+END_SRC
+  そのうち戻すかも．
 * =whitespace=: 空白の強調表示
   #+BEGIN_SRC emacs-lisp
     (require 'whitespace nil 'noerror)
     (setq whitespace-line-column 72)
     (setq whitespace-style
-          '(face              ; faceを使って視覚化する。
-            trailing          ; 行末の空白を対象とする。
+          '(face              ; faceを使って視覚化する．
+            trailing          ; 行末の空白を対象とする．
             tabs              ; tab
             spaces            ; space
             ))
@@ -177,7 +69,7 @@
             ;; comment the line below.
             (tab-mark ?\t [?\u00BB ?\t] [?\\ ?\t])))
     (setq whitespace-space-regexp "\\(\u3000+\\)")
-    ;; デフォルトで視覚化を有効にする。
+    ;; デフォルトで視覚化を有効にする．
     (global-whitespace-mode 1)
   #+END_SRC
 * =uniquify=: モードラインのファイル名にディレクトリも表示する
@@ -195,8 +87,8 @@
           (convert-standard-filename (concat my:temp-dir "emacs-places")))
   #+END_SRC
 * =time-stamp=: 保存時に timestamp を自動更新
-  いろいろ衝突したので =＄Lastupdate: 2= (＄は半角) があったら timestamp を更新する.
-  モード独自の設定に関しては別途
+  デフォルトではいろいろと衝突したので
+  更新文字列を変更し， =＄Lastupdate: 2= (＄は半角) があったら timestamp を更新する様にした．
   #+BEGIN_SRC emacs-lisp
     (require 'time-stamp nil 'noerror)
     (setq time-stamp-active t)
@@ -206,14 +98,12 @@
     (setq time-stamp-format "%03y-%02m-%02d %02H:%02M:%02S")
     (add-hook 'before-save-hook 'time-stamp)
   #+END_SRC
-* =tramp=
+  モード独自の設定(例えば Org とか)に関しては別途．
+* =tramp=: 使わないので無効化?
+  無効化したいんだけれど，うまくいってない，ような...
   #+BEGIN_SRC emacs-lisp
     (setq tramp-persistency-file-name (concat my:temp-dir "tramp"))
-    (setq tramp-mode nil)
-  #+END_SRC
-* =rainbow-mode=: 色表示
-  #+BEGIN_SRC emacs-lisp
-    (el-get-bundle rainbow-mode)
+    (setq tramp-default-method "scpx")
   #+END_SRC
 * =bookmark=: bookmark ファイル
   イマイチ使いこなせてない.
@@ -221,6 +111,7 @@
     (setq bookmark-default-file (concat my:share-dir "bookmarks"))
   #+END_SRC
 * =edit-server=: chrome/chromium の textarea を Emacs で編集
+  chromium を使うのを止めたので無効化
   #+BEGIN_SRC emacs-lisp
     ;; (when (or (executable-find "chromium")
     ;;           (executable-find "chrome"))
@@ -231,9 +122,9 @@
     ;;     (edit-server-start)))
   #+END_SRC
 * browse-url
-  Firefox → emacs-w3m → w3 の順で探索。 eww もそのうち試す。
-  Firefox の呼び出し方が変わったので、そのために関数を追加。
-  詳細は [[http://www.emacswiki.org/emacs/BrowseUrl]] を参照のこと。
+  Firefox → emacs-w3m → w3 の順で探索． eww もそのうち試す．
+  Firefox の呼び出し方が変わったので、そのために関数を追加．
+  詳細は [[http://www.emacswiki.org/emacs/BrowseUrl]] を参照のこと．
   #+BEGIN_SRC emacs-lisp
     (defun browse-url-firefox (url &optional new-window)
       "@see http://www.emacswiki.org/emacs/BrowseUrl"
@@ -270,6 +161,7 @@
 *** 起動時のスプラッシュ画面を表示しない
     #+BEGIN_SRC emacs-lisp
       (setq inhibit-startup-screen t)
+      (setq inhibit-startup-message t)
     #+END_SRC
 *** フレーム, ツールバー等を非表示に
     大抵の場合ターミナル内で =-nw= として起動するし,
@@ -296,11 +188,6 @@
     #+BEGIN_SRC emacs-lisp
     (show-paren-mode 1)
     (setq show-paren-style 'mixed)
-    #+END_SRC
-*** カーソル位置
-    #+BEGIN_SRC emacs-lisp
-      ;; 現在行を目立たせる
-      (global-hl-line-mode)
     #+END_SRC
 *** linum-mode
     必要に応じて =linum-mode= を有効にするので,
@@ -375,39 +262,42 @@
            (expand-file-name (concat my:temp-dir "recentf")))
      (setq recentf-auto-cleanup 'never)
      (setq recentf-exclude
-           '(".recentf" "^/tmp\\.*" "^/private\\.*" "^/var/folders\\.*" "/TAGS$"))
+           '(".recentf"
+             "^/tmp\\.*"
+             "^/private\\.*"
+             "^/var/folders\\.*"
+             "/TAGS$"
+             "^/home/uwabami/.mozilla/firefox/jhitnbb2.default/itsalltext\\.*"
+             ))
      (add-hook 'after-init-hook 'recentf-mode)
    #+END_SRC
 *** Undo/Redo
    そのうち undohist と undo-tree を試そうと思っているのですが、
-   今のところ特に弄ってません。
+   今のところ特に弄ってません．
    #+BEGIN_SRC emacs-lisp
-     (setq undo-limit 160000) ; 無限にしたいができないので, 倍に
-     (setq undo-strong-limit 240000)
+     (setq undo-limit 20000)
+     ; 無限にしたいができないのでとりあえず30倍に．
+     (setq undo-strong-limit 30000)
      (savehist-mode 1)        ; ミニバッファの履歴を保存しリストア
      (setq savehist-file
            (concat my:temp-dir "history"))
      (setq history-length t)  ; t で無制限
    #+END_SRC
-*** find-file での除外リスト
-    元ネタ: [[http://stackoverflow.com/questions/1731634/dont-show-uninteresting-files-in-emacs-completion-window][autocomplete - Don't show uninteresting files in Emacs completion window]]
-    #+BEGIN_SRC emacs-lisp
-      (defadvice completion-file-name-table (after
-                                             ignoring-backups-f-n-completion
-                                             activate)
-        "Filter out results when they match `completion-ignored-extensions'."
-        (let ((res ad-return-value))
-          (if (and (listp res)
-                   (stringp (car res))
-                   (cdr res))                 ; length > 1, don't ignore sole match
-              (setq ad-return-value
-                    (completion-pcm--filename-try-filter res)))))
-    #+END_SRC
+** デイレクトリ整理
+   #+BEGIN_SRC emacs-lisp
+     (with-eval-after-load 'url
+       (setq url-configuration-directory (concat my:temp-dir "url")))
+   #+END_SRC
+* ガベージコレクションの頻度を下げる
+  とりあえず 50 MB にしておく.
+  #+BEGIN_SRC emacs-lisp
+    (setq gc-cons-threshold (* 50 (* 1024 1024)))
+  #+END_SRC
 * 行末の無駄な空白/改行を削除する
   元ネタ: [[http://d.hatena.ne.jp/tototoshi/20101202/1291289625][無駄な行末の空白を削除する(Emacs Advent Calendar jp:2010)]]
 
   ただし, RD や Markdown だと空白行に意味があったりするので、
-  必要に応じて拡張子で判断して外している。
+  必要に応じて拡張子で判断して外している．
   #+BEGIN_SRC emacs-lisp
     (defvar my:delete-trailing-whitespace-exclude-suffix
       (list "\\.rd$" "\\.md$" "\\.rbt$" "\\.rab$"))
@@ -456,7 +346,7 @@
                    (my:make-scratch 1)))))
  #+END_SRC
 * 空になったファイルを尋ねずに自動削除
- ゴミが残らないし、地味に便利。
+ ゴミが残らないし、地味に便利．
  #+BEGIN_SRC emacs-lisp
     (if (not (memq 'delete-file-if-no-contents after-save-hook))
         (setq after-save-hook
@@ -468,3 +358,8 @@
         (delete-file
          (buffer-file-name (current-buffer)))))
  #+END_SRC
+* =midnight=: 一定期間使用しなかった buffer を自動削除
+  #+BEGIN_SRC emacs-lisp
+    (require 'midnight)
+    (setq clean-buffer-list-delay-general 1)
+  #+END_SRC

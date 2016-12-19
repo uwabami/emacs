@@ -2,7 +2,7 @@
 #+TITLE: Wanderlust の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2016-02-03 22:17:27
+#+DATE: 2016-12-09 19:59:34
 #+LANG: ja
 #+LAYOUT: page
 #+CATEGORIES: cc-env emacs
@@ -45,12 +45,16 @@
    HTML メールを表示するための設定.
    mime-setup がロードされる前に記述する必要あり.
    #+BEGIN_SRC emacs-lisp
-     (setq mime-setup-enable-inline-html nil)
+     (setq mime-setup-enable-inline-html t)
+   #+END_SRC
+   どのアプリケーションで開くか → =xdg-open= に丸投げ．
+   #+BEGIN_SRC emacs-lisp
+     (setq mime-view-mailcap-files '("~/.mailcap"))
    #+END_SRC
    MIME の例の保存先の変更
    #+BEGIN_SRC emacs-lisp
       (setq mime-situation-examples-file
-            (concat my:temp-dir "mime-example"))
+         (concat my:temp-dir "mime-example"))
    #+END_SRC
    HTML パートの表示に w3m を使う
    #+BEGIN_SRC emacs-lisp
@@ -62,20 +66,25 @@
        (setq mime-w3m-safe-url-regexp nil)
        )
    #+END_SRC
-   大きいメッセージを送信時に分割しない
+   eww を使う設定 ⇒ base64 decode がうまくいかない? pending
    #+BEGIN_SRC emacs-lisp
-     (setq mime-edit-split-message nil)
+     ;; (require 'mime-setup nil 'noerror)
+     ;; (when (fboundp 'eww)
+     ;;   (progn
+     ;;     (setq mime-setup-enable-inline-html 'shr)
+     ;;     (defun shr-insert-document--for-eww (&rest them)
+     ;;       (let ((shr-width 70)) (apply them)))
+     ;;     (defun eww-display-html--fill-column (&rest them)
+     ;;       (advice-add 'shr-insert-document :around 'shr-insert-document--for-eww)
+     ;;       (unwind-protect
+     ;;           (apply them)
+     ;;         (advice-remove 'shr-insert-document 'shr-insert-document--for-eww)))
+     ;;     (advice-add 'eww-display-html :around 'eww-display-html--fill-column)
+     ;;     ))
    #+END_SRC
    text/plain を html より優先
    #+BEGIN_SRC emacs-lisp
      (set-alist 'mime-view-type-subtype-score-alist '(text . html) 0)
-   #+END_SRC
-** gcontacts-get-wl
-   GoogleContacts から Wanderlust の AddressBook へ変換する.
-   WanderlustのAddressファイルは情報が少ないので，org-contactsあたりを使った方が良いのかもしれない．
-   #+BEGIN_SRC emacs-lisp
-     (require 'gcontacts-get-wl nil 'noerror)
-     (setq gcontacts-get-wl-ask nil)
    #+END_SRC
 ** mbsync
    #+BEGIN_SRC emacs-lisp
@@ -84,23 +93,23 @@
 * ssl.elの代わりにopentlsを使う
   ついで(あれば) =/etc/ssl/certs/ca-ceritficats.crt= で証明書を検証.
   #+BEGIN_SRC emacs-lisp
-    (setq smtp-use-gnutls nil)
-    (require 'tls)
-    (set-alist 'elmo-network-stream-type-alist
-               "!opentls" '(opentls nil open-tls-stream))
-    (set-alist 'elmo-network-stream-type-alist
-               "!" '(ssl ssl open-tls-stream))
-    (cond
-     ((file-exists-p "/etc/ssl/certs/ca-certificates.crt")
-      (setq tls-program
-            '("gnutls-cli --x509cafile /etc/ssl/certs/ca-certificates.crt -p %p %h"
-              "gnutls-cli --insecure -p %p %h"
-              )))
-     (t
-      (setq tls-program
-            '("gnutls-cli --insecure -p %p %h"))
-      )
-     )
+    ;; (setq smtp-use-gnutls t)
+    ;; (require 'tls)
+    ;; (set-alist 'elmo-network-stream-type-alist
+    ;;            "!opentls" '(opentls nil open-tls-stream))
+    ;; (set-alist 'elmo-network-stream-type-alist
+    ;;            "!" '(ssl ssl open-tls-stream))
+    ;; (cond
+    ;;  ((file-exists-p "/etc/ssl/certs/ca-certificates.crt")
+    ;;   (setq tls-program
+    ;;         '("gnutls-cli --x509cafile /etc/ssl/certs/ca-certificates.crt -p %p %h"
+    ;;           "gnutls-cli --insecure -p %p %h"
+    ;;           )))
+    ;;  (t
+    ;;   (setq tls-program
+    ;;         '("gnutls-cli --insecure -p %p %h"))
+    ;;   )
+    ;;  )
   #+END_SRC
 * 個人情報の設定
   具体的な設定内容は
@@ -218,12 +227,17 @@
    #+BEGIN_SRC emacs-lisp
       (setq elmo-imap4-use-modified-utf7 t)
    #+END_SRC
+** 非同期チェック
+   なんか挙動が変な，ような...．
+   #+BEGIN_SRC emacs-lisp
+   (setq wl-folder-check-async nil)
+   #+END_SRC
 ** フォルダの位置の default からの変更
-   =~/Maildir/= もしくは =~/.mua/= 以下に集約している
+   =~/.cache/wanderlust/= に集約している
    local の Mail folder の位置
    #+BEGIN_SRC emacs-lisp
-     (setq elmo-maildir-folder-path "~/Maildir/.elmo"
-           elmo-localdir-folder-path "~/Maildir/.elmo/local")
+     (setq elmo-maildir-folder-path "~/.cache/wanderlust"
+           elmo-localdir-folder-path "~/.cache/wanderlust/local")
    #+END_SRC
    local フォルダの設定:
    =.lost+found= は =elmo-maildir-folder-path= からの相対パスになっていることに注意
@@ -246,7 +260,7 @@
    アドレス帳 -> gcontacts-get-wlを使う
    #+BEGIN_SRC emacs-lisp
      (setq wl-use-petname t)
-     (setq wl-address-file   "~/.mua/Address.wl")
+     (setq wl-address-file  "~/.mua/Address.wl")
      ;; (when (locate-library "eweouz")
      ;;   (progn
      ;;     (require 'eweouz)
@@ -257,10 +271,10 @@
    Google Contacts の API が変わったらしく
    GCALDaemon で LDAP サーバは使えなくなったのでコメントアウト.
    #+BEGIN_SRC emacs-lisp
-     ;; ;; ldap からアドレスを引く設定
+     ;; ldap からアドレスを引く設定
      ;; (setq wl-use-ldap t)
      ;; (setq wl-ldap-server "localhost")
-     ;; (setq wl-ldap-port "636")
+     ;; (setq wl-ldap-port "389")
      ;; (setq wl-ldap-base "dc=math,dc=kyoto-u,dc=ac,dc=jp")
    #+END_SRC
    パスワードの保存先
@@ -273,7 +287,8 @@
    #+END_SRC
 ** FCC, BCC の設定
    #+BEGIN_SRC emacs-lisp
-     (setq wl-fcc "%Sent")
+     (setq wl-fcc nil)
+     ;; (setq wl-fcc "%Sent")
    #+END_SRC
    fcc を既読にする場合は以下．=wl-fcc= が nil の場合には意味は無い
    #+BEGIN_SRC emacs-lisp
@@ -285,7 +300,8 @@
     #+END_SRC
 ** 起動時に =%INBOX= のみをチェック
    #+BEGIN_SRC emacs-lisp
-      (setq wl-auto-check-folder-name "*%INBOX,%kusm.INBOX,%docomo.INBOX,%[Gmail].INBOX,%kuins.INBOX")
+      ;; (setq wl-auto-check-folder-name "*%INBOX,%docomo/INBOX")
+      (setq wl-auto-check-folder-name "%INBOX")
    #+END_SRC
 ** フォルダ選択時の初期設定
    imap の namespace を毎度入力するのが面倒なので，これを追加しておく.
@@ -294,8 +310,7 @@
    #+END_SRC
 ** confirm 関連の設定
    スキャン時の問い合わせの無効化.
-   ちなみ
-   confirm を nil にしても 問い合わせが無いだけで
+   ちなみに confirm を nil にしても 問い合わせが無いだけで
    threshold は効くので, 明示的に nil に.
    #+BEGIN_SRC emacs-lisp
      (setq elmo-folder-update-confirm nil)
@@ -314,6 +329,10 @@
       (setq wl-interactive-send t)
    #+END_SRC
 ** misc.
+   大きいメッセージを送信時に分割しない
+   #+BEGIN_SRC emacs-lisp
+     (setq mime-edit-split-message nil)
+   #+END_SRC
    スレッドは常に閉じる
    #+BEGIN_SRC emacs-lisp
      (setq wl-thread-insert-opened nil)
@@ -334,6 +353,17 @@
    #+BEGIN_SRC emacs-lisp
      (setq wl-highlight-folder-with-icon nil)
    #+END_SRC
+** dispose, delete の設定
+   Gmail用に%INBOXでは削除を =wl-trash-folder= への移動ではなく，「delete」に．
+   #+BEGIN_SRC emacs-lisp
+     (add-to-list 'wl-dispose-folder-alist
+                  '("^%INBOX" . remove))
+   #+END_SRC
+   迷惑メール関連も
+   #+BEGIN_SRC emacs-lisp
+     (add-to-list 'wl-dispose-folder-alist
+                  '(".*Junk$" . remove))
+   #+END_SRC
 ** 折り返しの設定
    message は折り返す.
    #+BEGIN_SRC emacs-lisp
@@ -342,6 +372,12 @@
    draft も折り返す
    #+BEGIN_SRC emacs-lisp
      (setq wl-draft-truncate-lines nil)
+   #+END_SRC
+** mode-line の設定
+   長いと嫌なのでイロイロ削る
+   #+BEGIN_SRC emacs-lisp
+   (setq wl-summary-mode-line-format "%f"); "%f {%t}(%n/%u/%a)"
+   (setq wl-message-mode-line-format "") ; "<< %f:%F>> [%m]"
    #+END_SRC
 * キーバインド関連
   =<f2>= で Addrbook の更新
@@ -483,38 +519,50 @@
              (".*" . hide)
              ))
    #+END_SRC
-** sort 順 [0/1]
+** sort 順
+*** 返信が来た順
    #+BEGIN_SRC emacs-lisp
      (defun wl-summary-overview-entity-compare-by-reply-date (a b)
-       "Compare entity A and B by latest date of replies."
-       (let ((fx
-              #'(lambda (x)
-                  (let* ((number (elmo-message-entity-number x))
-                         (list (cons number
-                                     (wl-thread-entity-get-descendant
-                                      (wl-thread-get-entity number))))
-                         max time)
-                    (while list
-                      (when (condition-case nil
-                                (elmo-time-less-p
-                                 max
-                                 (setq time
-                                       (elmo-message-entity-field
+       "Compare message A and B by latest date of replies including thread."
+       (flet ((string-max2 (x y) (cond ((string< x y) y) ('t x)))
+              (thread-number-get-date (x)
+                                      (timezone-make-date-sortable
+                                       (elmo-msgdb-overview-entity-get-date
                                         (elmo-message-entity
-                                         wl-summary-buffer-elmo-folder (car list))
-                                        'date)))
-                              (error nil))
-                        (setq max time))
-                      (setq list (cdr list)))
-                    max))))
-         (condition-case nil
-             (elmo-time-less-p (funcall fx a) (funcall fx b))
-           (error nil))))
+                                         wl-summary-buffer-elmo-folder x))))
+              (thread-get-family (x)
+                                 (cons x (wl-thread-entity-get-descendant (wl-thread-get-entity x))))
+              (max-reply-date (x)
+                              (cond ((eq 'nil x)
+                                     'nil)
+                                    ((eq 'nil (cdr x))
+                                     (thread-number-get-date (car x)))
+                                    ('t
+                                     (string-max2 (thread-number-get-date (car x))
+                                                  (max-reply-date (cdr x)))))))
+         (string<
+          (max-reply-date (thread-get-family (elmo-message-entity-number a)))
+          (max-reply-date (thread-get-family (elmo-message-entity-number b))))))
+     ;; Sort threads based on the date of the latest reply.
      (add-to-list 'wl-summary-sort-specs 'reply-date)
-     (setq wl-summary-default-sort-spec 'reply-date)
-     ;; (add-to-list 'wl-summary-sort-specs 'rdate)
+     ;; (setq wl-summary-default-sort-spec 'reply-date)
    #+END_SRC
-   - [ ] ファイルの番号をそのままソートする方が高速だが, それで幸せになれるか?
+*** 返信番号順
+    #+BEGIN_SRC emacs-lisp
+      (defun wl-summary-overview-entity-compare-by-reply-number (a b)
+        "Compare entity A and B by latest number of replies."
+        (let ((fx #'(lambda (x)
+                      (setq x (elmo-message-entity-number x))
+                      (apply 'max x (wl-thread-entity-get-descendant
+                                     (wl-thread-get-entity x))))))
+          (< (funcall fx a) (funcall fx b))))
+      (add-to-list 'wl-summary-sort-specs 'reply-number)
+    #+END_SRC
+*** デフォルト
+    とりあえず返信が来た順で
+    #+BEGIN_SRC emacs-lisp
+     (setq wl-summary-default-sort-spec 'reply-date)
+    #+END_SRC
 * 振り分け設定
   =$= 以外を振り分け対象に
   #+BEGIN_SRC emacs-lisp
@@ -528,7 +576,7 @@
            '(
              "List-Post"
              "List-Id"
-             "List-ID"
+             "List-ID"                  ;; たまに List-ID で来るメールあるよね?
              "Resent-CC"
              "Mailing-List"
              "X-Mailing-List"
@@ -536,8 +584,8 @@
              "X-ML-Name"
              "X-ML-To"
              "Delivered-To"
-             "Content-Type" ;; 添付の有無の表示の為に追加
-             "X-Google-Appengine-App-Id";; GAEの送信するメールの振り分け用
+             "Content-Type"              ;; 添付の有無の表示の為に追加
+             "X-Google-Appengine-App-Id" ;; GAEの送信するメールの振り分け用
              "To"
              "Cc"
              "From"
@@ -586,39 +634,11 @@
 * 添付ファイルの扱い
   =/etc/mailcap= と =~/.mailcap= の二つに
   同じエントリがあると, 動作が微妙になるらしい [fn:6] .
-  ここでは =~/.mailcap= だけを見にいくように
+  ここでは =~/.mailcap= だけを見にいくように:
   #+BEGIN_SRC emacs-lisp
-    (setq mime-view-mailcap-files '("~/.mailcap"))
     (setq mime-play-find-every-situations nil
           mime-play-delete-file-immediately nil
           process-connection-type nil)
-    ;; (defvar my:mime-preview-play-current-entity-appname "xdg-open"
-    ;;   "meadow なら fiber, mac なら open, linux なら xdg-open")
-    ;; (unless (functionp #'mime-preview-play-current-entity-orig)
-    ;;   (fset #'mime-preview-play-current-entity-orig
-    ;;         (symbol-function #'mime-preview-play-current-entity)))
-    ;; (setq mime-play-delete-file-immediately nil)
-    ;; (defun mime-preview-play-current-entity (&optional ignore-examples mode)
-    ;;   (interactive "P")
-    ;;   (if (and mode (not (equal mode "play")))
-    ;;       (mime-preview-play-current-entity-orig ignore-examples mode)
-    ;;     (let* ((entity (get-text-property (point) 'mime-view-entity))
-    ;;            (name (mime-entity-safe-filename entity))
-    ;;            (filename (expand-file-name (if (and name (not (string= name "")))
-    ;;                                            name
-    ;;                                          (make-temp-name "EMI"))
-    ;;                                        (make-temp-file "EMI" 'directory))))
-    ;;       (mime-write-entity-content entity filename)
-    ;;       (message "External method is starting...")
-    ;;       (let* ((process-name
-    ;;               (concat my:mime-preview-play-current-entity-appname " " filename))
-    ;;              (process
-    ;;               (start-process process-name
-    ;;                              mime-echo-buffer-name
-    ;;                              my:mime-preview-play-current-entity-appname
-    ;;                              filename)))
-    ;;         (set-alist 'mime-mailcap-method-filename-alist process filename)
-    ;;         (set-process-sentinel process 'mime-mailcap-method-sentinel)))))
   #+END_SRC
   ちなみに
   =~/.mailcap= 自体は
@@ -667,6 +687,11 @@
      (eval-after-load "wl-summary"
        '(define-key wl-summary-mode-map
           "\M-T" 'wl-summary-w3m-safe-toggle-inline-images))
+   #+END_SRC
+** From, To を省略表示しない
+   To や From にアドレスが沢山指定されていると省略されるので，これを無効化
+   #+BEGIN_SRC emacs-lisp
+   (setq wl-message-use-header-narrowing nil)
    #+END_SRC
 * 返信設定
   自分宛のメールに返信する場合は =To:=, =Cc:= から自分のアドレスを削除
@@ -735,7 +760,7 @@
              (face-spec-set face spec))
             (t
              (wl-declare-face face spec))))
-    ;; (my:wl-set-face 'wl-highlight-folder-closed-face                  '((t (:foreground "#4cff4c" :bold nil :italic nil :weight normal ))))
+    (my:wl-set-face 'wl-highlight-folder-closed-face                  '((t (:foreground "#4cff4c" :bold nil :italic nil :weight normal ))))
     (my:wl-set-face 'wl-highlight-folder-few-face                     '((t (:foreground "#FF4C4C" :bold t :italic nil :weight normal ))))
     ;; (my:wl-set-face 'wl-highlight-folder-killed-face                  '((t (:foreground ,my:h:black :bold nil :italic nil :weight normal ))))
     ;; (my:wl-set-face 'wl-highlight-folder-many-face                    '((t (:foreground ,my:h:magenta :bold nil :italic nil :weight normal ))))
@@ -746,18 +771,18 @@
     (my:wl-set-face 'wl-highlight-folder-zero-face                    '((t (:foreground "#F6F3E8" :bold nil :italic nil :weight normal ))))
     ;; (my:wl-set-face 'wl-highlight-header-separator-face               '((t (:inherit highlight :bold t ))))
     ;; (my:wl-set-face 'wl-highlight-message-citation-header             '((t (:foreground ,my:h:green :bold nil :italic nil ))))
-    ;; (my:wl-set-face 'wl-highlight-message-cited-text-1                '((t (:foreground ,my:h:green :bold nil :italic nil ))))
-    ;; (my:wl-set-face 'wl-highlight-message-cited-text-10               '((t (:foreground "#4cffff" :bold nil :italic nil ))))
-    ;; (my:wl-set-face 'wl-highlight-message-cited-text-11               '((t (:foreground "#ff4cff" :bold nil :italic nil ))))
-    ;; (my:wl-set-face 'wl-highlight-message-cited-text-12               '((t (:foreground "#ff4c4c" :bold nil :italic nil ))))
-    ;; (my:wl-set-face 'wl-highlight-message-cited-text-2                '((t (:foreground ,my:h:yellow :bold nil :italic nil ))))
-    ;; (my:wl-set-face 'wl-highlight-message-cited-text-3                '((t (:foreground ,my:h:blue  :bold nil :italic nil ))))
-    ;; (my:wl-set-face 'wl-highlight-message-cited-text-4                '((t (:foreground ,my:h:cyan :bold nil :italic nil ))))
-    ;; (my:wl-set-face 'wl-highlight-message-cited-text-5                '((t (:foreground ,my:h:magenta :bold nil :italic nil ))))
-    ;; (my:wl-set-face 'wl-highlight-message-cited-text-6                '((t (:foreground ,my:h:red :bold nil :italic nil ))))
-    ;; (my:wl-set-face 'wl-highlight-message-cited-text-7                '((t (:foreground "#4cff4c" :bold nil :italic nil ))))
-    ;; (my:wl-set-face 'wl-highlight-message-cited-text-8                '((t (:foreground "#fff4c" :bold nil :italic nil ))))
-    ;; (my:wl-set-face 'wl-highlight-message-cited-text-9                '((t (:foreground ,my:n:blue :bold nil :italic nil ))))
+    (my:wl-set-face 'wl-highlight-message-cited-text-1                '((t (:foreground "#7fff7f" :bold nil :italic nil ))))
+    (my:wl-set-face 'wl-highlight-message-cited-text-2                '((t (:foreground "#ffff7f" :bold nil :italic nil ))))
+    (my:wl-set-face 'wl-highlight-message-cited-text-3                '((t (:foreground "#7f7fff" :bold nil :italic nil ))))
+    (my:wl-set-face 'wl-highlight-message-cited-text-4                '((t (:foreground "#7fffff" :bold nil :italic nil ))))
+    (my:wl-set-face 'wl-highlight-message-cited-text-5                '((t (:foreground "#ff7fff" :bold nil :italic nil ))))
+    (my:wl-set-face 'wl-highlight-message-cited-text-6                '((t (:foreground "#ff7f7f" :bold nil :italic nil ))))
+    (my:wl-set-face 'wl-highlight-message-cited-text-7                '((t (:foreground "#4cff4c" :bold nil :italic nil ))))
+    (my:wl-set-face 'wl-highlight-message-cited-text-8                '((t (:foreground "#ffff4c" :bold nil :italic nil ))))
+    (my:wl-set-face 'wl-highlight-message-cited-text-9                '((t (:foreground "#4c4cff" :bold nil :italic nil ))))
+    (my:wl-set-face 'wl-highlight-message-cited-text-10               '((t (:foreground "#4cffff" :bold nil :italic nil ))))
+    (my:wl-set-face 'wl-highlight-message-cited-text-11               '((t (:foreground "#ff4cff" :bold nil :italic nil ))))
+    (my:wl-set-face 'wl-highlight-message-cited-text-12               '((t (:foreground "#ff4c4c" :bold nil :italic nil ))))
     (my:wl-set-face 'wl-highlight-message-date-header-contents        '((t (:foreground "#4CFF4C" :bold t :italic nil ))))
     (my:wl-set-face 'wl-highlight-message-header-contents             '((t (:foreground "#aaaaaa" :bold nil :italic nil ))))
     (my:wl-set-face 'wl-highlight-message-headers                     '((t (:foreground "#4CFFFF" :bold t :italic nil ))))
@@ -854,20 +879,21 @@
 * 検索
   imap の検索か maildir-utils の検索か?
   #+BEGIN_SRC emacs-lisp
-    (when (and (locate-library "elmo-search")
-               (executable-find "mu"))
-      '(progn
-         (require 'elmo-search)
-         (elmo-search-register-engine
-          'mu 'local-file
-          :prog "/usr/bin/mu" ;; or wherever you've installed it
-          :args '("find" pattern "--fields" "l") :charset 'utf-8)
-         (setq elmo-search-default-engine 'mu)
-         ))
+    (require 'elmo-search nil 'noerror)
+    (elmo-search-register-engine
+     'mu 'local-file
+     :prog "mu"
+     :args '("find" "-u" elmo-search-split-pattern-list "--fields" "l" "--sortfield" "date" "-r")
+     :charset 'utf-8)
+    (setq elmo-search-default-engine 'mu)
+    (setq wl-quicksearch-folder "[]")
+    (define-key wl-summary-mode-map "v" 'wl-quicksearch-goto-search-folder-wrapper)
+    (define-key wl-folder-mode-map "v" 'wl-quicksearch-goto-search-folder-wrapper)
   #+END_SRC
 ** メールが多すぎると怒られるので.
    #+BEGIN_SRC emacs-lisp
-     (setq elmo-multi-divide-number 2000000)
+     (setq elmo-multi-divide-number 5000000)
+     (setq elmo-multi-number 5000000)
    #+END_SRC
 * Footnotes
 

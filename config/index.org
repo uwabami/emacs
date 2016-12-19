@@ -2,21 +2,41 @@
 #+TITLE: Emacsの設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2016-02-12 12:30:19
+#+DATE: 2016-12-19 13:51:55
 #+LANG: ja
 #+LAYOUT: page
 #+CATEGORIES: cc-env emacs
 #+PERMALINK: cc-env/emacs/config/index.html
 * 始めに
   =~/.emacs= → =~/.emacs.d/init.el= ([[http://www.gfd-dennou.org/member/uwabami/cc-env/EmacsBasic.html][解説]]) ときて
-  このファイルで設定ファイルの読み込みを行なっています。
-  具体的な設定例は、個々のファイルを参照のこと。
-* [[config/basic_config.org][環境に依存しない(筈の)設定]]
-  どんな場所でも無いと途方に暮れてしまう様な基本的な設定など
+  このファイルで設定ファイルの読み込みを行なっています．
+  具体的な設定例は，個々のファイルを参照のこと．
+* [[file:exec-path-from-shell.org][環境変数の読み込み]]: =exec-path-from-shell=
+  #+BEGIN_SRC emacs-lisp
+    (my:load-org-file "exec-path-from-shell")
+  #+END_SRC
+* [[file:language_config.org][言語の設定]]
+  #+BEGIN_SRC emacs-lisp
+    (my:load-org-file "language_config")
+  #+END_SRC
+* [[file:basic_config.org][環境に依存しない(筈の)設定]]
+  主に本体に同梱されている拡張に関する設定など.
  #+BEGIN_SRC emacs-lisp
     (my:load-org-file "basic_config")
   #+END_SRC
-* Copy & Paste
+* =url.el= の代わりに =curl= を使う: =mb-url=
+  =url.el= の提供している =url-retrieve= は
+  - redirect の扱いが怪しい
+  - 大きなリクエストに対して単一の buffer で処理を行なうためか，undo-limit にひっかかって辛い．
+  といった点が気になったので，=curl= を使う様に =advice= してくれる =mb-url= を使う事に．
+  #+BEGIN_SRC emacs-lisp
+    (el-get-bundle mb-url)
+    (require 'mb-url nil 'noerror)
+    (advice-add 'url-http :override 'mb-url-http-curl)
+  #+END_SRC
+  request が増えると =curl= 関連の buffer が増えるけれど，それは御愛嬌．
+* Copy & Paste: =xclip=
+  =xclip= で clipboard とデータをやりとり．
   #+BEGIN_SRC emacs-lisp
     (when (executable-find "xclip")
       (progn
@@ -24,38 +44,21 @@
         (require 'xclip nil 'noerror)
         (turn-on-xclip)))
   #+END_SRC
-* Elscreen
-  #+BEGIN_SRC emacs-lisp
-    (unless (my:dpkg-status "elscreen")
-      (el-get-bundle knu/elscreen))
-    (setq elscreen-prefix-key (kbd "C-o"))
-    (setq elscreen-display-tab 4)
-    (setq elscreen-display-screen-number nil)
-    (require 'elscreen nil 'noerror)
-    (elscreen-start)
-  #+END_SRC
-  ついでに modeline の表示そのものを無効化しておく
-  #+BEGIN_SRC emacs-lisp
-    (defadvice elscreen-mode-line-update
-        (around my:disable-elscreen-mode-line-update activate)
-      )
-    (remove-hook 'elscreen-screen-update-hook 'elscreen-mode-line-update)
-  #+END_SRC
-* 日本語入力: [[file:config/ddskk_config.org][DDSKKの設定]]
-  [[http://openlab.ring.gr.jp/skk/ddskk-ja.html][Daredevil SKK (DDSKK)]] をメインで使用中。無いと途方に暮れる。
+  clipboard と PRIMARY の同期には =gpaste= を使っている．
+* 日本語入力: [[file:ddskk_config.org][ddskkの設定]]
+  [[http://openlab.ring.gr.jp/skk/ddskk-ja.html][Daredevil SKK (DDSKK)]] をメインで使用中．無いと途方に暮れる．
   ちなみにGTKが有効になっていると =gtk-immodule= なんかと衝突するので
-  =~/.Xresources= で xim を無効にしておくと良い。
+  =~/.Xresources= で xim を無効にしておくと良い．
   例えば以下の様に:
   #+BEGIN_SRC conf :tangle no
      ! disable XIM
      Emacs*useXIM: false
   #+END_SRC
-  インストール
+  インストール: Debian パッケージがあれば，それを優先
   #+BEGIN_SRC emacs-lisp
   (unless (my:dpkg-status "ddskk")
     (el-get-bundle ddskk))
   #+END_SRC
-  =~/.emacs.d/tmp/skk= 以下に置かれるが,
   実際の設定は [[file:ddskk_config.org][DDSKKの設定]] で行なっているため, 設定ファイルの位置変更を変更する
   #+BEGIN_SRC emacs-lisp
     (setq skk-user-directory (concat my:temp-dir "skk"))
@@ -66,11 +69,40 @@
     (setq skk-byte-compile-init-file t)
     (my:org-babel-tangle-and-compile-file (concat my:config-dir "ddskk_config"))
   #+END_SRC
-  実際の読み込み。
+  実際の読み込み．
   #+BEGIN_SRC emacs-lisp
     (require 'skk-leim nil 'noerror)
     (setq default-input-method "japanese-skk")
     (require 'skk-autoloads nil 'noerror)
+  #+END_SRC
+  モードラインのインジケータが動くのが許せないので幅を固定して sticky させる．
+  =change-major-mode-hook= で，一度 skk を呼び出すことに．格好悪いがしょうがない，かなぁ...
+  #+BEGIN_SRC emacs-lisp
+    (defun my:update-modeline-for-ddskk ()
+      ""
+      (progn
+        (skk-mode) (skk-mode)))
+    ;; (add-hook 'after-change-major-mode-hook 'my:update-modeline-for-ddskk)
+  #+END_SRC
+* Elscreen
+  #+BEGIN_SRC emacs-lisp
+    (unless (my:dpkg-status "elscreen")
+      (el-get-bundle knu/elscreen))
+    ;; (el-get-bundle elscreen-buffer-list)
+    (setq elscreen-prefix-key (kbd "C-o"))
+    (setq elscreen-display-tab 4)
+    (setq elscreen-display-screen-number nil)
+    (require 'elscreen nil 'noerror)
+    (elscreen-start)
+    ;; (require 'elscreen-buffer-list nil 'noerror)
+    ;; (setq elscreen-separate-buffer-list-mode 1)
+  #+END_SRC
+  ついでに modeline の表示そのものを無効化しておく
+  #+BEGIN_SRC emacs-lisp
+    (defadvice elscreen-mode-line-update
+        (around my:disable-elscreen-mode-line-update activate)
+      )
+    (remove-hook 'elscreen-screen-update-hook 'elscreen-mode-line-update)
   #+END_SRC
 * 校正，辞書等
 ** spell checker
@@ -79,7 +111,7 @@
      (with-eval-after-load "ispell"
        (add-to-list 'ispell-skip-region-alist '("[^\000-\377]+")))
      (setq-default ispell-program-name "aspell")
-     ;; (autoload 'flyspell-mode "flyspell" "spell checking on the fly")
+     (autoload 'flyspell-mode "flyspell" "spell checking on the fly")
    #+END_SRC
 ** 辞書
    #+BEGIN_SRC emacs-lisp
@@ -102,29 +134,23 @@
                  (ndeb "/usr/local/share/dict/colloc"    :alias "研究社 英和活用大辞典 ")
                  ))))
    #+END_SRC
-** Ginger
-   英文校正, 類義語提案等
-   #+BEGIN_SRC emacs-lisp
-     (el-get-bundle gist:5457732:ginger-api.el
-       :depends (request))
-     (el-get-bundle gist:7349439:ginger-rephrase-api.el
-       :depends (request))
-   #+END_SRC
 * 認証関連
   =auth-source= と =id-manager= を使っている
 ** id-manager の設定
+   ID と Password の簡単な組の管理をするのに非常に重宝している．
    #+BEGIN_SRC emacs-lisp
      (when (file-exists-p (expand-file-name "~/.gnupg/idm-db.gpg"))
        (progn
-         (el-get-bundle id-manager)
+         (el-get-bundle kiwanami/emacs-id-manager)
          (setq idm-database-file
                (expand-file-name "~/.gnupg/idm-db.gpg"))
-         (require 'id-manager)
+         (require 'id-manager nil 'noerror)
          (global-set-key (kbd "M-7") 'id-manager)
          (setq idm-clipboard-expire-time-sec 15)))
    #+END_SRC
 ** plstore, auth-source の設定
-   自分の秘密鍵で暗号化⇔複合
+   Emacs の設定なんかは plstore + auth-source が便利です．
+   自分の秘密鍵で暗号化⇔複合する設定．
    #+BEGIN_SRC emacs-lisp
      (require 'auth-source nil 'noerror)
      (setq plstore-secret-keys 'silent)
@@ -147,19 +173,21 @@
          (add-to-list 'auth-sources
                       (expand-file-name "~/.gnupg/auth-source.plist")))
   #+END_SRC
-* [[file:mua_config.org][MUAの設定]]
+* [[file:mua_config.org][MUAの設定]] [0/1]
+  - [ ] 設定を整理すること．
   MUA として Wanderlust を使っている．
   #+BEGIN_SRC emacs-lisp
     (when (or (my:dpkg-status "wl")
               (my:dpkg-status "wl-beta"))
       (progn
+        ;; (el-get-bundle lightcyan/my-shimbun
+        ;;   :autloads nil)
         (unless (my:dpkg-status "rail")
           (el-get-bundle uwabami/rail))
         (el-get-bundle syohex/emacs-elscreen-wl
           :features elscreen-wl)
-        (el-get-bundle uwabami/gcontacts-get-wl
-          :depends (oauth2 json))
         (el-get-bundle 'mbsync)
+        (setq mbsync-args '("inbox"))
         (autoload 'wl "wl" "Wanderlust" t)
         (autoload 'wl-other-frame "wl" "Wanderlust on new frame" t)
         (autoload 'wl-draft "wl-draft" "Write draft with Wanderlust." t)
@@ -174,15 +202,15 @@
               'wl-draft-send
               'wl-draft-kill
               'mail-send-hook))
-        (setq mime-view-mailcap-files '("~/.mailcap"))
-        (setq mime-play-find-every-situations nil
-              mime-play-delete-file-immediately nil
-              process-connection-type nil)
-        (setq elmo-msgdb-directory "~/Maildir/.elmo"
-              elmo-maildir-folder-path "~/Maildir/.elmo"
+        (setq elmo-msgdb-directory "~/.cache/wanderlust"
+              elmo-maildir-folder-path "~/.cache/wanderlust"
+              elmo-cache-directory "~/.cache/wanderlust"
+              wl-score-files-directory "~/.cache/wanderlust"
               wl-init-file (concat my:config-dir "wl_config"))
         (unless (file-directory-p elmo-msgdb-directory)
           (make-directory elmo-msgdb-directory))
+        (unless (file-directory-p (concat elmo-msgdb-directory "/local"))
+          (make-directory (concat elmo-msgdb-directory "/local")))
         (unless (file-directory-p (concat elmo-msgdb-directory "/local/Trash"))
           (make-directory (concat elmo-msgdb-directory "/local/Trash")))
         (eval-when-compile
@@ -190,212 +218,138 @@
             (add-to-list 'load-path
                          (concat "/usr/share/emacs24/site-lisp/wl"))
             (my:org-babel-tangle-and-compile-file (concat my:config-dir "wl_config"))))
+        ;; emacs mail handler
+        (defun my:mailto-compose-mail (mailto-url)
+          (if (and (stringp mailto-url)
+                   (string-match "\\`mailto:" mailto-url))
+              (progn
+                (require 'rfc2368)
+                (let* ((headers (mapcar (lambda (h) (cons (intern (car h)) (cdr h)))
+                                        (rfc2368-parse-mailto-url mailto-url)))
+                       (good-headers (remove-if (lambda (h) (member (car h) '(Body))) headers))
+                       (body (cdr (assoc 'Body headers))))
+                  (wl-draft good-headers nil nil body)))))
         ))
+    ;;
+    (setq mime-view-mailcap-files '("~/.mailcap"))
+    (setq mime-play-find-every-situations nil
+          mime-play-delete-file-immediately nil
+          process-connection-type nil)
   #+END_SRC
-* zlc + yaicomplete
-** zlc
+* 補完: =ido=, =flx-ido=, =smex=
+  少しの間 Anything から Helm に移行して使ってみたけど
+  *余計な事しすぎ* で色々設定してもシンドかったので，結局使うのを止めました．
+
+  そんな訳で，当分 =ido= と =smex= を使うことに．
+** =ido= の設定
    #+BEGIN_SRC emacs-lisp
-     (el-get-bundle zlc)
-     (require 'zlc nil 'noerror)
-     (zlc-mode t)
-     (with-eval-after-load "zlc"
-       (let ((map minibuffer-local-map))
-         ;; (define-key map (kbd "<backtab>") 'zlc-select-previous)
-         ;; (define-key map (kbd "S-<tab>")   'zlc-select-previous)
-         (define-key map (kbd "C-p")       'zlc-select-previous-vertical)
-         (define-key map (kbd "C-n")       'zlc-select-next-vertical)
-         (define-key map (kbd "C-b")       'zlc-select-previous)
-         (define-key map (kbd "C-f")       'zlc-select-next)
-         (define-key map (kbd "C-d")       'zlc-reset)
-         )
-       (setq zlc-select-completion-immediately nil)
-       )
+     (eval-when-compile (require 'ido))
+     (ido-mode t)
+     ;; (ido-everywhere t)  ;; <- Wanderlust みたいに，過去の選択を覚えている奴と相性悪いので.
+     (setq ido-enable-prefix nil             ; prefix match を有効にすると，入力を先頭一致可能
+           ido-confirm-unique-completion t   ; TAB で名前の一致まで行ない，その後 RET で実行
+           ido-enable-flex-matching t        ; flex matching を試す際には prefix を無効化すること
+           ido-enable-dot-prefix t           ; . を prefix として扱う
+           ido-default-file-method   'selected-window
+           ido-default-buffer-method 'selected-window
+           ido-max-directory-size 100000
+           ido-enable-tramp-completion nil
+           ido-use-faces nil                 ; flx-ido の highlight を使う
+           ido-ignore-extensions t
+           ido-cannot-complete-command 'ido-next-match
+           ido-save-directory-list-file (concat my:temp-dir "ido.last"))
+     ;; 補完で無視する拡張子の追加．そのうち増える．
+     (cl-loop for ext in
+              '(".dvi"
+                ".fdb_latexmk"
+                ".fls"
+                ".ilg"
+                ".jqz"
+                ".mod"
+                ".nav"
+                ".out"
+                ".snm"
+                ".synctex.gz"
+                ".vrb"
+                )
+              do (add-to-list 'completion-ignored-extensions ext))
+     ;; ido の buffer で skk を無効化しておく.
+     ;; 日本語ファイル名は, とりあえず考えないことに.
+     (add-hook 'ido-minibuffer-setup-hook
+               (lambda ()
+                 (when (fboundp 'skk-mode-exit)
+                   (skk-mode-exit))))
    #+END_SRC
-** yaicomplete
+** =flx-ido=: flex match の強化
+   曖昧マッチが非常に直感的になった．地味に便利で手放せない．
    #+BEGIN_SRC emacs-lisp
-     ;; (el-get-bundle yaicomplete
-     ;;   :type http
-     ;;   :url "https://raw.github.com/tarao/elisp/master/yaicomplete.el"
-     ;;   :features "yaicomplete"
-     ;;   )
-     ;; (custom-set-faces
-     ;;  '(yaicomplete-completion-suffix-face ((t nil))))
-     ;; (yaicomplete-mode)
+     (el-get-bundle flx)
+     (flx-ido-mode 1)
+     (setq flx-ido-use-faces t
+           flx-ido-threshold 10000)
    #+END_SRC
-* Helm
-** 読み込み
+** =ido-grid=: 補完候補の grid 表示
    #+BEGIN_SRC emacs-lisp
-     (el-get-bundle helm)
-     (require 'helm-config nil 'noerror)
+     (el-get-bundle larkery/ido-grid.el)
+     (require 'ido-grid nil 'noerror)
+     (setq ido-grid-max-columns 5
+           ido-grid-start-small nil
+           ido-grid-indent 2
+           ido-grid-column-padding 3
+           ido-grid-rows 5)
+     (ido-grid-enable)
+     (defun my:ido-minibuffer-truncate-line ()
+       (set (make-local-variable 'truncate-lines) nil))
+     (add-hook 'ido-minibuffer-setup-hook 'my:ido-minibuffer-truncate-line)
+     (add-hook 'ido-setup-hook 'my:ido-minibuffer-truncate-line)
    #+END_SRC
-*** 読み込み時の警告を止める
-    良い事だとは決して思わないけれど.
-    - [[https://github.com/syl20bnr/spacemacs/issues/192][ad-handle-definition errors at startup · Issue #192 · syl20bnr/spacemacs]]
-    #+BEGIN_SRC emacs-lisp
-      (setq ad-redefinition-action 'accept)
-    #+END_SRC
-** history の位置変更
-   デフォルトだと =~/.emacs.d/= 直下に作成するので, =~/.emacs.d/tmp= 以下に移動
+** =ido-recentf=: recentf を ido で
    #+BEGIN_SRC emacs-lisp
-     (with-eval-after-load "helm-adaptive"
-       (setq helm-adaptive-history-file (concat my:temp-dir "helm-adaptive-history")))
+     (defun ido-recentf-open ()
+       "Use `ido-completing-read' to \\[find-file] a recent file"
+       (interactive)
+       (if (find-file (ido-completing-read "Find recent file: " recentf-list))
+           (message "Opening file...")
+         (message "Aborting")))
    #+END_SRC
-** 補完挙動の調整
+** =smex=
    #+BEGIN_SRC emacs-lisp
-     (setq
-      ;; 候補を直ちに表示
-      helm-idle-delay 0.0
-      ;; タイプしてから再描画するまでの時間を 0.1 に: default?
-      helm-input-idle-delay 0.1
-      ;; 体感速度向上
-      helm-quick-update t
-      ;; 余計なファイルは表示しない
-      helm-ff-skip-boring-files t
-      ;; 折り返し無し
-      helm-truncate-lines t
-      ;; C-k の動作調整
-      helm-delete-minibuffer-contents-from-point t
-      )
+     (el-get-bundle smex)
+     (autoload 'smex "smex"
+       "Smex is a M-x enhancement for Emacs, it provides a convenient interface to
+     your recently and most frequently used commands.")
+     (with-eval-after-load 'smex
+       (setq smex-save-file (concat my:temp-dir "smex-items")))
    #+END_SRC
-** キーバインド
+** =ido= と =smex= 関連の keybind
    #+BEGIN_SRC emacs-lisp
-     (define-key global-map (kbd "C-z")     'helm-command-prefix)
-     (global-unset-key (kbd "C-x c"))
-     (define-key global-map (kbd "M-X")     'helm-M-x)
-     ;; (define-key global-map (kbd "C-x C-f") 'helm-find-files)
-     ;; (define-key global-map (kbd "C-x C-f") 'find-file)
-     (define-key global-map (kbd "C-x C-r") 'helm-recentf)
-     (define-key global-map (kbd "M-y")     'helm-show-kill-ring)
-     (define-key global-map (kbd "C-c i")   'helm-imenu)
-     (define-key global-map (kbd "C-x b")   'helm-for-files)
-     (define-key global-map (kbd "C-x C-o") 'helm-elscreen)
-     (define-key global-map (kbd "C-x C-b") 'helm-buffers-list)
-     ;; C-h -> always delete backward-char
-     (with-eval-after-load "helm"
-       (define-key helm-map (kbd "C-h")      'delete-backward-char))
-     (with-eval-after-load "helm-files"
-       (define-key helm-find-files-map (kbd "C-h") 'delete-backward-char)
-       (define-key helm-read-file-map  (kbd "TAB") 'helm-execute-persistent-action)
-       (define-key helm-find-files-map (kbd "TAB") 'helm-execute-persistent-action))
-     ;; For helm-find-files etc.
-     ;; (defadvice helm-ff-kill-or-find-buffer-fname (around execute-only-if-exist activate)
-     ;;   "Execute command only if CANDIDATE exists"
-     ;;   (when (file-exists-p candidate)
-     ;;         ad-do-it))
-     ;; (global-set-key (kbd "M-x")                          'helm-M-x)
-     ;; (global-set-key (kbd "M-y")                          'helm-show-kill-ring)
-     ;; (global-set-key (kbd "C-c f")                        'helm-recentf)
-     ;; (global-set-key (kbd "C-x C-f")                      'helm-find-files)
-     ;; (global-set-key (kbd "C-c <SPC>")                    'helm-all-mark-rings)
-     ;; (global-set-key (kbd "C-x r b")                      'helm-filtered-bookmarks)
-     ;; (global-set-key (kbd "C-h r")                        'helm-info-emacs)
-     ;; (global-set-key (kbd "C-:")                          'helm-eval-expression-with-eldoc)
-     ;; (global-set-key (kbd "C-,")                          'helm-calcul-expression)
-     ;; (global-set-key (kbd "C-h d")                        'helm-info-at-point)
-     ;; (global-set-key (kbd "C-x C-d")                      'helm-browse-project)
-     ;; (global-set-key (kbd "<f1>")                         'helm-resume)
-     ;; (global-set-key (kbd "C-h C-f")                      'helm-apropos)
-     ;; (global-set-key (kbd "<f5> s")                       'helm-find)
-     ;; (global-set-key (kbd "<f2>")                         'helm-execute-kmacro)
-     ;; (global-set-key (kbd "C-c g")                        'helm-gid)
-     ;; (global-set-key (kbd "C-c i")                        'helm-imenu-in-all-buffers)
-     ;; (define-key global-map [remap jump-to-register]      'helm-register)
-     ;; (define-key global-map [remap list-buffers]          'helm-buffers-list)
-     ;; (define-key global-map [remap dabbrev-expand]        'helm-dabbrev)
-     ;; (define-key global-map [remap find-tag]              'helm-etags-select)
-     ;; (define-key global-map [remap xref-find-definitions] 'helm-etags-select)
-     ;; (define-key shell-mode-map (kbd "M-p")               'helm-comint-input-ring) ; shell history.
-     ;; (global-unset-key (kbd "C-z"))
-     ;; (setq helm-command-prefix-key "C-z")
-   #+END_SRC
-** =helm-descbinds=
-   #+BEGIN_SRC emacs-lisp
-     (el-get-bundle helm-descbinds)
-     (require 'helm-descbinds nil 'noerror)
-     (helm-descbinds-mode)
-   #+END_SRC
-** =helm-gtags=
-   #+BEGIN_SRC emacs-lisp
-     (when (executable-find "gtags")
-       (progn
-         (el-get-bundle helm-gtags)
-         (require 'helm-gtags nil 'noerror)))
-     (with-eval-after-load "helm-gtags"
-       (setq helm-gtags-path-style 'root)
-       (setq helm-gtags-ignore-case t)
-       (add-hook 'helm-gtags-mode-hook
-                 '(lambda ()
-                    (local-set-key (kbd "M-t") 'helm-gtags-find-tag)
-                    (local-set-key (kbd "M-r") 'helm-gtags-find-rtag)
-                    (local-set-key (kbd "M-s") 'helm-gtags-find-symbol)
-                    (local-set-key (kbd "C-t") 'helm-gtags-pop-stack)))
-       )
-     (add-hook 'c-mode-hook    'helm-gtags-mode)
-     (add-hook 'cc-mode-hook    'helm-gtags-mode)
-     (add-hook 'f90-mode-hook  'helm-gtags-mode)
-     (add-hook 'ruby-mode-hook 'helm-gtags-mode)
-     (add-hook 'emacs-lisp-mode-hook 'helm-gtags-mode)
-   #+END_SRC
-** =helm-ag=
-   #+BEGIN_SRC emacs-lisp
-     (when (executable-find "ag")
-       (progn
-         (el-get-bundle helm-ag)
-         (require 'helm-ag nil 'noerror)))
-     (with-eval-after-load "helm-ag"
-       (setq helm-ag-base-command "ag --nocolor --nogroup --ignore-case")
-       (setq helm-ag-command-option "--all-text")
-       (setq helm-ag-insert-at-point 'symbol)
-       (define-key global-map (kbd "M-g .") 'helm-ag)
-       (define-key global-map (kbd "M-g ,") 'helm-ag-pop-stack)
-       (define-key global-map (kbd "C-M-s") 'helm-ag-this-file))
-   #+END_SRC
-** =helm-locate=
-   #+BEGIN_SRC emacs-lisp
-     (when (executable-find "mlocate")
-       (with-eval-after-load "helm-locate"
-         (setq helm-locate-command "mlocate %s -e -A --regex %s")
-         ))
-   #+END_SRC
-** =ido-mode= の完全無効化
-   #+BEGIN_SRC emacs-lisp
-     (when (fboundp 'ido-mode)
-       (ido-mode -1))
+     (global-set-key (kbd "C-x f")   'ido-find-file)
+     (global-set-key (kbd "C-x C-f") 'ido-find-file)
+     (global-set-key (kbd "C-x C-r") 'ido-recentf-open)
+     (global-set-key (kbd "C-x d")   'ido-dired)
+     (global-set-key (kbd "C-x C-d") 'ido-dired)
+     (global-set-key (kbd "C-x b")   'ido-switch-buffer)
+     (global-set-key (kbd "C-x C-b") 'ido-switch-buffer)
+     (global-set-key (kbd "C-x M-b") 'ibuffer)
+     (global-set-key (kbd "M-x")     'smex)
    #+END_SRC
 * 補完: =yasnippet=, =auto-complete=
 ** yasnippet
    #+BEGIN_SRC emacs-lisp
-     ;; (el-get-bundle yasnippet)
-     ;; (require 'yasnippet nil 'noerror)
-     ;; (setq yas-snippet-dirs (list (concat my:share-dir "yasnippet")
-     ;;                              yas-installed-snippets-dir))
-     ;; (yas-global-mode 1)
-     ;; (define-key yas-minor-mode-map (kbd "C-x y i") 'yas-insert-snippet)
-     ;; (define-key yas-minor-mode-map (kbd "C-x y n") 'yas-new-snippet)
-     ;; (define-key yas-minor-mode-map (kbd "C-x y v") 'yas-visit-snippet-file)
-     ;; (define-key yas-minor-mode-map (kbd "<tab>")   nil)
-     ;; (define-key yas-minor-mode-map (kbd "TAB")     nil)
-     ;; (define-key yas-minor-mode-map (kbd "C-<tab>") 'yas-expand)
-     ;; (setq yas-verbosity 2)
-     ;; ;; (custom-set-variables '(yas-trigger-key (kbd "C-[tab]")))
+     (el-get-bundle yasnippet)
+     (require 'yasnippet nil 'noerror)
+     (setq yas-snippet-dirs (list (concat my:share-dir "yasnippet")
+                                  yas-installed-snippets-dir))
+     (yas-global-mode 1)
+     (define-key yas-minor-mode-map (kbd "C-x y i") 'yas-insert-snippet)
+     (define-key yas-minor-mode-map (kbd "C-x y n") 'yas-new-snippet)
+     (define-key yas-minor-mode-map (kbd "C-x y v") 'yas-visit-snippet-file)
+     (define-key yas-minor-mode-map (kbd "<tab>")   nil)
+     (define-key yas-minor-mode-map (kbd "TAB")     nil)
+     (define-key yas-minor-mode-map (kbd "C-<tab>") 'yas-expand)
+     (setq yas-verbosity 2)
+     ;; (custom-set-variables '(yas-trigger-key (kbd "C-[tab]")))
    #+END_SRC
-*** snippet を helm で選択
-    #+BEGIN_SRC emacs-lisp
-      ;; (defun my:yas/prompt (prompt choices &optional display-fn)
-      ;;   (let* ((names (loop for choice in choices
-      ;;                       collect (or (and display-fn (funcall display-fn choice))
-      ;;                                   choice)))
-      ;;          (selected (helm-other-buffer
-      ;;                     `(((name . ,(format "%s" prompt))
-      ;;                        (candidates . names)
-      ;;                        (action . (("Insert snippet" . (lambda (arg) arg))))))
-      ;;                     "*helm yas/prompt*")))
-      ;;     (if selected
-      ;;         (let ((n (position selected names :test 'equal)))
-      ;;           (nth n choices))
-      ;;       (signal 'quit "user quit!"))))
-      ;; (custom-set-variables '(yas/prompt-functions '(my:yas/prompt)))
-    #+END_SRC
 ** auto-complete
 *** 基本設定
     #+BEGIN_SRC emacs-lisp
@@ -424,6 +378,15 @@
               (remove-duplicates
                (mapcan #'yas--table-all-keys (yas--get-snippet-tables)))))
       (ac-config-default)
+      ;; (setq ac-sources
+      ;;       '(ac-source-features
+      ;;         ac-source-functions
+      ;;         ac-source-yasnippet
+      ;;         ac-source-variables
+      ;;         ac-source-symbols
+      ;;         ac-source-abbrev
+      ;;         ;; ac-source-dictionary
+      ;;         ac-source-words-in-same-mode-buffers))
       ;; (defun ac-org-mode-setup ()
       ;;   (setq ac-sources
       ;;         '(
@@ -450,7 +413,7 @@
       ;; (add-hook 'org-mode-hook 'ac-org-mode-setup)
     #+END_SRC
 *** =look= で英単語の補完
-    - [[http://syohex.hatenablog.com/entry/20121225/1356449561][英文を書く際の tips - syohex’s diary]]
+    元ネタ: [[http://syohex.hatenablog.com/entry/20121225/1356449561][英文を書く際の tips - syohex’s diary]]
     #+BEGIN_SRC emacs-lisp
       (defun my:ac-look ()
         "`look' command with auto-completelook"
@@ -523,7 +486,7 @@
     (setq calendar-week-start-day 0)
    #+END_SRC
 * Org
-  org-mode が無いと生きていけない体になりました
+  =org-mode= が無いと生きていけない体になりました
 ** 基本設定
 *** 読み込み
     #+BEGIN_SRC emacs-lisp
@@ -531,12 +494,17 @@
       (require 'org-capture)
       (require 'org-archive)
       (require 'org-agenda)
-      (require 'org-mobile)
-      (el-get-bundle org-agenda-property)
+      (when (or (my:dpkg-status "wl")
+                (my:dpkg-status "wl-beta"))
+        (require 'org-wl nil 'noerror))
+      (el-get-bundle Malabarba/org-agenda-property)
       (require 'org-agenda-property nil 'noerror)
-      (el-get-bundle bastibe/org-journal
-        :autoloads nil)
+      (el-get-bundle bastibe/org-journal :autoloads nil)
       (require 'org-journal nil 'noerror)
+    #+END_SRC
+*** 文字コード強制
+    #+BEGIN_SRC emacs-lisp
+      (modify-coding-system-alist 'file "\\.org\\'" 'utf-8)
     #+END_SRC
 *** auto-mode-alist
     以前のメモの整理のために [[http://howm.osdn.jp/index-j.html][howm: Hitori Otegaru Wiki Modoki]] も使っているので, howm も有効に
@@ -563,7 +531,7 @@
     #+END_SRC
 *** default は Dropbox に保存
     #+BEGIN_SRC emacs-lisp
-      (setq org-directory (concat (file-name-as-directory (getenv "HOME")) "Dropbox/org/"))
+      (setq org-directory (concat (file-name-as-directory (getenv "HOME")) "ownCloud/Dropbox/org/"))
     #+END_SRC
 *** return でリンクを辿る
     #+BEGIN_SRC emacs-lisp
@@ -571,11 +539,11 @@
     #+END_SRC
 *** 見出しを畳んで表示
     #+BEGIN_SRC emacs-lisp
-    (setq org-startup-folded t)
+      (setq org-startup-folded t)
     #+END_SRC
 *** 画面端での改行はしない
     #+BEGIN_SRC emacs-lisp
-    (setq org-startup-truncated t)
+      (setq org-startup-truncated t)
     #+END_SRC
 *** narrowing: 編集中の subtree に集中するために
     #+BEGIN_SRC emacs-lisp
@@ -616,12 +584,16 @@
     #+BEGIN_SRC emacs-lisp
       (setq org-tag-alist
         '(
-          ("OFFICE"   . ?o)
-          ("HOME"     . ?h)
-          ("MAIL"     . ?m)
-          ("WORK"     . ?w)
-          ("DEBIAN"   . ?d)
-          ("COMP"     . ?c)
+          ("OFFICE"     . ?o)
+          ("HOME"       . ?h)
+          ("MAIL"       . ?m)
+          ("WORK"       . ?w)
+          ("Debian"     . ?d)
+          ("Computer"   . ?c)
+          ("Book"       . ?b)
+          ("Emacs"      . ?e)
+          ("TeX"        . ?t)
+          ("Ruby"       . ?r)
           ))
     #+END_SRC
 *** Archive の設定
@@ -643,99 +615,33 @@
       ;;       '(("Diary.org" :level . 1)))
     #+END_SRC
 *** Capture Template の追加
+    Wanderlust のメールも扱えるようにする．
     #+BEGIN_SRC emacs-lisp
       (setq org-capture-templates
             `(
-              ("t" "Todo" plain
+              ("t" "TODO" plain
                (file (concat org-directory "Memo.org"))
                "* TODO %^{title} %^g\n  %?\n  %a"
-               :prepend t
-               :unnarrowed nil
+               :prepend nil
+               :unnarrowed t
                :kill-buffer t
                )
-              ("s" "scheduled TODO" plain
-               (file (concat org-directory "Schedule.org"))
-               "* TODO %^{title} %^g\n  %?\n  %a\n %^t"
-               :prepend t
+              ;; "* TODO <%<%Y-%m-%d>> %:subject %^g\n  %?\n  %a\n  #+BEGIN_QUOTE\n%i\n  #+END_QUOTE"
+              ("e" "Email TODO" plain
+               (file (concat org-directory "Memo.org"))
+               "* TODO [[wl:\%5Bmsgid:%:message-id-no-brackets\%5D][%(replace-regexp-in-string \"\\\\[.*\\\\] \" \"\" \"%:subject\")]]\n  :PROPERTIES:\n  :CREATED: %u\n  :END:%?\n"
+               :prepend nil
                :unnarrowed nil
                :kill-buffer t
                )
               ("m" "Memo" plain
                (file (concat org-directory "Memo.org"))
                "* MEMO %t %^{titlle}\n  %?\n  %a"
-               :prepend t
-               :unnarrowed nil
+               :prepend nil
+               :unnarrowed t
                :kill-buffer t
                )
               ))
-              ;; ("d" "Diary" plain
-              ;;  (file (concat org-directory "Diary.org"))
-              ;;  "* DIARY %t %^{title}\n  %?\n"
-              ;;  :prepend t
-              ;;  :unnarrowed nil
-              ;;  :kill-buffer t
-              ;;  ))
-            ;; )
-      ;; (setq org-capture-templates
-      ;;       `(
-      ;;         ("p"
-      ;;          "Project Task"
-      ;;          entry (file+headline (expand-file-name "~/project/project.org") "Inbox") "** TODO %?\n    %i\n    %a\n    %T")a
-      ;;         ("t" "Todo" plain
-      ;;          (file (concat org-directory "Memo.org"))
-      ;;          ;; "* TODO <%<%Y-%m-%d>> %^{title} %^g\n  %?\n  %a\n  #+BEGIN_QUOTE\n%i\n  #+END_QUOTE"
-      ;;          "* TODO <%<%Y-%m-%d>> %^{title} %^g\n  %?\n  %a"
-      ;;          :prepend nil
-      ;;          :unnarrowed nil
-      ;;          :kill-buffer t
-      ;;          )
-      ;;         ;; ("e" "Email Todo" plain
-      ;;         ;;  (file (concat org-directory "Memo.org"))
-      ;;         ;;  ;; "* TODO <%<%Y-%m-%d>> %:subject %^g\n  %?\n  %a\n  #+BEGIN_QUOTE\n%i\n  #+END_QUOTE"
-      ;;         ;;  "* TODO <%<%Y-%m-%d>> %:subject %^g\n  %?\n  %a"
-      ;;         ;;  :prepend nil
-      ;;         ;;  :unnarrowed nil
-      ;;         ;;  :kill-buffer t
-      ;;         ;;  )
-      ;;         ;; ("s" "Schedule" plain
-      ;;         ;;  (file (concat org-directory "Schedule.org"))
-      ;;         ;;  ;; "* TODO <%<%Y-%m-%d>> %^{title} %^g\n  %?\n  %a\n  #+BEGIN_QUOTE\n%i\n  #+END_QUOTE"
-      ;;         ;;  "* TODO <%<%Y-%m-%d>> %^{title} %^g\n  %?\n  %a"
-      ;;         ;;  :prepend nil
-      ;;         ;;  :unnarrowed nil
-      ;;         ;;  :kill-buffer t
-      ;;         ;;  )
-      ;;         ;; ("S" "Schedule from Email" plain
-      ;;         ;;  (file (concat org-directory "Schedule.org"))
-      ;;         ;;  ;; "* <%<%Y-%m-%d>> %:subject %^g\n  %?\n  %a\n  #+BEGIN_QUOTE\n%i\n  #+END_QUOTE"
-      ;;         ;;  "* <%<%Y-%m-%d>> %:subject %^g\n  %?\n  %a"
-      ;;         ;;  :prepend nil
-      ;;         ;;  :unnarrowed nil
-      ;;         ;;  :kill-buffer t
-      ;;         ;;  )
-      ;;         ;; ("m" "Memo" plain
-      ;;         ;;  (file (concat org-directory "Memo.org"))
-      ;;         ;;  ;; (file (concat org-directory (format-time-string "%Y%m%d-%H%M%S.howm")))
-      ;;         ;;  ;; "* MEMO <%<%Y-%m-%d>> %?\n  %a\n  #+BEGIN_QUOTE\n%i\n  #+END_QUOTE"
-      ;;         ;;  "* MEMO <%<%Y-%m-%d>> %?\n  %a"
-      ;;         ;;  :prepend t
-      ;;         ;;  :unnarrowed nil
-      ;;         ;;  :kill-buffer t
-      ;;         ;;  )
-      ;;         ;; ("d" "Diary" plain
-      ;;         ;;  (file (concat org-directory "Diary.org"))
-      ;;         ;;  ;; (file (concat org-directory (format-time-string "%Y%m%d-%H%M%S.howm")))
-      ;;         ;;  "* DIARY <%<%Y-%m-%d>> %^{title}\n  %?"
-      ;;         ;;  :prepend t
-      ;;         ;;  :unnarrowed nil
-      ;;         ;;  :kill-buffer t
-      ;;         ;;  )
-      ;;         ))
-    #+END_SRC
-*** Capture での bookmark の使用禁止?
-    refile 時には使われてしまうので, 実は意味が無かったりするの?
-    #+BEGIN_SRC emacs-lisp
-    ;;  (setq org-capture-bookmark nil)
     #+END_SRC
 ** Agenda
 *** Agenda 表示で使用するファイル
@@ -750,8 +656,11 @@
                  "GFD.org"
                  "KUSM.org"
                  "DebianJP.org"
-                 ;; "mobile.org"
                  "twitter.org"
+                 "journal.org"
+                 "redmine_GFD.org"
+                 "redmine_FluidSoc.org"
+                 "redmine_KUSM.org"
                  ;; "twitter_2014.org"
                  ;; "twitter_2013.org"
                  ;; "twitter_2012.org"
@@ -760,24 +669,21 @@
                  ;; "twitter_2009.org"
                  ;; "twitter_2008.org"
                  ;; "twitter_2007.org"
-                 "journal.org"
                  ))
         (add-to-list 'org-agenda-files (concat org-directory file)))
     #+END_SRC
 *** 表示のカスタマイズ
     初期表示
     #+BEGIN_SRC emacs-lisp
-    ;; (setq org-agenda-span 'week)
     (setq org-agenda-span 'day)
     #+END_SRC
-
     趣味で土曜日をの face を追加.
     祝日, 休日を日曜と同じfaceにする. 元ネタは以下:
     @see: [[https://julien.danjou.info/blog/2010/org-mode-and-holidays][Org-mode and holidays | Julien Danjou]]
     #+BEGIN_SRC emacs-lisp
       (setq org-agenda-weekend-days '(0))
       (defface my:org-agenda-date-saturday
-        '((t (:foreground "blue")))
+        '((t (:foreground "#7FBFFF" :bold t)))
         "Agenda 表示中の土曜日用のface"
         :group 'org-agenda )
 
@@ -793,7 +699,8 @@
                                        (insert entry)
                                        (org-get-category (point-min)))))
                        (when (or (string= "祝日" category)
-                                 (string= "休日" category)))))))
+                                 (string= "休日" category))
+                         (return 'org-agenda-date-weekend))))))
               (when face (return face))))))
       (setq org-agenda-day-face-function 'my:org-agenda-day-face-function)
     #+END_SRC
@@ -804,23 +711,23 @@
     Org-gcal で取得したカレンダーファイルに合わせて色分け
     #+BEGIN_SRC emacs-lisp
       (defface my:org-agenda-calendar-KUSM
-        '((t (:foreground "green")))
+        '((t (:foreground "#7FFF7F")))
         "Agenda 表示中, KUSM.org の表示 face"
         :group 'org-agenda )
       (defface my:org-agenda-calendar-Schedule
-        '((t (:foreground "blue")))
+        '((t (:foreground "#7FFFFF")))
         "Agenda 表示中, Schedule.org の表示 face"
         :group 'org-agenda )
       (defface my:org-agenda-calendar-GFD
-        '((t (:foreground "yellow")))
+        '((t (:foreground "#FFFF7F")))
         "Agenda 表示中, GFD.org の表示 face"
         :group 'org-agenda )
       (defface my:org-agenda-calendar-DebianJP
-        '((t (:foreground "purple")))
+        '((t (:foreground "#BF7FFF")))
         "Agenda 表示中, DebianJP.org の表示 face"
         :group 'org-agenda )
       (defface my:org-agenda-calendar-twitter
-        '((t (:foreground "gray")))
+        '((t (:foreground "#CCCCCC")))
         "Agenda 表示中, Twiiter log の表示 face"
         :group 'org-agenda )
       (add-hook 'org-finalize-agenda-hook
@@ -854,21 +761,26 @@
             '(
               ("n" "agenda and all TODO list"
                (
-                (agenda " ")
-                (todo "TODO")
-                (todo "WAIT")
-                (todo "SOMEDAY")
+                (agenda ""
+                        ((org-agenda-ndays 1)
+                         (org-agenda-entry-types '(:timestamp :sexp))))
+                (todo "TODO"
+                      ((org-agenda-prefix-format " %i %-22:c"))
+                      )
+                (todo "新規|着手|進行中|確認"
+                      ((org-agenda-prefix-format " %i %-22:c"))
+                      )
+                (todo "WAIT"
+                      ((org-agenda-prefix-format " %i %-22:c"))
+                      )
+                (todo "SOMEDAY"
+                      ((org-agenda-prefix-format " %i %-22:c"))
+                      )
                 )
                )
               ("N" "All memo entry"
                (
                 (todo "MEMO")
-                )
-               )
-              ("d" "journal and diary"
-               (
-                (todo "JOURNAL")
-                (todo "DIARY")
                 )
                )
               ))
@@ -884,6 +796,9 @@
      (with-eval-after-load "org-journal"
        (global-set-key (kbd "C-c C-j") 'browse-url-at-point)
        (global-set-key (kbd "C-x M")   'org-journal-new-entry))
+     (add-hook 'org-journal-mode-hook
+               (lambda ()
+                 (setq truncate-lines t)))
      ;; Key bindings
      ;; (define-key org-journal-mode-map (kbd "C-c C-f") 'org-journal-open-next-entry)
      ;; (define-key org-journal-mode-map (kbd "C-c C-b") 'org-journal-open-previous-entry)
@@ -919,7 +834,15 @@
 ** Babel
 *** コードブロックの font-lock
     #+BEGIN_SRC emacs-lisp
-      (setq org-src-fontify-natively t)
+    (setq org-src-fontify-natively t)
+    #+END_SRC
+*** コードブロックのインデント
+    #+BEGIN_SRC emacs-lisp
+      (setq org-edit-src-content-indentation 2)
+      (setq org-src-preserve-indentation nil)
+      (add-to-list 'safe-local-variable-values
+                   '(org-src-preserve-indentation . t)
+                   )
     #+END_SRC
 *** ditaa
     #+BEGIN_SRC emacs-lisp
@@ -937,50 +860,39 @@
     #+END_SRC
 *** 余計な空白の削除
     #+BEGIN_QUOTE
-    upTeX以外のTeXやHTMLは，日本語の途中で改行があると、
-    それを空白とみなしてしまうので、それを除去するようにする。
-    ここでは単純に、U+2000 以降の文字同士が改行で分割されていた場合は
-    改行を削除する関数に例を示す。
+    upTeX以外のTeXやHTMLは，日本語の途中で改行があると，
+    それを空白とみなしてしまうので，それを除去するようにする．
+    ここでは単純に，U+2000 以降の文字同士が改行で分割されていた場合は
+    改行を削除する関数に例を示す．
     #+END_QUOTE
     とのことで，これを頂くことに．
     #+BEGIN_SRC emacs-lisp
-      (defun my:remove-org-newlines-at-cjk-text (&optional _mode)
-        "先頭が '*', '#', '|' でなく，改行の前後が日本の文字の場合はその改行を除去する．"
-        (interactive)
-        (goto-char (point-min))
-        (while (re-search-forward "^\\([^|#*\n].+\\)\\(.\\)\n *\\(.\\)" nil t)
-          (if (and (> (string-to-char (match-string 2)) #x2000)
-                   (> (string-to-char (match-string 3)) #x2000))
-              (replace-match "\\1\\2\\3"))
-          (goto-char (point-at-bol))))
-
-      (eval-after-load "ox"
-        '(progn
-           (add-hook 'org-export-before-processing-hook
-                     'my:remove-org-newlines-at-cjk-text)))
+      ;; (defun my:remove-org-newlines-at-cjk-text (&optional _mode)
+      ;;   "先頭が '*', '#', '|' でなく，改行の前後が日本の文字の場合はその改行を除去する．"
+      ;;   (interactive)
+      ;;   (goto-char (point-min))
+      ;;   (while (re-search-forward "^\\([^|#*\n].+\\)\\(.\\)\n *\\(.\\)" nil t)
+      ;;     (if (and (> (string-to-char (match-string 2)) #x2000)
+      ;;              (> (string-to-char (match-string 3)) #x2000))
+      ;;         (replace-match "\\1\\2\\3"))
+      ;;     (goto-char (point-at-bol))))
+      ;;
+      ;; (eval-after-load "ox"
+      ;;   '(progn
+      ;;      (add-hook 'org-export-before-processing-hook
+      ;;                'my:remove-org-newlines-at-cjk-text)))
     #+END_SRC
-** Org-Wunderlist
-   #+BEGIN_SRC emacs-lisp
-     ;; (el-get-bundle myuhe/org-wunderlist.el
-     ;;   :depends (deferred request alert cl-lib s))
-     ;; (require 'org-wunderlist nil t)
-     ;; (with-eval-after-load "org-wunderlist"
-     ;;   (setq org-wunderlist-client-id (my:auth-source-get-property 'id :apps "org-wunderlist")
-     ;;         org-wunderlist-token (my:auth-source-get-property 'token :apps "org-wunderlist")
-     ;;         org-wunderlist-file  (concat org-directory "Wunderlist.org")
-     ;;         org-wunderlist-dir   (concat my:temp-dir "org-wunderlist/"))
-     ;;   (unless (file-directory-p org-wunderlist-dir)
-     ;;     (make-directory org-wunderlist-dir)))
-   #+END_SRC
-** Mobile
-   #+BEGIN_SRC emacs-lisp
-     ;; (setq org-id-locations-file (concat my:temp-dir "org-id-locations"))
-     ;; (setq org-mobile-directory "~/Dropbox/MobileOrg")
-     ;; (setq org-mobile-files
-     ;;       (list "~/Dropbox/org/Memo.org"
-     ;;             "~/Dropbox/org/mobile.org"))
-     ;; (setq org-mobile-inbox-for-pull "~/Dropbox/org/mobile.org")
-   #+END_SRC
+*** Beamer export
+    #+BEGIN_SRC emacs-lisp
+      (require 'ox-beamer)
+      (add-to-list 'org-latex-classes
+                   '("my:beamer"
+                     "\\documentclass[dvipdfmx,presentation]{beamer}
+                     [NO-DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
+                     ("\\section\{%s\}" . "\\section*\{%s\}")
+                     ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
+                     ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}")))
+    #+END_SRC
 ** Org-gcal
    Google カレンダーと org の予定を同期
 *** token 等の置き場所の変更
@@ -996,35 +908,68 @@
     実際の情報等は auth-source を使って設定しておく.
     #+BEGIN_SRC emacs-lisp
       ;; org-cal
-      (el-get-bundle myuhe/org-gcal.el
-        :depends (deferred request alert cl-lib))
+      (el-get-bundle org-gcal)
       (require 'org-gcal nil t)
       (with-eval-after-load "org-gcal"
         ;; (require 'alert nil 'noerror)
         (setq alert-log-messages t)
         (setq alert-default-style 'log)
         ;; (setq org-gcal-use-notifications t)
-        (setq org-gcal-up-days    365) ;; 1 years
-        (setq org-gcal-down-days  365) ;; 1 years
+        (setq org-gcal-down-days   90) ;; 過去 3 month
+        (setq org-gcal-up-days    180) ;; 未来 6 month
         (setq org-gcal-auto-archive nil)
         (setq org-gcal-token-file (expand-file-name ".org-gcal-token" org-gcal-dir))
         (setq org-gcal-client-id (my:auth-source-get-property 'id :apps "org-gcal"))
         (setq org-gcal-client-secret (my:auth-source-get-property 'secret :apps "org-gcal"))
-        ;; カレンダーIDをキー、スケジュールを取りこむOrgファイルをvalueとするalist
+        ;; カレンダーIDをキー，スケジュールを取りこむOrgファイルをvalueとするalist
         (setq org-gcal-file-alist (cadr (my:auth-source-get-property 'calendar-alist :apps "org-gcal")))
         )
     #+END_SRC
+** OrgとRedmine の連携: =orgmine=
+   インストールと読み込み
+   #+BEGIN_SRC emacs-lisp
+     (el-get-bundle orgmine)
+     (require 'orgmine nil 'noerror)
+     (add-hook 'org-mode-hook
+               (lambda ()
+                 (if (assoc "om_project" org-file-properties) (orgmine-mode))))
+   #+END_SRC
+   設定
+   #+BEGIN_SRC emacs-lisp
+     (setq orgmine-note-block-begin "#+BEGIN_SRC gfm"
+           orgmine-note-block-end   "#+END_SRC\n"
+           orgmine-default-todo-keyword "新規"
+           )
+   #+END_SRC
+   サーバ設定
+   #+BEGIN_SRC emacs-lisp
+     (setq orgmine-servers
+           '(
+              ("kusm"
+              (host . "https://www.math.kyoto-u.ac.jp/redmine/oa/")
+              (api-key . "4774db54a95060daa2e1d3e51452208b11a08322")
+              )
+              ("dennou-k"
+              (host . "https://dennou-k.gfd-dennou.org/redmine/")
+              (api-key . "355c0f5fa541372fd5e4885fb223babe7a189f20")
+              )
+              ("fdhndbk"
+              (host . "https://www.math.kyoto-u.ac.jp/fdhndbk/")
+              (api-key . "fe5aa1538aa5d92ef1ddd278b449f224b39f897c")
+              )
+              ))
+   #+END_SRC
 * Howm
   Org を使う前は Howm を使っていました.
   過去のメモを検索するためだけに未だに Howm を使っています.
 ** ディレクトリの設定
    メモの内容は Dropbox で同期することに
    #+BEGIN_SRC emacs-lisp
-     (setq howm-directory "~/Dropbox/org")
+     (setq howm-directory "~/ownCloud/Dropbox/org")
      ;; メニューと履歴を検索対象から除外するために別ディレクトリへ
-     (setq howm-keyword-file "~/Dropbox/.howm/keys")
-     (setq howm-history-file "~/Dropbox/.howm/history")
-     (setq howm-menu-file "~/Dropbox/.howm/menu")
+     (setq howm-keyword-file "~/ownCloud/Dropbox/.howm/keys")
+     (setq howm-history-file "~/ownCloud/Dropbox/.howm/history")
+     (setq howm-menu-file "~/ownCloud/Dropbox/.howm/menu")
      (setq howm-file-name-format "%Y%m%d-%H%M%S.howm")
    #+END_SRC
 ** org-mode でメモを書くためにその1
@@ -1159,72 +1104,91 @@
      (setq howm-template "* MEMO %date %cursor\n%file\n")
      (setq howm-reminder-today-format (format howm-insert-date-format howm-date-format))
    #+END_SRC
-*
 * tDiary
   #+BEGIN_SRC emacs-lisp
-    (when (file-directory-p "~/Dropbox/tdiary/")
-      (progn
-        (el-get-bundle http-el
-          :type http
-          :url "https://raw.githubusercontent.com/tdiary/tdiary-contrib/master/util/tdiary-mode/http.el")
-        (el-get-bundle tdiary-mode
-          :type http
-          :depends http-el
-          :url "https://raw.githubusercontent.com/tdiary/tdiary-contrib/master/util/tdiary-mode/tdiary-mode.el")
-        (with-eval-after-load "tdiary-mode"
-          (setq tdiary-diary-list  '(("log" "http://uwabami.junkhub.org/log/")))
-          (setq tdiary-csrf-key    (my:auth-source-get-property 'csrf-key    :apps "tdiary"))
-          (setq tdiary-passwd-file (my:auth-source-get-property 'passwd-file :apps "tdiary"))
-          (setq tdiary-text-directory (expand-file-name "~/Dropbox/tdiary"))
-          (setq tdiary-browser-function 'browse-url)
-          (setq tdiary-style-mode 'rd-mode)
-          (setq tdiary-hour-offset 2)
-          (setq tdiary-text-save-p t)
-          (setq tdiary-text-suffix ".rd")
-          )
-        (autoload 'tdiary-mode "tdiary-mode" nil t)
-        (autoload 'tdiary-new "tdiary-mode" nil t)
-        (autoload 'tdiary-new-diary "tdiary-mode" nil t)
-        (autoload 'tdiary-replace "tdiary-mode" nil t)
-        ))
+    ;; (when (file-directory-p "~/ownCloud/Dropbox/tdiary/")
+    ;;   (progn
+    ;;     (el-get-bundle http-el
+    ;;       :type http
+    ;;       :url "https://raw.githubusercontent.com/tdiary/tdiary-contrib/master/util/tdiary-mode/http.el")
+    ;;     (el-get-bundle tdiary-mode
+    ;;       :type http
+    ;;       :depends http-el
+    ;;       :url "https://raw.githubusercontent.com/tdiary/tdiary-contrib/master/util/tdiary-mode/tdiary-mode.el")
+    ;;     (with-eval-after-load "tdiary-mode"
+    ;;       (setq tdiary-diary-list  '(("log" "http://uwabami.junkhub.org/log/")))
+    ;;       (setq tdiary-csrf-key    (my:auth-source-get-property 'csrf-key    :apps "tdiary"))
+    ;;       (setq tdiary-passwd-file (my:auth-source-get-property 'passwd-file :apps "tdiary"))
+    ;;       (setq tdiary-text-directory (expand-file-name "~/ownCloud/Dropbox/tdiary"))
+    ;;       (setq tdiary-browser-function 'browse-url)
+    ;;       (setq tdiary-style-mode 'rd-mode)
+    ;;       (setq tdiary-hour-offset 2)
+    ;;       (setq tdiary-text-save-p t)
+    ;;       (setq tdiary-text-suffix ".rd")
+    ;;       )
+    ;;     (autoload 'tdiary-mode "tdiary-mode" nil t)
+    ;;     (autoload 'tdiary-new "tdiary-mode" nil t)
+    ;;     (autoload 'tdiary-new-diary "tdiary-mode" nil t)
+    ;;     (autoload 'tdiary-replace "tdiary-mode" nil t)
+    ;;     ))
+  #+END_SRC
+* Textile
+  #+BEGIN_SRC emacs-lisp
+    (el-get-bundle juba/textile-mode)
+    (add-to-list 'safe-local-variable-values
+                 '(orgmine-note-block-begin . "#+BEGIN_SRC textile")
+                 )
   #+END_SRC
 * Markdown
   #+BEGIN_SRC emacs-lisp
-    (unless (locate-library "markdown-mode")
-      (el-get-bundle markdown-mode))
-    (add-to-list 'auto-mode-alist
-                 '("\\.\\(md\\|mdown\\|markdown\\)\\'" . markdown-mode))
-    (with-eval-after-load "markdown-mode"
-      (add-hook 'markdown-mode-hook
-                '(lambda ()
-                   (electric-indent-local-mode -1))))
+  (unless (locate-library "markdown-mode")
+    (el-get-bundle markdown-mode))
+  (add-to-list 'auto-mode-alist
+               '("\\.\\(md\\|markdown\\)\\'" . gfm-mode))
+  (if (executable-find "pandoc")
+      (setq markdown-command
+            "pandoc --from markdown_github -t html5 --mathjax --highlight-style pygments"))
+  (with-eval-after-load "markdown-mode"
+    (add-hook 'markdown-mode-hook
+              '(lambda ()
+                 (electric-indent-local-mode -1))))
+  (with-eval-after-load "gfm-mode"
+    (add-hook 'gfm-mode-hook
+              '(lambda ()
+                 (electric-indent-local-mode -1))))
   #+END_SRC
-* プログラム関連
-** flycheck
-   プログラム作成時に buffer 内部で lint を走らせてくれる優れモノ．
-   ただし，lint は別プログラムなので，適切に導入しておく必要がある．
-   #+BEGIN_SRC emacs-lisp
-   ;;  (el-get-bundle 'flycheck)
-   ;;  (require 'flycheck nil 'noerror)
-   #+END_SRC
-** systemd
-   #+BEGIN_SRC emacs-lisp
-     (add-to-list 'auto-mode-alist '("\\.service$" . conf-unix-mode))
-     (add-to-list 'auto-mode-alist '("\\.timer$" . conf-unix-mode))
-     (add-to-list 'auto-mode-alist '("\\.target$" . conf-unix-mode))
-     (add-to-list 'auto-mode-alist '("\\.mount$" . conf-unix-mode))
-     (add-to-list 'auto-mode-alist '("\\.automount$" . conf-unix-mode))
-     (add-to-list 'auto-mode-alist '("\\.slice$" . conf-unix-mode))
-     (add-to-list 'auto-mode-alist '("\\.socket$" . conf-unix-mode))
-     (add-to-list 'auto-mode-alist '("\\.path$" . conf-unix-mode))
-   #+END_SRC
+* Re:VIEW
+  #+BEGIN_SRC emacs-lisp
+    (el-get-bundle kmuto/review-el)
+    (add-to-list 'auto-mode-alist '("\\.re\\'" . review-mode))
+  #+END_SRC
+* SCSS
+  #+BEGIN_SRC emacs-lisp
+    (el-get-bundle 'scss-mode)
+    (add-to-list 'auto-mode-alist '("\\.scss\\'" . scss-mode))
+    (with-eval-after-load "scss-mode"
+      (setq scss-sass-command (executable-find "sass")))
+  #+END_SRC
+* systemd
+  #+BEGIN_SRC emacs-lisp
+    (add-to-list 'auto-mode-alist '("\\.service\\'" . conf-unix-mode))
+    (add-to-list 'auto-mode-alist '("\\.timer\\'" . conf-unix-mode))
+    (add-to-list 'auto-mode-alist '("\\.target\\'" . conf-unix-mode))
+    (add-to-list 'auto-mode-alist '("\\.mount\\'" . conf-unix-mode))
+    (add-to-list 'auto-mode-alist '("\\.automount\\'" . conf-unix-mode))
+    (add-to-list 'auto-mode-alist '("\\.slice\\'" . conf-unix-mode))
+    (add-to-list 'auto-mode-alist '("\\.socket\\'" . conf-unix-mode))
+    (add-to-list 'auto-mode-alist '("\\.path\\'" . conf-unix-mode))
+    (add-to-list 'auto-mode-alist '("\\.netdev\\'" . conf-unix-mode))
+    (add-to-list 'auto-mode-alist '("\\.network\\'" . conf-unix-mode))
+    (add-to-list 'auto-mode-alist '("\\.link\\'" . conf-unix-mode))
+    (add-to-list 'auto-mode-alist '("\\.automount\\'" . conf-unix-mode))
+  #+END_SRC
 * Ruby
   素の =ruby-mode=. =Gemfile= も ruby-mode で扱う
   #+BEGIN_SRC emacs-lisp
     (autoload 'ruby-mode "ruby-mode" "Mode for editing ruby source files" t)
     (add-to-list 'auto-mode-alist '("Gemfile$" . ruby-mode))
-    ;; (add-to-list 'auto-mode-alist '("\\.rb$latex " . ruby-mode))
-    ;; (add-to-list 'auto-mode-alist '("Capfile$" . ruby-mode))
   #+END_SRC
   =ruby-electric=: 括弧や =do ... end= の補完
   #+BEGIN_SRC emacs-lisp
@@ -1235,10 +1199,10 @@
   #+END_SRC
   =ruby-block=: =do...end= の対応をハイライト
   #+BEGIN_SRC emacs-lisp
-    (el-get-bundle ruby-block)
-    (require 'ruby-block nil 'noerror)
-    (ruby-block-mode t)
-    (setq ruby-block-highlight-toggle t)
+    ;; (el-get-bundle ruby-block)
+    ;; (require 'ruby-block nil 'noerror)
+    ;; (ruby-block-mode t)
+    ;; (setq ruby-block-highlight-toggle t)
   #+END_SRC
   =rspec-mode=:
   #+BEGIN_SRC emacs-lisp
@@ -1246,17 +1210,61 @@
     (require 'rspec-mode nil 'noerror)
     (setq rspec-use-rake-flag nil)
   #+END_SRC
-
+  =rabbit-mode=:
+  #+BEGIN_SRC emacs-lisp
+    (autoload 'rabbit-mode "rabbit-mode" "major mode for Rabbit" nil t)
+    (add-to-list 'auto-mode-alist
+                 '("\\.rab$" . rabbit-mode))
+  #+END_SRC
+* C
+  #+BEGIN_SRC emacs-lisp
+    (eval-when-compile (require 'cc-mode))
+    (c-add-style "my:bsd-like"
+                 '("bsd"
+                   (c-basic-offset . 2)
+                   (c-hanging-braces-alist . ((inline-open       before after)
+                                              (block-open        before after)
+                                              (substatement-open before after)))
+                   (c-offsets-alist . ((brace-list-entry . +)))
+                   ))
+    (setq-default c-default-style "my:bsd-like")
+    (add-hook 'c-mode-hook
+              (lambda ()
+                (c-set-style "my:bsd-like")
+                (electric-indent-local-mode -1)))
+    (el-get-bundle c-eldoc)
+    (add-hook 'c-mode-hook
+              (lambda ()
+                (set (make-local-variable 'eldoc-idle-delay) 0.20)
+                (c-turn-on-eldoc-mode)
+                ))
+  #+END_SRC
 * Fortran (>=90)
   #+BEGIN_SRC emacs-lisp
     (add-to-list 'auto-mode-alist '("\\.\\(f|F\\)\\(90|95|03|08\\)$" . f90-mode))
-    (setq f90-do-indent 2
-          f90-if-indent 2
-          f90-type-indent 2
-          f90-program-indent 2
-          f90-continuation-indent 2
-          f90-comment-region "!"
-          f90-indented-comment-re "!" )
+    (add-hook 'f90-mode-hook
+              '(lambda ()
+                 (setq f90-do-indent 2
+                       f90-if-indent 2
+                       f90-type-indent 2
+                       f90-program-indent 2
+                       f90-continuation-indent 2
+                       f90-directive-comment-re "!omp\\$"
+                       f90-indented-comment-re "!"
+                       f90-break-delimiters "[-+\\*/><=,% \t]"
+                       f90-break-before-delimiters t
+                       f90-beginning-ampersand nil
+                       f90-smart-end 'blink
+                       f90-auto-keyword-case nil
+                       f90-leave-line-no nil
+                       f90-comment-region "!! "
+                       f90-indent-comment "! "
+                       indent-tabs-mode nil
+                       f90-font-lock-keywords f90-font-lock-keywords-2
+                       )))
+    ;; (add-hook 'f90-mode-hook
+    ;;           (lambda ()
+    ;;             (ggtags-mode 1)))
   #+END_SRC
 * TeX
 *** 読み込み
@@ -1276,7 +1284,8 @@
       (when (and (and (ignore-errors (el-get-executable-find "platex"))
                       (ignore-errors (el-get-executable-find "latexmk")))
                  (locate-library "auctex"))
-        (el-get-bundle tom-tan/auctex-latexmk))
+        (el-get-bundle tom-tan/auctex-latexmk
+          :depends nil))
     #+END_SRC
     ここでは,
     - default の "LaTeX" を上書き
@@ -1363,6 +1372,33 @@
      =japanese-latex-mode= では
      =TeX-engine-alist-builtin= に =ptex, jtex, uptex= が追加(=setq=) されているため
      上記設定は不要(かも).
+**** Okular との連携
+     #+BEGIN_SRC emacs-lisp
+       ;; (setq TeX-view-program-selection
+       ;;       '((output-pdf "Evince")
+       ;;         (output-dvi "xdvi")))
+       ;; (defun my:okular-make-url () (concat
+       ;;                               "file://"
+       ;;                               (expand-file-name (funcall file (TeX-output-extension) t)
+       ;;                                                 (file-name-directory (TeX-master-file)))
+       ;;                               "#src:"
+       ;;                               (TeX-current-line)
+       ;;                               (expand-file-name (TeX-master-directory))
+       ;;                               "./"
+       ;;                               (TeX-current-file-name-master-relative)))
+       ;; (add-hook 'LaTeX-mode-hook '(lambda ()
+       ;;                               (add-to-list 'TeX-expand-list
+       ;;                                            '("%u" my:okular-make-url))))
+       ;; (setq TeX-source-correlate-method 'synctex)
+       ;; (with-eval-after-load "tex"
+       ;;   '(add-to-list
+       ;;     'TeX-command-list
+       ;;     '("View" "okular --unique %u" TeX-run-discard-or-function nil t :help "View file")))
+       ;; (with-eval-after-load "tex-jp"
+       ;;   '(add-to-list
+       ;;     'TeX-command-list
+       ;;     '("View" "okular --unique %u" TeX-run-discard-or-function nil t :help "View file")))
+     #+END_SRC
 *** zotero との連携
     #+BEGIN_SRC emacs-lisp
       (el-get-bundle zotelo)
@@ -1370,6 +1406,403 @@
                                          (Default . "Unicode")))
       (add-hook 'LaTeX-mode-hook 'zotelo-minor-mode)
     #+END_SRC
+* flymake
+** 読み込み
+   #+BEGIN_SRC emacs-lisp
+     (el-get-bundle flymake)
+     (require 'flymake nil 'noerror)
+     (setq flymake-start-syntax-check-on-find-file nil)
+     (add-hook 'find-file-hook 'flymake-find-file-hook)
+   #+END_SRC
+** Makefile の有無によるコマンドの振り分け
+   元ネタ: [[http://moimoitei.blogspot.jp/2010/05/flymake-in-emacs.html][Emacs で文法チェック]] [fn:1]
+*** Makefile が無い場合のチェック用関数
+   #+BEGIN_SRC emacs-lisp
+     (defun my:flymake-simple-generic-init (cmd &optional opts)
+       (let* ((temp-file (flymake-init-create-temp-buffer-copy
+                          'flymake-create-temp-inplace))
+              (local-file (file-relative-name
+                           temp-file
+                           (file-name-directory buffer-file-name))))
+         (list cmd (append opts (list local-file)))))
+   #+END_SRC
+*** Makefile が有る場合のチェック用関数
+    #+BEGIN_SRC emacs-lisp
+      (defun my:flymake-simple-make-or-generic-init (cmd &optional opts)
+        (if (file-exists-p "Makefile")
+            (flymake-simple-make-init)
+          (my:flymake-simple-generic-init cmd opts)))
+    #+END_SRC
+** C/C++
+*** Makefile が無い場合の関数定義
+**** C
+    #+BEGIN_SRC emacs-lisp
+      (defun my:flymake-c-init ()
+        (my:flymake-simple-make-or-generic-init
+         "gcc" '("-O2" "-Wall" "-Wextra" "-Wformat" "-Werror=format-security" "-fsyntax-only")))
+    #+END_SRC
+**** C++
+     #+BEGIN_SRC emacs-lisp
+       (defun my:flymake-cc-init ()
+         (my:flymake-simple-make-or-generic-init
+          "g++" '("-O2" "-Wall" "-Wextra" "-Wformat" "-Werror=format-security" "-fsyntax-only")))
+     #+END_SRC
+*** 関数の追加
+    #+BEGIN_SRC emacs-lisp
+      (push '("\\.[cC]\\'" my:flymake-c-init)
+            flymake-allowed-file-name-masks)
+      (push '("\\.\\(?:cc\|cpp\|CC\|CPP\\)\\'" my:flymake-cc-init)
+            flymake-allowed-file-name-masks)
+    #+END_SRC
+** Ruby
+   @see [[http://www.emacswiki.org/emacs/FlymakeRuby]] [fn:2]
+*** 関数定義
+   #+BEGIN_SRC emacs-lisp
+      (defun my:flymake-ruby-init ()
+        (my:flymake-simple-generic-init
+         "ruby" '("-c")))
+   #+END_SRC
+*** 関数の追加
+   #+BEGIN_SRC emacs-lisp
+     (push '("\\.\\(?:rb\|erb\\)\\'" my:flymake-ruby-init) flymake-allowed-file-name-masks)
+   #+END_SRC
+** Fortran (>=90)
+*** 関数定義
+    gfortran 用と g95 用で関数を切り替え.
+    とはいえ g95 は最近使ってないので良く知らない.
+    #+BEGIN_SRC emacs-lisp
+      (defun my:flymake-gfortran-init ()
+        (my:flymake-simple-make-or-generic-init
+         "gfortran" '("-O2" "-Wall" "-Wextra" "-fsyntax-only")))
+      (defun my:flymake-g95-init ()
+        (my:flymake-simple-make-or-generic-init
+         "g95" '("-O2" "-Wall" "-Wextra" "-fsyntax-only")))
+    #+END_SRC
+*** 関数の追加
+    #+BEGIN_SRC emacs-lisp
+      (cond
+       ((executable-find "gfortran")
+        (push '("\\.\\(?:f90\|F90\|f95\|F95\\)\\'" my:flymake-gfortran-init)
+              flymake-allowed-file-name-masks))
+       ((executable-find "g95")
+        (push '("\\.\\(?:f90\|F90\|f95\|F95\\)\\'" my:flymake-g95-init)
+              flymake-allowed-file-name-masks))
+       (t nil))
+    #+END_SRC
+   コンパイラとして gfortran を想定しています.
+   ただ, gfortran の -fsyntax-only 出力は gcc とはだいぶ異なるので
+   以下の様な安直な wrapper を噛ませてチェックすることにしています
+   #+BEGIN_SRC ruby
+     #!/usr/bin/env ruby
+     # -*- mode: ruby; coding: utf-8; indent-tabs-mode: nil -*-
+     #
+     # License: WTFPL
+     #
+     @hold = nil
+     @fname = nil
+     @line = nil
+     @ch = nil
+     while input = ARGF.gets
+       @input = input
+       if @input =~ /^ / || @input =~/^\s*$/ || @input =~/^\s*1\s*$/
+         @hold = @input
+       elsif @input =~ /^(Warning|Error):/ && ( @fname && @line && @ch)
+         puts "#{@fname}:#{@line}: #{@input.chomp} (ch.#{@ch})"
+       elsif @input =~ /^(.+?):(\d+?)\.(\d+):(\s*)/
+         @fname,@line,@ch = $1, $2, $3
+         @hold = @input
+       else
+         @hold = @input
+         puts @hold
+         @hold = nil
+         @fname = nil
+         @line = nil
+         @ch = nil
+       end
+     end
+   #+END_SRC
+** TeX
+   #+BEGIN_SRC emacs-lisp
+     (defun flymake-get-tex-args (file-name)
+       (list "platex"
+             (list "-file-line-error" "-draftmode" "-interaction=nonstopmode" file-name)))
+   #+END_SRC
+* フォントと色
+  テーマにした方が良い
+  #+BEGIN_SRC emacs-lisp
+    (defun my:load-window-config ()
+      "load window-system specific settings"
+      (interactive)
+      (when window-system
+        (progn
+          (add-to-list 'default-frame-alist '(font . "Monospace-12"))
+          (set-background-color "#242424")
+          ;; (set-cursor-color "#4CFF4C")
+          (set-face-attribute 'default t :font "Monospace" :height 135)
+          (set-frame-font "Monospace-13.5" nil t)
+          ;; (add-to-list 'default-frame-alist '(alpha 90 50))
+          ;; (set-frame-parameter (selected-frame) 'alpha '(90 50))
+          ;; (set-face-attribute 'default nil
+          ;;                     :family "Ricty Discord"
+          ;;                     :height 150)
+          ;; (set-fontset-font (frame-parameter nil 'font)
+          ;;                   'japanese-jisx0208
+          ;;                   (cons "Ricty Discord" "iso10646-1"))
+          ;; (set-fontset-font (frame-parameter nil 'font)
+          ;;                   'japanese-jisx0212
+          ;;                   (cons "Ricty Discord" "iso10646-1"))
+          ;; (set-fontset-font (frame-parameter nil 'font)
+          ;;                   'katakana-jisx0201
+          ;;                   (cons "Ricty Discord" "iso10646-1"))
+          ;; (set-fontset-font t 'symbol
+          ;;                   (font-spec :family "Symbola") nil 'prepend)
+          ;; (set-frame-parameter (selected-frame) 'alpha '(90 50))
+          ;; (add-to-list 'default-frame-alist '(font . "SeptemberMMono-13.5"))
+          )))
+    (setq frame-background-mode (frame-parameter nil 'background-mode))
+    (setq default-frame-alist
+          '(
+            (foreground-color . "#F6F3E8")
+            (scroll-bar-foreground-color . "red")
+            (vertical-scroll-bars . right)
+            ))
+    (when (window-system)
+      (my:load-window-config))
+  #+END_SRC
+  テスト
+  #+BEGIN_SRC emacs-lisp
+    (custom-set-faces
+     '(default                             ((t (:foreground "#F6F3E8" ))))
+     ;;
+     '(cursor                              ((t (:foreground "#4CFF4C" :background "#4CFF4C" ))))
+     '(font-lock-builtin-face              ((t (:foreground "#7FBFFF" ))))
+     '(font-lock-comment-delimiter-face    ((t (:foreground "#e5e5e6" ))))
+     '(font-lock-comment-face              ((t (:foreground "#e5e5e6" ))))
+     '(font-lock-constant-face             ((t (:foreground "#FFBF7F" ))))
+     '(font-lock-doc-face                  ((t (:foreground "#7FFF7F" ))))
+     '(font-lock-doc-string-face           ((t (:foreground "#7FFF7F" ))))
+     '(font-lock-function-name-face        ((t (:foreground "#BF7FFF"))))
+     '(font-lock-keyword-face              ((t (:foreground "#FF7F7F"))))
+     '(font-lock-link-face                 ((t (:foreground "#7FFFFF" ))))
+     '(font-lock-negation-char-face        ((t (:foreground "#7FFFFF" :bold t   :italic nil))))
+     '(font-lock-preprocessor-face         ((t (:foreground "#FF4C4C" :bold nil :italic nil))))
+     '(font-lock-regexp-grouping-backslash ((t (:foreground "#A5EE4C" :bold t   :italic nil))))
+     '(font-lock-regexp-grouping-construct ((t (:foreground "#7F7FFF" :bold t   :italic nil))))
+     '(font-lock-string-face               ((t (:foreground "#7FFF7F" ))))
+     '(font-lock-type-face                 ((t (:foreground "#FFFF7F" ))))
+     '(font-lock-variable-name-face        ((t (:foreground "#7F7FFF" ))))
+     '(font-lock-warning-face              ((t (:foreground "#FF7FBF" :bold t ))))
+     '(fringe                              ((t (:foreground "#666666" :background "#282828" ))))
+     ;; '(hl-line                             ((t (:background "#556b2f" ))))
+     ;; '(highlight                           ((t (:background "#556b2f" ))))
+     '(hl-line                             ((t (:background "#4C4C4C" ))))
+     '(highlight                           ((t (:background "#4C4C4C" ))))
+     '(minibuffer-prompt                   ((t (:foreground "#BF7FFF" ))))
+     ;; '(mode-line                           ((t (:foreground "#242424" :background "#5FAFD7" :bold nil ))))
+     ;; '(mode-line                           ((t (:foreground "#F6F3E8" :background "#222244" ))))
+     ;; '(mode-line-inactive                  ((t (:foreground "#666666" :background "#BDBDBD" :bold nil ))))
+     '(region                              ((t (:background "#222244" ))))
+     ;; custom-set-faces was added by Custom.
+     ;; If you edit it by hand, you could mess it up, so be careful.
+     ;; Your init file should contain only one such instance.
+     ;; If there is more than one, they won't work right.
+     ;; '(fixed-pitch ((t (:family "Ricty" ))))
+     ;; '(variable-pitch ((t (:family "Ricty" ))))
+     ;; '(fixed-pitch ((t (:family "Monospace" :height 135 ))))
+     ;; '(variable-pitch ((t (:family "Monospace" :height 135 ))))
+     ;; dired
+     '(dired-directory ((t (:bold t :foreground "#7F7FFF" ))))
+     ;; '(dired-flagged
+     ;; '(dired-header
+     ;; '(dired-ignored
+     ;; '(dired-mark
+     ;; '(dired-marked
+     ;; '(dired-perm-write
+     '(dired-symlink   ((t (:bold t :foreground "#7FFFFF" ))))
+     ;; '(dired-warning
+     '(flx-highlight-face ((t (:bold t :foreground "#FFBF7F" ))))
+     ;; helm: header-line
+     '(helm-source-header ((t (:foreground "#F6F3E8" :background "#224488" :bold t))))
+     '(helm-visible-mark ((t (:inherit highlight ))))
+     '(helm-selection ((t (:inherit highlight ))))
+     '(helm-selection-line ((t (:inherit highlight ))))
+     ;; helm: directory
+     '(helm-ff-directory ((t (:inherit default :foreground "#7FBFFF" :bold t))))
+     '(helm-ff-directory ((t (:inherit default :foreground "#7F7FFF" :bold t))))
+     '(helm-bookmark-directory ((t (:inherit helm-ff-directory ))))
+     '(helm-buffer-directory ((t (:inherit helm-ff-directory ))))
+     '(helm-ff-dotted-directory ((t (:inherit helm-ff-directory ))))
+     ;; helm: file
+     '(helm-ff-file   ((t (:inherit default ))))
+     '(helm-bookmark-file ((t (:inherit helm-ff-file ))))
+     '(helm-buffer-file ((t (:inherit helm-ff-file ))))
+     '(helm-grep-file ((t (:inherit helm-ff-file ))))
+     '(helm-etags-file ((t (:inherit helm-ff-file ))))
+     ;; helm: file + executable
+     '(helm-ff-executable ((t (:inherit helm-ff-file :foreground "#7FFF7F" :bold t))))
+     ;; helm: symlink
+     '(helm-ff-symlink ((t (:inherit default :foreground "#7FFFFF" :bold t))))
+     '(helm-ff-dotted-symlink-directory  ((t (:inherit helm-ff-symlink ))))
+     '(helm-ff-invalid-symlink ((t (:inherit default :foreground "#FF7F7F" ))))
+     ;; Ivy
+     ;; '(ivy-confirm-face ((t (:inherit minibuffer-prompt))))
+     ;; '(ivy-current-match ((t (:inherit minibuffer-prompt))))
+     ;; '(ivy-match-required-face ((t (:inherit minibuffer-prompt))))
+     '(howm-mode-keyword-face            ((t (:foreground "#7F7FFF" :background nil ))))
+     '(howm-mode-title-face              ((t (:foreground "#4CFFFF" :background nil ))))
+     '(howm-reminder-deadline-face       ((t (:bold t :foreground "#FF4C4C" :background nil ))))
+     '(howm-reminder-late-deadline-face  ((t (:bold t :underline t :foreground "#FF0000" :background nil ))))
+     '(howm-reminder-today-face          ((t (:bold t :foreground "#FFBF7F" :background nil ))))
+     '(howm-reminder-tomorrow-face       ((t (:bold t :foreground "#FF7FBF" :background nil ))))
+     ;; ido
+     '(ido-first-match     ((t (:inherit default ))))
+     '(ido-only-match      ((t (:foreground "#FFFF4C" ))))
+     '(ido-subdir          ((t (:foreground "#7F7FFF" :bold t))))
+     '(ido-grid-mode-match ((t (:inherit ido-first-match ))))
+     ;; ido-grid-mode-common-match
+     ;; ido-grid-mode-jump-face
+     ;; ido-incomplete-regexp
+     ;; ido-indicator
+     ;; ido-virtual
+     ;; outline
+     '(outline-1 ((t (:inherit font-lock-function-name-face :bold t))))
+     '(outline-2 ((t (:inherit font-lock-string-face :bold t))))
+     '(outline-3 ((t (:inherit font-lock-keyword-face :bold t))))
+     '(outline-4 ((t (:inherit font-lock-type-face :bold t ))))
+     '(outline-5 ((t (:inherit font-lock-constant-face :bold t ))))
+     '(outline-6 ((t (:inherit font-lock-variable-name-face :bold t))))
+     '(outline-7 ((t (:inherit font-lock-builtin-face :bold t ))))
+     ;; '(outline-8 ((t (:inherit font-lock-comment-face :bold t ))))
+     ;;
+     ;; org
+     '(org-agenda-date-today     ((t (bold t ))))
+     '(org-agenda-date           ((t (:foreground "#FFFFFF" ))))
+     '(org-agenda-date-weekend   ((t (:foreground "#FF7F7F" ))))
+     '(org-agenda-calendar-event ((t (:foreground "#F6F3E8" ))))
+     '(org-hide                  ((t (:foreground "#4C4C4C" ))))
+     ;; review
+     '(review-mode-header1-face  ((t (:inherit outline-1))))
+     '(review-mode-header2-face  ((t (:inherit outline-2))))
+     '(review-mode-header3-face  ((t (:inherit outline-3))))
+     '(review-mode-header4-face  ((t (:inherit outline-4))))
+     '(review-mode-header5-face  ((t (:inherit outline-5))))
+     ;; powerline
+     '(powerline-active1         ((t (:foreground "#242424" :background "#AFD7FF" ))))
+     '(powerline-active2         ((t (:foreground "#F6F3E8" :background "#666666" ))))
+     '(powerline-inactive1       ((t :inherit mode-line-inactive )))
+     '(powerline-inactive2       ((t :inherit mode-line-inactive )))
+     )
+  #+END_SRC
+* =hl-line+=
+  標準添付の =hl-line= だと face の設定が常に最上位に来るので場合によっては見辛くなる．
+  また，face として =hlighlight= が使われるが，これは別のライブラリでも使われているので，
+  別途 =hl-line= 用の face を用意したい．
+
+  というわけで，=hl-line+= で適宜設定を試みる
+  #+BEGIN_SRC emacs-lisp
+    ;; (el-get-bundle hl-line+)
+    ;; (require 'hl-line+ nil 'noerror)
+    ;; (setq hl-line-overlay-priority -50) ;; default
+    ;; (global-hl-line-mode t)
+  #+END_SRC
+
+* =rainbow-mode=: 色表示
+  #+BEGIN_SRC emacs-lisp
+    ;; (el-get-bundle rainbow-mode)
+  #+END_SRC
+* ちら見: =quick-preview=
+  デフォルトでは =-nw= に対応できないので，dirty hack ながら
+  #+BEGIN_SRC diff
+    diff --git a/quick-preview.el b/quick-preview.el
+    index 72f3a77..d04beb2 100644
+    --- a/quick-preview.el
+    +++ b/quick-preview.el
+    @@ -65,7 +65,7 @@
+                "org.gnome.NautilusPreviewer"
+                "ShowFile"
+                :string (concat (when (file-exists-p filename) "file://") filename)
+    -           :int32 (string-to-number (frame-parameter nil 'window-id))
+    +           :int32 (string-to-number (if window-system (frame-parameter nil 'window-id) "0"))
+                :boolean t)
+             (error (concat "command not found :"
+                            (symbol-name quick-preview-method))))
+
+  #+END_SRC
+  とかしている．→ [[https://github.com/uwabami/quick-preview.el][uwabami/quick-preview.el]]
+  #+BEGIN_SRC emacs-lisp
+    ;; (el-get-bundle uwabami/quick-preview.el
+    ;;   :name quick-preview)
+    ;; (require 'quick-preview nil 'noerror)
+    ;; (setq quick-preview-method 'sushi)
+    ;; (global-set-key (kbd "C-c q") 'quick-preview-at-point)
+    ;; (define-key dired-mode-map (kbd "Q") 'quick-preview-at-point)
+  #+END_SRC
+* =diminish=: モードラインの短縮表示
+  #+BEGIN_SRC emacs-lisp
+    (el-get-bundle diminish)
+    (require 'diminish nil 'noerror)
+    (defmacro my:diminish (file mode &optional new-name)
+      "original: https://github.com/larstvei/dot-emacs/blob/master/init.org"
+      `(with-eval-after-load ,file
+         (diminish ,mode ,new-name)))
+    (my:diminish "abbrev"           'abbrev-mode)
+    ;; (my:diminish "auto-complete"    'auto-complete-mode)
+    (my:diminish "eldoc"            'eldoc-mode)
+    (my:diminish "flycheck"         'flycheck-mode)
+    (my:diminish "flymake"          'flymake-mode)
+    (my:diminish "flyspell"         'flyspell-mode)
+    (my:diminish "howm"             'howm-mode)
+    (my:diminish "isearch"          'isearch-mode)
+    (my:diminish "paredit"          'paredit-mode)
+    ;; (my:diminish "projectile"       'projectile-mode)
+    (my:diminish "rainbow-mode"     'rainbow-mode)
+    (my:diminish "ruby-block"       'ruby-block-mode)
+    (my:diminish "whitespace"       'global-whitespace-mode)
+    (my:diminish "yasnippet"        'yas-minor-mode)
+    (my:diminish "helm-multi-match" 'helm-migemo-mode)
+    (my:diminish "helm-gtags"       'helm-gtags-mode)
+  #+END_SRC
+  メジャーモードは =hook= で設定.
+  #+BEGIN_SRC emacs-lisp
+    (add-hook 'emacs-lisp-mode-hook '(lambda () (setq mode-name "El")))
+    (add-hook 'lisp-interaction-mode-hook '(lambda () (setq mode-name "Li")))
+    (add-hook 'wl-folder-mode-hook  '(lambda () (setq mode-name "")))
+    (add-hook 'wl-summary-mode-hook '(lambda () (setq mode-name "")))
+    (add-hook 'wl-draft-mode-hook   '(lambda () (setq mode-name "")))
+    (add-hook 'mime-view-mode-hook  '(lambda () (setq mode-name "")))
+  #+END_SRC
+* OpenWith
+  #+BEGIN_SRC emacs-lisp
+    ;; (el-get-bundle openwith)
+    ;; (require 'openwith nil 'noerror)
+    ;; (setq openwith-associations
+    ;;       (list
+    ;;        ;; (list (openwith-make-extension-regexp
+    ;;        ;;        '("mpg" "mpeg" "mp3" "mp4"
+    ;;        ;;          "avi" "wmv" "wav" "mov" "flv"
+    ;;        ;;          "ogm" "ogg" "mkv"))
+    ;;        ;;       "vlc"
+    ;;        ;;       '(file))
+    ;;        ;; (list (openwith-make-extension-regexp
+    ;;        ;;        '("xbm" "pbm" "pgm" "ppm" "pnm"
+    ;;        ;;          "png" "gif" "bmp" "tif" "jpeg" "jpg"))
+    ;;        ;;       "geeqie"
+    ;;        ;;       '(file))
+    ;;        (list (openwith-make-extension-regexp
+    ;;               '("doc" "xls" "ppt" "odt" "ods" "odg" "odp"))
+    ;;              "libreoffice"
+    ;;              '(file))
+    ;;        (list (openwith-make-extension-regexp
+    ;;               '("dvi"))
+    ;;              "xdvi"
+    ;;              '(file))
+    ;;        (list (openwith-make-extension-regexp
+    ;;               '("pdf"))
+    ;;              "evince"
+    ;;              '(file))
+    ;;        ))
+    ;; (openwith-mode 1)
+  #+END_SRC
 * 独自関数
 ** カーソルのある位置の face を調べる関数
    わりと良く使う. 地味に便利
@@ -1378,129 +1811,3 @@
        (interactive)
        (message "%s" (get-char-property (point) 'face)))
    #+END_SRC
-* フォントと色
-  テーマにした方が良い
-  #+BEGIN_SRC emacs-lisp
-    (when window-system
-      (progn
-        (add-to-list 'default-frame-alist '(font . "Ricty Discord-13.5"))
-        (set-fontset-font t 'symbol
-                          (font-spec :family "Symbola") nil 'prepend)
-        ;; (add-to-list 'default-frame-alist '(font . "SeptemberMMono-13.5"))
-        ))
-    (setq frame-background-mode (frame-parameter nil 'background-mode))
-    ;; (setq default-frame-alist
-    ;;       '((background-color . "black")
-    ;;         (foreground-color . "azure1")
-    ;;         (scroll-bar-foreground-color . "red")
-    ;;         (vertical-scroll-bars . right)
-    ;;         (cursor-color . "green")))
-  #+END_SRC
-  テスト
-  #+BEGIN_SRC emacs-lisp
-        (set-foreground-color                                  "#F6F3E8") ; 文字色
-        (set-background-color                                  "#333333") ; 背景色
-        (set-cursor-color                                      "#FF0000") ; カーソル色
-        (set-face-background 'region                           "#222244") ; リージョン
-        (set-face-foreground 'mode-line                        "#333333") ; モードライン文字
-        (set-face-background 'mode-line                        "#CCCCCC") ; モードライン背景
-        (set-face-foreground 'mode-line-inactive               "#999999") ; モードライン文字(非アクティブ)
-        (set-face-background 'mode-line-inactive               "#111111") ; モードライン背景(非アクティブ)
-        (set-face-foreground 'font-lock-builtin-face           "#7FBFFF") ; 組み込み関数
-        (set-face-foreground 'font-lock-comment-delimiter-face "#aaaaaa") ; コメントデリミタ
-        (set-face-foreground 'font-lock-comment-face           "#888888") ; コメント
-        (set-face-foreground 'font-lock-constant-face          "#FFBF7F") ; 定数(this, selfなども)
-        (set-face-foreground 'font-lock-doc-face               "#7FFF7F") ; ドキュメント
-        ;; (set-face-foreground 'font-lock-doc-string-face               "#7FFF7F") ; ドキュメント
-        (set-face-foreground 'font-lock-function-name-face     "#BF7FFF") ; 関数名
-        (set-face-foreground 'font-lock-keyword-face           "#FF7F7F") ; キーワード
-        ;; (set-face-foreground 'font-lock-link-face              "#7FFFFF") ; リンク
-        ;; (set-face-foreground 'font-lock-negation-char-face        )
-        ;; (set-face-foreground 'font-lock-preprocessor-face         )
-        ;; (set-face-foreground 'font-lock-regexp-grouping-backslash )
-        ;; (set-face-foreground 'font-lock-regexp-grouping-construct )
-        (set-face-foreground 'font-lock-string-face            "#7FFF7F") ; 文字列
-        (set-face-foreground 'font-lock-type-face              "#FFFF7F") ; クラス
-        (set-face-foreground 'font-lock-variable-name-face     "#7F7FFF") ; 変数
-        (set-face-foreground 'font-lock-warning-face           "#FF7FBF") ; 警告
-        (set-face-foreground 'fringe                           "#666666") ; fringe(折り返し記号などが出る部分)
-        (set-face-background 'fringe                           "#282828") ; fringe
-        (set-face-foreground 'minibuffer-prompt                "#BF7FFF") ; minibuffer
-        (set-face-background 'highlight                        "#444444") ; hl-line 等
-        ;;
-        (set-face-foreground 'org-agenda-date                  "#FFFFFF") ; org-agenda: 平日
-        (set-face-foreground 'my:org-agenda-date-saturday      "#7FBFFF") ; org-agenda: 土曜日
-        (set-face-foreground 'my:org-agenda-calendar-KUSM      "#7FFF7F") ; org-agenda:
-        (set-face-foreground 'my:org-agenda-calendar-GFD       "#FFFF7F") ; org-agenda:
-        (set-face-foreground 'my:org-agenda-calendar-Schedule  "#7FFFFF") ; org-agenda:
-        (set-face-foreground 'my:org-agenda-calendar-DebianJP  "#BF7FFF") ; org-agenda:
-        (set-face-foreground 'my:org-agenda-calendar-twitter   "#CCCCCC") ; org-agenda:
-        (set-face-foreground 'org-agenda-date-weekend          "#FF7F7F") ; org-agenda: 日祝日
-        (set-face-foreground 'org-agenda-calendar-event        "#F6F3E8") ; イベント
-        (custom-set-faces
-         '(org-agenda-date-today ((t (:bold t))))
-         ;; custom-set-faces was added by Custom.
-         ;; If you edit it by hand, you could mess it up, so be careful.
-         ;; Your init file should contain only one such instance.
-         ;; If there is more than one, they won't work right.
-         ;; '(fixed-pitch ((t (:family "Ricty"))))
-         ;; '(variable-pitch ((t (:family "Ricty"))))
-         '(fixed-pitch ((t (:family "SeptemberMMono"))))
-         '(variable-pitch ((t (:family "SeptemberMMono"))))
-         ;; helm: header-line
-         '(helm-source-header ((t (:foreground "#F6F3E8" :background "#224488" :bold t))))
-         '(helm-visible-mark ((t (:inherit highlight ))))
-         '(helm-selection ((t (:inherit highlight ))))
-         '(helm-selection-line ((t (:inherit highlight ))))
-         ;; helm: directory
-         ;; '(helm-ff-directory ((t (:inherit default :foreground "#7FBFFF" :bold t))))
-         '(helm-ff-directory ((t (:inherit default :foreground "#7F7FFF" :bold t))))
-         '(helm-bookmark-directory ((t (:inherit helm-ff-directory ))))
-         '(helm-buffer-directory ((t (:inherit helm-ff-directory ))))
-         '(helm-ff-dotted-directory ((t (:inherit helm-ff-directory ))))
-         ;; helm: file
-         '(helm-ff-file   ((t (:inherit default ))))
-         '(helm-bookmark-file ((t (:inherit helm-ff-file ))))
-         '(helm-buffer-file ((t (:inherit helm-ff-file ))))
-         ;; '(helm-grep-file ((t (:inherit helm-ff-file ))))
-         ;; '(helm-etags-file ((t (:inherit helm-ff-file ))))
-         ;; helm: file + executable
-         '(helm-ff-executable ((t (:inherit helm-ff-file :foreground "#7FFF7F" :bold t))))
-         ;; helm: symlink
-         '(helm-ff-symlink ((t (:inherit default :foreground "#7FFFFF" :bold t))))
-         '(helm-ff-dotted-symlink-directory  ((t (:inherit helm-ff-symlink ))))
-         '(helm-ff-invalid-symlink ((t (:inherit default :foreground "#FF7F7F"))))
-         ;;
-         '(outline-1 ((t (:inherit font-lock-function-name-face :bold t))))
-         '(outline-2 ((t (:inherit font-lock-string-face :bold t))))
-         '(outline-3 ((t (:inherit font-lock-keyword-face :bold t))))
-         '(outline-4 ((t (:inherit font-lock-type-face :bold t ))))
-         '(outline-5 ((t (:inherit font-lock-constant-face :bold t ))))
-         '(outline-6 ((t (:inherit font-lock-variable-name-face :bold t))))
-         '(outline-7 ((t (:inherit font-lock-builtin-face :bold t ))))
-         '(outline-8 ((t (:inherit font-lock-comment-face :bold t ))))
-         )
-  #+END_SRC
-* 2ch ビューア: navi2ch
-  #+BEGIN_SRC emacs-lisp
-    (el-get-bundle navi2ch)
-    (autoload 'navi2ch "navi2ch" "Navigator for 2ch for Emacs" t)
-    (setq navi2ch-directory my:temp-dir)
-    (setq navi2ch-net-http-proxy "127.0.0.1:40000")
-    (setq navi2ch-article-auto-range nil)
-    (with-eval-after-load "navi2ch"
-      (setq navi2ch-message-save-sendlog t)
-      (setq navi2ch-search-web-search-method 'navi2ch-search-union-method)
-      (setq navi2ch-search-union-method-list '(navi2ch-search-find-2ch-method
-                                               navi2ch-search-hula-method))
-      (add-to-list 'navi2ch-list-navi2ch-category-alist
-                   navi2ch-message-sendlog-board)
-      (setq navi2ch-message-sendlog-message-format-function
-            'navi2ch-message-sendlog-message-format-with-board-name)
-      (require 'navi2ch-head))
-
-  #+END_SRC
-* Test
-  #+BEGIN_SRC emacs-lisp
-    ;; (setq glyphless-char-display "--")
-  #+END_SRC

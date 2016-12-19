@@ -1,0 +1,36 @@
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#+TITLE: 環境変数の読み込み: =exec-path-from-shell=
+#+AUTHOR: Youhei SASAKI
+#+EMAIL: uwabami@gfd-dennou.org
+#+DATE: 2016-08-01 10:59:03
+#+LANG: ja
+#+LAYOUT: page
+#+CATEGORIES: cc-env emacs
+#+PERMALINK: cc-env/emacs/config/exec-path-from-shell.html
+* 始めに
+  zsh で設定した =PATH= などの環境変数を Emacs に引き継ぐために
+  [[https://github.com/purcell/exec-path-from-shell][purcell/exec-path-from-shell]] を使います．
+
+  今の所
+  - =SHELL=
+  - =DEBFULLNAME=
+  - =DEBEMAIL=
+  - =SKKSERVER=
+  - =http_proxy=
+  を読み込んでいます．
+
+  #+BEGIN_SRC emacs-lisp
+    (when (executable-find "zsh")
+      (progn
+        (setq-default explicit-shell-file-name "zsh")
+        (setq shell-file-name "zsh"
+              shell-command-switch "-c")))
+    (el-get-bundle exec-path-from-shell)
+    (require 'exec-path-from-shell nil 'noerror)
+    (when (memq window-system '(mac ns))
+      (exec-path-from-shell-initialize))
+    (exec-path-from-shell-copy-envs
+     '("http_proxy" "DEBFULLNAME" "DEBEMAIL" "SKKSERVER" "TEXMFHOME" "GPG_KEY_ID"))
+    (setq user-full-name (concat (getenv "DEBFULLNAME"))
+          user-mail-address (concat (getenv "DEBEMAIL")))
+  #+END_SRC

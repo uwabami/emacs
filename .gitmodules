@@ -1,6 +1,0 @@
-[submodule "share/el-get-cli"]
-	path = share/el-get-cli
-	url = https://github.com/tarao/el-get-cli.git
-[submodule "share/org-mode"]
-	path = share/org-mode
-	url = http://orgmode.org/org-mode.git

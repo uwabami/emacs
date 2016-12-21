@@ -29,7 +29,7 @@ init.el: README.org
 	$(EMACS) -l init.el -batch -f batch-byte-compile $<
 clean:
 	rm -fr auto-save-alist
-	rm -fr *.el *.elc
+	rm -fr *.el *.elc *~
 distclean: clean
 	rm -fr .cask
 	rm -fr tmp

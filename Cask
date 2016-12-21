@@ -35,6 +35,7 @@
 (depends-on "orgmine" :git "https://github.com/kametoku/orgmine")
 (depends-on "package-utils")
 (depends-on "pallet")
+(depends-on "password-store")
 (depends-on "popwin")
 (depends-on "prodigy")
 (depends-on "projectile")

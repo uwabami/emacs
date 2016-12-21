@@ -12,6 +12,7 @@ before_install:
   - sudo apt-get install -qq wl-beta ddskk
   - curl -fsSkL --max-time 10 --retry 10 --retry-delay 10 https://raw.github.com/cask/cask/master/go | python
   - export PATH="$HOME/.cask/bin:$PATH"
+  - ln -s emacs .emacs.d
 script:
   - make EMACS=${EMACS}
   - make clean

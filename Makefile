@@ -10,6 +10,7 @@ all: bootstrap init.el $(ELC) init.elc
 bootstrap: tmp/cask-stamp
 tmp/cask-stamp:
 	mkdir -p tmp
+	$(EMACS) -Q -L share/cask -batch -f batch-byte-compile share/cask/cask.el
 	$(CASK)
 	touch $@
 init.el: README.org

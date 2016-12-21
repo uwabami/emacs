@@ -2,7 +2,7 @@
 #+TITLE: ddskk の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2016-08-09 13:12:43
+#+DATE: 2016-12-21 18:00:41
 #+LANG: ja
 #+LAYOUT: page
 #+CATEGORIES: cc-env emacs
@@ -35,54 +35,54 @@
   #+END_SRC
 * 表示関連
   #+BEGIN_SRC emacs-lisp
-    ;; 変換候補の表示位置
-    (setq skk-show-candidates-always-pop-to-buffer t)
-    ;; 候補表示件数を2列に
-    (setq skk-henkan-show-candidates-rows 2)
-    ;; 日本語表示しない
-    (setq skk-japanese-message-and-error nil)
-    ;; メニューを日本語にしない -> toolbar 非表示だし.
-    (setq skk-show-japanese-menu nil)
-    ;; 注釈の表示
-    (setq skk-show-annotation nil)
+;; 変換候補の表示位置
+(setq skk-show-candidates-always-pop-to-buffer t)
+;; 候補表示件数を2列に
+(setq skk-henkan-show-candidates-rows 2)
+;; 日本語表示しない
+(setq skk-japanese-message-and-error nil)
+;; メニューを日本語にしない -> toolbar 非表示だし.
+(setq skk-show-japanese-menu nil)
+;; 注釈の表示
+(setq skk-show-annotation nil)
     ;; インジケータの表示のカスタマイズ
-    (setq skk-latin-mode-string "[_A]")
-    (setq skk-hiragana-mode-string "[あ]")
-    (setq skk-katakana-mode-string "[ア]")
-    (setq skk-jisx0208-latin-mode-string "[Ａ]")
-    (setq skk-jisx0201-mode-string "[_ｱ]")
-    (setq skk-abbrev-mode-string "[aA]")
-    (setq skk-indicator-use-cursor-color nil)
+(setq skk-latin-mode-string "[_A]")
+(setq skk-hiragana-mode-string "[あ]")
+(setq skk-katakana-mode-string "[ア]")
+(setq skk-jisx0208-latin-mode-string "[Ａ]")
+(setq skk-jisx0201-mode-string "[_ｱ]")
+(setq skk-abbrev-mode-string "[aA]")
+(setq skk-indicator-use-cursor-color nil)
     ;; インジケータを左端に表示
-    (setq skk-status-indicator 'left)
-    ;; mode-line が動くのが許せないので，ちょっと修正
-    (defadvice skk-make-indicator-alist
-        (after my:set-skk-default-indicator activate)
-      (dolist (elem
-               '((abbrev " [aA]" . "--[aA]:")
-                 (latin " [_A]" . "--[_A]:")
-                 (default " [--]" . "--[--]:")))
-        (setq ad-return-value
-              (append (cons elem nil)
-                      (delq (assoc (car elem) ad-return-value) ad-return-value)))))
-    ;; (defun my:update-modeline-for-ddskk ()
-    ;;   ""
-    ;;   (progn
-    ;;     (skk-mode) (skk-mode)))
-    ;; (add-hook 'after-change-major-mode-hook 'my:update-modeline-for-ddskk)
-    ;; (setq skk-show-tooltip t)
-    ;; (when skk-show-tooltip
-    ;;   (setq skk-tooltip-parameters
-    ;;         '((background-color . "ForestGreen")
-    ;;           (border-color . "royal blue")))
-    ;;   )
-    (setq skk-show-inline t)
-    ;; (setq skk-show-inline 'vertical)
-    ;; (when skk-show-inline
-    ;;   (if (boundp 'skk-inline-show-face)
-    ;;       (setq skk-inline-show-background-color "#2c2c88")))
-    ;; カーソルには色をつけない
-    (setq skk-use-color-cursor nil)
+(setq skk-status-indicator 'left)
+;; mode-line が動くのが許せないので，ちょっと修正
+(defadvice skk-make-indicator-alist
+    (after my:set-skk-default-indicator activate)
+  (dolist (elem
+           '((abbrev " [aA]" . "--[aA]:")
+             (latin " [_A]" . "--[_A]:")
+             (default " [--]" . "--[--]:")))
+    (setq ad-return-value
+          (append (cons elem nil)
+                  (delq (assoc (car elem) ad-return-value) ad-return-value)))))
+(defun my:update-modeline-for-ddskk ()
+  ""
+  (progn
+    (skk-mode) (skk-mode)))
+(add-hook 'after-change-major-mode-hook 'my:update-modeline-for-ddskk)
+;; (setq skk-show-tooltip t)
+;; (when skk-show-tooltip
+;;   (setq skk-tooltip-parameters
+;;         '((background-color . "ForestGreen")
+;;           (border-color . "royal blue")))
+;;   )
+(setq skk-show-inline t)
+;; (setq skk-show-inline 'vertical)
+;; (when skk-show-inline
+;;   (if (boundp 'skk-inline-show-face)
+;;       (setq skk-inline-show-background-color "#2c2c88")))
+;; カーソルには色をつけない
+(setq skk-use-color-cursor nil)
   #+END_SRC
 * 編集関連
   #+BEGIN_SRC emacs-lisp

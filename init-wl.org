@@ -2,7 +2,7 @@
 #+TITLE: Wanderlust の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2016-12-21 04:04:30
+#+DATE: 2016-12-26 19:20:47
 #+LANG: ja
 #+LAYOUT: page
 #+CATEGORIES: cc-env emacs
@@ -12,12 +12,9 @@
   ちなみに, 配布御本尊である m17n.org が運用停止したので,
   一時配布元がどこになるのか良くわかりません.
 
-  Emacs24 で動く版は配布先が github になっています. [fn:1]
+  Emacs24以降で動く版は配布先が github になっています. [fn:1]
 * 依存/追加ライブラリのインストールと読み込み
   インストールしているのは今のところ以下の通り:
-  - rail
-  - gcontacts-get-wl
-  - c-sig
 ** rail
    SEMI や FLIM などの UA の表示に [[http://uwabami.github.com/rail/][rail]] [fn:2]を使っている.
    ちなみに rail を有効にすると, 以下の様に User-Agent が表示される
@@ -37,15 +34,27 @@
    #+BEGIN_SRC emacs-lisp
      (setq wl-mime-charset 'utf-8)
    #+END_SRC
+** gcontacts-get-wl
+   #+BEGIN_SRC emacs-lisp
+(use-package gcontacts-get-wl
+  :if (my:dpkg-status "wl-beta")
+  :commands (gcontacts-update-wl-address)
+  :config
+  (load (expand-file-name "emacs/gcontacts-get.gpg" my:d:password-store)))
+   #+END_SRC
 ** elscreen-wl
    #+BEGIN_SRC emacs-lisp
    (require 'elscreen-wl nil 'noerror)
    #+END_SRC
-** emacs-w3m + SEMI の追加設定
-   HTML メールを表示するための設定.
+** SEMI の追加設定
+   HTML メールを表示するための設定: eww を使うことに．
    mime-setup がロードされる前に記述する必要あり.
    #+BEGIN_SRC emacs-lisp
-     (setq mime-setup-enable-inline-html t)
+(setq mime-setup-enable-inline-html 'shr)
+(require 'mime-setup nil 'noerror)
+(with-eval-after-load 'shr
+  ;; disable colorized
+  '(defun shr-colorize-region (start end fg &optional bg) nil))
    #+END_SRC
    どのアプリケーションで開くか → =xdg-open= に丸投げ．
    #+BEGIN_SRC emacs-lisp
@@ -56,40 +65,16 @@
       (setq mime-situation-examples-file
          (concat my:d:tmp "mime-example"))
    #+END_SRC
-   HTML パートの表示に w3m を使う
-   #+BEGIN_SRC emacs-lisp
-     (require 'mime-setup nil 'noerror)
-     (when (locate-library "mime-w3m")
-       (require 'w3m-ems)
-       (require 'w3m-load)
-       (require 'mime-w3m)
-       (setq mime-w3m-safe-url-regexp nil)
-       )
-   #+END_SRC
-   eww を使う設定 ⇒ base64 decode がうまくいかない? pending
-   #+BEGIN_SRC emacs-lisp
-     ;; (require 'mime-setup nil 'noerror)
-     ;; (when (fboundp 'eww)
-     ;;   (progn
-     ;;     (setq mime-setup-enable-inline-html 'shr)
-     ;;     (defun shr-insert-document--for-eww (&rest them)
-     ;;       (let ((shr-width 70)) (apply them)))
-     ;;     (defun eww-display-html--fill-column (&rest them)
-     ;;       (advice-add 'shr-insert-document :around 'shr-insert-document--for-eww)
-     ;;       (unwind-protect
-     ;;           (apply them)
-     ;;         (advice-remove 'shr-insert-document 'shr-insert-document--for-eww)))
-     ;;     (advice-add 'eww-display-html :around 'eww-display-html--fill-column)
-     ;;     ))
-   #+END_SRC
    text/plain を html より優先
    #+BEGIN_SRC emacs-lisp
-     (set-alist 'mime-view-type-subtype-score-alist '(text . html) 0)
+(set-alist 'mime-view-type-subtype-score-alist '(text . html) 0)
    #+END_SRC
-** mbsync
-   #+BEGIN_SRC emacs-lisp
-   (require 'mbsync nil 'noerror)
-   #+END_SRC
+   音を鳴らすアレやコレの無効化
+  #+BEGIN_SRC emacs-lisp
+(setq mime-play-find-every-situations nil
+      mime-play-delete-file-immediately nil
+      process-connection-type nil)
+  #+END_SRC
 * ssl.elの代わりにopentlsを使う
   ついで(あれば) =/etc/ssl/certs/ca-ceritficats.crt= で証明書を検証.
   #+BEGIN_SRC emacs-lisp
@@ -878,16 +863,19 @@
 * 検索
   imap の検索か maildir-utils の検索か?
   #+BEGIN_SRC emacs-lisp
-    (require 'elmo-search nil 'noerror)
-    (elmo-search-register-engine
-     'mu 'local-file
-     :prog "mu"
-     :args '("find" "-u" elmo-search-split-pattern-list "--fields" "l" "--sortfield" "date" "-r")
-     :charset 'utf-8)
-    (setq elmo-search-default-engine 'mu)
-    (setq wl-quicksearch-folder "[]")
-    (define-key wl-summary-mode-map "v" 'wl-quicksearch-goto-search-folder-wrapper)
-    (define-key wl-folder-mode-map "v" 'wl-quicksearch-goto-search-folder-wrapper)
+(use-package elmo-search
+  :bind (:map wl-summary-mode-map
+              ("v" . wl-quicksearch-goto-search-folder-wrapper)
+              :map wl-folder-mode-map
+              ("v" . wl-quicksearch-goto-search-folder-wrapper))
+  :config
+  (elmo-search-register-engine
+   'mu 'local-file
+   :prog "mu"
+   :args '("find" "-u" elmo-search-split-pattern-list "--fields" "l" "--sortfield" "date" "-r")
+   :charset 'utf-8)
+  (setq elmo-search-default-engine 'mu)
+  (setq wl-quicksearch-folder "[]"))
   #+END_SRC
 ** メールが多すぎると怒られるので.
    #+BEGIN_SRC emacs-lisp

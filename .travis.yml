@@ -7,7 +7,7 @@ before_install:
   - sudo mkdir -p /usr/local/evm
   - curl -fsSkL --max-time 10 --retry 10 --retry-delay 10 https://raw.github.com/rejeep/evm/master/go | bash
   - export PATH="$HOME/.evm/bin:$PATH"
-  - evm install $EVM_EMACS --use --skip
+  - sudo evm install $EVM_EMACS --use --skip
   - sudo apt-get install -qq wl-beta ddskk
   - cask --debug
 script:

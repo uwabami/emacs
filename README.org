@@ -1,13 +1,13 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-01-07 16:33:13
+#+DATE: 2017-01-07 16:34:08
 #+LANGUAGE: ja
 #+LAYOUT: default
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
   [[https://travis-ci.org/uwabami/emacs.svg?branch=master]]
-  [[https://img.shields.io/badge/License-GPL%2520v3-blue.svg]]
+  [[https://img.shields.io/badge/License-GPLv3-blue.svg]]
 
   基本方針は以下の通り:
 ** Emacs のパッケージは [[http://cask.readthedocs.io/en/latest/][Cask]] と [[https://github.com/rdallasgray/pallet][pallet]] で管理

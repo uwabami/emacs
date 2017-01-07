@@ -8,7 +8,7 @@ before_install:
   - export PATH="$HOME/.evm/bin:$PATH"
   - evm config path /tmp
   - evm install $EVM_EMACS --use --skip
-  - sudo apt-get install -qq wl-beta ddskk
+  - sudo apt-get install -qq wl-beta ddskk howm
   - cask --debug
 script:
   - make

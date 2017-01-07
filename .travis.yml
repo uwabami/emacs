@@ -2,12 +2,12 @@ language: generic
 env:
   - EVM_EMACS=emacs-25.1-travis
 before_install:
+  - ln -s emacs ~/.emacs.d
   - curl -fsSkL https://gist.github.com/rejeep/ebcd57c3af83b049833b/raw > x.sh && source ./x.sh
   - evm install $EVM_EMACS --use --skip
   - sudo apt-get install -qq wl-beta ddskk
   - cask --debug
-  - ln -s emacs ~/.emacs.d
 script:
-  - make EMACS=${EVM_EMACS}
+  - make
   - make clean
   - make distclean

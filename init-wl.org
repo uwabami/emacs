@@ -2,7 +2,7 @@
 #+TITLE: Wanderlust の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2017-01-06 19:50:36
+#+DATE: 2017-01-07 21:35:40
 #+LANG: ja
 #+LAYOUT: page
 #+CATEGORIES: cc-env emacs
@@ -509,43 +509,46 @@
    #+BEGIN_SRC emacs-lisp
 (defun wl-summary-overview-entity-compare-by-reply-date (a b)
   "Compare message A and B by latest date of replies including thread."
-  (flet ((string-max2 (x y) (cond ((string< x y) y) ('t x)))
-         (thread-number-get-date (x)
-                                 (timezone-make-date-sortable
-                                  (elmo-msgdb-overview-entity-get-date
-                                   (elmo-message-entity
-                                    wl-summary-buffer-elmo-folder x))))
-         (thread-get-family (x)
-                            (cons x (wl-thread-entity-get-descendant (wl-thread-get-entity x))))
-         (max-reply-date (x)
-                         (cond ((eq 'nil x)
-                                'nil)
-                               ((eq 'nil (cdr x))
-                                (thread-number-get-date (car x)))
-                               ('t
-                                (string-max2 (thread-number-get-date (car x))
-                                             (max-reply-date (cdr x)))))))
-    (string<
-     (max-reply-date (thread-get-family (elmo-message-entity-number a)))
-     (max-reply-date (thread-get-family (elmo-message-entity-number b))))))
-;; Sort threads based on the date of the latest reply.
+  (cl-letf
+      (((symbol-function 'string-max2)
+        (lambda (x y)
+          (cond ((string< x y) y) ('t x)))
+        (thread-number-get-date (x)
+                                (timezone-make-date-sortable
+                                 (elmo-msgdb-overview-entity-get-date
+                                  (elmo-message-entity
+                                   wl-summary-buffer-elmo-folder x))))
+        (thread-get-family (x)
+                           (cons x (wl-thread-entity-get-descendant (wl-thread-get-entity x))))
+        (max-reply-date (x)
+                        (cond ((eq 'nil x)
+                               'nil)
+                              ((eq 'nil (cdr x))
+                               (thread-number-get-date (car x)))
+                              ('t
+                               (string-max2 (thread-number-get-date (car x))
+                                            (max-reply-date (cdr x)))))))
+       (string<
+        (max-reply-date (thread-get-family (elmo-message-entity-number a)))
+        (max-reply-date (thread-get-family (elmo-message-entity-number b)))))))
 (add-to-list 'wl-summary-sort-specs 'reply-date)
    #+END_SRC
 *** 返信番号順
     #+BEGIN_SRC emacs-lisp
-      (defun wl-summary-overview-entity-compare-by-reply-number (a b)
-        "Compare entity A and B by latest number of replies."
-        (let ((fx #'(lambda (x)
-                      (setq x (elmo-message-entity-number x))
-                      (apply 'max x (wl-thread-entity-get-descendant
-                                     (wl-thread-get-entity x))))))
-          (< (funcall fx a) (funcall fx b))))
-      (add-to-list 'wl-summary-sort-specs 'reply-number)
+;; (defun wl-summary-overview-entity-compare-by-reply-number (a b)
+;;   "Compare entity A and B by latest number of replies."
+;;   (let ((fx #'(lambda (x)
+;;                 (setq x (elmo-message-entity-number x))
+;;                 (apply 'max x (wl-thread-entity-get-descendant
+;;                                (wl-thread-get-entity x))))))
+;;     (< (funcall fx a) (funcall fx b))))
+;; (add-to-list 'wl-summary-sort-specs 'reply-number)
     #+END_SRC
 *** デフォルト
     とりあえず返信順で
     #+BEGIN_SRC emacs-lisp
-(setq wl-summary-default-sort-spec 'reply-date)
+;; (setq wl-summary-default-sort-spec 'reply-date)
+(setq wl-summary-default-sort-spec 'date)
     #+END_SRC
 * 振り分け設定
   =$= 以外を振り分け対象に

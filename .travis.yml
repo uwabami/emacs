@@ -4,10 +4,10 @@ env:
 before_install:
   - ln -s $TRAVIS_BUILD_DIR ~/.emacs.d
   - export PATH="$HOME/.emacs.d/share/cask/bin:$PATH"
-  - sudo mkdir -p /usr/local/evm
   - curl -fsSkL --max-time 10 --retry 10 --retry-delay 10 https://raw.github.com/rejeep/evm/master/go | bash
   - export PATH="$HOME/.evm/bin:$PATH"
-  - sudo evm install $EVM_EMACS --use --skip
+  - evm config path /tmp
+  - evm install $EVM_EMACS --use --skip
   - sudo apt-get install -qq wl-beta ddskk
   - cask --debug
 script:

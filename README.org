@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-01-07 20:45:01
+#+DATE: 2017-01-07 20:47:37
 #+LANGUAGE: ja
 #+LAYOUT: default
 * はじめに
@@ -1609,6 +1609,9 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 * Howm
   Org を使う前は Howm を使っていました.
   過去のメモを検索するためだけに未だに Howm を使っています.
+
+  Rust で書かれた [[https://github.com/BurntSushi/ripgrep][ripgrep]] がとても速いらしいので， =howm= と =ripgrep= がある時だけ
+  読み込むようにしています．
   #+BEGIN_SRC emacs-lisp
 (use-package howm
   :if (and (my:dpkg-status "howm")

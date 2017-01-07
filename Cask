@@ -27,6 +27,7 @@
 (depends-on "helm-core")
 (depends-on "helm-descbinds")
 (depends-on "helm-gtags")
+(depends-on "howm")
 (depends-on "htmlize")
 (depends-on "id-manager")
 (depends-on "idle-highlight-mode")

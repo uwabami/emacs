@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-01-07 18:47:14
+#+DATE: 2017-01-07 20:45:01
 #+LANGUAGE: ja
 #+LAYOUT: default
 * はじめに
@@ -1201,85 +1201,93 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 *** 表示のカスタマイズ
     初期表示
     #+BEGIN_SRC emacs-lisp
-    (setq org-agenda-span 'day)
+(setq org-agenda-span 'day)
     #+END_SRC
     趣味で土曜日をの face を追加.
     祝日, 休日を日曜と同じfaceにする. 元ネタは以下:
     @see: [[https://julien.danjou.info/blog/2010/org-mode-and-holidays][Org-mode and holidays | Julien Danjou]]
     #+BEGIN_SRC emacs-lisp
-      (setq org-agenda-weekend-days '(0))
-      (defface my:org-agenda-date-saturday
-        '((t (:foreground "#7FBFFF" :bold t)))
-        "Agenda 表示中の土曜日用のface"
-        :group 'org-agenda )
-
-      (defun my:org-agenda-day-face-function (date)
-        "Compute DATE face for saturday, holidays."
-        (unless (org-agenda-todayp date)
-          (dolist (file (org-agenda-files nil 'ifmode))
-            (when (member (calendar-day-of-week date) '(6))
-              (return 'my:org-agenda-date-saturday))
-            (let ((face
-                   (dolist (entry (org-agenda-get-day-entries file date))
-                     (let ((category (with-temp-buffer
-                                       (insert entry)
-                                       (org-get-category (point-min)))))
-                       (when (or (string= "祝日" category)
-                                 (string= "休日" category))
-                         (return 'org-agenda-date-weekend))))))
-              (when face (return face))))))
-      (setq org-agenda-day-face-function 'my:org-agenda-day-face-function)
+(setq org-agenda-weekend-days '(0))
+(defface my:org-agenda-date-saturday
+  '((t (:foreground "#7FBFFF" :bold t )))
+  "Agenda 表示中の土曜日用のface")
+(defface my:org-agenda-date-today-saturday
+  '((t (:inherit my:org-agenda-date-saturday :underline t)))
+  "Agenda 表示中の今日かつ土曜日用のface")
+(defface my:org-agenda-date-today-weekend
+  '((t (:inherit org-agenda-date-weekend :underline t)))
+  "Agenda 表示中の今日かつ日・祝日用のface")
+(defun my:org-agenda-day-face-function (date)
+  "Compute DATE face for saturday, holidays."
+  (cl-dolist (file (org-agenda-files nil 'ifmode))
+    (when (member (calendar-day-of-week date) '(6))
+      (if (org-agenda-todayp date)
+          (cl-return 'my:org-agenda-date-today-saturday))
+      (cl-return 'my:org-agenda-date-saturday))
+    (let ((face
+           (cl-dolist (entry (org-agenda-get-day-entries file date))
+             (let ((category (with-temp-buffer
+                               (insert entry)
+                               (org-get-category (point-min)))))
+               (when (or (string= "祝日" category)
+                         (string= "休日" category))
+                 (if (org-agenda-todayp date)
+                     (cl-return 'org-agenda-date-today-weekend)
+                   (cl-return 'org-agenda-date-weekend)))))))
+      (when face (cl-return face))
+      )))
+(setq org-agenda-day-face-function 'my:org-agenda-day-face-function)
     #+END_SRC
     日付表示を =YYYY/MM/DD= に: =calendar-date-style= で変わってくれると良いのに.
     #+BEGIN_SRC emacs-lisp
-      (setq org-agenda-format-date "%Y/%m/%d (%a)")
+(setq org-agenda-format-date "%Y/%m/%d (%a)")
     #+END_SRC
     Org-gcal で取得したカレンダーファイルに合わせて色分け
     #+BEGIN_SRC emacs-lisp
-      (defface my:org-agenda-calendar-KUSM
-        '((t (:foreground "#7FFF7F")))
-        "Agenda 表示中, KUSM.org の表示 face"
-        :group 'org-agenda )
-      (defface my:org-agenda-calendar-Schedule
-        '((t (:foreground "#7FFFFF")))
-        "Agenda 表示中, Schedule.org の表示 face"
-        :group 'org-agenda )
-      (defface my:org-agenda-calendar-GFD
-        '((t (:foreground "#FFFF7F")))
-        "Agenda 表示中, GFD.org の表示 face"
-        :group 'org-agenda )
-      (defface my:org-agenda-calendar-DebianJP
-        '((t (:foreground "#BF7FFF")))
-        "Agenda 表示中, DebianJP.org の表示 face"
-        :group 'org-agenda )
-      (defface my:org-agenda-calendar-twitter
-        '((t (:foreground "#CCCCCC")))
-        "Agenda 表示中, Twiiter log の表示 face"
-        :group 'org-agenda )
-      (add-hook 'org-finalize-agenda-hook
-                (lambda ()
-                  (save-excursion
-                    (goto-char (point-min))
-                    (while (re-search-forward "KUSM:" nil t)
-                      (add-text-properties (match-beginning 0) (point-at-eol)
-                                           '(face my:org-agenda-calendar-KUSM)))
-                    (goto-char (point-min))
-                    (while (re-search-forward "Schedule:" nil t)
-                      (add-text-properties (match-beginning 0) (point-at-eol)
-                                           '(face my:org-agenda-calendar-Schedule)))
-                    (goto-char (point-min))
-                    (while (re-search-forward "DebianJP:" nil t)
-                      (add-text-properties (match-beginning 0) (point-at-eol)
-                                           '(face my:org-agenda-calendar-DebianJP)))
-                    (goto-char (point-min))
-                    (while (re-search-forward "GFD:" nil t)
-                      (add-text-properties (match-beginning 0) (point-at-eol)
-                                           '(face my:org-agenda-calendar-GFD)))
-                    (goto-char (point-min))
-                    (while (re-search-forward "twitter:" nil t)
-                      (add-text-properties (match-beginning 0) (point-at-eol)
-                                           '(face my:org-agenda-calendar-twitter)))
-                    )))
+(defface my:org-agenda-calendar-KUSM
+  '((t (:foreground "#7FFF7F")))
+  "Agenda 表示中, KUSM.org の表示 face"
+  :group 'org-agenda )
+(defface my:org-agenda-calendar-Schedule
+  '((t (:foreground "#7FFFFF")))
+  "Agenda 表示中, Schedule.org の表示 face"
+  :group 'org-agenda )
+(defface my:org-agenda-calendar-GFD
+  '((t (:foreground "#FFFF7F")))
+  "Agenda 表示中, GFD.org の表示 face"
+  :group 'org-agenda )
+(defface my:org-agenda-calendar-DebianJP
+  '((t (:foreground "#BF7FFF")))
+  "Agenda 表示中, DebianJP.org の表示 face"
+  :group 'org-agenda )
+(defface my:org-agenda-calendar-twitter
+  '((t (:foreground "#CCCCCC")))
+  "Agenda 表示中, Twiiter log の表示 face"
+  :group 'org-agenda )
+(add-hook 'org-finalize-agenda-hook
+          (lambda ()
+            (save-excursion
+              (goto-char (point-min))
+              (while (re-search-forward "KUSM:" nil t)
+                (add-text-properties (match-beginning 0) (point-at-eol)
+                                     '(face my:org-agenda-calendar-KUSM)))
+              (goto-char (point-min))
+              (while (re-search-forward "Schedule:" nil t)
+                (add-text-properties (match-beginning 0) (point-at-eol)
+                                     '(face my:org-agenda-calendar-Schedule)))
+              (goto-char (point-min))
+              (while (re-search-forward "DebianJP:" nil t)
+                (add-text-properties (match-beginning 0) (point-at-eol)
+                                     '(face my:org-agenda-calendar-DebianJP)))
+              (goto-char (point-min))
+              (while (re-search-forward "GFD:" nil t)
+                (add-text-properties (match-beginning 0) (point-at-eol)
+                                     '(face my:org-agenda-calendar-GFD)))
+              (goto-char (point-min))
+              (while (re-search-forward "twitter:" nil t)
+                (add-text-properties (match-beginning 0) (point-at-eol)
+                                     '(face my:org-agenda-calendar-twitter)))
+              )))
     #+END_SRC
 *** =org-agenda-custom-commands= GTD 用の表示の追加
     #+BEGIN_SRC emacs-lisp
@@ -1604,11 +1612,11 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   #+BEGIN_SRC emacs-lisp
 (use-package howm
   :if (and (my:dpkg-status "howm")
-           (executable-find "rg2"))
+           (executable-find "rg"))
   :bind (:map howm-mode-map
               ("C-c C-c"     . nil)
               ("C-x C-z C-c" . howm-save-and-kill-buffer/screen))
-  :init
+  :config
   ;;; ディレクトリの設定
   ;; メモの内容は Dropbox で同期することに
   (setq howm-directory "~/Dropbox/org")
@@ -1626,7 +1634,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (setq howm-prefix (kbd "C-x C-z"))
   ;; title header は "*"
   (setq howm-view-title-header "*")
-  :config
+  ;; :config
   (when (locate-library "elscreen-howm")
     (require 'elscreen-howm nil 'noerror))
   ;; 色付けは org-mode 任せ: howm の font-lock を無効化
@@ -2221,11 +2229,11 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
  ;; '(outline-8 ((t (:inherit font-lock-comment-face :bold t ))))
  ;;
  ;; org
- '(org-agenda-date-today     ((t (bold t ))))
- '(org-agenda-date           ((t (:foreground "#FFFFFF" ))))
- '(org-agenda-date-weekend   ((t (:foreground "#FF7F7F" :bold t))))
- '(org-agenda-calendar-event ((t (:foreground "#F6F3E8" ))))
- '(org-hide                  ((t (:foreground "#4C4C4C" ))))
+ '(org-agenda-date-today           ((t (:underline t ))))
+ '(org-agenda-date                 ((t (:foreground "#FFFFFF" ))))
+ '(org-agenda-date-weekend         ((t (:foreground "#FF7F7F" :bold t))))
+ '(org-agenda-calendar-event       ((t (:foreground "#F6F3E8" ))))
+ '(org-hide                        ((t (:foreground "#4C4C4C" ))))
  ;; review
  '(review-mode-header1-face  ((t (:inherit outline-1))))
  '(review-mode-header2-face  ((t (:inherit outline-2))))
@@ -2254,7 +2262,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (my:diminish "flycheck"         'flycheck-mode)
   (my:diminish "flymake"          'flymake-mode)
   (my:diminish "flyspell"         'flyspell-mode)
-  (my:diminish "howm"             'howm-mode)
+;;  (my:diminish "howm"             'howm-mode)
   (my:diminish "isearch"          'isearch-mode)
   (my:diminish "paredit"          'paredit-mode)
   (my:diminish "projectile"       'projectile-mode)

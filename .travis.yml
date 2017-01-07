@@ -4,6 +4,7 @@ sudo: required
 env:
   matrix:
     - EMACS=emacs25
+  allow_failures:
     - EMACS=emacs-snapshot
 before_install:
   - ln -s $TRAVIS_BUILD_DIR ~/.emacs.d

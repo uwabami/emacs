@@ -2,7 +2,7 @@
 #+TITLE: Wanderlust の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2016-12-26 19:20:47
+#+DATE: 2017-01-06 19:50:36
 #+LANG: ja
 #+LAYOUT: page
 #+CATEGORIES: cc-env emacs
@@ -361,8 +361,8 @@
 ** mode-line の設定
    長いと嫌なのでイロイロ削る
    #+BEGIN_SRC emacs-lisp
-   (setq wl-summary-mode-line-format "%f"); "%f {%t}(%n/%u/%a)"
-   (setq wl-message-mode-line-format "") ; "<< %f:%F>> [%m]"
+(setq wl-summary-mode-line-format "") ; "%f {%t}(%n/%u/%a)"
+(setq wl-message-mode-line-format "") ; "<< %f:%F>> [%m]"
    #+END_SRC
 * キーバインド関連
   =<f2>= で Addrbook の更新

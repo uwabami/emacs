@@ -48,6 +48,7 @@
 (depends-on "pallet")
 (depends-on "password-store")
 (depends-on "popwin")
+(depends-on "powerline")
 (depends-on "prodigy")
 (depends-on "projectile")
 (depends-on "rainbow-mode")

@@ -11,13 +11,14 @@ before_install:
   - if [ x"$EMACS" == x"emacs25" ]; then
     sudo apt-add-repository -y ppa:adrozdoff/emacs &&
     sudo apt-get update -qq &&
-    sudo apt-get install -qq emacs25 emacs25-el wl-beta ddskk howm ;
+    sudo apt-get install -qq emacs25 emacs25-el howm ;
     fi
   - if [ x"$EMACS" == x"emacs-snapshot" ]; then
     sudo add-apt-repository -y ppa:ubuntu-elisp/ppa &&
     sudo apt-get update -qq &&
-    sudo apt-get install -qq emacs-snapshot emacs-snapshot-el wl-beta ddskk howm;
+    sudo apt-get install -qq emacs-snapshot emacs-snapshot-el howm;
     fi
+  - EMACS=$EMACS cask --verbose --debug
 script:
   - make EMACS=$EMACS
   - make clean

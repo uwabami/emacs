@@ -2,8 +2,7 @@ language: generic
 env:
   - EVM_EMACS=emacs-25.1-travis
 before_install:
-  - ln -s emacs ~/.emacs.d
-  - (cd ~/.emacs.d && git submodule update --init )
+  - ln -s $TRAVIS_BUILD_DIR ~/.emacs.d
   - export PATH="$HOME/.emacs.d/share/cask/bin:$PATH"
   - sudo mkdir -p /usr/local/evm
   - curl -fsSkL --max-time 10 --retry 10 --retry-delay 10 https://raw.github.com/rejeep/evm/master/go | bash

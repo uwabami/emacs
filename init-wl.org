@@ -2,7 +2,7 @@
 #+TITLE: Wanderlust の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2017-01-07 21:35:40
+#+DATE: 2017-01-10 15:51:31
 #+LANG: ja
 #+LAYOUT: page
 #+CATEGORIES: cc-env emacs
@@ -14,19 +14,19 @@
 
   Emacs24以降で動く版は配布先が github になっています. [fn:1]
 * 依存/追加ライブラリのインストールと読み込み
-  インストールしているのは今のところ以下の通り:
 ** rail
-   SEMI や FLIM などの UA の表示に [[http://uwabami.github.com/rail/][rail]] [fn:2]を使っている.
+   SEMI や FLIM などの UA の表示に [[http://uwabami.github.com/rail/][rail]] を使っている.
    ちなみに rail を有効にすると, 以下の様に User-Agent が表示される
    #+ATTR_HTML: with="50%"
-   [[file:https:/raw.github.com/uwabami/rail/gh-pages/images/wanderlust_with_or_without_rail.png]]
+   http://uwabami.github.io/rail/images/wanderlust_with_or_without_rail.png
    #+BEGIN_SRC emacs-lisp
-     (require 'rail nil 'noerror)
-     (setq rail-emulate-genjis t)
+(use-package rail
+  :config
+  (setq rail-emulate-genjis t))
    #+END_SRC
 ** cp5022x を使う
    ISO-2022-JP を CP50220 として扱う.
-   [[http://d.hatena.ne.jp/kiwanami/20091103/1257243524][Wanderlustと文字コード]] [fn:3] も参照のこと.
+   [[http://d.hatena.ne.jp/kiwanami/20091103/1257243524][Wanderlustと文字コード]] も参照のこと.
    #+BEGIN_SRC emacs-lisp
      (add-to-list 'mime-charset-coding-system-alist '(iso-2022-jp . cp50220))
    #+END_SRC
@@ -35,6 +35,10 @@
      (setq wl-mime-charset 'utf-8)
    #+END_SRC
 ** gcontacts-get-wl
+   [[https://github.com/uwabami/gcontacts-get-wl][gcontacts-get-wl]] は
+   Google Contacts の連絡先を Wanderlust の =.Address= に出力するだけのパッケージ．
+   [[https://github.com/jd/google-contacts.el][google-contacs.el]] の方が便利そうではあるものの「ふりがな」の扱いと，
+   オフラインでの処理を考えて，結局安直な方法を選んでしまった．
    #+BEGIN_SRC emacs-lisp
 (use-package gcontacts-get-wl
   :if (my:dpkg-status "wl-beta")
@@ -42,28 +46,34 @@
   :config
   (load (expand-file-name "emacs/gcontacts-get.gpg" my:d:password-store)))
    #+END_SRC
+   oauth token は =pass= で管理している．中身は以下
+   #+BEGIN_SRC emacs-lisp :tangle no
+(setq gcontacts-get-wl-oauth-client-ID "XXXXXXXXXXXXXXXX.apps.googleusercontent.com"
+      gcontacts-get-wl-oauth-client-secret "YYYYYYYYYYYYYYYYYYYYYYYYY"
+      gcontacts-get-wl-ask nil)
+   #+END_SRC
 ** elscreen-wl
    #+BEGIN_SRC emacs-lisp
-   (require 'elscreen-wl nil 'noerror)
+(use-package elscreen-wl)
    #+END_SRC
 ** SEMI の追加設定
    HTML メールを表示するための設定: eww を使うことに．
    mime-setup がロードされる前に記述する必要あり.
    #+BEGIN_SRC emacs-lisp
+(setq mime-view-text/html-previewer 'shr)
 (setq mime-setup-enable-inline-html 'shr)
-(require 'mime-setup nil 'noerror)
-(with-eval-after-load 'shr
-  ;; disable colorized
-  '(defun shr-colorize-region (start end fg &optional bg) nil))
+(use-package mime-setup
+  :init
+  (defun shr-colorize-region (start end fg &optional bg) nil))
    #+END_SRC
    どのアプリケーションで開くか → =xdg-open= に丸投げ．
    #+BEGIN_SRC emacs-lisp
-     (setq mime-view-mailcap-files '("~/.mailcap"))
+(setq mime-view-mailcap-files '("~/.mailcap"))
    #+END_SRC
    MIME の例の保存先の変更
    #+BEGIN_SRC emacs-lisp
-      (setq mime-situation-examples-file
-         (concat my:d:tmp "mime-example"))
+(setq mime-situation-examples-file
+      (concat my:d:tmp "mime-example"))
    #+END_SRC
    text/plain を html より優先
    #+BEGIN_SRC emacs-lisp
@@ -74,27 +84,6 @@
 (setq mime-play-find-every-situations nil
       mime-play-delete-file-immediately nil
       process-connection-type nil)
-  #+END_SRC
-* ssl.elの代わりにopentlsを使う
-  ついで(あれば) =/etc/ssl/certs/ca-ceritficats.crt= で証明書を検証.
-  #+BEGIN_SRC emacs-lisp
-    ;; (setq smtp-use-gnutls t)
-    ;; (require 'tls)
-    ;; (set-alist 'elmo-network-stream-type-alist
-    ;;            "!opentls" '(opentls nil open-tls-stream))
-    ;; (set-alist 'elmo-network-stream-type-alist
-    ;;            "!" '(ssl ssl open-tls-stream))
-    ;; (cond
-    ;;  ((file-exists-p "/etc/ssl/certs/ca-certificates.crt")
-    ;;   (setq tls-program
-    ;;         '("gnutls-cli --x509cafile /etc/ssl/certs/ca-certificates.crt -p %p %h"
-    ;;           "gnutls-cli --insecure -p %p %h"
-    ;;           )))
-    ;;  (t
-    ;;   (setq tls-program
-    ;;         '("gnutls-cli --insecure -p %p %h"))
-    ;;   )
-    ;;  )
   #+END_SRC
 * 個人情報の設定
   具体的な設定内容は
@@ -244,12 +233,11 @@
    #+END_SRC
    アドレス帳 -> gcontacts-get-wlを使う
    #+BEGIN_SRC emacs-lisp
-     (setq wl-use-petname t)
-     (setq wl-address-file  "~/.mua/Address.wl")
-     ;; (when (locate-library "eweouz")
-     ;;   (progn
-     ;;     (require 'eweouz)
-     ;;     (add-hook 'wl-hook 'eweouz-insinuate-wl)))
+(setq wl-use-petname t)
+(setq wl-address-file  "~/.mua/Address.wl")
+(use-package eweouz
+  :config
+  (add-hook 'wl-hook 'eweouz-insinuate-wl))
    #+END_SRC
    LDAP サーバからアドレスを引くことも可能.
    以前は GCALDaemon を使って local に ldap サーバを上げていたのだけれども,
@@ -285,7 +273,6 @@
     #+END_SRC
 ** 起動時に =%INBOX= のみをチェック
    #+BEGIN_SRC emacs-lisp
-      ;; (setq wl-auto-check-folder-name "*%INBOX,%docomo/INBOX")
       (setq wl-auto-check-folder-name "%INBOX")
    #+END_SRC
 ** フォルダ選択時の初期設定
@@ -444,7 +431,7 @@
    =elmo-msgdb-extra-fields= を設定する必要がある.
    この変数は振り分け判定にも使用するのでそこで設定している
 ** Gmail 風に, 自分宛のメールに ">" をつけて表示する
-   元ネタ [fn:4]: [[http://d.hatena.ne.jp/khiker/20080206/wanderlust]]
+   元ネタ [[http://d.hatena.ne.jp/khiker/20080206/wanderlust]]
    #+BEGIN_SRC emacs-lisp
      (setq wl-user-mail-address-regexp
            "^uwabami.*\\|^sasakyh.*")
@@ -680,7 +667,7 @@
    #+BEGIN_SRC emacs-lisp
    (setq wl-message-use-header-narrowing nil)
    #+END_SRC
-* 返信設定
+* 作成/返信設定
   自分宛のメールに返信する場合は =To:=, =Cc:= から自分のアドレスを削除
   #+BEGIN_SRC emacs-lisp
     (setq wl-draft-always-delete-myself t)
@@ -710,6 +697,10 @@
   #+BEGIN_SRC emacs-lisp
   (setq wl-default-draft-cite-decorate-author nil)
   #+END_SRC
+** draft mode で orgtbl を有効に
+   #+BEGIN_SRC emacs-lisp
+(add-hook 'wl-draft-mode-hook 'turn-on-orgtbl)
+   #+END_SRC
 ** c-sig
    署名の選択に c-sig を使用している.
    設定は以下の通り. Mew 風に =C-c <tab>= で signature を挿入するようにしている
@@ -719,11 +710,11 @@
      (setq sig-save-to-sig-name-alist nil)
      (setq message-signature-file nil)
      ;; Mew 風に \C-c \t で c-sig -> signature 挿入
-     (define-key wl-draft-mode-map "\C-c\t" 'insert-signature-eref)
-     (add-hook 'wl-draft-mode-hook
-               '(lambda ()
-                  (define-key (current-local-map) "\C-c\C-w"
-                    'insert-signature-eref)))
+(define-key wl-draft-mode-map "\C-c\t" 'insert-signature-eref)
+(add-hook 'wl-draft-mode-hook
+          '(lambda ()
+             (define-key (current-local-map) "\C-c\C-w"
+               'insert-signature-eref)))
    #+END_SRC
 * Face の設定
 ** Face の追加
@@ -888,12 +879,6 @@
 * Footnotes
 
 [fn:1] wanderlust - github : [[https://github.com/wanderlust/wanderlust]]
-
-[fn:2] rail - github pages : [[http://uwabami.github.com/rail/]]
-
-[fn:3] Wanderlustと文字コード : [[http://d.hatena.ne.jp/kiwanami/20091103/1257243524]]
-
-[fn:4] Wanderlustで自分宛てのメールをGMailのように「>」で強調する : [[http://d.hatena.ne.jp/khiker/20080206/wanderlust]]
 
 [fn:5] color-theme-darkpastel : [[https://github.com/uwabami/color-theme-darkpastel]]
 

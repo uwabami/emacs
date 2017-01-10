@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-01-10 22:22:47
+#+DATE: 2017-01-10 23:56:06
 #+LANGUAGE: ja
 #+LAYOUT: default
 * はじめに
@@ -184,6 +184,11 @@ init.el: README.org
   "Return the package status from dpkg --get-selections."
   (string-match "^ii" (shell-command-to-string (format "dpkg -l %s" package))))
    #+END_SRC
+* 後方互換性: =el-x=
+  古い =flet= と同じ挙動をする =dflet= を使うために =el-x= を導入しておく
+  #+BEGIN_SRC emacs-lisp
+(use-package el-x)
+  #+END_SRC
 * url-retrieve の置き換え: =mb-url=
   標準関数の =url-retrieve= 等の proxy 環境下での挙動が怪しいので，
   =mb-url= で advice (上書き)することに．

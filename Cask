@@ -12,6 +12,7 @@
 (depends-on "deferred")
 (depends-on "drag-stuff")
 (depends-on "eaw_and_emoji" :git "https://github.com/uwabami/locale-eaw-emoji" :files ("*.el"))
+(depends-on "el-x")
 (depends-on "elmine")
 (depends-on "elscreen" :git "https://github.com/knu/elscreen")
 (depends-on "exec-path-from-shell")

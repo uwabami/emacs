@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-01-10 23:56:06
+#+DATE: 2017-01-11 22:45:00
 #+LANGUAGE: ja
 #+LAYOUT: default
 * はじめに
@@ -679,253 +679,6 @@ init.el: README.org
   :config
   (elscreen-start))
   #+END_SRC
-* 校正，辞書等
-** spell checker
-   ispell はコマンドとして =aspell= を利用する．
-   #+BEGIN_SRC emacs-lisp
-(use-package ispell
-  :init
-  (setq-default ispell-program-name "aspell")
-  :config
-  (add-to-list 'ispell-skip-region-alist '("[^\000-\377]+")))
-   #+END_SRC
-   flyspell-mode は別途有効化しておいた方が良いのかもしれない
-   #+BEGIN_SRC emacs-lisp
-(use-package flyspell
-  :diminish flyspell-mode
-  :config
-  (defun my:flyspell-popup-choose (orig event poss word)
-    (if (window-system)
-        (funcall orig event poss word)
-      (flyspell-emacs-popup-textual event poss word)))
-  (advice-add 'flyspell-emacs-popup :around #'my:flyspell-popup-choose)
-  )
-   #+END_SRC
-** 辞書
-   #+BEGIN_SRC emacs-lisp
-(use-package lookup
-  :commands (lookup lookup-region lookup-pattern)
-  :if (and (my:dpkg-status "lookup-el")
-           (file-exists-p "/usr/local/share/dict/lookup-enabled"))
-  :bind (("C-c w" . lookup-pattern)
-         ("C-c W" . lookup-word))
-  :init
-  (setq lookup-search-agents
-        '(
-          (ndeb "/usr/local/share/dict/eijiro"    :alias "英辞郎")
-          (ndeb "/usr/local/share/dict/waeijiro"  :alias "和英辞郎")
-          (ndeb "/usr/local/share/dict/rikagaku5" :alias "理化学辞典 第5版")
-          (ndeb "/usr/local/share/dict/koujien4"  :alias "広辞苑 第4版")
-          (ndeb "/usr/local/share/dict/wadai5"    :alias "研究社 和英大辞典 第5版")
-          (ndeb "/usr/local/share/dict/eidai6"    :alias "研究社 英和大辞典 第6版")
-          (ndeb "/usr/local/share/dict/colloc"    :alias "研究社 英和活用大辞典 ")
-          )))
-   #+END_SRC
-* 補完: =helm=
-  以前はデフォルトの挙動が嫌で割とイロイロと設定していたのだけれど，
-  最近はそんなに邪魔しない感じ...なのかな? とりあえず現状は以下の通り．
-  #+BEGIN_SRC emacs-lisp
-(use-package helm
-  :diminish (helm-migemo-mode)
-  :bind (("M-x"     . helm-M-x)
-         ("C-x f"   . helm-find-files)
-         ("C-x C-f" . helm-find-files)
-         ("C-x b"   . helm-buffers-list)
-         ("C-x C-b" . helm-buffers-list)
-         ("C-x C-r" . helm-recentf)
-         :map helm-map
-         ("[tab]" . helm-execute-persistent-action)
-         ("C-i"   . helm-execute-persistent-action)
-         ("C-z"   . helm-select-action)
-         )
-  :init
-  (global-unset-key (kbd "C-z"))
-  (my:disable-builtin-mode 'helm-mode)   ; helm-mode は基本使わない
-  (setq helm-command-prefix-key "C-z"    ; helm-command-prefix-key
-        ;; dired での skk との競合(C-x C-j の奪い合い)を避ける
-        dired-bind-jump nil
-        ;; mode line には何も表示しない
-        helm-completion-mode-string ""
-        ;; minibuffer に input method の状態を引き継がない
-        helm-inherit-input-method nil
-        ;; migemo を有効化
-        helm-migemo-mode t
-        ;; 余計なファイルは表示しない
-        helm-ff-skip-boring-files t
-        ;; 曖昧検索
-        helm-locate-fuzzy-match nil      ; locate fuzzy is worthless
-        helm-M-x-fuzzy-match t
-        helm-recentf-fuzzy-match t
-        helm-buffers-fuzzy-matching t
-        helm-semantic-fuzzy-match t
-        helm-apropos-fuzzy-match t
-        helm-imenu-fuzzy-match t
-        helm-lisp-fuzzy-completion t
-        helm-completion-in-region-fuzzy-match t
-        ;; helm-adaptive の保存先の変更
-        helm-adaptive-history-file (concat my:d:tmp "helm-adaptive-history")
-        ;; mode line には何も表示しない
-        helm-completion-mode-string ""
-        )
-  ;; 一つ上のディレクトリ(../)を候補から外す
-  (advice-add 'helm-ff-filter-candidate-one-by-one
-              :around (lambda (orig-func file)
-                        (unless (string-match "\\(?:/\\|\\`\\)\\.\\{2\\}\\'" file)
-                          (funcall orig-func file))))
-  ;; 存在しないファイルには何もしない(default は新規 buffer ができる)
-  (advice-add 'helm-ff-kill-or-find-buffer-fname
-              :around (lambda (orig-fn candidate)
-                        (when (file-exists-p candidate)
-                          (funcal orgi-func candidate))))
-  :config
-  (helm-autoresize-mode)
-  (setq helm-autoresize-min-height 30   ; fixed height: 30%
-        helm-autoresize-max-height 30)
-  )
-  #+END_SRC
-** helm-locate
-   =mlocate= の option を修正しておく
-   #+BEGIN_SRC emacs-lisp
-(use-package helm-locate
-  :if (executable-find "mlocate")
-  :config
-  (setq helm-locate-command "mlocate %s -e -A --regex %s"))
-   #+END_SRC
-** helm-descbinds
-   #+BEGIN_SRC emacs-lisp
-(use-package helm-descbinds
-  :config
-  (helm-descbinds-mode))
-   #+END_SRC
-** helm-ag
-   ripgrep があればそっちを使うようにしてみた．
-   #+BEGIN_SRC emacs-lisp
-(use-package helm-ag
-  :if (or (executable-find "ag")
-          (executable-find "rg"))
-  :bind (("M-g ." . helm-ag)
-         ("M-g ," . helm-ag-pop-stack)
-         ("C-M-s" . helm-ag-this-file))
-  :config
-  (cond
-   ((executable-find "rg")
-    (setq helm-ag-base-command "rg --vimgrep --no-heading"))
-   (t
-    (setq helm-ag-base-command "ag --nocolor --nogroup --ignore-case"
-          helm-ag-command-option "--all-text")))
-  (setq helm-ag-insert-at-point 'symbol)
-  )
-   #+END_SRC
-** helm-gtags
-   無いと途方に暮れる．
-   #+BEGIN_SRC emacs-lisp
-(use-package helm-gtags
-  :if (executable-find "gtags")
-  :diminish helm-gtags-mode
-  :init
-  (add-hook 'helm-gtags-mode-hook
-            (lambda ()
-              (local-set-key (kbd "M-t") 'helm-gtags-find-tag)
-              (local-set-key (kbd "M-r") 'helm-gtags-find-rtag)
-              (local-set-key (kbd "M-s") 'helm-gtags-find-symbol)
-              (local-set-key (kbd "C-t") 'helm-gtags-pop-stack)))
-  :config
-  (setq helm-gtags-path-style 'root
-        helm-gtags-ignore-case t)
-  (add-hook 'c-mode-hook    'helm-gtags-mode)
-  (add-hook 'cc-mode-hook   'helm-gtags-mode)
-  (add-hook 'f90-mode-hook  'helm-gtags-mode)
-  (add-hook 'ruby-mode-hook 'helm-gtags-mode)
-  (add-hook 'emacs-lisp-mode-hook 'helm-gtags-mode))
-   #+END_SRC
-* 補完: =yasnippet=, =auto-complete=
-** yasnippet
-   #+BEGIN_SRC emacs-lisp
-(use-package yasnippet
-  :bind (:map yas-minor-mode-map
-              ("C-x y i" . yas-insert-snippet)
-              ("C-x y n" . yas-new-snippet)
-              ("C-x y v" . yas-visit-snippet-file)
-              ("<tab>"   . nil)
-              ("TAB"     . nil)
-              ("C-<tab>" . yas-expand))
-  :diminish yas-minor-mode
-  :init
-  (defconst my:d:yasnippet
-    (expand-file-name "yasnippet" my:d:share))
-  (unless (file-directory-p my:d:yasnippet)
-    (make-directory my:d:yasnippet))
-  :config
-  (setq yas-snippet-dirs
-        (list my:d:yasnippet yas-installed-snippets-dir))
-  (yas-global-mode 1)
-  (setq yas-verbosity 2))
-   #+END_SRC
-** auto-complete
-*** 基本設定
-    #+BEGIN_SRC emacs-lisp
-(use-package auto-complete-config
-  :diminish auto-complete-mode
-  :bind (:map ac-menu-map
-              ("C-n" . ac-next)
-              ("C-p" . ac-previous)
-              :map ac-completing-map
-              ("<tab>" . ac-complete)
-              ("RET"   .  nil)
-              ("M-/"    . ac-stop))
-  :config
-  (add-to-list 'ac-modes 'org-mode)
-  (ac-flyspell-workaround)
-  ;; 辞書追加
-  (add-to-list 'ac-dictionary-directories (concat my:d:share "ac-dict"))
-  (setq ac-comphist-file (concat my:d:tmp "ac-comphist.dat"))
-  (setq ac-auto-start 4)                         ; 4 文字以上で起動
-  (setq ac-auto-show-menu 1)                     ; 1秒でメニュー表示
-  (setq ac-use-comphist t)                       ; 補完候補をソート
-  (setq ac-candidate-limit nil)                  ; 補完候補表示を無制限に
-  (setq ac-use-quick-help nil)                   ; tool tip 無し
-  (setq ac-use-menu-map t)                       ; キーバインド
-  ;; yasnippet 対応
-  (setf (symbol-function 'yas-active-keys)
-        (lambda ()
-          (remove-duplicates
-           (mapcan #'yas--table-all-keys (yas--get-snippet-tables)))))
-  (ac-config-default))
-    #+END_SRC
-* 認証関連: =password-store=
-** id-manager の設定
-   ID と Password の簡単な組の管理をするのに非常に重宝している．
-   #+BEGIN_SRC emacs-lisp
-(use-package id-manager
-  :if (file-exists-p "~/.gnupg/idm-db.gpg")
-  :bind ("M-7" . idm-open-list-command)
-  :config
-  (setq idm-database-file
-        (expand-file-name "~/.gnupg/idm-db.gpg"))
-  (setq idm-clipboard-expire-time-sec 30))
-   #+END_SRC
-** plstore
-   デフォルトは対称鍵暗号化なので， =GPG_KEY_ID= を設定しておく
-   #+BEGIN_SRC emacs-lisp
-(use-package plstore
-  :init
-  (setq plstore-secret-keys 'silent
-        plstore-encrypt-to (getenv "GPG_KEY_ID")))
-   #+END_SRC
-** oauth2
-   oauth2 の認証情報は =plstore= で保存される．
-   ファイルの置き場所と暗号鍵の設定をしておく
-   #+BEGIN_SRC emacs-lisp
-(use-package oauth2
-  :init
-  (setq oauth2-token-file (concat my:d:tmp "oauth2.plstore")))
-   #+END_SRC
-** password-store
-   #+BEGIN_SRC emacs-lisp
-(use-package password-store
-  :if my:d:password-store
-  )
-   #+END_SRC
 * MUA の設定: =wanderlust=
   実際の設定は別ファイルを参照: [[file:init-wl.org][Wanderlust の設定]]
   #+BEGIN_SRC emacs-lisp
@@ -999,6 +752,235 @@ Categories=GNOME;GTK;Office;Email;
 StartupNotify=false
 MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   #+END_SRC
+* 認証関連: =password-store=
+** id-manager の設定
+   ID と Password の簡単な組の管理をするのに非常に重宝している．
+   #+BEGIN_SRC emacs-lisp
+(use-package id-manager
+  :if (file-exists-p "~/.gnupg/idm-db.gpg")
+  :bind ("M-7" . idm-open-list-command)
+  :config
+  (setq idm-database-file
+        (expand-file-name "~/.gnupg/idm-db.gpg"))
+  (setq idm-clipboard-expire-time-sec 30))
+   #+END_SRC
+** plstore
+   デフォルトは対称鍵暗号化なので， =GPG_KEY_ID= を設定しておく
+   #+BEGIN_SRC emacs-lisp
+(use-package plstore
+  :init
+  (setq plstore-secret-keys 'silent
+        plstore-encrypt-to (getenv "GPG_KEY_ID")))
+   #+END_SRC
+** oauth2
+   oauth2 の認証情報は =plstore= で保存される．
+   ファイルの置き場所と暗号鍵の設定をしておく
+   #+BEGIN_SRC emacs-lisp
+(use-package oauth2
+  :init
+  (setq oauth2-token-file (concat my:d:tmp "oauth2.plstore")))
+   #+END_SRC
+** password-store
+   #+BEGIN_SRC emacs-lisp
+(use-package password-store
+  :if my:d:password-store
+  )
+   #+END_SRC
+* 補完: =helm=
+  以前はデフォルトの挙動が嫌で割とイロイロと設定していたのだけれど，
+  最近はそんなに邪魔しない感じ...なのかな? とりあえず現状は以下の通り．
+  #+BEGIN_SRC emacs-lisp
+(use-package helm
+  :diminish (helm-migemo-mode)
+  :bind (("M-x"     . helm-M-x)
+         ("C-x f"   . helm-find-files)
+         ("C-x C-f" . helm-find-files)
+         ("C-x b"   . helm-buffers-list)
+         ("C-x C-b" . helm-buffers-list)
+         ("C-x C-r" . helm-recentf)
+         :map helm-map
+         ("[tab]" . helm-execute-persistent-action)
+         ("C-i"   . helm-execute-persistent-action)
+         ("C-z"   . helm-select-action)
+         )
+  :init
+  (global-unset-key (kbd "C-z"))
+  (my:disable-builtin-mode 'helm-mode)   ; helm-mode は基本使わない
+  (setq helm-command-prefix-key "C-z"    ; helm-command-prefix-key
+        ;; dired での skk との競合(C-x C-j の奪い合い)を避ける
+        dired-bind-jump nil
+        ;; mode line には何も表示しない
+        helm-completion-mode-string ""
+        ;; minibuffer に input method の状態を引き継がない
+        helm-inherit-input-method nil
+        ;; migemo を有効化
+        helm-migemo-mode t
+        ;; 余計なファイルは表示しない
+        helm-ff-skip-boring-files t
+        ;; helm-adaptive の保存先の変更
+        helm-adaptive-history-file (concat my:d:tmp "helm-adaptive-history")
+        ;; mode line には何も表示しない
+        helm-completion-mode-string ""
+        )
+  ;; 一つ上のディレクトリ(../)を候補から外す
+  (advice-add 'helm-ff-filter-candidate-one-by-one
+              :around (lambda (orig-func file)
+                        (unless (string-match "\\(?:/\\|\\`\\)\\.\\{2\\}\\'" file)
+                          (funcall orig-func file))))
+  ;; 存在しないファイルには何もしない(default は新規 buffer ができる)
+  (advice-add 'helm-ff-kill-or-find-buffer-fname
+              :around (lambda (orig-fn candidate)
+                        (when (file-exists-p candidate)
+                          (funcal orgi-func candidate))))
+  :config
+  (helm-autoresize-mode)
+  (setq helm-autoresize-min-height 30 ; fixed 30%
+        helm-autoresize-max-height 30)
+  )
+  #+END_SRC
+** helm-flx
+   曖昧検索は flx に任せる．かなり良い．
+   #+BEGIN_SRC emacs-lisp
+(use-package helm-flx
+  :config
+  (helm-flx-mode +1)
+  (setq helm-flx-for-helm-find-files t ;; t by default
+        helm-flx-for-helm-locate t) ;; nil by default
+  )
+   #+END_SRC
+** helm-locate
+   default の =mlocate= の option を修正しておく．
+   #+BEGIN_SRC emacs-lisp
+(use-package helm-locate
+  :if (executable-find "mlocate")
+  :config
+  (setq helm-locate-command "mlocate %s -e -A --regex %s"))
+   #+END_SRC
+** helm-descbinds
+   =helm-M-x= の際にキーバインドが表示されるようになる
+   #+BEGIN_SRC emacs-lisp
+(use-package helm-descbinds
+  :config
+  (helm-descbinds-mode))
+   #+END_SRC
+** helm-ag
+   ripgrep があればそっちを使うようにしてみた．
+   #+BEGIN_SRC emacs-lisp
+(use-package helm-ag
+  :if (or (executable-find "ag")
+          (executable-find "rg"))
+  :bind (("M-g ." . helm-ag)
+         ("M-g ," . helm-ag-pop-stack)
+         ("C-M-s" . helm-ag-this-file))
+  :config
+  (cond
+   ((executable-find "rg")
+    (setq helm-ag-base-command "rg --vimgrep --no-heading"))
+   (t
+    (setq helm-ag-base-command "ag --nocolor --nogroup --ignore-case"
+          helm-ag-command-option "--all-text")))
+  (setq helm-ag-insert-at-point 'symbol)
+  )
+   #+END_SRC
+* 補完: =yasnippet=, =auto-complete=
+** yasnippet
+   #+BEGIN_SRC emacs-lisp
+(use-package yasnippet
+  :bind (:map yas-minor-mode-map
+              ("C-x y i" . yas-insert-snippet)
+              ("C-x y n" . yas-new-snippet)
+              ("C-x y v" . yas-visit-snippet-file)
+              ("<tab>"   . nil)
+              ("TAB"     . nil)
+              ("C-<tab>" . yas-expand))
+  :diminish yas-minor-mode
+  :init
+  (defconst my:d:yasnippet
+    (expand-file-name "yasnippet" my:d:share))
+  (unless (file-directory-p my:d:yasnippet)
+    (make-directory my:d:yasnippet))
+  :config
+  (setq yas-snippet-dirs
+        (list my:d:yasnippet yas-installed-snippets-dir))
+  (yas-global-mode 1)
+  (setq yas-verbosity 2))
+   #+END_SRC
+** auto-complete
+*** 基本設定
+    #+BEGIN_SRC emacs-lisp
+(use-package auto-complete-config
+  :diminish auto-complete-mode
+  :bind (:map ac-menu-map
+              ("C-n"   . ac-next)
+              ("C-p"   . ac-previous)
+              :map ac-completing-map
+              ("<tab>" . ac-complete)
+              ("RET"   .  nil)
+              ("M-/"   . ac-stop))
+  :config
+  ;; おまじない
+  (ac-flyspell-workaround)
+  ;; 辞書追加
+  (add-to-list 'ac-dictionary-directories (concat my:d:share "ac-dict"))
+  (setq ac-comphist-file (concat my:d:tmp "ac-comphist.dat"))
+  (setq ac-auto-start 4)                         ; 4 文字以上で起動
+  (setq ac-auto-show-menu 1)                     ; 1秒でメニュー表示
+  (setq ac-use-comphist t)                       ; 補完候補をソート
+  (setq ac-candidate-limit nil)                  ; 補完候補表示を無制限に
+  (setq ac-use-quick-help nil)                   ; tool tip 無し
+  (setq ac-use-menu-map t)                       ; キーバインド
+  ;; yasnippet 対応
+  (setf (symbol-function 'yas-active-keys)
+        (lambda ()
+          (remove-duplicates
+           (mapcan #'yas--table-all-keys (yas--get-snippet-tables)))))
+  (ac-config-default)
+  (global-auto-complete-mode t)
+  )
+    #+END_SRC
+* 校正，辞書等
+** spell checker
+   ispell はコマンドとして =aspell= を利用する．
+   #+BEGIN_SRC emacs-lisp
+(use-package ispell
+  :init
+  (setq-default ispell-program-name "aspell")
+  :config
+  (add-to-list 'ispell-skip-region-alist '("[^\000-\377]+")))
+   #+END_SRC
+   flyspell-mode は別途有効化しておいた方が良いのかもしれない
+   #+BEGIN_SRC emacs-lisp
+(use-package flyspell
+  :diminish flyspell-mode
+  :config
+  (defun my:flyspell-popup-choose (orig event poss word)
+    (if (window-system)
+        (funcall orig event poss word)
+      (flyspell-emacs-popup-textual event poss word)))
+  (advice-add 'flyspell-emacs-popup :around #'my:flyspell-popup-choose)
+  )
+   #+END_SRC
+** 辞書
+   #+BEGIN_SRC emacs-lisp
+(use-package lookup
+  :commands (lookup lookup-region lookup-pattern)
+  :if (and (my:dpkg-status "lookup-el")
+           (file-exists-p "/usr/local/share/dict/lookup-enabled"))
+  :bind (("C-c w" . lookup-pattern)
+         ("C-c W" . lookup-word))
+  :init
+  (setq lookup-search-agents
+        '(
+          (ndeb "/usr/local/share/dict/eijiro"    :alias "英辞郎")
+          (ndeb "/usr/local/share/dict/waeijiro"  :alias "和英辞郎")
+          (ndeb "/usr/local/share/dict/rikagaku5" :alias "理化学辞典 第5版")
+          (ndeb "/usr/local/share/dict/koujien4"  :alias "広辞苑 第4版")
+          (ndeb "/usr/local/share/dict/wadai5"    :alias "研究社 和英大辞典 第5版")
+          (ndeb "/usr/local/share/dict/eidai6"    :alias "研究社 英和大辞典 第6版")
+          (ndeb "/usr/local/share/dict/colloc"    :alias "研究社 英和活用大辞典 ")
+          )))
+   #+END_SRC
+
 * カレンダー: =japanese-holidays=
   日本の祝日を表示するために =japanese-holidays= をインストール
   #+BEGIN_SRC emacs-lisp
@@ -1038,6 +1020,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    howm も有効にしている，ぐらい．
    #+BEGIN_SRC emacs-lisp
 (use-package org
+  :init
   :config
   (setq org-directory (concat (getenv "HOME") "/Dropbox/org/") ;; Dropbox に保存する
         org-return-follows-link t                              ;; return でリンクを辿る
@@ -1243,6 +1226,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
             ))
            )
         )
+  ;; 色付け
   (add-hook 'org-finalize-agenda-hook
             (lambda ()
               (save-excursion
@@ -1266,6 +1250,14 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                 (while (re-search-forward "twitter:" nil t)
                   (add-text-properties (match-beginning 0) (point-at-eol)
                                        '(face my:org-agenda-calendar-twitter)))
+                (goto-char (point-min))
+                (while (re-search-forward "祝日:" nil t)
+                  (add-text-properties (match-beginning 0) (point-at-eol)
+                                       '(face org-agenda-date-weekend)))
+                (goto-char (point-min))
+                (while (re-search-forward "休日:" nil t)
+                  (add-text-properties (match-beginning 0) (point-at-eol)
+                                       '(face org-agenda-date-weekend)))
                 )))
   )
   #+END_SRC
@@ -1396,9 +1388,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
            (file-directory-p org-directory))
   :commands (orgmine-mode)
   :init
-  ;; 幾つかの redmine で未だに textlie を使っているので...．
   (add-to-list 'safe-local-variable-values
-               '((orgmine-note-block-begin "#+BEGIN_SRC textile")))
+               '(orgmine-note-block-begin . "#+BEGIN_SRC textile"))
   (add-hook 'org-mode-hook
             (lambda ()
               (if (assoc "om_project" org-file-properties) (orgmine-mode))))
@@ -1572,6 +1563,9 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :bind (:map howm-mode-map
               ("C-c C-c"     . nil)
               ("C-x C-z C-c" . howm-save-and-kill-buffer/screen))
+  :init
+  (add-hook 'howm-menu-hook (lambda ()
+                              (setq truncate-lines t)))
   :config
   ;;; ディレクトリの設定
   ;; メモの内容は Dropbox で同期することに
@@ -1660,17 +1654,111 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   )
   #+END_SRC
 * プログラム環境
+** コードのタグ付け: =ggtags=, =helm-gtags=
+   無いと途方に暮れる．
+   +Debian 版の GNU Global がすったもんだの挙句ようやく更新された!+
+   #+BEGIN_SRC emacs-lisp
+(use-package helm-gtags
+  :if (executable-find "gtags")
+  :diminish helm-gtags-mode
+  :init
+  (add-hook 'helm-gtags-mode-hook
+            (lambda ()
+              (local-set-key (kbd "M-t") 'helm-gtags-find-tag)
+              (local-set-key (kbd "M-r") 'helm-gtags-find-rtag)
+              (local-set-key (kbd "M-s") 'helm-gtags-find-symbol)
+              (local-set-key (kbd "C-t") 'helm-gtags-pop-stack)))
+  :config
+  (setq helm-gtags-path-style 'root
+        helm-gtags-ignore-case t)
+  (add-hook 'c-mode-hook    'helm-gtags-mode)
+  (add-hook 'cc-mode-hook   'helm-gtags-mode)
+  (add-hook 'f90-mode-hook  'helm-gtags-mode)
+  (add-hook 'ruby-mode-hook 'helm-gtags-mode)
+  (add-hook 'emacs-lisp-mode-hook 'helm-gtags-mode))
+   #+END_SRC
+** プロジェクト管理: [[https://github.com/bbatsov/projectile][bbatsov/projectile]]
+   これも無いと途方に暮れる．[[https://github.com/bbatsov/helm-projectile][bbatsov/helm-projectile]] と一緒に使っている.
+   #+BEGIN_SRC emacs-lisp
+(use-package projectile
+  :if (locate-library "helm-projectile")
+  :config
+  (setq projectile-keymap-prefix (kbd "C-c p")  ; default
+        projectile-enable-caching t
+        projectile-cache-file (concat my:d:tmp "projectile.cache")
+        projectile-completion-system 'helm
+        projectile-tags-backend 'ggtags
+        projectile-mode-line '(:eval
+                               (if
+                                   (file-remote-p default-directory)
+                                   ""
+                                 (format " [%s]"
+                                         (projectile-project-name))))
+        projectile-known-projects-file (concat my:d:tmp "projectile-bookmarks.eld")
+        ;; projectile-globally-ignored-files
+        ;; projectile-globally-ignored-directories
+        )
+  (projectile-mode)
+  (helm-projectile-on)
+  )
+   #+END_SRC
+** VCS: =magit=, =git-gutter=
+   magit は Emacs の Git Frontend.
+   結局の所 CUI でコマンド叩く事も多いけれど，これはこれで重宝している．
+   #+BEGIN_SRC emacs-lisp
+(use-package magit
+  :bind (("C-x g" . magit-status))
+  )
+   #+END_SRC
+   git-gutter で差分を視覚的に表示 +そのうち飽きるかも...+
+   #+BEGIN_SRC emacs-lisp
+(use-package git-gutter
+  :config
+  (setq git-gutter:window-width 2
+        git-gutter:added-sign "+ "
+        git-gutter:deleted-sign-sign "- "
+        git-gutter:modified-sign "  " ;; 空白 2つ
+        ;; git-gutter:modified-sign "⇔"
+        ;; git-gutter:added-sign "⇒"
+        ;; git-gutter:deleted-sign "⇐"
+        git-gutter:update-hooks '(after-save-hook after-revert-hook)
+        git-gutter:lighter ""
+        )
+  (set-face-foreground 'git-gutter:added "green")
+  (set-face-foreground 'git-gutter:deleted "magenta")
+  (set-face-background 'git-gutter:modified "yellow")
+  (global-git-gutter-mode +1)
+  )
+   #+END_SRC
 ** flycheck
    #+BEGIN_SRC emacs-lisp
 (use-package flycheck
   :init
-  (global-flycheck-mode)
   :diminish flycheck-mode
   :config
+  (global-flycheck-mode)
   (setq-default flycheck-disabled-checkers
                 '(
                   emacs-lisp-checkdoc
                   ))
+  ;; gcc
+  (defun my:setup-flycheck-gcc-project-path ()
+    "gcc: Add projectile root for include path"
+    (let ((root (ignore-errors (projectile-project-root))))
+      (when root
+        (add-to-list
+         (make-variable-buffer-local 'flycheck-gcc-include-path)
+         root))))
+  ;; gfortran
+  (add-hook 'c-mode-hook 'my:setup-flycheck-gcc-project-path)
+  (defun my:setup-flycheck-gfortran-project-path ()
+    "gfortran: Add projectile root for include path"
+    (let ((root (ignore-errors (projectile-project-root))))
+      (when root
+        (add-to-list
+         (make-variable-buffer-local 'flycheck-gfortran-include-path)
+         root))))
+  (add-hook 'c-mode-hook 'my:setup-flycheck-gfortran-project-path)
   )
    #+END_SRC
 ** rainbow-mode
@@ -1764,9 +1852,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (add-hook 'c-mode-hook
             (lambda ()
               (c-set-style "my:bsd-like")
-              (electric-indent-local-mode -1)))
-  (add-hook 'c-mode-hook
-            (lambda ()
+              (electric-indent-local-mode -1)
               (set (make-local-variable 'eldoc-idle-delay) 0.20)
               (c-turn-on-eldoc-mode)
               ))
@@ -1958,15 +2044,14 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
  ;; '(dired-perm-write
  '(dired-symlink                    ((t (:bold t :foreground "#7FFFFF" ))))
  ;; '(dired-warning
- '(flx-highlight-face               ((t (:bold t :foreground "#FFBF7F" ))))
+ '(flx-highlight-face               ((t (:bold t :undeline t))))
  ;; helm: header-line
  '(helm-source-header               ((t (:foreground "#F6F3E8" :background "#224488" :bold t))))
  '(helm-visible-mark                ((t (:inherit highlight ))))
  '(helm-selection                   ((t (:inherit highlight ))))
  '(helm-selection-line              ((t (:inherit highlight ))))
  ;; helm: directory
- '(helm-ff-directory                ((t (:inherit default :foreground "#7FBFFF" :bold t))))
- '(helm-ff-directory                ((t (:inherit default :foreground "#7F7FFF" :bold t))))
+ '(helm-ff-directory                ((t (:inherit dired-directory ))))
  '(helm-bookmark-directory          ((t (:inherit helm-ff-directory ))))
  '(helm-buffer-directory            ((t (:inherit helm-ff-directory ))))
  '(helm-ff-dotted-directory         ((t (:inherit helm-ff-directory ))))
@@ -1982,10 +2067,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
  '(helm-ff-symlink                  ((t (:inherit default :foreground "#7FFFFF" :bold t))))
  '(helm-ff-dotted-symlink-directory ((t (:inherit helm-ff-symlink ))))
  '(helm-ff-invalid-symlink          ((t (:inherit default :foreground "#FF7F7F" ))))
- ;; Ivy
- ;; '(ivy-confirm-face ((t (:inherit minibuffer-prompt))))
- ;; '(ivy-current-match ((t (:inherit minibuffer-prompt))))
- ;; '(ivy-match-required-face ((t (:inherit minibuffer-prompt))))
+ ;;; howm
  '(howm-mode-keyword-face            ((t (:foreground "#7F7FFF" :background nil ))))
  '(howm-mode-title-face              ((t (:foreground "#4CFFFF" :background nil ))))
  '(howm-reminder-deadline-face       ((t (:bold t :foreground "#FF4C4C" :background nil ))))
@@ -1993,10 +2075,10 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
  '(howm-reminder-today-face          ((t (:bold t :foreground "#FFBF7F" :background nil ))))
  '(howm-reminder-tomorrow-face       ((t (:bold t :foreground "#FF7FBF" :background nil ))))
  ;; ido
- '(ido-first-match     ((t (:inherit default ))))
- '(ido-only-match      ((t (:foreground "#FFFF4C" ))))
- '(ido-subdir          ((t (:foreground "#7F7FFF" :bold t))))
- '(ido-grid-mode-match ((t (:inherit ido-first-match ))))
+ ;; '(ido-first-match     ((t (:inherit default ))))
+ ;; '(ido-only-match      ((t (:foreground "#FFFF4C" ))))
+ ;; '(ido-subdir          ((t (:foreground "#7F7FFF" :bold t))))
+ ;; '(ido-grid-mode-match ((t (:inherit ido-first-match ))))
  ;; ido-grid-mode-common-match
  ;; ido-grid-mode-jump-face
  ;; ido-incomplete-regexp
@@ -2019,16 +2101,11 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
  '(org-agenda-calendar-event       ((t (:foreground "#F6F3E8" ))))
  '(org-hide                        ((t (:foreground "#4C4C4C" ))))
  ;; review
- '(review-mode-header1-face  ((t (:inherit outline-1))))
- '(review-mode-header2-face  ((t (:inherit outline-2))))
- '(review-mode-header3-face  ((t (:inherit outline-3))))
- '(review-mode-header4-face  ((t (:inherit outline-4))))
- '(review-mode-header5-face  ((t (:inherit outline-5))))
- ;; powerline
-;; '(powerline-active1         ((t (:foreground "#242424" :background "#AFD7FF" ))))
-;; '(powerline-active2         ((t (:foreground "#F6F3E8" :background "#666666" ))))
-;; '(powerline-inactive1       ((t :inherit mode-line-inactive )))
-;; '(powerline-inactive2       ((t :inherit mode-line-inactive )))
+ ;; '(review-mode-header1-face  ((t (:inherit outline-1))))
+ ;; '(review-mode-header2-face  ((t (:inherit outline-2))))
+ ;; '(review-mode-header3-face  ((t (:inherit outline-3))))
+ ;; '(review-mode-header4-face  ((t (:inherit outline-4))))
+ ;; '(review-mode-header5-face  ((t (:inherit outline-5))))
  )
   #+END_SRC
 * =diminish=: モードラインの短縮表示
@@ -2039,6 +2116,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   `(with-eval-after-load ,file
      (diminish ,mode ,new-name)))
 (my:diminish "isearch"          'isearch-mode)
+(setq auto-revert-mode-text "")
   #+END_SRC
   メジャーモードは =hook= で設定.
   #+BEGIN_SRC emacs-lisp

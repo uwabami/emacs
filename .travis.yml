@@ -1,8 +1,13 @@
 language: generic
 env:
-  - EVM_EMACS=emacs-24.4-travis
-  - EVM_EMACS=emacs-24.5-travis
-  - EVM_EMACS=emacs-25.1-travis
+  matrix:
+    - EVM_EMACS=emacs-24.4-travis
+    - EVM_EMACS=emacs-24.5-travis
+    - EVM_EMACS=emacs-25.1-travis
+    - EVM_EMACS=emacs-git-snapshot-travis
+matrix:
+  allow_failures:
+    - env: EMACS=emacs-git-snapshot-travis
 before_install:
   - ln -s $TRAVIS_BUILD_DIR ~/.emacs.d
   - export PATH="$HOME/.emacs.d/share/cask/bin:$PATH"

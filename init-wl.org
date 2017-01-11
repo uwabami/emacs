@@ -2,7 +2,7 @@
 #+TITLE: Wanderlust の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2017-01-10 23:56:37
+#+DATE: 2017-01-11 01:17:15
 #+LANG: ja
 #+LAYOUT: page
 #+CATEGORIES: cc-env emacs
@@ -473,28 +473,27 @@
              eword-analyze-encoded-word
              eword-analyze-atom))
    #+END_SRC
-** Subject が変わったらスレッドを切る
+** Subject が変わってもスレッドを切らない
    #+BEGIN_SRC emacs-lisp
-     (setq wl-summary-divide-thread-when-subject-changed nil)
+(setq wl-summary-divide-thread-when-subject-changed nil)
    #+END_SRC
 ** Subject での Tab や複数スペースを無視
    #+BEGIN_SRC emacs-lisp
-     (defadvice std11-unfold-string (after simply activate)
-       (setq ad-return-value
-             (elmo-replace-in-string ad-return-value "[ \t]+" " ")))
+(defadvice std11-unfold-string (after simply activate)
+  (setq ad-return-value
+        (elmo-replace-in-string ad-return-value "[ \t]+" " ")))
    #+END_SRC
 ** 重複メッセージを非表示に
    フォルダ内の Message-ID が同じメールを非表示にする
    #+BEGIN_SRC emacs-lisp
-     (setq wl-folder-process-duplicates-alist
-           '(
-             (".*" . hide)
-             ))
+(setq wl-folder-process-duplicates-alist
+      '(
+        (".*" . hide)
+        ))
    #+END_SRC
-** sort 順
-*** 返信が来た順
-    =flet= を書き換えるのが面倒で =el-x= にある =dflet= を使うように変更
-   #+BEGIN_SRC emacs-lisp
+** sort 順: 返信が来た順
+   =flet= を書き換えるのが面倒で =el-x= にある =dflet= を使うように変更
+  #+BEGIN_SRC emacs-lisp
 (defun wl-summary-overview-entity-compare-by-reply-date (a b)
   "Compare message A and B by latest date of replies including thread."
   (dflet ((string-max2 (x y)
@@ -518,53 +517,38 @@
      (max-reply-date (thread-get-family (elmo-message-entity-number a)))
      (max-reply-date (thread-get-family (elmo-message-entity-number b))))))
 (add-to-list 'wl-summary-sort-specs 'reply-date)
-   #+END_SRC
-*** 返信番号順
-    #+BEGIN_SRC emacs-lisp
-;; (defun wl-summary-overview-entity-compare-by-reply-number (a b)
-;;   "Compare entity A and B by latest number of replies."
-;;   (let ((fx #'(lambda (x)
-;;                 (setq x (elmo-message-entity-number x))
-;;                 (apply 'max x (wl-thread-entity-get-descendant
-;;                                (wl-thread-get-entity x))))))
-;;     (< (funcall fx a) (funcall fx b))))
-;; (add-to-list 'wl-summary-sort-specs 'reply-number)
-    #+END_SRC
-*** デフォルト
-    とりあえず返信順で
-    #+BEGIN_SRC emacs-lisp
 (setq wl-summary-default-sort-spec 'reply-date)
-;; (setq wl-summary-default-sort-spec 'date)
-    #+END_SRC
+  #+END_SRC
 * 振り分け設定
   =$= 以外を振り分け対象に
   #+BEGIN_SRC emacs-lisp
-   (setq wl-summary-auto-refile-skip-marks '("$"))
+(setq wl-summary-auto-refile-skip-marks '("$"))
   #+END_SRC
 ** 振り分け判定に使用するヘッダ
    添付の有無の表示にも使うので =Content-Type= も登録.
    あと =Delivered-To= はメールの検索の時に結構重宝している.
    #+BEGIN_SRC emacs-lisp
-     (setq elmo-msgdb-extra-fields
-           '(
-             "List-Post"
-             "List-Id"
-             "List-ID"                  ;; たまに List-ID で来るメールあるよね?
-             "Resent-CC"
-             "Mailing-List"
-             "X-Mailing-List"
-             "X-ML-Address"
-             "X-ML-Name"
-             "X-ML-To"
-             "Delivered-To"
-             "Content-Type"              ;; 添付の有無の表示の為に追加
-             "X-Google-Appengine-App-Id" ;; GAEの送信するメールの振り分け用
-             "To"
-             "Cc"
-             "From"
-             "Subject"
-             "Reply-To"
-             ))
+(setq elmo-msgdb-extra-fields
+      '(
+        "List-Post"
+        "List-Id"
+        "List-ID"                  ;; たまに List-ID で来るメールあるよね?
+        "Resent-CC"
+        "Mailing-List"
+        "X-Mailing-List"
+        "X-ML-Address"
+        "X-ML-Name"
+        "X-ML-To"
+        "Delivered-To"
+        "Content-Type"              ;; 添付の有無の表示の為に追加
+        "X-Google-Appengine-App-Id" ;; GAEの送信するメールの振り分け用
+        "To"
+        "Cc"
+        "From"
+        "Subject"
+        "Reply-To"
+        "Auto-Submitted"            ;; Git commit/Cron notify
+        ))
    #+END_SRC
 * 日本語添付ファイル名のデコード
   日本語の添付ファイルに関しては, いまだにうまくいかない時がある.
@@ -605,8 +589,7 @@
     (defun shell-quote-argument (file) file)
   #+END_SRC
 * 添付ファイルの扱い
-  =/etc/mailcap= と =~/.mailcap= の二つに
-  同じエントリがあると, 動作が微妙になるらしい [fn:6] .
+  =/etc/mailcap= と =~/.mailcap= の二つに 同じエントリがあると, 動作が微妙になるらしい
   ここでは =~/.mailcap= だけを見にいくように:
   #+BEGIN_SRC emacs-lisp
     (setq mime-play-find-every-situations nil
@@ -716,84 +699,83 @@
                'insert-signature-eref)))
    #+END_SRC
 * Face の設定
-** Face の追加
   デフォルトより細かく指定するために幾つかの face 定義を追加.
-  #+BEGIN_SRC emacs-lisp
-    (setq wl-highlight-message-header-alist
-          '(("Subject[ \t]*:"
-             . wl-highlight-message-subject-header-contents)
-            ("From[ \t]*:"
-             . wl-highlight-message-from-header-contents)
-            ("Date[ \t]*:"
-             . wl-highlight-message-date-header-contents)
-            ("\\(.*To\\|Cc\\|Newsgroups\\)[ \t]*:"
-             . wl-highlight-message-important-header-contents)
-            ("\\(User-Agent\\|X-Mailer\\|X-Newsreader\\)[ \t]*:" .
-             wl-highlight-message-unimportant-header-contents)
-            ))
-    (defun my:wl-set-face (face spec)
-      (make-face face)
-      (cond ((fboundp 'face-spec-set)
-             (face-spec-set face spec))
-            (t
-             (wl-declare-face face spec))))
-    (my:wl-set-face 'wl-highlight-folder-closed-face                  '((t (:foreground "#4cff4c" :bold nil :italic nil :weight normal ))))
-    (my:wl-set-face 'wl-highlight-folder-few-face                     '((t (:foreground "#FF4C4C" :bold t :italic nil :weight normal ))))
-    ;; (my:wl-set-face 'wl-highlight-folder-killed-face                  '((t (:foreground ,my:h:black :bold nil :italic nil :weight normal ))))
-    ;; (my:wl-set-face 'wl-highlight-folder-many-face                    '((t (:foreground ,my:h:magenta :bold nil :italic nil :weight normal ))))
-    ;; (my:wl-set-face 'wl-highlight-folder-opened-face                  '((t (:foreground "#4cffff" :bold nil :italic nil :weight normal ))))
-    ;; (my:wl-set-face 'wl-highlight-folder-path-face                    '((t (:underline t :bold nil :italic nil :weight normal ))))
-    ;; (my:wl-set-face 'wl-highlight-folder-unknown-face                 '((t (:foreground "#4cffff" :bold nil :italic nil :weight normal ))))
-    ;; (my:wl-set-face 'wl-highlight-folder-unread-face                  '((t (:foreground ,my:n:blue :bold nil :italic nil :weight normal ))))
-    (my:wl-set-face 'wl-highlight-folder-zero-face                    '((t (:foreground "#F6F3E8" :bold nil :italic nil :weight normal ))))
-    ;; (my:wl-set-face 'wl-highlight-header-separator-face               '((t (:inherit highlight :bold t ))))
-    ;; (my:wl-set-face 'wl-highlight-message-citation-header             '((t (:foreground ,my:h:green :bold nil :italic nil ))))
-    (my:wl-set-face 'wl-highlight-message-cited-text-1                '((t (:foreground "#7fff7f" :bold nil :italic nil ))))
-    (my:wl-set-face 'wl-highlight-message-cited-text-2                '((t (:foreground "#ffff7f" :bold nil :italic nil ))))
-    (my:wl-set-face 'wl-highlight-message-cited-text-3                '((t (:foreground "#7f7fff" :bold nil :italic nil ))))
-    (my:wl-set-face 'wl-highlight-message-cited-text-4                '((t (:foreground "#7fffff" :bold nil :italic nil ))))
-    (my:wl-set-face 'wl-highlight-message-cited-text-5                '((t (:foreground "#ff7fff" :bold nil :italic nil ))))
-    (my:wl-set-face 'wl-highlight-message-cited-text-6                '((t (:foreground "#ff7f7f" :bold nil :italic nil ))))
-    (my:wl-set-face 'wl-highlight-message-cited-text-7                '((t (:foreground "#4cff4c" :bold nil :italic nil ))))
-    (my:wl-set-face 'wl-highlight-message-cited-text-8                '((t (:foreground "#ffff4c" :bold nil :italic nil ))))
-    (my:wl-set-face 'wl-highlight-message-cited-text-9                '((t (:foreground "#4c4cff" :bold nil :italic nil ))))
-    (my:wl-set-face 'wl-highlight-message-cited-text-10               '((t (:foreground "#4cffff" :bold nil :italic nil ))))
-    (my:wl-set-face 'wl-highlight-message-cited-text-11               '((t (:foreground "#ff4cff" :bold nil :italic nil ))))
-    (my:wl-set-face 'wl-highlight-message-cited-text-12               '((t (:foreground "#ff4c4c" :bold nil :italic nil ))))
-    (my:wl-set-face 'wl-highlight-message-date-header-contents        '((t (:foreground "#4CFF4C" :bold t :italic nil ))))
-    (my:wl-set-face 'wl-highlight-message-header-contents             '((t (:foreground "#aaaaaa" :bold nil :italic nil ))))
-    (my:wl-set-face 'wl-highlight-message-headers                     '((t (:foreground "#4CFFFF" :bold t :italic nil ))))
-    (my:wl-set-face 'wl-highlight-message-important-header-contents2  '((t (:foreground "#4CFF4C" :bold nil :italic nil ))))
-    (my:wl-set-face 'wl-highlight-message-signature                   '((t (:foreground "#aaaaaa" :bold nil :italic nil ))))
-    (my:wl-set-face 'wl-highlight-message-important-header-contents   '((t (:foreground "#FF4CFF" :bold t :italic nil ))))
-    (my:wl-set-face 'wl-highlight-message-subject-header-contents     '((t (:foreground "#FF4C4C" :bold t :italic nil ))))
-    (my:wl-set-face 'wl-highlight-message-from-header-contents        '((t (:foreground "#FFFF4C" :bold t :italic nil ))))
-    (my:wl-set-face 'wl-highlight-message-unimportant-header-contents '((t (:foreground "#aaaaaa" :bold nil :italic nil ))))
-    (my:wl-set-face 'wl-highlight-summary-answered-face               '((t (:foreground "#4CFF4C" :bold nil :italic nil :weight normal ))))
-    ;; (my:wl-set-face 'wl-highlight-summary-copied-face                 '((t (:foreground "#4CFFFF" :bold nil :italic nil :weight normal ))))
-    ;; (my:wl-set-face 'wl-highlight-summary-deleted-face                '((t (:foreground ,my:h:black :bold nil :italic nil :weight normal ))))
-    ;; (my:wl-set-face 'wl-highlight-summary-displaying-face             '((t (:underline t :bold nil :italic nil :weight normal ))))
-    ;; (my:wl-set-face 'wl-highlight-summary-disposed-face               '((t (:foreground "#aaaaaa" :bold nil :italic nil :weight normal ))))
-    ;; (my:wl-set-face 'wl-highlight-summary-flagged-face                '((t (:foreground ,my:h:yellow :bold nil :italic nil :weight normal ))))
-    ;; (my:wl-set-face 'wl-highlight-summary-forwarded-face              '((t (:foreground ,my:h:blue :bold nil :italic nil :weight normal ))))
-    ;; (my:wl-set-face 'wl-highlight-summary-high-read-face              '((t (:foreground ,my:h:green :bold nil :italic nil :weight normal ))))
-    ;; (my:wl-set-face 'wl-highlight-summary-high-unread-face            '((t (:foreground ,my:h:orange :bold nil :italic nil :weight normal ))))
-    ;; (my:wl-set-face 'wl-highlight-summary-important-face              '((t (:foreground "#ffff4c" :bold nil :italic nil :weight normal ))))
-    ;; (my:wl-set-face 'wl-highlight-summary-important-flag-face         '((t (:foreground "#ffff4c" :bold nil :italic nil :weight normal ))))
-    ;; (my:wl-set-face 'wl-highlight-summary-killed-face                 '((t (:foreground ,my:h:black :bold nil :italic nil :weight normal ))))
-    ;; (my:wl-set-face 'wl-highlight-summary-l:read-face                 '((t (:foreground "#4CFF4C" :bold nil :italic nil :weight normal ))))
-    ;; (my:wl-set-face 'wl-highlight-summary-l:unread-face               '((t (:foreground ,my:h:lightb :bold nil :italic nil :weight normal ))))
-    ;; (my:wl-set-face 'wl-highlight-summary-new-face                    '((t (:foreground "#ff4c4c" :bold nil :italic nil :weight normal ))))
-    ;; (my:wl-set-face 'wl-highlight-summary-normal-face                 '((t (:foreground "#f6f3e8" :bold nil :italic nil :weight normal ))))
-    ;; (my:wl-set-face 'wl-highlight-summary-prefetch-face               '((t (:foreground ,my:n:blue :bold nil :italic nil :weight normal ))))
-    (my:wl-set-face 'wl-highlight-summary-refiled-face                '((t (:foreground "#7F7FFF" :bold nil :italic nil :weight normal ))))
-    ;; (my:wl-set-face 'wl-highlight-summary-resend-face                 '((t (:foreground ,my:h:orange :bold nil :italic nil :weight normal ))))
-    ;; (my:wl-set-face 'wl-highlight-summary-target-face                 '((t (:foreground "#4CFFFF" :bold nil :italic nil :weight normal ))))
-    ;; (my:wl-set-face 'wl-highlight-summary-temp-face                   '((t (:foreground ,my:n:violet :bold nil :italic nil :weight normal ))))
-    (my:wl-set-face 'wl-highlight-summary-thread-top-face             '((t (:foreground "#F6F3E8" :bold t :italic nil :weight normal ))))
-    ;; (my:wl-set-face 'wl-highlight-summary-unread-face                 '((t (:foreground "#ff4c4c" :bold nil :italic nil :weight normal ))))
-    ;; (my:wl-set-face 'wl-highlight-thread-indent-face                  '((t (:underline t :bold nil :italic nil :weight normal ))))
-  #+END_SRC
+ #+BEGIN_SRC emacs-lisp
+(setq wl-highlight-message-header-alist
+      '(("Subject[ \t]*:"
+         . wl-highlight-message-subject-header-contents)
+        ("From[ \t]*:"
+         . wl-highlight-message-from-header-contents)
+        ("Date[ \t]*:"
+         . wl-highlight-message-date-header-contents)
+        ("\\(.*To\\|Cc\\|Newsgroups\\)[ \t]*:"
+         . wl-highlight-message-important-header-contents)
+        ("\\(User-Agent\\|X-Mailer\\|X-Newsreader\\)[ \t]*:" .
+         wl-highlight-message-unimportant-header-contents)
+        ))
+(defun my:wl-set-face (face spec)
+  (make-face face)
+  (cond ((fboundp 'face-spec-set)
+         (face-spec-set face spec))
+        (t
+         (wl-declare-face face spec))))
+(my:wl-set-face 'wl-highlight-folder-closed-face                  '((t (:foreground "#4cff4c" :bold nil :italic nil :weight normal ))))
+(my:wl-set-face 'wl-highlight-folder-few-face                     '((t (:foreground "#FF4C4C" :bold t :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-folder-killed-face                  '((t (:foreground ,my:h:black :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-folder-many-face                    '((t (:foreground ,my:h:magenta :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-folder-opened-face                  '((t (:foreground "#4cffff" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-folder-path-face                    '((t (:underline t :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-folder-unknown-face                 '((t (:foreground "#4cffff" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-folder-unread-face                  '((t (:foreground ,my:n:blue :bold nil :italic nil :weight normal ))))
+(my:wl-set-face 'wl-highlight-folder-zero-face                    '((t (:foreground "#F6F3E8" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-header-separator-face               '((t (:inherit highlight :bold t ))))
+;; (my:wl-set-face 'wl-highlight-message-citation-header             '((t (:foreground ,my:h:green :bold nil :italic nil ))))
+(my:wl-set-face 'wl-highlight-message-cited-text-1                '((t (:foreground "#7fff7f" :bold nil :italic nil ))))
+(my:wl-set-face 'wl-highlight-message-cited-text-2                '((t (:foreground "#ffff7f" :bold nil :italic nil ))))
+(my:wl-set-face 'wl-highlight-message-cited-text-3                '((t (:foreground "#7f7fff" :bold nil :italic nil ))))
+(my:wl-set-face 'wl-highlight-message-cited-text-4                '((t (:foreground "#7fffff" :bold nil :italic nil ))))
+(my:wl-set-face 'wl-highlight-message-cited-text-5                '((t (:foreground "#ff7fff" :bold nil :italic nil ))))
+(my:wl-set-face 'wl-highlight-message-cited-text-6                '((t (:foreground "#ff7f7f" :bold nil :italic nil ))))
+(my:wl-set-face 'wl-highlight-message-cited-text-7                '((t (:foreground "#4cff4c" :bold nil :italic nil ))))
+(my:wl-set-face 'wl-highlight-message-cited-text-8                '((t (:foreground "#ffff4c" :bold nil :italic nil ))))
+(my:wl-set-face 'wl-highlight-message-cited-text-9                '((t (:foreground "#4c4cff" :bold nil :italic nil ))))
+(my:wl-set-face 'wl-highlight-message-cited-text-10               '((t (:foreground "#4cffff" :bold nil :italic nil ))))
+(my:wl-set-face 'wl-highlight-message-cited-text-11               '((t (:foreground "#ff4cff" :bold nil :italic nil ))))
+(my:wl-set-face 'wl-highlight-message-cited-text-12               '((t (:foreground "#ff4c4c" :bold nil :italic nil ))))
+(my:wl-set-face 'wl-highlight-message-date-header-contents        '((t (:foreground "#4CFF4C" :bold t :italic nil ))))
+(my:wl-set-face 'wl-highlight-message-header-contents             '((t (:foreground "#aaaaaa" :bold nil :italic nil ))))
+(my:wl-set-face 'wl-highlight-message-headers                     '((t (:foreground "#4CFFFF" :bold t :italic nil ))))
+(my:wl-set-face 'wl-highlight-message-important-header-contents2  '((t (:foreground "#4CFF4C" :bold nil :italic nil ))))
+(my:wl-set-face 'wl-highlight-message-signature                   '((t (:foreground "#aaaaaa" :bold nil :italic nil ))))
+(my:wl-set-face 'wl-highlight-message-important-header-contents   '((t (:foreground "#FF4CFF" :bold t :italic nil ))))
+(my:wl-set-face 'wl-highlight-message-subject-header-contents     '((t (:foreground "#FF4C4C" :bold t :italic nil ))))
+(my:wl-set-face 'wl-highlight-message-from-header-contents        '((t (:foreground "#FFFF4C" :bold t :italic nil ))))
+(my:wl-set-face 'wl-highlight-message-unimportant-header-contents '((t (:foreground "#aaaaaa" :bold nil :italic nil ))))
+(my:wl-set-face 'wl-highlight-summary-answered-face               '((t (:foreground "#4CFF4C" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-summary-copied-face                 '((t (:foreground "#4CFFFF" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-summary-deleted-face                '((t (:foreground ,my:h:black :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-summary-displaying-face             '((t (:underline t :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-summary-disposed-face               '((t (:foreground "#aaaaaa" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-summary-flagged-face                '((t (:foreground ,my:h:yellow :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-summary-forwarded-face              '((t (:foreground ,my:h:blue :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-summary-high-read-face              '((t (:foreground ,my:h:green :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-summary-high-unread-face            '((t (:foreground ,my:h:orange :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-summary-important-face              '((t (:foreground "#ffff4c" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-summary-important-flag-face         '((t (:foreground "#ffff4c" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-summary-killed-face                 '((t (:foreground ,my:h:black :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-summary-l:read-face                 '((t (:foreground "#4CFF4C" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-summary-l:unread-face               '((t (:foreground ,my:h:lightb :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-summary-new-face                    '((t (:foreground "#ff4c4c" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-summary-normal-face                 '((t (:foreground "#f6f3e8" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-summary-prefetch-face               '((t (:foreground ,my:n:blue :bold nil :italic nil :weight normal ))))
+(my:wl-set-face 'wl-highlight-summary-refiled-face                '((t (:foreground "#7F7FFF" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-summary-resend-face                 '((t (:foreground ,my:h:orange :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-summary-target-face                 '((t (:foreground "#4CFFFF" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-summary-temp-face                   '((t (:foreground ,my:n:violet :bold nil :italic nil :weight normal ))))
+(my:wl-set-face 'wl-highlight-summary-thread-top-face             '((t (:foreground "#F6F3E8" :bold t :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-summary-unread-face                 '((t (:foreground "#ff4c4c" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-thread-indent-face                  '((t (:underline t :bold nil :italic nil :weight normal ))))
+ #+END_SRC
 * GPG 署名
   以前は mailcrypt を使っていたけれど,
   epa があるので主にキーバインドの設定のみ.
@@ -803,55 +785,26 @@
   もっとうまい方法/正攻法がありそうな気がするけれど,
   使えてるから, まあ良いかな, とか.
   #+BEGIN_SRC emacs-lisp
-    (setq mime-pgp-verify-when-preview nil)
+(setq mime-pgp-verify-when-preview nil)
+(add-hook 'wl-draft-mode-hook
+          (lambda ()
+            (set-buffer-file-coding-system 'iso-2022-jp)
+            ))
+(defun my:epa-wl-decrypt-message ()
+  (interactive)
+  (save-window-excursion
+    (wl-summary-jump-to-current-message)
+    (wl-message-decrypt-pgp-nonmime)))
+(defun my:epa-wl-verify-message ()
+  (interactive)
+  (save-selected-window
+    (wl-summary-jump-to-current-message)
+    (wl-message-verify-pgp-nonmime)))
 
-    (add-hook 'wl-draft-mode-hook
-              '(lambda ()
-                 (set-buffer-file-coding-system 'iso-2022-jp)
-                 ))
-    (defun my:epa-wl-decrypt-message ()
-      (interactive)
-      (save-window-excursion
-        (wl-summary-jump-to-current-message)
-        (wl-message-decrypt-pgp-nonmime)))
-    (defun my:epa-wl-verify-message ()
-      (interactive)
-      (save-selected-window
-        (wl-summary-jump-to-current-message)
-        (wl-message-verify-pgp-nonmime)))
-
-    (define-key wl-summary-mode-map "\C-c:d" 'my:epa-wl-decrypt-message)
-    (define-key wl-summary-mode-map "\C-c:v" 'my:epa-wl-verify-message)
-    (define-key wl-draft-mode-map "\C-c:s" 'epa-mail-sign)
-    (define-key wl-draft-mode-map "\C-c:e" 'epa-mail-encrypt)
-  #+END_SRC
-* spam フィルタ
-  サーバ側で bsfilter 通しているけど, 手元でも使うために
-  #+BEGIN_SRC emacs-lisp
-    ;; (require 'wl-spam)
-    ;; (wl-spam-setup)
-    ;; (setq elmo-spam-scheme 'bsfilter)
-    ;; (setq elmo-spam-bsfilter-shell-program "/usr/bin/ruby1.8")
-    ;; (setq wl-spam-folder "%kusm/Junk")
-  #+END_SRC
-* mhc
-  メールからスケジュールを import する
-  #+BEGIN_SRC emacs-lisp
-    ;; (autoload 'mhc-mua-setup "mhc-mua")
-    ;; (add-hook 'wl-init-hook 'mhc-mua-setup)
-    ;; (setq mhc-summary-language 'japanese)
-    ;; (setq mhc-start-day-of-week 0)
-    ;; (setq mhc-use-wide-scope nil)
-    ;; (setq mhc-summary-use-cw nil)
-    ;; (mhc-mua-setup)
-    ;; (setq mhc-default-category nil)
-    ;; (setq mhc-category-face-alist
-    ;;       '(
-    ;;         ("Work"      . (nil  "#f6f3e8"  nil))      ;; お仕事一般
-    ;;         ("Kusm"      . (nil  "#f6f3e8"  nil))         ;; 講議
-    ;;         ("Private"   . (nil  "#f6f3e8"    nil))      ;; プライベート
-    ;;         )
-    ;;       )
+(define-key wl-summary-mode-map "\C-c:d" 'my:epa-wl-decrypt-message)
+(define-key wl-summary-mode-map "\C-c:v" 'my:epa-wl-verify-message)
+(define-key wl-draft-mode-map "\C-c:s" 'epa-mail-sign)
+(define-key wl-draft-mode-map "\C-c:e" 'epa-mail-encrypt)
   #+END_SRC
 * 検索
   imap の検索か maildir-utils の検索か?
@@ -870,15 +823,8 @@
   (setq elmo-search-default-engine 'mu)
   (setq wl-quicksearch-folder "[]"))
   #+END_SRC
-** メールが多すぎると怒られるので.
-   #+BEGIN_SRC emacs-lisp
-     (setq elmo-multi-divide-number 5000000)
-     (setq elmo-multi-number 5000000)
-   #+END_SRC
-* Footnotes
-
-[fn:1] wanderlust - github : [[https://github.com/wanderlust/wanderlust]]
-
-[fn:5] color-theme-darkpastel : [[https://github.com/uwabami/color-theme-darkpastel]]
-
-[fn:6] [[http://comments.gmane.org/gmane.mail.wanderlust.general.japanese/8618]]
+  検索時にメールが多すぎると怒られるので. 数字は適当.
+  #+BEGIN_SRC emacs-lisp
+(setq elmo-multi-divide-number 10000000)
+(setq elmo-multi-number 10000000)
+  #+END_SRC

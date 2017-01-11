@@ -25,6 +25,9 @@ init.el: README.org
 		  (org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\")))"
 %.elc: %.el
 	$(EMACS) -l init.el -batch -f batch-byte-compile $<
+recompile:
+	touch README.org
+	$(MAKE)
 clean:
 	rm -fr auto-save-alist *.el *.elc *~
 distclean: clean

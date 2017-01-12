@@ -1,3 +1,0 @@
-[submodule "share/cask"]
-	path = share/cask
-	url = https://github.com/cask/cask.git

@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-01-11 22:45:00
+#+DATE: 2017-01-13 02:02:16
 #+LANGUAGE: ja
 #+LAYOUT: default
 * はじめに
@@ -10,19 +10,14 @@
   [[https://img.shields.io/badge/License-GPLv3-blue.svg]]
 
   基本方針は以下の通り:
-** Emacs のパッケージは [[http://cask.readthedocs.io/en/latest/][Cask]] と [[https://github.com/rdallasgray/pallet][pallet]] で管理
-   以前は [[https://github.com/dimitri/el-get][El-Get]] を使っていたのですが，
-   環境によって info が無いとか，
-   Git 等 VCS が通らん proxy 下，とか
-   作業環境がとてもシンドイので，結局...という感じです．
-
-   個人的には [[https://github.com/dimitri/el-get][El-Get]] が好きなのでそのうちまた戻すかもしれません．
-   - [[http://tarao.hatenablog.com/entry/20150221/1424518030][Caskはもう古い，これからはEl-Get - いまどきのEmacsパッケージ管理 - 貳佰伍拾陸夜日記]]
+** Emacs のパッケージ(=package.el=)と [[https://github.com/dimitri/el-get][El-Get]] を使う。
+   基本は =package.el= を使いますが、
+   VCS からインストールしたいパッケージが幾つかあるので、 [[https://github.com/dimitri/el-get][El-Get]] も使っています。
 ** Debian パッケージがインストールされているならば，それを優先する
    はい，個人の我侭ですね．:[[https://en.wikipedia.org/wiki/Eating_your_own_dog_food][Eating your own dog food - Wikipedia]]
 
    Emacsに関連するDebianパッケージを幾つかメンテナンスしているので，
-   可能な限りDebianパッケージを使うことにしています．
+   可能な限りDebianパッケージを使うことにしています.
 
    自分が root 持っていない環境ではしょうがないですけれど．
 ** 設定は [[http://orgmode.org/][Org mode]] で書きたい
@@ -52,12 +47,14 @@ init.el: README.org
 
   試行錯誤の結果，ディレクトリ構成は以下のようにしました:
   #+BEGIN_EXAMPLE
-~/.emacs.d/
- |-- Makefile        ←  byte-compile 用の rule
- |-- README.org      ←  本ファイル．`org-babel-tangle' で init.el を生成
- |-- init-foobar.org ←  外部ファイルを使うパッケージの設定ファイル
- |-- share/          ←  git submodule など, (基本的に)参照するだけの資源置き場所
- `-- tmp/            ←  一次ファイルの置き場所
+    ~/.emacs.d/
+     |-- Makefile        ←  byte-compile 用の rule
+     |-- README.org      ←  本ファイル．`org-babel-tangle' で init.el を生成
+     |-- init-foobar.org ←  外部ファイルを使うパッケージの設定ファイル
+     |-- el-get/         ←  el-get 本体、および el-get で導入したパッケージ等
+     |-- packages/       ←  package.el で導入したパッケージの置き場所
+     |-- share/          ←  git submodule など, (基本的に)参照するだけの資源置き場所
+     `-- tmp/            ←  一次ファイルの置き場所
   #+END_EXAMPLE
   上記ディレクトリ構成を設定ファイルで使用するためにディレクトリ配置を宣言しておきます．
   #+BEGIN_SRC emacs-lisp
@@ -69,6 +66,8 @@ init.el: README.org
   (expand-file-name "tmp/" user-emacs-directory))
 (unless (file-directory-p my:d:tmp)
   (make-directory my:d:tmp))
+(unless (file-directory-p (concat user-emacs-directory "packages"))
+  (make-directory (concat user-emacs-directory "packages")))
   #+END_SRC
   ついでに，
   =custom-set-variables= は別ファイルに出力，終了時に削除するようにしています．
@@ -81,38 +80,36 @@ init.el: README.org
             (if (file-exists-p custom-file)
                 (delete-file custom-file))))
   #+END_SRC
-* Package 関連: =package.el=, [[http://cask.readthedocs.io/en/latest/][Cask]], [[https://github.com/rdallasgray/pallet][pallet]], [[https://github.com/jwiegley/use-package][use-package]]
-** =package.el= と =cask= の初期化
-   #+BEGIN_SRC emacs-lisp
+* Package 関連: =package.el=, [[https://github.com/dimitri/el-get][El-Get]], [[https://github.com/jwiegley/use-package][use-package]]
+  [[https://github.com/jwiegley/use-package][use-package]] のおかけで、
+  無いと途方に暮れるパッケージ以外のインストールは無視できるようになります。
+** =package.el=
+   [[https://github.com/dimitri/el-get][El-Get]] 含めパッケージは基本的に =pacakge.el= で導入するので、先ずはその設定.
+#+BEGIN_SRC emacs-lisp
 (require 'package nil 'noerror)
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+(setq package-enable-at-startup nil
+      package-user-dir (concat user-emacs-directory "packages"))
+(add-to-list 'package-archives '("melpa-stable" . "http://melpa.org/packages/") t)
 (add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/") t)
 (package-initialize)
-(add-to-list 'load-path (concat my:d:share "cask"))
-(require 'cask nil 'noerror)
-(cask-initialize)
-   #+END_SRC
-** =use-package= の設定
-   個々のパッケージの設定には =use-package= を利用する．
-   ドキュメントによれば
-   #+BEGIN_SRC emacs-lisp :tangle no
-(eval-when-compile (require 'use-package))
-(require 'diminish)
-(require 'bind-keys)
-   #+END_SRC
-   で良い，とあるのだけれど font-lock が効かなくなる様なので
+#+END_SRC
+** =use-package= の導入と設定
+   個々のパッケージの設定には =use-package= を利用します。
    #+BEGIN_SRC emacs-lisp
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
 (require 'use-package)
    #+END_SRC
-   としている．
-** pallet
-   =pallet= で =package.el= で導入したパッケージを =Cask= ファイルに反映させる．
-   以前は「vcs から持ってくる」といった事ができなかったのだけれど，
-   最近対応した様で，(ようやく)安心して使えるようになった．
+** [[https://github.com/dimitri/el-get][El-Get]] の導入と初期設定
    #+BEGIN_SRC emacs-lisp
-(use-package pallet
-  :config
-  (pallet-mode t))
+(unless (require 'el-get nil 'noerror)
+  (package-refresh-contents)
+  (package-install 'el-get))
+(defvar my:d:el-get (concat user-emacs-directory "el-get"))
+(use-package el-get
+  :load-path my:d:el-get
+  )
    #+END_SRC
 * byte-compile 用の雑多な設定
 ** 常に cl を読み込む → =cl-lib= を読み込むように変更
@@ -187,7 +184,8 @@ init.el: README.org
 * 後方互換性: =el-x=
   古い =flet= と同じ挙動をする =dflet= を使うために =el-x= を導入しておく
   #+BEGIN_SRC emacs-lisp
-(use-package el-x)
+(use-package el-x
+  :ensure t)
   #+END_SRC
 * url-retrieve の置き換え: =mb-url=
   標準関数の =url-retrieve= 等の proxy 環境下での挙動が怪しいので，
@@ -195,7 +193,8 @@ init.el: README.org
   =curl= のバッファが増殖するのだけれど，これはなんとかならないかなぁ...
   #+BEGIN_SRC emacs-lisp
 (use-package mb-url
-  :init
+  :ensure t
+  :config
   (advice-add 'url-http :override 'mb-url-http-curl))
   #+END_SRC
 * 環境変数の読み込み: =exec-path-from-shell=
@@ -218,7 +217,9 @@ init.el: README.org
     (setq-default explicit-shell-file-name "zsh")
     (setq shell-file-name "zsh"
           shell-command-switch "-c")))
+(defvar my:d:password-store nil)
 (use-package exec-path-from-shell
+  :ensure t
   :config
   (when (memq window-system '(mac ns)) (exec-path-from-shell-initialize))
   (exec-path-from-shell-copy-envs
@@ -234,8 +235,8 @@ init.el: README.org
      ))
   (setq user-full-name (concat (getenv "DEBFULLNAME"))
         user-mail-address (concat (getenv "DEBEMAIL")))
-  (defconst my:d:password-store
-    (getenv "PASSWORD_STORE_DIR"))
+  (setq my:d:password-store
+        (getenv "PASSWORD_STORE_DIR"))
   )
   #+END_SRC
 * 言語の設定
@@ -261,12 +262,19 @@ init.el: README.org
    環境によっては文字の変換がうまく行なえません．
    そこで言語設定前に =cp5022x.el= をインストールすることにしています．
    #+BEGIN_SRC emacs-lisp
-(use-package cp5022x)
+(use-package cp5022x
+  :ensure t
+  )
    #+END_SRC
 ** East Asian Ambiguos 対応
    CJK 以外の East Asian Ambiguos，絵文字も2文字幅にするようにしています．
    拙作の修正ロケールはこちら: [[https://github.com/uwabami/locale-eaw-emoji]]
    #+BEGIN_SRC emacs-lisp
+(unless (locate-library "eaw_and_emoji")
+  (el-get-bundle eaw_and_emoji
+                 :type github
+                 :pkgname "uwabami/locale-eaw-emoji"
+                 :features eaw_and_emoji))
 (use-package eaw_and_emoji
   :config
   (eaw-and-emoji-fullwidth))
@@ -642,6 +650,7 @@ init.el: README.org
   =xclip= で clipboard とデータをやりとり．
   #+BEGIN_SRC emacs-lisp
 (use-package xclip
+  :ensure t
   :if (executable-find "xclip")
   :config
   (turn-on-xclip))
@@ -667,10 +676,12 @@ init.el: README.org
   (setq default-input-method "japanese-skk")
   )
   #+END_SRC
-* Elscreen
+* Elscreen [/]
   modeline の表示そのものは無効化しておく．
+  - [ ] Debian パッケージ版は古い．更新すべき
   #+BEGIN_SRC emacs-lisp
 (use-package elscreen
+  :ensure t
   :init
   (setq elscreen-tab-display-control nil)
   (setq elscreen-prefix-key (kbd "C-o"))
@@ -687,6 +698,8 @@ init.el: README.org
           (my:dpkg-status "wl-beta"))
   :commands (wl wl-other-frame wl-draft wl-user-agent wl-user-agent-compose wl-draft-send wl-draft-kill)
   :init
+  (el-get-bundle uwabami/rail)
+  (el-get-bundle uwabami/gcontacts-get-wl)
   (define-mail-user-agent
     'wl-user-agent
     'wl-user-agent-compose
@@ -757,6 +770,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    ID と Password の簡単な組の管理をするのに非常に重宝している．
    #+BEGIN_SRC emacs-lisp
 (use-package id-manager
+  :ensure t
   :if (file-exists-p "~/.gnupg/idm-db.gpg")
   :bind ("M-7" . idm-open-list-command)
   :config
@@ -777,12 +791,14 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    ファイルの置き場所と暗号鍵の設定をしておく
    #+BEGIN_SRC emacs-lisp
 (use-package oauth2
+  :ensure t
   :init
   (setq oauth2-token-file (concat my:d:tmp "oauth2.plstore")))
    #+END_SRC
 ** password-store
    #+BEGIN_SRC emacs-lisp
 (use-package password-store
+  :ensure t
   :if my:d:password-store
   )
    #+END_SRC
@@ -790,58 +806,59 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   以前はデフォルトの挙動が嫌で割とイロイロと設定していたのだけれど，
   最近はそんなに邪魔しない感じ...なのかな? とりあえず現状は以下の通り．
   #+BEGIN_SRC emacs-lisp
-(use-package helm
-  :diminish (helm-migemo-mode)
-  :bind (("M-x"     . helm-M-x)
-         ("C-x f"   . helm-find-files)
-         ("C-x C-f" . helm-find-files)
-         ("C-x b"   . helm-buffers-list)
-         ("C-x C-b" . helm-buffers-list)
-         ("C-x C-r" . helm-recentf)
-         :map helm-map
-         ("[tab]" . helm-execute-persistent-action)
-         ("C-i"   . helm-execute-persistent-action)
-         ("C-z"   . helm-select-action)
-         )
-  :init
-  (global-unset-key (kbd "C-z"))
-  (my:disable-builtin-mode 'helm-mode)   ; helm-mode は基本使わない
-  (setq helm-command-prefix-key "C-z"    ; helm-command-prefix-key
-        ;; dired での skk との競合(C-x C-j の奪い合い)を避ける
-        dired-bind-jump nil
-        ;; mode line には何も表示しない
-        helm-completion-mode-string ""
-        ;; minibuffer に input method の状態を引き継がない
-        helm-inherit-input-method nil
-        ;; migemo を有効化
-        helm-migemo-mode t
-        ;; 余計なファイルは表示しない
-        helm-ff-skip-boring-files t
-        ;; helm-adaptive の保存先の変更
-        helm-adaptive-history-file (concat my:d:tmp "helm-adaptive-history")
-        ;; mode line には何も表示しない
-        helm-completion-mode-string ""
-        )
-  ;; 一つ上のディレクトリ(../)を候補から外す
-  (advice-add 'helm-ff-filter-candidate-one-by-one
-              :around (lambda (orig-func file)
-                        (unless (string-match "\\(?:/\\|\\`\\)\\.\\{2\\}\\'" file)
-                          (funcall orig-func file))))
-  ;; 存在しないファイルには何もしない(default は新規 buffer ができる)
-  (advice-add 'helm-ff-kill-or-find-buffer-fname
-              :around (lambda (orig-fn candidate)
-                        (when (file-exists-p candidate)
-                          (funcal orgi-func candidate))))
-  :config
-  (helm-autoresize-mode)
-  (setq helm-autoresize-min-height 30 ; fixed 30%
-        helm-autoresize-max-height 30)
-  )
+    (use-package helm
+      :ensure t
+      :defines helm-map
+      :diminish (helm-migemo-mode)
+      :bind (("M-x"     . helm-M-x)
+             ("C-x f"   . helm-find-files)
+             ("C-x C-f" . helm-find-files)
+             ("C-x b"   . helm-buffers-list)
+             ("C-x C-b" . helm-buffers-list)
+             ("C-x C-r" . helm-recentf)
+             )
+      :config
+      (define-key helm-map (kbd "TAB") 'helm-execute-persistent-action)
+      (define-key helm-map (kbd "C-i") 'helm-execute-persistent-action)
+      (global-unset-key (kbd "C-z"))
+      (define-key helm-map (kbd "C-z") 'helm-select-action)
+      (my:disable-builtin-mode 'helm-mode)   ; helm-mode は基本使わない
+      (setq helm-command-prefix-key "C-z"    ; helm-command-prefix-key
+            ;; dired での skk との競合(C-x C-j の奪い合い)を避ける
+            dired-bind-jump nil
+            ;; mode line には何も表示しない
+            helm-completion-mode-string ""
+            ;; minibuffer に input method の状態を引き継がない
+            helm-inherit-input-method nil
+            ;; migemo を有効化
+            helm-migemo-mode t
+            ;; 余計なファイルは表示しない
+            helm-ff-skip-boring-files t
+            ;; helm-adaptive の保存先の変更
+            helm-adaptive-history-file (concat my:d:tmp "helm-adaptive-history")
+            ;; mode line には何も表示しない
+            helm-completion-mode-string ""
+            )
+      ;; 一つ上のディレクトリ(../)を候補から外す
+      (advice-add 'helm-ff-filter-candidate-one-by-one
+                  :around (lambda (orig-func file)
+                            (unless (string-match "\\(?:/\\|\\`\\)\\.\\{2\\}\\'" file)
+                              (funcall orig-func file))))
+      ;; 存在しないファイルには何もしない(default は新規 buffer ができる)
+      (advice-add 'helm-ff-kill-or-find-buffer-fname
+                  :around (lambda (orig-func candidate)
+                            (when (file-exists-p candidate)
+                              (funcal orgi-func candidate))))
+      (helm-autoresize-mode)
+      (setq helm-autoresize-min-height 30 ; fixed 30%
+            helm-autoresize-max-height 30)
+      )
   #+END_SRC
 ** helm-flx
    曖昧検索は flx に任せる．かなり良い．
    #+BEGIN_SRC emacs-lisp
 (use-package helm-flx
+  :ensure t
   :config
   (helm-flx-mode +1)
   (setq helm-flx-for-helm-find-files t ;; t by default
@@ -860,6 +877,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    =helm-M-x= の際にキーバインドが表示されるようになる
    #+BEGIN_SRC emacs-lisp
 (use-package helm-descbinds
+  :ensure t
   :config
   (helm-descbinds-mode))
    #+END_SRC
@@ -867,6 +885,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    ripgrep があればそっちを使うようにしてみた．
    #+BEGIN_SRC emacs-lisp
 (use-package helm-ag
+  :ensure t
   :if (or (executable-find "ag")
           (executable-find "rg"))
   :bind (("M-g ." . helm-ag)
@@ -883,9 +902,11 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   )
    #+END_SRC
 * 補完: =yasnippet=, =auto-complete=
+  上手く設定できていないので保留
 ** yasnippet
    #+BEGIN_SRC emacs-lisp
 (use-package yasnippet
+  :disabled t
   :bind (:map yas-minor-mode-map
               ("C-x y i" . yas-insert-snippet)
               ("C-x y n" . yas-new-snippet)
@@ -906,9 +927,9 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (setq yas-verbosity 2))
    #+END_SRC
 ** auto-complete
-*** 基本設定
     #+BEGIN_SRC emacs-lisp
 (use-package auto-complete-config
+  :disabled t
   :diminish auto-complete-mode
   :bind (:map ac-menu-map
               ("C-n"   . ac-next)
@@ -980,11 +1001,11 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
           (ndeb "/usr/local/share/dict/colloc"    :alias "研究社 英和活用大辞典 ")
           )))
    #+END_SRC
-
 * カレンダー: =japanese-holidays=
   日本の祝日を表示するために =japanese-holidays= をインストール
   #+BEGIN_SRC emacs-lisp
 (use-package japanese-holidays
+  :ensure t
   :init
   (add-hook 'calendar-today-visible-hook   'japanese-holiday-mark-weekend)
   (add-hook 'calendar-today-invisible-hook 'japanese-holiday-mark-weekend)
@@ -1018,7 +1039,12 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    目新しい設定はしていない，と思う．強いて言えば
    以前のメモの整理のために [[http://howm.osdn.jp/index-j.html][howm: Hitori Otegaru Wiki Modoki]] も使っているので,
    howm も有効にしている，ぐらい．
+
    #+BEGIN_SRC emacs-lisp
+(dolist (package '(org org-plus-contrib))
+  (unless (package-installed-p package)
+    (package-refresh-contents)
+    (package-install package)))
 (use-package org
   :init
   :config
@@ -1265,6 +1291,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    エントリ作成時に日付を入れるために =org-jounnal-new-entry= を =defadvice= している
    #+BEGIN_SRC emacs-lisp
 (use-package org-journal
+  :ensure t
   :bind (("C-c C-j" . browse-url-at-point))
   :init
   (add-hook 'org-journal-mode-hook
@@ -1334,6 +1361,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 *** token 等の置き場所の変更
     #+BEGIN_SRC emacs-lisp
 (use-package request
+  :ensure t
   :init
   (setq request-storage-directory (concat my:d:tmp "request"))
   (unless (file-directory-p request-storage-directory)
@@ -1344,6 +1372,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     ついでに agenda 表示の際の色付けを設定．
     #+BEGIN_SRC emacs-lisp
 (use-package org-gcal
+  :ensure t
   :if (and my:d:password-store
            (file-directory-p org-directory))
   :commands (org-gcal-fetch)
@@ -1383,6 +1412,12 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 ** OrgとRedmine の連携: =orgmine=
    素晴しい!! [[https://github.com/kametoku/orgmine][kametoku/orgmine: Emacs minor mode for org-mode with redmine integration]]
    #+BEGIN_SRC emacs-lisp
+(unless (locate-library "orgmine")
+  (dolist (package '(elmine))
+    (unless (package-installed-p package)
+      (package-refresh-contents)
+      (package-install package)))
+  (el-get-bundle kametoku/orgmine))
 (use-package orgmine
   :if (and my:d:password-store
            (file-directory-p org-directory))
@@ -1399,38 +1434,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         orgmine-default-todo-keyword "新規")
   ;; サーバ設定
   (load (expand-file-name "emacs/orgmine.gpg" my:d:password-store)))
-   #+END_SRC
-** Org-Wiki
-   試しにテスト中...
-   @see [[https://github.com/caiorss/org-wiki][caiorss/org-wiki: Wiki for Emacs org-mode built on top of Emacs org-mode.]]
-   #+BEGIN_SRC emacs-lisp
-(use-package org-wiki
-  :config
-  (setq org-wiki-location (expand-file-name "~/Work/tmp/public/cc-env/"))
-  (org-wiki-make-menu)
-  ;; jekyll export 用に header 関数を上書き
-  (defun my:org-wiki-header ()
-    "Insert a header at the top of the file, customize for jekyll export."
-    (interactive)
-    (save-excursion
-      (goto-char (point-min))
-      (insert (format
-               (string-trim "
-,#+TITLE: %s
-,#+DATE: 2016
-,#+PERMALINK: /cc-env/%s.html
-,#+DESCRIPTION:
-,#+LANGUAGE: ja
-,#+LAYOUT: default
-,#+KEYWORDS:
-,#+STARTUP:  overview
-
-")
-               (file-name-base (buffer-file-name))
-               (file-name-base (buffer-file-name))
-               ))))
-  (advice-add 'org-wiki-header :override 'my:org-wiki-header)
-  )
    #+END_SRC
 ** Export
 *** 一般設定
@@ -1659,6 +1662,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    +Debian 版の GNU Global がすったもんだの挙句ようやく更新された!+
    #+BEGIN_SRC emacs-lisp
 (use-package helm-gtags
+  :ensure t
   :if (executable-find "gtags")
   :diminish helm-gtags-mode
   :init
@@ -1713,6 +1717,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    git-gutter で差分を視覚的に表示 +そのうち飽きるかも...+
    #+BEGIN_SRC emacs-lisp
 (use-package git-gutter
+  :ensure t
+  :if (locate-library "magit")
   :config
   (setq git-gutter:window-width 2
         git-gutter:added-sign "+ "
@@ -1733,8 +1739,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 ** flycheck
    #+BEGIN_SRC emacs-lisp
 (use-package flycheck
-  :init
   :diminish flycheck-mode
+  :init
   :config
   (global-flycheck-mode)
   (setq-default flycheck-disabled-checkers
@@ -1770,7 +1776,9 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    #+END_SRC
 ** Textile
    #+BEGIN_SRC emacs-lisp
-(use-package textile-mode)
+(use-package textile-mode
+  :ensure t
+  )
    #+END_SRC
 ** Markdown
    #+BEGIN_SRC emacs-lisp
@@ -1792,10 +1800,15 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 ** SCSS
    #+BEGIN_SRC emacs-lisp
 (use-package scss-mode
+  :ensure t
   :if (executable-find "sass")
   :mode "\\.scss\\'"
   :config
   (setq scss-sass-command (executable-find "sass")))
+   #+END_SRC
+** 設定ファイル: =generic-x=
+   #+BEGIN_SRC emacs-lisp
+(use-package generic-x)
    #+END_SRC
 ** Ruby
    素の =ruby-mode=. =Gemfile= も ruby-mode で扱う
@@ -1809,6 +1822,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    =ruby-electric=: 括弧や =do ... end= の補完
    #+BEGIN_SRC emacs-lisp
 (use-package ruby-electric
+  :ensure t
   :init
   (add-hook 'ruby-mode-hook (lambda () (ruby-electric-mode t)))
   :config
@@ -1817,6 +1831,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    =ruby-block=: =do...end= の対応をハイライト
    #+BEGIN_SRC emacs-lisp
 (use-package ruby-block
+  :ensure t
   :diminish ruby-block-mode
   :config
   (ruby-block-mode t)
@@ -1826,6 +1841,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    =rspec-mode=:
    #+BEGIN_SRC emacs-lisp
 (use-package rspec-mode
+  :ensure t
   :config
   (setq rspec-use-rake-flag nil))
    #+END_SRC
@@ -1893,6 +1909,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
      file encoding を取得する関数と latexmk の実行用関数をカスタマイズ
     #+BEGIN_SRC emacs-lisp
 (use-package tex-jp
+  :if (my:dpkg-status "auctex")
   :config
   (dolist (command '("pTeX" "pLaTeX" "pBibTeX" "jTeX" "jLaTeX" "jBibTeX"))
     (delq (assoc command TeX-command-list) TeX-command-list))
@@ -1960,6 +1977,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    イマイチ使いこなせてないけれど．
    #+BEGIN_SRC emacs-lisp
 (use-package zotelo
+  :ensure t
+  :if (my:dpkg-status "zotelo")
   :init
   (add-hook 'LaTeX-mode-hook 'zotelo-minor-mode)
   :config

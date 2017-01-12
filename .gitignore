@@ -3,6 +3,8 @@
 .cask
 .org-id-locations
 .cask
+el-get
+packages
 tmp
 *~
 old

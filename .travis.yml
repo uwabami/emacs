@@ -10,13 +10,11 @@ matrix:
     - env: EMACS=emacs-git-snapshot-travis
 before_install:
   - ln -s $TRAVIS_BUILD_DIR ~/.emacs.d
-  - export PATH="$HOME/.emacs.d/share/cask/bin:$PATH"
   - export PATH="$HOME/.evm/bin:$PATH"
   - git clone https://github.com/rejeep/evm.git $HOME/.evm
   - evm config path /tmp
   - evm install $EVM_EMACS
   - evm use $EVM_EMACS
-  - cask --verbose --debug
 script:
   - evm use $EVM_EMACS
   - make

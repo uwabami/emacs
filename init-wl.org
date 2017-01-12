@@ -20,6 +20,7 @@
    #+ATTR_HTML: with="50%"
    http://uwabami.github.io/rail/images/wanderlust_with_or_without_rail.png
    #+BEGIN_SRC emacs-lisp
+(eval-when-compile (require 'mime-def))
 (use-package rail
   :config
   (setq rail-emulate-genjis t))

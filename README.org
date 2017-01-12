@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-01-13 02:45:16
+#+DATE: 2017-01-13 02:53:24
 #+LANGUAGE: ja
 #+LAYOUT: default
 * はじめに
@@ -1043,13 +1043,13 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    目新しい設定はしていない，と思う．強いて言えば
    以前のメモの整理のために [[http://howm.osdn.jp/index-j.html][howm: Hitori Otegaru Wiki Modoki]] も使っているので,
    howm も有効にしている，ぐらい．
-
    #+BEGIN_SRC emacs-lisp
-(dolist (package '(org org-plus-contrib))
+(dolist (package '(org-plus-contrib org))
   (unless (package-installed-p package)
     (package-refresh-contents)
     (package-install package)))
 (use-package org
+  :ensure t
   :init
   :config
   (setq org-directory (concat (getenv "HOME") "/Dropbox/org/") ;; Dropbox に保存する

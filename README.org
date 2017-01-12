@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-01-13 02:02:16
+#+DATE: 2017-01-13 02:45:16
 #+LANGUAGE: ja
 #+LAYOUT: default
 * はじめに
@@ -109,6 +109,9 @@ init.el: README.org
 (defvar my:d:el-get (concat user-emacs-directory "el-get"))
 (use-package el-get
   :load-path my:d:el-get
+  :config
+  (setq el-get-git-shallow-clone t
+        el-get-notify-type 'message)
   )
    #+END_SRC
 * byte-compile 用の雑多な設定
@@ -694,11 +697,11 @@ init.el: README.org
   実際の設定は別ファイルを参照: [[file:init-wl.org][Wanderlust の設定]]
   #+BEGIN_SRC emacs-lisp
 (use-package wl
-  :if (or (my:dpkg-status "wl")
-          (my:dpkg-status "wl-beta"))
+  :if (and (or (my:dpkg-status "wl")
+               (my:dpkg-status "wl-beta"))
+           (my:dpkg-status "rail"))
   :commands (wl wl-other-frame wl-draft wl-user-agent wl-user-agent-compose wl-draft-send wl-draft-kill)
   :init
-  (el-get-bundle uwabami/rail)
   (el-get-bundle uwabami/gcontacts-get-wl)
   (define-mail-user-agent
     'wl-user-agent
@@ -719,6 +722,7 @@ init.el: README.org
     (make-directory (concat elmo-msgdb-directory "/local")))
   (unless (file-directory-p (concat elmo-msgdb-directory "/local/Trash"))
     (make-directory (concat elmo-msgdb-directory "/local/Trash")))
+  :config
   )
   #+END_SRC
   ついでに =mailto= のリンクを emacsclient で扱うために，以下の関数を定義しておく

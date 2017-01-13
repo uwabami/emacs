@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-01-13 16:11:34
+#+DATE: 2017-01-13 16:41:56
 #+LANGUAGE: ja
 #+LAYOUT: default
 * はじめに
@@ -830,8 +830,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
             helm-completion-mode-string ""
             ;; minibuffer に input method の状態を引き継がない
             helm-inherit-input-method nil
-            ;; migemo を有効化
-            helm-migemo-mode t
             ;; 余計なファイルは表示しない
             helm-ff-skip-boring-files t
             ;; helm-adaptive の保存先の変更
@@ -848,7 +846,11 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
       (advice-add 'helm-ff-kill-or-find-buffer-fname
                   :around (lambda (orig-func candidate)
                             (when (file-exists-p candidate)
-                              (funcal orgi-func candidate))))
+                              (funcal orig-func candidate))))
+      (if (and (locate-library "migemo")     ; あれば migemo を有効化
+               (executable-find "cmigemo"))
+          (setq helm-migemo-mode t)
+        (setq helm-migemo-mode nil))
       (helm-autoresize-mode)
       (setq helm-autoresize-min-height 30 ; fixed 30%
             helm-autoresize-max-height 30)

@@ -1,10 +1,8 @@
 *.el
 *.elc
-.cask
 .org-id-locations
-.cask
-el-get
 packages
+quelpa
 tmp
 *~
 old

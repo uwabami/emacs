@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-01-13 12:12:00
+#+DATE: 2017-01-13 14:09:19
 #+LANGUAGE: ja
 #+LAYOUT: default
 * はじめに
@@ -10,9 +10,10 @@
   [[https://img.shields.io/badge/License-GPLv3-blue.svg]]
 
   基本方針は以下の通り:
-** Emacs のパッケージ(=package.el=)と [[https://github.com/dimitri/el-get][El-Get]] を使う。
+** Emacs のパッケージ(=package.el=)と [[https://github.com/quelpa/quelpa][quelpa]], [[https://github.com/jwiegley/use-package][use-package]] を使う
    基本は =package.el= を使いますが、
-   VCS からインストールしたいパッケージが幾つかあるので、 [[https://github.com/dimitri/el-get][El-Get]] も使っています。
+   VCS からインストールしたいパッケージが幾つかあるので、
+   それらについては [[https://github.com/quelpa/quelpa][quelpa]] を使います。
 ** Debian パッケージがインストールされているならば，それを優先する
    はい，個人の我侭ですね．:[[https://en.wikipedia.org/wiki/Eating_your_own_dog_food][Eating your own dog food - Wikipedia]]
 
@@ -24,10 +25,9 @@
    以前こんなブログ記事を書きました: [[http://uwabami.junkhub.org/log/20111213.html#p01][Emacsの設定ファイルをorgで書く]]
 
    というわけで，設定は [[http://orgmode.org/worg/org-contrib/babel/intro.html][Org Babel]] で書いています．
-*** =~/.emacs.d/init.el= の生成
-    本ファイル(=README.org=) から，
-    Makefile 内の以下のスクリプトで =~/init.el= を生成し，byte-compile します．
-    #+BEGIN_SRC makefile-gmake :tangle no
+   本ファイル(=README.org=) から，
+   Makefile 内の以下のスクリプトで =~/init.el= を生成し，byte-compile します．
+   #+BEGIN_SRC makefile-gmake :tangle no
 init.el: README.org
 	$(EMACS) -q --batch --eval \
 		 "(progn \
@@ -35,15 +35,10 @@ init.el: README.org
 		    (org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\")))"
 %.elc: %.el
 	$(EMACS) -l $< -batch -f batch-byte-compile $<
-    #+END_SRC
+   #+END_SRC
 * ディレクトリ構成
-  以前は =~/.emacs= に設定を書いていましたが，
-  最近は =~/.emacs.d/init.el= を使うのが主流ですね．
-  さらに，適切な設定を行なうことで Emacs 起動時に読み込んだ elisp ファイ
-  ルのあるディレクトリを =user-emacs-directory= として扱えます．
-
-  そんな訳で，分割した設定ファイル群やパッケージで install したパッケージ
-  の置き場所も =user-emacs-directory= 以下にまとめています．
+  分割した設定ファイル群やパッケージで install したパッケージ
+  の置き場所は =user-emacs-directory= 以下にまとめています．
 
   試行錯誤の結果，ディレクトリ構成は以下のようにしました:
   #+BEGIN_EXAMPLE
@@ -51,9 +46,11 @@ init.el: README.org
      |-- Makefile        ←  byte-compile 用の rule
      |-- README.org      ←  本ファイル．`org-babel-tangle' で init.el を生成
      |-- init-foobar.org ←  外部ファイルを使うパッケージの設定ファイル
-     |-- el-get/         ←  el-get 本体、および el-get で導入したパッケージ等
-     |-- packages/       ←  package.el で導入したパッケージの置き場所
-     |-- share/          ←  git submodule など, (基本的に)参照するだけの資源置き場所
+     |-- init-barbaz.org     (ddskk, gnus, wanderlust, ...)
+     :
+     |-- packages/       ←  package.el で導入したパッケージが置かれる場所
+     |-- quelpa/         ←  quelpa で導入したパッケージが置かれる場所
+     |-- share/          ←  (基本的に)参照するだけの資源置き場所
      `-- tmp/            ←  一次ファイルの置き場所
   #+END_EXAMPLE
   上記ディレクトリ構成を設定ファイルで使用するためにディレクトリ配置を宣言しておきます．
@@ -66,8 +63,6 @@ init.el: README.org
   (expand-file-name "tmp/" user-emacs-directory))
 (unless (file-directory-p my:d:tmp)
   (make-directory my:d:tmp))
-(unless (file-directory-p (concat user-emacs-directory "packages"))
-  (make-directory (concat user-emacs-directory "packages")))
   #+END_SRC
   ついでに，
   =custom-set-variables= は別ファイルに出力，終了時に削除するようにしています．
@@ -80,12 +75,14 @@ init.el: README.org
             (if (file-exists-p custom-file)
                 (delete-file custom-file))))
   #+END_SRC
-* Package 関連: =package.el=, [[https://github.com/dimitri/el-get][El-Get]], [[https://github.com/jwiegley/use-package][use-package]]
+* Package 関連: =package.el=, [[https://github.com/jwiegley/use-package][use-package]], =auto-install=
   [[https://github.com/jwiegley/use-package][use-package]] のおかけで、
   無いと途方に暮れるパッケージ以外のインストールは無視できるようになります。
 ** =package.el=
-   [[https://github.com/dimitri/el-get][El-Get]] 含めパッケージは基本的に =pacakge.el= で導入するので、先ずはその設定.
+   パッケージは基本的に =pacakge.el= で導入するので、先ずはその設定.
 #+BEGIN_SRC emacs-lisp
+(unless (file-directory-p (concat user-emacs-directory "packages"))
+  (make-directory (concat user-emacs-directory "packages")))
 (require 'package nil 'noerror)
 (setq package-enable-at-startup nil
       package-user-dir (concat user-emacs-directory "packages"))
@@ -93,29 +90,50 @@ init.el: README.org
 (add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/") t)
 (package-initialize)
 #+END_SRC
-** =use-package= の導入と設定
-   個々のパッケージの設定には =use-package= を利用します。
+** [[https://github.com/jwiegley/use-package][use-package]]
+   個々のパッケージの設定には [[https://github.com/jwiegley/use-package][use-package]] を利用します．
    #+BEGIN_SRC emacs-lisp
-(unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
-(require 'use-package)
+(unless (require 'use-package nil t)
+  (package-refresh-contens)
+  (pakage-install 'use-package))
    #+END_SRC
-** [[https://github.com/dimitri/el-get][El-Get]] の導入と初期設定
+** [[https://github.com/quelpa/quelpa][quelpa]]
+   melpa に登録されていないパッケージや自作の elisp 等をインストールできる様に
+   [[https://github.com/quelpa/quelpa][quelpa]] を入れておきます.
    #+BEGIN_SRC emacs-lisp
-(unless (require 'el-get nil 'noerror)
-  (package-refresh-contents)
-  (package-install 'el-get))
-(defvar my:d:el-get (concat user-emacs-directory "el-get"))
-(use-package el-get
-  :load-path my:d:el-get
-  :config
-  (setq el-get-git-shallow-clone t
-        el-get-notify-type 'message)
+(use-package quelpa
+  :ensure t
+  :init
+  (setq quelpa-upgrade-p nil
+        quelpa-update-melpa-p nil)
   )
    #+END_SRC
+* 独自関数
+** カーソルのある位置の face を調べる関数
+   わりと良く使う. 地味に便利
+   #+BEGIN_SRC emacs-lisp
+(defun my:describe-face-at-point ()
+  (interactive)
+  (message "%s" (get-char-property (point) 'face)))
+   #+END_SRC
+** 機能を無効化するための関数の定義
+   =line-number-mode= など「有効無効をtoggleする関数」は
+   慣習的に =0= 以下の数字を指定すると明示的に無効化できるので，
+   =-1= を設定する関数を定義しておく.
+   #+BEGIN_SRC emacs-lisp
+(defun my:disable-builtin-mode (mode)
+  "与えられた mode が存在するのであれば -1 をセットして無効化"
+  (if (fboundp mode) (funcall mode -1)))
+   #+END_SRC
+** dpkg-status
+   もっと良い方法がありそうなモンですが．
+   #+BEGIN_SRC emacs-lisp
+(defun my:dpkg-status (package)
+  "Return the package status from dpkg --get-selections."
+  (string-match "^ii" (shell-command-to-string (format "dpkg -l %s" package))))
+   #+END_SRC
 * byte-compile 用の雑多な設定
-** 常に cl を読み込む → =cl-lib= を読み込むように変更
+** 常に =cl-lib= を読み込む
    以前は(今も?)「 =cl.el= は名前衝突があるので byte compile 時以外は読み込まない様にしよう」
    というお話でした．つまり，
    #+BEGIN_SRC emacs-lisp :tangle no
@@ -160,30 +178,6 @@ init.el: README.org
         make-local
         ))
    #+END_SRC
-* 独自関数
-** カーソルのある位置の face を調べる関数
-   わりと良く使う. 地味に便利
-   #+BEGIN_SRC emacs-lisp
-(defun my:describe-face-at-point ()
-  (interactive)
-  (message "%s" (get-char-property (point) 'face)))
-   #+END_SRC
-** 機能を無効化するための関数の定義
-   =line-number-mode= など「有効無効をtoggleする関数」は
-   慣習的に =0= 以下の数字を指定すると明示的に無効化できるので，
-   =-1= を設定する関数を定義しておく.
-   #+BEGIN_SRC emacs-lisp
-(defun my:disable-builtin-mode (mode)
-  "与えられた mode が存在するのであれば -1 をセットして無効化"
-  (if (fboundp mode) (funcall mode -1)))
-   #+END_SRC
-** dpkg-status
-   もっと良い方法がありそうなモンですが．
-   #+BEGIN_SRC emacs-lisp
-(defun my:dpkg-status (package)
-  "Return the package status from dpkg --get-selections."
-  (string-match "^ii" (shell-command-to-string (format "dpkg -l %s" package))))
-   #+END_SRC
 * 後方互換性: =el-x=
   古い =flet= と同じ挙動をする =dflet= を使うために =el-x= を導入しておく
   #+BEGIN_SRC emacs-lisp
@@ -215,11 +209,6 @@ init.el: README.org
   - =PASSWORD_STORE_DIR=
   を読み込んでいます．
   #+BEGIN_SRC emacs-lisp
-(when (executable-find "zsh")
-  (progn
-    (setq-default explicit-shell-file-name "zsh")
-    (setq shell-file-name "zsh"
-          shell-command-switch "-c")))
 (defvar my:d:password-store nil)
 (use-package exec-path-from-shell
   :ensure t
@@ -237,9 +226,8 @@ init.el: README.org
      "PASSWORD_STORE_DIR"
      ))
   (setq user-full-name (concat (getenv "DEBFULLNAME"))
-        user-mail-address (concat (getenv "DEBEMAIL")))
-  (setq my:d:password-store
-        (getenv "PASSWORD_STORE_DIR"))
+        user-mail-address (concat (getenv "DEBEMAIL"))
+        my:d:password-store (getenv "PASSWORD_STORE_DIR"))
   )
   #+END_SRC
 * 言語の設定
@@ -248,8 +236,6 @@ init.el: README.org
   #+BEGIN_QUOTE
   いきなり矛盾しますが，最近の Emacs(例:23.3) では文字コードの設定は不要です．
   #+END_QUOTE
-  ...え, そうなのか...
-
   というわけで OS 依存の条件分岐だけを記述しています．
 
   ちなみに
@@ -273,11 +259,10 @@ init.el: README.org
    CJK 以外の East Asian Ambiguos，絵文字も2文字幅にするようにしています．
    拙作の修正ロケールはこちら: [[https://github.com/uwabami/locale-eaw-emoji]]
    #+BEGIN_SRC emacs-lisp
-(unless (locate-library "eaw_and_emoji")
-  (el-get-bundle eaw_and_emoji
-                 :type github
-                 :pkgname "uwabami/locale-eaw-emoji"
-                 :features eaw_and_emoji))
+(unless (package-installed-p 'eaw_and_emoji)
+  (quelpa '(eaw_and_emoji
+            :fetcher url
+            :url "https://raw.githubusercontent.com/uwabami/locale-eaw-emoji/master/eaw_and_emoji.el")))
 (use-package eaw_and_emoji
   :config
   (eaw-and-emoji-fullwidth))
@@ -649,16 +634,6 @@ init.el: README.org
   :config
   (setq clean-buffer-list-delay-general 1))
    #+END_SRC
-* Copy & Paste: =xclip=
-  =xclip= で clipboard とデータをやりとり．
-  #+BEGIN_SRC emacs-lisp
-(use-package xclip
-  :ensure t
-  :if (executable-find "xclip")
-  :config
-  (turn-on-xclip))
-  #+END_SRC
-  clipboard と PRIMARY の同期には =gpaste= を使っている．
 * 日本語入力: [[file:init-ddskk.org][ddskkの設定]]
   [[http://openlab.ring.gr.jp/skk/ddskk-ja.html][Daredevil SKK (DDSKK)]] をメインで使用中．無いと途方に暮れる．
   ちなみにGTKが有効になっていると =gtk-immodule= なんかと衝突するので
@@ -679,6 +654,16 @@ init.el: README.org
   (setq default-input-method "japanese-skk")
   )
   #+END_SRC
+* Copy & Paste: =xclip=
+  =xclip= で clipboard とデータをやりとり．
+  #+BEGIN_SRC emacs-lisp
+(use-package xclip
+  :ensure t
+  :if (executable-find "xclip")
+  :config
+  (turn-on-xclip))
+  #+END_SRC
+  clipboard と PRIMARY の同期には =gpaste= を使っている．
 * Elscreen [/]
   modeline の表示そのものは無効化しておく．
   - [ ] Debian パッケージ版は古い．更新すべき
@@ -693,6 +678,43 @@ init.el: README.org
   :config
   (elscreen-start))
   #+END_SRC
+* 認証関連: =password-store=
+** id-manager の設定
+   ID と Password の簡単な組の管理をするのに非常に重宝している．
+   #+BEGIN_SRC emacs-lisp
+(use-package id-manager
+  :ensure t
+  :if (file-exists-p "~/.gnupg/idm-db.gpg")
+  :bind ("M-7" . idm-open-list-command)
+  :config
+  (setq idm-database-file
+        (expand-file-name "~/.gnupg/idm-db.gpg"))
+  (setq idm-clipboard-expire-time-sec 30))
+   #+END_SRC
+** plstore
+   デフォルトは対称鍵暗号化なので， =GPG_KEY_ID= を設定しておく
+   #+BEGIN_SRC emacs-lisp
+(use-package plstore
+  :init
+  (setq plstore-secret-keys 'silent
+        plstore-encrypt-to (getenv "GPG_KEY_ID")))
+   #+END_SRC
+** oauth2
+   oauth2 の認証情報は =plstore= で保存される．
+   ファイルの置き場所と暗号鍵の設定をしておく
+   #+BEGIN_SRC emacs-lisp
+(use-package oauth2
+  :ensure t
+  :init
+  (setq oauth2-token-file (concat my:d:tmp "oauth2.plstore")))
+   #+END_SRC
+** password-store
+   #+BEGIN_SRC emacs-lisp
+(use-package password-store
+  :ensure t
+  :if my:d:password-store
+  )
+   #+END_SRC
 * MUA の設定: =wanderlust=
   実際の設定は別ファイルを参照: [[file:init-wl.org][Wanderlust の設定]]
   #+BEGIN_SRC emacs-lisp
@@ -702,7 +724,10 @@ init.el: README.org
            (my:dpkg-status "rail"))
   :commands (wl wl-other-frame wl-draft wl-user-agent wl-user-agent-compose wl-draft-send wl-draft-kill)
   :init
-  (el-get-bundle uwabami/gcontacts-get-wl)
+  (unless (package-installed-p 'gcontacts-get-wl)
+    (quelpa '(gcontacts-get-wl
+              :fetcher url
+              :url "https://raw.githubusercontent.com/uwabami/gcontacts-get-wl/master/gcontacts-get-wl.el")))
   (define-mail-user-agent
     'wl-user-agent
     'wl-user-agent-compose
@@ -722,7 +747,6 @@ init.el: README.org
     (make-directory (concat elmo-msgdb-directory "/local")))
   (unless (file-directory-p (concat elmo-msgdb-directory "/local/Trash"))
     (make-directory (concat elmo-msgdb-directory "/local/Trash")))
-  :config
   )
   #+END_SRC
   ついでに =mailto= のリンクを emacsclient で扱うために，以下の関数を定義しておく
@@ -769,43 +793,6 @@ Categories=GNOME;GTK;Office;Email;
 StartupNotify=false
 MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   #+END_SRC
-* 認証関連: =password-store=
-** id-manager の設定
-   ID と Password の簡単な組の管理をするのに非常に重宝している．
-   #+BEGIN_SRC emacs-lisp
-(use-package id-manager
-  :ensure t
-  :if (file-exists-p "~/.gnupg/idm-db.gpg")
-  :bind ("M-7" . idm-open-list-command)
-  :config
-  (setq idm-database-file
-        (expand-file-name "~/.gnupg/idm-db.gpg"))
-  (setq idm-clipboard-expire-time-sec 30))
-   #+END_SRC
-** plstore
-   デフォルトは対称鍵暗号化なので， =GPG_KEY_ID= を設定しておく
-   #+BEGIN_SRC emacs-lisp
-(use-package plstore
-  :init
-  (setq plstore-secret-keys 'silent
-        plstore-encrypt-to (getenv "GPG_KEY_ID")))
-   #+END_SRC
-** oauth2
-   oauth2 の認証情報は =plstore= で保存される．
-   ファイルの置き場所と暗号鍵の設定をしておく
-   #+BEGIN_SRC emacs-lisp
-(use-package oauth2
-  :ensure t
-  :init
-  (setq oauth2-token-file (concat my:d:tmp "oauth2.plstore")))
-   #+END_SRC
-** password-store
-   #+BEGIN_SRC emacs-lisp
-(use-package password-store
-  :ensure t
-  :if my:d:password-store
-  )
-   #+END_SRC
 * 補完: =helm=
   以前はデフォルトの挙動が嫌で割とイロイロと設定していたのだけれど，
   最近はそんなに邪魔しない感じ...なのかな? とりあえず現状は以下の通り．
@@ -905,8 +892,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (setq helm-ag-insert-at-point 'symbol)
   )
    #+END_SRC
-* 補完: =yasnippet=, =auto-complete=
-  上手く設定できていないので保留
+* 補完: =yasnippet=, =auto-complete= [/]
+  - [ ] 上手く設定できていないので保留
 ** yasnippet
    #+BEGIN_SRC emacs-lisp
 (use-package yasnippet
@@ -1045,13 +1032,13 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    howm も有効にしている，ぐらい．
    #+BEGIN_SRC emacs-lisp
 (defvar my:d:org (concat (getenv "HOME") "/Dropbox/org/"))
+(dolist (package '(org-plus-contrib org))
+  (unless (package-installed-p package)
+    (package-refresh-contents)
+    (package-install package)
+    (package-initialize)))
 (use-package org
   :init
-  (dolist (package '(org-plus-contrib org))
-    (unless (package-installed-p package)
-      (package-refresh-contents)
-      (package-install package)
-      (package-initialize)))
   :config
   (setq org-directory my:d:org                 ;; Dropbox に保存する
         org-return-follows-link t              ;; return でリンクを辿る
@@ -1423,12 +1410,10 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
            (file-directory-p org-directory))
   :commands (orgmine-mode)
   :init
-  (unless (locate-library "orgmine")
-    (dolist (package '(elmine))
-      (unless (package-installed-p package)
-        (package-refresh-contents)
-        (package-install package)))
-    (el-get-bundle kametoku/orgmine))
+  (unless (package-installed-p 'orgmine)
+    (quelpa '(orgmine
+              :fetcher github
+              :repo "kametoku/orgmine")))
   (add-to-list 'safe-local-variable-values
                '(orgmine-note-block-begin . "#+BEGIN_SRC textile"))
   (add-hook 'org-mode-hook
@@ -2225,8 +2210,9 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (my:powerline-theme)
   )
   #+END_SRC
+
 * 起動時間の計測
-  - [[http://memo.sugyan.com/entry/20120120/1327037494][起動時間を計測する 改訂版 - すぎゃーんメモ]]
+  [[http://memo.sugyan.com/entry/20120120/1327037494][起動時間を計測する 改訂版 - すぎゃーんメモ]]
   #+BEGIN_SRC emacs-lisp
 (add-hook 'after-init-hook
           (lambda ()
@@ -2236,7 +2222,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 * LICENSE
   幾つかの関数の元ネタとして Emacs 本体のコードを参照したので，GPL-3 or later です．
   #+BEGIN_EXAMPLE
-Copyright (C) 2011--2016 Youhei SASAKI <uwabami@gfd-dennou.org>
+Copyright (C) 2011--2017 Youhei SASAKI <uwabami@gfd-dennou.org>
 .
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

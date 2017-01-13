@@ -95,7 +95,7 @@ init.el: README.org
    #+BEGIN_SRC emacs-lisp
 (unless (require 'use-package nil t)
   (package-refresh-contents)
-  (pakage-install 'use-package))
+  (package-install 'use-package))
    #+END_SRC
 ** [[https://github.com/quelpa/quelpa][quelpa]]
    melpa に登録されていないパッケージや自作の elisp 等をインストールできる様に

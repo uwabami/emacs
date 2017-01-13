@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-01-13 02:53:24
+#+DATE: 2017-01-13 12:06:07
 #+LANGUAGE: ja
 #+LAYOUT: default
 * はじめに
@@ -1044,19 +1044,20 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    以前のメモの整理のために [[http://howm.osdn.jp/index-j.html][howm: Hitori Otegaru Wiki Modoki]] も使っているので,
    howm も有効にしている，ぐらい．
    #+BEGIN_SRC emacs-lisp
-(dolist (package '(org-plus-contrib org))
-  (unless (package-installed-p package)
-    (package-refresh-contents)
-    (package-install package)))
+(defvar my:d:org (concat (getenv "HOME") "/Dropbox/org/"))
 (use-package org
-  :ensure t
+  :functions org-link-types
   :init
+  (dolist (package '(org-plus-contrib))
+    (unless (package-installed-p package)
+      (package-refresh-contents)
+      (package-install package)))
   :config
-  (setq org-directory (concat (getenv "HOME") "/Dropbox/org/") ;; Dropbox に保存する
-        org-return-follows-link t                              ;; return でリンクを辿る
-        org-startup-folded t                                   ;; 見出しを畳んで表示
-        org-startup-truncated t                                ;; 折り返し無し
-        org-emphasis-alist                                     ;; 基本 "-nw" なので色変更
+  (setq org-directory my:d:org                 ;; Dropbox に保存する
+        org-return-follows-link t              ;; return でリンクを辿る
+        org-startup-folded t                   ;; 見出しを畳んで表示
+        org-startup-truncated t                ;; 折り返し無し
+        org-emphasis-alist                     ;; 基本 "-nw" なので色変更
         (cons '("+" '(:strike-through t :foreground "#999999"))
               (cl-delete "+" org-emphasis-alist :key 'car :test 'equal))
         ;; GTD: 状態の追加
@@ -1149,7 +1150,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    なんて事もやっている．元ネタは [[https://julien.danjou.info/blog/2010/org-mode-and-holidays][Org-mode and holidays]]
   #+BEGIN_SRC emacs-lisp
 (use-package org-agenda
-  :if (file-directory-p (concat (getenv "HOME") "/Dropbox/org"))
+  :if (file-directory-p my:d:org)
   :bind (("C-c a" . org-agenda))
   :init
   (defface my:org-agenda-date-saturday
@@ -1296,6 +1297,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    #+BEGIN_SRC emacs-lisp
 (use-package org-journal
   :ensure t
+  :if (file-directory-p my:d:org)
   :bind (("C-c C-j" . browse-url-at-point))
   :init
   (add-hook 'org-journal-mode-hook
@@ -1343,8 +1345,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 (use-package org-src
   :diminish org-src-mode
   :config
-  (setq org-src-fontify-natively t  ;; font-lock
-        org-src-tab-acts-natively t ;; indent
+  (setq org-src-fontify-natively t       ;; font-lock
+        org-src-tab-acts-natively t      ;; indent
         org-edit-src-content-indentation 0
         org-src-preserve-indentation t
         )
@@ -1378,7 +1380,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 (use-package org-gcal
   :ensure t
   :if (and my:d:password-store
-           (file-directory-p org-directory))
+           (file-directory-p my:d:org))
   :commands (org-gcal-fetch)
   :init
   (setq org-gcal-dir (concat my:d:tmp "org-gcal"))
@@ -1416,17 +1418,17 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 ** OrgとRedmine の連携: =orgmine=
    素晴しい!! [[https://github.com/kametoku/orgmine][kametoku/orgmine: Emacs minor mode for org-mode with redmine integration]]
    #+BEGIN_SRC emacs-lisp
-(unless (locate-library "orgmine")
-  (dolist (package '(elmine))
-    (unless (package-installed-p package)
-      (package-refresh-contents)
-      (package-install package)))
-  (el-get-bundle kametoku/orgmine))
 (use-package orgmine
   :if (and my:d:password-store
            (file-directory-p org-directory))
   :commands (orgmine-mode)
   :init
+  (unless (locate-library "orgmine")
+    (dolist (package '(elmine))
+      (unless (package-installed-p package)
+        (package-refresh-contents)
+        (package-install package)))
+    (el-get-bundle kametoku/orgmine))
   (add-to-list 'safe-local-variable-values
                '(orgmine-note-block-begin . "#+BEGIN_SRC textile"))
   (add-hook 'org-mode-hook

@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-01-13 14:15:11
+#+DATE: 2017-01-13 16:11:34
 #+LANGUAGE: ja
 #+LAYOUT: default
 * はじめに
@@ -75,7 +75,7 @@ init.el: README.org
             (if (file-exists-p custom-file)
                 (delete-file custom-file))))
   #+END_SRC
-* Package 関連: =package.el=, [[https://github.com/jwiegley/use-package][use-package]], =auto-install=
+* Package 関連: =package.el=, [[https://github.com/jwiegley/use-package][use-package]], [[https://github.com/quelpa/quelpa][quelpa]]
   [[https://github.com/jwiegley/use-package][use-package]] のおかけで、
   無いと途方に暮れるパッケージ以外のインストールは無視できるようになります。
 ** =package.el=
@@ -83,12 +83,17 @@ init.el: README.org
 #+BEGIN_SRC emacs-lisp
 (unless (file-directory-p (concat user-emacs-directory "packages"))
   (make-directory (concat user-emacs-directory "packages")))
+(eval-when-compile
+  (load-library "url-handlers"))
 (require 'package nil 'noerror)
-(setq package-enable-at-startup nil
+(setq package-enable-at-startup t
       package-user-dir (concat user-emacs-directory "packages"))
-(add-to-list 'package-archives '("melpa-stable" . "http://melpa.org/packages/") t)
-(add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/") t)
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+(add-to-list 'package-archives '("org"   . "http://orgmode.org/elpa/") t)
+(eval-when-compile (package-refresh-contents))
 (package-initialize)
+(unless (package-installed-p 'package-utils)
+  (package-install 'package-utils))
 #+END_SRC
 ** [[https://github.com/jwiegley/use-package][use-package]]
    個々のパッケージの設定には [[https://github.com/jwiegley/use-package][use-package]] を利用します．
@@ -99,13 +104,17 @@ init.el: README.org
    #+END_SRC
 ** [[https://github.com/quelpa/quelpa][quelpa]]
    melpa に登録されていないパッケージや自作の elisp 等をインストールできる様に
-   [[https://github.com/quelpa/quelpa][quelpa]] を入れておきます.
+   [[https://github.com/quelpa/quelpa][quelpa]] を入れておきます．とはいえ、これでパッケージを入れる訳ではないので、
+   melpa の同期はしません。
    #+BEGIN_SRC emacs-lisp
 (use-package quelpa
   :ensure t
-  :init
+  :config
   (setq quelpa-upgrade-p nil
-        quelpa-update-melpa-p nil)
+        quelpa-checkout-melpa-p nil
+        quelpa-update-melpa-p nil
+        quelpa-melpa-recipe-stores nil
+        )
   )
    #+END_SRC
 * 独自関数
@@ -1032,11 +1041,9 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    howm も有効にしている，ぐらい．
    #+BEGIN_SRC emacs-lisp
 (defvar my:d:org (concat (getenv "HOME") "/Dropbox/org/"))
-(dolist (package '(org-plus-contrib org))
-  (unless (package-installed-p package)
-    (package-refresh-contents)
-    (package-install package)
-    (package-initialize)))
+(eval-and-compile
+  (unless (package-installed-p 'org) (package-install 'org))
+  (unless (package-installed-p 'org-plus-contrib)(package-install 'org-plus-contrib)))
 (use-package org
   :init
   :config
@@ -1411,6 +1418,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :commands (orgmine-mode)
   :init
   (unless (package-installed-p 'orgmine)
+    (package-install 'elmine)
     (quelpa '(orgmine
               :fetcher github
               :repo "kametoku/orgmine")))

@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-01-13 14:09:19
+#+DATE: 2017-01-13 14:15:11
 #+LANGUAGE: ja
 #+LAYOUT: default
 * はじめに
@@ -94,7 +94,7 @@ init.el: README.org
    個々のパッケージの設定には [[https://github.com/jwiegley/use-package][use-package]] を利用します．
    #+BEGIN_SRC emacs-lisp
 (unless (require 'use-package nil t)
-  (package-refresh-contens)
+  (package-refresh-contents)
   (pakage-install 'use-package))
    #+END_SRC
 ** [[https://github.com/quelpa/quelpa][quelpa]]

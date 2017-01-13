@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-01-13 12:06:07
+#+DATE: 2017-01-13 12:12:00
 #+LANGUAGE: ja
 #+LAYOUT: default
 * はじめに
@@ -1046,12 +1046,12 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    #+BEGIN_SRC emacs-lisp
 (defvar my:d:org (concat (getenv "HOME") "/Dropbox/org/"))
 (use-package org
-  :functions org-link-types
   :init
-  (dolist (package '(org-plus-contrib))
+  (dolist (package '(org-plus-contrib org))
     (unless (package-installed-p package)
       (package-refresh-contents)
-      (package-install package)))
+      (package-install package)
+      (package-initialize)))
   :config
   (setq org-directory my:d:org                 ;; Dropbox に保存する
         org-return-follows-link t              ;; return でリンクを辿る

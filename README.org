@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-01-15 15:37:35
+#+DATE: 2017-01-15 15:52:21
 #+LANGUAGE: ja
 #+LAYOUT: default
 * はじめに
@@ -1059,9 +1059,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    howm も有効にしている，ぐらい．
    #+BEGIN_SRC emacs-lisp
 (defvar my:d:org (concat (getenv "HOME") "/Dropbox/org/"))
-(eval-and-compile
-  (unless (package-installed-p 'org) (package-install 'org))
-  (unless (package-installed-p 'org-plus-contrib)(package-install 'org-plus-contrib)))
 (use-package org
   :init
   :config
@@ -1770,7 +1767,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         git-gutter:deleted-sign-sign "- "
         git-gutter:modified-sign "::"
         git-gutter:unchanged-sign "  "     ;; 空白 2つ
-        git-gutter:always-show-separator t
+        git-gutter:always-show-separator nil
         ;; git-gutter:modified-sign "⇔"
         ;; git-gutter:added-sign "⇒"
         ;; git-gutter:deleted-sign "⇐"

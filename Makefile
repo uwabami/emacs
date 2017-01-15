@@ -1,7 +1,7 @@
 # -*- mode: makefile -*-
 EMACS	?= emacs
+SRC		 = init-ddskk.org
 SRC		+= $(shell dpkg -l wl-beta 2>&1 | grep -q ^ii && echo init-wl.org )
-SRC		+= $(shell dpkg -l ddskk 2>&1 | grep -q ^ii && echo init-ddskk.org )
 PKG		 = org-plus-contrib
 PKG		+= $(shell dpkg -l ddskk 2>&1 | grep -q ^ii || echo ddskk )
 EL		?= $(SRC:%.org=%.el)

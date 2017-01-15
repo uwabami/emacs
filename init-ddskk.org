@@ -2,7 +2,7 @@
 #+TITLE: ddskk の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2017-01-15 15:45:05
+#+DATE: 2017-01-15 16:41:21
 #+LANG: ja
 #+LAYOUT: page
 #+CATEGORIES: cc-env emacs
@@ -200,11 +200,10 @@ File.open(src, "r") {|f|
   (add-to-list 'skk-search-prog-list
                '(skk-comp-by-server-completion) t))
  (t
-  (setq skk-get-jisyo-directory (concat my:d:tmp "skk-jisyo")))
+  (setq skk-get-jisyo-directory (concat my:d:tmp "skk-jisyo")
+        skk-large-jisyo (concat skk-get-jisyo-directory "/SKK-JISYO.L"))
+  )
  )
-(eval-when-compile
-  (unless (getenv "SKKSERVER")
-    (skk-jisyo-get)))
 ;; 辞書登録の際に送り仮名を削除
 (setq skk-check-okurigana-on-touroku 'auto)
 ;;漢字登録のミスをチェックする

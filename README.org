@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-01-15 16:02:34
+#+DATE: 2017-01-15 17:29:25
 #+LANGUAGE: ja
 #+LAYOUT: default
 * はじめに
@@ -673,12 +673,15 @@ init.el: README.org
   #+END_SRC
   実際の設定は [[file:init-ddskk.org][ddskkの設定]] で行なっているため, 設定ファイルの位置変更を変更している
   #+BEGIN_SRC emacs-lisp
-(use-package skk-autoloads
+(use-package skk
+  :bind (("C-x j"   . skk-mode)
+         ("C-x C-j" . skk-mode)
+         ("C-\\"    . skk-mode))
   :init
-  (setq skk-user-directory (concat my:d:tmp "skk"))
-  (setq skk-init-file (concat user-emacs-directory "init-ddskk"))
+  (setq skk-user-directory (concat my:d:tmp "skk")
+        skk-init-file (concat user-emacs-directory "init-ddskk")
+        default-input-method "japanese-skk" )
   :config
-  (setq default-input-method "japanese-skk")
   )
   #+END_SRC
 * Copy & Paste: =xclip=
@@ -1781,6 +1784,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 ** flycheck
    #+BEGIN_SRC emacs-lisp
 (use-package flycheck
+  :ensure t
   :diminish flycheck-mode
   :init
   :config
@@ -2215,58 +2219,63 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   powerline 本体の設定．default-theme をベースに見たい物だけ表示するようにしてみた．
   #+BEGIN_SRC emacs-lisp
 (use-package powerline
+  :ensure t
   :config
+  (when (eq system-type 'darwin)
+    (setq powerline-default-separator 'utf-8
+          powerline-utf-8-separator-left  #x20
+          powerline-utf-8-separator-right #x20))
   (defun my:powerline-theme ()
-  "Setup customize theme."
-  (interactive)
-  (setq-default
-   mode-line-format
-   '("%e"
-     (:eval
-      (let* ((active (powerline-selected-window-active))
-             (mode-line-buffer-id (if active 'mode-line-buffer-id 'mode-line-buffer-id-inactive))
-             (mode-line (if active 'mode-line 'mode-line-inactive))
-             (face1 (if active 'powerline-active1 'powerline-inactive1))
-             (face2 (if active 'powerline-active2 'powerline-inactive2))
-             (separator-left (intern (format "powerline-%s-%s"
-                                             (powerline-current-separator)
-                                             (car powerline-default-separator-dir))))
-             (separator-right (intern (format "powerline-%s-%s"
-                                              (powerline-current-separator)
-                                              (cdr powerline-default-separator-dir))))
-             (lhs (list
-                   (powerline-raw (substring skk-modeline-input-mode 2 -1) nil 'l)
-                   (powerline-raw "%*" mode-line 'l)
-                   (powerline-raw mode-line-mule-info mode-line 'l)
-                   (powerline-buffer-id mode-line-buffer-id 'l)
-                   ;; (when (and (boundp 'which-func-mode) which-func-mode)
-                   ;;   (powerline-raw which-func-format nil 'l))
-                   (powerline-raw " ")
-                   (funcall separator-left mode-line face1)
-                   (powerline-major-mode face1 'l)
-                   (powerline-process face1)
-                   (powerline-narrow face1 'l)
-                   (powerline-raw " " face1)
-                   (funcall separator-left face1 face2)
-                   (powerline-vc face2 'r)
-                   ))
-             (rhs (list
-                   (powerline-raw global-mode-string face2 'r)
-                   (funcall separator-right face2 face1)
-                   (powerline-raw " " face1)
-                   (powerline-minor-modes face1 'r)
-                   (funcall separator-right face1 mode-line)
-                   (powerline-raw " ")
-                   (powerline-raw "%6p" mode-line 'r)
-                   ))
-             )
-        (concat (powerline-render lhs)
-                (powerline-fill face2 (powerline-width rhs))
-                (powerline-render rhs)))))))
+    "Setup customize theme."
+    (interactive)
+    (my:skk-modeline-input-mode)
+    (setq-default
+     mode-line-format
+     '("%e"
+       (:eval
+        (let* ((active (powerline-selected-window-active))
+               (mode-line-buffer-id (if active 'mode-line-buffer-id 'mode-line-buffer-id-inactive))
+               (mode-line (if active 'mode-line 'mode-line-inactive))
+               (face1 (if active 'powerline-active1 'powerline-inactive1))
+               (face2 (if active 'powerline-active2 'powerline-inactive2))
+               (separator-left (intern (format "powerline-%s-%s"
+                                               (powerline-current-separator)
+                                               (car powerline-default-separator-dir))))
+               (separator-right (intern (format "powerline-%s-%s"
+                                                (powerline-current-separator)
+                                                (cdr powerline-default-separator-dir))))
+               (lhs (list
+                     (powerline-raw (substring skk-modeline-input-mode 2 -1) nil 'l)
+                     (powerline-raw "%*" mode-line 'l)
+                     (powerline-raw mode-line-mule-info mode-line 'l)
+                     (powerline-buffer-id mode-line-buffer-id 'l)
+                     ;; (when (and (boundp 'which-func-mode) which-func-mode)
+                     ;;   (powerline-raw which-func-format nil 'l))
+                     (powerline-raw " ")
+                     (funcall separator-left mode-line face1)
+                     (powerline-major-mode face1 'l)
+                     (powerline-process face1)
+                     (powerline-narrow face1 'l)
+                     (powerline-raw " " face1)
+                     (funcall separator-left face1 face2)
+                     (powerline-vc face2 'r)
+                     ))
+               (rhs (list
+                     (powerline-raw global-mode-string face2 'r)
+                     (funcall separator-right face2 face1)
+                     (powerline-raw " " face1)
+                     (powerline-minor-modes face1 'r)
+                     (funcall separator-right face1 mode-line)
+                     (powerline-raw " ")
+                     (powerline-raw "%6p" mode-line 'r)
+                     ))
+               )
+          (concat (powerline-render lhs)
+                  (powerline-fill face2 (powerline-width rhs))
+                  (powerline-render rhs)))))))
   (my:powerline-theme)
   )
   #+END_SRC
-
 * 起動時間の計測
   [[http://memo.sugyan.com/entry/20120120/1327037494][起動時間を計測する 改訂版 - すぎゃーんメモ]]
   #+BEGIN_SRC emacs-lisp

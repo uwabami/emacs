@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-01-15 15:54:42
+#+DATE: 2017-01-15 16:02:34
 #+LANGUAGE: ja
 #+LAYOUT: default
 * はじめに
@@ -93,15 +93,17 @@ init.el: README.org
   (package-install 'package-utils))
    #+END_SRC
    また，初回起動時に =make= で org の最新版等を導入するために
-   batch でインストールできる様に，以下を =tmp/emacs-batch-install.el= として出力します．
-   #+BEGIN_SRC emacs-lisp :tangle tmp/emacs-batch-install.el
+   batch でインストールできる様に，以下を =emacs-batch-install.el= として出力します．
+   #+BEGIN_SRC emacs-lisp :tangle emacs-batch-install.el
+(when load-file-name
+  (setq user-emacs-directory (file-name-directory load-file-name)))
 (unless (file-directory-p (concat user-emacs-directory "packages"))
   (make-directory (concat user-emacs-directory "packages")))
-(require 'package)
+(setq url-http-attempt-keepalives nil)
+(require 'package nil 'noerror)
 (setq package-user-dir (concat user-emacs-directory "packages"))
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (add-to-list 'package-archives '("org"   . "http://orgmode.org/elpa/") t)
-(setq url-http-attempt-keepalives nil)
 (package-refresh-contents)
 (package-initialize)
 (package-install pkg-install)

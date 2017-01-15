@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-01-13 16:41:56
+#+DATE: 2017-01-15 15:06:34
 #+LANGUAGE: ja
 #+LAYOUT: default
 * はじめに
@@ -80,11 +80,10 @@ init.el: README.org
   無いと途方に暮れるパッケージ以外のインストールは無視できるようになります。
 ** =package.el=
    パッケージは基本的に =pacakge.el= で導入するので、先ずはその設定.
-#+BEGIN_SRC emacs-lisp
+   #+BEGIN_SRC emacs-lisp
 (unless (file-directory-p (concat user-emacs-directory "packages"))
   (make-directory (concat user-emacs-directory "packages")))
-(eval-when-compile
-  (load-library "url-handlers"))
+(setq url-http-attempt-keepalives nil)
 (require 'package nil 'noerror)
 (setq package-enable-at-startup t
       package-user-dir (concat user-emacs-directory "packages"))
@@ -94,7 +93,21 @@ init.el: README.org
 (package-initialize)
 (unless (package-installed-p 'package-utils)
   (package-install 'package-utils))
-#+END_SRC
+   #+END_SRC
+   初回起動時に =make= で org の最新版を導入するために
+   batch でインストールできる様に，以下を =emacs-batch-install.el= として出力します．
+   #+BEGIN_SRC emacs-lisp :tangle emacs-batch-install.el
+(unless (file-directory-p (concat user-emacs-directory "packages"))
+  (make-directory (concat user-emacs-directory "packages")))
+(require 'package)
+(setq package-user-dir (concat user-emacs-directory "packages"))
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+(add-to-list 'package-archives '("org"   . "http://orgmode.org/elpa/") t)
+(setq url-http-attempt-keepalives nil)
+(package-refresh-contents)
+(package-initialize)
+(package-install pkg-install)
+   #+END_SRC
 ** [[https://github.com/jwiegley/use-package][use-package]]
    個々のパッケージの設定には [[https://github.com/jwiegley/use-package][use-package]] を利用します．
    #+BEGIN_SRC emacs-lisp
@@ -846,7 +859,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
       (advice-add 'helm-ff-kill-or-find-buffer-fname
                   :around (lambda (orig-func candidate)
                             (when (file-exists-p candidate)
-                              (funcal orig-func candidate))))
+                              (funcall orig-func candidate))))
       (if (and (locate-library "migemo")     ; あれば migemo を有効化
                (executable-find "cmigemo"))
           (setq helm-migemo-mode t)
@@ -1465,6 +1478,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :config
   (setq org-html-use-infojs nil
         org-html-html5-fancy nil
+        org-export-htmlize-output-type 'css
         org-html-doctype "html5"
         org-html-text-markup-alist
         '((bold           . "<strong>%s</strong>")
@@ -1478,7 +1492,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 ** Jekyll 用の設定
    Web サイトは Jekyll で作成しています．
    [[https://github.com/yoshinari-nomura/org-octopress][yoshinari-nomura/org-octopress: org-mode in octopress]] の
-   =ox-jekyll= を改造して，
+   =ox-jekyll= を参考に +改造して+ ，
    html export の際に必要な yaml front matter を出力できるようにしてます．
    #+BEGIN_SRC emacs-lisp
 (org-export-define-derived-backend 'jekyll 'html
@@ -1490,10 +1504,10 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :translate-alist
   '((template       . org-jekyll-template))
   :options-alist
-  '((:ref       "REF" nil "")
-    (:permalink "PERMALINK" nil "")
-    (:layout    "LAYOUT" nil "default")
-    (:menu      "MENU" nil ""))
+  '((:layout    "LAYOUT" nil "default")
+    (:ref       "REF" nil nil)
+    (:permalink "PERMALINK" nil nil)
+    )
   )
 ;; template
 (defun org-jekyll-template (contents info)
@@ -1513,16 +1527,10 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
          (org-jekyll--get-option info :language))
         (layout
          (org-jekyll--get-option info :layout))
-        (categories
-         (org-jekyll--get-option info :categories ))
-        (tags
-         (org-jekyll--get-option info :tags ))
         (jekyll-ref
          (org-jekyll--get-option info :ref ))
         (jekyll-permalink
          (org-jekyll--get-option info :permalink ))
-        (jekyll-menu
-         (org-jekyll--get-option info :menu ))
         (convert-to-yaml-list
          (lambda (arg)
            (mapconcat #'(lambda (text)(concat "\n- " text)) (split-string arg) " "))))
@@ -1531,12 +1539,11 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
      "\ntitle: "      title
      "\ndate: "       date
      "\nlayout: "     layout
-     "\ncategories: " (funcall convert-to-yaml-list categories)
-     "\ntags: "       (funcall convert-to-yaml-list tags)
      "\nlang: "       language
-     "\nref: "        jekyll-ref
-     "\npermalink: "  jekyll-permalink
-     "\nmenu: "       jekyll-menu
+     (unless (string-equal jekyll-ref "")
+       (concat "\nref: " jekyll-ref))
+     (unless (string-equal jekyll-permalink "")
+       (concat "\npermalink: " jekyll-permalink))
      "\n---\n")))
 
 (defun org-jekyll-export-as-html
@@ -1552,6 +1559,36 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (interactive)
   (let ((outfile (org-export-output-file-name ".html" subtreep)))
     (org-export-to-file 'jekyll outfile async subtreep visible-only body-only ext-plist)))
+   #+END_SRC
+** Org-Wiki
+   計算機関連のメモは [[https://github.com/caiorss/org-wiki][org-wiki]] で書いています．
+   #+BEGIN_SRC emacs-lisp
+(unless (package-installed-p 'org-wiki)
+  (quelpa '(org-wiki
+            :fetcher github
+            :repo "caiorss/org-wiki")))
+(use-package org-wiki
+  :config
+  (setq org-wiki-location (concat (getenv "HOME") "/Pulic/cc-env/"))
+  (defun my:org-wiki-header ()
+    "Insert a header at the top of the file, customize for personal use"
+    (interactive)
+    (save-excursion
+      (goto-char (point-min))
+      (insert (format
+               (string-trim "
+,#+TITLE:
+,#+DATE: 20
+,#+LANGUAGE: ja
+,#+REF: cc-env/%s
+,#+LAYOUT: default
+,#+SETUPFILE: ../_setup.org
+,#+PERMALINK: /cc-env/%s.html
+")
+               (file-name-base (buffer-file-name))
+               (file-name-base (buffer-file-name))))))
+  (advice-add 'org-wiki-header :override 'my:org-wiki-header)
+  )
    #+END_SRC
 * Howm
   Org を使う前は Howm を使っていました.
@@ -1715,25 +1752,27 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :bind (("C-x g" . magit-status))
   )
    #+END_SRC
-   git-gutter で差分を視覚的に表示 +そのうち飽きるかも...+
+   git-gutter で差分を視覚的に表示してくれる．
+   @see [[http://qiita.com/syohex/items/a669b35fbbfcdda0cbf2][git-gutter.elの紹介 - Qiita]]
    #+BEGIN_SRC emacs-lisp
 (use-package git-gutter
   :ensure t
   :if (locate-library "magit")
+  :bind (("C-x p" . git-gutter:previous-hunk)
+         ("C-x n" . git-gutter:previous-hunk)
+         ("C-x =" . git-gutter:popup-hunk))
   :config
   (setq git-gutter:window-width 2
         git-gutter:added-sign "+ "
         git-gutter:deleted-sign-sign "- "
-        git-gutter:modified-sign "  " ;; 空白 2つ
+        git-gutter:modified-sign "::"
+        git-gutter:unchanged-sign "  "     ;; 空白 2つ
+        git-gutter:always-show-separator t
         ;; git-gutter:modified-sign "⇔"
         ;; git-gutter:added-sign "⇒"
         ;; git-gutter:deleted-sign "⇐"
-        git-gutter:update-hooks '(after-save-hook after-revert-hook)
         git-gutter:lighter ""
         )
-  (set-face-foreground 'git-gutter:added "green")
-  (set-face-foreground 'git-gutter:deleted "magenta")
-  (set-face-background 'git-gutter:modified "yellow")
   (global-git-gutter-mode +1)
   )
    #+END_SRC
@@ -2065,6 +2104,11 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
  '(dired-symlink                    ((t (:bold t :foreground "#7FFFFF" ))))
  ;; '(dired-warning
  '(flx-highlight-face               ((t (:bold t :undeline t))))
+ ;; git-gutter
+ '(git-gutter:added                  ((t (:inherit default :bold t :foreground "#4CFF4C"))))
+ '(git-gutter:deleted                ((t (:inherit default :bold t :foreground "#FF7FBF"))))
+ '(git-gutter:modified               ((t (:inherit default :bold t :foreground "#FFFF4C"))))
+ '(git-gutter:unchanged              ((t (:inherit default ))))
  ;; helm: header-line
  '(helm-source-header               ((t (:foreground "#F6F3E8" :background "#224488" :bold t))))
  '(helm-visible-mark                ((t (:inherit highlight ))))

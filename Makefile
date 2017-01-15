@@ -6,8 +6,8 @@ EL		?= $(SRC:%.org=%.el)
 ELC		?= $(SRC:%.org=%.elc)
 
 all: bootstrap init.elc $(ELC)
-bootstrap: tmp/bootstrap-stamp
-tmp/bootstrap-stamp: init.el
+bootstrap: .bootstrap-stamp
+.bootstrap-stamp: init.el
 	$(EMACS) -q --batch --eval \
 		"(defconst pkg-install 'org-plus-contrib)" \
 		-l emacs-batch-install.el
@@ -33,6 +33,7 @@ recompile:
 clean:
 	rm -fr auto-save-list *.el *.elc *~
 distclean: clean
+	rm -f .bootstrap-stamp
 	rm -fr packages
 	rm -fr quelpa
 	rm -fr tmp

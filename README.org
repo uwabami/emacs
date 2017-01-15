@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-01-15 15:52:21
+#+DATE: 2017-01-15 15:54:42
 #+LANGUAGE: ja
 #+LAYOUT: default
 * はじめに
@@ -93,8 +93,8 @@ init.el: README.org
   (package-install 'package-utils))
    #+END_SRC
    また，初回起動時に =make= で org の最新版等を導入するために
-   batch でインストールできる様に，以下を =emacs-batch-install.el= として出力します．
-   #+BEGIN_SRC emacs-lisp :tangle emacs-batch-install.el
+   batch でインストールできる様に，以下を =tmp/emacs-batch-install.el= として出力します．
+   #+BEGIN_SRC emacs-lisp :tangle tmp/emacs-batch-install.el
 (unless (file-directory-p (concat user-emacs-directory "packages"))
   (make-directory (concat user-emacs-directory "packages")))
 (require 'package)

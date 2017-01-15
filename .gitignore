@@ -1,6 +1,7 @@
 *.el
 *.elc
 .org-id-locations
+.bootstrap-stamp
 packages
 quelpa
 tmp

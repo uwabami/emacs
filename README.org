@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-01-15 15:06:34
+#+DATE: 2017-01-15 15:37:35
 #+LANGUAGE: ja
 #+LAYOUT: default
 * はじめに
@@ -61,8 +61,6 @@ init.el: README.org
   (expand-file-name "share/" user-emacs-directory))
 (defconst my:d:tmp
   (expand-file-name "tmp/" user-emacs-directory))
-(unless (file-directory-p my:d:tmp)
-  (make-directory my:d:tmp))
   #+END_SRC
   ついでに，
   =custom-set-variables= は別ファイルに出力，終了時に削除するようにしています．
@@ -94,7 +92,7 @@ init.el: README.org
 (unless (package-installed-p 'package-utils)
   (package-install 'package-utils))
    #+END_SRC
-   初回起動時に =make= で org の最新版を導入するために
+   また，初回起動時に =make= で org の最新版等を導入するために
    batch でインストールできる様に，以下を =emacs-batch-install.el= として出力します．
    #+BEGIN_SRC emacs-lisp :tangle emacs-batch-install.el
 (unless (file-directory-p (concat user-emacs-directory "packages"))
@@ -108,6 +106,12 @@ init.el: README.org
 (package-initialize)
 (package-install pkg-install)
    #+END_SRC
+   batch でのインストールは例えば
+   #+BEGIN_SRC makefile :tangle no
+	$(EMACS) -q --batch --eval \
+	  "(deconst pkg-install 'org-plus-contrib)" -l emacs-batch-install.el
+   #+END_SRC
+   とか．実際は [[file:Makefile][Makefile]] 参照．
 ** [[https://github.com/jwiegley/use-package][use-package]]
    個々のパッケージの設定には [[https://github.com/jwiegley/use-package][use-package]] を利用します．
    #+BEGIN_SRC emacs-lisp
@@ -668,7 +672,6 @@ init.el: README.org
   実際の設定は [[file:init-ddskk.org][ddskkの設定]] で行なっているため, 設定ファイルの位置変更を変更している
   #+BEGIN_SRC emacs-lisp
 (use-package skk-autoloads
-  :if (my:dpkg-status "ddskk")
   :init
   (setq skk-user-directory (concat my:d:tmp "skk"))
   (setq skk-init-file (concat user-emacs-directory "init-ddskk"))

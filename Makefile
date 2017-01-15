@@ -1,16 +1,21 @@
 # -*- mode: makefile -*-
 EMACS	?= emacs
-SRC		+= $(shell if dpkg -l wl-beta 2>&1 | grep -q ^ii ; then echo init-wl.org ; fi )
-SRC		+= $(shell if dpkg -l ddskk 2>&1 | grep -q ^ii ; then echo init-ddskk.org ; fi)
+SRC		+= $(shell dpkg -l wl-beta 2>&1 | grep -q ^ii && echo init-wl.org )
+SRC		+= $(shell dpkg -l ddskk 2>&1 | grep -q ^ii && echo init-ddskk.org )
+PKG		 = org-plus-contrib
+PKG		+= $(shell dpkg -l ddskk 2>&1 | grep -q ^ii || echo ddskk )
 EL		?= $(SRC:%.org=%.el)
 ELC		?= $(SRC:%.org=%.elc)
 
 all: bootstrap init.elc $(ELC)
-bootstrap: .bootstrap-stamp
-.bootstrap-stamp: init.el
-	$(EMACS) -q --batch --eval \
-		"(defconst pkg-install 'org-plus-contrib)" \
-		-l emacs-batch-install.el
+bootstrap: tmp/bootstrap-stamp
+tmp/bootstrap-stamp: init.el
+	mkdir -p tmp
+	chmod 700 tmp
+	@for p in $(PKG) ; do \
+		$(EMACS) -q --batch --eval \
+		  "(defconst pkg-install '$$p)" -l emacs-batch-install.el ;\
+	done
 	rm -f emacs-batch-install.el
 	touch $@
 init.el: README.org
@@ -33,7 +38,6 @@ recompile:
 clean:
 	rm -fr auto-save-list *.el *.elc *~
 distclean: clean
-	rm -f .bootstrap-stamp
 	rm -fr packages
 	rm -fr quelpa
 	rm -fr tmp

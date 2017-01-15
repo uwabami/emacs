@@ -2,7 +2,7 @@
 #+TITLE: ddskk の設定
 #+AUTHOR: Youhei SASAKI
 #+EMAIL: uwabami@gfd-dennou.org
-#+DATE: 2017-01-06 18:37:15
+#+DATE: 2017-01-15 15:45:05
 #+LANG: ja
 #+LAYOUT: page
 #+CATEGORIES: cc-env emacs
@@ -13,7 +13,7 @@
   Daredevil SKK (DDSKK) は Emacs Lisp 版の SKK です。本家 SKK を受け継い
   で開発を行っています。
   #+END_QUOTE
-  [[file:init.org][Emacsの基本設定]] で
+  [[file:README.org][Emacs の設定]] で
   - skk-user-directory
   - skk-init-file
   を設定しているので、設定ファイルの構成は
@@ -31,7 +31,7 @@
   sticky shift については   [[http://homepage1.nifty.com/blankspace/emacs/sticky.html][sticky shift]] を参照のこと.
   ddskk の 14.2 以降から同梱されるようになった(ありがたい)
   #+BEGIN_SRC emacs-lisp
-    (setq skk-sticky-key ";")
+(setq skk-sticky-key ";")
   #+END_SRC
 * 表示関連
   #+BEGIN_SRC emacs-lisp
@@ -81,46 +81,46 @@
   #+END_SRC
 * 編集関連
   #+BEGIN_SRC emacs-lisp
-    ;; キーバインド
-    (global-set-key "\C-x\C-j" 'skk-mode)
-    (global-set-key "\C-xj" 'skk-mode)
-    (global-set-key "\C-j" 'skk-mode)
-    (global-set-key "\C-\\" 'skk-mode)
-    ;; 半角カナを入力
-    (setq skk-use-jisx0201-input-method t)
-    ;; Enter で改行しない
-    (setq skk-egg-like-newline t)
-    ;;"「"を入力したら"」"も自動で挿入
-    (setq skk-auto-insert-paren t)
-    ;; 句読点変換ルール
-    (setq skk-kuten-touten-alist
-          '(
-            (jp    .    ("。" . "、" ))
-            (en-jp   .    ("．" . "，" ))
-            (en    .    (". " . ", "))
-            ))
-    (setq-default skk-kutouten-type 'en-jp)
-    ;; 全角記号の変換: @ での日付入力は使わない
-    ;; (setq skk-date-ad t)
-    ;; (setq skk-number-style nil)
-    (setq skk-rom-kana-rule-list
-          (append skk-rom-kana-rule-list
-                  '(("!" nil "!")
-                    (":" nil ":")
-                    (";" nil ";")
-                    ("?" nil "?")
-                    ("z " nil "　")
-                    ("\\" nil "\\")
-                    ("@" nil "@")
-                    )))
-    ;; 全角英語モードで U+FF0D, U+FF5E を入力する?
-    ;; (when (not (string< mule-version "6.0"))
-    ;;   (aset skk-jisx0208-latin-vector ?- (string #xFF0D))
-    ;;   (aset skk-jisx0208-latin-vector ?~ (string #xFF5E)))
-    ;; 送り仮名が厳密に正しい候補を優先
-    (setq skk-henkan-strict-okuri-precedence t)
-    ;; 辞書の共有
-    (setq skk-share-private-jisyo t)
+;; キーバインド
+(global-set-key "\C-x\C-j" 'skk-mode)
+(global-set-key "\C-xj" 'skk-mode)
+(global-set-key "\C-j" 'skk-mode)
+(global-set-key "\C-\\" 'skk-mode)
+;; 半角カナを入力
+(setq skk-use-jisx0201-input-method t)
+;; Enter で改行しない
+(setq skk-egg-like-newline t)
+;;"「"を入力したら"」"も自動で挿入
+(setq skk-auto-insert-paren t)
+;; 句読点変換ルール
+(setq skk-kuten-touten-alist
+      '(
+        (jp    .    ("。" . "、" ))
+        (en-jp   .    ("．" . "，" ))
+        (en    .    (". " . ", "))
+        ))
+(setq-default skk-kutouten-type 'en-jp)
+;; 全角記号の変換: @ での日付入力は使わない
+;; (setq skk-date-ad t)
+;; (setq skk-number-style nil)
+(setq skk-rom-kana-rule-list
+      (append skk-rom-kana-rule-list
+              '(("!" nil "!")
+                (":" nil ":")
+                (";" nil ";")
+                ("?" nil "?")
+                ("z " nil "　")
+                ("\\" nil "\\")
+                ("@" nil "@")
+                )))
+;; 全角英語モードで U+FF0D, U+FF5E を入力する?
+;; (when (not (string< mule-version "6.0"))
+;;   (aset skk-jisx0208-latin-vector ?- (string #xFF0D))
+;;   (aset skk-jisx0208-latin-vector ?~ (string #xFF5E)))
+;; 送り仮名が厳密に正しい候補を優先
+(setq skk-henkan-strict-okuri-precedence t)
+;; 辞書の共有
+(setq skk-share-private-jisyo t)
   #+END_SRC
 * インクリメンタルサーチ
   #+BEGIN_SRC emacs-lisp
@@ -139,12 +139,12 @@
     ;; (add-hook 'isearch-mode-hook 'skk-isearch-mode-setup)
     ;; (add-hook 'isearch-mode-end-hook 'skk-isearch-mode-cleanup)
     ;; 上が上手く動かないので minibuffer 内では強制的に skk off
-    (add-hook 'skk-mode-hook
-              (lambda ()
-                (and (skk-in-minibuffer-p)
-                     (skk-mode-exit))))
-    ;; migemo があると，minibuffer までモードを引き摺っている，ような?
-    (setq skk-isearch-start-mode 'latin)
+(add-hook 'skk-mode-hook
+          (lambda ()
+            (and (skk-in-minibuffer-p)
+                 (skk-mode-exit))))
+;; migemo があると，minibuffer までモードを引き摺っている，ような?
+(setq skk-isearch-start-mode 'latin)
   #+END_SRC
   インクリメンタルサーチは migemo に任せることに．
 * 辞書の設定
@@ -162,52 +162,53 @@
   顔文字に ; や が含まれている場合に, 適宜quoteする必要があるので
   以下のスクリプトで適当に変換.
   #+BEGIN_SRC ruby
-    #!/usr/bin/env ruby
-    require 'nkf'
-    src = ARGV[0]
-    if ARGV.size < 1
-      puts "usage: ime2skk.rb ime_dictionary"
-      exit 0
-    end
-    File.open(src, "r") {|f|
-      f.each do |line|
-        line_euc = NKF.nkf("-S -e",line)
-        if line_euc =~ /^([^!]+?)\t(.+?)\t.+$/
-          entry = $1
-          content = $2
-          if content =~/;/
-            puts entry + " /(concat \""+ content.gsub(';','\\\\073')+"\")/"
-          elsif content =~/\//
-            puts entry + " /(concat \""+ content.gsub('/','\\\\057')+"\")/"
-          else
-            puts entry + " /"+ content +"/"
-          end
-        end
+#!/usr/bin/env ruby
+require 'nkf'
+src = ARGV[0]
+if ARGV.size < 1
+  puts "usage: ime2skk.rb ime_dictionary"
+  exit 0
+end
+File.open(src, "r") {|f|
+  f.each do |line|
+    line_euc = NKF.nkf("-S -e",line)
+    if line_euc =~ /^([^!]+?)\t(.+?)\t.+$/
+      entry = $1
+      content = $2
+      if content =~/;/
+        puts entry + " /(concat \"" + content.gsub(';','\\\\073') + "\")/"
+      elsif content =~/\//
+        puts entry + " /(concat \"" + content.gsub('/','\\\\057') + "\")/"
+      else
+        puts entry + " /" + content + "/"
       end
-    }
+    end
+  end
+}
   #+END_SRC
   他にも quote する必要あるような気もするけれど, それは気がついた時に.
   #+BEGIN_SRC emacs-lisp
-    ;; 辞書サーバの指定
-    (cond
-     ((getenv "SKKSERVER")
-      (setq skk-server-host "127.0.0.1")
-      (setq skk-server-portnum "1178")
-      (setq skk-large-jisyo nil)
-      ;; server completion
-      (add-to-list 'skk-search-prog-list
-                   '(skk-server-completion-search) t)
-      (add-to-list 'skk-search-prog-list
-                   '(skk-comp-by-server-completion) t)
-      )
-     (t
-      (setq skk-large-jisyo
-            (concat user-emacs-directory "share/skkdic/SKK-JISYO.L"))
-      ))
-    ;; 辞書登録の際に送り仮名を削除
-    (setq skk-check-okurigana-on-touroku 'auto)
-    ;;漢字登録のミスをチェックする
-    (setq skk-check-okurigana-on-touroku t)
+;; 辞書サーバの指定
+(cond
+ ((getenv "SKKSERVER")
+  (setq skk-server-host "127.0.0.1")
+  (setq skk-server-portnum "1178")
+  (setq skk-large-jisyo nil)
+  ;; server completion
+  (add-to-list 'skk-search-prog-list
+               '(skk-server-completion-search) t)
+  (add-to-list 'skk-search-prog-list
+               '(skk-comp-by-server-completion) t))
+ (t
+  (setq skk-get-jisyo-directory (concat my:d:tmp "skk-jisyo")))
+ )
+(eval-when-compile
+  (unless (getenv "SKKSERVER")
+    (skk-jisyo-get)))
+;; 辞書登録の際に送り仮名を削除
+(setq skk-check-okurigana-on-touroku 'auto)
+;;漢字登録のミスをチェックする
+(setq skk-check-okurigana-on-touroku t)
   #+END_SRC
 * 動的補完
   #+BEGIN_SRC emacs-lisp
@@ -229,8 +230,8 @@
   #+END_SRC
 * 部首変換, 総画数変換
   #+BEGIN_SRC emacs-lisp
-    ;; (eval-and-compile (require 'skk-tankan nil 'noerror))
-    (add-to-list 'skk-search-prog-list
-                 '(skk-tankan-search 'skk-search-jisyo-file
-                                     skk-large-jisyo 10000))
+;; (eval-and-compile (require 'skk-tankan nil 'noerror))
+(add-to-list 'skk-search-prog-list
+             '(skk-tankan-search 'skk-search-jisyo-file
+                                 skk-large-jisyo 10000))
   #+END_SRC

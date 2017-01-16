@@ -18,5 +18,6 @@ before_install:
 script:
   - evm use $EVM_EMACS
   - make
+  - make elc
   - make clean
   - make distclean

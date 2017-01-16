@@ -1,13 +1,14 @@
 # -*- mode: makefile -*-
 EMACS	?= emacs
-SRC		 = init-ddskk.org
-SRC		+= $(shell dpkg -l wl-beta 2>&1 | grep -q ^ii && echo init-wl.org )
 PKG		 = org-plus-contrib
 PKG		+= $(shell dpkg -l ddskk 2>&1 | grep -q ^ii || echo ddskk )
-EL		?= $(SRC:%.org=%.el)
-ELC		?= $(SRC:%.org=%.elc)
+EL		= init-ddskk.el
+EL		+= $(shell dpkg -l wl-beta 2>&1 | grep -q ^ii && echo init-wl.el )
+ELC		= $(EL:%.el=%.elc)
 
-all: bootstrap init.elc $(ELC)
+all: bootstrap init.elc
+elc: $(ELC)
+	@rm -f init-*.el
 bootstrap: tmp/bootstrap-stamp
 tmp/bootstrap-stamp: init.el
 	mkdir -p tmp
@@ -19,13 +20,6 @@ tmp/bootstrap-stamp: init.el
 	rm -f emacs-batch-install.el
 	touch $@
 init.el: README.org
-	$(EMACS) -q --batch --eval \
-	   "(progn \
-		  (require 'ob-tangle) \
-		  (org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\")))"
-init.elc: init.el
-	$(EMACS) -l init.el -batch -f batch-byte-compile $<
-%.el: %.org
 	$(EMACS) -q --batch --eval \
 	   "(progn \
 		  (require 'ob-tangle) \

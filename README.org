@@ -1,12 +1,11 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-01-16 15:46:10
+#+DATE: 2017-01-16 20:05:15
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
-#+LAYOUT: default
+#+LAYOUT: cc-env
 #+SETUPFILE: ~/Public/_setup.org
 #+PERMALINK: /cc-env/Emacs.html
-
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -2590,17 +2589,20 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     (:permalink "PERMALINK" nil nil)
     )
   :filters-alist
-  '((:filter-final-output . org-jekyll--escape-liquid))
+  '((:filter-final-output . org-jekyll-finalized))
   )
 ;; template
 (defun org-jekyll-template (contents info)
   "Return complete document string after HTML conversion."
   (concat (org-jekyll--yaml-front-matter info) contents))
-;; liquid template に誤解されそうなアレコレを置換
-(defun org-jekyll--escape-liquid (contents _backend info)
+;;; 幾つかの文字列を置換する
+;;  - liquid templateに誤認される `{%', `%}'
+(defun org-jekyll-finalized (contents _backend info)
   "Publish src-block to html, Escape liquid tags, e.g. {%, %}"
   (with-temp-buffer
-    (insert (s-replace "{%" "&#123;%" (s-replace "%}" "%&#125;" contents)))
+    (insert (s-replace "{%" "&#123;%"
+                       (s-replace "%}" "%&#125;"
+                                             contents)))
     (set-auto-mode t)
     (buffer-substring-no-properties (point-min) (point-max))))
 ;;

@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-01-18 02:26:30
+#+DATE: 2017-01-18 03:10:52
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -2539,6 +2539,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   '((:layout    "LAYOUT" nil "default")
     (:ref       "REF" nil nil)
     (:permalink "PERMALINK" nil nil)
+    (:redirect_from "redirect_from" nil nil )
+    (:redirect_to "redirect_to" nil nil )
     )
   :filters-alist
   '((:filter-final-output . org-jekyll-finalized))
@@ -2577,6 +2579,10 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
          (org-jekyll--get-option info :ref ))
         (jekyll-permalink
          (org-jekyll--get-option info :permalink ))
+        (jekyll-redirect-from
+         (org-jekyll--get-option info :redirect_from ))
+        (jekyll-redirect-to
+         (org-jekyll--get-option info :redirect_to ))
         (convert-to-yaml-list
          (lambda (arg)
            (mapconcat #'(lambda (text)(concat "\n- " text)) (split-string arg) " "))))
@@ -2590,6 +2596,12 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
        (concat "\nref: " jekyll-ref))
      (unless (string-equal jekyll-permalink "")
        (concat "\npermalink: " jekyll-permalink))
+     (unless (string-equal jekyll-ref "")
+       (concat "\nref: " jekyll-ref))
+     (unless (string-equal jekyll-redirect-from "")
+       (concat "\nredirect_from: " jekyll-redirect-from))
+     (unless (string-equal jekyll-redirect-to "")
+       (concat "\nredirect_to: " jekyll-redirect-to))
      "\n---\n")))
 
 (defun org-jekyll-export-as-html

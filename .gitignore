@@ -2,7 +2,7 @@
 *.elc
 .org-id-locations
 .bootstrap-stamp
-packages
+elpa
 quelpa
 tmp
 *~

@@ -11,14 +11,16 @@ elc: $(ELC)
 	@rm -f init-*.el
 bootstrap: tmp/bootstrap-stamp
 tmp/bootstrap-stamp: init.el
-	mkdir -p tmp
-	chmod 700 tmp
-	@for p in $(PKG) ; do \
-		$(EMACS) -q --batch --eval \
-		  "(defconst pkg-install '$$p)" -l emacs-batch-install.el ;\
-	done
-	rm -f emacs-batch-install.el
-	touch $@
+	@mkdir -p tmp
+	@chmod 700 tmp
+	@if [ ! -f $@ ] ; then \
+	  for p in $(PKG) ; do \
+		  $(EMACS) -q --batch --eval \
+		    "(defconst pkg-install '$$p)" -l emacs-batch-install.el ;\
+	  done ;\
+	fi
+	@rm -f emacs-batch-install.el
+	@touch $@
 init.el: README.org
 	$(EMACS) -q --batch --eval \
 	   "(progn \

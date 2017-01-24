@@ -1,16 +1,19 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-01-18 03:10:52
+#+DATE: 2017-01-24 19:38:27
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
-#+SETUPFILE: ~/Public/_setup.org
 #+PERMALINK: /cc-env/Emacs.html
+#+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
+#+MACRO: travis @@html:<img src="https://travis-ci.org/$1.svg?branch=master" class="travis_badge">@@
+#+MACRO: ghribbon @@html:<style>#forkongithub a{background:#000;color:#fff;text-decoration:none;font-family:arial,sans-serif;text-align:center;font-weight:bold;padding:5px 40px;font-size:1rem;line-height:2rem;position:relative;transition:0.5s;}#forkongithub a:hover{background:#c11;color:#fff;}#forkongithub a::before,#forkongithub a::after{content:"";width:100%;display:block;position:absolute;top:1px;left:0;height:1px;background:#fff;}#forkongithub a::after{bottom:1px;top:auto;}@media screen and (min-width:800px){#forkongithub{position:fixed;display:block;top:0;right:0;width:200px;overflow:hidden;height:200px;z-index:9999;}#forkongithub a{width:200px;position:absolute;top:120px;right:15px;transform:rotate(45deg);-webkit-transform:rotate(45deg);-ms-transform:rotate(45deg);-moz-transform:rotate(45deg);-o-transform:rotate(45deg);box-shadow:4px 4px 10px rgba(0,0,0,0.8);}}</style><span id="forkongithub"><a href="https://github.com/$1">Fork me on GitHub</a></span>@@
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
-  [[https://travis-ci.org/uwabami/emacs.svg]]
+  {{{travis(uwabami/emacs)}}}
   [[https://img.shields.io/badge/License-GPLv3-blue.svg]]
+  {{{ghribbon(uwabami/emacs)}}}
 
   基本方針は以下の通り:
 ** Emacs のパッケージ(=package.el=)と [[https://github.com/quelpa/quelpa][quelpa]], [[https://github.com/jwiegley/use-package][use-package]] を使う
@@ -282,6 +285,9 @@ init.el: README.org
   )
    #+END_SRC
 * 主にEmacs本体に同梱されている拡張に関する設定
+  :PROPERTIES:
+  :ID:       1621568c-82d3-455a-8a12-5b356ba79e89
+  :END:
 ** 標準機能の設定
 *** 表示関連
     起動時のスプラッシュ画面を表示しない
@@ -622,6 +628,30 @@ init.el: README.org
   (setq browse-url-browser-function 'browse-url-firefox)
   )
    #+END_SRC
+   内蔵ブラウザである eww の設定もついでにやっておく．
+   検索エンジンとして =google= を指定したら，403が返ってきた．なんだろうね.
+   #+BEGIN_SRC emacs-lisp
+(use-package eww
+  :config
+  (setq eww-search-prefix "https://www.bing.com/search?q=")
+  (defvar my:eww-disable-colorize t)
+  (defun shr-colorize-region--disable (orig start end fg &optional bg &rest _)
+    (unless my:eww-disable-colorize
+      (funcall orig start end fg)))
+  (advice-add 'shr-colorize-region :around 'shr-colorize-region--disable)
+  (advice-add 'eww-colorize-region :around 'shr-colorize-region--disable)
+  (defun eww-disable-color ()
+    "eww で文字色を反映させない"
+    (interactive)
+    (setq-local my:eww-disable-colorize t)
+    (eww-reload))
+  (defun eww-enable-color ()
+    "eww で文字色を反映させる"
+    (interactive)
+    (setq-local my:eww-disable-colorize nil)
+    (eww-reload))
+  )
+   #+END_SRC
 ** =server=: Emacs server
    #+BEGIN_SRC emacs-lisp
 (use-package server
@@ -779,7 +809,7 @@ Emacs*useXIM: false
     - [[http://matsucon.net/material/dic/][2ちゃんねる顔文字辞書 MatsuCon]]
     - [[http://matsucon.net/][MatsuCon]]
     といった所.
-    はてなキーワードからの辞書の抽出は [[http://d.hatena.ne.jp/znz][id:znz]]znz さんの
+    はてなキーワードからの辞書の抽出は [[http://d.hatena.ne.jp/znz][znz]] さんの
      - [[http://rubyist.g.hatena.ne.jp/znz/20060924/p1][「はてなダイアリーキーワードふりがなリスト」を SKK の辞書に変換]]
     を参考に.
     [[http://matsucon.net/][MatsuCon]] で公開されている顔文字に関しては
@@ -1867,8 +1897,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
           (setq helm-migemo-mode t)
         (setq helm-migemo-mode nil))
       (helm-autoresize-mode)
-      (setq helm-autoresize-min-height 30 ; fixed 30%
-            helm-autoresize-max-height 30)
+      (setq helm-autoresize-min-height 40 ; fixed 40%
+            helm-autoresize-max-height 40)
       )
   #+END_SRC
 ** helm-flx
@@ -2112,8 +2142,20 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (add-hook 'org-mode-hook 'my:org-timestamp-hook)
   )
    #+END_SRC
-** Orglink
-   org 形式の link を他のモードでも使えるようにする
+** Org-Id, Orglink
+   ファイル間のリンクを uuid で行なう設定
+   #+BEGIN_SRC emacs-lisp
+(use-package org-id
+  :bind (("C-c l"   . org-store-link)
+         ("C-c C-l"  . org-insert-link))
+  :config
+  (setq org-id-link-to-org-use-id 'create-if-interactive-and-no-custom-id
+        org-id-location-files (concat my:d:tmp "org-id-locations")
+        )
+  (org-id-update-id-locations)
+  )
+   #+END_SRC
+   org 形式の link を他のモードのドキュメント，コメント等でも使えるようにする
    #+BEGIN_SRC emacs-lisp
 (use-package orglink
   :ensure t
@@ -2122,6 +2164,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (global-orglink-mode +1)
   )
    #+END_SRC
+   まあ，あきたら止めそうだけれど，どうだろうかね．
 ** Capture: メモ取り
    キーバインドは以前 changelog memo をやっていた時の癖で =C-x m= をメモにしている.
    他には wanderlust のメールを扱えるように =org-wl= を読み込んで template を追加したぐらい．
@@ -2312,13 +2355,15 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                 )))
   )
   #+END_SRC
-** =org-journal=: 日記
+** 日記: =org-journal=
    エントリ作成時に日付を入れるために =org-jounnal-new-entry= を =defadvice= している
    #+BEGIN_SRC emacs-lisp
 (use-package org-journal
   :ensure t
   :if (file-directory-p my:d:org)
-  :bind (("C-c C-j" . browse-url-at-point))
+  :commands (org-journal-new-entry)
+  :bind (("C-c C-j" . browse-url-at-point)
+         ("C-x m"   . org-journal-new-entry))
   :init
   (add-hook 'org-journal-mode-hook
             (setq truncate-lines t))
@@ -2344,7 +2389,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                         (format-time-string org-journal-date-format)))
         ))
     )
-  (ad-activate 'org-journal-new-entry))
+  (ad-activate 'org-journal-new-entry)
+  )
   ;; Key bindings -- 使えてない...
   ;; (define-key org-journal-mode-map (kbd "C-c C-f") 'org-journal-open-next-entry)
   ;; (define-key org-journal-mode-map (kbd "C-c C-b") 'org-journal-open-previous-entry)
@@ -2382,8 +2428,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                                '((ditaa . t)))
   )
     #+END_SRC
-** Org-gcal
-   Google カレンダーと org の予定を同期
+** Org と Google カレンダーの連携: =org-gcal=
 *** token 等の置き場所の変更
     #+BEGIN_SRC emacs-lisp
 (use-package request
@@ -2465,26 +2510,42 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
       (goto-char (point-min))
       (insert (format
                (string-trim "
-#+TITLE:
-#+DATE: 20
-#+LANGUAGE: ja
-#+REF: cc-env/%s
-#+LAYOUT: default
-#+SETUPFILE: ~/Public/_setup.org
-#+PERMALINK: /cc-env/%s.html
+,#+TITLE:
+,#+DATE: 20
+,#+LANGUAGE: ja
+,#+REF: cc-env/%s
+,#+LAYOUT: default
+,#+SETUPFILE: ~/Public/_setup.org
+,#+PERMALINK: /cc-env/%s.html
 ")
                (file-name-base (buffer-file-name))
                (file-name-base (buffer-file-name))))))
   (advice-add 'org-wiki-header :override 'my:org-wiki-header)
   )
    #+END_SRC
-** Export
+** Org-Export
 *** 一般設定
     #+BEGIN_SRC emacs-lisp
 (use-package ox
     :config
     (setq org-export-with-toc nil
           org-export-with-section-numbers nil)
+    ;; for Beamer
+    (add-to-list 'org-export-options-alist
+                 '(:shortdate    "SHORTDATE" nil nil))
+    (add-to-list 'org-export-options-alist
+                 '(:shorttitle   "SHORTTITLE" nil nil))
+    ;; for Jekyll
+    (add-to-list 'org-export-options-alist
+                 '(:layout    "LAYOUT" nil "default"))
+    (add-to-list 'org-export-options-alist
+                 '(:ref       "REF" nil nil))
+    (add-to-list 'org-export-options-alist
+                 '(:permalink "PERMALINK" nil nil))
+    (add-to-list 'org-export-options-alist
+                 '(:redirect_from "redirect_from" nil nil))
+    (add-to-list 'org-export-options-alist
+                 '(:redirect_to "redirect_to" nil nil))
     )
     #+END_SRC
 *** Beamer export
@@ -2497,7 +2558,26 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                      [NO-DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
                  ("\\section\{%s\}" . "\\section*\{%s\}")
                  ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
-                 ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))))
+                 ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
+               )
+  ;;
+  (add-to-list 'org-latex-classes
+               '("my:beamer-uplatex"
+                 "\\documentclass[dvipdfmx,presentation]{beamer}
+                     [NO-DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
+                 ("\\section\{%s\}" . "\\section*\{%s\}")
+                 ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
+                 ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
+               )
+  (add-to-list 'org-latex-classes
+               '("my:beamer-pdflatex"
+                 "\\documentclass[unicode,presentation]{beamer}
+                     [NO-DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
+                 ("\\section\{%s\}" . "\\section*\{%s\}")
+                 ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
+                 ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
+               )
+  )
     #+END_SRC
     LATEX_CLASS に =my:beamer= を指定すると，上記設定で export される．
 *** HTML 出力: =ox-html=
@@ -2518,7 +2598,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
           (verbatim       . "<code>%s</code>")))
   )
     #+END_SRC
-** Jekyll 用の設定
+** Org-Project
    Web サイトは Jekyll で作成しています．
    [[https://github.com/yoshinari-nomura/org-octopress][yoshinari-nomura/org-octopress: org-mode in octopress]] の
    =ox-jekyll= を参考に +改造して+ ，
@@ -2535,13 +2615,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :translate-alist
   '((template  . org-jekyll-template)
     )
-  :options-alist
-  '((:layout    "LAYOUT" nil "default")
-    (:ref       "REF" nil nil)
-    (:permalink "PERMALINK" nil nil)
-    (:redirect_from "redirect_from" nil nil )
-    (:redirect_to "redirect_to" nil nil )
-    )
   :filters-alist
   '((:filter-final-output . org-jekyll-finalized))
   )
@@ -2551,6 +2624,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (concat (org-jekyll--yaml-front-matter info) contents))
 ;;; 幾つかの文字列を置換する
 ;;  - liquid templateに誤認される `{%', `%}'
+;;  - `:' の escape
 ;;  - table-of-contents の処理
 (defun org-jekyll-finalized (contents _backend info)
   "Publish src-block to html, Escape liquid tags, e.g. {%, %}"
@@ -2559,6 +2633,13 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     (perform-replace "&$58;" "&#58;" nil nil nil nil nil (point-min) (point-max))
     (perform-replace "{%" "&#123;%" nil nil nil nil nil (point-min) (point-max))
     (perform-replace "%}" "%&#125;" nil nil nil nil nil (point-min) (point-max))
+    (perform-replace "<nav id=\"table-of-contents" "<div id=\"toc-wrapper\">
+<nav id=\"table-of-contents" nil nil nil nil nil (point-min) (point-max))
+    (perform-replace "</nav>" (format "</nav>
+</div>
+<a href=\"#toc-toggle\" class=\"btn toc-btn\" id=\"toc-toggle\">%s</a>"
+                                      (org-html--translate "Table of Contents" info))
+                     nil nil nil nil nil (point-min) (point-max))
     (set-auto-mode t)
     (buffer-substring-no-properties (point-min) (point-max))))
 ;;
@@ -2596,8 +2677,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
        (concat "\nref: " jekyll-ref))
      (unless (string-equal jekyll-permalink "")
        (concat "\npermalink: " jekyll-permalink))
-     (unless (string-equal jekyll-ref "")
-       (concat "\nref: " jekyll-ref))
      (unless (string-equal jekyll-redirect-from "")
        (concat "\nredirect_from: " jekyll-redirect-from))
      (unless (string-equal jekyll-redirect-to "")
@@ -2637,17 +2716,17 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
            :publishing-directory "~/Public/"
            :publishing-function org-publish-to-jekyll
            :recursive t
-           :headline-level 2
+           :with-toc nil
+           :headline-levels 5
            )
-          ("cc-env"
-           :base-directory "~/Public/cc-env"
+          ("web"
+           :base-directory "~/Public/cc-env/"
            :base-extension "org"
-           :exclude "\\(_.*\\)"
-           :publishing-directory "~/Public/cc-env"
+           :publishing-directory "~/Public/cc-env/"
            :publishing-function org-publish-to-jekyll
-           :with-toc t
            :recursive t
-           :headline-level 2
+           :with-toc t
+           :headline-levels 5
            )
           ))
   )
@@ -2756,6 +2835,26 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         howm-reminder-today-format (format howm-insert-date-format howm-date-format))
   )
   #+END_SRC
+* 日記: =tDiary=
+  tdiary-mode をちまちまと弄っている所
+  #+BEGIN_SRC emacs-lisp
+(unless (locate-library "tdiary-mode")
+  (quelpa '(tdiary-mode
+            :fetcher github
+            :repo "uwabami/tdiary-mode")))
+(use-package tdiary-mode
+  :if (file-directory-p "~/Dropbox/tdiary")
+  :commands (tdiary-mode tdiary-new tdiary-new-directory tdiary-replace)
+  :config
+  (load (expand-file-name "emacs/tdiary-mode.gpg" my:d:password-store))
+  (setq tdiary-browser-function 'browser-url
+        tdiary-coding-system 'utf-8-unix
+        tdiary-style-mode 'rd-mode
+        tdiary-hour-offset 2
+        tdiary-text-save-p t
+        tdiary-text-suffix ".rd")
+  )
+  #+END_SRC
 * プログラム環境
 ** コードのタグ付け: =ggtags=, =helm-gtags=
    無いと途方に暮れる．
@@ -2805,36 +2904,12 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (helm-projectile-on)
   )
    #+END_SRC
-** VCS: =magit=, =git-gutter=
+** VCS: =magit=
    magit は Emacs の Git Frontend.
    結局の所 CUI でコマンド叩く事も多いけれど，これはこれで重宝している．
    #+BEGIN_SRC emacs-lisp
 (use-package magit
   :bind (("C-x g" . magit-status))
-  )
-   #+END_SRC
-   git-gutter で差分を視覚的に表示してくれる．
-   @see [[http://qiita.com/syohex/items/a669b35fbbfcdda0cbf2][git-gutter.elの紹介 - Qiita]]
-   #+BEGIN_SRC emacs-lisp
-(use-package git-gutter
-  :ensure t
-  :if (locate-library "magit")
-  :bind (("C-x p" . git-gutter:previous-hunk)
-         ("C-x n" . git-gutter:previous-hunk)
-         ("C-x =" . git-gutter:popup-hunk))
-  :config
-  (setq git-gutter:window-width 2
-        git-gutter:added-sign "+ "
-        git-gutter:deleted-sign-sign "- "
-        git-gutter:modified-sign "::"
-        git-gutter:unchanged-sign "  "     ;; 空白 2つ
-        git-gutter:always-show-separator nil
-        ;; git-gutter:modified-sign "⇔"
-        ;; git-gutter:added-sign "⇒"
-        ;; git-gutter:deleted-sign "⇐"
-        git-gutter:lighter ""
-        )
-  (global-git-gutter-mode +1)
   )
    #+END_SRC
 ** flycheck
@@ -3124,8 +3199,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
  ;;
  '(cursor                              ((t (:foreground "#4CFF4C" :background "#4CFF4C" ))))
  '(font-lock-builtin-face              ((t (:foreground "#7FBFFF" ))))
- '(font-lock-comment-delimiter-face    ((t (:foreground "#e5e5e6" ))))
- '(font-lock-comment-face              ((t (:foreground "#e5e5e6" ))))
+ '(font-lock-comment-delimiter-face    ((t (:foreground "#a5a5a6" ))))
+ '(font-lock-comment-face              ((t (:foreground "#a5a5a6" ))))
  '(font-lock-constant-face             ((t (:foreground "#FFBF7F" ))))
  '(font-lock-doc-face                  ((t (:foreground "#7FFF7F" ))))
  '(font-lock-doc-string-face           ((t (:foreground "#7FFF7F" ))))
@@ -3279,14 +3354,14 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (force-mode-line-update t))
   #+END_SRC
   powerline 本体の設定．default-theme をベースに見たい物だけ表示するようにしてみた．
+  あと，separater は環境によってズレるので，半角スペースに変更
   #+BEGIN_SRC emacs-lisp
 (use-package powerline
   :ensure t
   :config
-  (when (eq system-type 'darwin)
-    (setq powerline-default-separator 'utf-8
-          powerline-utf-8-separator-left  #x20
-          powerline-utf-8-separator-right #x20))
+  (setq powerline-default-separator 'utf-8
+        powerline-utf-8-separator-left  #x20
+        powerline-utf-8-separator-right #x20)
   (defun my:powerline-theme ()
     "Setup customize theme."
     (interactive)

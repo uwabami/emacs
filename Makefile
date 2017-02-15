@@ -31,6 +31,7 @@ init.el: README.org
 recompile:
 	touch README.org
 	$(MAKE)
+	$(MAKE) elc
 clean:
 	rm -fr auto-save-list *.el *.elc *~
 distclean: clean

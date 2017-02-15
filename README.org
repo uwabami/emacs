@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-01-24 19:38:27
+#+DATE: 2017-02-12 18:09:21
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -172,15 +172,17 @@ init.el: README.org
 (use-package el-x
   :ensure t)
   #+END_SRC
-* url-retrieve の置き換え: =mb-url=
-  標準関数の =url-retrieve= 等の proxy 環境下での挙動が怪しいので，
-  =mb-url= で advice (上書き)することに．
-  =curl= のバッファが増殖するのだけれど，これはなんとかならないかなぁ...
+* url-retrieve の置換: =mb-url=
+  標準関数の url-retrieve 等の proxy 環境下での挙動が怪しいので,
+  [[https://github.com/dochang/mb-url][dochang/mb-url: Multiple Backends for Emacs URL package]]
+  advice (上書き)する.
   #+BEGIN_SRC emacs-lisp
 (use-package mb-url
   :ensure t
+  :if (executable-find "curl")
   :config
-  (advice-add 'url-http :override 'mb-url-http-curl))
+  (advice-add 'url-http :override 'mb-url-http-curl)
+  )
   #+END_SRC
 * 環境変数の読み込み: =exec-path-from-shell=
   zsh で設定した =PATH= などの環境変数を Emacs に引き継ぐために
@@ -605,6 +607,47 @@ init.el: README.org
 (setq bookmark-default-file (concat my:d:share "bookmarks"))
    #+END_SRC
 
+** =eww=: 内蔵ブラウザ [0/1]
+   内蔵ブラウザの設定
+   - [ ] =mb-url= で curl を使うようにすると、
+     =google= から 403が返るようになる。これ、どうしたら良いのかな?
+   幅と背景色の指定がメイン
+   #+BEGIN_SRC emacs-lisp
+(use-package eww
+  :config
+  (setq eww-bookmarks-directory (expand-file-name "eww" my:d:tmp)
+        )
+  (unless (file-directory-p (expand-file-name "eww" my:d:tmp))
+    (make-directory (expand-file-name "eww" my:d:tmp)))
+  (setq eww-search-prefix "https://www.bing.com/search?q=")
+  (defvar my:eww-disable-colorize t)
+  (defun shr-colorize-region--disable (orig start end fg &optional bg &rest _)
+    (unless my:eww-disable-colorize
+      (funcall orig start end fg)))
+  (advice-add 'shr-colorize-region :around 'shr-colorize-region--disable)
+  (advice-add 'eww-colorize-region :around 'shr-colorize-region--disable)
+  (defun eww-disable-color ()
+    "eww で文字色を反映させない"
+    (interactive)
+    (setq-local my:eww-disable-colorize t)
+    (eww-reload))
+  (defun eww-enable-color ()
+    "eww で文字色を反映させる"
+    (interactive)
+    (setq-local my:eww-disable-colorize nil)
+    (eww-reload))
+  ;; テキスト幅を 70 に固定
+  ;; - [[http://emacs.rubikitch.com/eww-width/][Emacs組み込みWebブラウザEWWでテキストの横幅を指定する方法]]
+  (defun shr-insert-document--for-eww (&rest them)
+    (let ((shr-width 70)) (apply them)))
+  (defun eww-display-html--fill-column (&rest them)
+    (advice-add 'shr-insert-document :around 'shr-insert-document--for-eww)
+    (unwind-protect
+        (apply them)
+      (advice-remove 'shr-insert-document 'shr-insert-document--for-eww)))
+  (advice-add 'eww-display-html :around 'eww-display-html--fill-column)
+  )
+   #+END_SRC
 ** =browse-url=
    Firefox の呼び出し方が変わったので，そのために関数を追加．
    詳細は [[http://www.emacswiki.org/emacs/BrowseUrl]] を参照のこと．
@@ -628,30 +671,6 @@ init.el: README.org
   (setq browse-url-browser-function 'browse-url-firefox)
   )
    #+END_SRC
-   内蔵ブラウザである eww の設定もついでにやっておく．
-   検索エンジンとして =google= を指定したら，403が返ってきた．なんだろうね.
-   #+BEGIN_SRC emacs-lisp
-(use-package eww
-  :config
-  (setq eww-search-prefix "https://www.bing.com/search?q=")
-  (defvar my:eww-disable-colorize t)
-  (defun shr-colorize-region--disable (orig start end fg &optional bg &rest _)
-    (unless my:eww-disable-colorize
-      (funcall orig start end fg)))
-  (advice-add 'shr-colorize-region :around 'shr-colorize-region--disable)
-  (advice-add 'eww-colorize-region :around 'shr-colorize-region--disable)
-  (defun eww-disable-color ()
-    "eww で文字色を反映させない"
-    (interactive)
-    (setq-local my:eww-disable-colorize t)
-    (eww-reload))
-  (defun eww-enable-color ()
-    "eww で文字色を反映させる"
-    (interactive)
-    (setq-local my:eww-disable-colorize nil)
-    (eww-reload))
-  )
-   #+END_SRC
 ** =server=: Emacs server
    #+BEGIN_SRC emacs-lisp
 (use-package server
@@ -659,7 +678,7 @@ init.el: README.org
   (unless (server-running-p)
     (server-start)))
    #+END_SRC
-* 日本語入力: [[file:init-ddskk.org][ddskkの設定]]
+* 日本語入力: =ddskk=
   [[http://openlab.ring.gr.jp/skk/ddskk-ja.html][Daredevil SKK (DDSKK)]] をメインで使用中．無いと途方に暮れる．
   ちなみにGTKが有効になっていると =gtk-immodule= なんかと衝突するので
   =~/.Xresources= で xim を無効にしておくと良い．
@@ -764,11 +783,11 @@ Emacs*useXIM: false
     #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
 (setq skk-kuten-touten-alist
       '(
-        (jp    .    ("。" . "、" ))
-        (en-jp   .    ("．" . "，" ))
-        (en    .    (". " . ", "))
+        (jp    . ("。" . "、"))
+        (en-jp . ("．" . "，"))
+        (en    . (". " . ", "))
         ))
-(setq-default skk-kutouten-type 'en-jp)
+(setq-default skk-kutouten-type 'en)
     #+END_SRC
     全角記号の変換: @ での日付入力は使わない
     #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
@@ -1009,7 +1028,7 @@ File.open(src, "r") {|f|
      [[http://d.hatena.ne.jp/kiwanami/20091103/1257243524][Wanderlustと文字コード]] も参照のこと.
      #+BEGIN_SRC emacs-lisp :tangle init-wl.el
 (add-to-list 'mime-charset-coding-system-alist '(iso-2022-jp . cp50220))
-(setq wl-mime-charset 'utf-8)
+(setq wl-mime-charset 'iso-2022-jp)
      #+END_SRC
 **** gcontacts-get-wl
      [[https://github.com/uwabami/gcontacts-get-wl][gcontacts-get-wl]] は
@@ -1040,9 +1059,9 @@ File.open(src, "r") {|f|
      #+BEGIN_SRC emacs-lisp :tangle init-wl.el
 (setq mime-view-text/html-previewer 'shr)
 (setq mime-setup-enable-inline-html 'shr)
-(use-package mime-setup
-  :init
-  (defun shr-colorize-region (start end fg &optional bg) nil))
+;; (use-package mime-setup
+;;   :init
+;;   (defun shr-colorize-region (start end fg &optional bg) nil))
      #+END_SRC
      どのアプリケーションで開くか → =xdg-open= に丸投げ．
      #+BEGIN_SRC emacs-lisp :tangle init-wl.el
@@ -1061,7 +1080,7 @@ video/*; xdg-open %s;
      #+END_SRC
      text/plain を html より優先
      #+BEGIN_SRC emacs-lisp :tangle init-wl.el
-(set-alist 'mime-view-type-subtype-score-alist '(text . html) 0)
+;; (set-alist 'mime-view-type-subtype-score-alist '(text . html) 0)
      #+END_SRC
      音を鳴らすアレやコレの無効化
     #+BEGIN_SRC emacs-lisp :tangle init-wl.el
@@ -1337,7 +1356,6 @@ video/*; xdg-open %s;
      #+END_SRC
 *** キーバインド関連
     =use-package= で設定しておいた方が良いかなぁ...
-
     =<f2>= で Addrbook の更新
     #+BEGIN_SRC emacs-lisp :tangle init-wl.el
 (global-set-key [f2] 'gcontacts-update-wl-address)
@@ -1762,7 +1780,7 @@ video/*; xdg-open %s;
 (setq mime-pgp-verify-when-preview nil)
 (add-hook 'wl-draft-mode-hook
           (lambda ()
-            (set-buffer-file-coding-system 'iso-2022-jp)
+            (set-buffer-file-coding-system 'utf-8)
             ))
 (defun my:epa-wl-decrypt-message ()
   (interactive)
@@ -1774,10 +1792,12 @@ video/*; xdg-open %s;
   (save-selected-window
     (wl-summary-jump-to-current-message)
     (wl-message-verify-pgp-nonmime)))
-(define-key wl-summary-mode-map "\C-c : d" 'my:epa-wl-decrypt-message)
-(define-key wl-summary-mode-map "\C-c : v" 'my:epa-wl-verify-message)
-(define-key wl-draft-mode-map "\C-c : s" 'epa-mail-sign)
-(define-key wl-draft-mode-map "\C-c : e" 'epa-mail-encrypt)
+(bind-keys :map wl-summary-mode-map
+           ("C-c : d" . my:epa-wl-decrypt-message)
+           ("C-c : v" . my:epa-wl-verify-message))
+(bind-keys :map wl-draft-mode-map
+           ("C-c : s" . epa-mail-sign)
+           ("C-c : e" . epa-mail-encrypt))
     #+END_SRC
 *** 検索
     imap の検索か mu(maildir-utils) の検索.
@@ -1847,6 +1867,127 @@ Categories=GNOME;GTK;Office;Email;
 StartupNotify=false
 MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   #+END_SRC
+* Emacs-w3m
+  あまり使わないけれど, 一応設定しておく.
+  #+BEGIN_SRC emacs-lisp
+(use-package w3m
+  :config
+  (setq w3m-search-default-engine "google"
+        w3m-use-cookies t)
+  (with-eval-after-load "w3m-search"
+    '(add-to-list 'w3m-search-engine-alist
+                  '("google" "https://encrypted.google.com/search?num=100&ie=utf-8&oe=utf-8&hl=ja&safe=off&filter=0&pws=0&complete=0&gbv=1&q=%s" utf-8)))
+  )
+  #+END_SRC
+* 補完: =ido=
+  補完を ido に任せているパッケージがちらほらあるので設定しておく．
+  find-file は helm-find-file より ido + flx-ido + ido-grid-mode の方が
+  好みなんだが，どうしようかなぁ...
+** =ido= の設定
+   #+BEGIN_SRC emacs-lisp
+(use-package ido
+  :config
+  (ido-mode t)
+  ;; (ido-everywhere t)  <- Wanderlust みたいに，過去の選択を覚えている奴と相性悪いので.
+  (setq ido-enable-prefix nil             ; prefix match を有効にすると，入力を先頭一致可能
+        ido-confirm-unique-completion t   ; TAB で名前の一致まで行ない，その後 RET で実行
+        ido-enable-flex-matching t        ; flex matching を試す際には prefix を無効化すること
+        ido-enable-dot-prefix t           ; . を prefix として扱う
+        ido-default-file-method   'selected-window
+        ido-default-buffer-method 'selected-window
+        ido-max-directory-size 100000
+        ido-enable-tramp-completion nil
+        ido-use-faces nil                 ; flx-ido の highlight を使う
+        ido-ignore-extensions t
+        ido-cannot-complete-command 'ido-next-match
+        ido-save-directory-list-file (concat my:d:tmp "ido.last"))
+  ;; 補完で無視する拡張子の追加．そのうち増える．
+  (cl-loop for ext in
+           '(".dvi"
+             ".fdb_latexmk"
+             ".fls"
+             ".ilg"
+             ".jqz"
+             ".mod"
+             ".nav"
+             ".out"
+             ".snm"
+             ".synctex.gz"
+             ".vrb"
+             )
+           do (add-to-list 'completion-ignored-extensions ext))
+  ;; ido の buffer で skk を無効化しておく.
+  ;; 日本語ファイル名は, とりあえず考えないことに.
+  (add-hook 'ido-minibuffer-setup-hook
+            (lambda ()
+              (when (fboundp 'skk-mode-exit)
+                (skk-mode-exit))))
+  )
+   #+END_SRC
+** =flx-ido=: flex match の強化
+   曖昧マッチが非常に直感的になった．地味に便利で手放せない．
+   #+BEGIN_SRC emacs-lisp
+(use-package flx-ido
+  :config
+  (flx-ido-mode 1)
+  (setq flx-ido-use-faces t
+        flx-ido-threshold 10000)
+  )
+   #+END_SRC
+** =ido-grid-mode=: 補完候補の grid 表示
+   #+BEGIN_SRC emacs-lisp
+(use-package ido-grid-mode
+  :ensure t
+  :config
+  (setq ido-grid-mode-max-columns 10
+        ido-grid-mode-max-rows 5   ;; ヒョコヒョコと動くのが煩わしいので
+        ido-grid-mode-min-rows 5   ;; 高さ 5 行に固定しておく．
+        ido-grid-mode-scroll-up    #'ido-grid-mode-previous-row
+        ido-grid-mode-scroll-down  #'ido-grid-mode-next-row
+        ido-grid-mode-prefix-scrolls t
+        ido-grid-mode-start-collapsed nil
+        ido-grid-mode-keys nil     ;; PageUp/C-p と PageDonw/C-n が逆の方が好み.
+        ido-grid-mode-prefix "-> "
+        )
+  (ido-grid-mode t)
+  (defun my:ido-minibuffer-truncate-line ()
+    (set (make-local-variable 'truncate-lines) nil))
+  (add-hook 'ido-minibuffer-setup-hook 'my:ido-minibuffer-truncate-line)
+  (add-hook 'ido-setup-hook 'my:ido-minibuffer-truncate-line)
+  )
+   #+END_SRC
+** =ido-recentf=: recentf を ido で
+   #+BEGIN_SRC emacs-lisp
+(defun ido-recentf-open ()
+  "Use `ido-completing-read' to \\[find-file] a recent file"
+  (interactive)
+  (if (find-file (ido-completing-read "Find recent file: " recentf-list))
+      (message "Opening file...")
+    (message "Aborting")))
+   #+END_SRC
+** =ido= 関連の keybind
+   =ido-grid-mode= の初期設定が気にくわない(=C-p,C-n= と =<up><down>= は逆の方が好き)なので
+   それを設定するのがメイン.
+   #+BEGIN_SRC emacs-lisp
+(defun my:ido-keybind-setup ()
+  "update ido keybind"
+  (define-key ido-completion-map (kbd "<prior>") 'ido-grid-mode-previous-page)
+  (define-key ido-completion-map (kbd "<next>")  'ido-grid-mode-next-page)
+  (define-key ido-completion-map (kbd "<left>")  'ido-grid-mode-left)
+  (define-key ido-completion-map (kbd "<right>") 'ido-grid-mode-right)
+  (define-key ido-completion-map (kbd "<up>")    'ido-grid-mode-previous)
+  (define-key ido-completion-map (kbd "<down>")  'ido-grid-mode-next)
+  (define-key ido-completion-map (kbd "C-p")     'ido-grid-mode-previous)
+  (define-key ido-completion-map (kbd "C-n")     'ido-grid-mode-next)
+  (define-key ido-completion-map (kbd "C-h")     'ido-delete-backward-updir)
+  (define-key ido-completion-map (kbd "C-l")     'ido-delete-backward-updir)
+  )
+(add-hook 'ido-setup-hook 'my:ido-keybind-setup)
+;; とりあえず helm-find-files 等を当分使ってみる事に．
+;; (global-set-key (kbd "C-x f")   'ido-find-file)
+;; (global-set-key (kbd "C-x C-f") 'ido-find-file)
+;; (global-set-key (kbd "C-x C-r") 'ido-recentf-open)
+   #+END_SRC
 * 補完: =helm=
   以前はデフォルトの挙動が嫌で割とイロイロと設定していたのだけれど，
   最近はそんなに邪魔しない感じ...なのかな? とりあえず現状は以下の通り．
@@ -2103,7 +2244,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         ;; GTD: 状態の追加
         org-todo-keywords '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)" "CANCEL(c)" "SOMEDAY(s)")
                             (type "ARTICLE(a)")
-                            (type "MEMO(m)"))
+                            (type "MEMO(m)")
+                            )
         ;; GTD: タグの追加
         org-tag-alist '(("OFFICE"     . ?o)
                         ("HOME"       . ?h)
@@ -2148,11 +2290,11 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 (use-package org-id
   :bind (("C-c l"   . org-store-link)
          ("C-c C-l"  . org-insert-link))
+  :init
+  (setq org-id-location-files (concat my:d:tmp "org-id-locations"))
   :config
   (setq org-id-link-to-org-use-id 'create-if-interactive-and-no-custom-id
-        org-id-location-files (concat my:d:tmp "org-id-locations")
         )
-  (org-id-update-id-locations)
   )
    #+END_SRC
    org 形式の link を他のモードのドキュメント，コメント等でも使えるようにする
@@ -2165,46 +2307,114 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   )
    #+END_SRC
    まあ，あきたら止めそうだけれど，どうだろうかね．
+** Org-capture: 日記
+   単一ファイルに記述すること，および
+   エントリ作成時に日付を入れるために =org-jounnal-new-entry= を =advice= している
+   #+BEGIN_SRC emacs-lisp
+(use-package org-journal
+  :ensure t
+  :if (file-directory-p my:d:org)
+  :init
+  (add-hook 'org-journal-mode-hook
+            (setq truncate-lines t))
+  :config
+  (unbind-key "C-c C-j" org-journal-mode-map)
+  (bind-key   "C-c C-j" 'browse-url-at-point)
+  (setq org-journal-dir my:d:org
+        org-journal-file-format "journal.org"
+        org-journal-date-format "%x (%a)"
+        org-journal-date-prefix "* "
+        org-journal-time-format "<%Y-%m-%d %R> "
+        org-journal-time-prefix "** MEMO "
+        org-journal-find-file 'find-file
+        )
+  (defun my:org-journal-add-date-entry (prefix &optional time)
+    "Insert date entry to `org-journal-file'"
+    (find-file (expand-file-name org-journal-file-format org-journal-dir))
+    (org-journal-decrypt)
+    (unless
+        (string-match (format-time-string org-journal-date-format)
+                      (buffer-substring-no-properties (point-min) (point-max)))
+      (progn
+        (goto-char (point-max))
+        (insert (concat "\n" org-journal-date-prefix
+                        (format-time-string org-journal-date-format)))
+        ))
+    )
+  (advice-add 'org-journal-new-entry :before 'my:org-journal-add-date-entry)
+  )
+;; Key bindings -- 使えてない...
+;; (define-key org-journal-mode-map (kbd "C-c C-f") 'org-journal-open-next-entry)
+;; (define-key org-journal-mode-map (kbd "C-c C-b") 'org-journal-open-previous-entry)
+;; (define-key org-journal-mode-map (kbd "C-c C-j") 'org-journal-new-entry)
+;; (define-key calendar-mode-map "j" 'org-journal-read-entry)
+;; (define-key calendar-mode-map (kbd "C-j") 'org-journal-display-entry)
+;; (define-key calendar-mode-map "]" 'org-journal-next-entry)
+;; (define-key calendar-mode-map "[" 'org-journal-previous-entry)
+;; (define-key calendar-mode-map (kbd "i j") 'org-journal-new-date-entry)
+;; (define-key calendar-mode-map (kbd "f f") 'org-journal-search-forever)
+;; (define-key calendar-mode-map (kbd "f w") 'org-journal-search-calendar-week)
+;; (define-key calendar-mode-map (kbd "f m") 'org-journal-search-calendar-month)
+;; (define-key calendar-mode-map (kbd "f y") 'org-journal-search-calendar-year)))
+   #+END_SRC
 ** Capture: メモ取り
    キーバインドは以前 changelog memo をやっていた時の癖で =C-x m= をメモにしている.
    他には wanderlust のメールを扱えるように =org-wl= を読み込んで template を追加したぐらい．
    mu のインデックスの方が良いかもしれない，と最近思っている．
-#+BEGIN_SRC emacs-lisp
-(use-package org-wl
-  :if (and (my:dpkg-status "wl-beta")
-           (file-directory-p org-directory)))
+   #+BEGIN_SRC emacs-lisp
 (use-package org-capture
   :bind (("C-x m" . org-capture))
   :if (file-directory-p org-directory)
   :config
-  (setq org-default-notes-file (concat org-directory "Memo.org")
+  (if (and (my:dpkg-status "wl-beta")
+           (file-directory-p org-directory))
+      (use-package org-wl))
+  (defun my:org-journal-add-date-entry-capture ()
+    (my:org-journal-add-date-entry nil)
+    (goto-char (point-max))
+    )
+  (setq org-default-notes-file (concat org-directory "journal.org")
         org-capture-templates
         `(
           ("t" "TODO" plain
-           (file (concat org-directory "Memo.org"))
-           "* TODO %^{title} %^g\n  %?\n  %a"
-           :prepend nil
-           :unnarrowed t
-           :kill-buffer t
-           )
-          ;; "* TODO <%<%Y-%m-%d>> %:subject %^g\n  %?\n  %a\n  #+BEGIN_QUOTE\n%i\n  #+END_QUOTE"
-          ("e" "Email TODO" plain
-           (file (concat org-directory "Memo.org"))
-           "* TODO [[wl:\%5Bmsgid:%:message-id-no-brackets\%5D][%(replace-regexp-in-string \"\\\\[.*\\\\] \" \"\" \"%:subject\")]]\n  :PROPERTIES:\n  :CREATED: %u\n  :END:%?\n"
+           (function my:org-journal-add-date-entry-capture)
+           "** TODO %^{title} %^g\n  %?\n  %a"
            :prepend nil
            :unnarrowed nil
            :kill-buffer t
            )
-          ("m" "Memo" plain
-           (file (concat org-directory "Memo.org"))
-           "* MEMO %t %^{titlle}\n  %?\n  %a"
+          ;; "* TODO <%<%Y-%m-%d>> %:subject %^g\n  %?\n  %a\n  #+BEGIN_QUOTE\n%i\n  #+END_QUOTE"
+          ("e" "Email TODO" plain
+           (function my:org-journal-add-date-entry-capture)
+           "** TODO [[wl:\%5Bmsgid:%:message-id-no-brackets\%5D][%(replace-regexp-in-string \"\\\\[.*\\\\] \" \"\" \"%:subject\")]]\n  :PROPERTIES:\n  :CREATED: %u\n  :END:%?\n"
            :prepend nil
-           :unnarrowed t
+           :unnarrowed nil
+           :kill-buffer t
+           )
+          ;; ("s" "Email Schedule" plain
+          ;;  (file (expand-file-name "Schedule.org" org-directory))
+          ;;  "* %:subject\n[[wl:\%5Bmsgid:%:message-id-no-brackets\%5D][%(replace-regexp-in-string \"\\\\[.*\\\\] \" \"\" \"%:subject\")]]\n %?\n%t\n"
+          ;;  :prepend nil
+          ;;  :unnarrowed nil
+          ;;  :kill-buffer t
+          ;;  )
+          ("m" "Memo/Journal Entry" plain
+           (function my:org-journal-add-date-entry-capture)
+           "** MEMO %T %?"
+           :prepend nil
+           :unnarrowed nil
+           :kill-buffer t
+           )
+          ("a" "Aritcle Entry" plain
+           (function my:org-journal-add-date-entry-capture)
+           "** ARTICLE %T %? "
+           :prepend nil
+           :unnarrowed nil
            :kill-buffer t
            )
           ))
   )
-#+END_SRC
+   #+END_SRC
 ** Agenda: スケジュール，TODO 表示
    GTD 用の設定．後述の =org-gcal= と =orgmine= で取得したデータも表示している．
    ついでに
@@ -2213,6 +2423,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    なんて事もやっている．元ネタは [[https://julien.danjou.info/blog/2010/org-mode-and-holidays][Org-mode and holidays]]
   #+BEGIN_SRC emacs-lisp
 (use-package org-agenda
+  :diminish org-agenda-mode
   :if (file-directory-p my:d:org)
   :bind (("C-c a" . org-agenda))
   :init
@@ -2244,7 +2455,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     :group 'org-agenda )
   (defface my:org-agenda-calendar-twitter
     '((t (:foreground "#CCCCCC")))
-    "Agenda 表示中, Twiiter log の表示 face"
+    "Agenda 表示中, Twitter log の表示 face"
     :group 'org-agenda )
   ;; 更新用の関数 - とりあえず動いているので良しとするが，リファクタリングしたい
   (defun my:org-agenda-day-face-function (date)
@@ -2272,10 +2483,10 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         (when face (cl-return face)))))
   :config
   ;; 使用するファイル
-  (setq org-agenda-files nil)
+  (setq org-agenda-files '("~/Public/cc-env"))
   (dolist (file
            '("Archive.org"
-             "Diary.org"
+             "Holidays.org"
              "Memo.org"
              "Schedule.org"
              "GFD.org"
@@ -2288,6 +2499,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
              "redmine_KUSM.org"
              ))
     (add-to-list 'org-agenda-files (concat org-directory file)))
+  (add-to-list 'org-agenda-files (expand-file-name "README.org" user-emacs-directory))
   ;; 表示のカスタマイズ
   (setq org-agenda-span 'day                   ;; day or week
         org-agenda-format-date "%Y/%m/%d (%a)" ;; YY/MM/DD (曜)
@@ -2355,56 +2567,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                 )))
   )
   #+END_SRC
-** 日記: =org-journal=
-   エントリ作成時に日付を入れるために =org-jounnal-new-entry= を =defadvice= している
-   #+BEGIN_SRC emacs-lisp
-(use-package org-journal
-  :ensure t
-  :if (file-directory-p my:d:org)
-  :commands (org-journal-new-entry)
-  :bind (("C-c C-j" . browse-url-at-point)
-         ("C-x m"   . org-journal-new-entry))
-  :init
-  (add-hook 'org-journal-mode-hook
-            (setq truncate-lines t))
-  :config
-  (unbind-key "C-c C-j" org-journal-mode-map)
-  (bind-key "C-c C-j" 'browse-url-at-point)
-  (setq org-journal-dir org-directory
-        org-journal-file-format "journal.org"
-        org-journal-date-format "%x (%a)"
-        org-journal-date-prefix "* "
-        org-journal-time-format "<%Y-%m-%d %R> "
-        org-journal-time-prefix "** ")
-  (defadvice org-journal-new-entry (before my:org-journal-add-date-entry)
-    "Insert date entry"
-    (find-file-other-window (concat org-journal-dir org-journal-file-format))
-    (org-journal-decrypt)
-    (unless
-        (string-match (format-time-string org-journal-date-format)
-                      (buffer-substring-no-properties (point-min) (point-max)))
-      (progn
-        (goto-char (point-max))
-        (insert (concat "\n" org-journal-date-prefix
-                        (format-time-string org-journal-date-format)))
-        ))
-    )
-  (ad-activate 'org-journal-new-entry)
-  )
-  ;; Key bindings -- 使えてない...
-  ;; (define-key org-journal-mode-map (kbd "C-c C-f") 'org-journal-open-next-entry)
-  ;; (define-key org-journal-mode-map (kbd "C-c C-b") 'org-journal-open-previous-entry)
-  ;; (define-key org-journal-mode-map (kbd "C-c C-j") 'org-journal-new-entry)
-  ;; (define-key calendar-mode-map "j" 'org-journal-read-entry)
-  ;; (define-key calendar-mode-map (kbd "C-j") 'org-journal-display-entry)
-  ;; (define-key calendar-mode-map "]" 'org-journal-next-entry)
-  ;; (define-key calendar-mode-map "[" 'org-journal-previous-entry)
-  ;; (define-key calendar-mode-map (kbd "i j") 'org-journal-new-date-entry)
-  ;; (define-key calendar-mode-map (kbd "f f") 'org-journal-search-forever)
-  ;; (define-key calendar-mode-map (kbd "f w") 'org-journal-search-calendar-week)
-  ;; (define-key calendar-mode-map (kbd "f m") 'org-journal-search-calendar-month)
-  ;; (define-key calendar-mode-map (kbd "f y") 'org-journal-search-calendar-year)))
-   #+END_SRC
 ** Babel
 *** org-src
     #+BEGIN_SRC emacs-lisp
@@ -2428,7 +2590,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                                '((ditaa . t)))
   )
     #+END_SRC
-** Org と Google カレンダーの連携: =org-gcal=
+** OrgとGoogle カレンダーの連携: =org-gcal=
 *** token 等の置き場所の変更
     #+BEGIN_SRC emacs-lisp
 (use-package request
@@ -2580,7 +2742,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   )
     #+END_SRC
     LATEX_CLASS に =my:beamer= を指定すると，上記設定で export される．
-*** HTML 出力: =ox-html=
+*** HTML export
     後述の Jekyll 用の設定も参照のこと．
     #+BEGIN_SRC emacs-lisp
 (use-package ox-html
@@ -2598,14 +2760,13 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
           (verbatim       . "<code>%s</code>")))
   )
     #+END_SRC
-** Org-Project
-   Web サイトは Jekyll で作成しています．
-   [[https://github.com/yoshinari-nomura/org-octopress][yoshinari-nomura/org-octopress: org-mode in octopress]] の
-   =ox-jekyll= を参考に +改造して+ ，
-   html export の際に必要な yaml front matter を出力できるようにしてます．
-   あと，src-block が liquid に解釈されない様に escape してます．
 *** Jekyll 用の Backend の定義
-    #+BEGIN_SRC emacs-lisp
+    Web サイトは Jekyll で作成しています．
+    [[https://github.com/yoshinari-nomura/org-octopress][yoshinari-nomura/org-octopress: org-mode in octopress]] の
+    =ox-jekyll= を参考に +改造して+ ，
+    html export の際に必要な yaml front matter を出力できるようにしてます．
+    あと，src-block が liquid に解釈されない様に escape してます．
+     #+BEGIN_SRC emacs-lisp
 (org-export-define-derived-backend 'jekyll 'html
   :menu-entry
   '(?j "Jekyl: export to html with YAML front matter."
@@ -2696,10 +2857,10 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (interactive)
   (let ((outfile (org-export-output-file-name ".html" subtreep)))
     (org-export-to-file 'jekyll outfile async subtreep visible-only body-only ext-plist)))
-    #+END_SRC
-*** Project の定義
-    =org-publish-all= 等で batch で一括出力できるようにしておきます．
-    #+BEGIN_SRC emacs-lisp
+     #+END_SRC
+** Org-Project
+   =org-publish-all= 等で batch で一括出力できるようにしておきます．
+   #+BEGIN_SRC emacs-lisp
 (use-package ox-publish
   :if (file-directory-p "~/Public/.git")
   :config
@@ -2730,7 +2891,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
            )
           ))
   )
-    #+END_SRC
+   #+END_SRC
 * Howm
   Org を使う前は Howm を使っていました.
   過去のメモを検索するためだけに未だに Howm を使っています.
@@ -2848,7 +3009,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :config
   (load (expand-file-name "emacs/tdiary-mode.gpg" my:d:password-store))
   (setq tdiary-browser-function 'browser-url
-        tdiary-coding-system 'utf-8-unix
+        tdiary-coding-system 'utf-8-dos
         tdiary-style-mode 'rd-mode
         tdiary-hour-offset 2
         tdiary-text-save-p t
@@ -2916,10 +3077,11 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    #+BEGIN_SRC emacs-lisp
 (use-package flycheck
   :ensure t
+  :disabled t
   :diminish flycheck-mode
   :init
   :config
-  (global-flycheck-mode)
+;;  (global-flycheck-mode)
   (setq-default flycheck-disabled-checkers
                 '(
                   emacs-lisp-checkdoc
@@ -3088,56 +3250,40 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    Debian パッケージ版を使う．やっている事は
    - =japanese-latex-mode= において, 幾つかのコマンドが追加/上書きされているが，
      あまり使うことの無いコマンドが表示されるのが嫌なのでそれらを削除．
-   - [[https://github.com/tom-tan/auctex-latexmk/][auctex-latexmk]] を参考に
-     file encoding を取得する関数と latexmk の実行用関数をカスタマイズ
+   - コンパイルには =latexmk= を使う，です．
     #+BEGIN_SRC emacs-lisp
 (use-package tex-jp
-  :if (my:dpkg-status "auctex")
+  :if (and (executable-find "uplatex")
+           (my:dpkg-status "auctex"))
   :config
-  (dolist (command '("pTeX" "pLaTeX" "pBibTeX" "jTeX" "jLaTeX" "jBibTeX"))
-    (delq (assoc command TeX-command-list) TeX-command-list))
-  ;; @see https://github.com/tom-tan/auctex-latexmk/auctex-latexmk.el
-  (defvar my:auctex-latexmk-encoding-alist
-    '((japanese-iso-8bit      . "euc")
-      (japanese-iso-8bit-unix . "euc")
-      (euc-jp                 . "euc")
-      (euc-jp-unix            . "euc")
-      (utf-8                  . "utf8")
-      (utf-8-unix             . "utf8")
-      (japanese-shift-jis     . "sjis")
-      (japanese-shift-jis-dos . "sjis"))
-    "Encoding mapping for platex.")
-  (defun my:TeX-run-latexmk ()
-    "Guess TeX file encoding and Excecute latexmk"
-    (let ((TeX-sentinel-default-function 'Latexmk-sentinel)
-          (pair (assq buffer-file-coding-system my:auctex-latexmk-encoding-alist)))
-      (unless (null pair)
-        (setenv "LATEXENC" (cdr pair)))
-      (TeX-run-TeX name command file)
-      (setenv "LATEXENC" nil)))
-  ;; customize latexmk command
-  (defun my:latexmk-setup ()
-    "Add LatexMk command to TeX-command-list."
-    (delq (assoc "LaTeX" TeX-command-list) TeX-command-list)
-    (add-to-list 'TeX-command-list
-                 '("LaTeX" "latexmk -gg -pdfdvi %t" my:TeX-run-latexmk nil
-                   (plain-tex-mode latex-mode doctex-mode)
-                   :help "Run LatexMk, with epLaTeX, dvipdfmx"))
-    (add-to-list 'TeX-command-list
-                 '("LaTeXMk" "latexmk %t" my:TeX-run-latexmk nil
-                   (plain-tex-mode latex-mode doctex-mode)
-                   :help "Run LatexMk without any options"))
-    (add-to-list 'TeX-command-list
-                 '("LaTeXMk(ps2pdfwr)" "latexmk -gg -pdfps %t" my:TeX-run-latexmk nil
-                   (plain-tex-mode latex-mode doctex-mode)
-                   :help "Run LatexMk, with (e)pLaTeX, dvips, ps2pdfwr"))
-    (setq LaTeX-clean-intermediate-suffixes
-          (append
-           '("\\.nav" "\\.snm" "\\.fdb_latexmk" "\\.aux.bak" "\\.synctex.gz")
-           LaTeX-clean-intermediate-suffixes))
-    (setq TeX-command-output-list
-          '(("latexmk" ("pdf")))))
-  (add-hook 'LaTeX-mode-hook 'my:latexmk-setup)
+  (add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)
+  (add-hook 'LaTeX-mode-hook 'TeX-PDF-mode)
+  (add-hook 'LaTeX-mode-hook
+            (function
+             (lambda ()
+               (dolist (command '("pTeX" "LaTeX" "pLaTeX" "pBibTeX" "jTeX" "jLaTeX" "jBibTeX"))
+                 (delq (assoc command TeX-command-list) TeX-command-list))
+               (setq TeX-command-default "LaTeX"
+                     japanese-LaTeX-command-default "LaTeX"
+                     TeX-PDF-mode t
+                     TeX-command-output-list '(("LaTeX" ("pdf")))
+                     )
+               (add-to-list 'TeX-expand-list
+                            '("%(LATEXENC)"
+                              (lambda ()
+                                (let ((str (japanese-TeX-get-encoding-string)))
+                                  (if str (format "%s" str) "")))))
+               (add-to-list 'TeX-command-list
+                            '("LaTeX"
+                              "LATEXENC=%(LATEXENC) latexmk -gg %t"
+                              TeX-run-TeX nil (latex-mode) :help "Run Latexmk")))))
+  (setq TeX-source-correlate-method 'synctex
+        TeX-source-correlate-start-server t
+        TeX-auto-save t
+        TeX-auto-local  (expand-file-name "auctex/auto" my:d:tmp)
+        TeX-style-local (expand-file-name "auctex/style" my:d:tmp)
+        TeX-parse-self t
+        TeX-auto-untabify t)
   )
     #+END_SRC
    =~/.latexmkrc= の設定は以下の通り．
@@ -3282,10 +3428,10 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
  '(howm-reminder-today-face          ((t (:bold t :foreground "#FFBF7F" :background nil ))))
  '(howm-reminder-tomorrow-face       ((t (:bold t :foreground "#FF7FBF" :background nil ))))
  ;; ido
- ;; '(ido-first-match     ((t (:inherit default ))))
- ;; '(ido-only-match      ((t (:foreground "#FFFF4C" ))))
- ;; '(ido-subdir          ((t (:foreground "#7F7FFF" :bold t))))
- ;; '(ido-grid-mode-match ((t (:inherit ido-first-match ))))
+ '(ido-first-match     ((t (:inherit default ))))
+ '(ido-only-match      ((t (:foreground "#FFFF4C" ))))
+ '(ido-subdir          ((t (:foreground "#7F7FFF" :bold t))))
+ '(ido-grid-mode-match ((t (:inherit ido-first-match ))))
  ;; ido-grid-mode-common-match
  ;; ido-grid-mode-jump-face
  ;; ido-incomplete-regexp

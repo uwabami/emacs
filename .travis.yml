@@ -7,6 +7,7 @@ env:
     - EVM_EMACS=emacs-git-snapshot-travis
 matrix:
   allow_failures:
+    - env: EMACS=emacs-24.4-travis
     - env: EMACS=emacs-git-snapshot-travis
 before_install:
   - ln -s $TRAVIS_BUILD_DIR ~/.emacs.d

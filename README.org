@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-02-12 18:09:21
+#+DATE: 2017-05-05 18:32:36
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -221,19 +221,16 @@ init.el: README.org
   )
   #+END_SRC
 * 言語の設定
-  過去にはいろいろ設定していたのですが...
-  - [[http://masutaka.net/chalow/2009-07-09-1.html][Emacs講座 -第7回- 文字コード / マスタカの ChangeLog メモ]]
-  #+BEGIN_QUOTE
-  いきなり矛盾しますが，最近の Emacs(例:23.3) では文字コードの設定は不要です．
-  #+END_QUOTE
-  というわけで OS 依存の条件分岐だけを記述しています．
-
-  ちなみに
-  =prefer-coding-system= を設定すると
-  =default-file-name-coding-system= が設定されます．
-  優先順位は以下の通り:
-  1. =file-name-coding-system= を見る
-  2. =file-name-coding-system= が nil なら =default-file-name-coding-system= を利用
+  日本語, UTF-8 にしています.
+  #+BEGIN_SRC emacs-lisp
+(set-language-environment "Japanese")
+(prefer-coding-system 'utf-8)
+(set-file-name-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+(set-terminal-coding-system 'utf-8)
+(set-default 'buffer-file-coding-system 'utf-8)
+  #+END_SRC
+  その他, 機種依存文字等についての設定をアレコレ.
 ** cp5022x.el
    Emacs23 から内部が Unicode ベースになっています．
 
@@ -243,20 +240,23 @@ init.el: README.org
    #+BEGIN_SRC emacs-lisp
 (use-package cp5022x
   :ensure t
+  :config
+  (set-charset-priority 'ascii 'japanese-jisx0208 'latin-jisx0201
+                        'katakana-jisx0201 'iso-8859-1 'unicode)
+  (set-coding-system-priority 'utf-8 'euc-jp 'iso-2022-jp 'cp932)
   )
    #+END_SRC
 ** East Asian Ambiguos 対応
    CJK 以外の East Asian Ambiguos，絵文字も2文字幅にするようにしています．
    拙作の修正ロケールはこちら: [[https://github.com/uwabami/locale-eaw-emoji]]
    #+BEGIN_SRC emacs-lisp
-(unless (package-installed-p 'eaw_and_emoji)
-  (quelpa '(eaw_and_emoji
+(unless (package-installed-p 'locale-eaw-emoji)
+  (quelpa '(locale-eaw-emoji
             :fetcher url
-            :url "https://raw.githubusercontent.com/uwabami/locale-eaw-emoji/master/eaw_and_emoji.el")))
-(use-package eaw_and_emoji
+            :url "https://raw.githubusercontent.com/uwabami/locale-eaw-emoji/master/locale-eaw-emoji.el")))
+(use-package locale-eaw-emoji
   :config
   (eaw-and-emoji-fullwidth))
-;; (setq nobreak-char-display nil)
    #+END_SRC
 ** OSの違いに起因する条件分岐
    Mac と Linux では同じ Unicode でも正規化が異なります
@@ -973,6 +973,9 @@ File.open(src, "r") {|f|
   )
    #+END_SRC
 * MUA の設定: =wanderlust=
+  :PROPERTIES:
+  :ID:       544e8091-614a-4784-a889-78651a923d6c
+  :END:
   MUA として Wanderlust を使っている
 ** Emacs 本体側の設定
    Emacs 本体での設定は以下の通り. Wanderlust 自体の設定は別ファイルで行なわれる．
@@ -1078,8 +1081,8 @@ video/*; xdg-open %s;
 (setq mime-situation-examples-file
       (concat my:d:tmp "mime-example"))
      #+END_SRC
-     text/plain を html より優先
-     #+BEGIN_SRC emacs-lisp :tangle init-wl.el
+     text/plain を html より優先 → 最近は html を表示している
+     #+BEGIN_SRC emacs-lisp :tangle no
 ;; (set-alist 'mime-view-type-subtype-score-alist '(text . html) 0)
      #+END_SRC
      音を鳴らすアレやコレの無効化
@@ -1206,9 +1209,8 @@ video/*; xdg-open %s;
 (setq elmo-imap4-use-modified-utf7 t)
      #+END_SRC
 **** 非同期チェック
-     なんか挙動が変な，ような...．
      #+BEGIN_SRC emacs-lisp :tangle init-wl.el
-(setq wl-folder-check-async nil)
+(setq wl-folder-check-async t)
      #+END_SRC
 **** フォルダの位置の default からの変更
      =~/.cache/wanderlust/= に集約している
@@ -1235,13 +1237,9 @@ video/*; xdg-open %s;
 (setq wl-temporary-file-directory "~/Downloads/")
      #+END_SRC
      アドレス帳 -> gcontacts-get-wlを使う.
-     GNOME を使っているのであれば [[https://tracker.debian.org/pkg/eweouz][eweouz]] もおもしろそう．とりあえず読み込んでおく.
      #+BEGIN_SRC emacs-lisp :tangle init-wl.el
 (setq wl-use-petname t)
 (setq wl-address-file  "~/.mua/Address.wl")
-(use-package eweouz
-  :config
-  (add-hook 'wl-hook 'eweouz-insinuate-wl))
      #+END_SRC
      LDAP サーバからアドレスを引くことも可能.
      以前は GCALDaemon を使って local に ldap サーバを上げていたのだけれども,
@@ -1381,10 +1379,14 @@ video/*; xdg-open %s;
 (define-key wl-summary-mode-map "\M-o" 'wl-summary-auto-refile)
     #+END_SRC
 *** flag とフォルダを行き来する関数の追加
+    以前は flag 付きフォルダを設定していたので使っていたが,
+    最近は =mu find flag:Flagged= の結果を仮想フォルダにしているので
+    以下の関数は使っていない.
+
     "=" でフラグ付きフォルダと
     実際にメッセージのあるフォルダを行き来する.
     Gmail の「スター付き」フォルダでも有効
-    #+BEGIN_SRC emacs-lisp :tangle init-wl.el
+    #+BEGIN_SRC emacs-lisp :tangle no
 (require 'elmo nil 'noerror)
 (defun my:wl-summary-jump-to-referer-message ()
   (interactive)
@@ -1554,44 +1556,6 @@ video/*; xdg-open %s;
         "Auto-Submitted"            ;; Git commit/Cron notify
         ))
      #+END_SRC
-*** 日本語添付ファイル名のデコード
-    日本語の添付ファイルに関しては, いまだにうまくいかない時がある.
-    #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
-(defvar my-mime-filename-coding-system-for-decode
-  '(iso-2022-jp japanese-shift-jis japanese-iso-8bit))
-(defun my-mime-decode-filename (filename)
-  (let ((filename (if (string-match "\n\t*" filename)
-                      (replace-match "" nil nil filename)
-                    filename))
-        (rest (eword-decode-string filename)))
-    (or (when (and my-mime-filename-coding-system-for-decode
-                   (string= rest filename))
-          (let ((dcs (mapcar (function coding-system-base)
-                             (detect-coding-string filename))))
-            (unless (memq 'emacs-mule dcs)
-              (let ((pcs my-mime-filename-coding-system-for-decode))
-                (while pcs
-                  (if (memq (coding-system-base (car pcs)) dcs)
-                      (setq rest (decode-coding-string filename (car pcs))
-                            pcs nil)
-                    (setq pcs (cdr pcs))))))))
-        rest)))
-(eval-after-load "mime"
-  '(defadvice mime-entity-filename
-       (after eword-decode-for-broken-MUA activate)
-     "Decode encoded file name for BROKEN MUA."
-     (when (stringp ad-return-value)
-       (setq ad-return-value (my-mime-decode-filename ad-return-value)))))
-(require 'std11 nil 'noerror)
-(eval-after-load "std11"
-  '(defadvice std11-wrap-as-quoted-string
-       (before encode-string activate)
-     "Encode a string."
-     (require 'eword-encode)
-     (ad-set-arg 0 (eword-encode-string (ad-get-arg 0)))))
-;; 二重エスケープを回避
-    (defun shell-quote-argument (file) file)
-    #+END_SRC
 *** メッセージ表示
 **** いったん全て非表示に
      #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
@@ -1668,6 +1632,14 @@ video/*; xdg-open %s;
     #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
 (setq wl-default-draft-cite-decorate-author nil)
     #+END_SRC
+**** メール本文の文字コード
+     丸囲み数字なんかが入ってしまうと
+     勝手にエンコーディングが変わってしまって鬱陶しい. どうしたモンだろうかね.
+     #+BEGIN_SRC emacs-lisp :tangle no
+(add-hook 'wl-draft-mode-hook
+          (lambda ()
+            (add-to-list 'mime-charset-type-list '(utf-8 8 nil))))
+     #+END_SRC
 **** draft mode で orgtbl を有効に
      #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
 (add-hook 'wl-draft-mode-hook 'turn-on-orgtbl)
@@ -1778,10 +1750,6 @@ video/*; xdg-open %s;
     使えてるから, まあ良いかな, とか.
     #+BEGIN_SRC emacs-lisp :tangle init-wl.el
 (setq mime-pgp-verify-when-preview nil)
-(add-hook 'wl-draft-mode-hook
-          (lambda ()
-            (set-buffer-file-coding-system 'utf-8)
-            ))
 (defun my:epa-wl-decrypt-message ()
   (interactive)
   (save-window-excursion
@@ -1800,14 +1768,15 @@ video/*; xdg-open %s;
            ("C-c : e" . epa-mail-encrypt))
     #+END_SRC
 *** 検索
-    imap の検索か mu(maildir-utils) の検索.
-    mu の検索が偶にセグフォるので悩み所
+    mu(maildir-utils)を使う. 偶にセグフォるので悩み所
     #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
 (use-package elmo-search
   :bind (:map wl-summary-mode-map
               ("v" . wl-quicksearch-goto-search-folder-wrapper)
+              ("V" . wl-quicksearch-goto-search-folder-wrapper)
               :map wl-folder-mode-map
-              ("v" . wl-quicksearch-goto-search-folder-wrapper))
+              ("v" . wl-quicksearch-goto-search-folder-wrapper)
+              ("V" . wl-quicksearch-goto-search-folder-wrapper))
   :config
   (elmo-search-register-engine
    'mu 'local-file
@@ -1881,14 +1850,22 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   #+END_SRC
 * 補完: =ido=
   補完を ido に任せているパッケージがちらほらあるので設定しておく．
-  find-file は helm-find-file より ido + flx-ido + ido-grid-mode の方が
-  好みなんだが，どうしようかなぁ...
+  find-file は helm-find-file より ido + flx-ido + ido-grid の方が好みなんだが,
+  どうしようかなぁ...
 ** =ido= の設定
    #+BEGIN_SRC emacs-lisp
 (use-package ido
+  ;; :bind (("C-x f"   . ido-find-file)
+  ;;        ("C-x C-f" . ido-find-file)
+  ;;        ("C-x d"   . ido-dired)
+  ;;        ("C-x C-d" . ido-dired)
+  ;;        ("C-x b"   . ido-switch-buffer)
+  ;;        ("C-x C-b" . ido-switch-buffer)
+  ;;        ("C-x M-b" . ibuffer)
+  ;;        )
   :config
-  (ido-mode t)
-  ;; (ido-everywhere t)  <- Wanderlust みたいに，過去の選択を覚えている奴と相性悪いので.
+  (ido-mode -1)
+  (ido-everywhere nil)  ; <- 過去の選択を覚えている奴と相性悪いので無効化
   (setq ido-enable-prefix nil             ; prefix match を有効にすると，入力を先頭一致可能
         ido-confirm-unique-completion t   ; TAB で名前の一致まで行ない，その後 RET で実行
         ido-enable-flex-matching t        ; flex matching を試す際には prefix を無効化すること
@@ -1922,71 +1899,11 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
             (lambda ()
               (when (fboundp 'skk-mode-exit)
                 (skk-mode-exit))))
+  (add-hook 'ido-setup-hook
+            (lambda ()
+              (define-key ido-completion-map (kbd "C-h")     'ido-delete-backward-updir)
+              (define-key ido-completion-map (kbd "C-l")     'ido-delete-backward-updir)))
   )
-   #+END_SRC
-** =flx-ido=: flex match の強化
-   曖昧マッチが非常に直感的になった．地味に便利で手放せない．
-   #+BEGIN_SRC emacs-lisp
-(use-package flx-ido
-  :config
-  (flx-ido-mode 1)
-  (setq flx-ido-use-faces t
-        flx-ido-threshold 10000)
-  )
-   #+END_SRC
-** =ido-grid-mode=: 補完候補の grid 表示
-   #+BEGIN_SRC emacs-lisp
-(use-package ido-grid-mode
-  :ensure t
-  :config
-  (setq ido-grid-mode-max-columns 10
-        ido-grid-mode-max-rows 5   ;; ヒョコヒョコと動くのが煩わしいので
-        ido-grid-mode-min-rows 5   ;; 高さ 5 行に固定しておく．
-        ido-grid-mode-scroll-up    #'ido-grid-mode-previous-row
-        ido-grid-mode-scroll-down  #'ido-grid-mode-next-row
-        ido-grid-mode-prefix-scrolls t
-        ido-grid-mode-start-collapsed nil
-        ido-grid-mode-keys nil     ;; PageUp/C-p と PageDonw/C-n が逆の方が好み.
-        ido-grid-mode-prefix "-> "
-        )
-  (ido-grid-mode t)
-  (defun my:ido-minibuffer-truncate-line ()
-    (set (make-local-variable 'truncate-lines) nil))
-  (add-hook 'ido-minibuffer-setup-hook 'my:ido-minibuffer-truncate-line)
-  (add-hook 'ido-setup-hook 'my:ido-minibuffer-truncate-line)
-  )
-   #+END_SRC
-** =ido-recentf=: recentf を ido で
-   #+BEGIN_SRC emacs-lisp
-(defun ido-recentf-open ()
-  "Use `ido-completing-read' to \\[find-file] a recent file"
-  (interactive)
-  (if (find-file (ido-completing-read "Find recent file: " recentf-list))
-      (message "Opening file...")
-    (message "Aborting")))
-   #+END_SRC
-** =ido= 関連の keybind
-   =ido-grid-mode= の初期設定が気にくわない(=C-p,C-n= と =<up><down>= は逆の方が好き)なので
-   それを設定するのがメイン.
-   #+BEGIN_SRC emacs-lisp
-(defun my:ido-keybind-setup ()
-  "update ido keybind"
-  (define-key ido-completion-map (kbd "<prior>") 'ido-grid-mode-previous-page)
-  (define-key ido-completion-map (kbd "<next>")  'ido-grid-mode-next-page)
-  (define-key ido-completion-map (kbd "<left>")  'ido-grid-mode-left)
-  (define-key ido-completion-map (kbd "<right>") 'ido-grid-mode-right)
-  (define-key ido-completion-map (kbd "<up>")    'ido-grid-mode-previous)
-  (define-key ido-completion-map (kbd "<down>")  'ido-grid-mode-next)
-  (define-key ido-completion-map (kbd "C-p")     'ido-grid-mode-previous)
-  (define-key ido-completion-map (kbd "C-n")     'ido-grid-mode-next)
-  (define-key ido-completion-map (kbd "C-h")     'ido-delete-backward-updir)
-  (define-key ido-completion-map (kbd "C-l")     'ido-delete-backward-updir)
-  )
-(add-hook 'ido-setup-hook 'my:ido-keybind-setup)
-;; とりあえず helm-find-files 等を当分使ってみる事に．
-;; (global-set-key (kbd "C-x f")   'ido-find-file)
-;; (global-set-key (kbd "C-x C-f") 'ido-find-file)
-;; (global-set-key (kbd "C-x C-r") 'ido-recentf-open)
    #+END_SRC
 * 補完: =helm=
   以前はデフォルトの挙動が嫌で割とイロイロと設定していたのだけれど，
@@ -1994,8 +1911,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   #+BEGIN_SRC emacs-lisp
     (use-package helm
       :ensure t
-      :defines helm-map
-      :diminish (helm-migemo-mode)
+      :diminish (helm-migemo-mode helm-mode)
       :bind (("M-x"     . helm-M-x)
              ("C-x f"   . helm-find-files)
              ("C-x C-f" . helm-find-files)
@@ -2004,11 +1920,13 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
              ("C-x C-r" . helm-recentf)
              )
       :config
-      (define-key helm-map (kbd "TAB") 'helm-execute-persistent-action)
-      (define-key helm-map (kbd "C-i") 'helm-execute-persistent-action)
-      (global-unset-key (kbd "C-z"))
-      (define-key helm-map (kbd "C-z") 'helm-select-action)
+      (with-eval-after-load "helm"
+        (bind-keys :map helm-map
+                   ("<tab>"   . helm-execute-persistent-action)
+                   ("C-i"     . helm-execute-persistent-action)
+                   ("C-z"     . helm-select-action)))
       (my:disable-builtin-mode 'helm-mode)   ; helm-mode は基本使わない
+      (global-unset-key (kbd "C-z"))
       (setq helm-command-prefix-key "C-z"    ; helm-command-prefix-key
             ;; dired での skk との競合(C-x C-j の奪い合い)を避ける
             dired-bind-jump nil
@@ -2033,10 +1951,25 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                   :around (lambda (orig-func candidate)
                             (when (file-exists-p candidate)
                               (funcall orig-func candidate))))
+      ;; minibuffer で C-f で default の find-file に移行
+      ;; write-file や insert-file なんかで必須.
+      (defun my:default-ff (&optional no-op)
+        "execute default find-file"
+        (interactive)
+        (call-interactively 'find-file))
+      (setq helm-type-file-actios
+            (append helm-type-file-actions
+                    '(("Default Find File" . my:default-ff))))
+      (with-eval-after-load "helm"
+        (bind-keys :map helm-map
+                   ("C-f" . (lambda () (interactive)
+                              (helm-quit-and-execute-action 'my:default-ff)))))
+      ;; helm と migemo の設定
       (if (and (locate-library "migemo")     ; あれば migemo を有効化
                (executable-find "cmigemo"))
           (setq helm-migemo-mode t)
         (setq helm-migemo-mode nil))
+      ;; 40% 固定
       (helm-autoresize-mode)
       (setq helm-autoresize-min-height 40 ; fixed 40%
             helm-autoresize-max-height 40)
@@ -2050,7 +1983,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :config
   (helm-flx-mode +1)
   (setq helm-flx-for-helm-find-files t ;; t by default
-        helm-flx-for-helm-locate t) ;; nil by default
+        helm-flx-for-helm-locate t)    ;; nil by default
   )
    #+END_SRC
 ** helm-locate
@@ -2058,6 +1991,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    #+BEGIN_SRC emacs-lisp
 (use-package helm-locate
   :if (executable-find "mlocate")
+  :disabled t
   :config
   (setq helm-locate-command "mlocate %s -e -A --regex %s"))
    #+END_SRC
@@ -2070,23 +2004,17 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (helm-descbinds-mode))
    #+END_SRC
 ** helm-ag
-   ripgrep があればそっちを使うようにしてみた．
    #+BEGIN_SRC emacs-lisp
 (use-package helm-ag
   :ensure t
-  :if (or (executable-find "ag")
-          (executable-find "rg"))
+  :if (executable-find "ag")
   :bind (("M-g ." . helm-ag)
          ("M-g ," . helm-ag-pop-stack)
          ("C-M-s" . helm-ag-this-file))
   :config
-  (cond
-   ((executable-find "rg")
-    (setq helm-ag-base-command "rg --vimgrep --no-heading"))
-   (t
-    (setq helm-ag-base-command "ag --nocolor --nogroup --ignore-case"
-          helm-ag-command-option "--all-text")))
-  (setq helm-ag-insert-at-point 'symbol)
+  (setq helm-ag-base-command "ag --nocolor --nogroup --ignore-case"
+        helm-ag-command-option "--all-text"
+        helm-ag-insert-at-point 'symbol)
   )
    #+END_SRC
 * 補完: =yasnippet=, =auto-complete= [/]
@@ -2241,11 +2169,13 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         org-emphasis-alist                     ;; 基本 "-nw" なので色変更
         (cons '("+" '(:strike-through t :foreground "#999999"))
               (cl-delete "+" org-emphasis-alist :key 'car :test 'equal))
+        org-completion-use-ido t
         ;; GTD: 状態の追加
-        org-todo-keywords '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)" "CANCEL(c)" "SOMEDAY(s)")
-                            (type "ARTICLE(a)")
-                            (type "MEMO(m)")
-                            )
+        org-todo-keywords
+        '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)" "CANCEL(c)" "SOMEDAY(s)")
+          (type "ARTICLE(a)")
+          (type "MEMO(m)")
+          )
         ;; GTD: タグの追加
         org-tag-alist '(("OFFICE"     . ?o)
                         ("HOME"       . ?h)
@@ -2289,12 +2219,15 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    #+BEGIN_SRC emacs-lisp
 (use-package org-id
   :bind (("C-c l"   . org-store-link)
-         ("C-c C-l"  . org-insert-link))
-  :init
-  (setq org-id-location-files (concat my:d:tmp "org-id-locations"))
+         ("C-c C-l" . org-insert-link))
   :config
   (setq org-id-link-to-org-use-id 'create-if-interactive-and-no-custom-id
+        org-id-track-globally t
         )
+  (when (file-directory-p "~/Public/cc-env")
+    (setq org-id-extra-files (f-glob "*.org" "~/Public/cc-env"))
+    (add-to-list 'org-id-extra-files
+                 (concat user-emacs-directory "README.org")))
   )
    #+END_SRC
    org 形式の link を他のモードのドキュメント，コメント等でも使えるようにする
@@ -2483,7 +2416,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         (when face (cl-return face)))))
   :config
   ;; 使用するファイル
-  (setq org-agenda-files '("~/Public/cc-env"))
   (dolist (file
            '("Archive.org"
              "Holidays.org"
@@ -2654,36 +2586,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         orgmine-default-todo-keyword "新規")
   ;; サーバ設定
   (load (expand-file-name "emacs/orgmine.gpg" my:d:password-store)))
-   #+END_SRC
-** Org-Wiki
-   計算機関連のメモは [[https://github.com/caiorss/org-wiki][org-wiki]] で書いています．
-   #+BEGIN_SRC emacs-lisp
-(unless (package-installed-p 'org-wiki)
-  (quelpa '(org-wiki
-            :fetcher github
-            :repo "caiorss/org-wiki")))
-(use-package org-wiki
-  :config
-  (setq org-wiki-location (concat (getenv "HOME") "/Public/cc-env/"))
-  (defun my:org-wiki-header ()
-    "Insert a header at the top of the file, customize for personal use"
-    (interactive)
-    (save-excursion
-      (goto-char (point-min))
-      (insert (format
-               (string-trim "
-,#+TITLE:
-,#+DATE: 20
-,#+LANGUAGE: ja
-,#+REF: cc-env/%s
-,#+LAYOUT: default
-,#+SETUPFILE: ~/Public/_setup.org
-,#+PERMALINK: /cc-env/%s.html
-")
-               (file-name-base (buffer-file-name))
-               (file-name-base (buffer-file-name))))))
-  (advice-add 'org-wiki-header :override 'my:org-wiki-header)
-  )
    #+END_SRC
 ** Org-Export
 *** 一般設定
@@ -2866,11 +2768,12 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :config
   (defun org-publish-to-jekyll (plist filename pub-dir)
     "publishing org to html with Jekyll YAML front matter."
+    (org-id-update-id-locations)
     (org-publish-org-to 'jekyll filename ".html" plist pub-dir))
   (setq org-publish-use-timestamps-flag t
         org-publish-timestamp-directory "~/Public/.org-timestamps/"
         org-publish-project-alist
-        '(("web"
+        '(("org"
            :base-directory "~/Public/"
            :base-extension "org"
            :exclude "\\(_.*\\|cc-env\\)"
@@ -2880,7 +2783,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
            :with-toc nil
            :headline-levels 5
            )
-          ("web"
+          ("cc-env"
            :base-directory "~/Public/cc-env/"
            :base-extension "org"
            :publishing-directory "~/Public/cc-env/"
@@ -2889,7 +2792,39 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
            :with-toc t
            :headline-levels 5
            )
-          ))
+          ;; ("web" :components ("org" "cc-env"))
+          )
+        )
+  )
+   #+END_SRC
+** Org-Wiki
+   計算機関連のメモは [[https://github.com/caiorss/org-wiki][org-wiki]] で書いています．
+   #+BEGIN_SRC emacs-lisp
+(unless (package-installed-p 'org-wiki)
+ (quelpa '(org-wiki
+           :fetcher github
+           :repo "caiorss/org-wiki")))
+(use-package org-wiki
+  :config
+  (setq org-wiki-location (concat (getenv "HOME") "/Public/cc-env/"))
+  (defun my:org-wiki-header ()
+    "Insert a header at the top of the file, customize for personal use"
+    (interactive)
+    (save-excursion
+      (goto-char (point-min))
+      (insert (format
+               (string-trim "
+#+TITLE:
+#+DATE: 20
+#+LANGUAGE: ja
+#+REF: cc-env/%s
+#+LAYOUT: default
+#+SETUPFILE: ~/Public/_setup.org
+#+PERMALINK: /cc-env/%s.html
+")
+               (file-name-base (buffer-file-name))
+               (file-name-base (buffer-file-name))))))
+  (advice-add 'org-wiki-header :override 'my:org-wiki-header)
   )
    #+END_SRC
 * Howm
@@ -3062,7 +2997,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         ;; projectile-globally-ignored-directories
         )
   (projectile-global-mode)
-  (helm-projectile-on)
+  ;; (helm-projectile-on)
   )
    #+END_SRC
 ** VCS: =magit=
@@ -3071,6 +3006,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    #+BEGIN_SRC emacs-lisp
 (use-package magit
   :bind (("C-x g" . magit-status))
+  :config
+  (setq magit-completing-read-function 'magit-ido-completing-read)
   )
    #+END_SRC
 ** flycheck
@@ -3283,7 +3220,11 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         TeX-auto-local  (expand-file-name "auctex/auto" my:d:tmp)
         TeX-style-local (expand-file-name "auctex/style" my:d:tmp)
         TeX-parse-self t
-        TeX-auto-untabify t)
+        TeX-auto-untabify t
+        font-latex-fontify-script nil
+        font-latex-fontify-sectioning 1.0
+        font-latex-script-display nil
+        )
   )
     #+END_SRC
    =~/.latexmkrc= の設定は以下の通り．
@@ -3323,10 +3264,14 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (interactive)
   (when window-system
     (progn
-      (add-to-list 'default-frame-alist '(font . "Monospace-12"))
+      (set-face-attribute 'default nil
+                          :family "SeptemberMMono"
+                          ;; :family "Ricty Discord for Powerline"
+                          :height 135) ;; 135pt
+      ;; (set-fontset-font nil 'japanese-jisx0208
+      ;;                   (font-spec :family "SeptemberMMono"))
+      ;; (setq face-font-rescale-alist '(("September.*" . 1)))
       (set-background-color "#242424")
-      (set-face-attribute 'default t :font "Monospace" :height 135)
-      (set-frame-font "Monospace-13.5" nil t)
       )))
 (setq frame-background-mode (frame-parameter nil 'background-mode))
 (setq default-frame-alist
@@ -3377,6 +3322,19 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
  ;; '(fixed-pitch ((t (:family "Monospace" :height 135 ))))
  ;; '(variable-pitch ((t (:family "Monospace" :height 135 ))))
  ;;
+ ;; preview-latex
+ '(font-latex-sectioning-0-face ((t (:inherit font-latex-sectioning-1-face))))
+ '(font-latex-sectioning-1-face ((t (:inherit font-latex-sectioning-2-face))))
+ '(font-latex-sectioning-2-face ((t (:inherit font-latex-sectioning-3-face))))
+ '(font-latex-sectioning-3-face ((t (:inherit font-latex-sectioning-4-face))))
+ '(font-latex-sectioning-4-face ((t (:inherit font-latex-sectioning-5-face ))))
+ '(font-latex-sectioning-5-face ((t (:inherit font-lock-type-face :bold t))))
+ '(font-latex-slide-title-face  ((t (:inherit font-lock-type-face :bold t))))
+ '(font-latex-subscript-face    ((t nil)))
+ '(font-latex-superscript-face  ((t nil)))
+ '(font-latex-math-face         ((t (:inherit font-lock-constant-face ))))
+ '(font-latex-script-char-face  ((t (:inherit font-lock-preprocessor-face :bold t))))
+ '(font-latex-verbatim-face     ((t (:inherit font-lock-doc-string-face ))))
  ;; elscreen
  '(elscreen-tab-control-face        ((t (:background "#222244" :foreground "#f6f3e8" :underline t :bold t ))))
  '(elscreen-tab-current-screen-face ((t (:background "#222244" :foreground "#f6f3e8" :underline t :bold t ))))
@@ -3431,7 +3389,9 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
  '(ido-first-match     ((t (:inherit default ))))
  '(ido-only-match      ((t (:foreground "#FFFF4C" ))))
  '(ido-subdir          ((t (:foreground "#7F7FFF" :bold t))))
- '(ido-grid-mode-match ((t (:inherit ido-first-match ))))
+ '(ido-grid-common-match ((t (:background "#4c4c4c"))))
+ '(ido-grid-mode-match ((t (:inherit ido-first-match))))
+ '(ido-vertical-first-match-face ((t (:underline (:inherit ido-first-match)))))
  ;; ido-grid-mode-common-match
  ;; ido-grid-mode-jump-face
  ;; ido-incomplete-regexp
@@ -3469,6 +3429,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   `(with-eval-after-load ,file
      (diminish ,mode ,new-name)))
 (my:diminish "isearch"          'isearch-mode)
+(my:diminish ""          'develock-mode)
 (setq auto-revert-mode-text "")
   #+END_SRC
   メジャーモードは =hook= で設定.
@@ -3492,7 +3453,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     (setq skk-modeline-input-mode "--[--]:")))
 (my:skk-modeline-input-mode)
   #+END_SRC
-  ddskk そのものに modeline を更新する関数があるので無効化する
+ddskk そのものに modeline を更新する関数があるので無効化する
   #+BEGIN_SRC emacs-lisp
 (defadvice skk-setup-modeline (around my:disable-skk-setup-modeline activate)
   "skk-setup-modeline による modeline の更新を無効化"
@@ -3500,14 +3461,23 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (force-mode-line-update t))
   #+END_SRC
   powerline 本体の設定．default-theme をベースに見たい物だけ表示するようにしてみた．
-  あと，separater は環境によってズレるので，半角スペースに変更
+  変更点として,
+  - separater は環境によってズレるので，半角スペースに変更
+  - vc-mode でのアイコン表示に U+26A1⚡ High Voltage を使う
+  といった事をしている. East Asian ambiguous Width char の扱いは面倒ですね
   #+BEGIN_SRC emacs-lisp
 (use-package powerline
-  :ensure t
   :config
   (setq powerline-default-separator 'utf-8
         powerline-utf-8-separator-left  #x20
-        powerline-utf-8-separator-right #x20)
+        powerline-utf-8-separator-right #x20
+        )
+(defpowerline my:powerline-vc
+  (when (and (buffer-file-name (current-buffer)) vc-mode)
+    (format "%s%s"
+            ;; (char-to-string #x26d3)
+            (char-to-string #x26a1)
+            (format-mode-line '(vc-mode vc-mode)))))
   (defun my:powerline-theme ()
     "Setup customize theme."
     (interactive)
@@ -3532,8 +3502,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                      (powerline-raw "%*" mode-line 'l)
                      (powerline-raw mode-line-mule-info mode-line 'l)
                      (powerline-buffer-id mode-line-buffer-id 'l)
-                     ;; (when (and (boundp 'which-func-mode) which-func-mode)
-                     ;;   (powerline-raw which-func-format nil 'l))
                      (powerline-raw " ")
                      (funcall separator-left mode-line face1)
                      (powerline-major-mode face1 'l)
@@ -3541,7 +3509,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                      (powerline-narrow face1 'l)
                      (powerline-raw " " face1)
                      (funcall separator-left face1 face2)
-                     (powerline-vc face2 'r)
+                     (my:powerline-vc face2 'r)
+                     ;; (powerline-vc face2 'r)
                      ))
                (rhs (list
                      (powerline-raw global-mode-string face2 'r)
@@ -3549,7 +3518,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                      (powerline-raw " " face1)
                      (powerline-minor-modes face1 'r)
                      (funcall separator-right face1 mode-line)
-                     (powerline-raw " ")
+                     (powerline-raw "  ")
                      (powerline-raw "%6p" mode-line 'r)
                      ))
                )

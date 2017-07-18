@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-07-18 23:50:20
+#+DATE: 2017-07-19 00:40:30
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -1023,7 +1023,7 @@ File.open(src, "r") {|f|
      SEMI や FLIM などの UA の表示に [[http://uwabami.github.com/rail/][rail]] を使っている.
      ちなみに rail を有効にすると, 以下の様に User-Agent が表示される
      #+ATTR_HTML: with="50%"
-     http://uwabami.github.io/rail/images/wanderlust_with_or_without_rail.png
+     [[https://uwabami.github.io/software/rail/images/wanderlust_with_or_without_rail.png]]
      #+BEGIN_SRC emacs-lisp :tangle init-wl.el
 (eval-when-compile (require 'mime-def))
 (use-package rail
@@ -1970,6 +1970,16 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (setq smex-save-file (concat my:d:tmp "smex-items"))
   )
    #+END_SRC
+* 補完: =helm=
+  幾つかの拡張で =helm= が呼ばれるので,
+  インストールするけれども明示的に無効化しておく
+#+BEGIN_SRC emacs-lisp
+(use-package helm
+  :ensure t
+  :config
+  (helm-mode -1)
+  )
+#+END_SRC
 * 校正，辞書等
 ** spell checker
    ispell はコマンドとして =aspell= を利用する．
@@ -2658,6 +2668,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 ** Org-Project
    =org-publish-all= 等で batch で一括出力できるようにしておきます．
    #+BEGIN_SRC emacs-lisp
+(use-package htmlize)
 (use-package ox-publish
   :if (file-directory-p "~/Public/.git")
   :config
@@ -2692,6 +2703,37 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         )
   )
    #+END_SRC
+** Org-Wiki
+    計算機関連のメモは [[https://github.com/caiorss/org-wiki][org-wiki]] で書いています．
+    #+BEGIN_SRC emacs-lisp
+(unless (package-installed-p 'org-wiki)
+  (quelpa '(org-wiki
+            :fetcher github
+            :repo "caiorss/org-wiki")))
+(use-package org-wiki
+  :config
+  (setq org-wiki-location (concat (getenv "HOME") "/Public/cc-env/"))
+  (defun my:org-wiki-header ()
+    "Insert a header at the top of the file, customize for personal use"
+    (interactive)
+    (save-excursion
+      (goto-char (point-min))
+      (insert (format
+               (string-trim "
+,#+TITLE:
+,#+DATE: 20
+,#+LANGUAGE: ja
+,#+REF: cc-env/%s
+,#+LAYOUT: cc-env
+,#+SETUPFILE: ~/Public/_setup.org
+,#+PERMALINK: /cc-env/%s.html
+Related [[wiki:index][Index]]
+")
+               (file-name-base (buffer-file-name))
+               (file-name-base (buffer-file-name))))))
+  (advice-add 'org-wiki-header :override 'my:org-wiki-header)
+  )
+    #+END_SRC
 * Howm
   Org を使う前は Howm を使っていました.
   過去のメモを検索するためだけに未だに Howm を使っています.

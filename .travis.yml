@@ -1,4 +1,5 @@
 language: generic
+dist: trusty
 env:
   matrix:
     - EVM_EMACS=emacs-24.4-travis

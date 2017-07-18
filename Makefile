@@ -35,6 +35,6 @@ recompile:
 clean:
 	rm -fr auto-save-list *.el *.elc *~
 distclean: clean
-	rm -fr packages
 	rm -fr quelpa
+	rm -fr elpa
 	rm -fr tmp

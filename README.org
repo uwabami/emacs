@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-07-19 00:40:30
+#+DATE: 2017-07-20 02:27:43
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -469,9 +469,11 @@ init.el: README.org
   (setq load-prefer-newer t))
    #+END_SRC
 ** ガベージコレクションの頻度を下げる
-   とりあえず 128 MB にしておく.
+   とりあえず 128 MB にしておく. ついでに message に gc が走っていることを表示
    #+BEGIN_SRC emacs-lisp
-(setq gc-cons-threshold (* 128 1024 1024))
+(setq gc-cons-threshold (* 128 1024 1024)
+      garbage-collection-messages t
+      )
    #+END_SRC
 ** scratch を殺さない. 消したら再生成
    ...元ネタがどこだったのか忘れてしまった...
@@ -598,12 +600,12 @@ init.el: README.org
   (add-hook 'before-save-hook 'time-stamp))
    #+END_SRC
    モード独自の設定(例えば Org とか)に関しては別途．
-** =tramp=: 使わないので無効化?
-   無効化したいんだけれど，うまくいってない，ような...?
+** =tramp=: ssh 越しにファイルを編集
    #+BEGIN_SRC emacs-lisp
-(setq tramp-mode nil
-      tramp-persistency-file-name (concat my:d:tmp "tramp")
-      tramp-default-method "scpx")
+(use-package tramp
+  :config
+  (setq tramp-persistency-file-name (concat my:d:tmp "tramp"))
+  )
    #+END_SRC
 ** =bookmark=: bookmark ファイル
    イマイチ使いこなせてない. 場所だけ変更しておく.
@@ -1911,6 +1913,18 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
             (lambda ()
               (define-key ido-completion-map (kbd "C-h")     'ido-delete-backward-updir)
               (define-key ido-completion-map (kbd "C-l")     'ido-delete-backward-updir)))
+  ;; tramp はキャッシュから消す
+  (defun my:ido-remove-tramp-from-cache nil
+    "Remove any TRAMP entries from `ido-dir-file-cache'."
+    (interactive)
+    (setq ido-dir-file-cache
+          (cl-remove-if
+           (lambda (x)
+             (string-match "/\\(rsh\\|ssh\\|telnet\\|su\\|sudo\\|sshx\\|krlogin\\|ksu\\|rcp\\|scp\\|rsync\\|scpx\\|fcp\\|nc\\|ftp\\|smb\\|adb\\):" (car x)))
+           ido-dir-file-cache)))
+  (defun ido-kill-emacs-hook ()
+    (my:ido-remove-tramp-from-cache)
+    (ido-save-history))
   )
    #+END_SRC
 ** =flx-ido=: flex match の強化
@@ -1972,7 +1986,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    #+END_SRC
 * 補完: =helm=
   幾つかの拡張で =helm= が呼ばれるので,
-  インストールするけれども明示的に無効化しておく
+  インストールするけれども明示的に無効化しておく.
 #+BEGIN_SRC emacs-lisp
 (use-package helm
   :ensure t

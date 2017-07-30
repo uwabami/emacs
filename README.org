@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-07-20 02:27:43
+#+DATE: 2017-07-30 20:20:10
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -469,12 +469,15 @@ init.el: README.org
   (setq load-prefer-newer t))
    #+END_SRC
 ** ガベージコレクションの頻度を下げる
-   とりあえず 128 MB にしておく. ついでに message に gc が走っていることを表示
-   #+BEGIN_SRC emacs-lisp
-(setq gc-cons-threshold (* 128 1024 1024)
+   message に gc が走っていることを表示する.
+      #+BEGIN_SRC emacs-lisp
+(setq ;; gc-cons-threshold (* 128 1024 1024)
       garbage-collection-messages t
       )
    #+END_SRC
+      =gc-cons-threshold= はとりあえず default の設定に.
+      =helm= や =flx= などのメモリ喰いな拡張を入れている場合には, 安易に =gc-cons-threshold= を上げるのは考えものである.
+      つまり「gc が走る→大きな領域を掃除するのでその間 emacs が止まる」という事を頻繁に経験することになるだろう.
 ** scratch を殺さない. 消したら再生成
    ...元ネタがどこだったのか忘れてしまった...
    #+BEGIN_SRC emacs-lisp
@@ -1074,7 +1077,7 @@ File.open(src, "r") {|f|
      #+END_SRC
      どのアプリケーションで開くか → =xdg-open= に丸投げ．
      #+BEGIN_SRC emacs-lisp :tangle init-wl.el
-(setq mime-view-mailcap-files '("~/.mailcap"))
+;; (setq mime-view-mailcap-files '("~/.mailcap"))
      #+END_SRC
      =~/.mailcap= 自体は以下
      #+BEGIN_SRC conf :tangle no
@@ -1854,25 +1857,23 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                   '("google" "https://encrypted.google.com/search?num=100&ie=utf-8&oe=utf-8&hl=ja&safe=off&filter=0&pws=0&complete=0&gbv=1&q=%s" utf-8)))
   )
   #+END_SRC
-* 補完: =ido=, =flx-ido=, =smex=
-  半年ぐらい Helm を使ってみたけど
-  余計な事しすぎで色々設定してもシンドかったので，
-  結局使うのを止めました．
-
-  そんな訳で，当分 =ido= と =smex= を使うことに．
+* 補完: =ido=, =flx-ido=
+  補完を ido に任せているパッケージがちらほらあるので設定しておく．
+  find-file は helm-find-file より ido + flx-ido + ido-grid の方が
+  好みなんだが，どうしようかなぁ...
 ** =ido= の設定
    #+BEGIN_SRC emacs-lisp
 (use-package ido
-  :bind (("C-x f"   . ido-find-file)
-         ("C-x C-f" . ido-find-file)
-         ("C-x d"   . ido-dired)
-         ("C-x C-d" . ido-dired)
-         ("C-x b"   . ido-switch-buffer)
-         ("C-x C-b" . ido-switch-buffer)
-         ("C-x M-b" . ibuffer))
+  ;; 補完は基本的に helm に投げることに.
+  ;; :bind (("C-x f"   . ido-find-file)
+  ;;        ("C-x C-f" . ido-find-file)
+  ;;        ("C-x d"   . ido-dired)
+  ;;        ("C-x C-d" . ido-dired)
+  ;;        ("C-x b"   . ido-switch-buffer)
+  ;;        ("C-x C-b" . ido-switch-buffer)
+  ;;        ("C-x M-b" . ibuffer))
   :config
   (ido-mode t)
-  ;; (ido-everywhere t)  <- Wanderlust みたいに，過去の選択を覚えている奴と相性悪いので.
   (setq ido-enable-prefix nil             ; prefix match を有効にすると，入力を先頭一致可能
         ido-confirm-unique-completion t   ; TAB で名前の一致まで行ない，その後 RET で実行
         ido-enable-flex-matching t        ; flex matching を試す際には prefix を無効化すること
@@ -1938,62 +1939,105 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         flx-ido-threshold 10000)
   )
    #+END_SRC
-** =ido-grid=: 補完候補の grid 表示
-   パッケージにある =ido-grid-mode= ではなく,
-   [[https://github.com/larkery/ido-grid.el][larkery/ido-grid.el: reimplementation of ido-grid-mode to be simpler/faster]]
-   を使うことに.
-   #+BEGIN_SRC emacs-lisp
-(unless (package-installed-p 'ido-grid)
-  (quelpa '(ido-grid
-            :fetcher github
-            :repo "larkery/ido-grid.el")))
-(use-package ido-grid
-  :ensure t
-  :config
-  (setq ido-grid-enabled t
-        ido-grid-start-small nil
-        ido-grid-rows 0.20)
-  (ido-grid-enable)
-  )
-   #+END_SRC
-** =ido-recentf=: recentf を ido で
-   #+BEGIN_SRC emacs-lisp
-(defun ido-recentf-open ()
-  "Use `ido-completing-read' to \\[find-file] a recent file"
-  (interactive)
-  (if (find-file (ido-completing-read "Find recent file: " recentf-list))
-      (message "Opening file...")
-    (message "Aborting")))
-(bind-key "C-x C-r" 'ido-recentf-open)
-   #+END_SRC
-** =ido-describe-bindings=: key binding を表示?
-   #+BEGIN_SRC emacs-lisp
-(use-package ido-describe-bindings
-  :ensure t
-  :bind (:map help-map
-              ("b" . ido-describe-bindings))
-  )
-   #+END_SRC
-** =smex=
-   =M-x= の強化
-   #+BEGIN_SRC emacs-lisp
-(use-package smex
-  :ensure t
-  :bind (("M-x" . smex))
-  :config
-  (setq smex-save-file (concat my:d:tmp "smex-items"))
-  )
-   #+END_SRC
 * 補完: =helm=
-  幾つかの拡張で =helm= が呼ばれるので,
-  インストールするけれども明示的に無効化しておく.
-#+BEGIN_SRC emacs-lisp
-(use-package helm
+  以前はデフォルトの挙動が嫌で割とイロイロと設定していたのだけれど，
+  最近はそんなに邪魔しない感じ...なのかな? とりあえず現状は以下の通り．
+** helm 本体
+  #+BEGIN_SRC emacs-lisp
+    (use-package helm
+      :ensure t
+      :diminish (helm-migemo-mode helm-mode)
+      :bind (("M-x"     . helm-M-x)
+             ("C-x f"   . helm-find-files)
+             ("C-x C-f" . helm-find-files)
+             ("C-x b"   . helm-buffers-list)
+             ("C-x C-b" . helm-buffers-list)
+             ("C-x C-r" . helm-recentf)
+             )
+      :config
+      (with-eval-after-load "helm"
+        (bind-keys :map helm-map
+                   ("<tab>"   . helm-execute-persistent-action)
+                   ("C-i"     . helm-execute-persistent-action)
+                   ("C-z"     . helm-select-action)))
+      (my:disable-builtin-mode 'helm-mode)   ; helm-mode は基本使わない
+      (global-unset-key (kbd "C-z"))
+      (setq helm-command-prefix-key "C-z"    ; helm-command-prefix-key
+            ;; dired での skk との競合(C-x C-j の奪い合い)を避ける
+            dired-bind-jump nil
+            ;; mode line には何も表示しない
+            helm-completion-mode-string ""
+            ;; minibuffer に input method の状態を引き継がない
+            helm-inherit-input-method nil
+            ;; 余計なファイルは表示しない
+            helm-ff-skip-boring-files t
+            ;; helm-adaptive の保存先の変更
+            helm-adaptive-history-file (concat my:d:tmp "helm-adaptive-history")
+            ;; mode line には何も表示しない
+            helm-completion-mode-string ""
+            )
+      ;; 一つ上のディレクトリ(../)を候補から外す
+      (advice-add 'helm-ff-filter-candidate-one-by-one
+                  :around (lambda (orig-func file)
+                            (unless (string-match "\\(?:/\\|\\`\\)\\.\\{2\\}\\'" file)
+                              (funcall orig-func file))))
+      ;; 存在しないファイルには何もしない(default は新規 buffer ができる)
+      (advice-add 'helm-ff-kill-or-find-buffer-fname
+                  :around (lambda (orig-func candidate)
+                            (when (file-exists-p candidate)
+                              (funcall orig-func candidate))))
+      ;; minibuffer で C-f で default の find-file に移行
+      ;; write-file や insert-file なんかで必須.
+      (defun my:default-ff (&optional no-op)
+        "execute default find-file"
+        (interactive)
+        (call-interactively 'find-file))
+      (setq helm-type-file-actios
+            (append helm-type-file-actions
+                    '(("Default Find File" . my:default-ff))))
+      (with-eval-after-load "helm"
+        (bind-keys :map helm-map
+                   ("C-f" . (lambda () (interactive)
+                              (helm-quit-and-execute-action 'my:default-ff)))))
+      ;; helm と migemo の設定
+      (if (and (locate-library "migemo")     ; あれば migemo を有効化
+               (executable-find "cmigemo"))
+          (setq helm-migemo-mode t)
+        (setq helm-migemo-mode nil))
+      ;; 40% 固定
+      (helm-autoresize-mode)
+      (setq helm-autoresize-min-height 40 ; fixed 40%
+            helm-autoresize-max-height 40)
+      )
+  #+END_SRC
+** helm-flx
+   曖昧検索は flx に任せる．かなり良い．
+   #+BEGIN_SRC emacs-lisp
+(use-package helm-flx
   :ensure t
   :config
-  (helm-mode -1)
+  (helm-flx-mode +1)
+  (setq helm-flx-for-helm-find-files t ;; t by default
+        helm-flx-for-helm-locate t)    ;; nil by default
   )
-#+END_SRC
+   #+END_SRC
+** helm-locate
+   default の =mlocate= の option を修正しておく．
+   #+BEGIN_SRC emacs-lisp
+(use-package helm-locate
+  :if (executable-find "mlocate")
+  :disabled t
+  :config
+  (setq helm-locate-command "mlocate %s -e -A --regex %s"))
+   #+END_SRC
+** helm-descbinds
+   =helm-M-x= の際にキーバインドが表示されるようになる
+   #+BEGIN_SRC emacs-lisp
+(use-package helm-descbinds
+  :ensure t
+  :config
+  (helm-descbinds-mode))
+   #+END_SRC
 * 校正，辞書等
 ** spell checker
    ispell はコマンドとして =aspell= を利用する．
@@ -3213,6 +3257,10 @@ Related [[wiki:index][Index]]
                               "LATEXENC=%(LATEXENC) latexmk -gg %t"
                               TeX-run-TeX nil (latex-mode) :help "Run Latexmk")))))
   (setq TeX-source-correlate-method 'synctex
+        TeX-view-program-selection
+        '((output-dvi "xdvi")        ;; built-in
+          (output-pdf "Zathura")     ;; built-in
+          (output-html "xdg-open"))  ;; built-in
         TeX-source-correlate-start-server t
         TeX-auto-save t
         TeX-auto-local  (expand-file-name "auctex/auto" my:d:tmp)
@@ -3247,6 +3295,7 @@ Related [[wiki:index][Index]]
    #+BEGIN_SRC emacs-lisp
 (use-package zotelo
   :ensure t
+  :disabled t
   :init
   (add-hook 'LaTeX-mode-hook 'zotelo-minor-mode)
   (add-hook 'TeX-mode-hook   'zotelo-minor-mode)

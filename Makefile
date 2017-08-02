@@ -1,8 +1,9 @@
 # -*- mode: makefile -*-
 EMACS	?= emacs
 PKG		 = org-plus-contrib
-PKG		+= $(shell dpkg -l ddskk 2>&1 | grep -q ^ii || echo ddskk )
-EL		= init-ddskk.el
+# PKG		+= $(shell dpkg -l ddskk 2>&1 | grep -q ^ii || echo ddskk )
+# EL		= init-ddskk.el
+EL		=
 EL		+= $(shell dpkg -l wl-beta 2>&1 | grep -q ^ii && echo init-wl.el )
 ELC		= $(EL:%.el=%.elc)
 

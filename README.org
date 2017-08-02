@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-08-01 01:52:39
+#+DATE: 2017-08-02 02:51:57
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -171,18 +171,6 @@ init.el: README.org
   #+BEGIN_SRC emacs-lisp
 (use-package el-x
   :ensure t)
-  #+END_SRC
-* url-retrieve の置換: =mb-url=
-  標準関数の url-retrieve 等の proxy 環境下での挙動が怪しいので,
-  [[https://github.com/dochang/mb-url][dochang/mb-url: Multiple Backends for Emacs URL package]]
-  advice (上書き)する.
-  #+BEGIN_SRC emacs-lisp
-(use-package mb-url
-  :ensure t
-  :if (executable-find "curl")
-  :config
-  (advice-add 'url-http :override 'mb-url-http-curl)
-  )
   #+END_SRC
 * 環境変数の読み込み: =exec-path-from-shell=
   zsh で設定した =PATH= などの環境変数を Emacs に引き継ぐために
@@ -471,9 +459,8 @@ init.el: README.org
 ** ガベージコレクションの頻度を下げる
    message に gc が走っていることを表示する.
       #+BEGIN_SRC emacs-lisp
-(setq ;; gc-cons-threshold (* 128 1024 1024)
-      garbage-collection-messages t
-      )
+(setq gc-cons-threshold (* 8 1024 1024)
+      garbage-collection-messages t )
    #+END_SRC
       =gc-cons-threshold= はとりあえず default の設定に.
       =helm= や =flx= などのメモリ喰いな拡張を入れている場合には, 安易に =gc-cons-threshold= を上げるのは考えものである.
@@ -616,19 +603,15 @@ init.el: README.org
 (setq bookmark-default-file (concat my:d:share "bookmarks"))
    #+END_SRC
 
-** =eww=: 内蔵ブラウザ [0/1]
-   内蔵ブラウザの設定
-   - [ ] =mb-url= で curl を使うようにすると、
-     =google= から 403が返るようになる。これ、どうしたら良いのかな?
-   幅と背景色の指定がメイン
+** =eww=: 内蔵ブラウザ
+   内蔵ブラウザの設定: 幅と背景色の指定がメイン
    #+BEGIN_SRC emacs-lisp
 (use-package eww
   :config
-  (setq eww-bookmarks-directory (expand-file-name "eww" my:d:tmp)
-        )
   (unless (file-directory-p (expand-file-name "eww" my:d:tmp))
     (make-directory (expand-file-name "eww" my:d:tmp)))
-  (setq eww-search-prefix "https://www.bing.com/search?q=")
+  (setq eww-bookmarks-directory (expand-file-name "eww" my:d:tmp)
+        eww-search-prefix "https://www.google.co.jp/search?q=")
   (defvar my:eww-disable-colorize t)
   (defun shr-colorize-region--disable (orig start end fg &optional bg &rest _)
     (unless my:eww-disable-colorize
@@ -645,10 +628,10 @@ init.el: README.org
     (interactive)
     (setq-local my:eww-disable-colorize nil)
     (eww-reload))
-  ;; テキスト幅を 70 に固定
+  ;; テキスト幅を 68 に固定
   ;; - [[http://emacs.rubikitch.com/eww-width/][Emacs組み込みWebブラウザEWWでテキストの横幅を指定する方法]]
   (defun shr-insert-document--for-eww (&rest them)
-    (let ((shr-width 70)) (apply them)))
+    (let ((shr-width 68)) (apply them)))
   (defun eww-display-html--fill-column (&rest them)
     (advice-add 'shr-insert-document :around 'shr-insert-document--for-eww)
     (unwind-protect
@@ -1071,9 +1054,9 @@ File.open(src, "r") {|f|
      #+BEGIN_SRC emacs-lisp :tangle init-wl.el
 (setq mime-view-text/html-previewer 'shr)
 (setq mime-setup-enable-inline-html 'shr)
-;; (use-package mime-setup
-;;   :init
-;;   (defun shr-colorize-region (start end fg &optional bg) nil))
+(use-package mime-setup)
+(with-eval-after-load 'shr
+  (defun shr-colorize-region (start end fg &optional bg) nil))
      #+END_SRC
      どのアプリケーションで開くか → =xdg-open= に丸投げ．
      #+BEGIN_SRC emacs-lisp :tangle init-wl.el
@@ -1593,19 +1576,6 @@ video/*; xdg-open %s;
         "^Message-ID:"
         ))
      #+END_SRC
-**** mime の画像表示の切り替え
-     =M-T= でトグル
-     #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
-(defun wl-summary-w3m-safe-toggle-inline-images (&optional arg)
-  "Toggle displaying of all images in the message buffer.
-     If the prefix arg is given, all images are considered to be safe."
-  (interactive "P")
-  (with-current-buffer wl-message-buffer
-    (w3m-toggle-inline-images arg)))
-(eval-after-load "wl-summary"
-  '(define-key wl-summary-mode-map
-     "\M-T" 'wl-summary-w3m-safe-toggle-inline-images))
-     #+END_SRC
 **** From, To を省略表示しない
      To や From にアドレスが沢山指定されていると省略されるので，これを無効化
      #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
@@ -1845,18 +1815,6 @@ Categories=GNOME;GTK;Office;Email;
 StartupNotify=false
 MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   #+END_SRC
-* Emacs-w3m
-  あまり使わないけれど, 一応設定しておく.
-  #+BEGIN_SRC emacs-lisp
-(use-package w3m
-  :config
-  (setq w3m-search-default-engine "google"
-        w3m-use-cookies t)
-  (with-eval-after-load "w3m-search"
-    '(add-to-list 'w3m-search-engine-alist
-                  '("google" "https://encrypted.google.com/search?num=100&ie=utf-8&oe=utf-8&hl=ja&safe=off&filter=0&pws=0&complete=0&gbv=1&q=%s" utf-8)))
-  )
-  #+END_SRC
 * 補完: =ido=
   補完は =ido= が軽いし速いので好み.
 ** =ido= の設定
@@ -1976,6 +1934,18 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
       :config
       (setq helm-mode -1)
       )
+  #+END_SRC
+* =ace-link=: リンクへのジャンプ
+  主に eww でのリンクジャンプに使っていたのだけれど
+  気がついたら便利に使う様になってしまった
+  #+BEGIN_SRC emacs-lisp
+(use-package ace-link
+  :ensure t
+  :bind (:map eww-mode-map
+               ("f" . ace-link-eww)
+               :map eww-link-keymap
+               ("f" . ace-link-eww))
+  )
   #+END_SRC
 * 校正，辞書等
 ** spell checker
@@ -2989,6 +2959,12 @@ Related [[wiki:index][Index]]
  ;; '(review-mode-header3-face  ((t (:inherit outline-3))))
  ;; '(review-mode-header4-face  ((t (:inherit outline-4))))
  ;; '(review-mode-header5-face  ((t (:inherit outline-5))))
+ ;; avy
+ '(avy-background-face             ((t (:foreground "#333333" ))))
+ '(avy-lead-face                   ((t (:foreground "#020202" :background "#4cff4C" :bold t))))
+ '(avy-lead-face-0                 ((t (:foreground "#020202" :background "#ffff4c" :bold t))))
+ '(avy-lead-face-1                 ((t (:foreground "#020202" :background "#ff4cff" :bold t))))
+ '(avy-lead-face-2                 ((t (:foreground "#020202" :background "#4cffff" :bold t))))
  )
   #+END_SRC
 * 日記: =tDiary=

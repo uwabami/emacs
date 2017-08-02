@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-08-02 19:21:30
+#+DATE: 2017-08-02 20:51:42
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -566,7 +566,14 @@ init.el: README.org
           ;; comment the line below.
           (tab-mark ?\t [?\u00BB ?\t] [?\\ ?\t]))
         whitespace-space-regexp "\\(\u3000+\\)")
-  (global-whitespace-mode 1))
+  (setq whitespace-global-modes '(not
+                                  eww-mode
+                                  term-mode
+                                  eshell-mode
+                                  org-agenda-mode
+                                  calendar-mode))
+  (global-whitespace-mode 1)
+  )
    #+END_SRC
 ** =saveplace=: 前回の修正位置を記憶する.
    記憶の保存先は =~/.emacs.d/tmp/emacs-places= に変更.
@@ -607,20 +614,15 @@ init.el: README.org
    内蔵ブラウザの設定: 幅と背景色の指定がメイン
    #+BEGIN_SRC emacs-lisp
 (use-package eww
-  :bind (:map eww-mode-map
-              ("r"  . eww-reload)
-              ("o"  . eww)
-              ("&"  . eww-browse-with-external-browser)
-              ("b"  . eww-back-url)
-              ("]"  . eww-next-url)
-              ("["  . eww-previous-url)
-              ("g"  . eww-top-url))
   :config
-  ;; shr
-  (setq shr-width 68
-        shr-image-animate nil
-        shr-max-image-proportion 0.5
-        shr-use-fonts nil)
+  (bind-keys :map eww-mode-map
+             ("r"  . eww-reload)
+             ("o"  . eww)
+             ("&"  . eww-browse-with-external-browser)
+             ("b"  . eww-back-url)
+             ("]"  . eww-next-url)
+             ("["  . eww-previous-url)
+             ("g"  . eww-top-url))
   ;; eww
   (unless (file-directory-p (expand-file-name "eww" my:d:tmp))
     (make-directory (expand-file-name "eww" my:d:tmp)))
@@ -696,7 +698,10 @@ init.el: README.org
   Emacs は "-nox", つまり frame 無しでターミナル上で上げることが多いので
   XIM 経由で入力することに.
 
-  というわけで leim の無効化.
+  というわけでキーバインドの無効化のみ
+  #+BEGIN_SRC emacs-lisp
+(global-unset-key "\C-\\")
+  #+END_SRC
 * 日本語入力: =ddskk=
   ここは *obsolete* . 最近は xim 経由で入力している.
 

@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-08-03 15:49:52
+#+DATE: 2017-08-03 17:34:37
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -1098,7 +1098,7 @@ video/*; xdg-open %s;
 *** 個人情報の設定
     具体的な設定内容は以下のファイルに置いている
      #+BEGIN_SRC emacs-lisp :tangle init-wl.el
-     (load (concat my:d:password-store "/emacs/wl-info.gpg"))
+     (load (concat my:d:password-store "/emacs/wl-info-" system-name ".gpg"))
      #+END_SRC
     設定している内容は以下の通り
 **** 自身のメールアドレスと購読メーリングリストの設定
@@ -1231,7 +1231,7 @@ video/*; xdg-open %s;
      #+END_SRC
      folders の位置の変更
      #+BEGIN_SRC emacs-lisp :tangle init-wl.el
-(setq wl-folders-file (concat my:d:password-store "/emacs/wl-folders.gpg"))
+(setq wl-folders-file (concat my:d:password-store "/emacs/wl-folders-" system-name ".gpg"))
      #+END_SRC
      Drafts, Trash の置き場所
      #+BEGIN_SRC emacs-lisp :tangle init-wl.el

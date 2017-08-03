@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-08-02 20:51:42
+#+DATE: 2017-08-03 15:49:52
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -1013,10 +1013,6 @@ File.open(src, "r") {|f|
            (my:dpkg-status "rail"))
   :commands (wl wl-other-frame wl-draft wl-user-agent wl-user-agent-compose wl-draft-send wl-draft-kill)
   :init
-  (unless (package-installed-p 'gcontacts-get-wl)
-    (quelpa '(gcontacts-get-wl
-              :fetcher url
-              :url "https://raw.githubusercontent.com/uwabami/gcontacts-get-wl/master/gcontacts-get-wl.el")))
   (define-mail-user-agent
     'wl-user-agent
     'wl-user-agent-compose
@@ -1058,24 +1054,6 @@ File.open(src, "r") {|f|
      #+BEGIN_SRC emacs-lisp :tangle init-wl.el
 (add-to-list 'mime-charset-coding-system-alist '(iso-2022-jp . cp50220))
 (setq wl-mime-charset 'iso-2022-jp)
-     #+END_SRC
-**** gcontacts-get-wl
-     [[https://github.com/uwabami/gcontacts-get-wl][gcontacts-get-wl]] は
-     Google Contacts の連絡先を Wanderlust の =.Address= に出力するだけのパッケージ．
-     [[https://github.com/jd/google-contacts.el][google-contacs.el]] の方が便利そうではあるものの「ふりがな」の扱いと，
-     オフラインでの処理を考えて，結局安直な方法を選んでしまった．
-     #+BEGIN_SRC emacs-lisp :tangle init-wl.el
-(use-package gcontacts-get-wl
-  :if (my:dpkg-status "wl-beta")
-  :commands (gcontacts-update-wl-address)
-  :config
-  (load (expand-file-name "emacs/gcontacts-get.gpg" my:d:password-store)))
-     #+END_SRC
-     oauth token は =pass= で管理している．中身は以下の通り
-     #+BEGIN_SRC emacs-lisp :tangle no
-(setq gcontacts-get-oauth-client-ID "XXXXXXXXXXXXXXXX.apps.googleusercontent.com"
-      gcontacts-get-oauth-client-secret "YYYYYYYYYYYYYYYYYYYYYYYYY"
-      gcontacts-get-ask nil)
      #+END_SRC
 **** elscreen-wl
      メール作成時に =elscreen= と連携してくれる．便利
@@ -1262,10 +1240,10 @@ video/*; xdg-open %s;
 (setq elmo-lost+found-folder "+lost+found")
 (setq wl-temporary-file-directory "~/Downloads/")
      #+END_SRC
-     アドレス帳 -> gcontacts-get-wlを使う.
+     アドレス帳
      #+BEGIN_SRC emacs-lisp :tangle init-wl.el
 (setq wl-use-petname t)
-(setq wl-address-file  "~/.mua/Address.wl")
+(setq wl-address-file  "~/.mua/Address")
      #+END_SRC
      LDAP サーバからアドレスを引くことも可能.
      以前は GCALDaemon を使って local に ldap サーバを上げていたのだけれども,
@@ -1380,10 +1358,6 @@ video/*; xdg-open %s;
      #+END_SRC
 *** キーバインド関連
     =use-package= で設定しておいた方が良いかなぁ...
-    =<f2>= で Addrbook の更新
-    #+BEGIN_SRC emacs-lisp :tangle init-wl.el
-(global-set-key [f2] 'gcontacts-update-wl-address)
-    #+END_SRC
     =C-c C-j= を browse-url に明け渡す
     #+BEGIN_SRC emacs-lisp :tangle init-wl.el
 (define-key wl-draft-mode-map "\C-c\C-j" 'browse-url-at-point)
@@ -1951,7 +1925,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 ** =smex=
    #+BEGIN_SRC emacs-lisp
 (use-package smex
-  :bind (("M-x" . smex))
+  :bind (("M-X" . smex))
   :ensure t
   :init
   (setq smex-save-file (concat my:d:tmp "smex-items"))
@@ -2995,10 +2969,10 @@ Related [[wiki:index][Index]]
  ;; '(review-mode-header5-face  ((t (:inherit outline-5))))
  ;; avy
  '(avy-background-face             ((t (:foreground "#333333" ))))
- '(avy-lead-face                   ((t (:foreground "#020202" :background "#4cff4C" :bold t))))
- '(avy-lead-face-0                 ((t (:foreground "#020202" :background "#ffff4c" :bold t))))
- '(avy-lead-face-1                 ((t (:foreground "#020202" :background "#ff4cff" :bold t))))
- '(avy-lead-face-2                 ((t (:foreground "#020202" :background "#4cffff" :bold t))))
+ '(avy-lead-face                   ((t (:foreground "#020202" :background "#244424" :bold t))))
+ '(avy-lead-face-0                 ((t (:foreground "#020202" :background "#444424" :bold t))))
+ '(avy-lead-face-1                 ((t (:foreground "#020202" :background "#442444" :bold t))))
+ '(avy-lead-face-2                 ((t (:foreground "#020202" :background "#244444" :bold t))))
  )
   #+END_SRC
 * 日記: =tDiary=

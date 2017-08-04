@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-08-03 17:34:37
+#+DATE: 2017-08-04 12:27:10
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -697,11 +697,13 @@ init.el: README.org
   以前は ddskk を使っていたのだけれど,
   Emacs は "-nox", つまり frame 無しでターミナル上で上げることが多いので
   XIM 経由で入力することに.
-
-  というわけでキーバインドの無効化のみ
   #+BEGIN_SRC emacs-lisp
-(global-unset-key "\C-\\")
+(defun my:xim-message ()
+  (interactive)
+  (message "Check your IM status"))
+(bind-key  "C-\\" 'my:xim-message)
   #+END_SRC
+  ...uim をコマンドラインから有効にする方法は無いものかなぁ...
 * 日本語入力: =ddskk=
   ここは *obsolete* . 最近は xim 経由で入力している.
 

@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-08-04 12:27:10
+#+DATE: 2017-08-04 22:56:35
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -400,7 +400,7 @@ init.el: README.org
      #+END_SRC
      =recentf=: 最近使ったファイル履歴の保管
     #+BEGIN_SRC emacs-lisp
-(setq recentf-max-saved-items 10000)
+(setq recentf-max-saved-items 256)
 (setq recentf-save-file
       (expand-file-name (concat my:d:tmp "recentf")))
 (setq recentf-auto-cleanup 'never)
@@ -410,7 +410,7 @@ init.el: README.org
         "^/private\\.*"
         "^/var/folders\\.*"
         "/TAGS$"
-        "^/home/uwabami/.mozilla/firefox/jhitnbb2.default/itsalltext\\.*"
+        "^/home/uwabami/.mozilla/\\.*"
         ))
 (add-hook 'after-init-hook 'recentf-mode)
     #+END_SRC
@@ -681,9 +681,10 @@ init.el: README.org
            (process-name (concat "firefox " url))
            (process (apply 'start-process process-name nil
                            browse-url-firefox-program ff-args) ))))
-  ;; default は eww. eww から firefox を呼び出すようにする
-  (setq browse-url-browser-function 'eww-browse-url
-        shr-external-browser 'browse-url-firefox)
+  (if (executable-find "firefox")
+      (setq browse-url-browser-function 'eww-url-firefox
+            shr-external-browser 'browse-url-firefox)
+    (setq browse-url-browser-function 'eww-browse-url))
   )
    #+END_SRC
 ** =server=: Emacs server
@@ -2971,10 +2972,10 @@ Related [[wiki:index][Index]]
  ;; '(review-mode-header5-face  ((t (:inherit outline-5))))
  ;; avy
  '(avy-background-face             ((t (:foreground "#333333" ))))
- '(avy-lead-face                   ((t (:foreground "#020202" :background "#244424" :bold t))))
- '(avy-lead-face-0                 ((t (:foreground "#020202" :background "#444424" :bold t))))
- '(avy-lead-face-1                 ((t (:foreground "#020202" :background "#442444" :bold t))))
- '(avy-lead-face-2                 ((t (:foreground "#020202" :background "#244444" :bold t))))
+ '(avy-lead-face                   ((t (:foreground "#f6f3e8" :background "#002400" :bold t :box t))))
+ '(avy-lead-face-0                 ((t (:foreground "#020202" :background "#ffff00" :bold t :box t))))
+ '(avy-lead-face-1                 ((t (:foreground "#f6f3e8" :background "#240024" :bold t :box t))))
+ '(avy-lead-face-2                 ((t (:foreground "#020202" :background "#00ffff" :bold t :box t))))
  )
   #+END_SRC
 * 日記: =tDiary=
@@ -3236,6 +3237,7 @@ Related [[wiki:index][Index]]
   特に =[home]= と =[end]= は無いと途方に暮れます．
   #+BEGIN_SRC emacs-lisp
 (bind-keys*
+ ("<f2>"    . eww)
  ("C-h"     . backward-delete-char)
  ("C-c M-a" . align-regexp)
  ("C-c ;"   . comment-region)

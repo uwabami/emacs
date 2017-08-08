@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-08-04 22:56:35
+#+DATE: 2017-08-08 16:23:57
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -682,7 +682,7 @@ init.el: README.org
            (process (apply 'start-process process-name nil
                            browse-url-firefox-program ff-args) ))))
   (if (executable-find "firefox")
-      (setq browse-url-browser-function 'eww-url-firefox
+      (setq browse-url-browser-function 'browse-url-firefox
             shr-external-browser 'browse-url-firefox)
     (setq browse-url-browser-function 'eww-browse-url))
   )
@@ -694,20 +694,7 @@ init.el: README.org
   (unless (server-running-p)
     (server-start)))
    #+END_SRC
-* 日本語入力関連.
-  以前は ddskk を使っていたのだけれど,
-  Emacs は "-nox", つまり frame 無しでターミナル上で上げることが多いので
-  XIM 経由で入力することに.
-  #+BEGIN_SRC emacs-lisp
-(defun my:xim-message ()
-  (interactive)
-  (message "Check your IM status"))
-(bind-key  "C-\\" 'my:xim-message)
-  #+END_SRC
-  ...uim をコマンドラインから有効にする方法は無いものかなぁ...
 * 日本語入力: =ddskk=
-  ここは *obsolete* . 最近は xim 経由で入力している.
-
   [[http://openlab.ring.gr.jp/skk/ddskk-ja.html][Daredevil SKK (DDSKK)]] をメインで使用中．無いと途方に暮れる．
   ちなみにGTKが有効になっていると =gtk-immodule= なんかと衝突するので
   =~/.Xresources= で xim を無効にしておくと良い．
@@ -719,7 +706,7 @@ Emacs*useXIM: false
 ** Emacs 本体側の設定
    実際の設定は別ファイルで行なわれるため
    ここでは設定ファイルの位置変更を変更している．
-   #+BEGIN_SRC emacs-lisp :tangle no
+   #+BEGIN_SRC emacs-lisp
 (use-package skk
   :bind (("C-x j"   . skk-mode)
          ("C-x C-j" . skk-mode)
@@ -734,31 +721,31 @@ Emacs*useXIM: false
 ** DDSKK 本体の設定
    sticky shift: [[http://homepage1.nifty.com/blankspace/emacs/sticky.html][sticky shift]] を参照のこと.
    ddskk の 14.2 以降から同梱されるようになった(ありがたい)
-   #+BEGIN_SRC emacs-lisp :tangle no
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
 (setq skk-sticky-key ";")
    #+END_SRC
    変換候補の表示位置
-   #+BEGIN_SRC emacs-lisp :tangle no
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
 (setq skk-show-candidates-always-pop-to-buffer t)
    #+END_SRC
    候補表示件数を2列に
-   #+BEGIN_SRC emacs-lisp :tangle no
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
 (setq skk-henkan-show-candidates-rows 2)
    #+END_SRC
    日本語表示しない
-   #+BEGIN_SRC emacs-lisp :tangle no
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
 (setq skk-japanese-message-and-error nil)
    #+END_SRC
    メニューを日本語にしない -> toolbar 非表示だし.
-   #+BEGIN_SRC emacs-lisp :tangle no
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
 (setq skk-show-japanese-menu nil)
    #+END_SRC
    注釈の表示
-   #+BEGIN_SRC emacs-lisp :tangle no
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
 (setq skk-show-annotation nil)
    #+END_SRC
    インジケータの表示のカスタマイズ
-   #+BEGIN_SRC emacs-lisp :tangle no
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
 (setq skk-latin-mode-string "[_A]")
 (setq skk-hiragana-mode-string "[あ]")
 (setq skk-katakana-mode-string "[ア]")
@@ -768,11 +755,11 @@ Emacs*useXIM: false
 (setq skk-indicator-use-cursor-color nil)
    #+END_SRC
    インジケータを左端に表示
-   #+BEGIN_SRC emacs-lisp :tangle no
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
 (setq skk-status-indicator 'left)
    #+END_SRC
    mode-line が動くのが許せないので，ちょっと修正
-   #+BEGIN_SRC emacs-lisp :tangle no
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
 (defadvice skk-make-indicator-alist
     (after my:set-skk-default-indicator activate)
   (dolist (elem
@@ -785,31 +772,31 @@ Emacs*useXIM: false
 (setq skk-show-inline t)
    #+END_SRC
    カーソルには色をつけない
-   #+BEGIN_SRC emacs-lisp :tangle no
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
 (setq skk-use-color-cursor nil)
    #+END_SRC
 *** 編集関連
     キーバインド
-    #+BEGIN_SRC emacs-lisp :tangle no
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
 (global-set-key "\C-x\C-j" 'skk-mode)
 (global-set-key "\C-xj" 'skk-mode)
 (global-set-key "\C-j" 'skk-mode)
 (global-set-key "\C-\\" 'skk-mode)
     #+END_SRC
     半角カナを入力
-    #+BEGIN_SRC emacs-lisp :tangle no
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
 (setq skk-use-jisx0201-input-method t)
     #+END_SRC
     Enter で改行しない
-    #+BEGIN_SRC emacs-lisp :tangle no
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
 (setq skk-egg-like-newline t)
     #+END_SRC
     "「"を入力したら"」"も自動で挿入
-    #+BEGIN_SRC emacs-lisp :tangle no
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
 (setq skk-auto-insert-paren t)
     #+END_SRC
     句読点変換ルール
-    #+BEGIN_SRC emacs-lisp :tangle no
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
 (setq skk-kuten-touten-alist
       '(
         (jp    . ("。" . "、"))
@@ -819,7 +806,7 @@ Emacs*useXIM: false
 (setq-default skk-kutouten-type 'en)
     #+END_SRC
     全角記号の変換: @ での日付入力は使わない
-    #+BEGIN_SRC emacs-lisp :tangle no
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
 (setq skk-rom-kana-rule-list
       (append skk-rom-kana-rule-list
               '(("!" nil "!")
@@ -832,11 +819,11 @@ Emacs*useXIM: false
                 )))
     #+END_SRC
     送り仮名が厳密に正しい候補を優先
-    #+BEGIN_SRC emacs-lisp :tangle no
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
 (setq skk-henkan-strict-okuri-precedence t)
     #+END_SRC
     辞書の共有
-    #+BEGIN_SRC emacs-lisp :tangle no
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
 (setq skk-share-private-jisyo t)
     #+END_SRC
 *** インクリメンタルサーチ
@@ -891,7 +878,7 @@ File.open(src, "r") {|f|
     他にも quote する必要あるような気もするけれど, それは気がついた時に.
 
     辞書サーバの指定は以下.
-    #+BEGIN_SRC emacs-lisp :tangle no
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
 (cond
  ((getenv "SKKSERVER")
   (setq skk-server-host "127.0.0.1"
@@ -907,16 +894,16 @@ File.open(src, "r") {|f|
  )
     #+END_SRC
     辞書登録の際に送り仮名を削除
-    #+BEGIN_SRC emacs-lisp :tangle no
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
 (setq skk-check-okurigana-on-touroku 'auto)
     #+END_SRC
     漢字登録のミスをチェックする
-    #+BEGIN_SRC emacs-lisp :tangle no
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
 (setq skk-check-okurigana-on-touroku t)
     #+END_SRC
 *** 動的補完
     まだ設定していない...
-    #+BEGIN_SRC emacs-lisp :tangle no
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
     ;; ;; 動的補完
     ;; (setq skk-dcomp-activate t)
     ;; (setq skk-dcomp-multiple-activate t)
@@ -935,7 +922,7 @@ File.open(src, "r") {|f|
     #+END_SRC
 *** 部首変換, 総画数変換
     上手く使いこなせていない
-    #+BEGIN_SRC emacs-lisp :tangle no
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
 (add-to-list 'skk-search-prog-list
              '(skk-tankan-search 'skk-search-jisyo-file
                                  skk-large-jisyo 10000))
@@ -3279,7 +3266,7 @@ Related [[wiki:index][Index]]
 
    SKK の状態がヒョコヒョコ動くのが嫌なので，
    =skk-modeline-input-mode= に常に現在の状況を表示する様にしておく．
- #+BEGIN_SRC emacs-lisp :tangle no
+ #+BEGIN_SRC emacs-lisp
 (defun my:skk-modeline-input-mode ()
   "skk が読み込まれていない場合でも skk-modeline-input-mode に文字を入れて返す"
   (unless (boundp 'skk-modeline-inpt-mode)
@@ -3287,7 +3274,7 @@ Related [[wiki:index][Index]]
 (my:skk-modeline-input-mode)
    #+END_SRC
  ddskk そのものに modeline を更新する関数があるので無効化する
-   #+BEGIN_SRC emacs-lisp :tangle no
+   #+BEGIN_SRC emacs-lisp
 (defadvice skk-setup-modeline (around my:disable-skk-setup-modeline activate)
   "skk-setup-modeline による modeline の更新を無効化"
   (setq skk-indicator-alist (skk-make-indicator-alist))
@@ -3331,9 +3318,9 @@ Related [[wiki:index][Index]]
                                                 (powerline-current-separator)
                                                 (cdr powerline-default-separator-dir))))
                (lhs (list
-                     ;; (powerline-raw (substring skk-modeline-input-mode 2 -1) nil 'l)
-                     (powerline-raw "[%*]" mode-line 'l)
+                     (powerline-raw (substring skk-modeline-input-mode 2 -1) nil 'l)
                      (powerline-raw mode-line-mule-info mode-line 'l)
+                     (powerline-raw "%*" mode-line 'l)
                      (powerline-buffer-id mode-line-buffer-id 'l)
                      (powerline-raw " ")
                      (funcall separator-left mode-line face1)

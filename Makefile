@@ -9,7 +9,7 @@ ELC		= $(EL:%.el=%.elc)
 
 all: bootstrap init.elc
 elc: $(ELC)
-	@rm -f init-*.el
+	@rm -f init*.el
 bootstrap: tmp/bootstrap-stamp
 tmp/bootstrap-stamp: init.el
 	@mkdir -p tmp

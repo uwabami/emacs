@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-08-08 16:23:57
+#+DATE: 2017-08-09 21:32:58
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -996,6 +996,7 @@ File.open(src, "r") {|f|
 ** Emacs 本体側の設定
    Emacs 本体での設定は以下の通り. Wanderlust 自体の設定は別ファイルで行なわれる．
    ここでは =wl-init-file= を指定することで，設定ファイルを明示している．
+
    #+BEGIN_SRC emacs-lisp
 (use-package wl
   :if (and (or (my:dpkg-status "wl")
@@ -1024,6 +1025,7 @@ File.open(src, "r") {|f|
     (make-directory (concat elmo-msgdb-directory "/local/Trash")))
   )
    #+END_SRC
+   割と =/etc/emacs/site-start.d/65wl-beta.el= と重複している気がするが...
 ** Wanderlust 本体の設定
    実際の設定は以下の通り
 *** 依存/追加ライブラリのインストールと読み込み
@@ -1369,14 +1371,10 @@ video/*; xdg-open %s;
 (define-key wl-summary-mode-map "\M-o" 'wl-summary-auto-refile)
     #+END_SRC
 *** flag とフォルダを行き来する関数の追加
-    以前は flag 付きフォルダを設定していたので使っていたが,
-    最近は =mu find flag:Flagged= の結果を仮想フォルダにしているので
-    以下の関数は使っていない.
-
     "=" でフラグ付きフォルダと
     実際にメッセージのあるフォルダを行き来する.
     Gmail の「スター付き」フォルダでも有効
-    #+BEGIN_SRC emacs-lisp :tangle no
+    #+BEGIN_SRC emacs-lisp :tangle init-wl.el
 (require 'elmo nil 'noerror)
 (defun my:wl-summary-jump-to-referer-message ()
   (interactive)

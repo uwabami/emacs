@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-08-09 21:32:58
+#+DATE: 2017-09-10 17:08:44
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -196,7 +196,7 @@ init.el: README.org
    '("SHELL"
      "DEBFULLNAME"
      "DEBEMAIL"
-;;     "SKKSERVER"
+     "SKKSERVER"
      "TEXMFHOME"
      "http_proxy"
      "GPG_KEY_ID"
@@ -205,7 +205,7 @@ init.el: README.org
      ))
   (setq user-full-name (concat (getenv "DEBFULLNAME"))
         user-mail-address (concat (getenv "DEBEMAIL"))
-        my:d:password-store (getenv "PASSWORD_STORE_DIR"))
+        my:d:password-store (concat (getenv "PASSWORD_STORE_DIR") "/Emacs/" system-name))
   )
   #+END_SRC
 * 言語の設定
@@ -551,27 +551,21 @@ init.el: README.org
   :diminish global-whitespace-mode
   :config
   (setq whitespace-line-column 72
-        whitespace-style
-        '(face              ; faceを使って視覚化する．
-          trailing          ; 行末の空白を対象とする．
-          tabs              ; tab
-          spaces            ; space
-          )
-        whitespace-display-mappings
-        '((space-mark ?\u3000 [?\u25a1])
-          ;; WARNING: the mapping below has a problem. When a TAB
-          ;; occupies exactly one column, it will display the character
-          ;; ?\xBB at that column followed by a TAB which goes to the
-          ;; next TAB column. If this is a problem for you, please,
-          ;; comment the line below.
-          (tab-mark ?\t [?\u00BB ?\t] [?\\ ?\t]))
-        whitespace-space-regexp "\\(\u3000+\\)")
-  (setq whitespace-global-modes '(not
+        whitespace-style '(face              ; faceを使って視覚化する．
+                           trailing          ; 行末の空白を対象とする．
+                           tabs              ; tab
+                           spaces            ; space
+                           )
+        whitespace-display-mappings '((space-mark ?\u3000 [?\u25a1])
+                                      (tab-mark ?\t [?\u00BB ?\t] [?\\ ?\t]))
+        whitespace-space-regexp "\\(\u3000+\\)"
+        whitespace-global-modes '(not
                                   eww-mode
                                   term-mode
                                   eshell-mode
                                   org-agenda-mode
-                                  calendar-mode))
+                                  calendar-mode)
+        )
   (global-whitespace-mode 1)
   )
    #+END_SRC
@@ -1090,7 +1084,7 @@ video/*; xdg-open %s;
 *** 個人情報の設定
     具体的な設定内容は以下のファイルに置いている
      #+BEGIN_SRC emacs-lisp :tangle init-wl.el
-     (load (concat my:d:password-store "/emacs/wl-info-" system-name ".gpg"))
+     (load (concat my:d:password-store "/wl-info.gpg"))
      #+END_SRC
     設定している内容は以下の通り
 **** 自身のメールアドレスと購読メーリングリストの設定
@@ -1223,7 +1217,7 @@ video/*; xdg-open %s;
      #+END_SRC
      folders の位置の変更
      #+BEGIN_SRC emacs-lisp :tangle init-wl.el
-(setq wl-folders-file (concat my:d:password-store "/emacs/wl-folders-" system-name ".gpg"))
+(setq wl-folders-file (concat my:d:password-store "/wl-folders.gpg"))
      #+END_SRC
      Drafts, Trash の置き場所
      #+BEGIN_SRC emacs-lisp :tangle init-wl.el
@@ -1249,7 +1243,7 @@ video/*; xdg-open %s;
      #+END_SRC
      パスワードの保存先
      #+BEGIN_SRC emacs-lisp :tangle init-wl.el
-(setq elmo-passwd-alist-file-name (concat my:d:password-store "/emacs/wl-passwd.gpg"))
+(setq elmo-passwd-alist-file-name (concat my:d:password-store "/wl-passwd.gpg"))
      #+END_SRC
 **** フォルダ編集時に backup を作成しない.
      #+BEGIN_SRC emacs-lisp :tangle init-wl.el
@@ -1748,10 +1742,8 @@ video/*; xdg-open %s;
 (use-package elmo-search
   :bind (:map wl-summary-mode-map
               ("v" . wl-quicksearch-goto-search-folder-wrapper)
-              ("V" . wl-quicksearch-goto-search-folder-wrapper)
               :map wl-folder-mode-map
-              ("v" . wl-quicksearch-goto-search-folder-wrapper)
-              ("V" . wl-quicksearch-goto-search-folder-wrapper))
+              ("v" . wl-quicksearch-goto-search-folder-wrapper))
   :config
   (elmo-search-register-engine
    'mu 'local-file
@@ -1811,126 +1803,89 @@ Categories=GNOME;GTK;Office;Email;
 StartupNotify=false
 MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   #+END_SRC
-* 補完: =ido=
-  補完は =ido= が軽いし速いので好み.
-** =ido= の設定
-   #+BEGIN_SRC emacs-lisp
-(use-package ido
-  :bind (("C-x f"   . ido-find-file)
-         ("C-x C-f" . ido-find-file)
-         ("C-x d"   . ido-dired)
-         ("C-x C-d" . ido-dired)
-         ("C-x b"   . ido-switch-buffer)
-         ("C-x C-b" . ido-switch-buffer)
-         ("C-x M-b" . ibuffer))
-  :config
-  (ido-mode t)
-  ;; (ido-everywhere t)  <- Wanderlust みたいに，過去の選択を覚えている奴と相性悪い.
-  (setq ido-enable-prefix nil             ; prefix match 入力を先頭一致可能
-        ido-confirm-unique-completion t   ; TAB で名前の一致まで. その後 RET で実行
-        ido-enable-flex-matching t        ; flx matching を試す際には prefix を無効化すること
-        ido-enable-dot-prefix t           ; . を prefix として扱う
-        ido-default-file-method   'selected-window
-        ido-default-buffer-method 'selected-window
-        ido-max-directory-size 100000
-        ido-enable-tramp-completion nil
-        ido-use-faces nil                 ; flx-ido の highlight を使う
-        ido-ignore-extensions t
-        ido-cannot-complete-command 'ido-next-match
-        ido-save-directory-list-file (concat my:d:tmp "ido.last"))
-  ;; 補完で無視する拡張子の追加．そのうち増える．
-  (cl-loop for ext in
-           '(".dvi"
-             ".fdb_latexmk"
-             ".fls"
-             ".ilg"
-             ".jqz"
-             ".mod"
-             ".nav"
-             ".out"
-             ".snm"
-             ".synctex.gz"
-             ".vrb"
-             )
-           do (add-to-list 'completion-ignored-extensions ext))
-  ;; ido の buffer で skk を無効化しておく.
-  ;; 日本語ファイル名は, とりあえず考えないことに.
-  ;; (add-hook 'ido-minibuffer-setup-hook
-  ;;           (lambda ()
-  ;;             (when (fboundp 'skk-mode-exit)
-  ;;               (skk-mode-exit))))
-  (add-hook 'ido-setup-hook
-            (lambda ()
-              (define-key ido-completion-map (kbd "C-h")     'ido-delete-backward-updir)
-              (define-key ido-completion-map (kbd "C-l")     'ido-delete-backward-updir)))
-  )
-   #+END_SRC
-** =flx-ido=: flex match の強化
-   曖昧マッチが非常に直感的になった．地味に便利で手放せない．
-   #+BEGIN_SRC emacs-lisp
-(use-package flx-ido
-  :ensure t
-  :config
-  (flx-ido-mode 1)
-  (setq flx-ido-use-faces t
-        flx-ido-threshold 10000)
-  )
-   #+END_SRC
-** =ido-grid=: grid mode
-   #+BEGIN_SRC emacs-lisp
-(unless (package-installed-p 'ido-grid)
-  (quelpa '(ido-grid
-            :fetcher github
-            :repo "larkery/ido-grid.el")))
-(use-package ido-grid
-  :ensure t
-  :config
-  (setq ido-grid-enabled t
-        ido-grid-start-small nil
-        ido-grid-rows 0.15)
-  (ido-grid-enable)
-  )
-   #+END_SRC
-** =ido-recentf=: recentf を ido で
-   #+BEGIN_SRC emacs-lisp
-     (defun ido-recentf-open ()
-       "Use `ido-completing-read' to \\[find-file] a recent file"
-       (interactive)
-       (if (find-file (ido-completing-read "Find recent file: " recentf-list))
-           (message "Opening file...")
-         (message "Aborting")))
-      (bind-key "C-x C-r" 'ido-recentf-open)
-   #+END_SRC
-** =ido-describe-bindings=: key binding を表示?
-   いまいち使いこなせていない.
-   #+BEGIN_SRC emacs-lisp
-(use-package ido-describe-bindings
-  :ensure t
-  :bind (:map help-map
-              ("b" . ido-describe-bindings))
-  )
-   #+END_SRC
-** =smex=
-   #+BEGIN_SRC emacs-lisp
-(use-package smex
-  :bind (("M-X" . smex))
-  :ensure t
-  :init
-  (setq smex-save-file (concat my:d:tmp "smex-items"))
-  :config
-  (smex-initialize)
-  )
-   #+END_SRC
-** =helm=
-   幾つかの拡張で helm が呼ばれるので,
-   インストールするけれども明示的に無効化しておく.
+* 補完: =helm=
+  以前はデフォルトの挙動が嫌で割とイロイロと設定していたのだけれど，
+  最近はそんなに邪魔しない感じ...なのかな? とりあえず現状は以下の通り．
   #+BEGIN_SRC emacs-lisp
     (use-package helm
       :ensure t
+      :defines helm-map
+      :diminish (helm-migemo-mode)
+      :bind (("M-x"     . helm-M-x)
+             ("C-x f"   . helm-find-files)
+             ("C-x C-f" . helm-find-files)
+             ("C-x b"   . ibuffer-other-window)
+             ("C-x C-b"   . ibuffer-other-window)
+             ;; ("C-x b"   . helm-buffers-list)
+             ("C-x C-r" . helm-recentf)
+             )
       :config
-      (setq helm-mode -1)
+      (ido-mode -1) ;; ido は使わない
+      (define-key helm-map (kbd "TAB") 'helm-execute-persistent-action)
+      (define-key helm-map (kbd "C-i") 'helm-execute-persistent-action)
+      (global-unset-key (kbd "C-z"))
+      (define-key helm-map (kbd "C-z") 'helm-select-action)
+      (my:disable-builtin-mode 'helm-mode)   ; helm-mode は基本使わない
+      (setq helm-command-prefix-key "C-z"    ; helm-command-prefix-key
+            ;; dired での skk との競合(C-x C-j の奪い合い)を避ける
+            dired-bind-jump nil
+            ;; mode line には何も表示しない
+            helm-completion-mode-string ""
+            ;; minibuffer に input method の状態を引き継がない
+            helm-inherit-input-method nil
+            ;; 余計なファイルは表示しない
+            helm-ff-skip-boring-files t
+            ;; helm-adaptive の保存先の変更
+            helm-adaptive-history-file (concat my:d:tmp "helm-adaptive-history")
+            ;; mode line には何も表示しない
+            helm-completion-mode-string ""
+            )
+      ;; 一つ上のディレクトリ(../)を候補から外す
+      (advice-add 'helm-ff-filter-candidate-one-by-one
+                  :around (lambda (orig-func file)
+                            (unless (string-match "\\(?:/\\|\\`\\)\\.\\{2\\}\\'" file)
+                              (funcall orig-func file))))
+      ;; 存在しないファイルには何もしない(default は新規 buffer ができる)
+      (advice-add 'helm-ff-kill-or-find-buffer-fname
+                  :around (lambda (orig-func candidate)
+                            (when (file-exists-p candidate)
+                              (funcall orig-func candidate))))
+      (if (and (locate-library "migemo")     ; あれば migemo を有効化
+               (executable-find "cmigemo"))
+          (setq helm-migemo-mode t)
+        (setq helm-migemo-mode nil))
+      (helm-autoresize-mode)
+      (setq helm-autoresize-min-height 30 ; fixed 30%
+            helm-autoresize-max-height 30)
       )
   #+END_SRC
+** helm-flx
+   曖昧検索は flx に任せる．かなり良い．
+   #+BEGIN_SRC emacs-lisp
+(use-package helm-flx
+  :ensure t
+  :config
+  (helm-flx-mode +1)
+  (setq helm-flx-for-helm-find-files t ;; t by default
+        helm-flx-for-helm-locate t )   ;; nil by default
+  )
+   #+END_SRC
+** helm-locate
+   default の =mlocate= の option を修正しておく．
+   #+BEGIN_SRC emacs-lisp
+(use-package helm-locate
+  :if (executable-find "mlocate")
+  :config
+  (setq helm-locate-command "mlocate %s -e -A --regex %s"))
+   #+END_SRC
+** helm-descbinds
+   =helm-M-x= の際にキーバインドが表示されるようになる
+   #+BEGIN_SRC emacs-lisp
+(use-package helm-descbinds
+  :ensure t
+  :config
+  (helm-descbinds-mode))
+   #+END_SRC
 * =ace-link=: リンクへのジャンプ
   主に eww でのリンクジャンプに使っていたのだけれど
   気がついたら便利に使う様になってしまった
@@ -2024,13 +1979,13 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    以前のメモの整理のために [[http://howm.osdn.jp/index-j.html][howm: Hitori Otegaru Wiki Modoki]] も使っているので,
    howm も有効にしている，ぐらい．
    #+BEGIN_SRC emacs-lisp
-(defvar my:d:org (concat (getenv "HOME") "/Dropbox/org/"))
+(defvar my:d:org (concat (getenv "HOME") "/ownCloud/org/"))
 (use-package org
   :bind (("C-x n s" . org-narrow-to-subtree)
          ("C-x n w" . widen))
   :init
   :config
-  (setq org-directory my:d:org                 ;; Dropbox に保存する
+  (setq org-directory my:d:org                 ;; ownCloud に保存する
         org-return-follows-link t              ;; return でリンクを辿る
         org-startup-folded t                   ;; 見出しを畳んで表示
         org-startup-truncated t                ;; 折り返し無し
@@ -2420,7 +2375,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (setq org-gcal-up-days    180) ;; 未来 6 month
   (setq org-gcal-auto-archive nil)
   :config
-  (load (expand-file-name "emacs/org-gcal.gpg" my:d:password-store)))
+  (load (concat my:d:password-store "/org-gcal.gpg")))
     #+END_SRC
     password-store には multiline で設定を書く．例えば以下:
     #+BEGIN_SRC emacs-lisp :tangle no
@@ -2453,7 +2408,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         orgmine-note-block-end   "#+END_SRC\n"
         orgmine-default-todo-keyword "新規")
   ;; サーバ設定
-  (load (expand-file-name "emacs/orgmine.gpg" my:d:password-store)))
+  (load (concat my:d:password-store "/orgmine.gpg")))
    #+END_SRC
 ** Org-Export
 *** 一般設定
@@ -2716,12 +2671,12 @@ Related [[wiki:index][Index]]
                               (setq truncate-lines t)))
   :config
   ;;; ディレクトリの設定
-  ;; メモの内容は Dropbox で同期することに
-  (setq howm-directory "~/Dropbox/org")
+  ;; メモの内容は ownCloud で同期することに
+  (setq howm-directory "~/ownCloud/org")
   ;; メニューと履歴を検索対象から除外するために別ディレクトリへ
-  (setq howm-keyword-file "~/Dropbox/.howm/keys"
-        howm-history-file "~/Dropbox/.howm/history"
-        howm-menu-file "~/Dropbox/.howm/menu")
+  (setq howm-keyword-file "~/ownCloud/howm/keys"
+        howm-history-file "~/ownCloud/howm/history"
+        howm-menu-file "~/ownCloud/howm/menu")
   ;; メモファイルは日付時刻毎に分離
   (setq howm-file-name-format "%Y%m%d-%H%M%S.howm")
   ;;;  メモはorgで書く
@@ -2804,20 +2759,20 @@ Related [[wiki:index][Index]]
 * フォントと色
   そろそろテーマにした方が良い，とは思ってはいる．
   #+BEGIN_SRC emacs-lisp
-(defun my:load-window-config ()
-  "load window-system specific settings"
-  (interactive)
-  (when window-system
-    (progn
-      (set-face-attribute 'default nil
-                          :family "SeptemberMMono"
-                          ;; :family "Ricty Discord for Powerline"
-                          :height 135) ;; 135pt
-      ;; (set-fontset-font nil 'japanese-jisx0208
-      ;;                   (font-spec :family "SeptemberMMono"))
-      ;; (setq face-font-rescale-alist '(("September.*" . 1)))
-      (set-background-color "#242424")
-      )))
+;; (defun my:load-window-config ()
+;;   "load window-system specific settings"
+;;   (interactive)
+;;   (when window-system
+;;     (progn
+;;       (set-face-attribute 'default nil
+;;                           :family "SeptemberMMono"
+;;                           ;; :family "Ricty Discord for Powerline"
+;;                           :height 135) ;; 135pt
+;;       ;; (set-fontset-font nil 'japanese-jisx0208
+;;       ;;                   (font-spec :family "SeptemberMMono"))
+;;       ;; (setq face-font-rescale-alist '(("September.*" . 1)))
+;;       (set-background-color "#242424")
+;;       )))
 (setq frame-background-mode (frame-parameter nil 'background-mode))
 (setq default-frame-alist
       '(
@@ -2825,8 +2780,8 @@ Related [[wiki:index][Index]]
         (scroll-bar-foreground-color . "red")
         (vertical-scroll-bars . right)
         ))
-(when (window-system)
-  (my:load-window-config))
+;; (when (window-system)
+;;   (my:load-window-config))
   #+END_SRC
   現在修正中．
   #+BEGIN_SRC emacs-lisp
@@ -2904,7 +2859,7 @@ Related [[wiki:index][Index]]
  ;; helm: header-line
  '(helm-source-header               ((t (:foreground "#F6F3E8" :background "#224488" :bold t))))
  '(helm-visible-mark                ((t (:inherit highlight ))))
- '(helm-selection                   ((t (:inherit highlight ))))
+ '(helm-selection                   ((t (:background "#4c4c4c" ))))
  '(helm-selection-line              ((t (:inherit highlight ))))
  ;; helm: directory
  '(helm-ff-directory                ((t (:inherit dired-directory ))))
@@ -2971,10 +2926,10 @@ Related [[wiki:index][Index]]
             :fetcher github
             :repo "uwabami/tdiary-mode")))
 (use-package tdiary-mode
-  :if (file-directory-p "~/Dropbox/tdiary")
+  :if (file-directory-p "~/ownCloud/tdiary")
   :commands (tdiary-mode tdiary-new tdiary-new-directory tdiary-replace)
   :config
-  (load (expand-file-name "emacs/tdiary-mode.gpg" my:d:password-store))
+  (load (concat my:d:password-store "/tdiary-mode.gpg"))
   (setq tdiary-browser-function 'browser-url
         tdiary-coding-system 'utf-8-dos
         tdiary-style-mode 'rd-mode
@@ -3170,7 +3125,7 @@ Related [[wiki:index][Index]]
   (setq TeX-source-correlate-method 'synctex
         TeX-view-program-selection
         '((output-dvi "xdvi")        ;; built-in
-          (output-pdf "Zathura")     ;; built-in
+          (output-pdf "Evince")     ;; built-in
           (output-html "xdg-open"))  ;; built-in
         TeX-source-correlate-start-server t
         TeX-auto-save t

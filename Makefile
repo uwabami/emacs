@@ -8,8 +8,6 @@ EL		+= $(shell dpkg -l wl 2>&1 | grep -q ^ii && echo init-wl.el )
 ELC		= $(EL:%.el=%.elc)
 
 all: bootstrap init.elc
-elc: $(ELC)
-	@rm -f init*.el
 bootstrap: tmp/bootstrap-stamp
 tmp/bootstrap-stamp: init.el
 	@mkdir -p tmp
@@ -27,14 +25,23 @@ init.el: README.org
 	   "(progn \
 		  (require 'ob-tangle) \
 		  (org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\")))"
+
+init.elc: $(ELC)
+	$(EMACS) -l init.el -batch -f batch-byte-compile init.el
+	@rm -f init.el
+$(ELC): $(EL)
+$(EL): init.el
 %.elc: %.el
 	$(EMACS) -l init.el -batch -f batch-byte-compile $<
+	@rm -f $<
+
 recompile:
 	touch README.org
 	$(MAKE)
-	$(MAKE) elc
+
 clean:
 	rm -fr auto-save-list *.el *.elc *~
+
 distclean: clean
 	rm -fr quelpa
 	rm -fr elpa

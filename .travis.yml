@@ -2,14 +2,8 @@ language: generic
 dist: trusty
 env:
   matrix:
-    - EVM_EMACS=emacs-24.4-travis
     - EVM_EMACS=emacs-24.5-travis
     - EVM_EMACS=emacs-25.2-travis
-    - EVM_EMACS=emacs-git-snapshot-travis
-matrix:
-  allow_failures:
-    - env: EMACS=emacs-24.4-travis
-    - env: EMACS=emacs-git-snapshot-travis
 before_install:
   - ln -s $TRAVIS_BUILD_DIR ~/.emacs.d
   - export PATH="$HOME/.evm/bin:$PATH"
@@ -20,6 +14,4 @@ before_install:
 script:
   - evm use $EVM_EMACS
   - make
-  - make elc
-  - make clean
   - make distclean

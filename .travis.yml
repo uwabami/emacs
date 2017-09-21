@@ -2,7 +2,6 @@ language: generic
 dist: trusty
 env:
   matrix:
-    - EVM_EMACS=emacs-24.5-travis
     - EVM_EMACS=emacs-25.2-travis
 before_install:
   - ln -s $TRAVIS_BUILD_DIR ~/.emacs.d

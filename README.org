@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-09-10 17:08:44
+#+DATE: 2017-09-21 20:29:02
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -982,6 +982,89 @@ File.open(src, "r") {|f|
   :if my:d:password-store
   )
    #+END_SRC
+* 補完: =helm=
+  以前はデフォルトの挙動が嫌で割とイロイロと設定していたのだけれど，
+  最近はそんなに邪魔しない感じ...なのかな? とりあえず現状は以下の通り．
+  #+BEGIN_SRC emacs-lisp
+    (use-package helm
+      :ensure t
+      :defines helm-map
+      :diminish (helm-migemo-mode)
+      :bind (("M-x"     . helm-M-x)
+             ("C-x f"   . helm-find-files)
+             ("C-x C-f" . helm-find-files)
+             ("C-x b"   . ibuffer-other-window)
+             ("C-x C-b"   . ibuffer-other-window)
+             ;; ("C-x b"   . helm-buffers-list)
+             ("C-x C-r" . helm-recentf)
+             )
+      :config
+      (ido-mode -1) ;; ido は使わない
+      (define-key helm-map (kbd "TAB") 'helm-execute-persistent-action)
+      (define-key helm-map (kbd "C-i") 'helm-execute-persistent-action)
+      (global-unset-key (kbd "C-z"))
+      (define-key helm-map (kbd "C-z") 'helm-select-action)
+      (my:disable-builtin-mode 'helm-mode)   ; helm-mode は基本使わない
+      (setq helm-command-prefix-key "C-z"    ; helm-command-prefix-key
+            ;; dired での skk との競合(C-x C-j の奪い合い)を避ける
+            dired-bind-jump nil
+            ;; mode line には何も表示しない
+            helm-completion-mode-string ""
+            ;; minibuffer に input method の状態を引き継がない
+            helm-inherit-input-method nil
+            ;; 余計なファイルは表示しない
+            helm-ff-skip-boring-files t
+            ;; helm-adaptive の保存先の変更
+            helm-adaptive-history-file (concat my:d:tmp "helm-adaptive-history")
+            ;; mode line には何も表示しない
+            helm-completion-mode-string ""
+            )
+      ;; 一つ上のディレクトリ(../)を候補から外す
+      (advice-add 'helm-ff-filter-candidate-one-by-one
+                  :around (lambda (orig-func file)
+                            (unless (string-match "\\(?:/\\|\\`\\)\\.\\{2\\}\\'" file)
+                              (funcall orig-func file))))
+      ;; 存在しないファイルには何もしない(default は新規 buffer ができる)
+      (advice-add 'helm-ff-kill-or-find-buffer-fname
+                  :around (lambda (orig-func candidate)
+                            (when (file-exists-p candidate)
+                              (funcall orig-func candidate))))
+      (if (and (locate-library "migemo")     ; あれば migemo を有効化
+               (executable-find "cmigemo"))
+          (setq helm-migemo-mode t)
+        (setq helm-migemo-mode nil))
+      (helm-autoresize-mode)
+      (setq helm-autoresize-min-height 30 ; fixed 30%
+            helm-autoresize-max-height 30)
+      )
+  #+END_SRC
+** helm-flx
+   曖昧検索は flx に任せる．かなり良い．
+   #+BEGIN_SRC emacs-lisp
+(use-package helm-flx
+  :ensure t
+  :config
+  (helm-flx-mode +1)
+  (setq helm-flx-for-helm-find-files t ;; t by default
+        helm-flx-for-helm-locate t )   ;; nil by default
+  )
+   #+END_SRC
+** helm-locate
+   default の =mlocate= の option を修正しておく．
+   #+BEGIN_SRC emacs-lisp
+(use-package helm-locate
+  :if (executable-find "mlocate")
+  :config
+  (setq helm-locate-command "mlocate %s -e -A --regex %s"))
+   #+END_SRC
+** helm-descbinds
+   =helm-M-x= の際にキーバインドが表示されるようになる
+   #+BEGIN_SRC emacs-lisp
+(use-package helm-descbinds
+  :ensure t
+  :config
+  (helm-descbinds-mode))
+   #+END_SRC
 * MUA の設定: =wanderlust=
   :PROPERTIES:
   :ID:       544e8091-614a-4784-a889-78651a923d6c
@@ -1803,89 +1886,6 @@ Categories=GNOME;GTK;Office;Email;
 StartupNotify=false
 MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   #+END_SRC
-* 補完: =helm=
-  以前はデフォルトの挙動が嫌で割とイロイロと設定していたのだけれど，
-  最近はそんなに邪魔しない感じ...なのかな? とりあえず現状は以下の通り．
-  #+BEGIN_SRC emacs-lisp
-    (use-package helm
-      :ensure t
-      :defines helm-map
-      :diminish (helm-migemo-mode)
-      :bind (("M-x"     . helm-M-x)
-             ("C-x f"   . helm-find-files)
-             ("C-x C-f" . helm-find-files)
-             ("C-x b"   . ibuffer-other-window)
-             ("C-x C-b"   . ibuffer-other-window)
-             ;; ("C-x b"   . helm-buffers-list)
-             ("C-x C-r" . helm-recentf)
-             )
-      :config
-      (ido-mode -1) ;; ido は使わない
-      (define-key helm-map (kbd "TAB") 'helm-execute-persistent-action)
-      (define-key helm-map (kbd "C-i") 'helm-execute-persistent-action)
-      (global-unset-key (kbd "C-z"))
-      (define-key helm-map (kbd "C-z") 'helm-select-action)
-      (my:disable-builtin-mode 'helm-mode)   ; helm-mode は基本使わない
-      (setq helm-command-prefix-key "C-z"    ; helm-command-prefix-key
-            ;; dired での skk との競合(C-x C-j の奪い合い)を避ける
-            dired-bind-jump nil
-            ;; mode line には何も表示しない
-            helm-completion-mode-string ""
-            ;; minibuffer に input method の状態を引き継がない
-            helm-inherit-input-method nil
-            ;; 余計なファイルは表示しない
-            helm-ff-skip-boring-files t
-            ;; helm-adaptive の保存先の変更
-            helm-adaptive-history-file (concat my:d:tmp "helm-adaptive-history")
-            ;; mode line には何も表示しない
-            helm-completion-mode-string ""
-            )
-      ;; 一つ上のディレクトリ(../)を候補から外す
-      (advice-add 'helm-ff-filter-candidate-one-by-one
-                  :around (lambda (orig-func file)
-                            (unless (string-match "\\(?:/\\|\\`\\)\\.\\{2\\}\\'" file)
-                              (funcall orig-func file))))
-      ;; 存在しないファイルには何もしない(default は新規 buffer ができる)
-      (advice-add 'helm-ff-kill-or-find-buffer-fname
-                  :around (lambda (orig-func candidate)
-                            (when (file-exists-p candidate)
-                              (funcall orig-func candidate))))
-      (if (and (locate-library "migemo")     ; あれば migemo を有効化
-               (executable-find "cmigemo"))
-          (setq helm-migemo-mode t)
-        (setq helm-migemo-mode nil))
-      (helm-autoresize-mode)
-      (setq helm-autoresize-min-height 30 ; fixed 30%
-            helm-autoresize-max-height 30)
-      )
-  #+END_SRC
-** helm-flx
-   曖昧検索は flx に任せる．かなり良い．
-   #+BEGIN_SRC emacs-lisp
-(use-package helm-flx
-  :ensure t
-  :config
-  (helm-flx-mode +1)
-  (setq helm-flx-for-helm-find-files t ;; t by default
-        helm-flx-for-helm-locate t )   ;; nil by default
-  )
-   #+END_SRC
-** helm-locate
-   default の =mlocate= の option を修正しておく．
-   #+BEGIN_SRC emacs-lisp
-(use-package helm-locate
-  :if (executable-find "mlocate")
-  :config
-  (setq helm-locate-command "mlocate %s -e -A --regex %s"))
-   #+END_SRC
-** helm-descbinds
-   =helm-M-x= の際にキーバインドが表示されるようになる
-   #+BEGIN_SRC emacs-lisp
-(use-package helm-descbinds
-  :ensure t
-  :config
-  (helm-descbinds-mode))
-   #+END_SRC
 * =ace-link=: リンクへのジャンプ
   主に eww でのリンクジャンプに使っていたのだけれど
   気がついたら便利に使う様になってしまった
@@ -2288,7 +2288,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
            )
         )
   ;; 色付け
-  (add-hook 'org-finalize-agenda-hook
+  (add-hook 'org-agenda-finalize-hook
             (lambda ()
               (save-excursion
                 (goto-char (point-min))
@@ -2621,6 +2621,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         )
   )
    #+END_SRC
+
 ** Org-Wiki
     計算機関連のメモは [[https://github.com/caiorss/org-wiki][org-wiki]] で書いています．
     #+BEGIN_SRC emacs-lisp
@@ -2661,7 +2662,7 @@ Related [[wiki:index][Index]]
   #+BEGIN_SRC emacs-lisp
 (use-package howm
   :if (and (my:dpkg-status "howm")
-           (executable-find "rg"))
+           (executable-find "ag"))
   :diminish howm-mode
   :bind (:map howm-mode-map
               ("C-c C-c"     . nil)
@@ -2688,21 +2689,29 @@ Related [[wiki:index][Index]]
   ;; title header は "*"
   (setq howm-view-title-header "*")
   ;; :config
-  (when (locate-library "elscreen-howm")
-    (require 'elscreen-howm nil 'noerror))
+  (use-package "elscreen-howm")
   ;; 色付けは org-mode 任せ: howm の font-lock を無効化
   (setq howm-use-color nil)
   ;;; 以下，決まり文句
   ;; 検索で大文字小文字を区別しない
   (setq howm-keyword-case-fold-search t)
-  ;; grep の 代わりに rg (ripgrep) を使う
+  ;; grep の 代わりに ag を使う
   (setq howm-view-use-grep t
-        howm-view-grep-command "rg"
-        howm-view-grep-option "-nH --no-heading --color never"
+        howm-view-grep-command "ag"
+        howm-view-grep-option "--nocolor --nogroup"
         howm-view-grep-extended-option nil
         howm-view-grep-fixed-option "-F"
         howm-view-grep-expr-option nil
         howm-view-grep-file-stdin-option nil)
+  (defun my:howm:add-dev-null (args)
+    (let ((str   (car args))               ;; 検索文字列
+          (files (nth 1 args)))            ;; ファイルリスト
+      (when (= 1 (length files))           ;; 単一ファイル？
+        (if (file-regular-p (car files))   ;; 通常ファイル？
+            ;; 単一の通常ファイルが指定された場合に /dev/null を追加
+            (setq files (append files '("/dev/null")))))
+      (list str files)))
+  (advice-add 'howm-real-grep-single :filter-args #'my:howm:add-dev-null)
   ;; 検索対象のディレクトリの追加...とりあえず追加しないことに．
   (setq howm-search-other-dir nil)
   ;; 検索対象外のファイル: ad hoc にどんどん増えていくなぁ...
@@ -2938,6 +2947,42 @@ Related [[wiki:index][Index]]
         tdiary-text-suffix ".rd")
   )
   #+END_SRC
+* MoinMoin: =moinmoin-mode=, =moomin.el=
+  Debian Wiki や職場の Wiki を編集するための
+  MoinMoin の設定. 編集には [[https://github.com/lurdan/moomin-el][tototoshi/moomin-el: Edit MoinMoin with Emacs]] を使う.
+** =moinmoin-mode=
+   MoinMoin 本体の moinmoin-mode 自体は古くて
+   screen-lines に依存していたりするので folk して更新中.
+   [[https://github.com/uwabami/moinmoin-mode][uwabami/moinmoin-mode: Fork from EmacsForMoinMoin, for Emacs >= 25]]
+   #+BEGIN_SRC emacs-lisp
+(unless (locate-library "moinmoin-mode")
+  (quelpa '(moinmoin-mode
+            :fetcher github
+            :repo "uwabami/moinmoin-mode")))
+(use-package moinmoin-mode)
+   #+END_SRC
+   そのうち気になる所を弄る，ということで．
+** =moomin=: =emacs-request + helm + moinmoin-mode=
+   最新の奴だと動かなかったので folk して多少弄った版を使うことに.
+   [[https://github.com/uwabami/moomin-el][uwabami/moomin-el: Edit MoinMoin with Emacs]]
+#+BEGIN_SRC emacs-lisp
+(unless (locate-library "moomin")
+  (quelpa '(moomin
+            :fetcher github
+            :repo "uwabami/moomin-el")))
+(use-package moomin
+  :if (file-directory-p my:d:password-store)
+  :bind (("C-x w" . helm-moomin)
+         :map moinmoin-mode-map
+         ("C-c C-c" . moomin-save-current-buffer)
+         ("C-c C-s" . moomin-save-current-buffer)
+         ("C-c C-o" . moomin-browse-current-page)
+         ("C-c C-r" . moomin-reload-current-page))
+  :config
+  (load (concat my:d:password-store "/moomin.gpg"))
+  (setq moomin-history-file (concat my:d:tmp "moomin_history"))
+  )
+#+END_SRC
 * プログラム環境
 ** VCS: =magit=
    magit は Emacs の Git Frontend.
@@ -3040,6 +3085,40 @@ Related [[wiki:index][Index]]
   :mode "\\.rab$"
   )
    #+END_SRC
+   =rdoc-mode=: 本体の方はどうも動かないなぁ...
+   #+BEGIN_SRC emacs-lisp
+(defface rdoc-header-1
+  '((t (:inherit outline-1)))
+  "rdoc mode header level 1")
+
+(defface rdoc-header-2
+  '((t (:inherit outline-2)))
+  "rdoc mode header level 2")
+
+(defface rdoc-header-3
+  '((t (:inherit outline-3)))
+  "rdoc mode header level 3")
+
+(defface rdoc-header-4
+  '((t (:inherit outline-4)))
+  "rdoc mode header level 4")
+
+(define-generic-mode 'rdoc-mode
+  ()					;comment-list
+  '()					;keyword-list
+  '(					;font-lock-list
+    ("^=[^=].*"                                             . 'rdoc-header-1)
+    ("^==[^=].*"                                            . 'rdoc-header-2)
+    ("^===[^=].*"                                           . 'rdoc-header-3)
+    ("^====[^=].*"                                          . 'rdoc-header-4)
+    ("^[\\*#]\\{1,9\\} "                                    . 'bold)
+    ("\\(?:[^a-zA-Z0-9]\\)?\\*[^*]+\\*\\(?:[^a-zA-Z0-9]\\)" . 'bold)
+    ("\\(?:[^a-zA-Z0-9]\\)?\\_[^_]+\\_\\(?:[^a-zA-Z0-9]\\)" . 'italic)
+    )
+  '("README_FOR_APP" "\\.rdoc$")	;auto-mode-list
+  '((lambda () (auto-fill-mode t)))	;function-list
+  "Major mode for editing RDOC files.")
+   #+END_SRC
 ** C
    #+BEGIN_SRC emacs-lisp
 (use-package cc-mode
@@ -3123,11 +3202,10 @@ Related [[wiki:index][Index]]
                               "LATEXENC=%(LATEXENC) latexmk -gg %t"
                               TeX-run-TeX nil (latex-mode) :help "Run Latexmk")))))
   (setq TeX-source-correlate-method 'synctex
-        TeX-view-program-selection
-        '((output-dvi "xdvi")        ;; built-in
-          (output-pdf "Evince")     ;; built-in
-          (output-html "xdg-open"))  ;; built-in
         TeX-source-correlate-start-server t
+        TeX-view-program-selection '((output-dvi "xdvi")
+                                     (output-pdf "Evince")
+                                     (output-html "xdg-open"))
         TeX-auto-save t
         TeX-auto-local  (expand-file-name "auctex/auto" my:d:tmp)
         TeX-style-local (expand-file-name "auctex/style" my:d:tmp)
@@ -3171,6 +3249,7 @@ Related [[wiki:index][Index]]
         zotelo-use-journal-abbreviation t)
 )
    #+END_SRC
+
 * 基本的なキーバインドの設定 [/]
   - [ ] 設定が効かない事がある．読み込む順番が関係するのかな...?
   既に手癖になってしまっているアレコレ．

@@ -35,10 +35,6 @@ $(EL): init.el
 	$(EMACS) -l init.el -batch -f batch-byte-compile $<
 	@rm -f $<
 
-recompile:
-	touch README.org
-	$(MAKE)
-
 clean:
 	rm -fr auto-save-list *.el *.elc *~
 

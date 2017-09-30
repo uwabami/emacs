@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-09-21 20:29:02
+#+DATE: 2017-09-30 22:25:00
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -2402,7 +2402,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                '(orgmine-note-block-begin . "#+BEGIN_SRC textile"))
   (add-hook 'org-mode-hook
             (lambda ()
-              (if (assoc "om_project" org-file-properties) (orgmine-mode))))
+              (if (assoc "om_server" org-file-properties) (orgmine-mode))))
   :config
   (setq orgmine-note-block-begin "#+BEGIN_SRC gfm"   ;; 要調整
         orgmine-note-block-end   "#+END_SRC\n"
@@ -2984,6 +2984,10 @@ Related [[wiki:index][Index]]
   )
 #+END_SRC
 * プログラム環境
+** 折り畳み: =outline-magic=
+   #+BEGIN_SRC emacs-lisp
+(use-package outline-magic)
+   #+END_SRC
 ** VCS: =magit=
    magit は Emacs の Git Frontend.
    結局の所 CUI でコマンド叩く事も多いけれど，これはこれで重宝している．
@@ -3119,6 +3123,14 @@ Related [[wiki:index][Index]]
   '((lambda () (auto-fill-mode t)))	;function-list
   "Major mode for editing RDOC files.")
    #+END_SRC
+   =rd-mode=
+   #+BEGIN_SRC emacs-lisp
+(use-package rd-mode
+  :mode "\\.rd$"
+  :config
+  (add-hook 'rd-mode-hook
+            'rd-show-other-block-all))
+   #+END_SRC
 ** C
    #+BEGIN_SRC emacs-lisp
 (use-package cc-mode
@@ -3250,6 +3262,14 @@ Related [[wiki:index][Index]]
 )
    #+END_SRC
 
+** Common Lisp: =slime=
+   #+BEGIN_SRC emacs-lisp
+(use-package slime
+  :commands slime
+  :config
+  (setq inferior-lisp-program "/usr/bin/sbcl")
+  )
+   #+END_SRC
 * 基本的なキーバインドの設定 [/]
   - [ ] 設定が効かない事がある．読み込む順番が関係するのかな...?
   既に手癖になってしまっているアレコレ．

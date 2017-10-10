@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-09-30 22:25:00
+#+DATE: 2017-10-09 16:07:25
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -2765,168 +2765,6 @@ Related [[wiki:index][Index]]
         howm-reminder-today-format (format howm-insert-date-format howm-date-format))
   )
   #+END_SRC
-* フォントと色
-  そろそろテーマにした方が良い，とは思ってはいる．
-  #+BEGIN_SRC emacs-lisp
-;; (defun my:load-window-config ()
-;;   "load window-system specific settings"
-;;   (interactive)
-;;   (when window-system
-;;     (progn
-;;       (set-face-attribute 'default nil
-;;                           :family "SeptemberMMono"
-;;                           ;; :family "Ricty Discord for Powerline"
-;;                           :height 135) ;; 135pt
-;;       ;; (set-fontset-font nil 'japanese-jisx0208
-;;       ;;                   (font-spec :family "SeptemberMMono"))
-;;       ;; (setq face-font-rescale-alist '(("September.*" . 1)))
-;;       (set-background-color "#242424")
-;;       )))
-(setq frame-background-mode (frame-parameter nil 'background-mode))
-(setq default-frame-alist
-      '(
-        (foreground-color . "#F6F3E8")
-        (scroll-bar-foreground-color . "red")
-        (vertical-scroll-bars . right)
-        ))
-;; (when (window-system)
-;;   (my:load-window-config))
-  #+END_SRC
-  現在修正中．
-  #+BEGIN_SRC emacs-lisp
-(custom-set-faces
- '(default                             ((t (:foreground "#F6F3E8" ))))
- ;;
- '(cursor                              ((t (:foreground "#4CFF4C" :background "#4CFF4C" ))))
- '(font-lock-builtin-face              ((t (:foreground "#7FBFFF" ))))
- '(font-lock-comment-delimiter-face    ((t (:foreground "#a5a5a6" ))))
- '(font-lock-comment-face              ((t (:foreground "#a5a5a6" ))))
- '(font-lock-constant-face             ((t (:foreground "#FFBF7F" ))))
- '(font-lock-doc-face                  ((t (:foreground "#7FFF7F" ))))
- '(font-lock-doc-string-face           ((t (:foreground "#7FFF7F" ))))
- '(font-lock-function-name-face        ((t (:foreground "#BF7FFF"))))
- '(font-lock-keyword-face              ((t (:foreground "#FF7F7F"))))
- '(font-lock-link-face                 ((t (:foreground "#7FFFFF" ))))
- '(font-lock-negation-char-face        ((t (:foreground "#7FFFFF" :bold t   :italic nil))))
- '(font-lock-preprocessor-face         ((t (:foreground "#FF4C4C" :bold nil :italic nil))))
- '(font-lock-regexp-grouping-backslash ((t (:foreground "#A5EE4C" :bold t   :italic nil))))
- '(font-lock-regexp-grouping-construct ((t (:foreground "#7F7FFF" :bold t   :italic nil))))
- '(font-lock-string-face               ((t (:foreground "#7FFF7F" ))))
- '(font-lock-type-face                 ((t (:foreground "#FFFF7F" ))))
- '(font-lock-variable-name-face        ((t (:foreground "#7F7FFF" ))))
- '(font-lock-warning-face              ((t (:foreground "#FF7FBF" :bold t ))))
- '(fringe                              ((t (:foreground "#666666" :background "#282828" ))))
- '(hl-line                             ((t (:inherit highlight :underline t ))))
- '(highlight                           ((t (:background "#333333" ))))
- '(minibuffer-prompt                   ((t (:foreground "#BF7FFF" ))))
- '(mode-line                           ((t (:foreground "#F6F3E8" :background "#222244" ))))
- '(mode-line-inactive                  ((t (:foreground "#666666" :background "#999999" :bold nil ))))
- '(region                              ((t (:background "#222244" ))))
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- ;; '(fixed-pitch ((t (:family "Ricty" ))))
- ;; '(variable-pitch ((t (:family "Ricty" ))))
- ;; '(fixed-pitch ((t (:family "Monospace" :height 135 ))))
- ;; '(variable-pitch ((t (:family "Monospace" :height 135 ))))
- ;;
- ;; preview-latex
- '(font-latex-sectioning-0-face ((t (:inherit font-latex-sectioning-1-face))))
- '(font-latex-sectioning-1-face ((t (:inherit font-latex-sectioning-2-face))))
- '(font-latex-sectioning-2-face ((t (:inherit font-latex-sectioning-3-face))))
- '(font-latex-sectioning-3-face ((t (:inherit font-latex-sectioning-4-face))))
- '(font-latex-sectioning-4-face ((t (:inherit font-latex-sectioning-5-face ))))
- '(font-latex-sectioning-5-face ((t (:inherit font-lock-type-face :bold t))))
- '(font-latex-slide-title-face  ((t (:inherit font-lock-type-face :bold t))))
- '(font-latex-subscript-face    ((t nil)))
- '(font-latex-superscript-face  ((t nil)))
- '(font-latex-math-face         ((t (:inherit font-lock-constant-face ))))
- '(font-latex-script-char-face  ((t (:inherit font-lock-preprocessor-face :bold t))))
- '(font-latex-verbatim-face     ((t (:inherit font-lock-doc-string-face ))))
- ;; elscreen
- '(elscreen-tab-control-face        ((t (:background "#222244" :foreground "#f6f3e8" :underline t :bold t ))))
- '(elscreen-tab-current-screen-face ((t (:background "#222244" :foreground "#f6f3e8" :underline t :bold t ))))
- '(elscreen-tab-other-screen-face   ((t (:background "#222244" :foreground "#aaaaaa" :underline t :bold nil ))))
- '(elscreen-tab-background-face     ((t (:background "#222244" :foreground "#aaaaaa" :underline t :bold nil ))))
- ;; dired
- '(dired-directory                  ((t (:bold t :foreground "#7F7FFF" ))))
- ;; '(dired-flagged
- ;; '(dired-header
- ;; '(dired-ignored
- ;; '(dired-mark
- ;; '(dired-marked
- ;; '(dired-perm-write
- '(dired-symlink                    ((t (:bold t :foreground "#7FFFFF" ))))
- ;; '(dired-warning
- ;; '(flx-highlight-face               ((t (:bold t :undeline t))))
- ;; git-gutter
- '(git-gutter:added                  ((t (:inherit default :bold t :foreground "#4CFF4C"))))
- '(git-gutter:deleted                ((t (:inherit default :bold t :foreground "#FF7FBF"))))
- '(git-gutter:modified               ((t (:inherit default :bold t :foreground "#FFFF4C"))))
- '(git-gutter:unchanged              ((t (:inherit default ))))
- ;; helm: header-line
- '(helm-source-header               ((t (:foreground "#F6F3E8" :background "#224488" :bold t))))
- '(helm-visible-mark                ((t (:inherit highlight ))))
- '(helm-selection                   ((t (:background "#4c4c4c" ))))
- '(helm-selection-line              ((t (:inherit highlight ))))
- ;; helm: directory
- '(helm-ff-directory                ((t (:inherit dired-directory ))))
- '(helm-bookmark-directory          ((t (:inherit helm-ff-directory ))))
- '(helm-buffer-directory            ((t (:inherit helm-ff-directory ))))
- '(helm-ff-dotted-directory         ((t (:inherit helm-ff-directory ))))
- ;; helm: file
- '(helm-ff-file                     ((t (:inherit default ))))
- '(helm-bookmark-file               ((t (:inherit helm-ff-file ))))
- '(helm-buffer-file                 ((t (:inherit helm-ff-file ))))
- '(helm-grep-file                   ((t (:inherit helm-ff-file ))))
- '(helm-etags-file                  ((t (:inherit helm-ff-file ))))
- ;; helm: file + executable
- '(helm-ff-executable               ((t (:inherit helm-ff-file :foreground "#7FFF7F" :bold t))))
- ;; helm: symlink
- '(helm-ff-symlink                  ((t (:inherit default :foreground "#7FFFFF" :bold t))))
- '(helm-ff-dotted-symlink-directory ((t (:inherit helm-ff-symlink ))))
- '(helm-ff-invalid-symlink          ((t (:inherit default :foreground "#FF7F7F" ))))
- ;;; howm
- '(howm-mode-keyword-face            ((t (:foreground "#7F7FFF" :background nil ))))
- '(howm-mode-title-face              ((t (:foreground "#4CFFFF" :background nil ))))
- '(howm-reminder-deadline-face       ((t (:bold t :foreground "#FF4C4C" :background nil ))))
- '(howm-reminder-late-deadline-face  ((t (:bold t :underline t :foreground "#FF0000" :background nil ))))
- '(howm-reminder-today-face          ((t (:bold t :foreground "#FFBF7F" :background nil ))))
- '(howm-reminder-tomorrow-face       ((t (:bold t :foreground "#FF7FBF" :background nil ))))
- ;; ido
- '(ido-subdir          ((t (:foreground "#7F7FFF" :bold t))))
- '(ido-only-match      ((t (:underline t))))
- ;; outline
- '(outline-1 ((t (:inherit font-lock-function-name-face :bold t))))
- '(outline-2 ((t (:inherit font-lock-string-face :bold t))))
- '(outline-3 ((t (:inherit font-lock-keyword-face :bold t))))
- '(outline-4 ((t (:inherit font-lock-type-face :bold t ))))
- '(outline-5 ((t (:inherit font-lock-constant-face :bold t ))))
- '(outline-6 ((t (:inherit font-lock-variable-name-face :bold t))))
- '(outline-7 ((t (:inherit font-lock-builtin-face :bold t ))))
- ;; '(outline-8 ((t (:inherit font-lock-comment-face :bold t ))))
- ;;
- ;; org
- '(org-agenda-date-today           ((t (:underline t ))))
- '(org-agenda-date                 ((t (:foreground "#FFFFFF" ))))
- '(org-agenda-date-weekend         ((t (:foreground "#FF7F7F" :bold t))))
- '(org-agenda-calendar-event       ((t (:foreground "#F6F3E8" ))))
- '(org-hide                        ((t (:foreground "#4C4C4C" ))))
- ;; review
- ;; '(review-mode-header1-face  ((t (:inherit outline-1))))
- ;; '(review-mode-header2-face  ((t (:inherit outline-2))))
- ;; '(review-mode-header3-face  ((t (:inherit outline-3))))
- ;; '(review-mode-header4-face  ((t (:inherit outline-4))))
- ;; '(review-mode-header5-face  ((t (:inherit outline-5))))
- ;; avy
- '(avy-background-face             ((t (:foreground "#333333" ))))
- '(avy-lead-face                   ((t (:foreground "#f6f3e8" :background "#002400" :bold t :box t))))
- '(avy-lead-face-0                 ((t (:foreground "#020202" :background "#ffff00" :bold t :box t))))
- '(avy-lead-face-1                 ((t (:foreground "#f6f3e8" :background "#240024" :bold t :box t))))
- '(avy-lead-face-2                 ((t (:foreground "#020202" :background "#00ffff" :bold t :box t))))
- )
-  #+END_SRC
 * 日記: =tDiary=
   tdiary-mode をちまちまと弄っている所
   #+BEGIN_SRC emacs-lisp
@@ -3019,11 +2857,11 @@ Related [[wiki:index][Index]]
   :mode ("\\.\\(md\\|markdown\\)\\'" . gfm-mode)
   :init
   (add-hook 'markdown-mode-hook
-            '(lambda ()
-               (electric-indent-local-mode -1)))
+            (lambda ()
+              (electric-indent-local-mode -1)))
   (add-hook 'gfm-mode-hook
-            '(lambda ()
-               (electric-indent-local-mode -1)))
+            (lambda ()
+              (electric-indent-local-mode -1)))
   :config
   (setq markdown-command
         "pandoc --from markdown_github -t html5 --mathjax --highlight-style pygments")
@@ -3399,6 +3237,174 @@ Related [[wiki:index][Index]]
   (my:powerline-theme)
   )
    #+END_SRC
+* フォントと色
+  そろそろテーマにした方が良い，とは思ってはいる．
+  #+BEGIN_SRC emacs-lisp
+;; (defun my:load-window-config ()
+;;   "load window-system specific settings"
+;;   (interactive)
+;;   (when window-system
+;;     (progn
+;;       (set-face-attribute 'default nil
+;;                           :family "SeptemberMMono"
+;;                           ;; :family "Ricty Discord for Powerline"
+;;                           :height 135) ;; 135pt
+;;       ;; (set-fontset-font nil 'japanese-jisx0208
+;;       ;;                   (font-spec :family "SeptemberMMono"))
+;;       ;; (setq face-font-rescale-alist '(("September.*" . 1)))
+;;       (set-background-color "#242424")
+;;       )))
+(setq frame-background-mode (frame-parameter nil 'background-mode))
+(setq default-frame-alist
+      '(
+        (foreground-color . "#F6F3E8")
+        (scroll-bar-foreground-color . "red")
+        (vertical-scroll-bars . right)
+        ))
+;; (when (window-system)
+;;   (my:load-window-config))
+  #+END_SRC
+  現在修正中．
+  #+BEGIN_SRC emacs-lisp
+(custom-set-faces
+ '(default                             ((t (:foreground "#F6F3E8" ))))
+ ;;
+ '(cursor                              ((t (:foreground "#4CFF4C" :background "#4CFF4C" ))))
+ '(font-lock-builtin-face              ((t (:foreground "#7FBFFF" ))))
+ '(font-lock-comment-delimiter-face    ((t (:foreground "#a5a5a6" ))))
+ '(font-lock-comment-face              ((t (:foreground "#a5a5a6" ))))
+ '(font-lock-constant-face             ((t (:foreground "#FFBF7F" ))))
+ '(font-lock-doc-face                  ((t (:foreground "#7FFF7F" ))))
+ '(font-lock-doc-string-face           ((t (:foreground "#7FFF7F" ))))
+ '(font-lock-function-name-face        ((t (:foreground "#BF7FFF"))))
+ '(font-lock-keyword-face              ((t (:foreground "#FF7F7F"))))
+ '(font-lock-link-face                 ((t (:foreground "#7FFFFF" ))))
+ '(font-lock-negation-char-face        ((t (:foreground "#7FFFFF" :bold t   :italic nil))))
+ '(font-lock-preprocessor-face         ((t (:foreground "#FF4C4C" :bold nil :italic nil))))
+ '(font-lock-regexp-grouping-backslash ((t (:foreground "#A5EE4C" :bold t   :italic nil))))
+ '(font-lock-regexp-grouping-construct ((t (:foreground "#7F7FFF" :bold t   :italic nil))))
+ '(font-lock-string-face               ((t (:foreground "#7FFF7F" ))))
+ '(font-lock-type-face                 ((t (:foreground "#FFFF7F" ))))
+ '(font-lock-variable-name-face        ((t (:foreground "#7F7FFF" ))))
+ '(font-lock-warning-face              ((t (:foreground "#FF7FBF" :bold t ))))
+ '(fringe                              ((t (:foreground "#666666" :background "#282828" ))))
+ '(hl-line                             ((t (:inherit highlight :underline t ))))
+ '(highlight                           ((t (:background "#333333" ))))
+ '(minibuffer-prompt                   ((t (:foreground "#BF7FFF" ))))
+ '(mode-line                           ((t (:foreground "#F6F3E8" :background "#222244" ))))
+ '(mode-line-inactive                  ((t (:foreground "#666666" :background "#999999" :bold nil ))))
+ '(region                              ((t (:background "#222244" ))))
+ ;; preview-latex
+ '(font-latex-sectioning-0-face        ((t (:inherit font-latex-sectioning-1-face))))
+ '(font-latex-sectioning-1-face        ((t (:inherit font-latex-sectioning-2-face))))
+ '(font-latex-sectioning-2-face        ((t (:inherit font-latex-sectioning-3-face))))
+ '(font-latex-sectioning-3-face        ((t (:inherit font-latex-sectioning-4-face))))
+ '(font-latex-sectioning-4-face        ((t (:inherit font-latex-sectioning-5-face ))))
+ '(font-latex-sectioning-5-face        ((t (:inherit font-lock-type-face :bold t))))
+ '(font-latex-slide-title-face         ((t (:inherit font-lock-type-face :bold t))))
+ '(font-latex-subscript-face           ((t nil)))
+ '(font-latex-superscript-face         ((t nil)))
+ '(font-latex-math-face                ((t (:inherit font-lock-constant-face ))))
+ '(font-latex-script-char-face         ((t (:inherit font-lock-preprocessor-face :bold t))))
+ '(font-latex-verbatim-face            ((t (:inherit font-lock-doc-string-face ))))
+ ;; elscreen
+ '(elscreen-tab-control-face           ((t (:background "#222244" :foreground "#f6f3e8" :underline t :bold t ))))
+ '(elscreen-tab-current-screen-face    ((t (:background "#222244" :foreground "#f6f3e8" :underline t :bold t ))))
+ '(elscreen-tab-other-screen-face      ((t (:background "#222244" :foreground "#aaaaaa" :underline t :bold nil ))))
+ '(elscreen-tab-background-face        ((t (:background "#222244" :foreground "#aaaaaa" :underline t :bold nil ))))
+ ;; dired
+ '(dired-directory                     ((t (:bold t :foreground "#7F7FFF" ))))
+ ;; '(dired-flagged
+ ;; '(dired-header
+ ;; '(dired-ignored
+ ;; '(dired-mark
+ ;; '(dired-marked
+ ;; '(dired-perm-write
+ '(dired-symlink                       ((t (:bold t :foreground "#7FFFFF" ))))
+ ;; '(dired-warning
+ ;; '(flx-highlight-face               ((t (:bold t :undeline t))))
+ ;; git-gutter
+ '(git-gutter:added                    ((t (:inherit default :bold t :foreground "#4CFF4C"))))
+ '(git-gutter:deleted                  ((t (:inherit default :bold t :foreground "#FF7FBF"))))
+ '(git-gutter:modified                 ((t (:inherit default :bold t :foreground "#FFFF4C"))))
+ '(git-gutter:unchanged                ((t (:inherit default ))))
+ ;; helm: header-line
+ '(helm-source-header                  ((t (:foreground "#F6F3E8" :background "#224488" :bold t))))
+ '(helm-visible-mark                   ((t (:inherit highlight ))))
+ '(helm-selection                      ((t (:background "#4c4c4c" ))))
+ '(helm-selection-line                 ((t (:inherit highlight ))))
+ ;; helm: directory
+ '(helm-ff-directory                   ((t (:inherit dired-directory ))))
+ '(helm-bookmark-directory             ((t (:inherit helm-ff-directory ))))
+ '(helm-buffer-directory               ((t (:inherit helm-ff-directory ))))
+ '(helm-ff-dotted-directory            ((t (:inherit helm-ff-directory ))))
+ ;; helm: file
+ '(helm-ff-file                        ((t (:inherit default ))))
+ '(helm-bookmark-file                  ((t (:inherit helm-ff-file ))))
+ '(helm-buffer-file                    ((t (:inherit helm-ff-file ))))
+ '(helm-grep-file                      ((t (:inherit helm-ff-file ))))
+ '(helm-etags-file                     ((t (:inherit helm-ff-file ))))
+ ;; helm: file + executable
+ '(helm-ff-executable                  ((t (:inherit helm-ff-file :foreground "#7FFF7F" :bold t))))
+ ;; helm: symlink
+ '(helm-ff-symlink                     ((t (:inherit default :foreground "#7FFFFF" :bold t))))
+ '(helm-ff-dotted-symlink-directory    ((t (:inherit helm-ff-symlink ))))
+ '(helm-ff-invalid-symlink             ((t (:inherit default :foreground "#FF7F7F" ))))
+ ;;; howm
+ '(howm-mode-keyword-face              ((t (:foreground "#7F7FFF" :background nil ))))
+ '(howm-mode-title-face                ((t (:foreground "#4CFFFF" :background nil ))))
+ '(howm-reminder-deadline-face         ((t (:bold t :foreground "#FF4C4C" :background nil ))))
+ '(howm-reminder-late-deadline-face    ((t (:bold t :underline t :foreground "#FF0000" :background nil ))))
+ '(howm-reminder-today-face            ((t (:bold t :foreground "#FFBF7F" :background nil ))))
+ '(howm-reminder-tomorrow-face         ((t (:bold t :foreground "#FF7FBF" :background nil ))))
+ ;; ido
+ '(ido-subdir                          ((t (:foreground "#7F7FFF" :bold t))))
+ '(ido-only-match                      ((t (:underline t))))
+ ;; outline
+ '(outline-1                           ((t (:inherit font-lock-function-name-face :bold t))))
+ '(outline-2                           ((t (:inherit font-lock-string-face :bold t))))
+ '(outline-3                           ((t (:inherit font-lock-keyword-face :bold t))))
+ '(outline-4                           ((t (:inherit font-lock-type-face :bold t ))))
+ '(outline-5                           ((t (:inherit font-lock-constant-face :bold t ))))
+ '(outline-6                           ((t (:inherit font-lock-variable-name-face :bold t))))
+ '(outline-7                           ((t (:inherit font-lock-builtin-face :bold t ))))
+ ;; '(outline-8 ((t (:inherit font-lock-comment-face :bold t ))))
+ ;;
+ ;; org
+ '(org-agenda-date-today               ((t (:underline t ))))
+ '(org-agenda-date                     ((t (:foreground "#FFFFFF" ))))
+ '(org-agenda-date-weekend             ((t (:foreground "#FF7F7F" :bold t))))
+ '(org-agenda-calendar-event           ((t (:foreground "#F6F3E8" ))))
+ '(org-hide                            ((t (:foreground "#4C4C4C" ))))
+ ;;
+ ;; moinmoin
+ '(moinmoin-h1                         ((t (:inherit outline-1))))
+ '(moinmoin-h2                         ((t (:inherit outline-2))))
+ '(moinmoin-h3                         ((t (:inherit outline-3))))
+ '(moinmoin-h4                         ((t (:inherit outline-4))))
+ '(moinmoin-h5                         ((t (:inherit outline-5))))
+ '(moinmoin-url                        ((t (:inherit font-lock-link-face))))
+ '(moinmoin-url-title                  ((t (:inherit moinmoin-url :bold t))))
+ '(moinmoin-anchor-ref-id              ((t (:inherit moinmoin-url :underline t))))
+ '(moinmoin-anchor-ref-title           ((t (:inherit moinmoin-url :bold t))))
+ '(moinmoin-wiki-link                  ((t (:inherit moinmoin-url :underline t ))))
+ '(moinmoin-inter-wiki-link            ((t (:inherit moinmoin-url :underline t ))))
+ '(moinmoin-item                       ((t (:inherit font-lock-doc-face ))))
+ '(moinmoin-item-2                     ((t (:inherit font-lock-doc-face ))))
+ ;; review
+ ;; '(review-mode-header1-face  ((t (:inherit outline-1))))
+ ;; '(review-mode-header2-face  ((t (:inherit outline-2))))
+ ;; '(review-mode-header3-face  ((t (:inherit outline-3))))
+ ;; '(review-mode-header4-face  ((t (:inherit outline-4))))
+ ;; '(review-mode-header5-face  ((t (:inherit outline-5))))
+ ;; avy
+ ;; '(avy-background-face             ((t (:foreground "#333333" ))))
+ ;; '(avy-lead-face                   ((t (:foreground "#f6f3e8" :background "#002400" :bold t :box t))))
+ ;; '(avy-lead-face-0                 ((t (:foreground "#020202" :background "#ffff00" :bold t :box t))))
+ ;; '(avy-lead-face-1                 ((t (:foreground "#f6f3e8" :background "#240024" :bold t :box t))))
+ ;; '(avy-lead-face-2                 ((t (:foreground "#020202" :background "#00ffff" :bold t :box t))))
+ )
+  #+END_SRC
 * 起動時間の計測
   [[http://memo.sugyan.com/entry/20120120/1327037494][起動時間を計測する 改訂版 - すぎゃーんメモ]]
   #+BEGIN_SRC emacs-lisp

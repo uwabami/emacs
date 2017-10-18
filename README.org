@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-10-09 16:07:25
+#+DATE: 2017-10-16 09:24:04
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -1133,11 +1133,21 @@ File.open(src, "r") {|f|
      HTML メールを表示するための設定: eww を使うことに．
      mime-setup がロードされる前に記述する必要あり.
      #+BEGIN_SRC emacs-lisp :tangle init-wl.el
-(setq mime-view-text/html-previewer 'shr)
-(setq mime-setup-enable-inline-html 'shr)
-(use-package mime-setup)
+;; (setq mime-view-text/html-previewer 'shr)
+;; (setq mime-setup-enable-inline-html 'shr)
+(use-package w3m
+  :config
+  (require 'mime-w3m)
+  (setq w3m-fill-column 80
+        mime-view-text/html-previewer 'w3m
+        mime-setup-enable-inline-html 'w3m))
+(unless (locate-library "w3m")
+  (progn
+    (setq mime-view-text/html-previewer 'shr
+          mime-setup-enable-inline-html 'shr)))
 (with-eval-after-load 'shr
   (defun shr-colorize-region (start end fg &optional bg) nil))
+(use-package mime-setup)
      #+END_SRC
      どのアプリケーションで開くか → =xdg-open= に丸投げ．
      #+BEGIN_SRC emacs-lisp :tangle init-wl.el
@@ -3098,15 +3108,6 @@ Related [[wiki:index][Index]]
                                      (Default . "Unicode"))
         zotelo-use-journal-abbreviation t)
 )
-   #+END_SRC
-
-** Common Lisp: =slime=
-   #+BEGIN_SRC emacs-lisp
-(use-package slime
-  :commands slime
-  :config
-  (setq inferior-lisp-program "/usr/bin/sbcl")
-  )
    #+END_SRC
 * 基本的なキーバインドの設定 [/]
   - [ ] 設定が効かない事がある．読み込む順番が関係するのかな...?

@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-10-18 18:59:37
+#+DATE: 2017-12-13 14:09:19
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -921,6 +921,20 @@ File.open(src, "r") {|f|
              '(skk-tankan-search 'skk-search-jisyo-file
                                  skk-large-jisyo 10000))
     #+END_SRC
+* インクリメンタル検索: =migemo=
+  #+BEGIN_SRC emacs-lisp
+(use-package migemo
+  :if (executable-find "cmigemo")
+  :config
+  ;; (setq migemo-command "cmigemo"
+  ;;       migemo-options '("-q" "--emacs")
+  ;;       migemo-dictionary "/usr/share/cmigemo/utf-8/migemo-dict"
+  ;;       migemo-user-dictionary nil
+  ;;       migemo-regex-dictionary nil
+  ;;       migemo-coding-system 'utf-8-unix)
+  (migemo-init)
+  )
+  #+END_SRC
 * Copy & Paste: =xclip=
   =xclip= で clipboard とデータをやりとり．
   #+BEGIN_SRC emacs-lisp
@@ -928,7 +942,7 @@ File.open(src, "r") {|f|
   :ensure t
   :if (executable-find "xclip")
   :config
-  (turn-on-xclip))
+  (xclip-mode 1))
   #+END_SRC
   clipboard と PRIMARY の同期には =gpaste= を使っている．
 * Elscreen [/]
@@ -2666,15 +2680,13 @@ Related [[wiki:index][Index]]
 * Howm
   Org を使う前は Howm を使っていました.
   過去のメモを検索するためだけに未だに Howm を使っています.
-
-  Rust で書かれた [[https://github.com/BurntSushi/ripgrep][ripgrep]] がとても速いらしいので， =howm= と =ripgrep= がある時だけ
-  読み込むようにしています．
   #+BEGIN_SRC emacs-lisp
 (use-package howm
   :if (and (my:dpkg-status "howm")
            (executable-find "ag"))
   :diminish howm-mode
   :bind (:map howm-mode-map
+              ("C-c , ,"     . howm-menu)
               ("C-c C-c"     . nil)
               ("C-x C-z C-c" . howm-save-and-kill-buffer/screen))
   :init

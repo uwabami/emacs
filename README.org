@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-12-13 14:09:19
+#+DATE: 2017-12-15 17:24:52
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -996,88 +996,100 @@ File.open(src, "r") {|f|
   :if my:d:password-store
   )
    #+END_SRC
-* 補完: =helm=
-  以前はデフォルトの挙動が嫌で割とイロイロと設定していたのだけれど，
+* 補完: =ido=, =flx-ido=, =smex=
+  以前は helm を利用していましたが,
+  古い計算機や VM 上では重くてシンドい思いをしたので,
+  結局 ido に戻ってきました.
+  デフォルトの挙動が嫌で割とイロイロと設定していたのだけれど，
   最近はそんなに邪魔しない感じ...なのかな? とりあえず現状は以下の通り．
-  #+BEGIN_SRC emacs-lisp
-    (use-package helm
-      :ensure t
-      :defines helm-map
-      :diminish (helm-migemo-mode)
-      :bind (("M-x"     . helm-M-x)
-             ("C-x f"   . helm-find-files)
-             ("C-x C-f" . helm-find-files)
-             ("C-x b"   . ibuffer-other-window)
-             ("C-x C-b"   . ibuffer-other-window)
-             ;; ("C-x b"   . helm-buffers-list)
-             ("C-x C-r" . helm-recentf)
-             )
-      :config
-      (ido-mode -1) ;; ido は使わない
-      (define-key helm-map (kbd "TAB") 'helm-execute-persistent-action)
-      (define-key helm-map (kbd "C-i") 'helm-execute-persistent-action)
-      (global-unset-key (kbd "C-z"))
-      (define-key helm-map (kbd "C-z") 'helm-select-action)
-      (my:disable-builtin-mode 'helm-mode)   ; helm-mode は基本使わない
-      (setq helm-command-prefix-key "C-z"    ; helm-command-prefix-key
-            ;; dired での skk との競合(C-x C-j の奪い合い)を避ける
-            dired-bind-jump nil
-            ;; mode line には何も表示しない
-            helm-completion-mode-string ""
-            ;; minibuffer に input method の状態を引き継がない
-            helm-inherit-input-method nil
-            ;; 余計なファイルは表示しない
-            helm-ff-skip-boring-files t
-            ;; helm-adaptive の保存先の変更
-            helm-adaptive-history-file (concat my:d:tmp "helm-adaptive-history")
-            ;; mode line には何も表示しない
-            helm-completion-mode-string ""
-            )
-      ;; 一つ上のディレクトリ(../)を候補から外す
-      (advice-add 'helm-ff-filter-candidate-one-by-one
-                  :around (lambda (orig-func file)
-                            (unless (string-match "\\(?:/\\|\\`\\)\\.\\{2\\}\\'" file)
-                              (funcall orig-func file))))
-      ;; 存在しないファイルには何もしない(default は新規 buffer ができる)
-      (advice-add 'helm-ff-kill-or-find-buffer-fname
-                  :around (lambda (orig-func candidate)
-                            (when (file-exists-p candidate)
-                              (funcall orig-func candidate))))
-      (if (and (locate-library "migemo")     ; あれば migemo を有効化
-               (executable-find "cmigemo"))
-          (setq helm-migemo-mode t)
-        (setq helm-migemo-mode nil))
-      (helm-autoresize-mode)
-      (setq helm-autoresize-min-height 30 ; fixed 30%
-            helm-autoresize-max-height 30)
-      )
-  #+END_SRC
-** helm-flx
-   曖昧検索は flx に任せる．かなり良い．
+** =ido= 本体の設定
    #+BEGIN_SRC emacs-lisp
-(use-package helm-flx
-  :ensure t
+(use-package ido
+  :bind (("C-x f"   . ido-find-file)
+         ("C-x C-f" . ido-find-file)
+         ("C-x d"   . ido-dired)
+         ("C-x C-d" . ido-dired)
+         ("C-x b"   . ibuffer)
+         ("C-x C-b" . ibuffer)
+         ("C-x M-b" . ibuffer))
   :config
-  (helm-flx-mode +1)
-  (setq helm-flx-for-helm-find-files t ;; t by default
-        helm-flx-for-helm-locate t )   ;; nil by default
+  (ido-mode t)
+  ;; (ido-everywhere t)  <- Wanderlust みたいに，過去の選択を覚えている奴と相性悪い.
+  (setq ido-enable-prefix nil             ; prefix match 入力を先頭一致可能
+        ido-confirm-unique-completion t   ; TAB で名前の一致まで. その後 RET で実行
+        ido-enable-flex-matching t        ; flx matching を試す際には prefix を無効化すること
+        ido-enable-dot-prefix t           ; . を prefix として扱う
+        ido-default-file-method   'selected-window
+        ido-default-buffer-method 'selected-window
+        ido-max-directory-size 100000
+        ido-enable-tramp-completion nil
+        ido-use-faces nil                 ; flx-ido の highlight を使う
+        ido-ignore-extensions t
+        ido-cannot-complete-command 'ido-next-match
+        ido-save-directory-list-file (concat my:d:tmp "ido.last"))
+  ;; 補完で無視する拡張子の追加．そのうち増える．
+  (cl-loop for ext in
+           '(".dvi"
+             ".fdb_latexmk"
+             ".fls"
+             ".ilg"
+             ".jqz"
+             ".mod"
+             ".nav"
+             ".out"
+             ".snm"
+             ".synctex.gz"
+             ".vrb"
+             )
+           do (add-to-list 'completion-ignored-extensions ext))
+  ;; ido の buffer で skk を無効化しておく.
+  ;; 日本語ファイル名は, とりあえず考えないことに.
+  ;; (add-hook 'ido-minibuffer-setup-hook
+  ;;           (lambda ()
+  ;;             (when (fboundp 'skk-mode-exit)
+  ;;               (skk-mode-exit))))
+  (add-hook 'ido-setup-hook
+            (lambda ()
+              (define-key ido-completion-map (kbd "C-h")     'ido-delete-backward-updir)
+              (define-key ido-completion-map (kbd "C-l")     'ido-delete-backward-updir)))
   )
    #+END_SRC
-** helm-locate
-   default の =mlocate= の option を修正しておく．
+** =flx-ido=: flex match の強化
+   曖昧マッチが非常に直感的になった．地味に便利で手放せない．
    #+BEGIN_SRC emacs-lisp
-(use-package helm-locate
-  :if (executable-find "mlocate")
-  :config
-  (setq helm-locate-command "mlocate %s -e -A --regex %s"))
-   #+END_SRC
-** helm-descbinds
-   =helm-M-x= の際にキーバインドが表示されるようになる
-   #+BEGIN_SRC emacs-lisp
-(use-package helm-descbinds
+(use-package flx-ido
   :ensure t
   :config
-  (helm-descbinds-mode))
+  (flx-ido-mode 1)
+  (setq flx-ido-use-faces t
+        flx-ido-threshold 1000)
+  )
+   #+END_SRC
+** =ido-grid=: grid mode
+   #+BEGIN_SRC emacs-lisp
+(unless (package-installed-p 'ido-grid)
+  (quelpa '(ido-grid
+            :fetcher github
+            :repo "larkery/ido-grid.el")))
+(use-package ido-grid
+  :ensure t
+  :config
+  (setq ido-grid-enabled t
+        ido-grid-start-small nil
+        ido-grid-rows 0.15)
+  (ido-grid-enable)
+  )
+   #+END_SRC
+** =smex=
+   #+BEGIN_SRC emacs-lisp
+(use-package smex
+  :bind (("M-X" . smex))
+  :ensure t
+  :init
+  (setq smex-save-file (concat my:d:tmp "smex-items"))
+  :config
+  (smex-initialize)
+  )
    #+END_SRC
 * MUA の設定: =wanderlust=
   :PROPERTIES:
@@ -2646,37 +2658,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   )
    #+END_SRC
 
-** Org-Wiki
-    計算機関連のメモは [[https://github.com/caiorss/org-wiki][org-wiki]] で書いています．
-    #+BEGIN_SRC emacs-lisp
-(unless (package-installed-p 'org-wiki)
-  (quelpa '(org-wiki
-            :fetcher github
-            :repo "caiorss/org-wiki")))
-(use-package org-wiki
-  :config
-  (setq org-wiki-location (concat (getenv "HOME") "/Public/cc-env/"))
-  (defun my:org-wiki-header ()
-    "Insert a header at the top of the file, customize for personal use"
-    (interactive)
-    (save-excursion
-      (goto-char (point-min))
-      (insert (format
-               (string-trim "
-,#+TITLE:
-,#+DATE: 20
-,#+LANGUAGE: ja
-,#+REF: cc-env/%s
-,#+LAYOUT: cc-env
-,#+SETUPFILE: ~/Public/_setup.org
-,#+PERMALINK: /cc-env/%s.html
-Related [[wiki:index][Index]]
-")
-               (file-name-base (buffer-file-name))
-               (file-name-base (buffer-file-name))))))
-  (advice-add 'org-wiki-header :override 'my:org-wiki-header)
-  )
-    #+END_SRC
 * Howm
   Org を使う前は Howm を使っていました.
   過去のメモを検索するためだけに未だに Howm を使っています.
@@ -2807,42 +2788,6 @@ Related [[wiki:index][Index]]
         tdiary-text-suffix ".rd")
   )
   #+END_SRC
-* MoinMoin: =moinmoin-mode=, =moomin.el=
-  Debian Wiki や職場の Wiki を編集するための
-  MoinMoin の設定. 編集には [[https://github.com/lurdan/moomin-el][tototoshi/moomin-el: Edit MoinMoin with Emacs]] を使う.
-** =moinmoin-mode=
-   MoinMoin 本体の moinmoin-mode 自体は古くて
-   screen-lines に依存していたりするので folk して更新中.
-   [[https://github.com/uwabami/moinmoin-mode][uwabami/moinmoin-mode: Fork from EmacsForMoinMoin, for Emacs >= 25]]
-   #+BEGIN_SRC emacs-lisp
-(unless (locate-library "moinmoin-mode")
-  (quelpa '(moinmoin-mode
-            :fetcher github
-            :repo "uwabami/moinmoin-mode")))
-(use-package moinmoin-mode)
-   #+END_SRC
-   そのうち気になる所を弄る，ということで．
-** =moomin=: =emacs-request + helm + moinmoin-mode=
-   最新の奴だと動かなかったので folk して多少弄った版を使うことに.
-   [[https://github.com/uwabami/moomin-el][uwabami/moomin-el: Edit MoinMoin with Emacs]]
-#+BEGIN_SRC emacs-lisp
-(unless (locate-library "moomin")
-  (quelpa '(moomin
-            :fetcher github
-            :repo "uwabami/moomin-el")))
-(use-package moomin
-  :if (file-directory-p my:d:password-store)
-  :bind (("C-x w" . helm-moomin)
-         :map moinmoin-mode-map
-         ("C-c C-c" . moomin-save-current-buffer)
-         ("C-c C-s" . moomin-save-current-buffer)
-         ("C-c C-o" . moomin-browse-current-page)
-         ("C-c C-r" . moomin-reload-current-page))
-  :config
-  (load (concat my:d:password-store "/moomin.gpg"))
-  (setq moomin-history-file (concat my:d:tmp "moomin_history"))
-  )
-#+END_SRC
 * プログラム環境
 ** 折り畳み: =outline-magic=
    #+BEGIN_SRC emacs-lisp
@@ -3373,6 +3318,9 @@ Related [[wiki:index][Index]]
  ;; ido
  '(ido-subdir                          ((t (:foreground "#7F7FFF" :bold t))))
  '(ido-only-match                      ((t (:underline t))))
+ ;; '(ido-first-match                     ((t (:inherit default ))))
+ ;; '(ido-only-match                      ((t (:foreground "#FFFF4C" ))))
+ ;; '(ido-subdir                          ((t (:foreground "#7F7FFF" :bold t))))
  ;; outline
  '(outline-1                           ((t (:inherit font-lock-function-name-face :bold t))))
  '(outline-2                           ((t (:inherit font-lock-string-face :bold t))))

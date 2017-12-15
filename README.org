@@ -3089,6 +3089,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 * =diminish=: モードラインの短縮表示
   =use-package= で読み込まれているので，可能な限りそちらで指定するように変更．
   #+BEGIN_SRC emacs-lisp
+(use-package diminish :ensure t)
 (defmacro my:diminish (file mode &optional new-name)
   "original: https://github.com/larstvei/dot-emacs/blob/master/init.org"
   `(with-eval-after-load ,file

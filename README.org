@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2017-12-28 04:33:47
+#+DATE: 2018-01-14 15:34:56
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -2003,13 +2003,13 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    以前のメモの整理のために [[http://howm.osdn.jp/index-j.html][howm: Hitori Otegaru Wiki Modoki]] も使っているので,
    howm も有効にしている，ぐらい．
    #+BEGIN_SRC emacs-lisp
-(defvar my:d:org (concat (getenv "HOME") "/ownCloud/org/"))
+(defvar my:d:org (concat (getenv "HOME") "/Nextcloud/org/"))
 (use-package org
   :bind (("C-x n s" . org-narrow-to-subtree)
          ("C-x n w" . widen))
   :init
   :config
-  (setq org-directory my:d:org                 ;; ownCloud に保存する
+  (setq org-directory my:d:org                 ;; Nextcloud に保存する
         org-return-follows-link t              ;; return でリンクを辿る
         org-startup-folded t                   ;; 見出しを畳んで表示
         org-startup-truncated t                ;; 折り返し無し
@@ -2694,12 +2694,12 @@ Related [[wiki:index][Index]]
                               (setq truncate-lines t)))
   :config
   ;;; ディレクトリの設定
-  ;; メモの内容は ownCloud で同期することに
-  (setq howm-directory "~/ownCloud/org")
+  ;; メモの内容は Nextcloud で同期することに
+  (setq howm-directory "~/Nextcloud/org")
   ;; メニューと履歴を検索対象から除外するために別ディレクトリへ
-  (setq howm-keyword-file "~/ownCloud/howm/keys"
-        howm-history-file "~/ownCloud/howm/history"
-        howm-menu-file "~/ownCloud/howm/menu")
+  (setq howm-keyword-file "~/Nextcloud/howm/keys"
+        howm-history-file "~/Nextcloud/howm/history"
+        howm-menu-file "~/Nextcloud/howm/menu")
   ;; メモファイルは日付時刻毎に分離
   (setq howm-file-name-format "%Y%m%d-%H%M%S.howm")
   ;;;  メモはorgで書く
@@ -2795,7 +2795,7 @@ Related [[wiki:index][Index]]
             :fetcher github
             :repo "uwabami/tdiary-mode")))
 (use-package tdiary-mode
-  :if (file-directory-p "~/ownCloud/tdiary")
+  :if (file-directory-p "~/Nextcloud/tdiary")
   :commands (tdiary-mode tdiary-new tdiary-new-directory tdiary-replace)
   :config
   (load (concat my:d:password-store "/tdiary-mode.gpg"))

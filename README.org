@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2018-01-14 15:34:56
+#+DATE: 2018-01-18 14:52:51
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -945,6 +945,12 @@ File.open(src, "r") {|f|
   (xclip-mode 1))
   #+END_SRC
   clipboard と PRIMARY の同期には =gpaste= を使っている．
+* =edit-server=: Browser の textarea を emacsclient で編集
+  #+BEGIN_SRC emacs-lisp
+(use-package edit-server
+  :config
+  (edit-server-start))
+  #+END_SRC
 * Elscreen [/]
   modeline の表示そのものは無効化しておく．
   - [ ] Debian パッケージ版は古い．更新すべき

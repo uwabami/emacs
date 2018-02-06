@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2018-01-18 14:52:51
+#+DATE: 2018-02-06 01:46:42
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -945,12 +945,6 @@ File.open(src, "r") {|f|
   (xclip-mode 1))
   #+END_SRC
   clipboard と PRIMARY の同期には =gpaste= を使っている．
-* =edit-server=: Browser の textarea を emacsclient で編集
-  #+BEGIN_SRC emacs-lisp
-(use-package edit-server
-  :config
-  (edit-server-start))
-  #+END_SRC
 * Elscreen [/]
   modeline の表示そのものは無効化しておく．
   - [ ] Debian パッケージ版は古い．更新すべき
@@ -3260,20 +3254,16 @@ Related [[wiki:index][Index]]
 * フォントと色
   そろそろテーマにした方が良い，とは思ってはいる．
   #+BEGIN_SRC emacs-lisp
-;; (defun my:load-window-config ()
-;;   "load window-system specific settings"
-;;   (interactive)
-;;   (when window-system
-;;     (progn
-;;       (set-face-attribute 'default nil
-;;                           :family "SeptemberMMono"
-;;                           ;; :family "Ricty Discord for Powerline"
-;;                           :height 135) ;; 135pt
-;;       ;; (set-fontset-font nil 'japanese-jisx0208
-;;       ;;                   (font-spec :family "SeptemberMMono"))
-;;       ;; (setq face-font-rescale-alist '(("September.*" . 1)))
-;;       (set-background-color "#242424")
-;;       )))
+(defun my:load-window-config ()
+  "load window-system specific settings"
+  (interactive)
+  (when window-system
+    (progn
+      (set-face-attribute 'default nil
+                          :family "Ricty Discord for Powerline"
+                          :height 135) ;; 135pt
+      (set-background-color "#242424")
+      )))
 (setq frame-background-mode (frame-parameter nil 'background-mode))
 (setq default-frame-alist
       '(
@@ -3281,8 +3271,8 @@ Related [[wiki:index][Index]]
         (scroll-bar-foreground-color . "red")
         (vertical-scroll-bars . right)
         ))
-;; (when (window-system)
-;;   (my:load-window-config))
+(when (window-system)
+  (my:load-window-config))
   #+END_SRC
   現在修正中．
   #+BEGIN_SRC emacs-lisp

@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2018-02-06 01:46:42
+#+DATE: 2018-02-23 17:32:56
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -688,6 +688,28 @@ init.el: README.org
   (unless (server-running-p)
     (server-start)))
    #+END_SRC
+* shell との連携
+  - [[https://masutaka.net/chalow/2011-09-28-1.html][ターミナルの zsh と Emacs を風のように駆け抜ける！]]
+  - [[http://syohex.hatenablog.com/entry/20111026/1319606395][cdeを改良]]
+  - [[https://qiita.com/__hage/items/2dd732b4dd68e124e8bd][cdeとelscreen-separate-buffer-listの相性が悪い]]
+  を参考に.
+  #+BEGIN_SRC emacs-lisp
+(defun return-current-working-directory-to-shell ()
+  (expand-file-name
+   (with-current-buffer
+       (if (featurep 'elscreen)
+           (let* ((frame-confs (elscreen-get-frame-confs (selected-frame)))
+                  (num (nth 1 (assoc 'screen-history frame-confs)))
+                  (cur-window-conf
+                   (assoc 'window-configuration
+                          (assoc num (assoc 'screen-property frame-confs))))
+                  (marker (nth 2 cur-window-conf)))
+             (marker-buffer marker))
+         (nth 1
+              (assoc 'buffer-list
+                     (nth 1 (nth 1 (current-frame-configuration))))))
+     default-directory)))
+  #+END_SRC
 * 日本語入力: =ddskk=
   [[http://openlab.ring.gr.jp/skk/ddskk-ja.html][Daredevil SKK (DDSKK)]] をメインで使用中．無いと途方に暮れる．
   ちなみにGTKが有効になっていると =gtk-immodule= なんかと衝突するので

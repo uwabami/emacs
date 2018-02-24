@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2018-02-23 17:32:56
+#+DATE: 2018-02-24 23:00:59
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -447,6 +447,7 @@ init.el: README.org
   :init
   (setq url-configuration-directory (concat my:d:tmp "url")))
 (use-package nsm
+  :if (featurep 'nsm)
   :init
   (setq nsm-settings-file (concat my:d:tmp "network-settings.data")))
    #+END_SRC

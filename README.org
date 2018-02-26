@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2018-02-24 23:00:59
+#+DATE: 2018-02-26 20:15:03
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -981,6 +981,18 @@ File.open(src, "r") {|f|
   (setq elscreen-display-screen-number nil)
   :config
   (elscreen-start))
+  #+END_SRC
+  あと [[http://syohex.hatenablog.com/entry/20130914/1379166283][zoom-window]] も使う事に.
+  #+BEGIN_SRC emacs-lisp
+(use-package zoom-window
+  :ensure t
+  :bind ("C-x C-z" . zoom-window-zoom)
+  :init
+  (setq zoom-window-use-elscreen t)
+  :config
+  (zoom-window-setup)
+  (setq zoom-window-mode-line-color "#7fff7f")
+  )
   #+END_SRC
 * 認証関連: =password-store=
 ** id-manager の設定

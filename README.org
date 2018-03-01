@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2018-02-26 20:15:03
+#+DATE: 2018-02-28 22:41:10
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -820,7 +820,7 @@ Emacs*useXIM: false
         (en-jp . ("．" . "，"))
         (en    . (". " . ", "))
         ))
-(setq-default skk-kutouten-type 'en)
+(setq-default skk-kutouten-type 'jp)
     #+END_SRC
     全角記号の変換: @ での日付入力は使わない
     #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el

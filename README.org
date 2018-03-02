@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2018-02-28 22:41:10
+#+DATE: 2018-03-03 02:41:58
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -185,6 +185,7 @@ init.el: README.org
   - =GPG_KEY_ID=
   - =GPG_AGENT_INFO=
   - =PASSWORD_STORE_DIR=
+  - =PATH=
   を読み込んでいます．
   #+BEGIN_SRC emacs-lisp
 (defvar my:d:password-store nil)
@@ -202,6 +203,7 @@ init.el: README.org
      "GPG_KEY_ID"
      "GPG_AGENT_INFO"
      "PASSWORD_STORE_DIR"
+     "PATH"
      ))
   (setq user-full-name (concat (getenv "DEBFULLNAME"))
         user-mail-address (concat (getenv "DEBEMAIL"))
@@ -1040,7 +1042,7 @@ File.open(src, "r") {|f|
       :defines helm-map
       :diminish (helm-migemo-mode)
       :bind (("M-x"     . helm-M-x)
-             ("C-x f"   . helm-find-files)
+             ("C-x f"   . helm-mini)
              ("C-x C-f" . helm-find-files)
              ("C-x b"   . ibuffer-other-window)
              ("C-x C-b"   . ibuffer-other-window)
@@ -1113,6 +1115,15 @@ File.open(src, "r") {|f|
   :ensure t
   :config
   (helm-descbinds-mode))
+   #+END_SRC
+** helm-ag
+   ag による検索での絞り込み
+   #+BEGIN_SRC emacs-lisp
+(use-package helm-ag
+  :ensure t
+  :if (executable-find "ag")
+  :bind (("M-g" . helm-ag))
+  )
    #+END_SRC
 * MUA の設定: =wanderlust=
   :PROPERTIES:
@@ -2891,6 +2902,35 @@ Related [[wiki:index][Index]]
   :bind (("C-x g" . magit-status))
   :config
   (setq magit-completing-read-function 'magit-ido-completing-read)
+  )
+   #+END_SRC
+** VCS: =helm-ghq=
+   ghq があった時に helm でリストアップする。
+   フルパス表示がちょっとうざったいので、list-candidates を override することに。
+   #+BEGIN_SRC emacs-lisp
+(use-package helm-ghq
+  :if (executable-find "ghq")
+  :config
+  (defun my:helm-ghq--list-candidates ()
+    (with-temp-buffer
+      (unless (zerop (apply #'call-process
+                            helm-ghq-command-ghq nil t nil
+                            helm-ghq-command-ghq-arg-list))
+        (error "Failed: Can't get ghq list candidates"))
+      (let ((ghq-root (helm-ghq--root))
+            paths)
+        (goto-char (point-min))
+        (while (not (eobp))
+          (let ((path (helm-ghq--line-string)))
+            (push (cons (file-relative-name path ghq-root) path) paths))
+          (forward-line 1))
+        (reverse paths))))
+  (advice-add 'helm-ghq--list-candidates :override
+              #'my:helm-ghq--list-candidates)
+  (setq helm-mini-default-sources '(helm-source-buffers-list
+                                    helm-source-files-in-current-dir
+                                    helm-source-recentf
+                                    helm-source-ghq))
   )
    #+END_SRC
 ** rainbow-mode

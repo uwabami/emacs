@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+TITLE: Emacs の設定
-#+DATE: 2018-03-03 02:41:58
+#+DATE: 2018-03-03 04:29:31
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -2927,10 +2927,10 @@ Related [[wiki:index][Index]]
         (reverse paths))))
   (advice-add 'helm-ghq--list-candidates :override
               #'my:helm-ghq--list-candidates)
-  (setq helm-mini-default-sources '(helm-source-buffers-list
-                                    helm-source-files-in-current-dir
+  (setq helm-mini-default-sources '(helm-source-ghq
+                                    helm-source-buffers-list
                                     helm-source-recentf
-                                    helm-source-ghq))
+                                    ))
   )
    #+END_SRC
 ** rainbow-mode
@@ -3335,7 +3335,7 @@ Related [[wiki:index][Index]]
   (when window-system
     (progn
       (set-face-attribute 'default nil
-                          :family "Ricty Discord for Powerline"
+                          :family "Cica"
                           :height 135) ;; 135pt
       (set-background-color "#242424")
       )))

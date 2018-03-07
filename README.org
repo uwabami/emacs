@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-03-08 05:48:43
+#+DATE: 2018-03-08 06:00:25
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -2902,15 +2902,14 @@ Related [[wiki:index][Index]]
   :if (locate-library "magit")
   :config
   (setq git-gutter:window-width 1
-        ;; git-gutter:added-sign "+"
-        ;; git-gutter:deleted-sign-sign "-"
-        git-gutter:modified-sign "="  ;; 空白 2つ
-        git-gutter:unchanged-sign " " ;; 空白 2つ
-        ;; git-gutter:modified-sign "⇔"
-        ;; git-gutter:added-sign "⇒"
-        ;; git-gutter:deleted-sign "⇐"
-        git-gutter:update-hooks '(after-save-hook after-revert-hook)
+        git-gutter:added-sign "+"
+        git-gutter:deleted-sign-sign "-"
+        git-gutter:modified-sign "="
+        git-gutter:unchanged-sign " " ;; 空白 1つ
+        git-gutter:separator-sign nil
         git-gutter:lighter ""
+        git-gutter:always-show-separator nil
+        git-gutter:update-hooks '(after-save-hook after-revert-hook)
         )
   (global-git-gutter-mode +1)
   )
@@ -3341,7 +3340,7 @@ Related [[wiki:index][Index]]
  ;; helm
  '(helm-source-header                  ((t (:foreground "#F6F3E8" :background "#224488" :bold t))))
  '(helm-visible-mark                   ((t (:inherit highlight ))))
- '(helm-selection                      ((t (:inherit highlight )))) ;; background "#4c4c4c" ))))
+ '(helm-selection                      ((t (:inherit highlight ))))
  '(helm-selection-line                 ((t (:inherit highlight ))))
  '(helm-ff-directory                   ((t (:inherit dired-directory ))))
  '(helm-bookmark-directory             ((t (:inherit helm-ff-directory ))))
@@ -3379,12 +3378,12 @@ Related [[wiki:index][Index]]
  '(elscreen-tab-current-screen-face    ((t (:background "#222244" :foreground "#f6f3e8" :underline t :bold t ))))
  '(elscreen-tab-other-screen-face      ((t (:background "#222244" :foreground "#aaaaaa" :underline t :bold nil ))))
  '(elscreen-tab-background-face        ((t (:background "#222244" :foreground "#aaaaaa" :underline t :bold nil ))))
- ;; '(flx-highlight-face               ((t (:bold t :undeline t))))
  ;; git-gutter
  '(git-gutter:added                    ((t (:inherit default :bold t :foreground "#4CFF4C" :background "#666666"))))
  '(git-gutter:deleted                  ((t (:inherit default :bold t :foreground "#FF7FBF" :background "#666666"))))
  '(git-gutter:modified                 ((t (:inherit default :bold t :foreground "#FFFF4C" :background "#666666"))))
  '(git-gutter:unchanged                ((t (:inherit default :background "#666666" ))))
+ '(git-gutter:separator-face           ((t (:inherit default :foreground "#FF4C4C" :background "#666666"))))
   ;;; howm
  '(howm-mode-keyword-face              ((t (:foreground "#7F7FFF" :background nil ))))
  '(howm-mode-title-face                ((t (:foreground "#4CFFFF" :background nil ))))

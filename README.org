@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-03-08 06:00:25
+#+DATE: 2018-03-21 23:38:58
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -522,7 +522,7 @@ init.el: README.org
 ** =abbrev=: 略語展開
    #+BEGIN_SRC emacs-lisp
 (use-package abbrev
-  ;; :diminish abbrev-mode
+  :diminish abbrev-mode
   :config
   (setq abbrev-file-name (concat my:d:share "abbrev_defs")
         save-abbrevs t)
@@ -532,7 +532,7 @@ init.el: README.org
 ** =eldoc=: emacs-lisp document
    #+BEGIN_SRC emacs-lisp
 (use-package eldoc
-;;  :diminish eldoc-mode
+  :diminish eldoc-mode
   :config
   (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
   )
@@ -553,7 +553,7 @@ init.el: README.org
 ** =whitespace=: 空白の強調表示
    #+BEGIN_SRC emacs-lisp
 (use-package whitespace
-;;  :diminish global-whitespace-mode
+  :diminish global-whitespace-mode
   :config
   (setq whitespace-line-column 72
         whitespace-style '(face              ; faceを使って視覚化する．
@@ -973,98 +973,102 @@ File.open(src, "r") {|f|
   (migemo-init)
   )
   #+END_SRC
-* 補完: =helm=
-  以前はデフォルトの挙動が嫌で割とイロイロと設定していたのだけれど，
-  最近はそんなに邪魔しない感じ...なのかな? とりあえず現状は以下の通り．
-
-  find-file の挙動だけはどうしても好きになれない。
-  補完が途中で止まって欲しいんだがなぁ(もしくは TAB 補完使いたい、とも言う)。
-  #+BEGIN_SRC emacs-lisp
-(use-package helm
-  :ensure t
-  :defines helm-map
-  :bind (("M-x"      . helm-M-x)
-         ("C-x C-f"  . helm-find-files)
-         ("C-x b"    . helm-mini)
-         ("C-x C-b"  . helm-mini)
-         ("C-x C-r"  . helm-recentf)
+* 補完: =ido=
+  補完は =ido= が軽いし速いので好み.
+  見た目がちょっと簡素すぎる気もするので、なんとか弄りたい所ではある。
+** =ido= の設定
+   #+BEGIN_SRC emacs-lisp
+(use-package ido
+  :bind (("C-x C-f" . ido-find-file)
+         ;; ("C-x d"   . ido-dired)
+         ;; ("C-x C-d" . ido-dired)
+         ;; ("C-x b"   . ibuffer)
+         ;; ("C-x C-b" . ibuffer)
+         ;; ("C-x M-b" . ibuffer)
          )
   :config
-  (ido-mode -1)
-  (define-key helm-map (kbd "TAB") 'helm-execute-persistent-action)
-  (define-key helm-map (kbd "C-i") 'helm-execute-persistent-action)
-  (global-unset-key (kbd "C-z"))
-  (define-key helm-map (kbd "C-z") 'helm-select-action)
-  (my:disable-builtin-mode 'helm-mode)   ; helm-mode は基本使わない
-  (setq helm-command-prefix-key "C-z"    ; helm-command-prefix-key
-        ;; dired での skk との競合(C-x C-j の奪い合い)を避ける
-        dired-bind-jump nil
-        ;; mode line には何も表示しない
-        helm-completion-mode-string ""
-        ;; minibuffer に input method の状態を引き継がない
-        helm-inherit-input-method nil
-        ;; 余計なファイルは表示しない
-        helm-ff-skip-boring-files t
-        ;; helm-adaptive の保存先の変更
-        helm-adaptive-history-file (concat my:d:tmp "helm-adaptive-history")
-        ;; mode line には何も表示しない
-        helm-completion-mode-string ""
-        ;; 改行しない
-        helm-truncate-lines t
-        ;; C-k
-        helm-delete-minibuffer-contents-from-point t
-        ;; migemo は使わない
-        helm-migemo-mode nil
+  (ido-mode t)
+  ;; (ido-everywhere t)  <- Wanderlust みたいに，過去の選択を覚えている奴と相性悪い.
+  (setq ido-enable-prefix nil             ; prefix match 入力を先頭一致可能
+        ido-confirm-unique-completion t   ; TAB で名前の一致まで. その後 RET で実行
+        ido-enable-flex-matching t        ; flx matching を試す際には prefix を無効化すること
+        ido-enable-dot-prefix t           ; . を prefix として扱う
+        ido-default-file-method   'selected-window
+        ido-default-buffer-method 'selected-window
+        ido-max-directory-size 10000
+        ido-enable-tramp-completion nil
+        ido-use-faces t
+        ido-ignore-extensions t
+        ido-cannot-complete-command 'ido-next-match
+        ido-save-directory-list-file (concat my:d:tmp "ido.last"))
+  ;; 補完で無視する拡張子の追加．そのうち増える．
+  (cl-loop for ext in
+           '(".dvi"
+             ".fdb_latexmk"
+             ".fls"
+             ".ilg"
+             ".jqz"
+             ".mod"
+             ".nav"
+             ".out"
+             ".snm"
+             ".synctex.gz"
+             ".vrb"
+             )
+           do (add-to-list 'completion-ignored-extensions ext))
+  (add-hook 'ido-setup-hook
+            (lambda ()
+              (define-key ido-completion-map (kbd "C-h") 'ido-delete-backward-updir)
+              (define-key ido-completion-map (kbd "C-l") 'ido-delete-backward-updir)))
+  (defun my:ido-disable-line-trucation ()
+    (set (make-local-variable 'truncate-lines) nil))
+  (add-hook 'ido-minibuffer-setup-hook 'my:ido-disable-line-trucation)
+  )
+   #+END_SRC
+** =flx-ido=: flex match の強化
+   曖昧マッチが非常に直感的になった．地味に便利で手放せない．
+   #+BEGIN_SRC emacs-lisp
+(use-package flx-ido
+  :ensure t
+  :config
+  (flx-ido-mode 1)
+  (setq flx-ido-use-faces nil
+        flx-ido-threshold 10000)
+  )
+   #+END_SRC
+** =ido-vertical=: 縦に並べて表示
+   #+BEGIN_SRC emacs-lisp
+(use-package ido-vertical-mode
+  :ensure t
+  :config
+  (ido-vertical-mode t)
+  (setq ido-vertical-define-keys 'C-n-C-p-up-down
+        ido-max-window-height 0.3
         )
-  ;; 一つ上のディレクトリ(../)を候補から外す
-  (advice-add 'helm-ff-filter-candidate-one-by-one
-              :around (lambda (orig-func file)
-                        (unless (string-match "\\(?:/\\|\\`\\)\\.\\{2\\}\\'" file)
-                          (funcall orig-func file))))
-  ;; 存在しないファイルには何もしない(default は新規 buffer ができる)
-  (advice-add 'helm-ff-kill-or-find-buffer-fname
-              :around (lambda (orig-func candidate)
-                        (when (file-exists-p candidate)
-                          (funcall orig-func candidate))))
-  (helm-autoresize-mode)
-  (setq helm-autoresize-min-height 30 ; fixed 30%
-        helm-autoresize-max-height 30)
-  )
-  #+END_SRC
-** helm-flx
-   曖昧検索は flx に任せる．かなり良い．
-   #+BEGIN_SRC emacs-lisp
-(use-package helm-flx
-  :ensure t
-  :config
-  (helm-flx-mode +1)
-  (setq helm-flx-for-helm-find-files t ;; t by default
-        helm-flx-for-helm-locate t )   ;; nil by default
   )
    #+END_SRC
-** helm-locate
-   default の =mlocate= の option を修正しておく．
+** =ido-recentf=: recentf を ido で
    #+BEGIN_SRC emacs-lisp
-(use-package helm-locate
-  :if (executable-find "mlocate")
-  :config
-  (setq helm-locate-command "mlocate %s -e -A --regex %s"))
+(defun ido-recentf-open ()
+  "Use `ido-completing-read' to \\[find-file] a recent file"
+  (interactive)
+  (if (find-file (ido-completing-read "Find recent file: " recentf-list))
+      (message "Opening file...")
+    (message "Aborting")))
+(bind-key "C-x C-r" 'ido-recentf-open)
    #+END_SRC
-** helm-descbinds
-   =helm-M-x= の際にキーバインドが表示されるようになる
+** =smex=
+   M-x を ido で。
    #+BEGIN_SRC emacs-lisp
-(use-package helm-descbinds
+(use-package smex
+  :bind (("M-x" . smex))
   :ensure t
   :config
-  (helm-descbinds-mode))
-   #+END_SRC
-** helm-ag
-   ag による検索での絞り込み
-   #+BEGIN_SRC emacs-lisp
-(use-package helm-ag
-  :ensure t
-  :if (executable-find "ag")
-  :bind (("M-g" . helm-ag))
+  (setq smex-auto-update t
+        smex-save-file (concat my:d:tmp "smex-items")
+        smex-prompt-string "smex: "
+        smex-flex-matching nil
+        )
   )
    #+END_SRC
 * Elscreen [/]
@@ -1988,7 +1992,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    flyspell-mode は別途有効化しておいた方が良いのかもしれない
    #+BEGIN_SRC emacs-lisp
 (use-package flyspell
-;;  :diminish flyspell-mode
+  :diminish flyspell-mode
   :config
   (defun my:flyspell-popup-choose (orig event poss word)
     (if (window-system)
@@ -2242,7 +2246,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    なんて事もやっている．元ネタは [[https://julien.danjou.info/blog/2010/org-mode-and-holidays][Org-mode and holidays]]
   #+BEGIN_SRC emacs-lisp
 (use-package org-agenda
-;;  :diminish org-agenda-mode
+  :diminish org-agenda-mode
   :if (file-directory-p my:d:org)
   :bind (("C-c a" . org-agenda))
   :init
@@ -2389,7 +2393,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 *** org-src
     #+BEGIN_SRC emacs-lisp
 (use-package org-src
-;;  :diminish org-src-mode
+  :diminish org-src-mode
   :config
   (setq org-src-fontify-natively t       ;; font-lock
         org-src-tab-acts-natively t      ;; indent
@@ -2454,7 +2458,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 (use-package orgmine
   :if (and my:d:password-store
            (file-directory-p org-directory))
-;;  :diminish (orgmine-mode)
+  :diminish (orgmine-mode)
   :commands (orgmine-mode)
   :init
   (unless (package-installed-p 'orgmine)
@@ -2472,7 +2476,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         orgmine-note-block-end   "#+END_SRC\n"
         orgmine-default-todo-keyword "新規")
   ;; サーバ設定
-  (load (concat my:d:password-store "/orgmine.gpg")))
+  (load (concat my:d:password-store "/orgmine.gpg"))
+  )
    #+END_SRC
 ** Org-Export
 *** 一般設定
@@ -2687,16 +2692,18 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    #+END_SRC
 
 ** Org-Wiki
-    計算機関連のメモは [[https://github.com/caiorss/org-wiki][org-wiki]] で書いています．
+    計算機関連のメモは [[https://github.com/uwabami/plain-org-wiki][uwabami/plain-org-wiki]] で書いています．
     #+BEGIN_SRC emacs-lisp
-(unless (package-installed-p 'org-wiki)
-  (quelpa '(org-wiki
+(unless (package-installed-p 'plain-org-wiki)
+  (quelpa '(plain-org-wiki
             :fetcher github
-            :repo "caiorss/org-wiki")))
-(use-package org-wiki
+            :repo "uwabami/plain-org-wiki")))
+(use-package plain-org-wiki
+  :bind (("C-x M" . plain-org-wiki ))
   :config
-  (setq org-wiki-location (concat (getenv "HOME") "/Public/cc-env/"))
-  (defun my:org-wiki-header ()
+  (setq pow-directory (concat (getenv "HOME") "/Public/cc-env/")
+        pow-extra-dirs (list user-emacs-directory))
+  (defun plain-org-wiki-insert-header ()
     "Insert a header at the top of the file, customize for personal use"
     (interactive)
     (save-excursion
@@ -2714,7 +2721,6 @@ Related [[wiki:index][Index]]
 ")
                (file-name-base (buffer-file-name))
                (file-name-base (buffer-file-name))))))
-  (advice-add 'org-wiki-header :override 'my:org-wiki-header)
   )
     #+END_SRC
 * Howm
@@ -2724,7 +2730,7 @@ Related [[wiki:index][Index]]
 (use-package howm
   :if (and (my:dpkg-status "howm")
            (executable-find "ag"))
-;;  :diminish howm-mode
+  :diminish howm-mode
   :bind (:map howm-mode-map
               ("C-c , ,"     . howm-menu)
               ("C-c C-c"     . nil)
@@ -2849,7 +2855,7 @@ Related [[wiki:index][Index]]
   #+END_SRC
 * MoinMoin: =moinmoin-mode=, =moomin.el=
   Debian Wiki や職場の Wiki を編集するための
-  MoinMoin の設定. 編集には [[https://github.com/lurdan/moomin-el][tototoshi/moomin-el: Edit MoinMoin with Emacs]] を使う.
+  MoinMoin の設定.
 ** =moinmoin-mode=
    MoinMoin 本体の moinmoin-mode 自体は古くて
    screen-lines に依存していたりするので folk して更新中.
@@ -2862,27 +2868,45 @@ Related [[wiki:index][Index]]
 (use-package moinmoin-mode)
    #+END_SRC
    そのうち気になる所を弄る，ということで．
-** =moomin=: =emacs-request + helm + moinmoin-mode=
-    最新の奴だと動かなかったので folk して多少弄った版を使うことに.
-    [[https://github.com/uwabami/moomin-el][uwabami/moomin-el: Edit MoinMoin with Emacs]]
- #+BEGIN_SRC emacs-lisp
+** =moomin=
+   元々は =moomin = emacs-request + helm + moinmoin-mode=
+   という奴. folk して ido-vertical-mode を support する様に
+   多少弄った版を使う。
+   [[https://github.com/uwabami/moomin-el][uwabami/moomin-el: Edit MoinMoin with Emacs]]
+#+BEGIN_SRC emacs-lisp
 (unless (locate-library "moomin")
   (quelpa '(moomin
             :fetcher github
             :repo "uwabami/moomin-el")))
 (use-package moomin
   :if (file-directory-p my:d:password-store)
-  :bind (("C-x w" . helm-moomin)
+  :bind (("C-x w" . ido-moomin)
          :map moinmoin-mode-map
          ("C-c C-c" . moomin-save-current-buffer)
          ("C-c C-s" . moomin-save-current-buffer)
          ("C-c C-o" . moomin-browse-current-page)
          ("C-c C-r" . moomin-reload-current-page))
   :config
+  (setq moomin-history-file
+        (concat my:d:tmp ".moomin_history"))
   (load (concat my:d:password-store "/moomin.gpg"))
-  (setq moomin-history-file (concat my:d:tmp "moomin_history"))
   )
- #+END_SRC
+#+END_SRC
+* プロジェクト管理: =projectile=
+  今一使いこなせてない...。
+  #+BEGIN_SRC emacs-lisp
+(use-package projectile
+  :config
+  (setq projectile-cache-file (concat my:d:tmp "projectile.cache")
+        projectile-known-projects-file (concat my:d:tmp "projectile-bookmarks.eld")
+        projectile-completion-system 'ido
+        projectile-mode-line
+        '(:eval (unless (string-match "-" (projectile-project-name))
+                  (format " [%s]" (projectile-project-name))))
+        )
+  (projectile-global-mode)
+  )
+  #+END_SRC
 * プログラム環境
 ** VCS: =magit=
    magit は Emacs の Git Frontend.
@@ -2894,52 +2918,24 @@ Related [[wiki:index][Index]]
   ;; (setq magit-completing-read-function 'magit-ido-completing-read)
   )
    #+END_SRC
-** VCS: =git-gutter=
-   git-gutter で差分を視覚的に表示 +そのうち飽きるかも...+
+** VCS: =ido-ghq=
+   ghq list を ido で選んで dired で開く
    #+BEGIN_SRC emacs-lisp
-(use-package git-gutter
-  :ensure t
-  :if (locate-library "magit")
+(unless (locate-library "ido-ghq")
+  (quelpa '(ido-ghq
+            :fetcher github
+            :repo "uwabami/ido-ghq")))
+(use-package ido-ghq
+  :bind (("C-x f" . ido-ghq-open))
   :config
-  (setq git-gutter:window-width 1
-        git-gutter:added-sign "+"
-        git-gutter:deleted-sign-sign "-"
-        git-gutter:modified-sign "="
-        git-gutter:unchanged-sign " " ;; 空白 1つ
-        git-gutter:separator-sign nil
-        git-gutter:lighter ""
-        git-gutter:always-show-separator nil
-        git-gutter:update-hooks '(after-save-hook after-revert-hook)
-        )
-  (global-git-gutter-mode +1)
+  (setq ido-ghq-short-list t)
   )
    #+END_SRC
-** VCS: =helm-ghq=
-   ghq があった時に helm でリストアップする。
-   フルパス表示がちょっとうざったいので、関数群をちょっと override することに。
+** 対応する括弧を見易く: =rainbow-delimiters=
    #+BEGIN_SRC emacs-lisp
-(use-package helm-ghq
-  :if (executable-find "ghq")
-  :ensure t
-  :bind (("C-x f" . helm-ghq))
+(use-package rainbow-delimiters
   :config
-  (defun my:helm-ghq--list-candidates ()
-    (with-temp-buffer
-      (unless (zerop (apply #'call-process
-                            helm-ghq-command-ghq nil t nil
-                            helm-ghq-command-ghq-arg-list))
-        (error "Failed: Can't get ghq list candidates"))
-      (let ((ghq-root (helm-ghq--root))
-            paths)
-        (goto-char (point-min))
-        (while (not (eobp))
-          (let ((path (helm-ghq--line-string)))
-            (push (cons (file-relative-name path ghq-root) path) paths))
-          (forward-line 1))
-        (reverse paths))))
-  (advice-add 'helm-ghq--list-candidates :override
-              #'my:helm-ghq--list-candidates)
-  )
+  (add-hook 'emacs-lisp-mode-hook #'rainbow-delimiters-mode))
    #+END_SRC
 ** 設定ファイル: =generic-x=
    #+BEGIN_SRC emacs-lisp
@@ -2949,10 +2945,9 @@ Related [[wiki:index][Index]]
    #+BEGIN_SRC emacs-lisp
 (use-package textile-mode
   :ensure t
-;;  :diminish textile-mode
+  :diminish textile-mode
   )
    #+END_SRC
-
 ** Markdown
    #+BEGIN_SRC emacs-lisp
 (use-package markdown-mode
@@ -2983,10 +2978,9 @@ Related [[wiki:index][Index]]
    =#RRGGBB= のカラーコードに勝手に色が付く．CSS の編集中なんかで地味に便利．
    #+BEGIN_SRC emacs-lisp
 (use-package rainbow-mode
-;;  :diminish rainbow-mode
+  :diminish rainbow-mode
   )
    #+END_SRC
-
 ** YAML
    #+BEGIN_SRC emacs-lisp
 (use-package yaml-mode
@@ -3134,10 +3128,12 @@ Related [[wiki:index][Index]]
 (use-package tex-jp
   :if (and (executable-find "uplatex")
            (my:dpkg-status "auctex"))
+  :defer t
+  :init (progn
+          (add-hook 'LaTeX-mode-hook #'TeX-source-correlate-mode)
+          (add-hook 'LaTeX-mode-hook #'TeX-PDF-mode)
+          (add-hook 'LaTeX-mode-hook #'turn-on-reftex))
   :config
-  (add-hook 'LaTeX-mode-hook 'TeX-source-correlate-mode)
-  (add-hook 'LaTeX-mode-hook 'TeX-PDF-mode)
-  (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
   (add-hook 'LaTeX-mode-hook
             (function
              (lambda ()
@@ -3261,18 +3257,18 @@ Related [[wiki:index][Index]]
   "original: https://github.com/larstvei/dot-emacs/blob/master/init.org"
   `(with-eval-after-load ,file
      (diminish ,mode ,new-name)))
-;; (my:diminish "isearch"          'isearch-mode)
-;; (my:diminish ""          'develock-mode)
+(my:diminish "isearch" 'isearch-mode)
+(my:diminish ""        'develock-mode)
 (setq auto-revert-mode-text "")
   #+END_SRC
   メジャーモードは =hook= で設定.
   #+BEGIN_SRC emacs-lisp
-;; (add-hook 'emacs-lisp-mode-hook '(lambda () (setq mode-name "")))
-;; (add-hook 'lisp-interaction-mode-hook '(lambda () (setq mode-name "")))
-;; (add-hook 'wl-folder-mode-hook  '(lambda () (setq mode-name "")))
-;; (add-hook 'wl-summary-mode-hook '(lambda () (setq mode-name "")))
-;; (add-hook 'wl-draft-mode-hook   '(lambda () (setq mode-name "")))
-;; (add-hook 'mime-view-mode-hook  '(lambda () (setq mode-name "")))
+(add-hook 'emacs-lisp-mode-hook '(lambda () (setq mode-name "")))
+(add-hook 'lisp-interaction-mode-hook '(lambda () (setq mode-name "")))
+(add-hook 'wl-folder-mode-hook  '(lambda () (setq mode-name "")))
+(add-hook 'wl-summary-mode-hook '(lambda () (setq mode-name "")))
+(add-hook 'wl-draft-mode-hook   '(lambda () (setq mode-name "")))
+(add-hook 'mime-view-mode-hook  '(lambda () (setq mode-name "")))
   #+END_SRC
 * フォントと色
   そろそろテーマにした方が良い，とは思ってはいる．
@@ -3323,8 +3319,8 @@ Related [[wiki:index][Index]]
  '(mode-line                           ((t (:foreground "#F6F3E8" :background "#222244" ))))
  '(mode-line-inactive                  ((t (:foreground "#666666" :background "#999999" :bold nil ))))
  '(fringe                              ((t (:foreground "#666666" :background "#282828" ))))
- '(hl-line                             ((t (:inherit highlight :underline t ))))
- '(highlight                           ((t (:background "#333333" ))))
+;; '(hl-line                             ((t (:inherit highlight :underline t ))))
+;; '(highlight                           ((t (:background "#333333" ))))
  '(minibuffer-prompt                   ((t (:foreground "#BF7FFF" ))))
  '(region                              ((t (:background "#222244" ))))
  ;; dired
@@ -3355,6 +3351,13 @@ Related [[wiki:index][Index]]
  '(helm-ff-symlink                     ((t (:inherit default :foreground "#7FFFFF" :bold t))))
  '(helm-ff-dotted-symlink-directory    ((t (:inherit helm-ff-symlink ))))
  '(helm-ff-invalid-symlink             ((t (:inherit default :foreground "#FF7F7F" ))))
+ ;; ido
+ '(ido-first-match                     ((t (:underline t))))
+ '(ido-only-match                      ((t (:foreground "#FFFF4C" :overline nil :weight bold))))
+ '(ido-subdir                          ((t (:inherit dired-directory))))
+ '(ido-vertical-first-match-face       ((t (:inherit ido-first-match))))
+ '(ido-vertical-match-face             ((t (:foreground "#4CFF4C"))))
+ ;; '(ido-virtual                         ((t nil)))
  ;; powerline
  '(powerline-active1                   ((t (:background "#000000":foreground "#F6F3E8"))))
  '(powerline-active2                   ((t (:background "#666666" :foreground "#F6F3E8"))))
@@ -3460,11 +3463,11 @@ Related [[wiki:index][Index]]
         powerline-utf-8-separator-left  #x20
         powerline-utf-8-separator-right #x20
         )
-(defpowerline my:powerline-vc
-  (when (and (buffer-file-name (current-buffer)) vc-mode)
-    (format "%s%s"
-            (char-to-string #x26a1)
-            (format-mode-line '(vc-mode vc-mode)))))
+  (defpowerline my:powerline-vc
+    (when (and (buffer-file-name (current-buffer)) vc-mode)
+      (format "%s%s"
+              (char-to-string #x26a1)
+              (format-mode-line '(vc-mode vc-mode)))))
   (defun my:powerline-theme ()
     "Setup customize theme."
     (interactive)

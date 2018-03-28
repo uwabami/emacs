@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-03-21 23:38:58
+#+DATE: 2018-03-28 18:36:14
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -2130,7 +2130,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                  (concat user-emacs-directory "README.org")))
   )
    #+END_SRC
-** Org-capture: 日記
+** Org-journal: 日記
    単一ファイルに記述すること，および
    エントリ作成時に日付を入れるために =org-jounnal-new-entry= を =advice= している
    #+BEGIN_SRC emacs-lisp
@@ -2196,6 +2196,14 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     (my:org-journal-add-date-entry nil)
     (goto-char (point-max))
     )
+  ;; @see https://github.com/sprig/org-capture-extension/issues/37
+  ;; Brackets '{' '}' in link description cause broken org-mode link #37]]
+(defun my:transform-square-brackets-to-round-ones (string-to-transform)
+  "Transforms [ into ( and ] into ), other chars left unchanged."
+  (concat
+   (mapcar #'(lambda (c) (if (equal c ?[) ?\( (if (equal c ?]) ?\) c)))
+           string-to-transform))
+  )
   (setq org-default-notes-file (concat org-directory "journal.org")
         org-capture-templates
         `(
@@ -2209,18 +2217,11 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
           ;; "* TODO <%<%Y-%m-%d>> %:subject %^g\n  %?\n  %a\n  #+BEGIN_QUOTE\n%i\n  #+END_QUOTE"
           ("e" "Email TODO" plain
            (function my:org-journal-add-date-entry-capture)
-           "** TODO [[wl:\%5Bmsgid:%:message-id-no-brackets\%5D][%(replace-regexp-in-string \"\\\\[.*\\\\] \" \"\" \"%:subject\")]]\n  :PROPERTIES:\n  :CREATED: %u\n  :END:%?\n"
+           "** TODO [[wl:\%5Bmsgid:%:message-id-no-brackets\%5D][%(my:transform-square-brackets-to-round-ones \"%:subject\")]]\n  :PROPERTIES:\n  :CREATED: %u\n  :END:%?\n"
            :prepend nil
            :unnarrowed nil
            :kill-buffer t
            )
-          ;; ("s" "Email Schedule" plain
-          ;;  (file (expand-file-name "Schedule.org" org-directory))
-          ;;  "* %:subject\n[[wl:\%5Bmsgid:%:message-id-no-brackets\%5D][%(replace-regexp-in-string \"\\\\[.*\\\\] \" \"\" \"%:subject\")]]\n %?\n%t\n"
-          ;;  :prepend nil
-          ;;  :unnarrowed nil
-          ;;  :kill-buffer t
-          ;;  )
           ("m" "Memo/Journal Entry" plain
            (function my:org-journal-add-date-entry-capture)
            "** MEMO %T %?"
@@ -2903,6 +2904,7 @@ Related [[wiki:index][Index]]
         projectile-mode-line
         '(:eval (unless (string-match "-" (projectile-project-name))
                   (format " [%s]" (projectile-project-name))))
+        projectile-file-exists-local-cache-expire (* 5 60)
         )
   (projectile-global-mode)
   )
@@ -3201,7 +3203,7 @@ Related [[wiki:index][Index]]
         zotelo-use-journal-abbreviation t)
 )
    #+END_SRC
-** 補完: =auto-complete=, =org-ac=
+** 補完: =auto-complete=
    ちょいちょい上手く動かなかったりするんだけれど、どうしたモンかな.
    #+BEGIN_SRC emacs-lisp
 (use-package auto-complete-config
@@ -3222,13 +3224,6 @@ Related [[wiki:index][Index]]
   ;;            ))
   ;;  (add-to-list 'ac-modes mode))
   )
-   #+END_SRC
-   org-mode には org-ac を使うことに: [[https://github.com/aki2o/org-ac][gitub: aki2o/org-ac]]
-   #+BEGIN_SRC emacs-lisp
-(use-package org-ac
-  :ensure t
-  :config
-  (org-ac/config-default))
    #+END_SRC
 * 基本的なキーバインドの設定
   既に手癖になってしまっているアレコレ．

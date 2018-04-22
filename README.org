@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-03-28 18:36:14
+#+DATE: 2018-04-19 15:02:07
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -1979,6 +1979,12 @@ Categories=GNOME;GTK;Office;Email;
 StartupNotify=false
 MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   #+END_SRC
+** メールからの予定の取り込み: =mhc=
+   #+BEGIN_SRC emacs-lisp
+(use-package mhc
+  :if (executable-find "mhc")
+  )
+   #+END_SRC
 * 校正，辞書等
 ** spell checker
    ispell はコマンドとして =aspell= を利用する．
@@ -2185,13 +2191,14 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    他には wanderlust のメールを扱えるように =org-wl= を読み込んで template を追加したぐらい．
    mu のインデックスの方が良いかもしれない，と最近思っている．
    #+BEGIN_SRC emacs-lisp
+(use-package org-wl
+  :if (and (my:dpkg-status "wl-beta")
+           (file-directory-p org-directory))
+  )
 (use-package org-capture
   :bind (("C-x m" . org-capture))
   :if (file-directory-p org-directory)
   :config
-  (if (and (my:dpkg-status "wl-beta")
-           (file-directory-p org-directory))
-      (use-package org-wl))
   (defun my:org-journal-add-date-entry-capture ()
     (my:org-journal-add-date-entry nil)
     (goto-char (point-max))
@@ -2236,8 +2243,9 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
            :unnarrowed nil
            :kill-buffer t
            )
-          ))
-  )
+          )
+        )
+)
    #+END_SRC
 ** Agenda: スケジュール，TODO 表示
    GTD 用の設定．後述の =org-gcal= と =orgmine= で取得したデータも表示している．
@@ -2312,6 +2320,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
              "Holidays.org"
              "Memo.org"
              "Schedule.org"
+             "MHC.org"
              "GFD.org"
              "KUSM.org"
              "DebianJP.org"
@@ -2365,6 +2374,10 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                                      '(face my:org-agenda-calendar-KUSM)))
                 (goto-char (point-min))
                 (while (re-search-forward "Schedule:" nil t)
+                  (add-text-properties (match-beginning 0) (point-at-eol)
+                                       '(face my:org-agenda-calendar-Schedule)))
+                (goto-char (point-min))
+                (while (re-search-forward "MHC:" nil t)
                   (add-text-properties (match-beginning 0) (point-at-eol)
                                        '(face my:org-agenda-calendar-Schedule)))
                 (goto-char (point-min))
@@ -2653,12 +2666,39 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (let ((outfile (org-export-output-file-name ".html" subtreep)))
     (org-export-to-file 'jekyll outfile async subtreep visible-only body-only ext-plist)))
      #+END_SRC
+** Org-Wiki
+    計算機関連のメモは [[https://github.com/uwabami/plain-org-wiki][uwabami/plain-org-wiki]] で書いています．
+    #+BEGIN_SRC emacs-lisp
+(unless (package-installed-p 'plain-org-wiki)
+  (quelpa '(plain-org-wiki
+            :fetcher github
+            :repo "uwabami/plain-org-wiki")))
+(defun my:load-plain-org-wiki ()
+  (lambda ()
+    (use-package plain-org-wiki
+      :bind (("C-x M" . plain-org-wiki ))
+      :config
+      (setq pow-directory (concat (getenv "HOME") "/Public/cc-env/")
+            pow-extra-dirs (list user-emacs-directory)
+            pow-template "#+TITLE:
+,#+DATE: 20
+,#+LANGUAGE: ja
+,#+REF: cc-env/%s
+,#+LAYOUT: cc-env
+,#+SETUPFILE: ~/Public/_setup.org
+,#+PERMALINK: /cc-env/%s.html
+Related [[wiki:index][Index]]
+")
+      )))
+(my:load-plain-org-wiki)
+    #+END_SRC
 ** Org-Project
    =org-publish-all= 等で batch で一括出力できるようにしておきます．
    #+BEGIN_SRC emacs-lisp
 (use-package htmlize)
 (use-package ox-publish
   :if (file-directory-p "~/Public/.git")
+  :init (my:load-plain-org-wiki)
   :config
   (defun org-publish-to-jekyll (plist filename pub-dir)
     "publishing org to html with Jekyll YAML front matter."
@@ -2691,39 +2731,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         )
   )
    #+END_SRC
-
-** Org-Wiki
-    計算機関連のメモは [[https://github.com/uwabami/plain-org-wiki][uwabami/plain-org-wiki]] で書いています．
-    #+BEGIN_SRC emacs-lisp
-(unless (package-installed-p 'plain-org-wiki)
-  (quelpa '(plain-org-wiki
-            :fetcher github
-            :repo "uwabami/plain-org-wiki")))
-(use-package plain-org-wiki
-  :bind (("C-x M" . plain-org-wiki ))
-  :config
-  (setq pow-directory (concat (getenv "HOME") "/Public/cc-env/")
-        pow-extra-dirs (list user-emacs-directory))
-  (defun plain-org-wiki-insert-header ()
-    "Insert a header at the top of the file, customize for personal use"
-    (interactive)
-    (save-excursion
-      (goto-char (point-min))
-      (insert (format
-               (string-trim "
-,#+TITLE:
-,#+DATE: 20
-,#+LANGUAGE: ja
-,#+REF: cc-env/%s
-,#+LAYOUT: cc-env
-,#+SETUPFILE: ~/Public/_setup.org
-,#+PERMALINK: /cc-env/%s.html
-Related [[wiki:index][Index]]
-")
-               (file-name-base (buffer-file-name))
-               (file-name-base (buffer-file-name))))))
-  )
-    #+END_SRC
 * Howm
   Org を使う前は Howm を使っていました.
   過去のメモを検索するためだけに未だに Howm を使っています.
@@ -2893,22 +2900,6 @@ Related [[wiki:index][Index]]
   (load (concat my:d:password-store "/moomin.gpg"))
   )
 #+END_SRC
-* プロジェクト管理: =projectile=
-  今一使いこなせてない...。
-  #+BEGIN_SRC emacs-lisp
-(use-package projectile
-  :config
-  (setq projectile-cache-file (concat my:d:tmp "projectile.cache")
-        projectile-known-projects-file (concat my:d:tmp "projectile-bookmarks.eld")
-        projectile-completion-system 'ido
-        projectile-mode-line
-        '(:eval (unless (string-match "-" (projectile-project-name))
-                  (format " [%s]" (projectile-project-name))))
-        projectile-file-exists-local-cache-expire (* 5 60)
-        )
-  (projectile-global-mode)
-  )
-  #+END_SRC
 * プログラム環境
 ** VCS: =magit=
    magit は Emacs の Git Frontend.
@@ -2958,10 +2949,14 @@ Related [[wiki:index][Index]]
   :init
   (add-hook 'markdown-mode-hook
             (lambda ()
-              (electric-indent-local-mode -1)))
+              (electric-indent-local-mode -1)
+              (orgtbl-mode)
+              ))
   (add-hook 'gfm-mode-hook
             (lambda ()
-              (electric-indent-local-mode -1)))
+              (electric-indent-local-mode -1)
+              (orgtbl-mode)
+              ))
   :config
   (setq markdown-command
         "pandoc --from markdown_github -t html5 --mathjax --highlight-style pygments")
@@ -3159,6 +3154,7 @@ Related [[wiki:index][Index]]
         TeX-source-correlate-start-server t
         TeX-view-program-selection '((output-dvi "xdvi")
                                      (output-pdf "Evince")
+                                     ;; (output-pdf "Okular")
                                      (output-html "xdg-open"))
         TeX-auto-save t
         TeX-auto-local  (expand-file-name "auctex/auto" my:d:tmp)

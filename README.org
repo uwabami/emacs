@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-04-19 15:02:07
+#+DATE: 2018-04-26 00:29:22
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -824,7 +824,7 @@ Emacs*useXIM: false
         (en-jp . ("．" . "，"))
         (en    . (". " . ", "))
         ))
-(setq-default skk-kutouten-type 'jp)
+(setq-default skk-kutouten-type 'en)
     #+END_SRC
     全角記号の変換: @ での日付入力は使わない
     #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
@@ -1036,15 +1036,31 @@ File.open(src, "r") {|f|
         flx-ido-threshold 10000)
   )
    #+END_SRC
-** =ido-vertical=: 縦に並べて表示
+** =ido-grid-mode=: 候補を並べて表示
+   横に並ぶと正直シンドイので並べてみる。
    #+BEGIN_SRC emacs-lisp
-(use-package ido-vertical-mode
+(unless (package-installed-p 'ido-grid)
+  (quelpa '(ido-grid
+            :fetcher github
+            :repo "larkery/ido-grid.el")))
+(use-package ido-grid
   :ensure t
   :config
-  (ido-vertical-mode t)
-  (setq ido-vertical-define-keys 'C-n-C-p-up-down
-        ido-max-window-height 0.3
+  (setq ido-grid-enabled t
+        ido-grid-start-small nil
+        ido-grid-rows 0.15
+        ido-grid-max-columns nil
+        ido-grid-indent 1
+        ido-grid-column-padding 3
+        ido-grid-bind-keys t
         )
+  (ido-grid-enable)
+  (defun my:ido-grid-force-one-columns (o &rest args)
+    (let ((ido-grid-max-columns 1) ;; single vertical col
+          (ido-grid-start-small nil) ;; popup immediately
+          (ido-grid-rows 0.15)) ;; 15% of frame height
+      (apply o args)
+      ))
   )
    #+END_SRC
 ** =ido-recentf=: recentf を ido で
@@ -3343,12 +3359,12 @@ Related [[wiki:index][Index]]
  '(helm-ff-dotted-symlink-directory    ((t (:inherit helm-ff-symlink ))))
  '(helm-ff-invalid-symlink             ((t (:inherit default :foreground "#FF7F7F" ))))
  ;; ido
- '(ido-first-match                     ((t (:underline t))))
+ '(ido-first-match                     ((t (:underline t :weight bold))))
  '(ido-only-match                      ((t (:foreground "#FFFF4C" :overline nil :weight bold))))
  '(ido-subdir                          ((t (:inherit dired-directory))))
- '(ido-vertical-first-match-face       ((t (:inherit ido-first-match))))
- '(ido-vertical-match-face             ((t (:foreground "#4CFF4C"))))
- ;; '(ido-virtual                         ((t nil)))
+ ;; '(ido-vertical-first-match-face       ((t (:inherit ido-first-match))))
+ ;;'(ido-vertical-match-face             ((t (:foreground "#4CFF4C"))))
+ ;; '(ido-grid-mode-match ((t (:inherit ido-first-match ))))
  ;; powerline
  '(powerline-active1                   ((t (:background "#000000":foreground "#F6F3E8"))))
  '(powerline-active2                   ((t (:background "#666666" :foreground "#F6F3E8"))))

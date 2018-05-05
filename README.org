@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-04-26 00:29:22
+#+DATE: 2018-05-05 16:53:38
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -3169,8 +3169,8 @@ Related [[wiki:index][Index]]
   (setq TeX-source-correlate-method 'synctex
         TeX-source-correlate-start-server t
         TeX-view-program-selection '((output-dvi "xdvi")
-                                     (output-pdf "Evince")
-                                     ;; (output-pdf "Okular")
+                                     ;; (output-pdf "Evince")
+                                     (output-pdf "Okular")
                                      (output-html "xdg-open"))
         TeX-auto-save t
         TeX-auto-local  (expand-file-name "auctex/auto" my:d:tmp)

@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-05-18 03:09:09
+#+DATE: 2018-05-24 19:14:22
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -1592,7 +1592,8 @@ video/*; xdg-open %s;
      サマリ行のフォーマット指定
      #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
 (setq wl-summary-line-format
-      "%T%P%1@%1>%Y/%M/%D %21(%t%[%19(%c %f%)%]%) %#%~%s")
+      "%T%P%1@%1>%Y/%M/%D %21(%t%[%19(%c %f%)%]%) %#%~%s"
+      wl-summary-width 80)
      #+END_SRC
      サマリ表示は切り詰めない
      #+BEGIN_SRC emacs-lisp  :tangle init-wl.el

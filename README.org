@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-05-24 19:14:22
+#+DATE: 2018-06-27 00:49:36
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -216,6 +216,28 @@ init.el: README.org
            (lambda ()
              (unless (member "*scratch*" (my:buffer-name-list))
                (my:make-scratch 1)))))
+   #+END_SRC
+** ファイル名を minibuffer におさまる様に整形
+   zsh 風味
+   #+BEGIN_SRC emacs-lisp
+(defun my:shorten-file-path (fpath max-length)
+  "Show up to `max-length' characters of a directory name `fpath' like zsh"
+  (let* ((path (reverse (split-string (abbreviate-file-name fpath) "/")))
+         (output "")
+         (top (string-join (reverse (last path 3)) "/"))
+         (vmax (- max-length 4 (length top)))
+         (path (butlast path 3))
+         )
+    (while (and path
+                (and (< (length output) vmax)
+                     (< (length (concat "/" (car path) output)) vmax)))
+      (setq output (concat "/" (car path) output))
+      (setq path (cdr path)))
+    ;; 省略
+    (when path
+      (setq output (concat "/..." output)))
+    (format "%s%s" top output)
+    ))
    #+END_SRC
 * 常に =cl-lib= を読み込む
   以前は(今も?)「 =cl.el= は名前衝突があるので byte compile 時以外は読み込まない様にしよう」
@@ -1068,9 +1090,11 @@ File.open(src, "r") {|f|
 (defun ido-recentf-open ()
   "Use `ido-completing-read' to \\[find-file] a recent file"
   (interactive)
-  (if (find-file (ido-completing-read "Find recent file: " recentf-list))
-      (message "Opening file...")
-    (message "Aborting")))
+  (let ((files (mapcar (lambda (f)
+                         (cons (my:shorten-file-path f 77) f))
+                       recentf-list)))
+    (let ((selected (ido-completing-read "Files: " (mapcar #'car files))))
+      (find-file (assoc-default selected files)))))
 (bind-key "C-x C-r" 'ido-recentf-open)
    #+END_SRC
 ** =smex=
@@ -1155,12 +1179,21 @@ File.open(src, "r") {|f|
   #+BEGIN_SRC emacs-lisp
 (use-package w3m
   :defer t
+  :bind (:w3m-mode-map
+         ("<left>"  . backward-char)
+         ("<right>" . forward-char)
+         ("<up>"    . previous-line)
+         ("<down>"  . next-line)
+         :w3m-minor-mode-map
+         ("<left>"  . backward-char)
+         ("<right>" . forward-char)
+         ("<up>"    . previous-line)
+         ("<down>"  . next-line))
   :config
   (setq w3m-search-default-engine "google"
-        w3m-use-cookies t)
-;; (with-eval-after-load "w3m-search"
-;;   '(add-to-list 'w3m-search-engine-alist
-;;                 '("google" "https://encrypted.google.com/search?num=100&ie=utf-8&oe=utf-8&hl=ja&safe=off&filter=0&pws=0&complete=0&gbv=1&q=%s" utf-8)))
+        w3m-use-cookies t
+        ;; w3m-fill-column -4
+        )
   )
   #+END_SRC
 
@@ -1237,8 +1270,7 @@ File.open(src, "r") {|f|
 (use-package w3m
   :config
   (require 'mime-w3m)
-  (setq w3m-fill-column 72
-        mime-view-text/html-previewer 'w3m
+  (setq mime-view-text/html-previewer 'w3m
         mime-setup-enable-inline-html 'w3m))
 (unless (locate-library "w3m")
   (progn
@@ -1593,7 +1625,7 @@ video/*; xdg-open %s;
      #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
 (setq wl-summary-line-format
       "%T%P%1@%1>%Y/%M/%D %21(%t%[%19(%c %f%)%]%) %#%~%s"
-      wl-summary-width 80)
+      wl-summary-width 84)
      #+END_SRC
      サマリ表示は切り詰めない
      #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
@@ -2272,7 +2304,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    なんて事もやっている．元ネタは [[https://julien.danjou.info/blog/2010/org-mode-and-holidays][Org-mode and holidays]]
   #+BEGIN_SRC emacs-lisp
 (use-package org-agenda
-  :diminish org-agenda-mode
   :if (file-directory-p my:d:org)
   :bind (("C-c a" . org-agenda))
   :init
@@ -2514,9 +2545,24 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 *** 一般設定
     #+BEGIN_SRC emacs-lisp
 (use-package ox
-    :config
+  :init
+  ;; 空行の削除
+  (defun my:remove-org-newlines-at-cjk-text (&optional _mode)
+    "先頭が '*', '#', '|' でなく、改行の前後が日本の文字の場合はその改行を除去"
+    (interactive)
+    (goto-char (point-min))
+    (while (re-search-forward "^\\([^|#*\n].+\\)\\(.\\)\n *\\(.\\)" nil t)
+      (if (and (> (string-to-char (match-string 2)) #x2000)
+               (> (string-to-char (match-string 3)) #x2000))
+          (replace-match "\\1\\2\\3"))
+      (goto-char (point-at-bol))))
+  (with-eval-after-load "ox"
+    (add-hook 'org-export-before-processing-hook
+              'my:remove-org-newlines-at-cjk-text))
+  :config
     (setq org-export-with-toc nil
-          org-export-with-section-numbers nil)
+          org-export-with-section-numbers nil
+          org-latex-with-hyperref nil)
     ;; for Beamer
     (add-to-list 'org-export-options-alist
                  '(:shortdate    "SHORTDATE" nil nil))
@@ -2534,6 +2580,51 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     (add-to-list 'org-export-options-alist
                  '(:redirect_to "redirect_to" nil nil))
     )
+    #+END_SRC
+*** LaTeX export
+    #+BEGIN_SRC emacs-lisp
+(use-package ox-latex
+  :config
+  (add-to-list 'org-latex-classes
+               '("my:platex"
+                 "\\documentclass[a4j]{jsarticle}
+                     [NO-DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
+                 ("\\section\{%s\}" . "\\section*\{%s\}")
+                 ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
+                 ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
+               )
+  ;;
+  (add-to-list 'org-latex-classes
+               '("my:bxjsartible"
+                 "\\documentclass[a4j,ja=standard]{bxjsarticle}
+                     [NO-DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
+                 ("\\section\{%s\}" . "\\section*\{%s\}")
+                 ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
+                 ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
+               )
+  ;; "verbatim" → "Verbatim" 置換
+  (defun my:org-latex-filter-fancyvrb (text backend _info)
+    "Convert begin/end{verbatim} to begin/end{Verbatim}.
+  Allows use of the fancyvrb latex package."
+    (when (or (org-export-derived-backend-p backend 'beamer)
+              (org-export-derived-backend-p backend 'latex))
+      (replace-regexp-in-string
+       "\\\\\\(begin\\|end\\){verbatim}"
+       "\\\\\\1{Verbatim}" text)))
+  (add-to-list 'org-export-filter-final-output-functions
+               'my:org-latex-filter-fancyvrb)
+
+  ;; "tabular" →  "Tabular"  置換
+  (defun my:org-latex-filter-bigtabular (text backend _info)
+    "Convert begin/end{tabular} to begin/end{Tabular}."
+    (when (or (org-export-derived-backend-p backend 'beamer)
+              (org-export-derived-backend-p backend 'latex))
+      (replace-regexp-in-string
+       "\\\\\\(begin\\|end\\){tabular}"
+       "\\\\\\1{Tabular}" text)))
+  (add-to-list 'org-export-filter-final-output-functions
+               'my:org-latex-filter-bigtabular)
+  )
     #+END_SRC
 *** Beamer export
     #+BEGIN_SRC emacs-lisp
@@ -2955,7 +3046,7 @@ Related [[wiki:index][Index]]
    #+BEGIN_SRC emacs-lisp
 (use-package textile-mode
   :ensure t
-  :diminish textile-mode
+;  :diminish textile-mode
   )
    #+END_SRC
 ** Markdown

@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-06-27 00:49:36
+#+DATE: 2018-07-01 16:31:27
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -366,6 +366,7 @@ init.el: README.org
   :PROPERTIES:
   :ID:       1621568c-82d3-455a-8a12-5b356ba79e89
   :END:
+  最近ぼちぼち他の拡張も入れる様になってきた.
 ** 標準機能の設定
 *** 表示関連
     起動時のスプラッシュ画面を表示しない
@@ -498,7 +499,7 @@ init.el: README.org
       savehist-file (concat my:d:tmp "history"))
     #+END_SRC
 ** ファイル，デイレクトリ整理
-   他にもイロイロありそう．
+   =~/.emacs.d/= 以下にファイルが転がるのがなんか嫌なので, 気がつく度に設定している.
    #+BEGIN_SRC emacs-lisp
 (use-package url
   :init
@@ -508,12 +509,20 @@ init.el: README.org
   :init
   (setq nsm-settings-file (concat my:d:tmp "network-settings.data")))
   #+END_SRC
+   他にもイロイロありそう．
 ** =recentf=: 最近使ったファイル履歴の保管
-    #+BEGIN_SRC emacs-lisp
+   ファイルを開く際には =ido-recentf-open= を使うので,
+   結局履歴を貯める設定をしている事になっている.
+   #+BEGIN_SRC emacs-lisp
 (use-package recentf
   :init
   (add-hook 'after-init-hook 'recentf-mode)
   :config
+  (defmacro my:suppressed-message (&rest body)
+    "Suppress new messages temporarily in the echo area and the `*Messages*' buffer while BODY is evaluated."
+    (declare (indent 0))
+    (let ((message-log-max nil))
+      `(with-temp-message (or (current-message) "") ,@body)))
   (setq recentf-max-saved-items 256
         recentf-save-file (expand-file-name (concat my:d:tmp "recentf"))
         recentf-auto-cleanup 'never
@@ -524,8 +533,15 @@ init.el: README.org
                           "/TAGS$"
                           "^/home/uwabami/.mozilla/\\.*"
                           ))
+  (run-with-idle-timer 30 t '(lambda ()
+                               (my:suppressed-message (recentf-save-list))))
   )
-    #+END_SRC
+   #+END_SRC
+   ディレクトリの履歴も取れるので recentf-ext を入れておく
+   #+BEGIN_SRC emacs-lisp
+(use-package recentf-ext
+  :ensure t)
+   #+END_SRC
 ** =.elc= と =.el= の timestamp を比較し，新しい方を読み込む
    =load-prefer-newer= は Emacs >= 24.4 から．
    #+BEGIN_SRC emacs-lisp
@@ -631,10 +647,12 @@ init.el: README.org
 (setq bookmark-default-file (concat my:d:share "bookmarks"))
    #+END_SRC
 ** =eww=: 内蔵ブラウザ
-   内蔵ブラウザの設定: 幅と背景色の指定がメインだが、上手くうごいてくれていない、ような。
+   幅と背景色の指定がメインだが、
+   上手くうごいてくれていない、ような。
    #+BEGIN_SRC emacs-lisp
 (use-package eww
   :config
+  ;; vi like <- vimperator, vimium に慣れてしまったので
   (bind-keys :map eww-mode-map
              ("r"  . eww-reload)
              ("o"  . eww)
@@ -642,43 +660,79 @@ init.el: README.org
              ("b"  . eww-back-url)
              ("]"  . eww-next-url)
              ("["  . eww-previous-url)
-             ("g"  . eww-top-url))
+             ("g"  . eww-top-url)
+             ("+"  . my:eww-increase-width)
+             ("-"  . my:eww-decrease-width)
+             ("h"  . backward-char)
+             ("j"  . next-line)
+             ("k"  . previous-line)
+             ("l"  . forward-char)
+             ("/"  . isearch-forward)
+             ("?"  . isearch-backward)
+             ("n"  . isearch-next)
+             ("N"  . isearch-previous)
+             ("f"  . ace-link-eww)
+             )
   ;; eww
   (unless (file-directory-p (expand-file-name "eww" my:d:tmp))
     (make-directory (expand-file-name "eww" my:d:tmp)))
   (setq eww-bookmarks-directory (expand-file-name "eww" my:d:tmp)
         eww-search-prefix "https://www.google.com/search?&gws_rd=cr&complete=0&pws=0&tbs=li:1&lr=lang_ja|lang_en&q=")
-  ;; 背景色等の設定
-  ;; (defvar eww-disable-colorize nil)
-  ;; (defun shr-colorize-region--disable (orig start end fg &optional bg &rest _)
-  ;;   (unless eww-disable-colorize
-  ;;     (funcall orig start end fg)))
-  ;; (advice-add 'shr-colorize-region :around 'shr-colorize-region--disable)
-  ;; (advice-add 'eww-colorize-region :around 'shr-colorize-region--disable)
-  ;; (defun eww-disable-color ()
-  ;;   "eww で文字色を反映させない"
-  ;;   (interactive)
-  ;;   (setq-local eww-disable-colorize t)
-  ;;   (eww-reload))
-  ;; (defun eww-enable-color ()
-  ;;   "eww で文字色を反映させる"
-  ;;   (interactive)
-  ;;   (setq-local eww-disable-colorize nil)
-  ;;   (eww-reload))
-  ;; テキスト幅の指定. setq で shr-width を指定しても反映されていない, 様な?
-  ;; (defun my:shr-insert-document--for-eww (&rest them)
-  ;;   (let ((shr-width 68)) (apply them)))
-  ;; (defun my:eww-display-html--fill-column (&rest them)
-  ;;   (advice-add 'shr-insert-document :around 'my:shr-insert-document--for-eww)
-  ;;   (unwind-protect
-  ;;       (apply them)
-  ;;     (advice-remove 'shr-insert-document 'my:shr-insert-document--for-eww)))
-  ;; (advice-add 'eww-display-html :around 'my:eww-display-html--fill-column)
+  ;; 背景色の設定
+  (defvar eww-disable-colorize t)
+  (defun shr-colorize-region--disable (orig start end fg &optional bg &rest _)
+    (unless eww-disable-colorize
+      (funcall orig start end fg)))
+  (advice-add 'shr-colorize-region :around 'shr-colorize-region--disable)
+  (advice-add 'eww-colorize-region :around 'shr-colorize-region--disable)
+  (defun eww-disable-color ()
+    "eww で文字色を反映させない"
+    (interactive)
+    (setq-local eww-disable-colorize t)
+    (eww-reload))
+  (defun eww-enable-color ()
+    "eww で文字色を反映させる"
+    (interactive)
+    (setq-local eww-disable-colorize nil)
+    (eww-reload))
+  (defun eww-disable-images ()
+    "eww で画像表示させない"
+    (interactive)
+    (setq-local shr-put-image-function 'shr-put-image-alt)
+    (eww-reload))
+  (defun eww-enable-images ()
+    "eww で画像表示させる"
+    (interactive)
+    (setq-local shr-put-image-function 'shr-put-image)
+    (eww-reload))
+  (defun shr-put-image-alt (spec alt &optional flags)
+    (insert alt))
+  ;; はじめから非表示
+  (defun eww-mode-hook--disable-image ()
+    (setq-local shr-put-image-function 'shr-put-image-alt))
+  (add-hook 'eww-mode-hook 'eww-mode-hook--disable-image)
+  ;; テキスト幅の指定
+  (defvar my:shr-width 78)
+  (defadvice shr-insert-document (around force-shr-width activate)
+    (let ((shr-width (min (1- (window-width)) my:shr-width)))
+      ad-do-it))
+  ;; increase
+  (defun my:eww-increase-width ()
+    (interactive)
+    (make-local-variable 'my:shr-width)
+    (setq my:shr-width  (+ 10 my:shr-width))
+    (eww-reload))
+  ;; decrease
+  (defun my:eww-decrease-width ()
+    (interactive)
+    (make-local-variable 'my:shr-width)
+    (setq my:shr-width  (- my:shr-width 10))
+    (eww-reload))
   ;; buffer を rename
-  ;; (defun eww-mode-hook--rename-buffer ()
-  ;;   "Rename eww browser's buffer so sites open in new page."
-  ;;   (rename-buffer "eww" t))
-  ;; (add-hook 'eww-mode-hook 'eww-mode-hook--rename-buffer)
+  (defun eww-mode-hook--rename-buffer ()
+    "Rename eww browser's buffer so sites open in new page."
+    (rename-buffer "eww" t))
+  (add-hook 'eww-mode-hook 'eww-mode-hook--rename-buffer)
   )
    #+END_SRC
 ** =browse-url=
@@ -714,6 +768,17 @@ init.el: README.org
   (unless (server-running-p)
     (server-start)))
    #+END_SRC
+* =ace-link=: ace によるリンク選択
+  eww では手放せないくらい便利
+  #+BEGIN_SRC emacs-lisp
+(use-package ace-link
+  :ensure t
+  :config
+  (with-eval-after-load 'eww
+    '(define-key eww-mode-map "f" 'ace-link-eww))
+  (ace-link-setup-default)
+  )
+  #+END_SRC
 * shell との連携
   詳細は
   - [[https://masutaka.net/chalow/2011-09-28-1.html][ターミナルの zsh と Emacs を風のように駆け抜ける！]]
@@ -1086,6 +1151,7 @@ File.open(src, "r") {|f|
   )
    #+END_SRC
 ** =ido-recentf=: recentf を ido で
+   "recentf-list" の結果を整形して, minibuffer に納まる様に縮小したり
    #+BEGIN_SRC emacs-lisp
 (defun ido-recentf-open ()
   "Use `ido-completing-read' to \\[find-file] a recent file"
@@ -1179,6 +1245,7 @@ File.open(src, "r") {|f|
   #+BEGIN_SRC emacs-lisp
 (use-package w3m
   :defer t
+  :disabled t
   :bind (:w3m-mode-map
          ("<left>"  . backward-char)
          ("<right>" . forward-char)
@@ -1261,23 +1328,11 @@ File.open(src, "r") {|f|
 (use-package elscreen-wl)
      #+END_SRC
 **** SEMI の追加設定
-     HTML メールを表示するために emacs-w3m を使う.
-     本当は eww でやりたいのだけれど base64 decode に難あり.
+     HTML メールを表示するために eww を使う(本当は eww でやりたいのだけれど base64 decode に難あり)
      mime-setup がロードされる前に記述する必要あり.
      #+BEGIN_SRC emacs-lisp :tangle init-wl.el
-;; (setq mime-view-text/html-previewer 'shr)
-;; (setq mime-setup-enable-inline-html 'shr)
-(use-package w3m
-  :config
-  (require 'mime-w3m)
-  (setq mime-view-text/html-previewer 'w3m
-        mime-setup-enable-inline-html 'w3m))
-(unless (locate-library "w3m")
-  (progn
-    (setq mime-view-text/html-previewer 'shr
-          mime-setup-enable-inline-html 'shr)))
-(with-eval-after-load 'shr
-  (defun shr-colorize-region (start end fg &optional bg) nil))
+(setq mime-view-text/html-previewer 'shr)
+(setq mime-setup-enable-inline-html 'shr)
 (use-package mime-setup)
      #+END_SRC
      どのアプリケーションで開くか → =xdg-open= に丸投げ．

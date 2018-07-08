@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-07-01 16:31:27
+#+DATE: 2018-07-05 01:35:01
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -532,6 +532,7 @@ init.el: README.org
                           "^/var/folders\\.*"
                           "/TAGS$"
                           "^/home/uwabami/.mozilla/\\.*"
+                          "\\.*草稿\\.*"
                           ))
   (run-with-idle-timer 30 t '(lambda ()
                                (my:suppressed-message (recentf-save-list))))
@@ -712,10 +713,17 @@ init.el: README.org
     (setq-local shr-put-image-function 'shr-put-image-alt))
   (add-hook 'eww-mode-hook 'eww-mode-hook--disable-image)
   ;; テキスト幅の指定
+  (setq shr-width 78)
   (defvar my:shr-width 78)
-  (defadvice shr-insert-document (around force-shr-width activate)
+  (defun my:shr-insert-document (&rest them)
     (let ((shr-width (min (1- (window-width)) my:shr-width)))
-      ad-do-it))
+      (apply them)))
+  (defun eww-display-html--fill-column (&rest them)
+    (advice-add 'shr-insert-document :around 'my:shr-insert-document)
+    (unwind-protect
+        (apply them)
+      (advice-remove 'shr-insert-document 'my:shr-insert-document)))
+  (advice-add 'eww-display-html :around 'eww-display-html--fill-column)
   ;; increase
   (defun my:eww-increase-width ()
     (interactive)
@@ -1328,11 +1336,20 @@ File.open(src, "r") {|f|
 (use-package elscreen-wl)
      #+END_SRC
 **** SEMI の追加設定
-     HTML メールを表示するために eww を使う(本当は eww でやりたいのだけれど base64 decode に難あり)
+     HTML メールを表示するために eww を使う.
      mime-setup がロードされる前に記述する必要あり.
      #+BEGIN_SRC emacs-lisp :tangle init-wl.el
 (setq mime-view-text/html-previewer 'shr)
 (setq mime-setup-enable-inline-html 'shr)
+;; 幅指定 → 実際の関数は eww の設定を参照
+(defun my:mime-shr-preview-text/html (&rest args)
+  (advice-add 'shr-insert-document :around 'my:shr-insert-document)
+  (unwind-protect
+      (apply args)
+    (advice-remove 'shr-insert-document 'my:shr-insert-document)))
+(advice-add 'mime-shr-preview-text/html :around
+            'my:mime-shr-preview-text/html)
+;;
 (use-package mime-setup)
      #+END_SRC
      どのアプリケーションで開くか → =xdg-open= に丸投げ．
@@ -1350,9 +1367,12 @@ video/*; xdg-open %s;
 (setq mime-situation-examples-file
       (concat my:d:tmp "mime-example"))
      #+END_SRC
-     text/plain を html より優先 → 最近は html を表示している
+     text/plain を html より優先
      #+BEGIN_SRC emacs-lisp :tangle no
-;; (set-alist 'mime-view-type-subtype-score-alist '(text . html) 0)
+(setq mime-view-type-subtype-score-alist
+      '(((text . plain) . 0)
+        ((text . html)  . 1)
+        ))
      #+END_SRC
      音を鳴らすアレやコレの無効化
     #+BEGIN_SRC emacs-lisp :tangle init-wl.el
@@ -1620,6 +1640,11 @@ video/*; xdg-open %s;
      #+BEGIN_SRC emacs-lisp   :tangle init-wl.el
 (setq wl-summary-mode-line-format "") ; "%f {%t}(%n/%u/%a)"
 (setq wl-message-mode-line-format "") ; "<< %f:%F>> [%m]"
+     #+END_SRC
+**** cache の制御
+     =~/.cache/elmo= の肥大化を防ぐ
+     #+BEGIN_SRC emacs-lisp
+(setq elmo-cache-expire-by-age 14)
      #+END_SRC
 *** キーバインド関連
     =use-package= で設定しておいた方が良いかなぁ...
@@ -2670,15 +2695,15 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                'my:org-latex-filter-fancyvrb)
 
   ;; "tabular" →  "Tabular"  置換
-  (defun my:org-latex-filter-bigtabular (text backend _info)
-    "Convert begin/end{tabular} to begin/end{Tabular}."
-    (when (or (org-export-derived-backend-p backend 'beamer)
-              (org-export-derived-backend-p backend 'latex))
-      (replace-regexp-in-string
-       "\\\\\\(begin\\|end\\){tabular}"
-       "\\\\\\1{Tabular}" text)))
-  (add-to-list 'org-export-filter-final-output-functions
-               'my:org-latex-filter-bigtabular)
+  ;; (defun my:org-latex-filter-bigtabular (text backend _info)
+  ;;   "Convert begin/end{tabular} to begin/end{Tabular}."
+  ;;   (when (or (org-export-derived-backend-p backend 'beamer)
+  ;;             (org-export-derived-backend-p backend 'latex))
+  ;;     (replace-regexp-in-string
+  ;;      "\\\\\\(begin\\|end\\){tabular}"
+  ;;      "\\\\\\1{Tabular}" text)))
+  ;; (add-to-list 'org-export-filter-final-output-functions
+  ;;              'my:org-latex-filter-bigtabular)
   )
     #+END_SRC
 *** Beamer export

@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-08-01 12:37:26
+#+DATE: 2018-08-20 01:52:06
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -2123,7 +2123,11 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 ** メールからの予定の取り込み: =mhc=
    #+BEGIN_SRC emacs-lisp
 (use-package mhc
-  :if (executable-find "mhc")
+  :if (file-directory-p (concat (getenv "HOME") "/.config/mhc"))
+  :config
+  (setq mhc-calendar-day-strings ["日" "月" "火" "水" "木" "金" "土"]
+        mhc-calendar-header-function 'mhc-calendar-make-header-ja
+        mhc-calendar-language 'japanese)
   )
    #+END_SRC
 * 校正，辞書等
@@ -2533,6 +2537,10 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                   (add-text-properties (match-beginning 0) (point-at-eol)
                                        '(face my:org-agenda-calendar-twitter)))
                 (goto-char (point-min))
+                (while (re-search-forward "誕生日:" nil t)
+                  (add-text-properties (match-beginning 0) (point-at-eol)
+                                       '(face org-agenda-date-weekend)))
+                (goto-char (point-min))
                 (while (re-search-forward "祝日:" nil t)
                   (add-text-properties (match-beginning 0) (point-at-eol)
                                        '(face org-agenda-date-weekend)))
@@ -2867,30 +2875,28 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     (org-export-to-file 'jekyll outfile async subtreep visible-only body-only ext-plist)))
      #+END_SRC
 ** Org-Wiki
-    計算機関連のメモは [[https://github.com/uwabami/plain-org-wiki][uwabami/plain-org-wiki]] で書いています．
+    計算機関連のメモは [[https://github.com/uwabami/org-wiki][uwabami/org-wiki]] で書いています．元々は
+    [[https://github.com/caiorss/org-wiki][caiorss/org-wiki]] を使っていたのですが helm 依存の部分を ido に書き換
+    えてます.
     #+BEGIN_SRC emacs-lisp
-(unless (package-installed-p 'plain-org-wiki)
-  (quelpa '(plain-org-wiki
+(unless (package-installed-p 'org-wiki)
+  (quelpa '(org-wiki
             :fetcher github
-            :repo "uwabami/plain-org-wiki")))
-(defun my:load-plain-org-wiki ()
-  (lambda ()
-    (use-package plain-org-wiki
-      :bind (("C-x M" . plain-org-wiki ))
-      :config
-      (setq pow-directory (concat (getenv "HOME") "/Public/cc-env/")
-            pow-extra-dirs (list user-emacs-directory)
-            pow-template "#+TITLE:
+            :repo "uwabami/org-wiki")))
+(use-package org-wiki
+  :if (file-directory-p "~/Public/cc-env")
+  :bind (("C-x M" . org-wiki ))
+  :config
+  (setq org-wiki-location "~/Public/cc-env"
+        org-wikitemplate "#+TITLE:
 ,#+DATE: 20
 ,#+LANGUAGE: ja
-,#+REF: cc-env/%s
+,#+REF: cc-env/%n
 ,#+LAYOUT: cc-env
 ,#+SETUPFILE: ~/Public/_setup.org
-,#+PERMALINK: /cc-env/%s.html
+,#+PERMALINK: /cc-env/%n.html
 Related [[wiki:index][Index]]
-")
-      )))
-(my:load-plain-org-wiki)
+"))
     #+END_SRC
 ** Org-Project
    =org-publish-all= 等で batch で一括出力できるようにしておきます．
@@ -2898,7 +2904,6 @@ Related [[wiki:index][Index]]
 (use-package htmlize)
 (use-package ox-publish
   :if (file-directory-p "~/Public/.git")
-  :init (my:load-plain-org-wiki)
   :config
   (defun org-publish-to-jekyll (plist filename pub-dir)
     "publishing org to html with Jekyll YAML front matter."
@@ -3100,6 +3105,25 @@ Related [[wiki:index][Index]]
   (load (concat my:d:password-store "/moomin.gpg"))
   )
 #+END_SRC
+* RSS Reader: =elfeed=
+  #+BEGIN_SRC emacs-lisp
+(use-package elfeed
+  :if (file-directory-p my:d:password-store)
+  :bind ("C-x e" . elfeed)
+  :config
+  (with-eval-after-load 'elfeed
+    (use-package elfeed-protocol)
+    (use-package elfeed-goodies)
+    (load (concat my:d:password-store "/elfeed.gpg")))
+  (if (not (file-directory-p (concat (getenv "HOME") "/.cache/elfeed")))
+      (make-directory (concat (getenv "HOME") "/.cache/elfeed"))
+    )
+  (setq elfeed-use-curl t
+        elfeed-db-directory (concat (getenv "HOME") "/.cache/elfeed")
+        )
+  (elfeed-protocol-enable)
+  )
+  #+END_SRC
 * プログラム環境
 ** VCS: =magit=
    magit は Emacs の Git Frontend.
@@ -3220,9 +3244,7 @@ Related [[wiki:index][Index]]
    #+END_SRC
    =rabbit-mode=: [[http://rabbit-shocker.org/ja/][Rabbit]] 編集用
    #+BEGIN_SRC emacs-lisp
-(use-package rabbit-mode
-  :mode "\\.rab$"
-  )
+(use-package rabbit-mode)
    #+END_SRC
    =rdoc-mode=: 本体の方はどうも動かないなぁ...
    #+BEGIN_SRC emacs-lisp
@@ -3456,7 +3478,7 @@ Related [[wiki:index][Index]]
     (progn
       (set-face-attribute 'default nil
                           :family "Cica"
-                          :height 135) ;; 135pt
+                          :height 180) ;; 135pt
       (set-background-color "#242424")
       )))
 (setq frame-background-mode (frame-parameter nil 'background-mode))

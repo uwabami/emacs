@@ -2209,6 +2209,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    #+BEGIN_SRC emacs-lisp
 (defvar my:d:org (concat (getenv "HOME") "/Nextcloud/org/"))
 (use-package org
+  :if (file-directory-p my:d:org)
   :bind (("C-x n s" . org-narrow-to-subtree)
          ("C-x n w" . widen))
   :init
@@ -2338,11 +2339,11 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    #+BEGIN_SRC emacs-lisp
 (use-package org-wl
   :if (and (my:dpkg-status "wl-beta")
-           (file-directory-p org-directory))
+           (file-directory-p my:d:org))
   )
 (use-package org-capture
   :bind (("C-x m" . org-capture))
-  :if (file-directory-p org-directory)
+  :if (file-directory-p my:d:org)
   :config
   (defun my:org-journal-add-date-entry-capture ()
     (my:org-journal-add-date-entry nil)
@@ -2356,7 +2357,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    (mapcar #'(lambda (c) (if (equal c ?[) ?\( (if (equal c ?]) ?\) c)))
            string-to-transform))
   )
-  (setq org-default-notes-file (concat org-directory "journal.org")
+  (setq org-default-notes-file (concat my:d:org "journal.org")
         org-capture-templates
         `(
           ("t" "TODO" plain
@@ -2474,7 +2475,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
              "redmine_FluidSoc.org"
              "redmine_KUSM.org"
              ))
-    (add-to-list 'org-agenda-files (concat org-directory file)))
+    (add-to-list 'org-agenda-files (concat my:d:org file)))
   (add-to-list 'org-agenda-files (expand-file-name "README.org" user-emacs-directory))
   ;; 表示のカスタマイズ
   (setq org-agenda-span 'day                   ;; day or week
@@ -2619,7 +2620,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    #+BEGIN_SRC emacs-lisp
 (use-package orgmine
   :if (and my:d:password-store
-           (file-directory-p org-directory))
+           (file-directory-p my:d:org))
   :diminish (orgmine-mode)
   :commands (orgmine-mode)
   :init

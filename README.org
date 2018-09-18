@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-08-20 01:52:06
+#+DATE: 2018-09-19 00:58:25
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -704,8 +704,12 @@ init.el: README.org
   (defun eww-enable-images ()
     "eww で画像表示させる"
     (interactive)
-    (setq-local shr-put-image-function 'shr-put-image)
+    (setq-local shr-put-image-function 'my:shr-put-image)
     (eww-reload))
+  (defun my:shr-put-image (spec alt &optional flags)
+    "call xdg-open"
+    (message "spec: %s" spec)
+    (shr-put-image (spec alt &optional flags)))
   (defun shr-put-image-alt (spec alt &optional flags)
     (insert alt))
   ;; はじめから非表示
@@ -787,7 +791,46 @@ init.el: README.org
   (ace-link-setup-default)
   )
   #+END_SRC
+* Elscreen [/]
+  modeline の表示そのものは無効化しておく．
+  - [ ] Debian パッケージ版は古い．更新すべき
+  #+BEGIN_SRC emacs-lisp
+(use-package elscreen
+  :ensure t
+  :init
+  (use-package elscreen-multi-term
+    :ensure t
+    )
+  (setq elscreen-tab-display-control nil
+        elscreen-prefix-key (kbd "C-o")
+        elscreen-display-tab 8
+        elscreen-display-screen-number nil)
+  :config
+  (elscreen-start))
+  #+END_SRC
 * shell との連携
+** multi-term
+   あまり使っていないけれど.
+   +これをメインに使うようになったら, 多分 zsh は止めた方が良いかも+
+   #+BEGIN_SRC emacs-lisp
+(use-package multi-term
+  :ensure t
+  :init
+  (add-hook 'term-mode-hook
+            (lambda ()
+              (bind-keys :map term-raw-map
+                         ("C-y" . term-paste)
+                         )))
+  (setq  multi-term-program shell-file-name
+         multi-term-program "/bin/zsh"
+         term-unbind-key-list '("C-o" "C-z" "C-x" "C-c" "C-h" "C-y" "<ESC>")
+         ansi-color-names-vector
+         [unspecified "#242424" "#FF4c4c" "#4cff4c" "#ffff4c"
+                      "#4c4cff" "#ff4cff" "#4cffff" "#f6f3e8"]
+         )
+  )
+   #+END_SRC
+** elscreen + zsh での連携
   詳細は
   - [[https://masutaka.net/chalow/2011-09-28-1.html][ターミナルの zsh と Emacs を風のように駆け抜ける！]]
   - [[http://syohex.hatenablog.com/entry/20111026/1319606395][cdeを改良]]
@@ -1184,20 +1227,6 @@ File.open(src, "r") {|f|
         )
   )
    #+END_SRC
-* Elscreen [/]
-  modeline の表示そのものは無効化しておく．
-  - [ ] Debian パッケージ版は古い．更新すべき
-  #+BEGIN_SRC emacs-lisp
-(use-package elscreen
-  :ensure t
-  :init
-  (setq elscreen-tab-display-control nil
-        elscreen-prefix-key (kbd "C-o")
-        elscreen-display-tab 8
-        elscreen-display-screen-number nil)
-  :config
-  (elscreen-start))
-  #+END_SRC
 * [[http://syohex.hatenablog.com/entry/20130914/1379166283][zoom-window]]
   #+BEGIN_SRC emacs-lisp
 (use-package zoom-window
@@ -1212,7 +1241,8 @@ File.open(src, "r") {|f|
   #+END_SRC
 * 認証関連: =id-manager=, =plstore=, =oauth2=, =password-store=
 ** id-manager の設定
-   ID と Password の簡単な組の管理をするのに非常に重宝している．
+   ID と Password の簡単な組の管理をするのに非常に重宝していました.
+   最近は =password-store= を使う様になったので, そのうち移行します.
    #+BEGIN_SRC emacs-lisp
 (use-package id-manager
   :ensure t
@@ -1244,7 +1274,17 @@ File.open(src, "r") {|f|
    #+BEGIN_SRC emacs-lisp
 (use-package password-store
   :ensure t
-  :if my:d:password-store
+  :if (and my:d:password-store
+           (executable-find "pass"))
+  )
+   #+END_SRC
+** auth-password-store
+   auth-source として =password-store= を使う拡張
+   #+BEGIN_SRC emacs-lisp
+(use-package auth-source-pass
+  :ensure t
+  :if (and my:d:password-store
+           (executable-find "pass"))
   )
    #+END_SRC
 * Emacs-w3m
@@ -1699,7 +1739,7 @@ video/*; xdg-open %s;
      #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
 (setq wl-summary-line-format
       "%T%P%1@%1>%Y/%M/%D %21(%t%[%19(%c %f%)%]%) %#%~%s"
-      wl-summary-width 84)
+      wl-summary-width 94)
      #+END_SRC
      サマリ表示は切り詰めない
      #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
@@ -2204,7 +2244,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   =org-mode= が無いと生きていけない体になりました
 ** 基本設定: =org=
    目新しい設定はしていない，と思う．強いて言えば
-   以前のメモの整理のために [[http://howm.osdn.jp/index-j.html][howm: Hitori Otegaru Wiki Modoki]] も使っているので,
+   以前のメモの整理のために [[http://howm.osdn.jp/index-j.html][howm: Hitori Otegaru Wiki Modoki]] も使っていたので,
    howm も有効にしている，ぐらい．
    #+BEGIN_SRC emacs-lisp
 (defvar my:d:org (concat (getenv "HOME") "/Nextcloud/org/"))
@@ -2218,10 +2258,13 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         org-return-follows-link t              ;; return でリンクを辿る
         org-startup-folded t                   ;; 見出しを畳んで表示
         org-startup-truncated t                ;; 折り返し無し
+        org-file-apps-defaults '((remote . emacs)  ;; xdg-open 任せ
+                                 (system . "xdg-open %s")
+                                 (t . "xdg-open %s"))
         org-emphasis-alist                     ;; 基本 "-nw" なので色変更
         (cons '("+" '(:strike-through t :foreground "#999999"))
               (cl-delete "+" org-emphasis-alist :key 'car :test 'equal))
-        ;; org-completion-use-ido nil
+        org-completion-use-ido t
         ;; GTD: 状態の追加
         org-todo-keywords
         '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)" "CANCEL(c)" "SOMEDAY(s)")
@@ -2283,7 +2326,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   )
    #+END_SRC
 ** Org-journal: 日記
-   単一ファイルに記述すること，および
+   単一ファイルに記述すること, および
    エントリ作成時に日付を入れるために =org-jounnal-new-entry= を =advice= している
    #+BEGIN_SRC emacs-lisp
 (use-package org-journal
@@ -2334,8 +2377,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    #+END_SRC
 ** Capture: メモ取り
    キーバインドは以前 changelog memo をやっていた時の癖で =C-x m= をメモにしている.
-   他には wanderlust のメールを扱えるように =org-wl= を読み込んで template を追加したぐらい．
-   mu のインデックスの方が良いかもしれない，と最近思っている．
+   他には wanderlust のメールを扱えるように =org-wl= を読み込んで template を追加したぐらい.
+   notmuch のインデックスの方が良いかもしれない, と最近思っている.
    #+BEGIN_SRC emacs-lisp
 (use-package org-wl
   :if (and (my:dpkg-status "wl-beta")
@@ -2686,6 +2729,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     #+BEGIN_SRC emacs-lisp
 (use-package ox-latex
   :config
+  (setq org-latex-pdf-process '("latexmk %f"))
   (add-to-list 'org-latex-classes
                '("my:platex"
                  "\\documentclass[a4j]{jsarticle}
@@ -2714,7 +2758,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
        "\\\\\\1{Verbatim}" text)))
   (add-to-list 'org-export-filter-final-output-functions
                'my:org-latex-filter-fancyvrb)
-
   ;; "tabular" →  "Tabular"  置換
   ;; (defun my:org-latex-filter-bigtabular (text backend _info)
   ;;   "Convert begin/end{tabular} to begin/end{Tabular}."
@@ -3106,26 +3149,19 @@ Related [[wiki:index][Index]]
   (load (concat my:d:password-store "/moomin.gpg"))
   )
 #+END_SRC
-* RSS Reader: =elfeed=
-  #+BEGIN_SRC emacs-lisp
-(use-package elfeed
-  :if (file-directory-p my:d:password-store)
-  :bind ("C-x e" . elfeed)
-  :config
-  (with-eval-after-load 'elfeed
-    (use-package elfeed-protocol)
-    (use-package elfeed-goodies)
-    (load (concat my:d:password-store "/elfeed.gpg")))
-  (if (not (file-directory-p (concat (getenv "HOME") "/.cache/elfeed")))
-      (make-directory (concat (getenv "HOME") "/.cache/elfeed"))
-    )
-  (setq elfeed-use-curl t
-        elfeed-db-directory (concat (getenv "HOME") "/.cache/elfeed")
-        )
-  (elfeed-protocol-enable)
-  )
-  #+END_SRC
 * プログラム環境
+** 文法チェック: =flycheck=
+   #+BEGIN_SRC emacs-lisp
+(use-package flycheck
+  :disabled t
+  :defer t
+  :init
+  (add-hook 'after-init-hook #'global-flycheck-mode)
+  :config
+  (setq flycheck-disabled-checkers
+        '(emacs-lisp-checkdoc))
+  )
+   #+END_SRC
 ** VCS: =magit=
    magit は Emacs の Git Frontend.
    結局の所 CUI でコマンド叩く事も多いけれど，これはこれで重宝している．
@@ -3216,6 +3252,8 @@ Related [[wiki:index][Index]]
   :mode "\\.rb\\'"
   :interpreter "ruby"
   :init
+  ;; マジックコメントは自分で入れる
+  (setq ruby-insert-encoding-magic-comment nil)
   (add-to-list 'auto-mode-alist '("Gemfile$" . ruby-mode)))
    #+END_SRC
    =ruby-electric=: 括弧や =do ... end= の補完
@@ -3477,9 +3515,16 @@ Related [[wiki:index][Index]]
   (interactive)
   (when window-system
     (progn
+      (set-frame-parameter nil 'alpha 90)
       (set-face-attribute 'default nil
                           :family "Cica"
-                          :height 180) ;; 135pt
+                          :height 180)
+      (set-face-attribute 'fixed-pitch nil
+                          :family "Cica"
+                          :height 180)
+      (set-face-attribute 'variable-pitch nil
+                          :family "Cica"
+                          :height 180)
       (set-background-color "#242424")
       )))
 (setq frame-background-mode (frame-parameter nil 'background-mode))
@@ -3518,8 +3563,17 @@ Related [[wiki:index][Index]]
  '(mode-line                           ((t (:foreground "#F6F3E8" :background "#222244" ))))
  '(mode-line-inactive                  ((t (:foreground "#666666" :background "#999999" :bold nil ))))
  '(fringe                              ((t (:foreground "#666666" :background "#282828" ))))
-;; '(hl-line                             ((t (:inherit highlight :underline t ))))
-;; '(highlight                           ((t (:background "#333333" ))))
+;; '(hl-line                           ((t (:inherit highlight :underline t ))))
+;; '(highlight                         ((t (:background "#333333" ))))
+ '(term-color-black                    ((t (:background "#242424" :foreground "#242424"))))
+ '(term-color-blue                     ((t (:background "#4c4cff" :foreground "#4c4cff"))))
+ '(term-color-cyan                     ((t (:background "#4cffff" :foreground "#4cffff"))))
+ '(term-color-green                    ((t (:background "#4cff4c" :foreground "#4cff4c"))))
+ '(term-color-magenta                  ((t (:background "#ff4cff" :foreground "#ff4cff"))))
+ '(term-color-red                      ((t (:background "#ff4c4c" :foreground "#ff4c4c"))))
+ '(term-color-white                    ((t (:background "#f6f3e8" :foreground "#f6f3e8"))))
+ '(term-color-yellow                   ((t (:background "#ffff4c" :foreground "#ffff4c"))))
+  ;;
  '(minibuffer-prompt                   ((t (:foreground "#BF7FFF" ))))
  '(region                              ((t (:background "#222244" ))))
  ;; dired
@@ -3723,7 +3777,6 @@ Related [[wiki:index][Index]]
             (message "init time: %.3f sec"
                      (float-time (time-subtract after-init-time before-init-time)))))
   #+END_SRC
-
 * LICENSE
   幾つかの関数の元ネタとして Emacs 本体のコードを参照したので，GPL-3 or later です．
   #+BEGIN_EXAMPLE

@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-09-19 00:58:25
+#+DATE: 2018-10-05 16:00:06
 #+LANGUAGE: ja
 #+REF: cc-env/Emacs
 #+LAYOUT: cc-env
@@ -985,6 +985,10 @@ Emacs*useXIM: false
     #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
 (setq skk-share-private-jisyo t)
     #+END_SRC
+    変換候補を縦に表示
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-show-inline 'vertical)
+    #+END_SRC
 *** インクリメンタルサーチ
     minibuffer 内では強制的に skk off.
     #+BEGIN_SRC emacs-lisp :tangle init-wl.el
@@ -1051,6 +1055,9 @@ File.open(src, "r") {|f|
   (setq skk-get-jisyo-directory (concat my:d:tmp "skk-jisyo")
         skk-large-jisyo (concat skk-get-jisyo-directory "/SKK-JISYO.L")))
  )
+(when (file-exists-p "/usr/local/share/skkdic/SKK-JISYO.emoji.utf8")
+  (setq skk-extra-jisyo-file-list
+        (list '("/usr/local/share/skkdic/SKK-JISYO.emoji.utf8" . utf-8))))
     #+END_SRC
     辞書登録の際に送り仮名を削除
     #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
@@ -1739,7 +1746,7 @@ video/*; xdg-open %s;
      #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
 (setq wl-summary-line-format
       "%T%P%1@%1>%Y/%M/%D %21(%t%[%19(%c %f%)%]%) %#%~%s"
-      wl-summary-width 94)
+      wl-summary-width 84)
      #+END_SRC
      サマリ表示は切り詰めない
      #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
@@ -2253,14 +2260,19 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :bind (("C-x n s" . org-narrow-to-subtree)
          ("C-x n w" . widen))
   :init
+  (with-eval-after-load "org"
+    (setq org-file-apps-defaults '((remote . emacs)  ;; xdg-open 任せ
+                                   (system . "xdg-open %s")
+                                   (t . "xdg-open %s")))
+    (setq org-file-apps-defaults-gnu '((remote . emacs)  ;; xdg-open 任せ
+                                       (system . "xdg-open %s")
+                                       (t . "xdg-open %s")))
+    )
   :config
   (setq org-directory my:d:org                 ;; Nextcloud に保存する
         org-return-follows-link t              ;; return でリンクを辿る
         org-startup-folded t                   ;; 見出しを畳んで表示
         org-startup-truncated t                ;; 折り返し無し
-        org-file-apps-defaults '((remote . emacs)  ;; xdg-open 任せ
-                                 (system . "xdg-open %s")
-                                 (t . "xdg-open %s"))
         org-emphasis-alist                     ;; 基本 "-nw" なので色変更
         (cons '("+" '(:strike-through t :foreground "#999999"))
               (cl-delete "+" org-emphasis-alist :key 'car :test 'equal))
@@ -3713,8 +3725,18 @@ Related [[wiki:index][Index]]
 (use-package powerline
   :config
   (setq powerline-default-separator 'utf-8
+        ;; 半角スペース
         powerline-utf-8-separator-left  #x20
-        powerline-utf-8-separator-right #x20
+        powerline-utf-8-separator-right  #x20
+        ;; デフォルトの⇔
+        ;; powerline-utf-8-separator-left  #xe0b0
+        ;; powerline-utf-8-separator-right #xe0b2
+        ;; 上三角, 下三角
+        ;; powerline-utf-8-separator-left  #xe0bc
+        ;; powerline-utf-8-separator-right #xe0be
+        ;; 壊れ枠
+        ;; powerline-utf-8-separator-left  #xe0d2
+        ;; powerline-utf-8-separator-right #xe0d4
         )
   (defpowerline my:powerline-vc
     (when (and (buffer-file-name (current-buffer)) vc-mode)

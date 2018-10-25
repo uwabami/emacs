@@ -1,19 +1,17 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-10-16 01:54:15
-#+LANGUAGE: ja
+#+DATE: 2018-10-25 14:01:09
+#+LANG: ja
 #+REF: cc-env/Emacs
-#+LAYOUT: cc-env
+#+LAYOUT: default
 #+PERMALINK: /cc-env/Emacs.html
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
-#+MACRO: travis @@html:<img src="https://travis-ci.org/$1.svg?branch=master" class="travis_badge">@@
-#+MACRO: ghribbon @@html:<style>#forkongithub a{background:#000;color:#fff;text-decoration:none;font-family:arial,sans-serif;text-align:center;font-weight:bold;padding:5px 40px;font-size:1rem;line-height:2rem;position:relative;transition:0.5s;}#forkongithub a:hover{background:#c11;color:#fff;}#forkongithub a::before,#forkongithub a::after{content:"";width:100%;display:block;position:absolute;top:1px;left:0;height:1px;background:#fff;}#forkongithub a::after{bottom:1px;top:auto;}@media screen and (min-width:800px){#forkongithub{position:fixed;display:block;top:0;right:0;width:200px;overflow:hidden;height:200px;z-index:9999;}#forkongithub a{width:200px;position:absolute;top:120px;right:15px;transform:rotate(45deg);-webkit-transform:rotate(45deg);-ms-transform:rotate(45deg);-moz-transform:rotate(45deg);-o-transform:rotate(45deg);box-shadow:4px 4px 10px rgba(0,0,0,0.8);}}</style><span id="forkongithub"><a href="https://github.com/$1">Fork me on GitHub</a></span>@@
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
-  {{{travis(uwabami/emacs)}}}
-  [[https://img.shields.io/badge/License-GPLv3-blue.svg]]
-  {{{ghribbon(uwabami/emacs)}}}
+  #+HTML: <amp-img src="https://travis-ci.org/uwabami/emacs.svg?branch=master" width="72px" height="20px" layout=fixed class="travis_badge"></amp-img>
+  #+HTML: <amp-img src="https://img.shields.io/badge/License-GPLv3-blue.svg" width="92px" height="20px" layout="fixed"></amp-img>
+  #+HTML: <a href="https://github.com/uwabami/emacs"><span class="icon-github"><svg id="SVGRoot" width="20px" height="20px" version="1.1" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="m5.4144 12.761c0 0.0645-0.0742 0.11613-0.16774 0.11613-0.10645 0.01-0.18064-0.0419-0.18064-0.11613 0-0.0645 0.0742-0.11613 0.16774-0.11613 0.0968-0.01 0.18064 0.0419 0.18064 0.11613zm-1.0032-0.14516c-0.0226 0.0645 0.0419 0.13871 0.13871 0.15806 0.0839 0.0323 0.18064 0 0.2-0.0645 0.0194-0.0645-0.0419-0.13871-0.13871-0.16775-0.0839-0.0226-0.17742 0.01-0.2 0.0742zm1.4258-0.0548c-0.0935 0.0226-0.15806 0.0839-0.14838 0.15806 0.01 0.0645 0.0935 0.10645 0.19032 0.0839 0.0936-0.0226 0.15806-0.0839 0.14839-0.14838-0.01-0.0613-0.0968-0.10323-0.19033-0.0935zm2.1226-12.361c-4.4742 0-7.8968 3.3968-7.8968 7.871 0 3.5774 2.2516 6.6387 5.4677 7.7161 0.41291 0.0742 0.55807-0.18064 0.55807-0.39032 0-0.2-0.01-1.3032-0.01-1.9806 0 0-2.2581 0.48387-2.7323-0.96129 0 0-0.36774-0.93871-0.89677-1.1806 0 0-0.73871-0.50645 0.0516-0.49677 0 0 0.80323 0.0645 1.2452 0.83226 0.70645 1.2452 1.8903 0.88709 2.3516 0.67419 0.0742-0.51613 0.28387-0.87419 0.51613-1.0871-1.8032-0.2-3.6226-0.46129-3.6226-3.5645 0-0.8871 0.24516-1.3323 0.76129-1.9-0.0839-0.20968-0.35806-1.0742 0.0839-2.1903 0.6742-0.20967 2.2258 0.87097 2.2258 0.87097 0.64516-0.18064 1.3387-0.27419 2.0258-0.27419 0.68709 0 1.3806 0.0936 2.0258 0.27419 0 0 1.5516-1.0839 2.2258-0.87097 0.44193 1.1194 0.16774 1.9806 0.0839 2.1903 0.51613 0.57096 0.83226 1.0161 0.83226 1.9 0 3.1129-1.9 3.3613-3.7032 3.5645 0.29678 0.25484 0.54839 0.73871 0.54839 1.4968 0 1.0871-0.01 2.4322-0.01 2.6968 0 0.20968 0.14839 0.46452 0.55807 0.39032 3.2258-1.071 5.4129-4.1322 5.4129-7.7097 0-4.4742-3.629-7.871-8.1032-7.871zm-4.7613 11.126c-0.0419 0.0323-0.0323 0.10646 0.0226 0.16775 0.0516 0.0516 0.12581 0.0742 0.16775 0.0323 0.0419-0.0323 0.0323-0.10645-0.0226-0.16774-0.0516-0.0516-0.12581-0.0742-0.16775-0.0323zm-0.34838-0.26129c-0.0226 0.0419 0.01 0.0935 0.0742 0.12581 0.0516 0.0323 0.11613 0.0226 0.13871-0.0226 0.0226-0.0419-0.01-0.0935-0.0742-0.12581-0.0645-0.0194-0.11613-0.01-0.13871 0.0226zm1.0452 1.1484c-0.0516 0.0419-0.0323 0.13871 0.0419 0.2 0.0742 0.0742 0.16775 0.0839 0.20968 0.0323 0.0419-0.0419 0.0226-0.13871-0.0419-0.2-0.071-0.0742-0.16775-0.0839-0.20968-0.0323zm-0.36774-0.47419c-0.0516 0.0323-0.0516 0.11613 0 0.19032 0.0516 0.0742 0.13871 0.10645 0.18064 0.0742 0.0516-0.0419 0.0516-0.1258 0-0.2-0.0452-0.0742-0.12903-0.10645-0.18064-0.0645z" fill="currentColor" stroke-width=".032258"/></svg></span></a>
 
   基本方針は以下の通り:
 ** Emacs のパッケージ(=package.el=)と [[https://github.com/quelpa/quelpa][quelpa]], [[https://github.com/jwiegley/use-package][use-package]] を使う
@@ -1361,8 +1359,10 @@ File.open(src, "r") {|f|
 **** rail
      SEMI や FLIM などの UA の表示に [[http://uwabami.github.com/rail/][rail]] を使っている.
      ちなみに rail を有効にすると, 以下の様に User-Agent が表示される
-     #+ATTR_HTML: with="50%"
-     [[https://uwabami.github.io/software/rail/images/wanderlust_with_or_without_rail.png]]
+     #+HTML: <div class="col-7 px2 mx-auto">
+     #+HTML: <amp-img layout="responsive" width=640 height=400 src="https://uwabami.github.io/software/rail/images/wanderlust_with_or_without_rail.png" alt="rail preview"></amp-img>
+     #+HTML: </div>
+
      #+BEGIN_SRC emacs-lisp :tangle init-wl.el
 (eval-when-compile (require 'mime-def))
 (use-package rail
@@ -1789,7 +1789,7 @@ video/*; xdg-open %s;
       (append wl-summary-line-format-spec-alist
               '((?> (my:wl-summary-line-for-me)))))
      #+END_SRC
-**** 添付ファイルがあったら, サマリ行に "@" を付ける
+**** 添付ファイルがあったら, サマリ行に @ を付ける
      #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
 (setq wl-summary-line-format-spec-alist
       (append wl-summary-line-format-spec-alist
@@ -2319,22 +2319,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     (set (make-local-variable 'time-stamp-end)   "\$")
     )
   (add-hook 'org-mode-hook 'my:org-timestamp-hook)
-  )
-   #+END_SRC
-** Org-Id, Orglink
-   ファイル間のリンクを uuid で行なう設定
-   #+BEGIN_SRC emacs-lisp
-(use-package org-id
-  :bind (("C-c l"   . org-store-link)
-         ("C-c C-l" . org-insert-link))
-  :config
-  (setq org-id-link-to-org-use-id 'create-if-interactive-and-no-custom-id
-        org-id-track-globally t
-        )
-  (when (file-directory-p "~/Public/cc-env")
-    (setq org-id-extra-files (f-glob "*.org" "~/Public/cc-env"))
-    (add-to-list 'org-id-extra-files
-                 (concat user-emacs-directory "README.org")))
   )
    #+END_SRC
 ** Org-journal: 日記
@@ -2948,50 +2932,11 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 ,#+DATE: 20
 ,#+LANGUAGE: ja
 ,#+REF: cc-env/%n
-,#+LAYOUT: cc-env
-,#+SETUPFILE: ~/Public/_setup.org
+,#+LAYOUT: default
 ,#+PERMALINK: /cc-env/%n.html
 Related [[wiki:index][Index]]
 "))
     #+END_SRC
-** Org-Project
-   =org-publish-all= 等で batch で一括出力できるようにしておきます．
-   #+BEGIN_SRC emacs-lisp
-(use-package htmlize)
-(use-package ox-publish
-  :if (file-directory-p "~/Public/.git")
-  :config
-  (defun org-publish-to-jekyll (plist filename pub-dir)
-    "publishing org to html with Jekyll YAML front matter."
-    (org-id-update-id-locations)
-    (org-publish-org-to 'jekyll filename ".html" plist pub-dir))
-  (setq org-publish-use-timestamps-flag t
-        org-publish-timestamp-directory "~/Public/.org-timestamps/"
-        org-publish-project-alist
-        '(("org"
-           :base-directory "~/Public/"
-           :base-extension "org"
-           :exclude "\\(_.*\\|cc-env\\)"
-           :publishing-directory "~/Public/"
-           :publishing-function org-publish-to-jekyll
-           :recursive t
-           :with-toc nil
-           :headline-levels 5
-           )
-          ("cc-env"
-           :base-directory "~/Public/cc-env/"
-           :base-extension "org"
-           :publishing-directory "~/Public/cc-env/"
-           :publishing-function org-publish-to-jekyll
-           :recursive t
-           :with-toc t
-           :headline-levels 5
-           )
-          ;; ("web" :components ("org" "cc-env"))
-          )
-        )
-  )
-   #+END_SRC
 * Howm
   Org を使う前は Howm を使っていました.
   過去のメモを検索するためだけに未だに Howm を使っています.

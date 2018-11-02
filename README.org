@@ -1,10 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-10-25 14:01:09
-#+LANG: ja
-#+REF: cc-env/Emacs
-#+LAYOUT: default
-#+PERMALINK: /cc-env/Emacs.html
+#+DATE: 2018-10-31 11:16:50
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．

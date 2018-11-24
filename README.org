@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-10-31 11:16:50
+#+DATE: 2018-11-02 18:20:23
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -3057,10 +3057,10 @@ Related [[wiki:index][Index]]
   (load (concat my:d:password-store "/tdiary-mode.gpg"))
   (setq tdiary-browser-function 'browser-url
         tdiary-coding-system 'utf-8-dos
-        tdiary-style-mode 'rd-mode
+        tdiary-style-mode 'org-mode
         tdiary-hour-offset 2
         tdiary-text-save-p t
-        tdiary-text-suffix ".rd")
+        tdiary-text-suffix ".org")
   )
   #+END_SRC
 * MoinMoin: =moinmoin-mode=, =moomin.el=

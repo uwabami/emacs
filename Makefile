@@ -27,12 +27,12 @@ init.el: README.org
 		  (org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\"))"
 
 init.elc: $(ELC)
-	$(EMACS) -l init.el -batch -f batch-byte-compile init.el
+	$(EMACS) -q -l init.el -batch -f batch-byte-compile init.el
 	@rm -f init.el
 $(ELC): $(EL)
 $(EL): init.el
 %.elc: %.el
-	$(EMACS) -l init.el -batch -f batch-byte-compile $<
+	$(EMACS) -q -l init.el -batch -f batch-byte-compile $<
 	@rm -f $<
 
 clean:

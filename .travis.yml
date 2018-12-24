@@ -17,4 +17,8 @@ env:
 before_script:
   - sh .travis-ci/install-evm.sh $EVM_EMACS
 script:
-  - make
+  - make init.el
+  - make bootstrap
+  - make init.elc
+  - make clean
+  - make distclean

@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-12-20 18:21:26
+#+DATE: 2018-12-24 17:06:02
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -30,7 +30,7 @@ init.el: README.org
 	$(EMACS) -q --batch --eval \
 		 "(progn \
 		    (require 'ob-tangle) \
-		    (org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\")))"
+		    (org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\"))"
 %.elc: %.el
 	$(EMACS) -l $< -batch -f batch-byte-compile $<
    #+END_SRC
@@ -94,6 +94,8 @@ init.el: README.org
 (add-to-list 'package-archives '("org"   . "http://orgmode.org/elpa/") t)
 (package-refresh-contents)
 (package-initialize)
+(unless (package-installed-p 'package-utils)
+  (package-install 'package-utils))
 (package-install pkg-install)
    #+END_SRC
    batch でのインストールは例えば

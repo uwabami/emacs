@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-11-02 18:20:23
+#+DATE: 2018-12-20 18:21:26
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -790,11 +790,7 @@ init.el: README.org
   - [ ] Debian パッケージ版は古い．更新すべき
   #+BEGIN_SRC emacs-lisp
 (use-package elscreen
-  :ensure t
   :init
-  (use-package elscreen-multi-term
-    :ensure t
-    )
   (setq elscreen-tab-display-control nil
         elscreen-prefix-key (kbd "C-o")
         elscreen-display-tab 8
@@ -1126,7 +1122,7 @@ File.open(src, "r") {|f|
          )
   :config
   (ido-mode t)
-  ;; (ido-everywhere t)  <- Wanderlust みたいに，過去の選択を覚えている奴と相性悪い.
+  ;; (ido-everywhere t)  ; <- Wanderlust みたいに, 過去の選択を覚えている奴と相性悪い.
   (setq ido-enable-prefix nil             ; prefix match 入力を先頭一致可能
         ido-confirm-unique-completion t   ; TAB で名前の一致まで. その後 RET で実行
         ido-enable-flex-matching t        ; flx matching を試す際には prefix を無効化すること
@@ -1191,12 +1187,13 @@ File.open(src, "r") {|f|
         ido-grid-indent 1
         ido-grid-column-padding 3
         ido-grid-bind-keys t
+        ido-max-directory-size 100000  ;; avoid [Too Big]
         )
   (ido-grid-enable)
   (defun my:ido-grid-force-one-columns (o &rest args)
-    (let ((ido-grid-max-columns 1) ;; single vertical col
+    (let ((ido-grid-max-columns 1)   ;; single vertical col
           (ido-grid-start-small nil) ;; popup immediately
-          (ido-grid-rows 0.15)) ;; 15% of frame height
+          (ido-grid-rows 0.15))      ;; 15% of frame height
       (apply o args)
       ))
   )
@@ -1228,18 +1225,6 @@ File.open(src, "r") {|f|
         )
   )
    #+END_SRC
-* [[http://syohex.hatenablog.com/entry/20130914/1379166283][zoom-window]]
-  #+BEGIN_SRC emacs-lisp
-(use-package zoom-window
-  :ensure t
-  :bind ("C-x C-z" . zoom-window-zoom)
-  :init
-  (setq zoom-window-use-elscreen t)
-  :config
-  (zoom-window-setup)
-  (setq zoom-window-mode-line-color "#7fff7f")
-  )
-  #+END_SRC
 * 認証関連: =id-manager=, =plstore=, =oauth2=, =password-store=
 ** id-manager の設定
    ID と Password の簡単な組の管理をするのに非常に重宝していました.
@@ -1375,7 +1360,7 @@ File.open(src, "r") {|f|
 **** elscreen-wl
      メール作成時に =elscreen= と連携してくれる．便利
      #+BEGIN_SRC emacs-lisp :tangle init-wl.el
-(use-package elscreen-wl)
+;; (use-package elscreen-wl)
      #+END_SRC
 **** SEMI の追加設定
      HTML メールを表示するために eww を使う.
@@ -2173,6 +2158,34 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         mhc-calendar-language 'japanese)
   )
    #+END_SRC
+* カレンダー: =japanese-holidays=
+  日本の祝日を表示するために =japanese-holidays= をインストール
+  #+BEGIN_SRC emacs-lisp
+(use-package japanese-holidays
+  :ensure t
+  :init
+  (add-hook 'calendar-today-visible-hook   'japanese-holiday-mark-weekend)
+  (add-hook 'calendar-today-invisible-hook 'japanese-holiday-mark-weekend)
+  (add-hook 'calendar-today-visible-hook   'calendar-mark-today)
+  :config
+  (setq calendar-holidays               ; とりあえず日本のみを表示
+        (append japanese-holidays holiday-local-holidays)
+        mark-holidays-in-calendar t     ; 祝日をカレンダーに表示
+        calendar-month-name-array       ; 月と曜日の表示調整
+        ["01" "02" "03" "04" "05" "06" "07" "08" "09" "10" "11" "12" ]
+        calendar-day-name-array
+        ["日" "月" "火" "水" "木" "金" "土"]
+        calendar-day-header-array
+        ["日" "月" "火" "水" "木" "金" "土"]
+        calendar-date-style 'iso         ; ISO format (YYYY/MM/DD) に変更
+        japanese-holiday-weekend '(0 6)  ; 土曜日・日曜日を祝日として表示
+        japanese-holiday-weekend-marker
+        '(holiday nil nil nil nil nil japanese-holiday-saturday)
+        ;; 日曜開始
+        calendar-week-start-day 0)
+  (calendar-set-date-style 'iso)
+  )
+  #+END_SRC
 * 校正，辞書等
 ** spell checker
    ispell はコマンドとして =aspell= を利用する．
@@ -2215,34 +2228,20 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
           (ndeb   "/usr/local/share/dict/colloc"    :alias "研究社 英和活用大辞典 ")
           )))
    #+END_SRC
-* カレンダー: =japanese-holidays=
-  日本の祝日を表示するために =japanese-holidays= をインストール
-  #+BEGIN_SRC emacs-lisp
-(use-package japanese-holidays
+** flycheck
+   プログラムのlint集
+   #+BEGIN_SRC emacs-lisp
+(use-package flycheck
   :ensure t
-  :init
-  (add-hook 'calendar-today-visible-hook   'japanese-holiday-mark-weekend)
-  (add-hook 'calendar-today-invisible-hook 'japanese-holiday-mark-weekend)
-  (add-hook 'calendar-today-visible-hook   'calendar-mark-today)
+  :diminish flycheck-mode
+  ;;  :init (use-package flycheck-pos-tip :ensure t)
   :config
-  (setq calendar-holidays               ; とりあえず日本のみを表示
-        (append japanese-holidays holiday-local-holidays)
-        mark-holidays-in-calendar t     ; 祝日をカレンダーに表示
-        calendar-month-name-array       ; 月と曜日の表示調整
-        ["01" "02" "03" "04" "05" "06" "07" "08" "09" "10" "11" "12" ]
-        calendar-day-name-array
-        ["日" "月" "火" "水" "木" "金" "土"]
-        calendar-day-header-array
-        ["日" "月" "火" "水" "木" "金" "土"]
-        calendar-date-style 'iso         ; ISO format (YYYY/MM/DD) に変更
-        japanese-holiday-weekend '(0 6)  ; 土曜日・日曜日を祝日として表示
-        japanese-holiday-weekend-marker
-        '(holiday nil nil nil nil nil japanese-holiday-saturday)
-        ;; 日曜開始
-        calendar-week-start-day 0)
-  (calendar-set-date-style 'iso)
+  (add-hook 'after-init-hook #'global-flycheck-mode)
+  ;; chktex
+  (setq flycheck-tex-chktex-executable "~/bin/flycheck_chktex.sh")
+  ;;
   )
-  #+END_SRC
+   #+END_SRC
 * Org
   =org-mode= が無いと生きていけない体になりました
 ** 基本設定: =org=
@@ -2598,6 +2597,10 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         org-edit-src-content-indentation 0
         org-src-preserve-indentation t
         )
+  (when (featurep 'flycheck)
+    (defun my:disable-fylcheck-in-org-src-block ()
+      (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc)))
+    (add-hook 'org-src-mode-hook 'my:disable-fylcheck-in-org-src-block))
   )
     #+END_SRC
 *** org-ditaa
@@ -2967,7 +2970,7 @@ Related [[wiki:index][Index]]
   ;; title header は "*"
   (setq howm-view-title-header "*")
   ;; :config
-  (use-package "elscreen-howm")
+  ;; (use-package "elscreen-howm")
   ;; 色付けは org-mode 任せ: howm の font-lock を無効化
   (setq howm-use-color nil)
   ;;; 以下，決まり文句
@@ -3043,15 +3046,317 @@ Related [[wiki:index][Index]]
         howm-reminder-today-format (format howm-insert-date-format howm-date-format))
   )
   #+END_SRC
+* VCS: =magit=
+  magit は Emacs の Git Frontend.
+  結局の所 CUI でコマンド叩く事も多いけれど，これはこれで重宝している．
+  #+BEGIN_SRC emacs-lisp
+(use-package magit
+  :bind (("C-x g" . magit-status))
+  :config
+  ;; (setq magit-completing-read-function 'magit-ido-completing-read)
+  )
+  #+END_SRC
+* VCS: =ido-ghq=
+  ghq list を ido で選んで dired で開く
+  #+BEGIN_SRC emacs-lisp
+(unless (locate-library "ido-ghq")
+  (quelpa '(ido-ghq
+            :fetcher github
+            :repo "uwabami/ido-ghq")))
+(use-package ido-ghq
+  :bind (("C-x f" . ido-ghq-open))
+  :config
+  (setq ido-ghq-short-list t)
+  )
+  #+END_SRC
+* 対応する括弧を見易く: =rainbow-delimiters=
+  #+BEGIN_SRC emacs-lisp
+(use-package rainbow-delimiters
+  :config
+  (add-hook 'emacs-lisp-mode-hook #'rainbow-delimiters-mode))
+  #+END_SRC
+* 設定ファイル: =generic-x=
+  #+BEGIN_SRC emacs-lisp
+(use-package generic-x)
+  #+END_SRC
+* Textile
+  #+BEGIN_SRC emacs-lisp
+(use-package textile-mode
+  :ensure t
+  )
+  #+END_SRC
+* Markdown
+  #+BEGIN_SRC emacs-lisp
+(use-package markdown-mode
+  :if (executable-find "pandoc")
+  :mode ("\\.\\(md\\|markdown\\|mkd\\)\\'" . gfm-mode)
+  :init
+  (add-hook 'markdown-mode-hook
+            (lambda ()
+              (electric-indent-local-mode -1)
+              (orgtbl-mode)
+              ))
+  (add-hook 'gfm-mode-hook
+            (lambda ()
+              (electric-indent-local-mode -1)
+              (orgtbl-mode)
+              ))
+  :config
+  (setq markdown-command
+        "pandoc --from markdown_github -t html5 --mathjax --highlight-style pygments")
+  )
+  #+END_SRC
+* SCSS
+  #+BEGIN_SRC emacs-lisp
+(use-package scss-mode
+  :ensure t
+  :if (executable-find "sass")
+  :mode "\\.scss\\'"
+  :config
+  (setq scss-sass-command (executable-find "sass"))
+  )
+  #+END_SRC
+* rainbow-mode
+  =#RRGGBB= のカラーコードに勝手に色が付く．CSS の編集中なんかで地味に便利．
+  #+BEGIN_SRC emacs-lisp
+(use-package rainbow-mode
+  :diminish rainbow-mode
+  )
+  #+END_SRC
+* YAML
+  #+BEGIN_SRC emacs-lisp
+(use-package yaml-mode
+  :mode "\\(\.yml\\|\.yaml\\)"
+  )
+  #+END_SRC
+* Ruby
+  素の =ruby-mode=. =Gemfile= なんかも ruby-mode で
+  #+BEGIN_SRC emacs-lisp
+(use-package ruby-mode
+  :mode ("\\.rb$"  "Capfile" "Gemfile")
+  :interpreter "ruby"
+  :config
+  ;; マジックコメントは自分で入れる
+  (setq ruby-insert-encoding-magic-comment nil
+        flycheck-cheker 'ruby-rubocop)
+  )
+  #+END_SRC
+  =ruby-electric=: 括弧や =do ... end= の補完
+  #+BEGIN_SRC emacs-lisp
+(use-package ruby-electric
+  :ensure t
+  :init
+  (add-hook 'ruby-mode-hook (lambda () (ruby-electric-mode t)))
+  :config
+  (setq ruby-electric-expand-delimiters-list nil))
+  #+END_SRC
+  =ruby-block=: =do...end= の対応をハイライト
+  #+BEGIN_SRC emacs-lisp
+;; (use-package ruby-block
+;;  :diminish ruby-block-mode
+;;  :config
+;;  (ruby-block-mode t)
+;;  (setq ruby-block-highlight-toggle 'overlay)
+;;  )
+  #+END_SRC
+  =rspec-mode=:
+  #+BEGIN_SRC emacs-lisp
+(use-package rspec-mode
+  :ensure t
+  :config
+  (setq rspec-use-rake-flag nil))
+  #+END_SRC
+  =rabbit-mode=: [[http://rabbit-shocker.org/ja/][Rabbit]] 編集用
+  #+BEGIN_SRC emacs-lisp
+(use-package rabbit-mode)
+  #+END_SRC
+  =rdoc-mode=: 本体の方はどうも動かないなぁ...
+  #+BEGIN_SRC emacs-lisp
+(defface rdoc-header-1
+  '((t (:inherit outline-1)))
+  "rdoc mode header level 1")
+
+(defface rdoc-header-2
+  '((t (:inherit outline-2)))
+  "rdoc mode header level 2")
+
+(defface rdoc-header-3
+  '((t (:inherit outline-3)))
+  "rdoc mode header level 3")
+
+(defface rdoc-header-4
+  '((t (:inherit outline-4)))
+  "rdoc mode header level 4")
+
+(define-generic-mode 'rdoc-mode
+  ()					;comment-list
+  '()					;keyword-list
+  '(					;font-lock-list
+    ("^=[^=].*"                                             . 'rdoc-header-1)
+    ("^==[^=].*"                                            . 'rdoc-header-2)
+    ("^===[^=].*"                                           . 'rdoc-header-3)
+    ("^====[^=].*"                                          . 'rdoc-header-4)
+    ("^[\\*#]\\{1,9\\} "                                    . 'bold)
+    ("\\(?:[^a-zA-Z0-9]\\)?\\*[^*]+\\*\\(?:[^a-zA-Z0-9]\\)" . 'bold)
+    ("\\(?:[^a-zA-Z0-9]\\)?\\_[^_]+\\_\\(?:[^a-zA-Z0-9]\\)" . 'italic)
+    )
+  '("README_FOR_APP" "\\.rdoc$")	;auto-mode-list
+  '((lambda () (auto-fill-mode t)))	;function-list
+  "Major mode for editing RDOC files.")
+  #+END_SRC
+  =rd-mode=
+  #+BEGIN_SRC emacs-lisp
+(use-package rd-mode
+  :mode "\\.rd$"
+  :config
+  (add-hook 'rd-mode-hook
+            'rd-show-other-block-all))
+  #+END_SRC
+* C
+  #+BEGIN_SRC emacs-lisp
+(use-package cc-mode
+  :init
+  (c-add-style "my:bsd-like"
+               '("bsd"
+                 (c-basic-offset . 2)
+                 (c-hanging-braces-alist . ((inline-open       before after)
+                                            (block-open        before after)
+                                            (substatement-open before after)))
+                 (c-offsets-alist . ((brace-list-entry . +)))
+                 ))
+  :config
+  (setq-default c-default-style "my:bsd-like")
+  (add-hook 'c-mode-hook
+            (lambda ()
+              (c-set-style "my:bsd-like")
+              (electric-indent-local-mode -1)
+              (set (make-local-variable 'eldoc-idle-delay) 0.20)
+              (c-turn-on-eldoc-mode)
+              ))
+  )
+  #+END_SRC
+* AUCTeX
+  Debian パッケージ版を使う．やっている事は
+  - =japanese-latex-mode= において, 幾つかのコマンドが追加/上書きされているが，
+    あまり使うことの無いコマンドが表示されるのが嫌なのでそれらを削除．
+  - コンパイルには =latexmk= を使う，です．
+   #+BEGIN_SRC emacs-lisp
+(use-package tex-jp
+  :if (and (executable-find "uplatex")
+           (my:dpkg-status "auctex"))
+  :init (progn
+          (add-hook 'LaTeX-mode-hook #'TeX-source-correlate-mode)
+          (add-hook 'LaTeX-mode-hook #'TeX-PDF-mode)
+          (add-hook 'LaTeX-mode-hook #'turn-on-reftex))
+  :config
+  (add-hook 'LaTeX-mode-hook
+            (function
+             (lambda ()
+               (dolist (command '("pTeX" "LaTeX" "pLaTeX" "pBibTeX" "jTeX" "jLaTeX" "jBibTeX"))
+                 (delq (assoc command TeX-command-list) TeX-command-list))
+               (setq TeX-command-default "LaTeX"
+                     japanese-LaTeX-command-default "LaTeX"
+                     TeX-PDF-mode t
+                     TeX-command-output-list '(("LaTeX" ("pdf")))
+                     )
+               (add-to-list 'TeX-expand-list
+                            '("%(LATEXENC)"
+                              (lambda ()
+                                (let ((str (japanese-TeX-get-encoding-string)))
+                                  (if str (format "%s" str) "")))))
+               (add-to-list 'TeX-command-list
+                            '("LaTeX"
+                              "LATEXENC=%(LATEXENC) latexmk -gg %t"
+                              TeX-run-TeX nil (latex-mode) :help "Run Latexmk")))))
+  (setq TeX-source-correlate-method 'synctex
+        TeX-source-correlate-start-server t
+        TeX-source-correlate-mode t
+        TeX-view-program-selection '((output-dvi "xdvi")
+                                     (output-pdf "Evince")
+                                     (output-html "xdg-open"))
+        TeX-auto-save t
+        TeX-auto-local  (expand-file-name "auctex/auto" my:d:tmp)
+        TeX-style-local (expand-file-name "auctex/style" my:d:tmp)
+        TeX-parse-self t
+        TeX-auto-untabify t
+        font-latex-fontify-script nil
+        font-latex-fontify-sectioning 1.0
+        font-latex-script-display nil
+        reftex-plug-into-AUCTeX t
+        )
+  )
+   #+END_SRC
+  =~/.latexmkrc= の設定は以下の通り．
+   #+BEGIN_SRC perl :tangle no
+      #!/usr/bin/env perl
+      $kanji  = defined $ENV{"LATEXENC"} ? "-kanji=$ENV{\"LATEXENC\"}" : "-kanjii=utf8" ;
+      $latex  = "platex -interaction=nonstopmode -src-specials -shell-escape --synctex=1 $kanji";
+      $latex_silent = "platex -interaction=batchmode -src-specials -shell-escape --synctex=1 $kanji";
+      $bibtex = "pbibtex $kanji";
+      $makeindex = "touch -m %D";
+      $dvipdf = "dvipdfmx %O -o %D %S";
+      $dvips = 'dvips %O -z -f %S | convbkmk -u > %D';
+      $ps2pdf = 'ps2pdfwr %O %S %D';
+      $pdf_mode = 3;
+      $pdf_previewer = 'start xdg-open';
+      $pdf_update_method = 0;
+      $clean_ext = "snm nav vrb synctex.gz";
+   #+END_SRC
+* Fortran
+  #+BEGIN_SRC emacs-lisp
+(use-package f90
+  :mode ("\\.\\(f|F\\)\\(90|95|03|08\\)$" . f90-mode)
+  :config
+  (add-hook 'f90-mode-hook
+            (lambda ()
+              (setq f90-do-indent 2
+                    f90-if-indent 2
+                    f90-type-indent 2
+                    f90-program-indent 2
+                    f90-continuation-indent 2
+                    f90-directive-comment-re "!omp\\$"
+                    f90-indented-comment-re "!"
+                    f90-break-delimiters "[-+\\*/><=,% \t]"
+                    f90-break-before-delimiters t
+                    f90-beginning-ampersand nil
+                    f90-smart-end 'blink
+                    f90-auto-keyword-case nil
+                    f90-leave-line-no nil
+                    f90-comment-region "!! "
+                    f90-indent-comment "! "
+                    indent-tabs-mode nil
+                    f90-font-lock-keywords f90-font-lock-keywords-2)
+              (ggtags-mode 1)))
+  )
+  #+END_SRC
+* 補完: =auto-complete=
+  ちょいちょい上手く動かなかったりするんだけれど、どうしたモンかな.
+  #+BEGIN_SRC emacs-lisp
+(use-package auto-complete-config
+  :config
+  (ac-flyspell-workaround)
+  (ac-set-trigger-key "M-TAB")
+  (ac-config-default)
+  (add-to-list 'ac-dictionary-directories (concat my:d:share "ac-dict"))
+  (setq ac-comphist-file (concat my:d:tmp "ac-comphist.dat")
+        ac-auto-start 4                          ; 4 文字以上で起動
+        ac-use-menu-map t                        ; キーバインド
+        ac-auto-show-menu 1                      ; 1秒でメニュー表示
+        ac-use-comphist t                        ; 補完候補をソート
+        ac-candidate-limit nil                   ; 補完候補表示を無制限に
+        ac-use-quick-help nil)                   ; tool tip 無し
+  ;; (dolist (mode
+  ;;          '(
+  ;;            ))
+  ;;  (add-to-list 'ac-modes mode))
+  )
+  #+END_SRC
 * 日記: =tDiary=
   tdiary-mode をちまちまと弄っている所
   #+BEGIN_SRC emacs-lisp
-(unless (locate-library "tdiary-mode")
-  (quelpa '(tdiary-mode
-            :fetcher github
-            :repo "uwabami/tdiary-mode")))
 (use-package tdiary-mode
-  :if (file-directory-p "~/Nextcloud/tdiary")
+  :if (and (file-directory-p "~/Nextcloud/tdiary")
+           (my:dpkg-status "tdiary-mode"))
   :commands (tdiary-mode tdiary-new tdiary-new-directory tdiary-replace)
   :config
   (load (concat my:d:password-store "/tdiary-mode.gpg"))
@@ -3102,324 +3407,7 @@ Related [[wiki:index][Index]]
   (load (concat my:d:password-store "/moomin.gpg"))
   )
 #+END_SRC
-* プログラム環境
-** 文法チェック: =flycheck=
-   #+BEGIN_SRC emacs-lisp
-(use-package flycheck
-  :disabled t
-  :defer t
-  :init
-  (add-hook 'after-init-hook #'global-flycheck-mode)
-  :config
-  (setq flycheck-disabled-checkers
-        '(emacs-lisp-checkdoc))
-  )
-   #+END_SRC
-** VCS: =magit=
-   magit は Emacs の Git Frontend.
-   結局の所 CUI でコマンド叩く事も多いけれど，これはこれで重宝している．
-   #+BEGIN_SRC emacs-lisp
-(use-package magit
-  :bind (("C-x g" . magit-status))
-  :config
-  ;; (setq magit-completing-read-function 'magit-ido-completing-read)
-  )
-   #+END_SRC
-** VCS: =ido-ghq=
-   ghq list を ido で選んで dired で開く
-   #+BEGIN_SRC emacs-lisp
-(unless (locate-library "ido-ghq")
-  (quelpa '(ido-ghq
-            :fetcher github
-            :repo "uwabami/ido-ghq")))
-(use-package ido-ghq
-  :bind (("C-x f" . ido-ghq-open))
-  :config
-  (setq ido-ghq-short-list t)
-  )
-   #+END_SRC
-** 対応する括弧を見易く: =rainbow-delimiters=
-   #+BEGIN_SRC emacs-lisp
-(use-package rainbow-delimiters
-  :config
-  (add-hook 'emacs-lisp-mode-hook #'rainbow-delimiters-mode))
-   #+END_SRC
-** 設定ファイル: =generic-x=
-   #+BEGIN_SRC emacs-lisp
-(use-package generic-x)
-   #+END_SRC
-** Textile
-   #+BEGIN_SRC emacs-lisp
-(use-package textile-mode
-  :ensure t
-;  :diminish textile-mode
-  )
-   #+END_SRC
-** Markdown
-   #+BEGIN_SRC emacs-lisp
-(use-package markdown-mode
-  :if (executable-find "pandoc")
-  :mode ("\\.\\(md\\|markdown\\)\\'" . gfm-mode)
-  :init
-  (add-hook 'markdown-mode-hook
-            (lambda ()
-              (electric-indent-local-mode -1)
-              (orgtbl-mode)
-              ))
-  (add-hook 'gfm-mode-hook
-            (lambda ()
-              (electric-indent-local-mode -1)
-              (orgtbl-mode)
-              ))
-  :config
-  (setq markdown-command
-        "pandoc --from markdown_github -t html5 --mathjax --highlight-style pygments")
-  )
-   #+END_SRC
-** SCSS
-   #+BEGIN_SRC emacs-lisp
-(use-package scss-mode
-  :ensure t
-  :if (executable-find "sass")
-  :mode "\\.scss\\'"
-  :config
-  (setq scss-sass-command (executable-find "sass")))
-   #+END_SRC
-** rainbow-mode
-   =#RRGGBB= のカラーコードに勝手に色が付く．CSS の編集中なんかで地味に便利．
-   #+BEGIN_SRC emacs-lisp
-(use-package rainbow-mode
-  :diminish rainbow-mode
-  )
-   #+END_SRC
-** YAML
-   #+BEGIN_SRC emacs-lisp
-(use-package yaml-mode
-  :mode "\\(\.yml\\|\.yaml\\)"
-  )
-   #+END_SRC
-** Ruby
-   素の =ruby-mode=. =Gemfile= も ruby-mode で扱う
-   #+BEGIN_SRC emacs-lisp
-(use-package ruby-mode
-  :mode "\\.rb\\'"
-  :interpreter "ruby"
-  :init
-  ;; マジックコメントは自分で入れる
-  (setq ruby-insert-encoding-magic-comment nil)
-  (add-to-list 'auto-mode-alist '("Gemfile$" . ruby-mode)))
-   #+END_SRC
-   =ruby-electric=: 括弧や =do ... end= の補完
-   #+BEGIN_SRC emacs-lisp
-(use-package ruby-electric
-  :ensure t
-  :init
-  (add-hook 'ruby-mode-hook (lambda () (ruby-electric-mode t)))
-  :config
-  (setq ruby-electric-expand-delimiters-list nil))
-   #+END_SRC
-   =ruby-block=: =do...end= の対応をハイライト
-   #+BEGIN_SRC emacs-lisp
-;; (use-package ruby-block
-;;  :diminish ruby-block-mode
-;;  :config
-;;  (ruby-block-mode t)
-;;  (setq ruby-block-highlight-toggle 'overlay)
-;;  )
-   #+END_SRC
-   =rspec-mode=:
-   #+BEGIN_SRC emacs-lisp
-(use-package rspec-mode
-  :ensure t
-  :config
-  (setq rspec-use-rake-flag nil))
-   #+END_SRC
-   =rabbit-mode=: [[http://rabbit-shocker.org/ja/][Rabbit]] 編集用
-   #+BEGIN_SRC emacs-lisp
-(use-package rabbit-mode)
-   #+END_SRC
-   =rdoc-mode=: 本体の方はどうも動かないなぁ...
-   #+BEGIN_SRC emacs-lisp
-(defface rdoc-header-1
-  '((t (:inherit outline-1)))
-  "rdoc mode header level 1")
 
-(defface rdoc-header-2
-  '((t (:inherit outline-2)))
-  "rdoc mode header level 2")
-
-(defface rdoc-header-3
-  '((t (:inherit outline-3)))
-  "rdoc mode header level 3")
-
-(defface rdoc-header-4
-  '((t (:inherit outline-4)))
-  "rdoc mode header level 4")
-
-(define-generic-mode 'rdoc-mode
-  ()					;comment-list
-  '()					;keyword-list
-  '(					;font-lock-list
-    ("^=[^=].*"                                             . 'rdoc-header-1)
-    ("^==[^=].*"                                            . 'rdoc-header-2)
-    ("^===[^=].*"                                           . 'rdoc-header-3)
-    ("^====[^=].*"                                          . 'rdoc-header-4)
-    ("^[\\*#]\\{1,9\\} "                                    . 'bold)
-    ("\\(?:[^a-zA-Z0-9]\\)?\\*[^*]+\\*\\(?:[^a-zA-Z0-9]\\)" . 'bold)
-    ("\\(?:[^a-zA-Z0-9]\\)?\\_[^_]+\\_\\(?:[^a-zA-Z0-9]\\)" . 'italic)
-    )
-  '("README_FOR_APP" "\\.rdoc$")	;auto-mode-list
-  '((lambda () (auto-fill-mode t)))	;function-list
-  "Major mode for editing RDOC files.")
-   #+END_SRC
-   =rd-mode=
-   #+BEGIN_SRC emacs-lisp
-(use-package rd-mode
-  :mode "\\.rd$"
-  :config
-  (add-hook 'rd-mode-hook
-            'rd-show-other-block-all))
-   #+END_SRC
-** C
-   #+BEGIN_SRC emacs-lisp
-(use-package cc-mode
-  :init
-  (c-add-style "my:bsd-like"
-               '("bsd"
-                 (c-basic-offset . 2)
-                 (c-hanging-braces-alist . ((inline-open       before after)
-                                            (block-open        before after)
-                                            (substatement-open before after)))
-                 (c-offsets-alist . ((brace-list-entry . +)))
-                 ))
-  :config
-  (setq-default c-default-style "my:bsd-like")
-  (add-hook 'c-mode-hook
-            (lambda ()
-              (c-set-style "my:bsd-like")
-              (electric-indent-local-mode -1)
-              (set (make-local-variable 'eldoc-idle-delay) 0.20)
-              (c-turn-on-eldoc-mode)
-              ))
-  )
-   #+END_SRC
-** AUCTeX
-   Debian パッケージ版を使う．やっている事は
-   - =japanese-latex-mode= において, 幾つかのコマンドが追加/上書きされているが，
-     あまり使うことの無いコマンドが表示されるのが嫌なのでそれらを削除．
-   - コンパイルには =latexmk= を使う，です．
-    #+BEGIN_SRC emacs-lisp
-(use-package tex-jp
-  :if (and (executable-find "uplatex")
-           (my:dpkg-status "auctex"))
-  :init (progn
-          (add-hook 'LaTeX-mode-hook #'TeX-source-correlate-mode)
-          (add-hook 'LaTeX-mode-hook #'TeX-PDF-mode)
-          (add-hook 'LaTeX-mode-hook #'turn-on-reftex))
-
-  :config
-  (add-hook 'LaTeX-mode-hook
-            (function
-             (lambda ()
-               (dolist (command '("pTeX" "LaTeX" "pLaTeX" "pBibTeX" "jTeX" "jLaTeX" "jBibTeX"))
-                 (delq (assoc command TeX-command-list) TeX-command-list))
-               (setq TeX-command-default "LaTeX"
-                     japanese-LaTeX-command-default "LaTeX"
-                     TeX-PDF-mode t
-                     TeX-command-output-list '(("LaTeX" ("pdf")))
-                     )
-               (add-to-list 'TeX-expand-list
-                            '("%(LATEXENC)"
-                              (lambda ()
-                                (let ((str (japanese-TeX-get-encoding-string)))
-                                  (if str (format "%s" str) "")))))
-               (add-to-list 'TeX-command-list
-                            '("LaTeX"
-                              "LATEXENC=%(LATEXENC) latexmk -gg %t"
-                              TeX-run-TeX nil (latex-mode) :help "Run Latexmk")))))
-  (setq TeX-source-correlate-method 'synctex
-        TeX-source-correlate-start-server t
-        TeX-source-correlate-mode t
-        TeX-view-program-selection '((output-dvi "xdvi")
-                                     (output-pdf "Evince")
-                                     (output-html "xdg-open"))
-        TeX-auto-save t
-        TeX-auto-local  (expand-file-name "auctex/auto" my:d:tmp)
-        TeX-style-local (expand-file-name "auctex/style" my:d:tmp)
-        TeX-parse-self t
-        TeX-auto-untabify t
-        font-latex-fontify-script nil
-        font-latex-fontify-sectioning 1.0
-        font-latex-script-display nil
-        reftex-plug-into-AUCTeX t
-        )
-  )
-    #+END_SRC
-   =~/.latexmkrc= の設定は以下の通り．
-    #+BEGIN_SRC perl :tangle no
-      #!/usr/bin/env perl
-      $kanji  = defined $ENV{"LATEXENC"} ? "-kanji=$ENV{\"LATEXENC\"}" : "-kanjii=utf8" ;
-      $latex  = "platex -interaction=nonstopmode -src-specials -shell-escape --synctex=1 $kanji";
-      $latex_silent = "platex -interaction=batchmode -src-specials -shell-escape --synctex=1 $kanji";
-      $bibtex = "pbibtex $kanji";
-      $makeindex = "touch -m %D";
-      $dvipdf = "dvipdfmx %O -o %D %S";
-      $dvips = 'dvips %O -z -f %S | convbkmk -u > %D';
-      $ps2pdf = 'ps2pdfwr %O %S %D';
-      $pdf_mode = 3;
-      $pdf_previewer = 'start xdg-open';
-      $pdf_update_method = 0;
-      $clean_ext = "snm nav vrb synctex.gz";
-    #+END_SRC
-** Fortran
-   #+BEGIN_SRC emacs-lisp
-(use-package f90
-  :mode ("\\.\\(f|F\\)\\(90|95|03|08\\)$" . f90-mode)
-  :config
-  (add-hook 'f90-mode-hook
-            (lambda ()
-              (setq f90-do-indent 2
-                    f90-if-indent 2
-                    f90-type-indent 2
-                    f90-program-indent 2
-                    f90-continuation-indent 2
-                    f90-directive-comment-re "!omp\\$"
-                    f90-indented-comment-re "!"
-                    f90-break-delimiters "[-+\\*/><=,% \t]"
-                    f90-break-before-delimiters t
-                    f90-beginning-ampersand nil
-                    f90-smart-end 'blink
-                    f90-auto-keyword-case nil
-                    f90-leave-line-no nil
-                    f90-comment-region "!! "
-                    f90-indent-comment "! "
-                    indent-tabs-mode nil
-                    f90-font-lock-keywords f90-font-lock-keywords-2)
-              (ggtags-mode 1)))
-  )
-   #+END_SRC
-** 補完: =auto-complete=
-   ちょいちょい上手く動かなかったりするんだけれど、どうしたモンかな.
-   #+BEGIN_SRC emacs-lisp
-(use-package auto-complete-config
-  :config
-  (ac-flyspell-workaround)
-  (ac-set-trigger-key "M-TAB")
-  (ac-config-default)
-  (add-to-list 'ac-dictionary-directories (concat my:d:share "ac-dict"))
-  (setq ac-comphist-file (concat my:d:tmp "ac-comphist.dat")
-        ac-auto-start 4                          ; 4 文字以上で起動
-        ac-use-menu-map t                        ; キーバインド
-        ac-auto-show-menu 1                      ; 1秒でメニュー表示
-        ac-use-comphist t                        ; 補完候補をソート
-        ac-candidate-limit nil                   ; 補完候補表示を無制限に
-        ac-use-quick-help nil)                   ; tool tip 無し
-  ;; (dolist (mode
-  ;;          '(
-  ;;            ))
-  ;;  (add-to-list 'ac-modes mode))
-  )
-   #+END_SRC
 * 基本的なキーバインドの設定
   既に手癖になってしまっているアレコレ．
   特に =[home]= と =[end]= は無いと途方に暮れます．
@@ -3453,12 +3441,18 @@ Related [[wiki:index][Index]]
   #+END_SRC
   メジャーモードは =hook= で設定.
   #+BEGIN_SRC emacs-lisp
-(add-hook 'emacs-lisp-mode-hook '(lambda () (setq mode-name "")))
-(add-hook 'lisp-interaction-mode-hook '(lambda () (setq mode-name "")))
-(add-hook 'wl-folder-mode-hook  '(lambda () (setq mode-name "")))
-(add-hook 'wl-summary-mode-hook '(lambda () (setq mode-name "")))
-(add-hook 'wl-draft-mode-hook   '(lambda () (setq mode-name "")))
-(add-hook 'mime-view-mode-hook  '(lambda () (setq mode-name "")))
+(dolist (hook
+         '(
+           textlie-mode-hook
+           scss-mode-hook
+           emacs-lisp-mode-hook
+           lisp-interaction-mode-hook
+           wl-folder-mode-hook
+           wl-summary-mode-hook
+           wl-draft-mode-hook
+           mime-view-mode-hook
+           ))
+  (add-hook hook '(lambda () (setq mode-name ""))))
   #+END_SRC
 * フォントと色
   そろそろテーマにした方が良い，とは思ってはいる．

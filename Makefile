@@ -24,7 +24,7 @@ init.el: README.org
 	$(EMACS) -q --batch --eval \
 	   "(progn \
 		  (require 'ob-tangle) \
-		  (org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\")))"
+		  (org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\"))"
 
 init.elc: $(ELC)
 	$(EMACS) -l init.el -batch -f batch-byte-compile init.el

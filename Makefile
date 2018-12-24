@@ -14,8 +14,8 @@ tmp/bootstrap-stamp: init.el
 	@chmod 700 tmp
 	@if [ ! -f $@ ] ; then \
 	  for p in $(PKG) ; do \
-		  $(EMACS) -q --batch --eval \
-		    "(defconst pkg-install '$$p)" -l emacs-batch-install.el ;\
+		  $(EMACS) -q --batch -l init.el --eval \
+		    "(package-install '$$p)" ;\
 	  done ;\
 	fi
 	@rm -f emacs-batch-install.el

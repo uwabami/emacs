@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-12-24 17:06:02
+#+DATE: 2018-12-24 17:17:45
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -77,39 +77,21 @@ init.el: README.org
 (require 'package nil 'noerror)
 (setq package-enable-at-startup t)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
-(add-to-list 'package-archives '("org"   . "http://orgmode.org/elpa/") t)
+(add-to-list 'package-archives '("org"   . "https://orgmode.org/elpa/") t)
 (eval-when-compile
   (unless (file-exists-p (concat user-emacs-directory "tmp/bootstrap-stamp"))
     (package-refresh-contents)))
 (package-initialize)
-(unless (package-installed-p 'package-utils)
-  (package-install 'package-utils))
    #+END_SRC
-   また，初回起動時に =make= で org の最新版等を導入するために
-   batch でインストールできる様に，以下を =emacs-batch-install.el= として出力します．
-   #+BEGIN_SRC emacs-lisp :tangle emacs-batch-install.el
-(setq url-http-attempt-keepalives nil)
-(require 'package nil 'noerror)
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
-(add-to-list 'package-archives '("org"   . "http://orgmode.org/elpa/") t)
-(package-refresh-contents)
-(package-initialize)
-(unless (package-installed-p 'package-utils)
-  (package-install 'package-utils))
-(package-install pkg-install)
-   #+END_SRC
-   batch でのインストールは例えば
-   #+BEGIN_SRC makefile :tangle no
-	$(EMACS) -q --batch --eval \
-	  "(deconst pkg-install 'org-plus-contrib)" -l emacs-batch-install.el
-   #+END_SRC
-   とすれば良いかと.
 ** [[https://github.com/jwiegley/use-package][use-package]]
    個々のパッケージの設定には [[https://github.com/jwiegley/use-package][use-package]] を利用します．
    #+BEGIN_SRC emacs-lisp
 (unless (require 'use-package nil t)
   (package-install 'use-package))
+(use-package package-utils
+  :ensure t)
    #+END_SRC
+   ついでに =package-utils= も更新しておいたり.
 ** [[https://github.com/quelpa/quelpa][quelpa]]
    melpa に登録されていないパッケージや自作の elisp 等をインストールできる様に
    [[https://github.com/quelpa/quelpa][quelpa]] を入れておきます．とはいえ、これでパッケージを入れる訳ではないので、
@@ -2154,6 +2136,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    #+BEGIN_SRC emacs-lisp
 (use-package mhc
   :if (file-directory-p (concat (getenv "HOME") "/.config/mhc"))
+  :ensure t
   :config
   (setq mhc-calendar-day-strings ["日" "月" "火" "水" "木" "金" "土"]
         mhc-calendar-header-function 'mhc-calendar-make-header-ja

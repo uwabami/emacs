@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-12-24 17:17:45
+#+DATE: 2018-12-26 17:46:40
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -13,7 +13,7 @@
 ** Emacs のパッケージ(=package.el=)と [[https://github.com/quelpa/quelpa][quelpa]], [[https://github.com/jwiegley/use-package][use-package]] を使う
    基本は =package.el= を使いますが、
    VCS からインストールしたいパッケージが幾つかあるので、
-   それらについては [[https://github.com/quelpa/quelpa][quelpa]] を使います。
+   それらについては [[https://github.com/quelpa/quelpa][quelpa]] + [[https://framagit.org/steckerhalter/quelpa-use-package][quelpa-use-package]] を使います。
 ** Debian パッケージがインストールされているならば，それを優先する
    :[[https://en.wikipedia.org/wiki/Eating_your_own_dog_food][Eating your own dog food - Wikipedia]]
 
@@ -43,8 +43,9 @@ init.el: README.org
     ~/.emacs.d/
      |-- Makefile    ←  byte-compile 用の rule
      |-- README.org  ←  本ファイル．`org-babel-tangle' で init.el を生成
-     |-- elpa/       ←  package.el で導入したパッケージが置かれる場所
-     |-- quelpa/     ←  quelpa で導入したパッケージが置かれる場所
+     |-- pkg/
+         |-- elpa/   ←  package.el で導入したパッケージが置かれる場所
+         `-- quelpa/ ←  quelpa で導入したパッケージが置かれる場所
      |-- share/      ←  (基本的に)参照するだけの資源置き場所
      `-- tmp/        ←  一次ファイルの置き場所
   #+END_EXAMPLE
@@ -75,7 +76,9 @@ init.el: README.org
    #+BEGIN_SRC emacs-lisp
 (setq url-http-attempt-keepalives nil)
 (require 'package nil 'noerror)
-(setq package-enable-at-startup t)
+(setq package-enable-at-startup t
+      package-user-dir (expand-file-name "pkg/elpa" user-emacs-directory)
+      package-gnupghome-dir (concat package-user-dir "/gnupg"))
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (add-to-list 'package-archives '("org"   . "https://orgmode.org/elpa/") t)
 (eval-when-compile
@@ -88,19 +91,20 @@ init.el: README.org
    #+BEGIN_SRC emacs-lisp
 (unless (require 'use-package nil t)
   (package-install 'use-package))
-(use-package package-utils
-  :ensure t)
+(setq use-package-always-ensure nil)
    #+END_SRC
-   ついでに =package-utils= も更新しておいたり.
-** [[https://github.com/quelpa/quelpa][quelpa]]
+** [[https://framagit.org/steckerhalter/quelpa-use-package][quelpa-use-package]]
    melpa に登録されていないパッケージや自作の elisp 等をインストールできる様に
-   [[https://github.com/quelpa/quelpa][quelpa]] を入れておきます．とはいえ、これでパッケージを入れる訳ではないので、
-   melpa の同期はしません。
+   [[https://github.com/quelpa/quelpa][quelpa]] を使います. これと [[https://github.com/jwiegley/use-package][use-package]] を連携する [[https://framagit.org/steckerhalter/quelpa-use-package][quelpa-use-package]] を
+   melpa から導入しておきます.
+   とはいえ、[[https://github.com/quelpa/quelpa][quelpa]] はあくまでオプションですんで,
+   melpa の同期はしません.
    #+BEGIN_SRC emacs-lisp
-(use-package quelpa
+(use-package quelpa-use-package
   :ensure t
-  :config
-  (setq quelpa-upgrade-p nil
+  :init
+  (setq quelpa-dir (expand-file-name "pkg/quelpa" user-emacs-directory)
+        quelpa-upgrade-p nil
         quelpa-checkout-melpa-p nil
         quelpa-update-melpa-p nil
         quelpa-melpa-recipe-stores nil)
@@ -304,11 +308,10 @@ init.el: README.org
    CJK 以外の East Asian Ambiguos，絵文字も2文字幅にするようにしています．
    拙作の修正ロケールはこちら: [[https://github.com/uwabami/locale-eaw-emoji]]
    #+BEGIN_SRC emacs-lisp
-(unless (package-installed-p 'locale-eaw-emoji)
-  (quelpa '(locale-eaw-emoji
-            :fetcher url
-            :url "https://raw.githubusercontent.com/uwabami/locale-eaw-emoji/master/locale-eaw-emoji.el")))
 (use-package locale-eaw-emoji
+  :quelpa (locale-eaw-emoji
+           :fetcher github
+           :repo "uwabami/locale-eaw-emoji")
   :config
   (eaw-and-emoji-fullwidth))
    #+END_SRC
@@ -493,6 +496,7 @@ init.el: README.org
    結局履歴を貯める設定をしている事になっている.
    #+BEGIN_SRC emacs-lisp
 (use-package recentf
+  :defer t
   :init
   (add-hook 'after-init-hook 'recentf-mode)
   :config
@@ -519,7 +523,9 @@ init.el: README.org
    ディレクトリの履歴も取れるので recentf-ext を入れておく
    #+BEGIN_SRC emacs-lisp
 (use-package recentf-ext
-  :ensure t)
+  :ensure t
+  :defer t
+  )
    #+END_SRC
 ** =.elc= と =.el= の timestamp を比較し，新しい方を読み込む
    =load-prefer-newer= は Emacs >= 24.4 から．
@@ -1157,12 +1163,10 @@ File.open(src, "r") {|f|
 ** =ido-grid-mode=: 候補を並べて表示
    横に並ぶと正直シンドイので並べてみる。
    #+BEGIN_SRC emacs-lisp
-(unless (package-installed-p 'ido-grid)
-  (quelpa '(ido-grid
-            :fetcher github
-            :repo "larkery/ido-grid.el")))
 (use-package ido-grid
-  :ensure t
+  :quelpa (ido-grid
+            :fetcher github
+            :repo "larkery/ido-grid.el")
   :config
   (setq ido-grid-enabled t
         ido-grid-start-small nil
@@ -2239,14 +2243,15 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :if (file-directory-p my:d:org)
   :bind (("C-x n s" . org-narrow-to-subtree)
          ("C-x n w" . widen))
+  :ensure org-plus-contrib
   :init
   (with-eval-after-load "org"
     (setq org-file-apps-defaults '((remote . emacs)  ;; xdg-open 任せ
                                    (system . "xdg-open %s")
-                                   (t . "xdg-open %s")))
+                                   (t      . "xdg-open %s")))
     (setq org-file-apps-defaults-gnu '((remote . emacs)  ;; xdg-open 任せ
                                        (system . "xdg-open %s")
-                                       (t . "xdg-open %s")))
+                                       (t      . "xdg-open %s")))
     )
   :config
   (setq org-directory my:d:org                 ;; Nextcloud に保存する
@@ -2373,7 +2378,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 (defun my:transform-square-brackets-to-round-ones (string-to-transform)
   "Transforms [ into ( and ] into ), other chars left unchanged."
   (concat
-   (mapcar #'(lambda (c) (if (equal c ?[) ?\( (if (equal c ?]) ?\) c)))
+   (mapcar #'(lambda (c) (if (equal c ?\[) ?\( (if (equal c ?\]) ?\) c)))
            string-to-transform))
   )
   (setq org-default-notes-file (concat my:d:org "journal.org")
@@ -2613,10 +2618,10 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     ついでに agenda 表示の際の色付けを設定．
     #+BEGIN_SRC emacs-lisp
 (use-package org-gcal
-  :ensure t
   :if (and my:d:password-store
            (file-directory-p my:d:org))
-  :commands (org-gcal-fetch)
+  :defer t
+  :ensure t
   :init
   (setq org-gcal-dir (concat my:d:tmp "org-gcal"))
   (unless org-gcal-dir
@@ -2628,7 +2633,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (setq org-gcal-up-days    180) ;; 未来 6 month
   (setq org-gcal-auto-archive nil)
   :config
-  (load (concat my:d:password-store "/org-gcal.gpg")))
+  (load (concat my:d:password-store "/org-gcal.gpg"))
+  )
     #+END_SRC
     password-store には multiline で設定を書く．例えば以下:
     #+BEGIN_SRC emacs-lisp :tangle no
@@ -2646,12 +2652,11 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
            (file-directory-p my:d:org))
   :diminish (orgmine-mode)
   :commands (orgmine-mode)
+  :quelpa (orgmine
+           :fetcher github
+           :repo "kametoku/orgmine")
   :init
-  (unless (package-installed-p 'orgmine)
-    (package-install 'elmine)
-    (quelpa '(orgmine
-              :fetcher github
-              :repo "kametoku/orgmine")))
+  (use-package elmine :ensure t)
   (add-to-list 'safe-local-variable-values
                '(orgmine-note-block-begin . "#+BEGIN_SRC textile"))
   (add-hook 'org-mode-hook
@@ -2903,12 +2908,11 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     [[https://github.com/caiorss/org-wiki][caiorss/org-wiki]] を使っていたのですが helm 依存の部分を ido に書き換
     えてます.
     #+BEGIN_SRC emacs-lisp
-(unless (package-installed-p 'org-wiki)
-  (quelpa '(org-wiki
-            :fetcher github
-            :repo "uwabami/org-wiki")))
 (use-package org-wiki
   :if (file-directory-p "~/Public/cc-env")
+  :quelpa (org-wiki
+          :fetcher github
+          :repo "uwabami/org-wiki")
   :bind (("C-x M" . org-wiki ))
   :config
   (setq org-wiki-location "~/Public/cc-env"
@@ -3044,11 +3048,11 @@ Related [[wiki:index][Index]]
 * VCS: =ido-ghq=
   ghq list を ido で選んで dired で開く
   #+BEGIN_SRC emacs-lisp
-(unless (locate-library "ido-ghq")
-  (quelpa '(ido-ghq
-            :fetcher github
-            :repo "uwabami/ido-ghq")))
 (use-package ido-ghq
+  :if (executable-find "ghq")
+  :quelpa (ido-ghq
+           :fetcher github
+           :repo "uwabami/ido-ghq")
   :bind (("C-x f" . ido-ghq-open))
   :config
   (setq ido-ghq-short-list t)
@@ -3361,11 +3365,11 @@ Related [[wiki:index][Index]]
    screen-lines に依存していたりするので folk して更新中.
    [[https://github.com/uwabami/moinmoin-mode][uwabami/moinmoin-mode: Fork from EmacsForMoinMoin, for Emacs >= 25]]
    #+BEGIN_SRC emacs-lisp
-(unless (locate-library "moinmoin-mode")
-  (quelpa '(moinmoin-mode
-            :fetcher github
-            :repo "uwabami/moinmoin-mode")))
-(use-package moinmoin-mode)
+(use-package moinmoin-mode
+  :quelpa (moinmoin-mode
+           :fetcher github
+           :repo "uwabami/moinmoin-mode")
+  )
    #+END_SRC
    そのうち気になる所を弄る，ということで．
 ** =moomin=
@@ -3374,12 +3378,11 @@ Related [[wiki:index][Index]]
    多少弄った版を使う。
    [[https://github.com/uwabami/moomin-el][uwabami/moomin-el: Edit MoinMoin with Emacs]]
 #+BEGIN_SRC emacs-lisp
-(unless (locate-library "moomin")
-  (quelpa '(moomin
-            :fetcher github
-            :repo "uwabami/moomin-el")))
 (use-package moomin
   :if (file-directory-p my:d:password-store)
+  :quelpa (moomin
+           :fetcher github
+           :repo "uwabami/moomin-el")
   :bind (("C-x w" . ido-moomin)
          :map moinmoin-mode-map
          ("C-c C-c" . moomin-save-current-buffer)
@@ -3392,7 +3395,6 @@ Related [[wiki:index][Index]]
   (load (concat my:d:password-store "/moomin.gpg"))
   )
 #+END_SRC
-
 * 基本的なキーバインドの設定
   既に手癖になってしまっているアレコレ．
   特に =[home]= と =[end]= は無いと途方に暮れます．

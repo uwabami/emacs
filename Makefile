@@ -39,6 +39,5 @@ clean:
 	rm -fr auto-save-list *.el *.elc *~
 
 distclean: clean
-	rm -fr quelpa
-	rm -fr elpa
+	rm -fr pkg
 	rm -fr tmp

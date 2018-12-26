@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-12-26 18:32:40
+#+DATE: 2018-12-26 19:06:03
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -3161,7 +3161,7 @@ Related [[wiki:index][Index]]
   =rabbit-mode=: [[http://rabbit-shocker.org/ja/][Rabbit]] 編集用
   #+BEGIN_SRC emacs-lisp
 (use-package rabbit-mode
-  :if (my:dpkg-status "rabbit-mode")
+  :if (executable-find "rabbit")
   :defer t
   )
   #+END_SRC
@@ -3296,6 +3296,17 @@ Related [[wiki:index][Index]]
       $pdf_previewer = 'start xdg-open';
       $pdf_update_method = 0;
       $clean_ext = "snm nav vrb synctex.gz";
+   #+END_SRC
+** zotero との連携
+   以前みたいに楽にはいかない...
+   #+BEGIN_SRC emacs-lisp
+(use-package emacs-zotero-bib-fetch
+  :quelpa (emacs-zotero-bib-fetch
+           :fetcher url
+           :url "https://gist.githubusercontent.com/andersjohansson/fa7ca643782771b6e15da41514e1358a/raw/25e9f875ef6a34bbdd2c24c34637310596755722/emacs-zotero-bib-fetch.el")
+  :config
+  (add-hook 'TeX-mode-hook 'ezbf-minor-mode)
+  )
    #+END_SRC
 * Fortran
   #+BEGIN_SRC emacs-lisp

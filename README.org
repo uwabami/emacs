@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-12-28 14:41:45
+#+DATE: 2018-12-28 15:52:27
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -1349,7 +1349,7 @@ File.open(src, "r") {|f|
 **** elscreen-wl
      メール作成時に =elscreen= と連携してくれる．便利
      #+BEGIN_SRC emacs-lisp :tangle init-wl.el
-(use-package elscreen-wl)
+; (use-package elscreen-wl)
      #+END_SRC
 **** SEMI の追加設定
      HTML メールを表示するために eww を使う.
@@ -2365,6 +2365,10 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 (use-package org-wl
   :if (and (my:dpkg-status "wl-beta")
            (file-directory-p my:d:org))
+  :quelpa (org-wl
+           :fetcher url
+           :url "https://code.orgmode.org/bzg/org-mode/raw/master/contrib/lisp/org-wl.el"
+           )
   )
 (use-package org-capture
   :bind (("C-x m" . org-capture))

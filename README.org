@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-12-28 15:52:27
+#+DATE: 2018-12-28 16:23:18
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -55,8 +55,12 @@ init.el: README.org
   (setq user-emacs-directory (file-name-directory load-file-name)))
 (defconst my:d:share
   (expand-file-name "share/" user-emacs-directory))
+(unless (file-directory-p my:d:share)
+  (make-directory my:d:share))
 (defconst my:d:tmp
   (expand-file-name "tmp/" user-emacs-directory))
+(unless (file-directory-p my:d:tmp)
+  (make-directory my:d:tmp))
   #+END_SRC
   ついでに，
   =custom-set-variables= は別ファイルに出力，終了時に削除するようにしています．

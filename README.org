@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-12-27 16:01:52
+#+DATE: 2018-12-28 14:05:32
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -3339,6 +3339,7 @@ Related [[wiki:index][Index]]
   ちょいちょい上手く動かなかったりするんだけれど、どうしたモンかな.
   #+BEGIN_SRC emacs-lisp
 (use-package auto-complete-config
+  :ensure auto-complete
   :config
   (ac-flyspell-workaround)
   (ac-set-trigger-key "M-TAB")

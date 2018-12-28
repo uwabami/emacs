@@ -7,25 +7,12 @@ EL		+= $(shell dpkg -l wl-beta 2>&1 | grep -q ^ii && echo init-wl.el )
 EL		+= $(shell dpkg -l wl 2>&1 | grep -q ^ii && echo init-wl.el )
 ELC		= $(EL:%.el=%.elc)
 
-all: bootstrap init.elc
-bootstrap: tmp/bootstrap-stamp
-tmp/bootstrap-stamp: init.el
-	@mkdir -p tmp
-	@chmod 700 tmp
-	@if [ ! -f $@ ] ; then \
-	  for p in $(PKG) ; do \
-		  $(EMACS) -q --batch -l init.el --eval \
-		    "(package-install '$$p)" ;\
-	  done ;\
-	fi
-	@rm -f emacs-batch-install.el
-	@touch $@
+all: init.elc
 init.el: README.org
 	$(EMACS) -q --batch --eval \
 	   "(progn \
 		  (require 'ob-tangle) \
 		  (org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\"))"
-
 init.elc: $(ELC)
 	$(EMACS) -q -l init.el -batch -f batch-byte-compile init.el
 	@rm -f init.el

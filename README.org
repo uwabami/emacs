@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-12-26 19:06:03
+#+DATE: 2018-12-27 16:01:52
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -78,7 +78,7 @@ init.el: README.org
 (require 'package nil 'noerror)
 (setq package-enable-at-startup t
       package-user-dir (expand-file-name "pkg/elpa" user-emacs-directory)
-      package-gnupghome-dir (concat package-user-dir "/gnupg"))
+      package-gnupghome-dir (expand-file-name ".gnupg" (getenv "HOME")))
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (add-to-list 'package-archives '("org"   . "https://orgmode.org/elpa/") t)
 (eval-when-compile
@@ -2656,8 +2656,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :quelpa (orgmine
            :fetcher github
            :repo "kametoku/orgmine")
+  :ensure elmine
   :init
-  (use-package elmine :ensure t)
   (add-to-list 'safe-local-variable-values
                '(orgmine-note-block-begin . "#+BEGIN_SRC textile"))
   (add-hook 'org-mode-hook

@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-12-30 13:08:41
+#+DATE: 2018-12-30 13:14:51
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -287,6 +287,487 @@ init.el: README.org
         my:d:password-store (concat (getenv "PASSWORD_STORE_DIR") "/Emacs/" (system-name)))
   )
   #+END_SRC
+* 言語の設定
+  日本語, UTF-8 にしています.
+  #+BEGIN_SRC emacs-lisp
+(set-language-environment "Japanese")
+(prefer-coding-system 'utf-8)
+(set-file-name-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+(set-terminal-coding-system 'utf-8)
+(set-default 'buffer-file-coding-system 'utf-8)
+  #+END_SRC
+  その他, 機種依存文字等についての設定をアレコレ.
+** cp5022x.el
+   Emacs23 から内部が Unicode ベースになっています．
+
+   しかし文字コードの変換は GNU libc の iconv をベースにしているため，
+   環境によっては文字の変換がうまく行なえません．
+   そこで言語設定前に =cp5022x.el= をインストールすることにしています．
+   #+BEGIN_SRC emacs-lisp
+(use-package cp5022x
+  :ensure t
+  :config
+  (set-charset-priority 'ascii 'japanese-jisx0208 'latin-jisx0201
+                        'katakana-jisx0201 'iso-8859-1 'unicode)
+  (set-coding-system-priority 'utf-8 'euc-jp 'iso-2022-jp 'cp932)
+  )
+   #+END_SRC
+** East Asian Ambiguos 対応
+   CJK 以外の East Asian Ambiguos，絵文字も2文字幅にするようにしています．
+   拙作の修正ロケールはこちら: [[https://github.com/uwabami/locale-eaw-emoji]]
+   #+BEGIN_SRC emacs-lisp
+(use-package locale-eaw-emoji
+  :quelpa (locale-eaw-emoji
+           :fetcher github
+           :repo "uwabami/locale-eaw-emoji")
+  :config
+  (eaw-and-emoji-fullwidth))
+   #+END_SRC
+** OSの違いに起因する条件分岐
+   Mac と Linux では同じ Unicode でも正規化が異なります
+   (具体的には Mac のファイルシステムである HFS+ では Unicode の正規化が異なります).
+   Unicode の正規化と Mac OS X 特有の事情については
+   - [[http://homepage1.nifty.com/nomenclator/unicode/normalization.htm][Unicode正規化とは]]
+   - [[http://www.sakito.com/2010/05/mac-os-x-normalization.html][Mac OS X におけるファイル名に関するメモ(NFC, NFD等)]]
+   等が参考になるでしょう.
+
+   日本語のファイル名を扱うことは滅多にないものの,
+   たまに祟りがあるのでそれを回避するための設定をしています.
+
+   Windows の場合はファイル名などは cp932 にしているものの,
+   最近 Windows 使っていないので良く知りません(というわけで，設定を捨てました).
+   +さらに，最近は Mac OS でも Emacs 使ってないから，これが正しのか良くわからない...+
+   #+BEGIN_SRC emacs-lisp
+(use-package ucs-normalize
+  :if (eq system-type 'darwin)
+  :config
+  (set-file-name-coding-system 'utf-8-hfs)
+  (setq locale-coding-system 'utf-8-hfs
+        mac-pass-control-to-system t   ;; Ctrl を Mac から奪い取る
+        ns-command-modifier 'meta      ;; Cmd と Option を逆にする
+        ns-alternate-modifier 'super)
+  (global-set-key [ns-drag-file] 'ns-find-file)
+  )
+   #+END_SRC
+* 主にEmacs本体に同梱されている拡張に関する設定
+  最近ぼちぼち他の拡張も入れる様になってきた.
+** 標準機能の設定
+*** 表示関連
+    起動時のスプラッシュ画面を表示しない
+    #+BEGIN_SRC emacs-lisp
+(setq inhibit-startup-screen t
+      inhibit-startup-message t)
+    #+END_SRC
+    大抵の場合ターミナル内で =-nw= として起動するし,
+    メニューは触ったことないので使わないので，
+    フレーム, ツールバー等を非表示にする．
+    #+BEGIN_SRC emacs-lisp
+(my:disable-builtin-mode 'tool-bar-mode)
+(my:disable-builtin-mode 'scroll-bar-mode)
+(my:disable-builtin-mode 'menu-bar-mode)
+(my:disable-builtin-mode 'blink-cursor-mode)
+(my:disable-builtin-mode 'column-number-mode)
+    #+END_SRC
+    ベル無効化
+    #+BEGIN_SRC emacs-lisp
+(setq ring-bell-function 'ignore)
+    #+END_SRC
+    現在行のハイライト
+    #+BEGIN_SRC emacs-lisp
+(global-hl-line-mode t)
+    #+END_SRC
+    選択リージョンに色付け
+    #+BEGIN_SRC emacs-lisp
+(setq transient-mark-mode t)
+    #+END_SRC
+    対応する括弧を強調表示
+    #+BEGIN_SRC emacs-lisp
+(show-paren-mode +1)
+(setq show-paren-style 'mixed)
+    #+END_SRC
+    行番号を表示する =linum-mode= は基本使わない(必要に応じて有効にする)
+    ので通常はモードラインに行番号や桁番号を表示しないようする.
+    ついでに =linum-mode= を有効にした場合の桁表示を 5 桁に.
+    #+BEGIN_SRC emacs-lisp
+(my:disable-builtin-mode 'line-number-mode)
+(setq linum-format "%5d ")
+    #+END_SRC
+    debug は表示しない: 必要に応じて t に変更する
+    #+BEGIN_SRC emacs-lisp
+(setq debug-on-error nil)
+    #+END_SRC
+    Compile-Log の非表示:     ほとんど見ないし．
+    #+BEGIN_SRC emacs-lisp
+(let ((win (get-buffer-window "*Compile-Log*")))
+  (when win (delete-window win)))
+    #+END_SRC
+    Warning の抑制: これもほとんど見ないし．
+    #+BEGIN_SRC emacs-lisp
+(setq byte-compile-warnings
+      '(not
+        free-vars
+        unresolved
+        callargs
+        redefine
+        obsolete
+        noruntime
+        cl-functions
+        interactive-only
+        make-local
+        ))
+    #+END_SRC
+*** 編集関連
+    yes or no を y or n に
+    #+BEGIN_SRC emacs-lisp
+(fset 'yes-or-no-p 'y-or-n-p)
+    #+END_SRC
+    ファイル名の大文字小文字を区別しない(zsh風)
+    #+BEGIN_SRC emacs-lisp
+(setq read-file-name-completion-ignore-case t)
+    #+END_SRC
+    tab 幅 4, tab でのインデントはしない
+    #+BEGIN_SRC emacs-lisp
+(setq-default tab-width 4)
+(setq-default indent-tabs-mode nil)
+    #+END_SRC
+    文字列は 72 文字で折り返し(RFC2822風味)
+    #+BEGIN_SRC emacs-lisp
+(setq-default fill-column 72)
+(setq paragraph-start '"^\\([ 　・○<\t\n\f]\\|(?[0-9a-zA-Z]+)\\)")
+(setq-default auto-fill-mode nil)
+    #+END_SRC
+    長い行の折り返し:
+    デフォルトは折り返し有で =\C-c M-l= で toggle
+    #+BEGIN_SRC emacs-lisp
+(set-default 'truncate-lines nil)
+(setq truncate-partial-width-windows nil)
+(define-key global-map (kbd "C-c M-l") 'toggle-truncate-lines)
+    #+END_SRC
+    バッファ終端で newline を入れない
+    #+BEGIN_SRC emacs-lisp
+(setq next-line-add-newlines nil)
+    #+END_SRC
+    symlink は常においかける
+    #+BEGIN_SRC emacs-lisp
+(setq vc-follow-symlinks t)
+    #+END_SRC
+    変更のあったファイルの自動再読み込み
+    #+BEGIN_SRC emacs-lisp
+(global-auto-revert-mode 1)
+    #+END_SRC
+    バックアップとauto-saveの作成/位置の変更:
+    #+BEGIN_SRC emacs-lisp
+(setq auto-save-list-file-prefix (concat my:d:tmp ".saves-")
+      auto-save-default t
+      auto-save-timeout 15
+      auto-save-interval 60
+      make-backup-files t
+      backup-by-copying t ; symlink は使わない
+      backup-directory-alist `(("." . ,my:d:tmp))
+      auto-save-file-name-transforms `((".*" ,my:d:tmp t))
+      version-control t
+      kept-new-versions 5
+      kept-old-versions 5
+      delete-old-versions t
+      delete-auto-save-files t
+      )
+    #+END_SRC
+    Undo/Redo:
+    そのうち undohist と undo-tree を試そうと思っているのですが，
+    今のところ特に弄ってません． =undo-limit= は無限大にしたいのですが，どうするのかな...?
+    #+BEGIN_SRC emacs-lisp
+(setq undo-limit 200000
+      undo-strong-limit 260000)
+(savehist-mode 1)
+(setq history-length t  ; t で無制限
+      savehist-file (concat my:d:tmp "history"))
+    #+END_SRC
+** ファイル，デイレクトリ整理
+   =~/.emacs.d/= 以下にファイルが転がるのがなんか嫌なので, 気がつく度に設定している.
+   #+BEGIN_SRC emacs-lisp
+(use-package url
+  :init
+  (setq url-configuration-directory (concat my:d:tmp "url")))
+(use-package nsm
+  :if (featurep 'nsm)
+  :init
+  (setq nsm-settings-file (concat my:d:tmp "network-settings.data")))
+  #+END_SRC
+   他にもイロイロありそう．
+** =recentf=: 最近使ったファイル履歴の保管
+   ファイルを開く際には =ido-recentf-open= を使うので,
+   結局履歴を貯める設定をしている事になっている.
+   #+BEGIN_SRC emacs-lisp
+(use-package recentf
+  :defer t
+  :init
+  (add-hook 'after-init-hook 'recentf-mode)
+  :config
+  (defmacro my:suppressed-message (&rest body)
+    "Suppress new messages temporarily in the echo area and the `*Messages*' buffer while BODY is evaluated."
+    (declare (indent 0))
+    (let ((message-log-max nil))
+      `(with-temp-message (or (current-message) "") ,@body)))
+  (setq recentf-max-saved-items 256
+        recentf-save-file (expand-file-name (concat my:d:tmp "recentf"))
+        recentf-auto-cleanup 'never
+        recentf-exclude '(".recentf"
+                          "^/tmp\\.*"
+                          "^/private\\.*"
+                          "^/var/folders\\.*"
+                          "/TAGS$"
+                          "^/home/uwabami/.mozilla/\\.*"
+                          "\\.*草稿\\.*"
+                          ))
+  (run-with-idle-timer 30 t '(lambda ()
+                               (my:suppressed-message (recentf-save-list))))
+  )
+   #+END_SRC
+   ディレクトリの履歴も取れるので recentf-ext を入れておく
+   #+BEGIN_SRC emacs-lisp
+(use-package recentf-ext
+  :ensure t
+  :defer t
+  )
+   #+END_SRC
+** =.elc= と =.el= の timestamp を比較し，新しい方を読み込む
+   =load-prefer-newer= は Emacs >= 24.4 から．
+   #+BEGIN_SRC emacs-lisp
+(when (boundp 'load-prefer-newer)
+  (setq load-prefer-newer t))
+   #+END_SRC
+** ガベージコレクションの +頻度を下げる+ 表示をしない
+   message に gc が走っていることを表示しない
+   #+BEGIN_SRC emacs-lisp
+(setq gc-cons-threshold (* 8 1024 1024)
+      garbage-collection-messages nil)
+   #+END_SRC
+   =gc-cons-threshold= はとりあえず default の設定に.
+   メモリ喰いな拡張を入れている場合には, 安易に =gc-cons-threshold= を上げるのは考えものである.
+   「gc が走る→大きな領域を掃除するのでその間 emacs が止まる」という事を頻繁に経験することになるだろう.
+** =abbrev=: 略語展開
+   #+BEGIN_SRC emacs-lisp
+(use-package abbrev
+  :diminish abbrev-mode
+  :config
+  (setq abbrev-file-name (concat my:d:share "abbrev_defs")
+        save-abbrevs t)
+  (setq-default abbrev-mode t)
+  )
+   #+END_SRC
+** =eldoc=: emacs-lisp document
+   #+BEGIN_SRC emacs-lisp
+(use-package eldoc
+  :diminish eldoc-mode
+  :config
+  (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
+  )
+   #+END_SRC
+** =midnight=: 一定期間使用しなかった buffer を自動削除
+   #+BEGIN_SRC emacs-lisp
+(use-package midnight
+  :config
+  (setq clean-buffer-list-delay-general 1))
+   #+END_SRC
+** =uniquify=: モードラインのファイル名にディレクトリも表示する
+   #+BEGIN_SRC emacs-lisp
+(use-package uniquify
+  :config
+  (setq uniquify-buffer-name-style 'post-forward-angle-brackets
+        uniquify-min-dir-content 1))
+   #+END_SRC
+** =whitespace=: 空白の強調表示
+   #+BEGIN_SRC emacs-lisp
+(use-package whitespace
+  :diminish global-whitespace-mode
+  :config
+  (setq whitespace-line-column 72
+        whitespace-style '(face              ; faceを使って視覚化する．
+                           trailing          ; 行末の空白を対象とする．
+                           tabs              ; tab
+                           spaces            ; space
+                           )
+        whitespace-display-mappings '((space-mark ?\u3000 [?\□])
+                                      (tab-mark ?\t [?\u00BB ?\t] [?\\ ?\t]))
+        whitespace-space-regexp "\\(\u3000+\\)"
+        whitespace-global-modes '(not
+                                  eww-mode
+                                  term-mode
+                                  eshell-mode
+                                  org-agenda-mode
+                                  calendar-mode)
+        )
+  (global-whitespace-mode 1)
+  )
+   #+END_SRC
+** =saveplace=: 前回の修正位置を記憶する.
+   記憶の保存先は =~/.emacs.d/tmp/emacs-places= に変更.
+   #+BEGIN_SRC emacs-lisp
+(use-package saveplace
+  :config
+  (setq-default save-place t)
+  (setq save-place-file (concat my:d:tmp "emacs-places")))
+   #+END_SRC
+** =time-stamp=: 保存時に timestamp を自動更新
+   デフォルトではいろいろと衝突したので
+   更新文字列を変更し， =＄Lastupdate: 2= (＄は半角) があったら timestamp を更新する様にした．
+   #+BEGIN_SRC emacs-lisp
+(use-package time-stamp
+  :config
+  (setq time-stamp-active t
+        time-stamp-line-limit 10
+        time-stamp-start "$Lastupdate: 2"
+        time-stamp-end "\\$"
+        time-stamp-format "%03y-%02m-%02d %02H:%02M:%02S")
+  (add-hook 'before-save-hook 'time-stamp))
+   #+END_SRC
+   モード独自の設定(例えば Org とか)に関しては別途．
+** =tramp=: ssh 越しにファイルを編集
+   #+BEGIN_SRC emacs-lisp
+(use-package tramp
+  :config
+  (setq tramp-persistency-file-name (concat my:d:tmp "tramp"))
+  )
+   #+END_SRC
+** =bookmark=: bookmark ファイル
+   イマイチ使いこなせてない. 場所だけ変更しておく.
+   #+BEGIN_SRC emacs-lisp
+(setq bookmark-default-file (concat my:d:share "bookmarks"))
+   #+END_SRC
+** =eww=: 内蔵ブラウザ
+   幅と背景色の指定がメインだが、
+   上手くうごいてくれていない、ような。
+   #+BEGIN_SRC emacs-lisp
+(use-package eww
+  :config
+  ;; vi like <- vimperator, vimium に慣れてしまったので
+  (bind-keys :map eww-mode-map
+             ("r"  . eww-reload)
+             ("o"  . eww)
+             ("&"  . eww-browse-with-external-browser)
+             ("b"  . eww-back-url)
+             ("]"  . eww-next-url)
+             ("["  . eww-previous-url)
+             ("g"  . eww-top-url)
+             ("+"  . my:eww-increase-width)
+             ("-"  . my:eww-decrease-width)
+             ("h"  . backward-char)
+             ("j"  . next-line)
+             ("k"  . previous-line)
+             ("l"  . forward-char)
+             ("/"  . isearch-forward)
+             ("?"  . isearch-backward)
+             ("n"  . isearch-next)
+             ("N"  . isearch-previous)
+             ("f"  . ace-link-eww)
+             )
+  ;; eww
+  (unless (file-directory-p (expand-file-name "eww" my:d:tmp))
+    (make-directory (expand-file-name "eww" my:d:tmp)))
+  (setq eww-bookmarks-directory (expand-file-name "eww" my:d:tmp)
+        eww-search-prefix "https://www.google.com/search?&gws_rd=cr&complete=0&pws=0&tbs=li:1&lr=lang_ja|lang_en&q=")
+  ;; 背景色の設定
+  (defvar eww-disable-colorize t)
+  (defun shr-colorize-region--disable (orig start end fg &optional bg &rest _)
+    (unless eww-disable-colorize
+      (funcall orig start end fg)))
+  (advice-add 'shr-colorize-region :around 'shr-colorize-region--disable)
+  (advice-add 'eww-colorize-region :around 'shr-colorize-region--disable)
+  (defun eww-disable-color ()
+    "eww で文字色を反映させない"
+    (interactive)
+    (setq-local eww-disable-colorize t)
+    (eww-reload))
+  (defun eww-enable-color ()
+    "eww で文字色を反映させる"
+    (interactive)
+    (setq-local eww-disable-colorize nil)
+    (eww-reload))
+  (defun eww-disable-images ()
+    "eww で画像表示させない"
+    (interactive)
+    (setq-local shr-put-image-function 'shr-put-image-alt)
+    (eww-reload))
+  (defun eww-enable-images ()
+    "eww で画像表示させる"
+    (interactive)
+    (setq-local shr-put-image-function 'my:shr-put-image)
+    (eww-reload))
+  (defun my:shr-put-image (spec alt &optional flags)
+    "call xdg-open"
+    (message "spec: %s" spec)
+    (shr-put-image (spec alt &optional flags)))
+  (defun shr-put-image-alt (spec alt &optional flags)
+    (insert alt))
+  ;; はじめから非表示
+  (defun eww-mode-hook--disable-image ()
+    (setq-local shr-put-image-function 'shr-put-image-alt))
+  (add-hook 'eww-mode-hook 'eww-mode-hook--disable-image)
+  ;; テキスト幅の指定
+  (setq shr-width 78)
+  (defvar my:shr-width 78)
+  (defun my:shr-insert-document (&rest them)
+    (let ((shr-width (min (1- (window-width)) my:shr-width)))
+      (apply them)))
+  (defun eww-display-html--fill-column (&rest them)
+    (advice-add 'shr-insert-document :around 'my:shr-insert-document)
+    (unwind-protect
+        (apply them)
+      (advice-remove 'shr-insert-document 'my:shr-insert-document)))
+  (advice-add 'eww-display-html :around 'eww-display-html--fill-column)
+  ;; increase
+  (defun my:eww-increase-width ()
+    (interactive)
+    (make-local-variable 'my:shr-width)
+    (setq my:shr-width  (+ 10 my:shr-width))
+    (eww-reload))
+  ;; decrease
+  (defun my:eww-decrease-width ()
+    (interactive)
+    (make-local-variable 'my:shr-width)
+    (setq my:shr-width  (- my:shr-width 10))
+    (eww-reload))
+  ;; buffer を rename
+  (defun eww-mode-hook--rename-buffer ()
+    "Rename eww browser's buffer so sites open in new page."
+    (rename-buffer "eww" t))
+  (add-hook 'eww-mode-hook 'eww-mode-hook--rename-buffer)
+  )
+   #+END_SRC
+** =browse-url=
+   Firefox の呼び出し方が変わったので，そのために関数を追加．
+   詳細は [[http://www.emacswiki.org/emacs/BrowseUrl]] を参照のこと．
+   #+BEGIN_SRC emacs-lisp
+(use-package browse-url
+  :bind (("C-c C-j" . browse-url-at-point))
+  :config
+  (defun browse-url-firefox (url &optional new-window)
+    "@see http://www.emacswiki.org/emacs/BrowseUrl"
+    (interactive (browse-url-interactive-arg "URL: "))
+    (setq url (browse-url-encode-url url))
+    (let* ((process-environment (browse-url-process-environment))
+           (window-args (if (browse-url-maybe-new-window new-window)
+                            (if browse-url-firefox-new-window-is-tab
+                                '("-new-tab")
+                              '("-new-window"))))
+           (ff-args (append browse-url-firefox-arguments window-args (list url)))
+           (process-name (concat "firefox " url))
+           (process (apply 'start-process process-name nil
+                           browse-url-firefox-program ff-args) ))))
+  (if (executable-find "firefox")
+      (setq browse-url-browser-function 'browse-url-firefox
+            shr-external-browser 'browse-url-firefox)
+    (setq browse-url-browser-function 'eww-browse-url))
+  )
+   #+END_SRC
+** =server=: Emacs server
+   #+BEGIN_SRC emacs-lisp
+(use-package server
+  :config
+  (unless (server-running-p)
+    (server-start)))
+   #+END_SRC
 * 起動時間の計測
   [[http://memo.sugyan.com/entry/20120120/1327037494][起動時間を計測する 改訂版 - すぎゃーんメモ]]
   #+BEGIN_SRC emacs-lisp

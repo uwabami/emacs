@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-12-30 18:21:51
+#+DATE: 2018-12-30 18:33:57
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -812,8 +812,10 @@ Emacs*useXIM: false
    実際の設定は別ファイルで行なわれるため
    ここでは設定ファイルの位置変更を変更している．
    #+BEGIN_SRC emacs-lisp
+(unless (locate-library "skk")
+  (package-install 'ddskk))
 (use-package skk
-  :ensure ddskk
+  :ensure nil
   :bind (("C-x j"   . skk-mode)
          ("C-x C-j" . skk-mode)
          ("C-\\"    . skk-mode))
@@ -2157,6 +2159,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     (set (make-local-variable 'time-stamp-end)   "\$")
     )
   (add-hook 'org-mode-hook 'my:org-timestamp-hook)
+  ;; (use-package org-tempo)
   )
    #+END_SRC
 ** Org-journal: 日記
@@ -2217,10 +2220,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 (use-package org-wl
   :if (and (my:dpkg-status "wl-beta")
            (file-directory-p my:d:org))
-  :quelpa (org-wl
-           :fetcher url
-           :url "https://code.orgmode.org/bzg/org-mode/raw/master/contrib/lisp/org-wl.el"
-           )
   )
 (use-package org-capture
   :bind (("C-x m" . org-capture))

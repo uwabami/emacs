@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-12-30 13:39:03
+#+DATE: 2018-12-30 13:43:35
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -1040,6 +1040,22 @@ File.open(src, "r") {|f|
   (xclip-mode 1))
   #+END_SRC
   clipboard と PRIMARY の同期には =gpaste= を使っている．
+* インクリメンタル検索: =migemo=
+  #+BEGIN_SRC emacs-lisp
+(use-package migemo
+  :if (executable-find "cmigemo")
+  :ensure t
+  :defer t
+  :config
+  (setq migemo-command "cmigemo"
+        migemo-options '("-q" "--emacs")
+        migemo-dictionary "/usr/share/cmigemo/utf-8/migemo-dict"
+        migemo-user-dictionary nil
+        migemo-regex-dictionary nil
+        migemo-coding-system 'utf-8-unix)
+  (migemo-init)
+  )
+  #+END_SRC
 * 起動時間の計測
   [[http://memo.sugyan.com/entry/20120120/1327037494][起動時間を計測する 改訂版 - すぎゃーんメモ]]
   #+BEGIN_SRC emacs-lisp

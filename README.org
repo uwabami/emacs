@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-12-30 18:01:58
+#+DATE: 2018-12-30 18:21:51
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -2091,11 +2091,12 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    #+BEGIN_SRC emacs-lisp
 (defvar my:d:org (concat (getenv "HOME") "/Nextcloud/org/"))
 (use-package org
-  :if (file-directory-p my:d:org)
+  :if (and (file-directory-p my:d:org)
+           (getenv "GPG_KEY_ID"))
   :defer t
   :bind (("C-x n s" . org-narrow-to-subtree)
          ("C-x n w" . widen))
-  ;:ensure org-plus-contrib
+  :ensure org-plus-contrib
   :init
   (with-eval-after-load "org"
     (setq org-file-apps-defaults '((remote . emacs)  ;; xdg-open 任せ

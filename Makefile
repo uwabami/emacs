@@ -2,24 +2,22 @@
 EMACS	?= emacs
 # PKG		 = org-plus-contrib
 # PKG		+= $(shell dpkg -l ddskk 2>&1 | grep -q ^ii || echo ddskk )
-# EL		= init-ddskk.el
+EL		= init-ddskk.el
 # EL		+= $(shell dpkg -l wl-beta 2>&1 | grep -q ^ii && echo init-wl.el )
 # EL		+= $(shell dpkg -l wl 2>&1 | grep -q ^ii && echo init-wl.el )
 ELC		= $(EL:%.el=%.elc)
 
 all: init.elc
+$(EL): init.el
 init.el: README.org
 	$(EMACS) -Q -q --batch --eval \
 	   "(progn \
 		  (require 'ob-tangle) \
 		  (org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\"))"
-init.elc: init.el
+init.elc: $(ELC)
 	$(EMACS) -q -l init.el -batch -f batch-byte-compile init.el
-#	@rm -f init.el
-# $(ELC): $(EL)
-# $(EL): init.el
-# %.elc: %.el
-# 	$(EMACS) -q -l init.el -batch -f batch-byte-compile $<
+%.elc: %.el
+	$(EMACS) -q -l init.el -batch -f batch-byte-compile $<
 # 	@rm -f $<
 
 clean:

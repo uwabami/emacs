@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-12-30 13:16:40
+#+DATE: 2018-12-30 13:39:03
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -772,6 +772,274 @@ init.el: README.org
   (ace-link-setup-default)
   )
   #+END_SRC
+* Elscreen
+  fork 版を利用中.
+  #+BEGIN_SRC emacs-lisp
+(use-package elscreen
+  :quelpa (elscreen
+            :fetcher url
+            :url "https://raw.githubusercontent.com/syohex/elscreen/master/elscreen.el")
+  :init
+  (setq elscreen-tab-display-control nil
+        elscreen-prefix-key (kbd "C-o")
+        elscreen-display-tab 8
+        elscreen-display-screen-number nil)
+  :config
+  (elscreen-start))
+  #+END_SRC
+* 日本語入力: =ddskk=
+  [[http://openlab.ring.gr.jp/skk/ddskk-ja.html][Daredevil SKK (DDSKK)]] をメインで使用中．無いと途方に暮れる．
+  ちなみにGTKが有効になっていると =gtk-immodule= なんかと衝突するので
+  =~/.Xresources= で xim を無効にしておくと良い．
+  例えば以下の様に:
+  #+BEGIN_SRC conf :tangle no
+! disable XIM
+Emacs*useXIM: false
+  #+END_SRC
+** Emacs 本体側の設定
+   実際の設定は別ファイルで行なわれるため
+   ここでは設定ファイルの位置変更を変更している．
+   #+BEGIN_SRC emacs-lisp
+(unless (locate-library "skk")
+  (package-install 'ddskk))
+(use-package skk
+  :bind (("C-x j"   . skk-mode)
+         ("C-x C-j" . skk-mode)
+         ("C-\\"    . skk-mode))
+  :init
+  (setq skk-user-directory (concat my:d:tmp "skk")
+        skk-init-file (concat user-emacs-directory "init-ddskk")
+        default-input-method "japanese-skk" )
+  :config
+  )
+   #+END_SRC
+** DDSKK 本体の設定
+   sticky shift: [[http://homepage1.nifty.com/blankspace/emacs/sticky.html][sticky shift]] を参照のこと.
+   ddskk の 14.2 以降から同梱されるようになった(ありがたい)
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-sticky-key ";")
+   #+END_SRC
+   変換候補の表示位置
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-show-candidates-always-pop-to-buffer t)
+   #+END_SRC
+   候補表示件数を2列に
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-henkan-show-candidates-rows 2)
+   #+END_SRC
+   日本語表示しない
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-japanese-message-and-error nil)
+   #+END_SRC
+   メニューを日本語にしない -> toolbar 非表示だし.
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-show-japanese-menu nil)
+   #+END_SRC
+   注釈の表示
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-show-annotation nil)
+   #+END_SRC
+   インジケータの表示のカスタマイズ
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-latin-mode-string "[_A]")
+(setq skk-hiragana-mode-string "[あ]")
+(setq skk-katakana-mode-string "[ア]")
+(setq skk-jisx0208-latin-mode-string "[Ａ]")
+(setq skk-jisx0201-mode-string "[_ｱ]")
+(setq skk-abbrev-mode-string "[aA]")
+(setq skk-indicator-use-cursor-color nil)
+   #+END_SRC
+   インジケータを左端に表示
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-status-indicator 'left)
+   #+END_SRC
+   mode-line が動くのが許せないので，ちょっと修正
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(defadvice skk-make-indicator-alist
+    (after my:set-skk-default-indicator activate)
+  (dolist (elem
+           '((abbrev " [aA]" . "--[aA]:")
+             (latin " [_A]" . "--[_A]:")
+             (default " [--]" . "--[--]:")))
+    (setq ad-return-value
+          (append (cons elem nil)
+                  (delq (assoc (car elem) ad-return-value) ad-return-value)))))
+(setq skk-show-inline t)
+   #+END_SRC
+   カーソルには色をつけない
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-use-color-cursor nil)
+   #+END_SRC
+*** 編集関連
+    キーバインド
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(global-set-key "\C-x\C-j" 'skk-mode)
+(global-set-key "\C-xj" 'skk-mode)
+(global-set-key "\C-j" 'skk-mode)
+(global-set-key "\C-\\" 'skk-mode)
+    #+END_SRC
+    半角カナを入力
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-use-jisx0201-input-method t)
+    #+END_SRC
+    Enter で改行しない
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-egg-like-newline t)
+    #+END_SRC
+    "「"を入力したら"」"も自動で挿入
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-auto-insert-paren t)
+    #+END_SRC
+    句読点変換ルール
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-kuten-touten-alist
+      '(
+        (jp    . ("。" . "、"))
+        (en-jp . ("．" . "，"))
+        (en    . (". " . ", "))
+        ))
+(setq-default skk-kutouten-type 'en)
+    #+END_SRC
+    全角記号の変換: @ での日付入力は使わない
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-rom-kana-rule-list
+      (append skk-rom-kana-rule-list
+              '(("!" nil "!")
+                (":" nil ":")
+                (";" nil ";")
+                ("?" nil "?")
+                ("z " nil "　")
+                ("\\" nil "\\")
+                ("@" nil "@")
+                )))
+    #+END_SRC
+    送り仮名が厳密に正しい候補を優先
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-henkan-strict-okuri-precedence t)
+    #+END_SRC
+    辞書の共有
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-share-private-jisyo t)
+    #+END_SRC
+    変換候補を縦に表示
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-show-inline 'vertical)
+    #+END_SRC
+*** インクリメンタルサーチ
+    minibuffer 内では強制的に skk off.
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(add-hook 'skk-mode-hook
+          (lambda ()
+            (and (skk-in-minibuffer-p)
+                 (skk-mode-exit))))
+(setq skk-isearch-start-mode 'latin)
+    #+END_SRC
+    インクリメンタルサーチは migemo に任せることに．
+*** 辞書の設定
+    追加している辞書の一覧は
+    - [[http://www.chibutsu.org/jisho/][地球物理辞書]]
+    - [[http://www.geocities.jp/living_with_plasma/tanudic.html][天文・天体物理用語の漢字変換用辞書]]
+    - はてなキーワード
+    - [[http://matsucon.net/material/dic/][2ちゃんねる顔文字辞書 MatsuCon]]
+    - [[http://matsucon.net/][MatsuCon]]
+    といった所.
+    はてなキーワードからの辞書の抽出は [[http://d.hatena.ne.jp/znz][znz]] さんの
+     - [[http://rubyist.g.hatena.ne.jp/znz/20060924/p1][「はてなダイアリーキーワードふりがなリスト」を SKK の辞書に変換]]
+    を参考に.
+    [[http://matsucon.net/][MatsuCon]] で公開されている顔文字に関しては
+    顔文字に ; や が含まれている場合に, 適宜quoteする必要があるので
+    以下のスクリプトで適当に変換.
+    #+BEGIN_SRC ruby :tangle no
+#!/usr/bin/env ruby
+require 'nkf'
+src = ARGV[0]
+if ARGV.size < 1
+  puts "usage: ime2skk.rb ime_dictionary"
+  exit 0
+end
+File.open(src, "r") {|f|
+  f.each do |line|
+    line_euc = NKF.nkf("-S -e",line)
+    if line_euc =~ /^([^!]+?)\t(.+?)\t.+$/
+      entry = $1
+      content = $2
+      if content =~/;/
+        puts entry + " /(concat \"" + content.gsub(';','\\\\073') + "\")/"
+      elsif content =~/\//
+        puts entry + " /(concat \"" + content.gsub('/','\\\\057') + "\")/"
+      else
+        puts entry + " /" + content + "/"
+      end
+    end
+  end
+}
+    #+END_SRC
+    他にも quote する必要あるような気もするけれど, それは気がついた時に.
+
+    辞書サーバの指定は以下.
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(cond
+ ((getenv "SKKSERVER")
+  (setq skk-server-host "127.0.0.1"
+        skk-server-portnum "1178"
+        skk-large-jisyo  nil)
+  (add-to-list 'skk-search-prog-list
+               '(skk-server-completion-search) t)
+  (add-to-list 'skk-search-prog-list
+               '(skk-comp-by-server-completion) t))
+ (t
+  (setq skk-get-jisyo-directory (concat my:d:tmp "skk-jisyo")
+        skk-large-jisyo (concat skk-get-jisyo-directory "/SKK-JISYO.L")))
+ )
+(when (file-exists-p "/usr/local/share/skkdic/SKK-JISYO.emoji.utf8")
+  (setq skk-extra-jisyo-file-list
+        (list '("/usr/local/share/skkdic/SKK-JISYO.emoji.utf8" . utf-8))))
+    #+END_SRC
+    辞書登録の際に送り仮名を削除
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-check-okurigana-on-touroku 'auto)
+    #+END_SRC
+    漢字登録のミスをチェックする
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-check-okurigana-on-touroku t)
+    #+END_SRC
+*** 動的補完
+    まだ設定していない...
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+    ;; ;; 動的補完
+    ;; (setq skk-dcomp-activate t)
+    ;; (setq skk-dcomp-multiple-activate t)
+    ;; (setq skk-dcomp-multiple-rows 5)
+    ;; ;; 動的補完の複数表示群のフェイス
+    ;; (set-face-foreground 'skk-dcomp-multiple-face "Black")
+    ;; (set-face-background 'skk-dcomp-multiple-face "LightGoldenrodYellow")
+    ;; (set-face-bold-p 'skk-dcomp-multiple-face nil)
+    ;; ;; 動的補完の複数表示郡の補完部分のフェイス
+    ;; (set-face-foreground 'skk-dcomp-multiple-trailing-face "dim gray")
+    ;; (set-face-bold-p 'skk-dcomp-multiple-trailing-face nil)
+    ;; ;; 動的補完の複数表示郡の選択対象のフェイス
+    ;; (set-face-foreground 'skk-dcomp-multiple-selected-face "White")
+    ;; (set-face-background 'skk-dcomp-multiple-selected-face "LightGoldenrod4")
+    ;; (set-face-bold-p 'skk-dcomp-multiple-selected-face nil)
+    #+END_SRC
+*** 部首変換, 総画数変換
+    上手く使いこなせていない
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(add-to-list 'skk-search-prog-list
+             '(skk-tankan-search 'skk-search-jisyo-file
+                                 skk-large-jisyo 10000))
+    #+END_SRC
+* Copy & Paste: =xclip=
+  =xclip= で clipboard とデータをやりとり．
+  #+BEGIN_SRC emacs-lisp
+(use-package xclip
+  :if (and (executable-find "xclip")
+           (eq system-type 'gnu/linux))
+  :ensure t
+  :config
+  (xclip-mode 1))
+  #+END_SRC
+  clipboard と PRIMARY の同期には =gpaste= を使っている．
 * 起動時間の計測
   [[http://memo.sugyan.com/entry/20120120/1327037494][起動時間を計測する 改訂版 - すぎゃーんメモ]]
   #+BEGIN_SRC emacs-lisp

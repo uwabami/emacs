@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-12-30 13:07:12
+#+DATE: 2018-12-30 13:08:41
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -249,6 +249,43 @@ init.el: README.org
   #+BEGIN_SRC emacs-lisp
 (use-package el-x
   :ensure t)
+  #+END_SRC
+* [[https://github.com/purcell/exec-path-from-shell][purcell/exec-path-from-shell]]: 環境変数の読み込み
+  zsh で設定した =PATH= などの環境変数を Emacs に引き継ぐ.
+  今の所
+  - =SHELL=
+  - =DEBFULLNAME=
+  - =DEBEMAIL=
+  - =TEXMFHOME=
+  - =SKKSERVER=
+  - =http_proxy=
+  - =GPG_KEY_ID=
+  - =GPG_AGENT_INFO=
+  - =PASSWORD_STORE_DIR=
+  - =PATH=
+  を読み込んでいます．
+  #+BEGIN_SRC emacs-lisp
+(defvar my:d:password-store nil)
+(use-package exec-path-from-shell
+  :ensure t
+  :config
+  (when (memq window-system '(mac ns)) (exec-path-from-shell-initialize))
+  (exec-path-from-shell-copy-envs
+   '("SHELL"
+     "DEBFULLNAME"
+     "DEBEMAIL"
+     "SKKSERVER"
+     "TEXMFHOME"
+     "http_proxy"
+     "GPG_KEY_ID"
+     "GPG_AGENT_INFO"
+     "PASSWORD_STORE_DIR"
+     "PATH"
+     ))
+  (setq user-full-name (concat (getenv "DEBFULLNAME"))
+        user-mail-address (concat (getenv "DEBEMAIL"))
+        my:d:password-store (concat (getenv "PASSWORD_STORE_DIR") "/Emacs/" (system-name)))
+  )
   #+END_SRC
 * 起動時間の計測
   [[http://memo.sugyan.com/entry/20120120/1327037494][起動時間を計測する 改訂版 - すぎゃーんメモ]]

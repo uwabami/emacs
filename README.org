@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-12-30 13:14:51
+#+DATE: 2018-12-30 13:16:40
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -524,13 +524,6 @@ init.el: README.org
                                (my:suppressed-message (recentf-save-list))))
   )
    #+END_SRC
-   ディレクトリの履歴も取れるので recentf-ext を入れておく
-   #+BEGIN_SRC emacs-lisp
-(use-package recentf-ext
-  :ensure t
-  :defer t
-  )
-   #+END_SRC
 ** =.elc= と =.el= の timestamp を比較し，新しい方を読み込む
    =load-prefer-newer= は Emacs >= 24.4 から．
    #+BEGIN_SRC emacs-lisp
@@ -768,6 +761,17 @@ init.el: README.org
   (unless (server-running-p)
     (server-start)))
    #+END_SRC
+* =ace-link=: ace によるリンク選択
+  eww では手放せないくらい便利
+  #+BEGIN_SRC emacs-lisp
+(use-package ace-link
+  :ensure t
+  :config
+  (with-eval-after-load 'eww
+    '(define-key eww-mode-map "f" 'ace-link-eww))
+  (ace-link-setup-default)
+  )
+  #+END_SRC
 * 起動時間の計測
   [[http://memo.sugyan.com/entry/20120120/1327037494][起動時間を計測する 改訂版 - すぎゃーんメモ]]
   #+BEGIN_SRC emacs-lisp

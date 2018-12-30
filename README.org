@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-12-30 14:04:02
+#+DATE: 2018-12-30 14:06:04
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -814,6 +814,122 @@ init.el: README.org
   (migemo-init)
   )
   #+END_SRC
+* 補完: =ido=
+  補完は =ido= が軽いし速いので好み.
+  見た目がちょっと簡素すぎる気もするので、なんとか弄りたい所ではある。
+** =ido= の設定
+   #+BEGIN_SRC emacs-lisp
+(use-package ido
+  :bind (("C-x C-f" . ido-find-file)
+         ;; ("C-x d"   . ido-dired)
+         ;; ("C-x C-d" . ido-dired)
+         ;; ("C-x b"   . ibuffer)
+         ;; ("C-x C-b" . ibuffer)
+         ;; ("C-x M-b" . ibuffer)
+         )
+  :config
+  (ido-mode t)
+  ;; (ido-everywhere t)  ; <- Wanderlust みたいに, 過去の選択を覚えている奴と相性悪い.
+  (setq ido-enable-prefix nil             ; prefix match 入力を先頭一致可能
+        ido-confirm-unique-completion t   ; TAB で名前の一致まで. その後 RET で実行
+        ido-enable-flex-matching t        ; flx matching を試す際には prefix を無効化すること
+        ido-enable-dot-prefix t           ; . を prefix として扱う
+        ido-default-file-method   'selected-window
+        ido-default-buffer-method 'selected-window
+        ido-max-directory-size 10000
+        ido-enable-tramp-completion nil
+        ido-use-faces t
+        ido-ignore-extensions t
+        ido-cannot-complete-command 'ido-next-match
+        ido-save-directory-list-file (concat my:d:tmp "ido.last"))
+  ;; 補完で無視する拡張子の追加．そのうち増える．
+  (cl-loop for ext in
+           '(".dvi"
+             ".fdb_latexmk"
+             ".fls"
+             ".ilg"
+             ".jqz"
+             ".mod"
+             ".nav"
+             ".out"
+             ".snm"
+             ".synctex.gz"
+             ".vrb"
+             )
+           do (add-to-list 'completion-ignored-extensions ext))
+  (add-hook 'ido-setup-hook
+            (lambda ()
+              (define-key ido-completion-map (kbd "C-h") 'ido-delete-backward-updir)
+              (define-key ido-completion-map (kbd "C-l") 'ido-delete-backward-updir)))
+  (defun my:ido-disable-line-trucation ()
+    (set (make-local-variable 'truncate-lines) nil))
+  (add-hook 'ido-minibuffer-setup-hook 'my:ido-disable-line-trucation)
+  )
+   #+END_SRC
+** =flx-ido=: flex match の強化
+   曖昧マッチが非常に直感的になった．地味に便利で手放せない．
+   #+BEGIN_SRC emacs-lisp
+(use-package flx-ido
+  :ensure t
+  :config
+  (flx-ido-mode 1)
+  (setq flx-ido-use-faces nil
+        flx-ido-threshold 10000)
+  )
+   #+END_SRC
+** =ido-grid-mode=: 候補を並べて表示
+   横に並ぶと正直シンドイので並べてみる。
+   #+BEGIN_SRC emacs-lisp
+(use-package ido-grid
+  :quelpa (ido-grid
+            :fetcher github
+            :repo "larkery/ido-grid.el")
+  :config
+  (setq ido-grid-enabled t
+        ido-grid-start-small nil
+        ido-grid-rows 0.15
+        ido-grid-max-columns nil
+        ido-grid-indent 1
+        ido-grid-column-padding 3
+        ido-grid-bind-keys t
+        ido-max-directory-size 100000  ;; avoid [Too Big]
+        )
+  (ido-grid-enable)
+  (defun my:ido-grid-force-one-columns (o &rest args)
+    (let ((ido-grid-max-columns 1)   ;; single vertical col
+          (ido-grid-start-small nil) ;; popup immediately
+          (ido-grid-rows 0.15))      ;; 15% of frame height
+      (apply o args)
+      ))
+  )
+   #+END_SRC
+** =ido-recentf=: recentf を ido で
+   "recentf-list" の結果を整形して, minibuffer に納まる様に縮小したり
+   #+BEGIN_SRC emacs-lisp
+(defun ido-recentf-open ()
+  "Use `ido-completing-read' to \\[find-file] a recent file"
+  (interactive)
+  (let ((files (mapcar (lambda (f)
+                         (cons (my:shorten-file-path f 77) f))
+                       recentf-list)))
+    (let ((selected (ido-completing-read "Files: " (mapcar #'car files))))
+      (find-file (assoc-default selected files)))))
+(bind-key "C-x C-r" 'ido-recentf-open)
+   #+END_SRC
+** =smex=
+   M-x を ido で。
+   #+BEGIN_SRC emacs-lisp
+(use-package smex
+  :ensure t
+  :bind (("M-x" . smex))
+  :config
+  (setq smex-auto-update t
+        smex-save-file (concat my:d:tmp "smex-items")
+        smex-prompt-string "smex: "
+        smex-flex-matching nil
+        )
+  )
+   #+END_SRC
 * 起動時間の計測
   [[http://memo.sugyan.com/entry/20120120/1327037494][起動時間を計測する 改訂版 - すぎゃーんメモ]]
   #+BEGIN_SRC emacs-lisp

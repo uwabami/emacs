@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-12-30 15:14:57
+#+DATE: 2018-12-30 17:55:22
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -1170,6 +1170,55 @@ File.open(src, "r") {|f|
         smex-prompt-string "smex: "
         smex-flex-matching nil
         )
+  )
+   #+END_SRC
+* 認証関連: =id-manager=, =plstore=, =oauth2=, =password-store=
+** id-manager の設定
+   ID と Password の簡単な組の管理をするのに非常に重宝していました.
+   最近は =password-store= を使う様になったので, そのうち移行します.
+   #+BEGIN_SRC emacs-lisp
+(use-package id-manager
+  :if (file-exists-p "~/.gnupg/idm-db.gpg")
+  :ensure t
+  :bind ("M-7" . idm-open-list-command)
+  :config
+  (setq idm-database-file
+        (expand-file-name "~/.gnupg/idm-db.gpg"))
+  (setq idm-clipboard-expire-time-sec 30))
+   #+END_SRC
+** plstore
+   デフォルトは対称鍵暗号化なので， =GPG_KEY_ID= を設定しておく
+   #+BEGIN_SRC emacs-lisp
+(use-package plstore
+  :if (getenv "GPG_KEY_ID")
+  :init
+  (setq plstore-secret-keys 'silent
+        plstore-encrypt-to (getenv "GPG_KEY_ID")))
+   #+END_SRC
+** oauth2
+   oauth2 の認証情報は =plstore= で保存される．
+   ファイルの置き場所と暗号鍵の設定をしておく
+   #+BEGIN_SRC emacs-lisp
+(use-package oauth2
+  :ensure t
+  :init
+  (setq oauth2-token-file (concat my:d:tmp "oauth2.plstore")))
+   #+END_SRC
+** password-store
+   #+BEGIN_SRC emacs-lisp
+(use-package password-store
+  :if (and my:d:password-store
+           (executable-find "pass"))
+  :ensure t
+  )
+   #+END_SRC
+** auth-password-store
+   auth-source として =password-store= を使う拡張
+   #+BEGIN_SRC emacs-lisp
+(use-package auth-source-pass
+  :if (and my:d:password-store
+           (executable-find "pass"))
+  :ensure t
   )
    #+END_SRC
 * 起動時間の計測

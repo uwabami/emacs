@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-12-30 19:12:31
+#+DATE: 2018-12-30 21:41:41
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -93,6 +93,21 @@ init.el: README.org
       (with-temp-buffer (write-file (concat user-emacs-directory "tmp/pkg-stamp")))
       )))
 (package-initialize)
+   #+END_SRC
+   あと batch で先に org-plus-contrib を install する様にしています.
+   #+BEGIN_SRC emacs-lisp :tangle org-install.el
+(setq url-http-attempt-keepalives nil)
+(require 'package nil 'noerror)
+(setq package-enable-at-startup t
+      package-user-dir (expand-file-name "pkg/elpa" user-emacs-directory)
+      package-gnupghome-dir (expand-file-name ".gnupg" (getenv "HOME")))
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+(add-to-list 'package-archives '("org"   . "https://orgmode.org/elpa/") t)
+(eval-when-compile
+  (unless (file-exists-p (concat user-emacs-directory "tmp/pkg-stamp"))
+    (package-refresh-contents)))
+(package-initialize)
+(package-install 'org-plus-contrib)
    #+END_SRC
 ** [[https://github.com/jwiegley/use-package][use-package]]
    個々のパッケージの設定には [[https://github.com/jwiegley/use-package][use-package]] を利用します．
@@ -2098,7 +2113,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :defer t
   :bind (("C-x n s" . org-narrow-to-subtree)
          ("C-x n w" . widen))
-  :ensure org-plus-contrib
   :init
   (package-initialize)
   (with-eval-after-load "org"

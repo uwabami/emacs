@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-12-30 18:33:57
+#+DATE: 2018-12-30 19:12:31
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -2100,6 +2100,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
          ("C-x n w" . widen))
   :ensure org-plus-contrib
   :init
+  (package-initialize)
   (with-eval-after-load "org"
     (setq org-file-apps-defaults '((remote . emacs)  ;; xdg-open 任せ
                                    (system . "xdg-open %s")

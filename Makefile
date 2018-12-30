@@ -1,26 +1,26 @@
 # -*- mode: makefile -*-
 EMACS	?= emacs
-PKG		 = org-plus-contrib
-PKG		+= $(shell dpkg -l ddskk 2>&1 | grep -q ^ii || echo ddskk )
-EL		= init-ddskk.el
-EL		+= $(shell dpkg -l wl-beta 2>&1 | grep -q ^ii && echo init-wl.el )
-EL		+= $(shell dpkg -l wl 2>&1 | grep -q ^ii && echo init-wl.el )
+# PKG		 = org-plus-contrib
+# PKG		+= $(shell dpkg -l ddskk 2>&1 | grep -q ^ii || echo ddskk )
+# EL		= init-ddskk.el
+# EL		+= $(shell dpkg -l wl-beta 2>&1 | grep -q ^ii && echo init-wl.el )
+# EL		+= $(shell dpkg -l wl 2>&1 | grep -q ^ii && echo init-wl.el )
 ELC		= $(EL:%.el=%.elc)
 
 all: init.elc
 init.el: README.org
-	$(EMACS) -q --batch --eval \
+	$(EMACS) -Q -q --batch --eval \
 	   "(progn \
 		  (require 'ob-tangle) \
 		  (org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\"))"
-init.elc: $(ELC)
+init.elc: init.el
 	$(EMACS) -q -l init.el -batch -f batch-byte-compile init.el
-	@rm -f init.el
-$(ELC): $(EL)
-$(EL): init.el
-%.elc: %.el
-	$(EMACS) -q -l init.el -batch -f batch-byte-compile $<
-	@rm -f $<
+#	@rm -f init.el
+# $(ELC): $(EL)
+# $(EL): init.el
+# %.elc: %.el
+# 	$(EMACS) -q -l init.el -batch -f batch-byte-compile $<
+# 	@rm -f $<
 
 clean:
 	rm -fr auto-save-list *.el *.elc *~

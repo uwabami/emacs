@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2018-12-30 12:59:53
+#+DATE: 2018-12-30 13:07:12
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -117,7 +117,6 @@ init.el: README.org
         quelpa-melpa-recipe-stores nil)
   )
    #+END_SRC
-* パッケージ関連
 * 独自関数
   細かい独自関数，など．
 ** カーソルのある位置の face を調べる関数
@@ -244,6 +243,12 @@ init.el: README.org
   名前衝突の回避のために，関数の接頭詞として =cl-= が付くようになったのは御愛嬌．
   #+BEGIN_SRC emacs-lisp
 (eval-and-compile (use-package cl-lib))
+  #+END_SRC
+* 後方互換性: =el-x=
+  古い =flet= と同じ挙動をする =dflet= を使うために =el-x= を導入しておく
+  #+BEGIN_SRC emacs-lisp
+(use-package el-x
+  :ensure t)
   #+END_SRC
 * 起動時間の計測
   [[http://memo.sugyan.com/entry/20120120/1327037494][起動時間を計測する 改訂版 - すぎゃーんメモ]]

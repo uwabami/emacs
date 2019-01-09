@@ -1,0 +1,6 @@
+[submodule "modules/leaf"]
+	path = modules/leaf
+	url = https://github.com/conao3/leaf.el.git
+[submodule "modules/feather"]
+	path = modules/feather
+	url = https://github.com/conao3/feather.el.git

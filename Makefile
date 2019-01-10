@@ -5,7 +5,7 @@ EL		+= $(shell dpkg -l wl-beta 2>&1 | grep -q ^ii && echo init-wl.el )
 EL		+= $(shell dpkg -l wl 2>&1 | grep -q ^ii && echo init-wl.el )
 ELC		= $(EL:%.el=%.elc)
 
-all: init.elc $(ELC)
+all: bootstrap init.elc $(ELC)
 bootstrap: tmp/bootstrap-stamp
 tmp/bootstrap-stamp: init.el
 	git submodule update --init

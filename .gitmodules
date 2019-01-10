@@ -1,3 +1,0 @@
-[submodule "modules/leaf.el"]
-	path = modules/leaf.el
-	url = https://github.com/conao3/leaf.el.git

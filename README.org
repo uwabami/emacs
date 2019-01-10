@@ -1,5 +1,5 @@
 #+TITLE: Emacs の設定
-#+DATE: 2019-01-11 01:35:44
+#+DATE: 2019-01-11 01:53:07
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * ヘッダ
   #+BEGIN_SRC emacs-lisp
@@ -46,21 +46,423 @@
 * Package の初期化
   ほとんど leaf で設定するので不要?
   #+BEGIN_SRC emacs-lisp
-(when (featurep 'package)
-  (package-initialize))
 (add-to-list 'load-path (locate-user-emacs-file "modules/leaf.el/"))
 (require 'leaf nil 'noerror)
 (leaf package
-  :config
+  :init
   (setq package-enable-at-startup t
-        package-user-dir (expand-file-name "pkg/elpa" user-emacs-directory)
+        package-user-dir (locate-user-emacs-file "pkg/elpa")
         package-gnupghome-dir (expand-file-name ".gnupg" (getenv "HOME")))
   (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
   (eval-when-compile
     (unless (file-exists-p (locate-user-emacs-file "tmp/bootstrap-stamp"))
       (package-refresh-contents)))
+  :config
+  (package-initialize)
+  (setq leaf-backend/:ensure 'package)
   )
    #+END_SRC
+  bind-key
+  #+BEGIN_SRC emacs-lisp
+(leaf bind-key
+  :ensure t
+  :config
+  (setq leaf-backend/:bind  'bind-key
+        leaf-backend/:bind* 'bind-key))
+  #+END_SRC
+  quelpa
+  #+BEGIN_SRC emacs-lisp
+(leaf quelpa
+  :ensure t
+  :init
+  (setq quelpa-dir (locate-user-emacs-file "pkg/quelpa")
+        quelpa-upgrade-p nil
+        quelpa-checkout-melpa-p nil
+        quelpa-update-melpa-p nil
+        quelpa-melpa-recipe-stores nil)
+  )
+  #+END_SRC
+  その他, 便利なアレコレ
+  #+BEGIN_SRC emacs-lisp
+(leaf cl-lib)
+(leaf el-x     :ensure t)
+(leaf diminish :ensure t)
+(leaf s        :ensure t)
+  #+END_SRC
+* 環境変数の読み込み: =exec-path-from-shell=
+  zsh で設定した =PATH= などの環境変数を Emacs に引き継ぐために
+  [[https://github.com/purcell/exec-path-from-shell][purcell/exec-path-from-shell]] を使います．
+  今の所
+  - =SHELL=
+  - =DEBFULLNAME=
+  - =DEBEMAIL=
+  - =TEXMFHOME=
+  - =SKKSERVER=
+  - =http_proxy=
+  - =GPG_KEY_ID=
+  - =GPG_AGENT_INFO=
+  - =PASSWORD_STORE_DIR=
+  - =PATH=
+  を読み込んでいます．
+  #+BEGIN_SRC emacs-lisp
+(defvar my:d:password-store nil)
+(leaf exec-path-from-shell
+  :ensure t
+  :config
+  (when (memq window-system '(mac ns)) (exec-path-from-shell-initialize))
+  (exec-path-from-shell-copy-envs
+   '("SHELL"
+     "DEBFULLNAME"
+     "DEBEMAIL"
+     "SKKSERVER"
+     "TEXMFHOME"
+     "http_proxy"
+     "GPG_KEY_ID"
+     "GPG_AGENT_INFO"
+     "PASSWORD_STORE_DIR"
+     "PATH"
+     ))
+  (setq user-full-name (concat (getenv "DEBFULLNAME"))
+        user-mail-address (concat (getenv "DEBEMAIL"))
+        my:d:password-store (concat (getenv "PASSWORD_STORE_DIR") "/Emacs/" (system-name)))
+  )
+  #+END_SRC
+* 言語の設定
+  日本語, UTF-8 にしています.
+  #+BEGIN_SRC emacs-lisp
+(set-language-environment "Japanese")
+(prefer-coding-system 'utf-8)
+(set-file-name-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+(set-terminal-coding-system 'utf-8)
+(set-default 'buffer-file-coding-system 'utf-8)
+  #+END_SRC
+  その他, 機種依存文字等についての設定をアレコレ.
+** cp5022x.el
+   Emacs23 から内部が Unicode ベースになっています．
+
+   しかし文字コードの変換は GNU libc の iconv をベースにしているため，
+   環境によっては文字の変換がうまく行なえません．
+   そこで言語設定前に =cp5022x.el= をインストールすることにしています．
+   #+BEGIN_SRC emacs-lisp
+(unless (package-installed-p 'locale-eaw-emoji)
+  (quelpa '(locale-eaw-emoji
+            :fetcher github
+            :repo "uwabami/locale-eaw-emoji")))
+(leaf locale-eaw-emoji
+  :config
+  (eaw-and-emoji-fullwidth))
+   #+END_SRC
+** OSの違いに起因する条件分岐
+   Mac と Linux では同じ Unicode でも正規化が異なります
+   (具体的には Mac のファイルシステムである HFS+ では Unicode の正規化が異なります).
+   Unicode の正規化と Mac OS X 特有の事情については
+   - [[http://homepage1.nifty.com/nomenclator/unicode/normalization.htm][Unicode正規化とは]]
+   - [[http://www.sakito.com/2010/05/mac-os-x-normalization.html][Mac OS X におけるファイル名に関するメモ(NFC, NFD等)]]
+   等が参考になるでしょう.
+
+   日本語のファイル名を扱うことは滅多にないものの,
+   たまに祟りがあるのでそれを回避するための設定をしています.
+
+   Windows の場合はファイル名などは cp932 にしているものの,
+   最近 Windows 使っていないので良く知りません(というわけで，設定を捨てました).
+   +さらに，最近は Mac OS でも Emacs 使ってないから，これが正しのか良くわからない...+
+   #+BEGIN_SRC emacs-lisp
+(leaf ucs-normalize
+  :if (eq system-type 'darwin)
+  :byte-compile-vars mac-pass-control-to-system ns-command-modifier ns-alternate-modifier
+  :config
+  (set-file-name-coding-system 'utf-8-hfs)
+  (setq locale-coding-system 'utf-8-hfs)
+  ;; ついでにキーバインド: Ctrl を Mac から奪い取る
+  (setq mac-pass-control-to-system t)
+  ;; Cmd と Option を逆にする
+  (setq ns-command-modifier 'meta)
+  (setq ns-alternate-modifier 'super)
+  (global-set-key [ns-drag-file] 'ns-find-file)
+  )
+   #+END_SRC
+* Elscreen
+** 導入 [0/1]
+   modeline の表示そのものは無効化しておく．
+   - [ ] Debian パッケージ版は古い．更新すべき
+   #+BEGIN_SRC emacs-lisp
+(quelpa '(elscreen
+          :fetcher github
+          :repo "emacs-jp/elscreen"))
+(leaf elscreen
+  :init
+  (setq elscreen-tab-display-control nil
+        elscreen-prefix-key (kbd "C-o")
+        elscreen-display-tab 8
+        elscreen-display-screen-number nil)
+  :config
+  (elscreen-start))
+   #+END_SRC
+** elscreen + zsh での連携
+  詳細は
+  - [[https://masutaka.net/chalow/2011-09-28-1.html][ターミナルの zsh と Emacs を風のように駆け抜ける！]]
+  - [[http://syohex.hatenablog.com/entry/20111026/1319606395][cdeを改良]]
+  - [[https://qiita.com/__hage/items/2dd732b4dd68e124e8bd][cdeとelscreen-separate-buffer-listの相性が悪い]]
+  などを参考に.
+  #+BEGIN_SRC emacs-lisp
+(defun return-current-working-directory-to-shell ()
+  (expand-file-name
+   (with-current-buffer
+       (if (featurep 'elscreen)
+           (let* ((frame-confs (elscreen-get-frame-confs (selected-frame)))
+                  (num (nth 1 (assoc 'screen-history frame-confs)))
+                  (cur-window-conf
+                   (assoc 'window-configuration
+                          (assoc num (assoc 'screen-property frame-confs))))
+                  (marker (nth 2 cur-window-conf)))
+             (marker-buffer marker))
+         (nth 1
+              (assoc 'buffer-list
+                     (nth 1 (nth 1 (current-frame-configuration))))))
+     default-directory)))
+  #+END_SRC
+* 日本語入力: =ddskk=
+  [[http://openlab.ring.gr.jp/skk/ddskk-ja.html][Daredevil SKK (DDSKK)]] をメインで使用中．無いと途方に暮れる．
+  ちなみにGTKが有効になっていると =gtk-immodule= なんかと衝突するので
+  =~/.Xresources= で xim を無効にしておくと良い．
+  例えば以下の様に:
+  #+BEGIN_SRC conf :tangle no
+! disable XIM
+Emacs*useXIM: false
+  #+END_SRC
+** Emacs 本体側の設定
+   実際の設定は別ファイルで行なわれるため
+   ここでは設定ファイルの位置変更を変更している．
+   #+BEGIN_SRC emacs-lisp
+(unless (require 'skk nil 'noerror)
+  (package-install 'ddskk))
+(leaf skk
+  :bind (("C-x j"   . skk-mode)
+         ("C-x C-j" . skk-mode)
+         ("C-\\"    . skk-mode))
+  :init
+  (setq skk-user-directory (concat my:d:tmp "skk")
+        skk-init-file (concat user-emacs-directory "init-ddskk")
+        default-input-method "japanese-skk" )
+  )
+   #+END_SRC
+** DDSKK 本体の設定
+   sticky shift: [[http://homepage1.nifty.com/blankspace/emacs/sticky.html][sticky shift]] を参照のこと.
+   ddskk の 14.2 以降から同梱されるようになった(ありがたい)
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-sticky-key ";")
+   #+END_SRC
+   変換候補の表示位置
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-show-candidates-always-pop-to-buffer t)
+   #+END_SRC
+   候補表示件数を2列に
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-henkan-show-candidates-rows 2)
+   #+END_SRC
+   日本語表示しない
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-japanese-message-and-error nil)
+   #+END_SRC
+   メニューを日本語にしない -> toolbar 非表示だし.
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-show-japanese-menu nil)
+   #+END_SRC
+   注釈の表示
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-show-annotation nil)
+   #+END_SRC
+   インジケータの表示のカスタマイズ
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-latin-mode-string "[_A]")
+(setq skk-hiragana-mode-string "[あ]")
+(setq skk-katakana-mode-string "[ア]")
+(setq skk-jisx0208-latin-mode-string "[Ａ]")
+(setq skk-jisx0201-mode-string "[_ｱ]")
+(setq skk-abbrev-mode-string "[aA]")
+(setq skk-indicator-use-cursor-color nil)
+   #+END_SRC
+   インジケータを左端に表示
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-status-indicator 'left)
+   #+END_SRC
+   mode-line が動くのが許せないので，ちょっと修正
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(defadvice skk-make-indicator-alist
+    (after my:set-skk-default-indicator activate)
+  (dolist (elem
+           '((abbrev " [aA]" . "--[aA]:")
+             (latin " [_A]" . "--[_A]:")
+             (default " [--]" . "--[--]:")))
+    (setq ad-return-value
+          (append (cons elem nil)
+                  (delq (assoc (car elem) ad-return-value) ad-return-value)))))
+(setq skk-show-inline t)
+   #+END_SRC
+   カーソルには色をつけない
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-use-color-cursor nil)
+   #+END_SRC
+*** 編集関連
+    キーバインド
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(global-set-key "\C-x\C-j" 'skk-mode)
+(global-set-key "\C-xj" 'skk-mode)
+(global-set-key "\C-j" 'skk-mode)
+(global-set-key "\C-\\" 'skk-mode)
+    #+END_SRC
+    半角カナを入力
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-use-jisx0201-input-method t)
+    #+END_SRC
+    Enter で改行しない
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-egg-like-newline t)
+    #+END_SRC
+    "「"を入力したら"」"も自動で挿入
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-auto-insert-paren t)
+    #+END_SRC
+    句読点変換ルール
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-kuten-touten-alist
+      '(
+        (jp    . ("。" . "、"))
+        (en-jp . ("．" . "，"))
+        (en    . (". " . ", "))
+        ))
+(setq-default skk-kutouten-type 'en)
+    #+END_SRC
+    全角記号の変換: @ での日付入力は使わない
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-rom-kana-rule-list
+      (append skk-rom-kana-rule-list
+              '(("!" nil "!")
+                (":" nil ":")
+                (";" nil ";")
+                ("?" nil "?")
+                ("z " nil "　")
+                ("\\" nil "\\")
+                ("@" nil "@")
+                )))
+    #+END_SRC
+    送り仮名が厳密に正しい候補を優先
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-henkan-strict-okuri-precedence t)
+    #+END_SRC
+    辞書の共有
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-share-private-jisyo t)
+    #+END_SRC
+    変換候補を縦に表示
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-show-inline 'vertical)
+    #+END_SRC
+*** インクリメンタルサーチ
+    minibuffer 内では強制的に skk off.
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(add-hook 'skk-mode-hook
+          (lambda ()
+            (and (skk-in-minibuffer-p)
+                 (skk-mode-exit))))
+(setq skk-isearch-start-mode 'latin)
+    #+END_SRC
+    インクリメンタルサーチは migemo に任せることに．
+*** 辞書の設定
+    追加している辞書の一覧は
+    - [[http://www.chibutsu.org/jisho/][地球物理辞書]]
+    - [[http://www.geocities.jp/living_with_plasma/tanudic.html][天文・天体物理用語の漢字変換用辞書]]
+    - はてなキーワード
+    - [[http://matsucon.net/material/dic/][2ちゃんねる顔文字辞書 MatsuCon]]
+    - [[http://matsucon.net/][MatsuCon]]
+    といった所.
+    はてなキーワードからの辞書の抽出は [[http://d.hatena.ne.jp/znz][znz]] さんの
+     - [[http://rubyist.g.hatena.ne.jp/znz/20060924/p1][「はてなダイアリーキーワードふりがなリスト」を SKK の辞書に変換]]
+    を参考に.
+    [[http://matsucon.net/][MatsuCon]] で公開されている顔文字に関しては
+    顔文字に ; や が含まれている場合に, 適宜quoteする必要があるので
+    以下のスクリプトで適当に変換.
+    #+BEGIN_SRC ruby :tangle no
+#!/usr/bin/env ruby
+require 'nkf'
+src = ARGV[0]
+if ARGV.size < 1
+  puts "usage: ime2skk.rb ime_dictionary"
+  exit 0
+end
+File.open(src, "r") {|f|
+  f.each do |line|
+    line_euc = NKF.nkf("-S -e",line)
+    if line_euc =~ /^([^!]+?)\t(.+?)\t.+$/
+      entry = $1
+      content = $2
+      if content =~/;/
+        puts entry + " /(concat \"" + content.gsub(';','\\\\073') + "\")/"
+      elsif content =~/\//
+        puts entry + " /(concat \"" + content.gsub('/','\\\\057') + "\")/"
+      else
+        puts entry + " /" + content + "/"
+      end
+    end
+  end
+}
+    #+END_SRC
+    他にも quote する必要あるような気もするけれど, それは気がついた時に.
+
+    辞書サーバの指定は以下.
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(cond
+ ((getenv "SKKSERVER")
+  (setq skk-server-host "127.0.0.1"
+        skk-server-portnum "1178"
+        skk-large-jisyo  nil)
+  (add-to-list 'skk-search-prog-list
+               '(skk-server-completion-search) t)
+  (add-to-list 'skk-search-prog-list
+               '(skk-comp-by-server-completion) t))
+ (t
+  (setq skk-get-jisyo-directory (concat my:d:tmp "skk-jisyo")
+        skk-large-jisyo (concat skk-get-jisyo-directory "/SKK-JISYO.L")))
+ )
+(when (file-exists-p "/usr/local/share/skkdic/SKK-JISYO.emoji.utf8")
+  (setq skk-extra-jisyo-file-list
+        (list '("/usr/local/share/skkdic/SKK-JISYO.emoji.utf8" . utf-8))))
+    #+END_SRC
+    辞書登録の際に送り仮名を削除
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-check-okurigana-on-touroku 'auto)
+    #+END_SRC
+    漢字登録のミスをチェックする
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-check-okurigana-on-touroku t)
+    #+END_SRC
+*** 動的補完
+    まだ設定していない...
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+    ;; ;; 動的補完
+    ;; (setq skk-dcomp-activate t)
+    ;; (setq skk-dcomp-multiple-activate t)
+    ;; (setq skk-dcomp-multiple-rows 5)
+    ;; ;; 動的補完の複数表示群のフェイス
+    ;; (set-face-foreground 'skk-dcomp-multiple-face "Black")
+    ;; (set-face-background 'skk-dcomp-multiple-face "LightGoldenrodYellow")
+    ;; (set-face-bold-p 'skk-dcomp-multiple-face nil)
+    ;; ;; 動的補完の複数表示郡の補完部分のフェイス
+    ;; (set-face-foreground 'skk-dcomp-multiple-trailing-face "dim gray")
+    ;; (set-face-bold-p 'skk-dcomp-multiple-trailing-face nil)
+    ;; ;; 動的補完の複数表示郡の選択対象のフェイス
+    ;; (set-face-foreground 'skk-dcomp-multiple-selected-face "White")
+    ;; (set-face-background 'skk-dcomp-multiple-selected-face "LightGoldenrod4")
+    ;; (set-face-bold-p 'skk-dcomp-multiple-selected-face nil)
+    #+END_SRC
+*** 部首変換, 総画数変換
+    上手く使いこなせていない
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(add-to-list 'skk-search-prog-list
+             '(skk-tankan-search 'skk-search-jisyo-file
+                                 skk-large-jisyo 10000))
+    #+END_SRC
 * 起動時間の計測
   [[http://memo.sugyan.com/entry/20120120/1327037494][起動時間を計測する 改訂版 - すぎゃーんメモ]]
   #+BEGIN_SRC emacs-lisp
@@ -76,22 +478,22 @@
 * 警告の抑制
   普段は殆んど見ない.
   #+BEGIN_SRC emacs-lisp
-(setq byte-compile-warnings
-      '(free-vars
-        unresolved
-        callargs
-        redefine
-;;        obsolete
-        noruntime
-        cl-functions
-        interactive-only
-        make-local))
-(setq ad-redefinition-action 'accept)
+;; (setq byte-compile-warnings
+;;       '(free-vars
+;;         unresolved
+;;         callargs
+;;         redefine
+;; ;;        obsolete
+;;         noruntime
+;;         cl-functions
+;;         interactive-only
+;;         make-local))
+;; (setq ad-redefinition-action 'accept)
   #+END_SRC
 * エラー表示の抑制
   これも普段は見ない.
   #+BEGIN_SRC emacs-lisp
-(setq debug-on-error nil)
+;; (setq debug-on-error nil)
   #+END_SRC
 * フォントと色
   そろそろテーマにした方が良い，とは思ってはいる．
@@ -274,4 +676,99 @@
 ;; '(review-mode-header3-face  ((t (:inherit outline-3))))
 ;; '(review-mode-header4-face  ((t (:inherit outline-4))))
 ;; '(review-mode-header5-face  ((t (:inherit outline-5))))
+  #+END_SRC
+* =powerline=: モードラインを綺麗に
+** ddskk の表示のカスタマイズ
+   SKK の状態がヒョコヒョコ動くのが嫌なので，
+   =skk-modeline-input-mode= に常に現在の状況を表示する様にしておく．
+ #+BEGIN_SRC emacs-lisp
+(defun my:skk-modeline-input-mode ()
+  "skk が読み込まれていない場合でも skk-modeline-input-mode に文字を入れて返す"
+  (unless (boundp 'skk-modeline-inpt-mode)
+    (setq skk-modeline-input-mode "--[--]:")))
+(my:skk-modeline-input-mode)
+   #+END_SRC
+ ddskk そのものに modeline を更新する関数があるので無効化する
+   #+BEGIN_SRC emacs-lisp
+(defadvice skk-setup-modeline (around my:disable-skk-setup-modeline activate)
+  "skk-setup-modeline による modeline の更新を無効化"
+  (setq skk-indicator-alist (skk-make-indicator-alist))
+  (force-mode-line-update t))
+   #+END_SRC
+** powerline 本体の設定．
+   default-theme をベースに見たい物だけ表示するようにしてみた．
+   変更点として,
+   - separater は環境によってズレるので，半角スペースに変更
+   - vc-mode でのアイコン表示に U+26A1⚡ High Voltage を使う
+   といった事をしている. East Asian ambiguous Width char の扱いは面倒ですね
+   #+BEGIN_SRC emacs-lisp
+(leaf powerline
+  :ensure t
+  :config
+  (setq powerline-default-separator 'utf-8
+        ;; 半角スペース
+        powerline-utf-8-separator-left  #x20
+        powerline-utf-8-separator-right  #x20
+        ;; デフォルトの⇔
+        ;; powerline-utf-8-separator-left  #xe0b0
+        ;; powerline-utf-8-separator-right #xe0b2
+        ;; 上三角, 下三角
+        ;; powerline-utf-8-separator-left  #xe0bc
+        ;; powerline-utf-8-separator-right #xe0be
+        ;; 壊れ枠
+        ;; powerline-utf-8-separator-left  #xe0d2
+        ;; powerline-utf-8-separator-right #xe0d4
+        )
+  (defpowerline my:powerline-vc
+    (when (and (buffer-file-name (current-buffer)) vc-mode)
+      (format "%s%s"
+              (char-to-string #x26a1)
+              (format-mode-line '(vc-mode vc-mode)))))
+  (defun my:powerline-theme ()
+    "Setup customize theme."
+    (interactive)
+    (setq-default
+     mode-line-format
+     '("%e"
+       (:eval
+        (let* ((active (powerline-selected-window-active))
+               (mode-line-buffer-id (if active 'mode-line-buffer-id 'mode-line-buffer-id-inactive))
+               (mode-line (if active 'mode-line 'mode-line-inactive))
+               (face1 (if active 'powerline-active1 'powerline-inactive1))
+               (face2 (if active 'powerline-active2 'powerline-inactive2))
+               (separator-left (intern (format "powerline-%s-%s"
+                                               (powerline-current-separator)
+                                               (car powerline-default-separator-dir))))
+               (separator-right (intern (format "powerline-%s-%s"
+                                                (powerline-current-separator)
+                                                (cdr powerline-default-separator-dir))))
+               (lhs (list
+                     (powerline-raw (substring skk-modeline-input-mode 2 -1) nil 'l)
+                     (powerline-raw mode-line-mule-info mode-line 'l)
+                     (powerline-raw "%*" mode-line 'l)
+                     (powerline-buffer-id mode-line-buffer-id 'l)
+                     (powerline-raw " ")
+                     (funcall separator-left mode-line face1)
+                     (powerline-major-mode face1 'l)
+                     (powerline-process face1)
+                     (powerline-narrow face1 'l)
+                     (powerline-raw " " face1)
+                     (funcall separator-left face1 face2)
+                     (my:powerline-vc face2 'r)
+                     ))
+               (rhs (list
+                     (powerline-raw global-mode-string face2 'r)
+                     (funcall separator-right face2 face1)
+                     (powerline-raw " " face1)
+                     (powerline-minor-modes face1 'r)
+                     (funcall separator-right face1 mode-line)
+                     (powerline-raw "  ")
+                     (powerline-raw "%6p" mode-line 'r)
+                     ))
+               )
+          (concat (powerline-render lhs)
+                  (powerline-fill face2 (powerline-width rhs))
+                  (powerline-render rhs)))))))
+  (my:powerline-theme)
+  )
   #+END_SRC

@@ -1,9 +1,10 @@
 # -*- mode: makefile -*-
 EMACS	?= emacs
-EL		= init-ddskk.el
-ELC		= $(EL:%.el=%.elc)
+# EL		= init-ddskk.el
+# ELC		= $(EL:%.el=%.elc)
 
-all: init.elc $(ELC)
+all: init.elc
+# all: init.elc $(ELC)
 # all: bootstrap init.elc $(ELC)
 # bootstrap: tmp/bootstrap-stamp
 $(EL): init.el

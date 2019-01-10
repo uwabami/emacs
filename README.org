@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2019-01-10 12:59:07
+#+DATE: 2019-01-10 13:42:06
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -10,15 +10,17 @@
   #+HTML: <a href="https://github.com/uwabami/emacs"><span class="icon-github"><svg id="SVGRoot" width="20px" height="20px" version="1.1" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="m5.4144 12.761c0 0.0645-0.0742 0.11613-0.16774 0.11613-0.10645 0.01-0.18064-0.0419-0.18064-0.11613 0-0.0645 0.0742-0.11613 0.16774-0.11613 0.0968-0.01 0.18064 0.0419 0.18064 0.11613zm-1.0032-0.14516c-0.0226 0.0645 0.0419 0.13871 0.13871 0.15806 0.0839 0.0323 0.18064 0 0.2-0.0645 0.0194-0.0645-0.0419-0.13871-0.13871-0.16775-0.0839-0.0226-0.17742 0.01-0.2 0.0742zm1.4258-0.0548c-0.0935 0.0226-0.15806 0.0839-0.14838 0.15806 0.01 0.0645 0.0935 0.10645 0.19032 0.0839 0.0936-0.0226 0.15806-0.0839 0.14839-0.14838-0.01-0.0613-0.0968-0.10323-0.19033-0.0935zm2.1226-12.361c-4.4742 0-7.8968 3.3968-7.8968 7.871 0 3.5774 2.2516 6.6387 5.4677 7.7161 0.41291 0.0742 0.55807-0.18064 0.55807-0.39032 0-0.2-0.01-1.3032-0.01-1.9806 0 0-2.2581 0.48387-2.7323-0.96129 0 0-0.36774-0.93871-0.89677-1.1806 0 0-0.73871-0.50645 0.0516-0.49677 0 0 0.80323 0.0645 1.2452 0.83226 0.70645 1.2452 1.8903 0.88709 2.3516 0.67419 0.0742-0.51613 0.28387-0.87419 0.51613-1.0871-1.8032-0.2-3.6226-0.46129-3.6226-3.5645 0-0.8871 0.24516-1.3323 0.76129-1.9-0.0839-0.20968-0.35806-1.0742 0.0839-2.1903 0.6742-0.20967 2.2258 0.87097 2.2258 0.87097 0.64516-0.18064 1.3387-0.27419 2.0258-0.27419 0.68709 0 1.3806 0.0936 2.0258 0.27419 0 0 1.5516-1.0839 2.2258-0.87097 0.44193 1.1194 0.16774 1.9806 0.0839 2.1903 0.51613 0.57096 0.83226 1.0161 0.83226 1.9 0 3.1129-1.9 3.3613-3.7032 3.5645 0.29678 0.25484 0.54839 0.73871 0.54839 1.4968 0 1.0871-0.01 2.4322-0.01 2.6968 0 0.20968 0.14839 0.46452 0.55807 0.39032 3.2258-1.071 5.4129-4.1322 5.4129-7.7097 0-4.4742-3.629-7.871-8.1032-7.871zm-4.7613 11.126c-0.0419 0.0323-0.0323 0.10646 0.0226 0.16775 0.0516 0.0516 0.12581 0.0742 0.16775 0.0323 0.0419-0.0323 0.0323-0.10645-0.0226-0.16774-0.0516-0.0516-0.12581-0.0742-0.16775-0.0323zm-0.34838-0.26129c-0.0226 0.0419 0.01 0.0935 0.0742 0.12581 0.0516 0.0323 0.11613 0.0226 0.13871-0.0226 0.0226-0.0419-0.01-0.0935-0.0742-0.12581-0.0645-0.0194-0.11613-0.01-0.13871 0.0226zm1.0452 1.1484c-0.0516 0.0419-0.0323 0.13871 0.0419 0.2 0.0742 0.0742 0.16775 0.0839 0.20968 0.0323 0.0419-0.0419 0.0226-0.13871-0.0419-0.2-0.071-0.0742-0.16775-0.0839-0.20968-0.0323zm-0.36774-0.47419c-0.0516 0.0323-0.0516 0.11613 0 0.19032 0.0516 0.0742 0.13871 0.10645 0.18064 0.0742 0.0516-0.0419 0.0516-0.1258 0-0.2-0.0452-0.0742-0.12903-0.10645-0.18064-0.0645z" fill="currentColor" stroke-width=".032258"/></svg></span></a>
 
   基本方針は以下の通り:
-** Emacs のパッケージ(=package.el=)と [[https://github.com/quelpa/quelpa][quelpa]], [[https://github.com/jwiegley/use-package][use-package]] を使う
-   基本は =package.el= を使いますが、
-   VCS からインストールしたいパッケージが幾つかあるので、
-   それらについては [[https://github.com/quelpa/quelpa][quelpa]] + [[https://framagit.org/steckerhalter/quelpa-use-package][quelpa-use-package]] を使います。
 ** Debian パッケージがインストールされているならば，それを優先する
    :[[https://en.wikipedia.org/wiki/Eating_your_own_dog_food][Eating your own dog food - Wikipedia]]
 
    Emacsに関連するDebianパッケージを幾つかメンテナンスしているので，
    可能な限りDebianパッケージを使うことにしています.
+** Emacs のパッケージ(=package.el=) + [[https://github.com/quelpa/quelpa][quelpa]] + [[https://github.com/conao3/leaf.el][leaf.el]] を使う
+   以前は [[https://github.com/jwiegley/use-package][use-package]] + [[https://framagit.org/steckerhalter/quelpa-use-package][quelpa-use-package]] を利用していましたが,
+   設定を [[https://github.com/conao3/leaf.el][leaf.el]] で書く様になってから,
+   - elpa, melpa にあるパッケージ は package.el で.
+   - github などからは [[https://github.com/quelpa/quelpa][quelpa]] で
+   となりました.
 ** 設定は [[http://orgmode.org/][Org mode]] で書きたい
    以前こんなブログ記事を書きました: [[http://uwabami.junkhub.org/log/20111213.html#p01][Emacsの設定ファイルをorgで書く]]
 
@@ -31,8 +33,8 @@ init.el: README.org
 		 "(progn \
 		    (require 'ob-tangle) \
 		    (org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\"))"
-%.elc: %.el
-	$(EMACS) -l $< -batch -f batch-byte-compile $<
+init.elc: init.el
+	$(EMACS) -q -l $< -batch -f batch-byte-compile $<
    #+END_SRC
 * デバッグ
   #+BEGIN_SRC emacs-lisp
@@ -48,14 +50,15 @@ init.el: README.org
     ~/.emacs.d/
      |-- Makefile    ←  byte-compile 用の rule
      |-- README.org  ←  本ファイル．`org-babel-tangle' で init.el を生成
-     |-- modules/    ←  Git submodule. 今の所 leaf のみ.
+     |-- modules/    ←  git submodules. 今の所 leaf.el のみ
      |-- pkg/
-         |-- elpa    ←  leaf -> package.el で導入したパッケージが置かれる場所
-         `-- quelpa  ←  leaf -> quelpa で導入したパッケージが置かれる場所
+         |-- elpa/   ←  leaf → package.el で導入したパッケージが置かれる場所
+         `-- quelpa/ ←  leaf → quelpa で導入したパッケージが置かれる場所
      |-- share/      ←  (基本的に)参照するだけの資源置き場所
      `-- tmp/        ←  一次ファイルの置き場所
   #+END_EXAMPLE
-  上記ディレクトリ構成を設定ファイルで使用するためにディレクトリ配置を宣言しておきます．
+  上記ディレクトリ構成を設定ファイルで使用するために
+  ディレクトリ配置を宣言/ディレクトリを作成しておきます．
   #+BEGIN_SRC emacs-lisp
 (when load-file-name
   (setq user-emacs-directory (file-name-directory load-file-name)))
@@ -78,36 +81,36 @@ init.el: README.org
                 (delete-file custom-file))))
   #+END_SRC
   +init.elが汚れる気がしてあまり好きではないのですが...皆さん気にしてないんですかね+
-* Package 関連: =package.el=, [[https://github.com/jwiegley/use-package][use-package]], [[https://github.com/quelpa/quelpa][quelpa]]
-  [[https://github.com/jwiegley/use-package][use-package]] のおかけで、
-  無いと途方に暮れるパッケージ以外のインストールは無視できるようになります。
+* Package 関連: [[https://github.com/conao3/leaf.el][leaf.el]], =package.el=, [[https://github.com/quelpa/quelpa][quelpa]]
+  [[https://github.com/conao3/leaf.el][leaf.el]] のおかげでとてもキレイに設定が書けるようになりました.
+** [[https://github.com/conao3/leaf.el][leaf.el]]
+   #+BEGIN_SRC emacs-lisp
+(add-to-list 'load-path
+             (concat user-emacs-directory "modules/leaf.el"))
+(require 'leaf nil 'nomessage)
+(leaf leaf
+  :config
+  (setq leaf-backend/:ensure 'package))
+   #+END_SRC
 ** =package.el=
    パッケージは基本的に =pacakge.el= で導入するので、先ずはその設定.
    #+BEGIN_SRC emacs-lisp
 (setq url-http-attempt-keepalives nil)
-(require 'package nil 'noerror)
-(setq package-enable-at-startup t
-      package-user-dir (expand-file-name "pkg/elpa" user-emacs-directory)
-      package-gnupghome-dir (expand-file-name ".gnupg" (getenv "HOME")))
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
-(add-to-list 'package-archives '("org"   . "https://orgmode.org/elpa/") t)
-(package-initialize)
+(leaf package
+  :config
+  (setq package-enable-at-startup t
+        package-user-dir (expand-file-name "pkg/elpa" user-emacs-directory)
+        package-gnupghome-dir (expand-file-name ".gnupg" (getenv "HOME")))
+  (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+  (add-to-list 'package-archives '("org"   . "https://orgmode.org/elpa/") t)
+  (package-initialize))
    #+END_SRC
-** [[https://github.com/jwiegley/use-package][use-package]]
-   個々のパッケージの設定には [[https://github.com/jwiegley/use-package][use-package]] を利用します．
-   #+BEGIN_SRC emacs-lisp
-(unless (require 'use-package nil t)
-  (package-install 'use-package))
-(setq use-package-always-ensure nil)
-   #+END_SRC
-** [[https://framagit.org/steckerhalter/quelpa-use-package][quelpa-use-package]]
+** [[https://github.com/quelpa/quelpa][quelpa]]
    melpa に登録されていないパッケージや自作の elisp 等をインストールできる様に
-   [[https://github.com/quelpa/quelpa][quelpa]] を使います. これと [[https://github.com/jwiegley/use-package][use-package]] を連携する [[https://framagit.org/steckerhalter/quelpa-use-package][quelpa-use-package]] を
-   melpa から導入しておきます.
-   とはいえ、[[https://github.com/quelpa/quelpa][quelpa]] はあくまでオプションですんで,
+   [[https://github.com/quelpa/quelpa][quelpa]] を使います. とはいえ、[[https://github.com/quelpa/quelpa][quelpa]] はあくまでオプションですんで,
    melpa の同期はしません.
    #+BEGIN_SRC emacs-lisp
-(use-package quelpa-use-package
+(leaf quelpa
   :ensure t
   :init
   (setq quelpa-dir (expand-file-name "pkg/quelpa" user-emacs-directory)
@@ -117,428 +120,114 @@ init.el: README.org
         quelpa-melpa-recipe-stores nil)
   )
    #+END_SRC
-* 環境変数の読み込み: =exec-path-from-shell=
-  zsh で設定した =PATH= などの環境変数を Emacs に引き継ぐために
-  [[https://github.com/purcell/exec-path-from-shell][purcell/exec-path-from-shell]] を使います．
-  今の所
-  - =SHELL=
-  - =DEBFULLNAME=
-  - =DEBEMAIL=
-  - =TEXMFHOME=
-  - =SKKSERVER=
-  - =http_proxy=
-  - =GPG_KEY_ID=
-  - =GPG_AGENT_INFO=
-  - =PASSWORD_STORE_DIR=
-  - =PATH=
-  を読み込んでいます．
-  #+BEGIN_SRC emacs-lisp
-(defvar my:d:password-store nil)
-(use-package exec-path-from-shell
-  :ensure t
-  :config
-  (when (memq window-system '(mac ns)) (exec-path-from-shell-initialize))
-  (exec-path-from-shell-copy-envs
-   '("SHELL"
-     "DEBFULLNAME"
-     "DEBEMAIL"
-     "SKKSERVER"
-     "TEXMFHOME"
-     "http_proxy"
-     "GPG_KEY_ID"
-     "GPG_AGENT_INFO"
-     "PASSWORD_STORE_DIR"
-     "PATH"
-     ))
-  (setq user-full-name (concat (getenv "DEBFULLNAME"))
-        user-mail-address (concat (getenv "DEBEMAIL"))
-        my:d:password-store (concat (getenv "PASSWORD_STORE_DIR") "/Emacs/" (system-name)))
-  )
-  #+END_SRC
-* インクリメンタル検索: =migemo=
-  #+BEGIN_SRC emacs-lisp
-(use-package migemo
-  :if (executable-find "cmigemo")
-  :config
-  (setq migemo-command "cmigemo"
-        migemo-options '("-q" "--emacs")
-        migemo-dictionary "/usr/share/cmigemo/utf-8/migemo-dict"
-        migemo-user-dictionary nil
-        migemo-regex-dictionary nil
-        migemo-coding-system 'utf-8-unix)
-  (migemo-init)
-  )
-  #+END_SRC
-* 言語の設定
-  日本語, UTF-8 にしています.
-  #+BEGIN_SRC emacs-lisp
-(set-language-environment "Japanese")
-(prefer-coding-system 'utf-8)
-(set-file-name-coding-system 'utf-8)
-(set-keyboard-coding-system 'utf-8)
-(set-terminal-coding-system 'utf-8)
-(set-default 'buffer-file-coding-system 'utf-8)
-  #+END_SRC
-  その他, 機種依存文字等についての設定をアレコレ.
-** cp5022x.el
-   Emacs23 から内部が Unicode ベースになっています．
-
-   しかし文字コードの変換は GNU libc の iconv をベースにしているため，
-   環境によっては文字の変換がうまく行なえません．
-   そこで言語設定前に =cp5022x.el= をインストールすることにしています．
+* 独自関数
+  細かい独自関数，など．
+** カーソルのある位置の face を調べる関数
+   わりと良く使う. 地味に便利
    #+BEGIN_SRC emacs-lisp
-(use-package cp5022x
-  :ensure t
-  :config
-  (set-charset-priority 'ascii 'japanese-jisx0208 'latin-jisx0201
-                        'katakana-jisx0201 'iso-8859-1 'unicode)
-  (set-coding-system-priority 'utf-8 'euc-jp 'iso-2022-jp 'cp932)
-  )
+(defun my:describe-face-at-point ()
+  (interactive)
+  (message "%s" (get-char-property (point) 'face)))
    #+END_SRC
-** East Asian Ambiguos 対応
-   CJK 以外の East Asian Ambiguos，絵文字も2文字幅にするようにしています．
-   拙作の修正ロケールはこちら: [[https://github.com/uwabami/locale-eaw-emoji]]
+** 機能を無効化するための関数の定義
+   =line-number-mode= など「有効無効をtoggleする関数」は
+   慣習的に =0= 以下の数字を指定すると明示的に無効化できるので，
+   =-1= を設定する関数を定義しておく.
    #+BEGIN_SRC emacs-lisp
-(use-package locale-eaw-emoji
-  :quelpa (locale-eaw-emoji
-           :fetcher github
-           :repo "uwabami/locale-eaw-emoji")
-  :config
-  (eaw-and-emoji-fullwidth))
+(defun my:disable-builtin-mode (mode)
+  "与えられた mode が存在するのであれば -1 をセットして無効化"
+  (if (fboundp mode) (funcall mode -1)))
    #+END_SRC
-** OSの違いに起因する条件分岐
-   Mac と Linux では同じ Unicode でも正規化が異なります
-   (具体的には Mac のファイルシステムである HFS+ では Unicode の正規化が異なります).
-   Unicode の正規化と Mac OS X 特有の事情については
-   - [[http://homepage1.nifty.com/nomenclator/unicode/normalization.htm][Unicode正規化とは]]
-   - [[http://www.sakito.com/2010/05/mac-os-x-normalization.html][Mac OS X におけるファイル名に関するメモ(NFC, NFD等)]]
-   等が参考になるでしょう.
-
-   日本語のファイル名を扱うことは滅多にないものの,
-   たまに祟りがあるのでそれを回避するための設定をしています.
-
-   Windows の場合はファイル名などは cp932 にしているものの,
-   最近 Windows 使っていないので良く知りません(というわけで，設定を捨てました).
+** dpkg-status
+   もっと良い方法がありそうなモンですが．
    #+BEGIN_SRC emacs-lisp
-(use-package ucs-normalize
-  :if (eq system-type 'darwin)
-  :config
-  (set-file-name-coding-system 'utf-8-hfs)
-  (setq locale-coding-system 'utf-8-hfs)
-  ;; ついでにキーバインド: Ctrl を Mac から奪い取る
-  (setq mac-pass-control-to-system t)
-  ;; Cmd と Option を逆にする
-  (setq ns-command-modifier 'meta)
-  (setq ns-alternate-modifier 'super)
-  (global-set-key [ns-drag-file] 'ns-find-file)
-  )
+(defun my:dpkg-status (package)
+  "Return the package status from dpkg --get-selections."
+  (string-match "^ii" (shell-command-to-string (format "dpkg -l %s" package))))
    #+END_SRC
-* Elscreen [/]
-  modeline の表示そのものは無効化しておく．
-  - [ ] Debian パッケージ版は古い．更新すべき
-  #+BEGIN_SRC emacs-lisp
-(use-package elscreen
-  :quelpa (elscreen
-           :fetcher github
-           :repo "emacs-jp/elscreen")
-  :init
-  (setq elscreen-tab-display-control nil
-        elscreen-prefix-key (kbd "C-o")
-        elscreen-display-tab 8
-        elscreen-display-screen-number nil)
-  :config
-  (elscreen-start))
-  #+END_SRC
-** SHELL との連携: elscreen <-> zsh
-  詳細は
-  - [[https://masutaka.net/chalow/2011-09-28-1.html][ターミナルの zsh と Emacs を風のように駆け抜ける！]]
-  - [[http://syohex.hatenablog.com/entry/20111026/1319606395][cdeを改良]]
-  - [[https://qiita.com/__hage/items/2dd732b4dd68e124e8bd][cdeとelscreen-separate-buffer-listの相性が悪い]]
-  などを参考に.
-  #+BEGIN_SRC emacs-lisp
-(defun return-current-working-directory-to-shell ()
-  (expand-file-name
-   (with-current-buffer
-       (if (featurep 'elscreen)
-           (let* ((frame-confs (elscreen-get-frame-confs (selected-frame)))
-                  (num (nth 1 (assoc 'screen-history frame-confs)))
-                  (cur-window-conf
-                   (assoc 'window-configuration
-                          (assoc num (assoc 'screen-property frame-confs))))
-                  (marker (nth 2 cur-window-conf)))
-             (marker-buffer marker))
-         (nth 1
-              (assoc 'buffer-list
-                     (nth 1 (nth 1 (current-frame-configuration))))))
-     default-directory)))
-  #+END_SRC
-* 日本語入力: =ddskk=
-  [[http://openlab.ring.gr.jp/skk/ddskk-ja.html][Daredevil SKK (DDSKK)]] をメインで使用中．無いと途方に暮れる．
-  ちなみにGTKが有効になっていると =gtk-immodule= なんかと衝突するので
-  =~/.Xresources= で xim を無効にしておくと良い．
-  例えば以下の様に:
-  #+BEGIN_SRC conf :tangle no
-! disable XIM
-Emacs*useXIM: false
-  #+END_SRC
-** Emacs 本体側の設定
-   実際の設定は別ファイルで行なわれるため
-   ここでは設定ファイルの位置変更を変更している．
-   #+BEGIN_SRC emacs-lisp
-(unless (locate-library "skk")
-  (package-install 'ddskk))
-(use-package skk
-  :bind (("C-x j"   . skk-mode)
-         ("C-x C-j" . skk-mode)
-         ("C-\\"    . skk-mode))
-  :init
-  (setq skk-user-directory (concat my:d:tmp "skk")
-        skk-init-file (concat user-emacs-directory "init-ddskk")
-        default-input-method "japanese-skk" )
-  :config
-  )
-   #+END_SRC
-** DDSKK 本体の設定
-   sticky shift: [[http://homepage1.nifty.com/blankspace/emacs/sticky.html][sticky shift]] を参照のこと.
-   ddskk の 14.2 以降から同梱されるようになった(ありがたい)
-   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
-(setq skk-sticky-key ";")
-   #+END_SRC
-   変換候補の表示位置
-   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
-(setq skk-show-candidates-always-pop-to-buffer t)
-   #+END_SRC
-   候補表示件数を2列に
-   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
-(if (>= (string-to-number (substring (skk-version) 14 18)) 16)
-    (setq skk-henkan-number-to-display-candidates 2)
-  (setq skk-henkan-show-candidates-rows 2))
-   #+END_SRC
-   日本語表示しない
-   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
-(setq skk-japanese-message-and-error nil)
-   #+END_SRC
-   メニューを日本語にしない -> toolbar 非表示だし.
-   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
-(setq skk-show-japanese-menu nil)
-   #+END_SRC
-   注釈の表示
-   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
-(setq skk-show-annotation nil)
-   #+END_SRC
-   インジケータの表示のカスタマイズ
-   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
-(setq skk-latin-mode-string "[_A]")
-(setq skk-hiragana-mode-string "[あ]")
-(setq skk-katakana-mode-string "[ア]")
-(setq skk-jisx0208-latin-mode-string "[Ａ]")
-(setq skk-jisx0201-mode-string "[_ｱ]")
-(setq skk-abbrev-mode-string "[aA]")
-(setq skk-indicator-use-cursor-color nil)
-   #+END_SRC
-   インジケータを左端に表示
-   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
-(setq skk-status-indicator 'left)
-   #+END_SRC
-   mode-line が動くのが許せないので，ちょっと修正
-   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
-(defadvice skk-make-indicator-alist
-    (after my:set-skk-default-indicator activate)
-  (dolist (elem
-           '((abbrev " [aA]" . "--[aA]:")
-             (latin " [_A]" . "--[_A]:")
-             (default " [--]" . "--[--]:")))
-    (setq ad-return-value
-          (append (cons elem nil)
-                  (delq (assoc (car elem) ad-return-value) ad-return-value)))))
-(setq skk-show-inline t)
-   #+END_SRC
-   カーソルには色をつけない
-   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
-(setq skk-use-color-cursor nil)
-   #+END_SRC
-*** 編集関連
-    キーバインド
-    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
-(global-set-key "\C-x\C-j" 'skk-mode)
-(global-set-key "\C-xj" 'skk-mode)
-(global-set-key "\C-j" 'skk-mode)
-(global-set-key "\C-\\" 'skk-mode)
-    #+END_SRC
-    半角カナを入力
-    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
-(setq skk-use-jisx0201-input-method t)
-    #+END_SRC
-    Enter で改行しない
-    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
-(setq skk-egg-like-newline t)
-    #+END_SRC
-    "「"を入力したら"」"も自動で挿入
-    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
-(setq skk-auto-insert-paren t)
-    #+END_SRC
-    句読点変換ルール
-    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
-(setq skk-kuten-touten-alist
-      '(
-        (jp    . ("。" . "、"))
-        (en-jp . ("．" . "，"))
-        (en    . (". " . ", "))
-        ))
-(setq-default skk-kutouten-type 'en)
-    #+END_SRC
-    全角記号の変換: @ での日付入力は使わない
-    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
-(setq skk-rom-kana-rule-list
-      (append skk-rom-kana-rule-list
-              '(("!" nil "!")
-                (":" nil ":")
-                (";" nil ";")
-                ("?" nil "?")
-                ("z " nil "　")
-                ("\\" nil "\\")
-                ("@" nil "@")
-                )))
-    #+END_SRC
-    送り仮名が厳密に正しい候補を優先
-    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
-(setq skk-henkan-strict-okuri-precedence t)
-    #+END_SRC
-    辞書の共有
-    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
-(setq skk-share-private-jisyo t)
-    #+END_SRC
-    変換候補を縦に表示
-    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
-(setq skk-show-inline 'vertical)
-    #+END_SRC
-*** インクリメンタルサーチ
-    minibuffer 内では強制的に skk off.
-    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
-(add-hook 'skk-mode-hook
-          (lambda ()
-            (and (skk-in-minibuffer-p)
-                 (skk-mode-exit))))
-(setq skk-isearch-start-mode 'latin)
-    #+END_SRC
-    インクリメンタルサーチは migemo に任せることに．
-*** 辞書の設定
-    追加している辞書の一覧は
-    - [[http://www.chibutsu.org/jisho/][地球物理辞書]]
-    - [[http://www.geocities.jp/living_with_plasma/tanudic.html][天文・天体物理用語の漢字変換用辞書]]
-    - はてなキーワード
-    - [[http://matsucon.net/material/dic/][2ちゃんねる顔文字辞書 MatsuCon]]
-    - [[http://matsucon.net/][MatsuCon]]
-    といった所.
-    はてなキーワードからの辞書の抽出は [[http://d.hatena.ne.jp/znz][znz]] さんの
-     - [[http://rubyist.g.hatena.ne.jp/znz/20060924/p1][「はてなダイアリーキーワードふりがなリスト」を SKK の辞書に変換]]
-    を参考に.
-    [[http://matsucon.net/][MatsuCon]] で公開されている顔文字に関しては
-    顔文字に ; や が含まれている場合に, 適宜quoteする必要があるので
-    以下のスクリプトで適当に変換.
-    #+BEGIN_SRC ruby :tangle no
-#!/usr/bin/env ruby
-require 'nkf'
-src = ARGV[0]
-if ARGV.size < 1
-  puts "usage: ime2skk.rb ime_dictionary"
-  exit 0
-end
-File.open(src, "r") {|f|
-  f.each do |line|
-    line_euc = NKF.nkf("-S -e",line)
-    if line_euc =~ /^([^!]+?)\t(.+?)\t.+$/
-      entry = $1
-      content = $2
-      if content =~/;/
-        puts entry + " /(concat \"" + content.gsub(';','\\\\073') + "\")/"
-      elsif content =~/\//
-        puts entry + " /(concat \"" + content.gsub('/','\\\\057') + "\")/"
-      else
-        puts entry + " /" + content + "/"
-      end
-    end
-  end
-}
-    #+END_SRC
-    他にも quote する必要あるような気もするけれど, それは気がついた時に.
+** 行末の無駄な空白/改行を削除する
+   @see [[http://d.hatena.ne.jp/tototoshi/20101202/1291289625][無駄な行末の空白を削除する(Emacs Advent Calendar jp:2010)]]
 
-    辞書サーバの指定は以下.
-    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
-(cond
- ((getenv "SKKSERVER")
-  (setq skk-server-host "127.0.0.1"
-        skk-server-portnum "1178"
-        skk-large-jisyo  nil)
-  (add-to-list 'skk-search-prog-list
-               '(skk-server-completion-search) t)
-  (add-to-list 'skk-search-prog-list
-               '(skk-comp-by-server-completion) t))
- (t
-  (setq skk-get-jisyo-directory (concat my:d:tmp "skk-jisyo")
-        skk-large-jisyo (concat skk-get-jisyo-directory "/SKK-JISYO.L")))
- )
-(when (file-exists-p "/usr/local/share/skkdic/SKK-JISYO.emoji.utf8")
-  (setq skk-extra-jisyo-file-list
-        (list '("/usr/local/share/skkdic/SKK-JISYO.emoji.utf8" . utf-8))))
-    #+END_SRC
-    辞書登録の際に送り仮名を削除
-    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
-(setq skk-check-okurigana-on-touroku 'auto)
-    #+END_SRC
-    漢字登録のミスをチェックする
-    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
-(setq skk-check-okurigana-on-touroku t)
-    #+END_SRC
-*** 動的補完
-    まだ設定していない...
-    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
-    ;; ;; 動的補完
-    ;; (setq skk-dcomp-activate t)
-    ;; (setq skk-dcomp-multiple-activate t)
-    ;; (setq skk-dcomp-multiple-rows 5)
-    ;; ;; 動的補完の複数表示群のフェイス
-    ;; (set-face-foreground 'skk-dcomp-multiple-face "Black")
-    ;; (set-face-background 'skk-dcomp-multiple-face "LightGoldenrodYellow")
-    ;; (set-face-bold-p 'skk-dcomp-multiple-face nil)
-    ;; ;; 動的補完の複数表示郡の補完部分のフェイス
-    ;; (set-face-foreground 'skk-dcomp-multiple-trailing-face "dim gray")
-    ;; (set-face-bold-p 'skk-dcomp-multiple-trailing-face nil)
-    ;; ;; 動的補完の複数表示郡の選択対象のフェイス
-    ;; (set-face-foreground 'skk-dcomp-multiple-selected-face "White")
-    ;; (set-face-background 'skk-dcomp-multiple-selected-face "LightGoldenrod4")
-    ;; (set-face-bold-p 'skk-dcomp-multiple-selected-face nil)
-    #+END_SRC
-*** 部首変換, 総画数変換
-    上手く使いこなせていない
-    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
-(add-to-list 'skk-search-prog-list
-             '(skk-tankan-search 'skk-search-jisyo-file
-                                 skk-large-jisyo 10000))
-    #+END_SRC
-* 起動時間の計測
-  [[http://memo.sugyan.com/entry/20120120/1327037494][起動時間を計測する 改訂版 - すぎゃーんメモ]]
-  #+BEGIN_SRC emacs-lisp
-(add-hook 'after-init-hook
-          (lambda ()
-            (message "init time: %.3f sec"
-                     (float-time (time-subtract after-init-time before-init-time)))))
-  #+END_SRC
-* LICENSE
-  幾つかの関数の元ネタとして Emacs 本体のコードを参照したので，GPL-3 or later です．
-  #+BEGIN_EXAMPLE
-Copyright (C) 2011--2017 Youhei SASAKI <uwabami@gfd-dennou.org>
-.
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-.
-This package is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-.
-You should have received a copy of the GNU General Public License
-along with this program. If not, see <https://www.gnu.org/licenses/>.
-  #+END_EXAMPLE
+   ただし, RD や Markdown だと空白行に意味があったりするので，
+   必要に応じて拡張子で判断して外している．
+   #+BEGIN_SRC emacs-lisp
+(defvar my:delete-trailing-whitespace-exclude-suffix
+  (list "\\.rd$" "\\.md$" "\\.rbt$" "\\.rab$"))
+(defun my:delete-trailing-whitespace ()
+  (interactive)
+  (cond
+   ((equal nil
+           (cl-loop for pattern in my:delete-trailing-whitespace-exclude-suffix
+                    thereis (string-match pattern buffer-file-name)))
+    (delete-trailing-whitespace))))
+(add-hook 'before-save-hook 'my:delete-trailing-whitespace)
+   #+END_SRC
+** 空になったファイルを尋ねずに自動削除
+   ゴミが残らないし，地味に便利．
+   #+BEGIN_SRC emacs-lisp
+(defun my:delete-file-if-no-contents ()
+  (when (and (buffer-file-name (current-buffer))
+             (= (point-min) (point-max)))
+    (delete-file
+     (buffer-file-name (current-buffer)))))
+(if (not (memq 'my:delete-file-if-no-contents after-save-hook))
+    (setq after-save-hook
+          (cons 'my:delete-file-if-no-contents after-save-hook)))
+   #+END_SRC
+** scratch を殺さない. 消したら再生成
+   ...元ネタがどこだったのか忘れてしまった...
+   #+BEGIN_SRC emacs-lisp
+(defun my:make-scratch (&optional arg)
+  (interactive)
+  (progn
+    ;; "*scratch*" を作成して buffer-list に放り込む
+    (set-buffer (get-buffer-create "*scratch*"))
+    (funcall initial-major-mode)
+    (erase-buffer)
+    (when (and initial-scratch-message (not inhibit-startup-message))
+      (insert initial-scratch-message))
+    (or arg
+        (progn
+          (setq arg 0)
+          (switch-to-buffer "*scratch*")))
+    (cond ((= arg 0) (message "*scratch* is cleared up."))
+          ((= arg 1) (message "another *scratch* is created")))))
+
+(defun my:buffer-name-list ()
+  (mapcar (function buffer-name) (buffer-list)))
+(add-hook 'kill-buffer-query-functions
+          ;; *scratch* バッファで kill-buffer したら内容を消去するだけにする
+          (function (lambda ()
+                      (if (string= "*scratch*" (buffer-name))
+                          (progn (my:make-scratch 0) nil)
+                        t))))
+(add-hook 'after-save-hook
+          ;; *scratch* バッファの内容を保存したら
+          ;; *scratch* バッファを新しく作る.
+          (function
+           (lambda ()
+             (unless (member "*scratch*" (my:buffer-name-list))
+               (my:make-scratch 1)))))
+   #+END_SRC
+** ファイル名を minibuffer におさまる様に整形
+   zsh 風味
+   #+BEGIN_SRC emacs-lisp
+(defun my:shorten-file-path (fpath max-length)
+  "Show up to `max-length' characters of a directory name `fpath' like zsh"
+  (let* ((path (reverse (split-string (abbreviate-file-name fpath) "/")))
+         (output "")
+         (top (string-join (reverse (last path 3)) "/"))
+         (vmax (- max-length 4 (length top)))
+         (path (butlast path 3))
+         )
+    (while (and path
+                (and (< (length output) vmax)
+                     (< (length (concat "/" (car path) output)) vmax)))
+      (setq output (concat "/" (car path) output))
+      (setq path (cdr path)))
+    ;; 省略
+    (when path
+      (setq output (concat "/..." output)))
+    (format "%s%s" top output)
+    ))
+   #+END_SRC

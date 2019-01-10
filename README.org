@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2019-01-10 16:41:17
+#+DATE: 2019-01-10 19:31:02
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -303,6 +303,7 @@ init.elc: init.el
    #+BEGIN_SRC emacs-lisp
 (leaf cp5022x
   :ensure t
+  :require t
   :config
   (set-charset-priority 'ascii 'japanese-jisx0208 'latin-jisx0201
                         'katakana-jisx0201 'iso-8859-1 'unicode)
@@ -501,8 +502,8 @@ init.elc: init.el
                           "^/home/uwabami/.mozilla/\\.*"
                           "\\.*草稿\\.*"
                           ))
-  (run-with-idle-timer 30 t '(lambda ()
-                               (my:suppressed-message (recentf-save-list))))
+  ;; (run-with-idle-timer 30 t '(lambda ()
+  ;;                              (my:suppressed-message (recentf-save-list))))
   )
    #+END_SRC
    ディレクトリの履歴も取れるので recentf-ext を入れておく
@@ -950,7 +951,10 @@ File.open(src, "r") {|f|
   #+BEGIN_SRC emacs-lisp
 (leaf migemo
   :if (executable-find "cmigemo")
-  :byte-compile-funcs ((migemo-init . migemo-init))
+  :init
+  (quelpa '(migemo
+            :fetcher github
+            :repo "uwabami/migemo"))
   :config
   (if (file-directory-p "/usr/local/share/migemo/utf-8")
       (setq migemo-dictionary "/usr/local/share/migemo/utf-8/migemo-dict")
@@ -1190,6 +1194,11 @@ File.open(src, "r") {|f|
 ** Wanderlust 本体の設定
    実際の設定は以下の通り
 *** 依存/追加ライブラリのインストールと読み込み
+**** 本体
+     byte-compile 用
+     #+begin_src emacs-lisp
+(eval-when-compile (require 'wl))
+     #+end_src
 **** rail
      SEMI や FLIM などの UA の表示に [[http://uwabami.github.com/rail/][rail]] を使っている.
      ちなみに rail を有効にすると, 以下の様に User-Agent が表示される
@@ -1200,6 +1209,7 @@ File.open(src, "r") {|f|
      #+BEGIN_SRC emacs-lisp :tangle init-wl.el
 (eval-when-compile (require 'mime-def))
 (leaf rail
+  :require t
   :config
   (setq rail-emulate-genjis t))
      #+END_SRC
@@ -1662,6 +1672,7 @@ video/*; xdg-open %s;
 **** sort 順: 返信が来た順
      =flet= を書き換えるのが面倒で =el-x= にある =dflet= を使うように変更
     #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
+(require 'el-x nil 'noerror)
 (defun wl-summary-overview-entity-compare-by-reply-date (a b)
   "Compare message A and B by latest date of replies including thread."
   (dflet ((string-max2 (x y)
@@ -2012,4 +2023,225 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         mhc-calendar-header-function 'mhc-calendar-make-header-ja
         mhc-calendar-language 'japanese)
   )
+   #+END_SRC
+* カレンダー: =japanese-holidays=
+  日本の祝日を表示するために =japanese-holidays= をインストール
+  #+BEGIN_SRC emacs-lisp
+(leaf japanese-holidays
+  :ensure t
+  :require t
+  :init
+  (add-hook 'calendar-today-visible-hook   'japanese-holiday-mark-weekend)
+  (add-hook 'calendar-today-invisible-hook 'japanese-holiday-mark-weekend)
+  (add-hook 'calendar-today-visible-hook   'calendar-mark-today)
+  :config
+  (setq calendar-holidays               ; とりあえず日本のみを表示
+        (append japanese-holidays holiday-local-holidays)
+        mark-holidays-in-calendar t     ; 祝日をカレンダーに表示
+        calendar-month-name-array       ; 月と曜日の表示調整
+        ["01" "02" "03" "04" "05" "06" "07" "08" "09" "10" "11" "12" ]
+        calendar-day-name-array
+        ["日" "月" "火" "水" "木" "金" "土"]
+        calendar-day-header-array
+        ["日" "月" "火" "水" "木" "金" "土"]
+        calendar-date-style 'iso         ; ISO format (YYYY/MM/DD) に変更
+        japanese-holiday-weekend '(0 6)  ; 土曜日・日曜日を祝日として表示
+        japanese-holiday-weekend-marker
+        '(holiday nil nil nil nil nil japanese-holiday-saturday)
+        ;; 日曜開始
+        calendar-week-start-day 0)
+  (calendar-set-date-style 'iso)
+  )
+  #+END_SRC
+* Org
+  =org-mode= が無いと生きていけない体になりました
+** 基本設定: =org=
+   目新しい設定はしていない，と思う．強いて言えば
+   以前のメモの整理のために [[http://howm.osdn.jp/index-j.html][howm: Hitori Otegaru Wiki Modoki]] も使っていたので,
+   howm も有効にしている，ぐらい．
+   #+BEGIN_SRC emacs-lisp
+(defvar my:d:org (concat (getenv "HOME") "/Nextcloud/org/"))
+(leaf org
+  :if (file-directory-p my:d:org)
+  :defer t
+  :bind (("C-x n s" . org-narrow-to-subtree)
+         ("C-x n w" . widen))
+  ;:ensure org-plus-contrib
+  :init
+  (with-eval-after-load "org"
+    (setq org-file-apps-defaults '((remote . emacs)  ;; xdg-open 任せ
+                                   (system . "xdg-open %s")
+                                   (t      . "xdg-open %s")))
+    (setq org-file-apps-defaults-gnu '((remote . emacs)  ;; xdg-open 任せ
+                                       (system . "xdg-open %s")
+                                       (t      . "xdg-open %s")))
+    )
+  :config
+  (setq org-directory my:d:org                 ;; Nextcloud に保存する
+        org-return-follows-link t              ;; return でリンクを辿る
+        org-startup-folded t                   ;; 見出しを畳んで表示
+        org-startup-truncated t                ;; 折り返し無し
+;;        org-emphasis-alist                     ;; 基本 "-nw" なので色変更
+;;        (cons '("+" '(:strike-through t :foreground "#999999"))
+;;              (cl-delete "+" org-emphasis-alist :key 'car :test 'equal))
+        org-completion-use-ido t
+        ;; GTD: 状態の追加
+        org-todo-keywords
+        '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)" "CANCEL(c)" "SOMEDAY(s)")
+          (type "ARTICLE(a)")
+          (type "MEMO(m)")
+          )
+        ;; GTD: タグの追加
+        org-tag-alist '(("OFFICE"     . ?o)
+                        ("HOME"       . ?h)
+                        ("MAIL"       . ?m)
+                        ("WORK"       . ?w)
+                        ("Debian"     . ?d)
+                        ("Computer"   . ?c)
+                        ("Book"       . ?b)
+                        ("Emacs"      . ?e)
+                        ("TeX"        . ?t)
+                        ("Ruby"       . ?r)
+                        )
+        )
+  ;; GTD: TODO→...→DONE としたエントリを =Arhive.org= に移動
+  (defun my:org-archive-done-tasks ()
+    (interactive)
+    ;; ARCHIVE タグを付けるだけなら以下
+    ;;   (org-map-entries 'org-archive-set-tag "/DONE" 'file))
+    ;; org-archive-location に refile したいなら以下
+    (org-map-entries 'org-archive-subtree "/DONE" 'file))
+  (setq org-archive-location "Archive.org::")
+  (add-hook 'org-todo-statistics-hook 'my:org-archive-done-tasks)
+  (add-hook 'org-todo-after-statistics-hook 'my:org-archive-done-tasks)
+  ;; 文字コード強制 ... 今時いらないかも．
+  (modify-coding-system-alist 'file "\\.org\\'" 'utf-8)
+  ;; howm ファイルも org-mode で．
+  (add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
+  (add-to-list 'auto-mode-alist '("\\.howm$" . org-mode))
+  ;;; timestamp 更新文字列の変更
+  ;;  org-mode では ＃+DATE: をひっかける用に(＃は小文字)．
+  (defun my:org-timestamp-hook ()
+    "Change `time-stamp-start' in org-mode"
+    (set (make-local-variable 'time-stamp-start) "#\\+DATE: 2")
+    (set (make-local-variable 'time-stamp-end)   "\$")
+    )
+  (add-hook 'org-mode-hook 'my:org-timestamp-hook)
+  )
+   #+END_SRC
+** Org-journal: 日記
+   単一ファイルに記述すること, および
+   エントリ作成時に日付を入れるために =org-jounnal-new-entry= を =advice= している
+   #+BEGIN_SRC emacs-lisp
+(leaf org-journal
+  :if (and (file-directory-p my:d:org)
+           (>= emacs-major-version 25))
+  :ensure t
+  :init
+  (add-hook 'org-journal-mode-hook
+            (setq truncate-lines t))
+  :config
+  ;; (unbind-key "C-c C-j"  org-journal-mode-map)
+  (bind-key   "C-c C-j" 'browse-url-at-point)
+  (setq org-journal-dir my:d:org
+        org-journal-file-format "journal.org"
+        org-journal-date-format "%x (%a)"
+        org-journal-date-prefix "* "
+        org-journal-time-format "<%Y-%m-%d %R> "
+        org-journal-time-prefix "** MEMO "
+        org-journal-find-file 'find-file
+        )
+  (defun my:org-journal-add-date-entry (prefix &optional time)
+    "Insert date entry to `org-journal-file'"
+    (find-file (expand-file-name org-journal-file-format org-journal-dir))
+    (org-journal-decrypt)
+    (unless
+        (string-match (format-time-string org-journal-date-format)
+                      (buffer-substring-no-properties (point-min) (point-max)))
+      (progn
+        (goto-char (point-max))
+        (insert (concat "\n" org-journal-date-prefix
+                        (format-time-string org-journal-date-format)))
+        ))
+    )
+  (advice-add 'org-journal-new-entry :before 'my:org-journal-add-date-entry)
+  )
+;; Key bindings -- 使えてない...
+;; (define-key org-journal-mode-map (kbd "C-c C-f") 'org-journal-open-next-entry)
+;; (define-key org-journal-mode-map (kbd "C-c C-b") 'org-journal-open-previous-entry)
+;; (define-key org-journal-mode-map (kbd "C-c C-j") 'org-journal-new-entry)
+;; (define-key calendar-mode-map "j" 'org-journal-read-entry)
+;; (define-key calendar-mode-map (kbd "C-j") 'org-journal-display-entry)
+;; (define-key calendar-mode-map "]" 'org-journal-next-entry)
+;; (define-key calendar-mode-map "[" 'org-journal-previous-entry)
+;; (define-key calendar-mode-map (kbd "i j") 'org-journal-new-date-entry)
+;; (define-key calendar-mode-map (kbd "f f") 'org-journal-search-forever)
+;; (define-key calendar-mode-map (kbd "f w") 'org-journal-search-calendar-week)
+;; (define-key calendar-mode-map (kbd "f m") 'org-journal-search-calendar-month)
+;; (define-key calendar-mode-map (kbd "f y") 'org-journal-search-calendar-year)))
+   #+END_SRC
+** Capture: メモ取り
+   キーバインドは以前 changelog memo をやっていた時の癖で =C-x m= をメモにしている.
+   他には wanderlust のメールを扱えるように =org-wl= を読み込んで template を追加したぐらい.
+   notmuch のインデックスの方が良いかもしれない, と最近思っている.
+   #+BEGIN_SRC emacs-lisp
+(leaf org-wl
+  :if (and (my:dpkg-status "wl-beta")
+           (file-directory-p my:d:org))
+  :init (quelpa '(org-wl
+                  :fetcher url
+                  :url "https://code.orgmode.org/bzg/org-mode/raw/master/contrib/lisp/org-wl.el"
+                  ))
+  )
+(leaf org-capture
+  :bind (("C-x m" . org-capture))
+  :if (file-directory-p my:d:org)
+  :config
+  (defun my:org-journal-add-date-entry-capture ()
+    (my:org-journal-add-date-entry nil)
+    (goto-char (point-max))
+    )
+  ;; @see https://github.com/sprig/org-capture-extension/issues/37
+  ;; Brackets '{' '}' in link description cause broken org-mode link #37]]
+(defun my:transform-square-brackets-to-round-ones (string-to-transform)
+  "Transforms [ into ( and ] into ), other chars left unchanged."
+  (concat
+   (mapcar #'(lambda (c) (if (equal c ?\[) ?\( (if (equal c ?\]) ?\) c)))
+           string-to-transform))
+  )
+  (setq org-default-notes-file (concat my:d:org "journal.org")
+        org-capture-templates
+        `(
+          ("t" "TODO" plain
+           (function my:org-journal-add-date-entry-capture)
+           "** TODO %^{title} %^g\n  %?\n  %a"
+           :prepend nil
+           :unnarrowed nil
+           :kill-buffer t
+           )
+          ;; "* TODO <%<%Y-%m-%d>> %:subject %^g\n  %?\n  %a\n  #+BEGIN_QUOTE\n%i\n  #+END_QUOTE"
+          ("e" "Email TODO" plain
+           (function my:org-journal-add-date-entry-capture)
+           "** TODO [[wl:\%5Bmsgid:%:message-id-no-brackets\%5D][%(my:transform-square-brackets-to-round-ones \"%:subject\")]]\n  :PROPERTIES:\n  :CREATED: %u\n  :END:%?\n"
+           :prepend nil
+           :unnarrowed nil
+           :kill-buffer t
+           )
+          ("m" "Memo/Journal Entry" plain
+           (function my:org-journal-add-date-entry-capture)
+           "** MEMO %T %?"
+           :prepend nil
+           :unnarrowed nil
+           :kill-buffer t
+           )
+          ("a" "Aritcle Entry" plain
+           (function my:org-journal-add-date-entry-capture)
+           "** ARTICLE %T %? "
+           :prepend nil
+           :unnarrowed nil
+           :kill-buffer t
+           )
+          )
+        )
+)
    #+END_SRC

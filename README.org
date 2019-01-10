@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2019-01-10 19:31:02
+#+DATE: 2019-01-10 19:59:56
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -1063,7 +1063,7 @@ File.open(src, "r") {|f|
 (defun ido-recentf-open ()
   "Use `ido-completing-read' to \\[find-file] a recent file"
   (interactive)
-  (eval-when-compile (require 'recentf nil 'noerror))
+  (eval-and-compile (require 'recentf nil 'noerror))
   (let ((files (mapcar (lambda (f)
                          (cons (my:shorten-file-path f 77) f))
                        recentf-list)))
@@ -2245,3 +2245,432 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         )
 )
    #+END_SRC
+** Agenda: スケジュール，TODO 表示
+   GTD 用の設定．後述の =org-gcal= と =orgmine= で取得したデータも表示している．
+   ついでに
+    - 土曜日をの face を追加.
+    - 祝日, 休日を日曜と同じfaceにする.
+   なんて事もやっている．元ネタは [[https://julien.danjou.info/blog/2010/org-mode-and-holidays][Org-mode and holidays]]
+  #+BEGIN_SRC emacs-lisp
+(leaf org-agenda
+  :if (file-directory-p my:d:org)
+  :require t
+  :bind (("C-c a" . org-agenda))
+  :init
+  (defface my:org-agenda-date-saturday
+    '((t (:foreground "#7FBFFF" :bold t )))
+    "Agenda 表示中の土曜日用のface")
+  (defface my:org-agenda-date-today-saturday
+    '((t (:inherit my:org-agenda-date-saturday :underline t)))
+    "Agenda 表示中の今日かつ土曜日用のface")
+  (defface my:org-agenda-date-today-weekend
+    '((t (:inherit org-agenda-date-weekend :underline t)))
+    "Agenda 表示中の今日かつ日・祝日用のface")
+  ;; こっからは org-gcal で同期したカレンダーの色
+  (defface my:org-agenda-calendar-KUSM
+    '((t (:foreground "#7FFF7F")))
+    "Agenda 表示中, KUSM.org の表示 face"
+    :group 'org-agenda )
+  (defface my:org-agenda-calendar-Schedule
+    '((t (:foreground "#7FFFFF")))
+    "Agenda 表示中, Schedule.org の表示 face"
+    :group 'org-agenda )
+  (defface my:org-agenda-calendar-GFD
+    '((t (:foreground "#FFFF7F")))
+    "Agenda 表示中, GFD.org の表示 face"
+    :group 'org-agenda )
+  (defface my:org-agenda-calendar-DebianJP
+    '((t (:foreground "#BF7FFF")))
+    "Agenda 表示中, DebianJP.org の表示 face"
+    :group 'org-agenda )
+  (defface my:org-agenda-calendar-twitter
+    '((t (:foreground "#CCCCCC")))
+    "Agenda 表示中, Twitter log の表示 face"
+    :group 'org-agenda )
+  ;; 更新用の関数 - とりあえず動いているので良しとするが，リファクタリングしたい
+  (defun my:org-agenda-day-face-function (date)
+    "Compute DATE face for saturday, holidays."
+    (cl-dolist (file (org-agenda-files nil 'ifmode))
+      (cond
+       ((member (calendar-day-of-week date) '(7))
+        (if (org-agenda-todayp date)
+            (cl-return 'my:org-agenda-date-today-weekend))
+        (cl-return 'org-agenda-date-weekend))
+       ((member (calendar-day-of-week date) '(6))
+        (if (org-agenda-todayp date)
+            (cl-return 'my:org-agenda-date-today-saturday))
+        (cl-return 'my:org-agenda-date-saturday)))
+      (let ((face
+             (cl-dolist (entry (org-agenda-get-day-entries file date))
+               (let ((category (with-temp-buffer
+                                 (insert entry)
+                                 (org-get-category (point-min)))))
+                 (when (or (string= "祝日" category)
+                           (string= "休日" category))
+                   (if (org-agenda-todayp date)
+                       (cl-return 'my:org-agenda-date-today-weekend)
+                     (cl-return 'org-agenda-date-weekend)))))))
+        (when face (cl-return face)))))
+  :config
+  ;; 使用するファイル
+  (dolist (file
+           '("Archive.org"
+             "Holidays.org"
+             "Memo.org"
+             "Schedule.org"
+             "MHC.org"
+             "GFD.org"
+             "KUSM.org"
+             "DebianJP.org"
+             "twitter.org"
+             "journal.org"
+             "redmine_GFD.org"
+             "redmine_FluidSoc.org"
+             "redmine_KUSM.org"
+             ))
+    (add-to-list 'org-agenda-files (concat my:d:org file)))
+  (add-to-list 'org-agenda-files (expand-file-name "README.org" user-emacs-directory))
+  ;; 表示のカスタマイズ
+  (setq org-agenda-span 'day                   ;; day or week
+        org-agenda-format-date "%Y/%m/%d (%a)" ;; YY/MM/DD (曜)
+        org-agenda-weekend-days '(0)           ;; 日曜始まり
+        ;; 表示関数
+        org-agenda-day-face-function 'my:org-agenda-day-face-function
+        org-agenda-custom-commands             ;; GTD 用の設定
+        '(
+          ("n" "agenda and all TODO list"
+           (
+            (agenda ""
+                    ((org-agenda-ndays 1)
+                     (org-agenda-entry-types '(:timestamp :sexp))))
+            (todo "TODO"
+                  ((org-agenda-prefix-format " %i %-22:c"))
+                  )
+            (todo "新規|着手|進行中|確認"
+                  ((org-agenda-prefix-format " %i %-22:c"))
+                  )
+            (todo "WAIT"
+                  ((org-agenda-prefix-format " %i %-22:c"))
+                  )
+            (todo "SOMEDAY"
+                  ((org-agenda-prefix-format " %i %-22:c"))
+                  )
+            ))
+          ("N" "All memo entry"
+           (;;
+            (todo "MEMO")
+            ))
+           )
+        )
+  ;; 色付け
+  (add-hook 'org-agenda-finalize-hook
+            (lambda ()
+              (save-excursion
+                (goto-char (point-min))
+                (while (re-search-forward "KUSM:" nil t)
+                  (add-text-properties (match-beginning 0) (point-at-eol)
+                                     '(face my:org-agenda-calendar-KUSM)))
+                (goto-char (point-min))
+                (while (re-search-forward "Schedule:" nil t)
+                  (add-text-properties (match-beginning 0) (point-at-eol)
+                                       '(face my:org-agenda-calendar-Schedule)))
+                (goto-char (point-min))
+                (while (re-search-forward "MHC:" nil t)
+                  (add-text-properties (match-beginning 0) (point-at-eol)
+                                       '(face my:org-agenda-calendar-Schedule)))
+                (goto-char (point-min))
+                (while (re-search-forward "DebianJP:" nil t)
+                  (add-text-properties (match-beginning 0) (point-at-eol)
+                                       '(face my:org-agenda-calendar-DebianJP)))
+                (goto-char (point-min))
+                (while (re-search-forward "GFD:" nil t)
+                  (add-text-properties (match-beginning 0) (point-at-eol)
+                                       '(face my:org-agenda-calendar-GFD)))
+                (goto-char (point-min))
+                (while (re-search-forward "twitter:" nil t)
+                  (add-text-properties (match-beginning 0) (point-at-eol)
+                                       '(face my:org-agenda-calendar-twitter)))
+                (goto-char (point-min))
+                (while (re-search-forward "誕生日:" nil t)
+                  (add-text-properties (match-beginning 0) (point-at-eol)
+                                       '(face org-agenda-date-weekend)))
+                (goto-char (point-min))
+                (while (re-search-forward "祝日:" nil t)
+                  (add-text-properties (match-beginning 0) (point-at-eol)
+                                       '(face org-agenda-date-weekend)))
+                (goto-char (point-min))
+                (while (re-search-forward "休日:" nil t)
+                  (add-text-properties (match-beginning 0) (point-at-eol)
+                                       '(face org-agenda-date-weekend)))
+                )))
+  )
+  #+END_SRC
+** Babel
+*** org-src
+    #+BEGIN_SRC emacs-lisp
+(leaf org-src
+  :diminish org-src-mode
+  :config
+  (setq org-src-fontify-natively t       ;; font-lock
+        org-src-tab-acts-natively t      ;; indent
+        org-edit-src-content-indentation 0
+        org-src-preserve-indentation t
+        )
+  (when (featurep 'flycheck)
+    (defun my:disable-fylcheck-in-org-src-block ()
+      (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc)))
+    (add-hook 'org-src-mode-hook 'my:disable-fylcheck-in-org-src-block))
+  )
+    #+END_SRC
+** OrgとGoogle カレンダーの連携: =org-gcal=
+*** token 等の置き場所の変更
+    #+BEGIN_SRC emacs-lisp
+(leaf request
+  :ensure t
+  :init
+  (setq request-storage-directory (concat my:d:tmp "request"))
+  (unless (file-directory-p request-storage-directory)
+    (make-directory request-storage-directory)))
+    #+END_SRC
+*** org-gcal 本体の設定
+    実際の情報等は =password-store= を使って設定しておく.
+    ついでに agenda 表示の際の色付けを設定．
+    #+BEGIN_SRC emacs-lisp
+(leaf org-gcal
+  :if (and my:d:password-store
+           (file-directory-p my:d:org))
+  :ensure t
+  :init
+  (setq org-gcal-dir (concat my:d:tmp "org-gcal"))
+  (unless org-gcal-dir (make-directory org-gcal-dir))
+  (setq org-gcal-token-file (expand-file-name ".org-gcal-token" org-gcal-dir)
+        alert-log-messages t
+        alert-default-style 'log
+        org-gcal-down-days   90 ;; 過去 3 month
+        org-gcal-up-days    180 ;; 未来 6 month
+        org-gcal-auto-archive nil)
+  (with-eval-after-load "org-gcal"
+    (load (concat my:d:password-store "/org-gcal.gpg")))
+  )
+    #+END_SRC
+    password-store には multiline で設定を書く．例えば以下:
+    #+BEGIN_SRC emacs-lisp :tangle no
+(setq org-gcal-client-id "XXXXXXXXXXX"
+      org-gcal-client-secret "XXXXXXXXXXX"
+      org-gcal-file-alist
+      '(("XXXXX@gmail.com" . "~/org/Schedule.org")
+        ("YYYYY@group.calendar.google.com" . "~/org/Project1.org")))
+    #+END_SRC
+** OrgとRedmine の連携: =orgmine=
+   素晴しい!!
+   [[https://github.com/kametoku/orgmine][kametoku/orgmine: Emacs minor mode for org-mode with redmine integration]]
+   #+BEGIN_SRC emacs-lisp
+(leaf orgmine
+  :if (and my:d:password-store
+           (file-directory-p my:d:org))
+  :init
+  (unless (package-installed-p 'elmine)
+    (package-install 'elmine))
+  (quelpa '(orgmine
+            :fetcher github
+            :repo "kametoku/orgmine"))
+  (add-to-list 'safe-local-variable-values
+               '(orgmine-note-block-begin . "#+BEGIN_SRC textile"))
+  (add-hook 'org-mode-hook
+            (lambda ()
+              (if (assoc "om_server" org-file-properties) (orgmine-mode))))
+  :commands orgmine orgmine-mode
+  :config
+  (setq orgmine-note-block-begin "#+BEGIN_SRC gfm"   ;; 要調整
+        orgmine-note-block-end   "#+END_SRC\n"
+        orgmine-default-todo-keyword "新規")
+  (with-eval-after-load "orgmine"
+    (load (concat my:d:password-store "/orgmine.gpg")))
+  )
+   #+END_SRC
+* フォントと色
+  そろそろテーマにした方が良い，とは思ってはいる．
+  #+BEGIN_SRC emacs-lisp
+(defun my:load-window-config ()
+  "load window-system specific settings"
+  (interactive)
+  (when window-system
+    (progn
+      (set-frame-parameter nil 'alpha 90)
+      (set-face-attribute 'default nil
+                          :family "RictyDiscord"
+                          :height 180)
+      (set-face-attribute 'fixed-pitch nil
+                          :family "RictyDiscord"
+                          :height 180)
+      (set-face-attribute 'variable-pitch nil
+                          :family "RictyDiscord"
+                          :height 180)
+      (set-background-color "#242424")
+      )))
+(setq frame-background-mode (frame-parameter nil 'background-mode))
+(setq default-frame-alist
+      '(
+        (foreground-color . "#F6F3E8")
+        (scroll-bar-foreground-color . "red")
+        (vertical-scroll-bars . right)
+        ))
+(when (window-system)
+  (my:load-window-config))
+  #+END_SRC
+  現在修正中．
+  #+BEGIN_SRC emacs-lisp
+(custom-set-faces
+ '(default                             ((t (:foreground "#F6F3E8" ))))
+ '(cursor                              ((t (:foreground "#4CFF4C" :background "#4CFF4C" ))))
+ ;; basic
+ '(font-lock-builtin-face              ((t (:foreground "#7FBFFF" ))))
+ '(font-lock-comment-delimiter-face    ((t (:foreground "#a5a5a6" ))))
+ '(font-lock-comment-face              ((t (:foreground "#a5a5a6" ))))
+ '(font-lock-constant-face             ((t (:foreground "#FFBF7F" ))))
+ '(font-lock-doc-face                  ((t (:foreground "#7FFF7F" ))))
+ '(font-lock-doc-string-face           ((t (:foreground "#7FFF7F" ))))
+ '(font-lock-function-name-face        ((t (:foreground "#BF7FFF"))))
+ '(font-lock-keyword-face              ((t (:foreground "#FF7F7F"))))
+ '(font-lock-link-face                 ((t (:foreground "#7FFFFF" ))))
+ '(font-lock-negation-char-face        ((t (:foreground "#7FFFFF" :bold t   :italic nil))))
+ '(font-lock-preprocessor-face         ((t (:foreground "#FF4C4C" :bold nil :italic nil))))
+ '(font-lock-regexp-grouping-backslash ((t (:foreground "#A5EE4C" :bold t   :italic nil))))
+ '(font-lock-regexp-grouping-construct ((t (:foreground "#7F7FFF" :bold t   :italic nil))))
+ '(font-lock-string-face               ((t (:foreground "#7FFF7F" ))))
+ '(font-lock-type-face                 ((t (:foreground "#FFFF7F" ))))
+ '(font-lock-variable-name-face        ((t (:foreground "#7F7FFF" ))))
+ '(font-lock-warning-face              ((t (:foreground "#FF7FBF" :bold t ))))
+ '(mode-line                           ((t (:foreground "#F6F3E8" :background "#222244" ))))
+ '(mode-line-inactive                  ((t (:foreground "#666666" :background "#999999" :bold nil ))))
+ '(fringe                              ((t (:foreground "#666666" :background "#282828" ))))
+;; '(hl-line                           ((t (:inherit highlight :underline t ))))
+ '(highlight                           ((t (:background "#556B2F" ))))
+ '(term-color-black                    ((t (:background "#242424" :foreground "#242424"))))
+ '(term-color-blue                     ((t (:background "#4c4cff" :foreground "#4c4cff"))))
+ '(term-color-cyan                     ((t (:background "#4cffff" :foreground "#4cffff"))))
+ '(term-color-green                    ((t (:background "#4cff4c" :foreground "#4cff4c"))))
+ '(term-color-magenta                  ((t (:background "#ff4cff" :foreground "#ff4cff"))))
+ '(term-color-red                      ((t (:background "#ff4c4c" :foreground "#ff4c4c"))))
+ '(term-color-white                    ((t (:background "#f6f3e8" :foreground "#f6f3e8"))))
+ '(term-color-yellow                   ((t (:background "#ffff4c" :foreground "#ffff4c"))))
+  ;;
+ '(minibuffer-prompt                   ((t (:foreground "#BF7FFF" ))))
+ '(region                              ((t (:background "#222244" ))))
+ ;; dired
+ '(dired-directory                     ((t (:bold t :foreground "#7F7FFF" ))))
+ '(dired-flagged                       ((t (:inherit error ))))
+ ;; '(dired-header
+ '(dired-ignored                       ((t (:inherit shadow ))))
+ ;; '(dired-mark
+ ;; '(dired-marked
+ '(dired-perm-write                    ((t (:bold t :foreground "#FFFF7F" ))))
+ '(dired-symlink                       ((t (:bold t :foreground "#7FFFFF" ))))
+ '(dired-warning                       ((t (:inherit font-lock-warning-face ))))
+ ;; helm
+ '(helm-source-header                  ((t (:foreground "#F6F3E8" :background "#224488" :bold t))))
+ '(helm-visible-mark                   ((t (:inherit highlight ))))
+ '(helm-selection                      ((t (:inherit highlight ))))
+ '(helm-selection-line                 ((t (:inherit highlight ))))
+ '(helm-ff-directory                   ((t (:inherit dired-directory ))))
+ '(helm-bookmark-directory             ((t (:inherit helm-ff-directory ))))
+ '(helm-buffer-directory               ((t (:inherit helm-ff-directory ))))
+ '(helm-ff-dotted-directory            ((t (:inherit helm-ff-directory ))))
+ '(helm-ff-file                        ((t (:inherit default ))))
+ '(helm-bookmark-file                  ((t (:inherit helm-ff-file ))))
+ '(helm-buffer-file                    ((t (:inherit helm-ff-file ))))
+ '(helm-grep-file                      ((t (:inherit helm-ff-file ))))
+ '(helm-etags-file                     ((t (:inherit helm-ff-file ))))
+ '(helm-ff-executable                  ((t (:inherit helm-ff-file :foreground "#7FFF7F" :bold t))))
+ '(helm-ff-symlink                     ((t (:inherit default :foreground "#7FFFFF" :bold t))))
+ '(helm-ff-dotted-symlink-directory    ((t (:inherit helm-ff-symlink ))))
+ '(helm-ff-invalid-symlink             ((t (:inherit default :foreground "#FF7F7F" ))))
+ ;; ido
+ '(ido-first-match                     ((t (:underline t :weight bold))))
+ '(ido-only-match                      ((t (:foreground "#FFFF4C" :overline nil :weight bold))))
+ '(ido-subdir                          ((t (:inherit dired-directory))))
+ ;; '(ido-vertical-first-match-face       ((t (:inherit ido-first-match))))
+ ;;'(ido-vertical-match-face             ((t (:foreground "#4CFF4C"))))
+ ;; '(ido-grid-mode-match ((t (:inherit ido-first-match ))))
+ ;; powerline
+ '(powerline-active1                   ((t (:background "#000000":foreground "#F6F3E8"))))
+ '(powerline-active2                   ((t (:background "#666666" :foreground "#F6F3E8"))))
+ '(powerline-inactive1                 ((t (:inherit modeline-inactive))))
+ '(powerline-inactive2                 ((t (:inherit modeline-inactive))))
+ ;; preview-latex
+ '(font-latex-sectioning-0-face        ((t (:inherit font-latex-sectioning-1-face))))
+ '(font-latex-sectioning-1-face        ((t (:inherit font-latex-sectioning-2-face))))
+ '(font-latex-sectioning-2-face        ((t (:inherit font-latex-sectioning-3-face))))
+ '(font-latex-sectioning-3-face        ((t (:inherit font-latex-sectioning-4-face))))
+ '(font-latex-sectioning-4-face        ((t (:inherit font-latex-sectioning-5-face ))))
+ '(font-latex-sectioning-5-face        ((t (:inherit font-lock-type-face :bold t))))
+ '(font-latex-slide-title-face         ((t (:inherit font-lock-type-face :bold t))))
+ '(font-latex-subscript-face           ((t nil)))
+ '(font-latex-superscript-face         ((t nil)))
+ '(font-latex-math-face                ((t (:inherit font-lock-constant-face ))))
+ '(font-latex-script-char-face         ((t (:inherit font-lock-preprocessor-face :bold t))))
+ '(font-latex-verbatim-face            ((t (:inherit font-lock-doc-string-face ))))
+ ;; elscreen
+ '(elscreen-tab-control-face           ((t (:background "#222244" :foreground "#f6f3e8" :underline t :bold t ))))
+ '(elscreen-tab-current-screen-face    ((t (:background "#222244" :foreground "#f6f3e8" :underline t :bold t ))))
+ '(elscreen-tab-other-screen-face      ((t (:background "#222244" :foreground "#aaaaaa" :underline t :bold nil ))))
+ '(elscreen-tab-background-face        ((t (:background "#222244" :foreground "#aaaaaa" :underline t :bold nil ))))
+ ;; git-gutter
+ '(git-gutter:added                    ((t (:inherit default :bold t :foreground "#4CFF4C" :background "#666666"))))
+ '(git-gutter:deleted                  ((t (:inherit default :bold t :foreground "#FF7FBF" :background "#666666"))))
+ '(git-gutter:modified                 ((t (:inherit default :bold t :foreground "#FFFF4C" :background "#666666"))))
+ '(git-gutter:unchanged                ((t (:inherit default :background "#666666" ))))
+ '(git-gutter:separator-face           ((t (:inherit default :foreground "#FF4C4C" :background "#666666"))))
+  ;;; howm
+ '(howm-mode-keyword-face              ((t (:foreground "#7F7FFF" :background nil ))))
+ '(howm-mode-title-face                ((t (:foreground "#4CFFFF" :background nil ))))
+ '(howm-reminder-deadline-face         ((t (:bold t :foreground "#FF4C4C" :background nil ))))
+ '(howm-reminder-late-deadline-face    ((t (:bold t :underline t :foreground "#FF0000" :background nil ))))
+ '(howm-reminder-today-face            ((t (:bold t :foreground "#FFBF7F" :background nil ))))
+ '(howm-reminder-tomorrow-face         ((t (:bold t :foreground "#FF7FBF" :background nil ))))
+ ;; outline
+ '(outline-1                           ((t (:inherit font-lock-function-name-face :bold t))))
+ '(outline-2                           ((t (:inherit font-lock-string-face :bold t))))
+ '(outline-3                           ((t (:inherit font-lock-keyword-face :bold t))))
+ '(outline-4                           ((t (:inherit font-lock-type-face :bold t ))))
+ '(outline-5                           ((t (:inherit font-lock-constant-face :bold t ))))
+ '(outline-6                           ((t (:inherit font-lock-variable-name-face :bold t))))
+ '(outline-7                           ((t (:inherit font-lock-builtin-face :bold t ))))
+ '(outline-8                           ((t (:inherit font-lock-comment-face :bold t ))))
+ ;; org
+ '(org-agenda-date-today               ((t (:underline t ))))
+ '(org-agenda-date                     ((t (:foreground "#FFFFFF" ))))
+ '(org-agenda-date-weekend             ((t (:foreground "#FF7F7F" :bold t))))
+ '(org-agenda-calendar-event           ((t (:foreground "#F6F3E8" ))))
+ '(org-hide                            ((t (:foreground "#4C4C4C" ))))
+ ;;
+ ;; moinmoin
+ '(moinmoin-h1                         ((t (:inherit outline-1))))
+ '(moinmoin-h2                         ((t (:inherit outline-2))))
+ '(moinmoin-h3                         ((t (:inherit outline-3))))
+ '(moinmoin-h4                         ((t (:inherit outline-4))))
+ '(moinmoin-h5                         ((t (:inherit outline-5))))
+ '(moinmoin-url                        ((t (:inherit font-lock-link-face))))
+ '(moinmoin-url-title                  ((t (:inherit moinmoin-url :bold t))))
+ '(moinmoin-anchor-ref-id              ((t (:inherit moinmoin-url :underline t))))
+ '(moinmoin-anchor-ref-title           ((t (:inherit moinmoin-url :bold t))))
+ '(moinmoin-wiki-link                  ((t (:inherit moinmoin-url :underline t ))))
+ '(moinmoin-inter-wiki-link            ((t (:inherit moinmoin-url :underline t ))))
+ '(moinmoin-item                       ((t (:inherit font-lock-doc-face ))))
+ '(moinmoin-item-2                     ((t (:inherit font-lock-doc-face ))))
+ )
+;; review
+;; '(review-mode-header1-face  ((t (:inherit outline-1))))
+;; '(review-mode-header2-face  ((t (:inherit outline-2))))
+;; '(review-mode-header3-face  ((t (:inherit outline-3))))
+;; '(review-mode-header4-face  ((t (:inherit outline-4))))
+;; '(review-mode-header5-face  ((t (:inherit outline-5))))
+  #+END_SRC
+* 起動時間の計測
+  [[http://memo.sugyan.com/entry/20120120/1327037494][起動時間を計測する 改訂版 - すぎゃーんメモ]]
+  #+BEGIN_SRC emacs-lisp
+(add-hook 'after-init-hook
+          (lambda ()
+            (message "init time: %.3f sec"
+                     (float-time (time-subtract after-init-time before-init-time)))))
+  #+END_SRC

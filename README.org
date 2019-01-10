@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2019-01-10 16:19:43
+#+DATE: 2019-01-10 16:41:17
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -777,9 +777,9 @@ Emacs*useXIM: false
     キーバインド
     #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
 (global-set-key "\C-x\C-j" 'skk-mode)
-(global-set-key "\C-xj" 'skk-mode)
-(global-set-key "\C-j" 'skk-mode)
-(global-set-key "\C-\\" 'skk-mode)
+(global-set-key "\C-xj"    'skk-mode)
+(global-set-key "\C-j"     'skk-mode)
+(global-set-key "\C-\\"    'skk-mode)
     #+END_SRC
     半角カナを入力
     #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
@@ -949,8 +949,8 @@ File.open(src, "r") {|f|
 * インクリメンタル検索: =migemo=
   #+BEGIN_SRC emacs-lisp
 (leaf migemo
-  :disabled (not (executable-find "cmigemo"))
-  :require t
+  :if (executable-find "cmigemo")
+  :byte-compile-funcs ((migemo-init . migemo-init))
   :config
   (if (file-directory-p "/usr/local/share/migemo/utf-8")
       (setq migemo-dictionary "/usr/local/share/migemo/utf-8/migemo-dict")
@@ -959,8 +959,9 @@ File.open(src, "r") {|f|
         migemo-options '("-q" "--emacs")
         migemo-user-dictionary nil
         migemo-regex-dictionary nil
-        migemo-coding-system 'utf-8-unix)
-  (migemo-init))
+        migemo-coding-system 'utf-8-unix))
+(if (require 'migemo nil 'noerror)
+    (migemo-init))
   #+END_SRC
 * 補完: =ido=
   補完は =ido= が軽いし速いので好み.
@@ -1099,7 +1100,7 @@ File.open(src, "r") {|f|
    デフォルトは対称鍵暗号化なので， =GPG_KEY_ID= を設定しておく
    #+BEGIN_SRC emacs-lisp
 (leaf plstore
-  :disabled (not (getenv "GPG_KEY_ID"))
+  :if (getenv "GPG_KEY_ID")
   :init
   (setq plstore-secret-keys 'silent
         plstore-encrypt-to (getenv "GPG_KEY_ID")))
@@ -1109,7 +1110,7 @@ File.open(src, "r") {|f|
    ファイルの置き場所と暗号鍵の設定をしておく
    #+BEGIN_SRC emacs-lisp
 (leaf oauth2
-  :disabled (not (getenv "GPG_KEY_ID"))
+  :if (getenv "GPG_KEY_ID")
   :ensure t
   :init
   (setq oauth2-token-file (concat my:d:tmp "oauth2.plstore")))
@@ -1117,8 +1118,8 @@ File.open(src, "r") {|f|
 ** password-store
    #+BEGIN_SRC emacs-lisp
 (leaf password-store
-  :disabled (not (and my:d:password-store
-                      (executable-find "pass")))
+  :if (and my:d:password-store
+           (executable-find "pass"))
   :ensure t
   )
    #+END_SRC
@@ -1126,11 +1127,32 @@ File.open(src, "r") {|f|
    auth-source として =password-store= を使う拡張
    #+BEGIN_SRC emacs-lisp
 (leaf auth-source-pass
-  :disabled (not (and my:d:password-store
-                      (executable-find "pass")))
+  :if (and my:d:password-store
+           (executable-find "pass"))
   :ensure t
   )
    #+END_SRC
+* Emacs-w3m
+  あまり使わないけれど, 一応設定しておく.
+  #+BEGIN_SRC emacs-lisp
+(leaf w3m
+  :defer t
+  :bind (:map w3m-mode-map
+         ("<left>"  . backward-char)
+         ("<right>" . forward-char)
+         ("<up>"    . previous-line)
+         ("<down>"  . next-line)
+         :map w3m-minor-mode-map
+         ("<left>"  . backward-char)
+         ("<right>" . forward-char)
+         ("<up>"    . previous-line)
+         ("<down>"  . next-line))
+  :config
+  (setq w3m-search-default-engine "google"
+        w3m-use-cookies t
+        w3m-fill-column -4)
+  )
+  #+END_SRC
 * MUA の設定: =wanderlust=
   MUA として Wanderlust を使っている
 ** Emacs 本体側の設定
@@ -1138,9 +1160,9 @@ File.open(src, "r") {|f|
    ここでは =wl-init-file= を指定することで，設定ファイルを明示している．
    #+BEGIN_SRC emacs-lisp
 (leaf wl
-  :disabled (not (and (or (my:dpkg-status "wl")
-                          (my:dpkg-status "wl-beta"))
-                      (my:dpkg-status "rail")))
+  :if (and (or (my:dpkg-status "wl")
+               (my:dpkg-status "wl-beta"))
+           (my:dpkg-status "rail"))
   :commands wl wl-other-frame wl-draft wl-user-agent-compose
   :init
   (define-mail-user-agent
@@ -1167,10 +1189,6 @@ File.open(src, "r") {|f|
    割と =/etc/emacs/site-start.d/65wl-beta.el= と重複している気がするが...
 ** Wanderlust 本体の設定
    実際の設定は以下の通り
-*** byte compile の設定
-    #+BEGIN_SRC emacs-lisp
-(eval-when-compile (require 'wl))
-    #+END_SRC
 *** 依存/追加ライブラリのインストールと読み込み
 **** rail
      SEMI や FLIM などの UA の表示に [[http://uwabami.github.com/rail/][rail]] を使っている.
@@ -1201,17 +1219,18 @@ File.open(src, "r") {|f|
      HTML メールを表示するために eww を使う.
      mime-setup がロードされる前に記述する必要あり.
      #+BEGIN_SRC emacs-lisp :tangle init-wl.el
-(setq mime-view-text/html-previewer 'shr)
-(setq mime-setup-enable-inline-html 'shr)
-;; 幅指定 → 実際の関数は eww の設定を参照
-(defun my:mime-shr-preview-text/html (&rest args)
-  (advice-add 'shr-insert-document :around 'my:shr-insert-document)
-  (unwind-protect
-      (apply args)
-    (advice-remove 'shr-insert-document 'my:shr-insert-document)))
-(advice-add 'mime-shr-preview-text/html :around
-            'my:mime-shr-preview-text/html)
-(leaf mime-setup)
+;; (setq mime-view-text/html-previewer 'shr)
+;; (setq mime-setup-enable-inline-html 'shr)
+;; ;; 幅指定 → 実際の関数は eww の設定を参照
+;; (defun my:mime-shr-preview-text/html (&rest args)
+;;   (advice-add 'shr-insert-document :around 'my:shr-insert-document)
+;;   (unwind-protect
+;;       (apply args)
+;;     (advice-remove 'shr-insert-document 'my:shr-insert-document)))
+;; (advice-add 'mime-shr-preview-text/html :around
+;;             'my:mime-shr-preview-text/html)
+;; (leaf mime-setup)
+(leaf mime-w3m)
      #+END_SRC
      どのアプリケーションで開くか → =xdg-open= に丸投げ．
      #+BEGIN_SRC emacs-lisp :tangle init-wl.el

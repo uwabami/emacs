@@ -8,6 +8,7 @@ ELC		= $(EL:%.el=%.elc)
 all: init.elc $(ELC)
 bootstrap: tmp/bootstrap-stamp
 tmp/bootstrap-stamp: init.el
+	git submodule update --init
 	mkdir -p tmp
 	chmod 700 tmp
 # 	$(EMACS) -q --batch -l org-install.el

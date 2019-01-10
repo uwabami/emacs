@@ -7,8 +7,6 @@ env:
   global:
     - PATH=$HOME/local/bin:$HOME/local/evm/bin:$PATH
   matrix:
-    - EVM_EMACS=emacs-24.1-travis
-    - EVM_EMACS=emacs-24.2-travis
     - EVM_EMACS=emacs-24.3-travis
     - EVM_EMACS=emacs-24.4-travis
     - EVM_EMACS=emacs-24.5-travis

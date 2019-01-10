@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2019-01-10 20:08:37
+#+DATE: 2019-01-10 20:42:50
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -80,7 +80,6 @@ init.el: README.org
       package-user-dir (expand-file-name "pkg/elpa" user-emacs-directory)
       package-gnupghome-dir (expand-file-name ".gnupg" (getenv "HOME")))
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
-(add-to-list 'package-archives '("org"   . "https://orgmode.org/elpa/") t)
 (package-initialize)
    #+END_SRC
 ** [[https://github.com/jwiegley/use-package][use-package]]
@@ -2235,6 +2234,10 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 (defvar my:d:org (concat (getenv "HOME") "/Nextcloud/org/"))
 (use-package org
   :if (file-directory-p my:d:org)
+  :quelpa (org
+           :fetcher file
+           :path "~/.emacs.d/modules/org-mode/lisp"
+           :version 9.1.9)
   :defer t
   :bind (("C-x n s" . org-narrow-to-subtree)
          ("C-x n w" . widen))
@@ -2360,9 +2363,10 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :if (and (my:dpkg-status "wl-beta")
            (file-directory-p my:d:org))
   :quelpa (org-wl
-           :fetcher url
-           :url "https://code.orgmode.org/bzg/org-mode/raw/master/contrib/lisp/org-wl.el"
-           )
+           :fetcher file
+           :path (expand-file-name
+                  "modules/org-mode/contrib/lisp/org-wl.el"
+                  user-emacs-directory))
   )
 (use-package org-capture
   :bind (("C-x m" . org-capture))
@@ -2623,16 +2627,16 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :ensure t
   :init
   (setq org-gcal-dir (concat my:d:tmp "org-gcal"))
-  (unless org-gcal-dir
-    (make-directory org-gcal-dir))
-  (setq org-gcal-token-file (expand-file-name ".org-gcal-token" org-gcal-dir))
-  (setq alert-log-messages t)
-  (setq alert-default-style 'log)
-  (setq org-gcal-down-days   90) ;; 過去 3 month
-  (setq org-gcal-up-days    180) ;; 未来 6 month
-  (setq org-gcal-auto-archive nil)
+  (unless org-gcal-dir (make-directory org-gcal-dir))
+  (setq org-gcal-token-file (expand-file-name ".org-gcal-token" org-gcal-dir)
+        alert-log-messages t
+        alert-default-style 'log
+        org-gcal-down-days   90  ;; 過去 3 month
+        org-gcal-up-days    180  ;; 未来 6 month
+        org-gcal-auto-archive nil)
   :config
-  (load (concat my:d:password-store "/org-gcal.gpg"))
+  (with-eval-after-load "org-gcal"
+    (load (concat my:d:password-store "/org-gcal.gpg")))
   )
     #+END_SRC
     password-store には multiline で設定を書く．例えば以下:
@@ -2667,7 +2671,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         orgmine-note-block-end   "#+END_SRC\n"
         orgmine-default-todo-keyword "新規")
   ;; サーバ設定
-  (load (concat my:d:password-store "/orgmine.gpg"))
+  (with-eval-after-load "orgmine"
+    (load (concat my:d:password-store "/orgmine.gpg")))
   )
    #+END_SRC
 ** Org-Export

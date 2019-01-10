@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2019-01-10 13:42:06
+#+DATE: 2019-01-10 13:52:20
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -120,6 +120,16 @@ init.elc: init.el
         quelpa-melpa-recipe-stores nil)
   )
    #+END_SRC
+* 設定に必要となる便利パッケージ群
+  基本, 読み込むだけのアレコレ
+  #+BEGIN_SRC emacs-lisp
+(leaf bind-key :ensure t)
+(leaf s        :ensure t)
+(leaf dash     :ensure t)
+(leaf diminish :ensure t)
+(leaf cl-lib   :ensure t)
+(leaf el-x     :ensure t)
+  #+END_SRC
 * 独自関数
   細かい独自関数，など．
 ** カーソルのある位置の face を調べる関数
@@ -216,7 +226,8 @@ init.elc: init.el
   "Show up to `max-length' characters of a directory name `fpath' like zsh"
   (let* ((path (reverse (split-string (abbreviate-file-name fpath) "/")))
          (output "")
-         (top (string-join (reverse (last path 3)) "/"))
+         ;; (top (string-join (reverse (last path 3)) "/"))
+         (top (mapconcat 'identitiy (reverse (last path 3)) "/"))
          (vmax (- max-length 4 (length top)))
          (path (butlast path 3))
          )
@@ -231,3 +242,41 @@ init.elc: init.el
     (format "%s%s" top output)
     ))
    #+END_SRC
+* 環境変数の読み込み: =exec-path-from-shell=
+  zsh で設定した =PATH= などの環境変数を Emacs に引き継ぐために
+  [[https://github.com/purcell/exec-path-from-shell][purcell/exec-path-from-shell]] を使います．
+  今の所
+  - =SHELL=
+  - =DEBFULLNAME=
+  - =DEBEMAIL=
+  - =TEXMFHOME=
+  - =SKKSERVER=
+  - =http_proxy=
+  - =GPG_KEY_ID=
+  - =GPG_AGENT_INFO=
+  - =PASSWORD_STORE_DIR=
+  - =PATH=
+  を読み込んでいます．
+  #+BEGIN_SRC emacs-lisp
+(defvar my:d:password-store nil)
+(leaf exec-path-from-shell
+  :ensure t
+  :config
+  (when (memq window-system '(mac ns)) (exec-path-from-shell-initialize))
+  (exec-path-from-shell-copy-envs
+   '("SHELL"
+     "DEBFULLNAME"
+     "DEBEMAIL"
+     "SKKSERVER"
+     "TEXMFHOME"
+     "http_proxy"
+     "GPG_KEY_ID"
+     "GPG_AGENT_INFO"
+     "PASSWORD_STORE_DIR"
+     "PATH"
+     ))
+  (setq user-full-name (concat (getenv "DEBFULLNAME"))
+        user-mail-address (concat (getenv "DEBEMAIL"))
+        my:d:password-store (concat (getenv "PASSWORD_STORE_DIR") "/Emacs/" (system-name)))
+  )
+  #+END_SRC

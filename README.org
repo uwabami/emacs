@@ -1,5 +1,5 @@
 #+TITLE: Emacs の設定
-#+DATE: 2019-01-11 01:53:07
+#+DATE: 2019-01-11 01:58:25
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * ヘッダ
   #+BEGIN_SRC emacs-lisp
@@ -89,6 +89,117 @@
 (leaf diminish :ensure t)
 (leaf s        :ensure t)
   #+END_SRC
+* 独自関数
+  細かい独自関数，など．
+** カーソルのある位置の face を調べる関数
+   わりと良く使う. 地味に便利
+   #+BEGIN_SRC emacs-lisp
+(defun my:describe-face-at-point ()
+  (interactive)
+  (message "%s" (get-char-property (point) 'face)))
+   #+END_SRC
+** 機能を無効化するための関数の定義
+   =line-number-mode= など「有効無効をtoggleする関数」は
+   慣習的に =0= 以下の数字を指定すると明示的に無効化できるので，
+   =-1= を設定する関数を定義しておく.
+   #+BEGIN_SRC emacs-lisp
+(defun my:disable-builtin-mode (mode)
+  "与えられた mode が存在するのであれば -1 をセットして無効化"
+  (if (fboundp mode) (funcall mode -1)))
+   #+END_SRC
+** dpkg-status
+   もっと良い方法がありそうなモンですが．
+   #+BEGIN_SRC emacs-lisp
+(defun my:dpkg-status (package)
+  "Return the package status from dpkg --get-selections."
+  (string-match "^ii" (shell-command-to-string (format "dpkg -l %s" package))))
+   #+END_SRC
+** 行末の無駄な空白/改行を削除する
+   @see [[http://d.hatena.ne.jp/tototoshi/20101202/1291289625][無駄な行末の空白を削除する(Emacs Advent Calendar jp:2010)]]
+
+   ただし, RD や Markdown だと空白行に意味があったりするので，
+   必要に応じて拡張子で判断して外している．
+   #+BEGIN_SRC emacs-lisp
+(defvar my:delete-trailing-whitespace-exclude-suffix
+  (list "\\.rd$" "\\.md$" "\\.rbt$" "\\.rab$"))
+(defun my:delete-trailing-whitespace ()
+  (interactive)
+  (cond
+   ((equal nil
+           (cl-loop for pattern in my:delete-trailing-whitespace-exclude-suffix
+                    thereis (string-match pattern buffer-file-name)))
+    (delete-trailing-whitespace))))
+(add-hook 'before-save-hook 'my:delete-trailing-whitespace)
+   #+END_SRC
+** 空になったファイルを尋ねずに自動削除
+   ゴミが残らないし，地味に便利．
+   #+BEGIN_SRC emacs-lisp
+(defun my:delete-file-if-no-contents ()
+  (when (and (buffer-file-name (current-buffer))
+             (= (point-min) (point-max)))
+    (delete-file
+     (buffer-file-name (current-buffer)))))
+(if (not (memq 'my:delete-file-if-no-contents after-save-hook))
+    (setq after-save-hook
+          (cons 'my:delete-file-if-no-contents after-save-hook)))
+   #+END_SRC
+** scratch を殺さない. 消したら再生成
+   ...元ネタがどこだったのか忘れてしまった...
+   #+BEGIN_SRC emacs-lisp
+(defun my:make-scratch (&optional arg)
+  (interactive)
+  (progn
+    ;; "*scratch*" を作成して buffer-list に放り込む
+    (set-buffer (get-buffer-create "*scratch*"))
+    (funcall initial-major-mode)
+    (erase-buffer)
+    (when (and initial-scratch-message (not inhibit-startup-message))
+      (insert initial-scratch-message))
+    (or arg
+        (progn
+          (setq arg 0)
+          (switch-to-buffer "*scratch*")))
+    (cond ((= arg 0) (message "*scratch* is cleared up."))
+          ((= arg 1) (message "another *scratch* is created")))))
+
+(defun my:buffer-name-list ()
+  (mapcar (function buffer-name) (buffer-list)))
+(add-hook 'kill-buffer-query-functions
+          ;; *scratch* バッファで kill-buffer したら内容を消去するだけにする
+          (function (lambda ()
+                      (if (string= "*scratch*" (buffer-name))
+                          (progn (my:make-scratch 0) nil)
+                        t))))
+(add-hook 'after-save-hook
+          ;; *scratch* バッファの内容を保存したら
+          ;; *scratch* バッファを新しく作る.
+          (function
+           (lambda ()
+             (unless (member "*scratch*" (my:buffer-name-list))
+               (my:make-scratch 1)))))
+   #+END_SRC
+** ファイル名を minibuffer におさまる様に整形
+   zsh 風味
+   #+BEGIN_SRC emacs-lisp
+(defun my:shorten-file-path (fpath max-length)
+  "Show up to `max-length' characters of a directory name `fpath' like zsh"
+  (let* ((path (reverse (split-string (abbreviate-file-name fpath) "/")))
+         (output "")
+         (top (string-join (reverse (last path 3)) "/"))
+         (vmax (- max-length 4 (length top)))
+         (path (butlast path 3))
+         )
+    (while (and path
+                (and (< (length output) vmax)
+                     (< (length (concat "/" (car path) output)) vmax)))
+      (setq output (concat "/" (car path) output))
+      (setq path (cdr path)))
+    ;; 省略
+    (when path
+      (setq output (concat "/..." output)))
+    (format "%s%s" top output)
+    ))
+   #+END_SRC
 * 環境変数の読み込み: =exec-path-from-shell=
   zsh で設定した =PATH= などの環境変数を Emacs に引き継ぐために
   [[https://github.com/purcell/exec-path-from-shell][purcell/exec-path-from-shell]] を使います．
@@ -463,6 +574,146 @@ File.open(src, "r") {|f|
              '(skk-tankan-search 'skk-search-jisyo-file
                                  skk-large-jisyo 10000))
     #+END_SRC
+* Copy & Paste
+** Linux: =xclip=
+   =xclip= で clipboard とデータをやりとり．
+   #+BEGIN_SRC emacs-lisp
+(leaf xclip
+  :if (executable-find "xclip")
+  :ensure t
+  :config
+  (xclip-mode 1))
+   #+END_SRC
+   clipboard と PRIMARY の同期には =gpaste= を使っている．
+* インクリメンタル検索: =migemo=
+  #+BEGIN_SRC emacs-lisp
+(quelpa '(migemo
+          :fetcher github
+          :repo "uwabami/migemo"))
+(leaf migemo
+  :if (executable-find "cmigemo")
+  :byte-compile-funcs ((migemo-init . migemo))
+  :config
+  (setq migemo-command "cmigemo"
+        migemo-options '("-q" "--emacs")
+        migemo-dictionary "/usr/share/cmigemo/utf-8/migemo-dict"
+        migemo-user-dictionary nil
+        migemo-regex-dictionary nil
+        migemo-coding-system 'utf-8-unix)
+  (migemo-init)
+  )
+  #+END_SRC
+* 補完: =ido=
+  補完は =ido= が軽いし速いので好み.
+  見た目がちょっと簡素すぎる気もするので、なんとか弄りたい所ではある。
+** =ido= の設定
+   #+BEGIN_SRC emacs-lisp
+(leaf ido
+  :bind (("C-x C-f" . ido-find-file)
+         )
+  :config
+  (ido-mode t)
+  ;; (ido-everywhere t)  ; <- Wanderlust みたいに, 過去の選択を覚えている奴と相性悪い.
+  (setq ido-enable-prefix nil             ; prefix match 入力を先頭一致可能
+        ido-confirm-unique-completion t   ; TAB で名前の一致まで. その後 RET で実行
+        ido-enable-flex-matching t        ; flx matching を試す際には prefix を無効化すること
+        ido-enable-dot-prefix t           ; . を prefix として扱う
+        ido-default-file-method   'selected-window
+        ido-default-buffer-method 'selected-window
+        ido-max-directory-size 10000
+        ido-enable-tramp-completion nil
+        ido-use-faces t
+        ido-ignore-extensions t
+        ido-cannot-complete-command 'ido-next-match
+        ido-save-directory-list-file (concat my:d:tmp "ido.last"))
+  ;; 補完で無視する拡張子の追加．そのうち増える．
+  (cl-loop for ext in
+           '(".dvi"
+             ".fdb_latexmk"
+             ".fls"
+             ".ilg"
+             ".jqz"
+             ".mod"
+             ".nav"
+             ".out"
+             ".snm"
+             ".synctex.gz"
+             ".vrb"
+             )
+           do (add-to-list 'completion-ignored-extensions ext))
+  (add-hook 'ido-setup-hook
+            (lambda ()
+              (define-key ido-completion-map (kbd "C-h") 'ido-delete-backward-updir)
+              (define-key ido-completion-map (kbd "C-l") 'ido-delete-backward-updir)))
+  (defun my:ido-disable-line-trucation ()
+    (set (make-local-variable 'truncate-lines) nil))
+  (add-hook 'ido-minibuffer-setup-hook 'my:ido-disable-line-trucation)
+  )
+   #+END_SRC
+** =flx-ido=: flex match の強化
+   曖昧マッチが非常に直感的になった．地味に便利で手放せない．
+   #+BEGIN_SRC emacs-lisp
+(leaf flx-ido
+  :ensure t
+  :config
+  (flx-ido-mode 1)
+  (setq flx-ido-use-faces nil
+        flx-ido-threshold 10000)
+  )
+   #+END_SRC
+** =ido-grid-mode=: 候補を並べて表示
+   横に並ぶと正直シンドイので並べてみる。
+   #+BEGIN_SRC emacs-lisp
+(quelpa '(ido-grid
+          :fetcher github
+          :repo "larkery/ido-grid.el"))
+(leaf ido-grid
+  :config
+  (setq ido-grid-enabled t
+        ido-grid-start-small nil
+        ido-grid-rows 0.15
+        ido-grid-max-columns nil
+        ido-grid-indent 1
+        ido-grid-column-padding 3
+        ido-grid-bind-keys t
+        ido-max-directory-size 100000  ;; avoid [Too Big]
+        )
+  (ido-grid-enable)
+  (defun my:ido-grid-force-one-columns (o &rest args)
+    (let ((ido-grid-max-columns 1)   ;; single vertical col
+          (ido-grid-start-small nil) ;; popup immediately
+          (ido-grid-rows 0.15))      ;; 15% of frame height
+      (apply o args)
+      ))
+  )
+   #+END_SRC
+** =ido-recentf=: recentf を ido で
+   "recentf-list" の結果を整形して, minibuffer に納まる様に縮小したり
+   #+BEGIN_SRC emacs-lisp
+(defun ido-recentf-open ()
+  "Use `ido-completing-read' to \\[find-file] a recent file"
+  (interactive)
+  (let ((files (mapcar (lambda (f)
+                         (cons (my:shorten-file-path f 77) f))
+                       recentf-list)))
+    (let ((selected (ido-completing-read "Files: " (mapcar #'car files))))
+      (find-file (assoc-default selected files)))))
+(bind-key "C-x C-r" 'ido-recentf-open)
+   #+END_SRC
+** =smex=
+   M-x を ido で。
+   #+BEGIN_SRC emacs-lisp
+(leaf smex
+  :ensure t
+  :bind (("M-x" . smex))
+  :config
+  (setq smex-auto-update t
+        smex-save-file (concat my:d:tmp "smex-items")
+        smex-prompt-string "smex: "
+        smex-flex-matching nil
+        )
+  )
+   #+END_SRC
 * 起動時間の計測
   [[http://memo.sugyan.com/entry/20120120/1327037494][起動時間を計測する 改訂版 - すぎゃーんメモ]]
   #+BEGIN_SRC emacs-lisp

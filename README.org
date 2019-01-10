@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2019-01-10 20:42:50
+#+DATE: 2019-01-11 00:52:56
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -80,6 +80,9 @@ init.el: README.org
       package-user-dir (expand-file-name "pkg/elpa" user-emacs-directory)
       package-gnupghome-dir (expand-file-name ".gnupg" (getenv "HOME")))
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+(eval-when-compile
+  (unless (file-exists-p (locate-user-emacs-file "tmp/bootstrap-stamp"))
+    (package-refresh-contents)))
 (package-initialize)
    #+END_SRC
 ** [[https://github.com/jwiegley/use-package][use-package]]
@@ -270,7 +273,7 @@ init.el: README.org
      ))
   (setq user-full-name (concat (getenv "DEBFULLNAME"))
         user-mail-address (concat (getenv "DEBEMAIL"))
-        my:d:password-store (concat (getenv "PASSWORD_STORE_DIR") "/Emacs/" system-name))
+        my:d:password-store (concat (getenv "PASSWORD_STORE_DIR") "/Emacs/" (system-name)))
   )
   #+END_SRC
 * 言語の設定
@@ -398,7 +401,7 @@ init.el: README.org
         unresolved
         callargs
         redefine
-        obsolete
+;;        obsolete
         noruntime
         cl-functions
         interactive-only
@@ -767,10 +770,11 @@ init.el: README.org
   (ace-link-setup-default)
   )
   #+END_SRC
-* Elscreen [/]
-  modeline の表示そのものは無効化しておく．
-  - [ ] Debian パッケージ版は古い．更新すべき
-  #+BEGIN_SRC emacs-lisp
+* Elscreen
+** 導入 [0/1]
+   modeline の表示そのものは無効化しておく．
+   - [ ] Debian パッケージ版は古い．更新すべき
+   #+BEGIN_SRC emacs-lisp
 (use-package elscreen
   :quelpa (elscreen
            :fetcher github
@@ -782,28 +786,6 @@ init.el: README.org
         elscreen-display-screen-number nil)
   :config
   (elscreen-start))
-  #+END_SRC
-* shell との連携
-** multi-term
-   あまり使っていないけれど.
-   +これをメインに使うようになったら, 多分 zsh は止めた方が良いかも+
-   #+BEGIN_SRC emacs-lisp
-(use-package multi-term
-  :ensure t
-  :init
-  (add-hook 'term-mode-hook
-            (lambda ()
-              (bind-keys :map term-raw-map
-                         ("C-y" . term-paste)
-                         )))
-  (setq  multi-term-program shell-file-name
-         multi-term-program "/bin/zsh"
-         term-unbind-key-list '("C-o" "C-z" "C-x" "C-c" "C-h" "C-y" "<ESC>")
-         ansi-color-names-vector
-         [unspecified "#242424" "#FF4c4c" "#4cff4c" "#ffff4c"
-                      "#4c4cff" "#ff4cff" "#4cffff" "#f6f3e8"]
-         )
-  )
    #+END_SRC
 ** elscreen + zsh での連携
   詳細は
@@ -966,7 +948,7 @@ Emacs*useXIM: false
     #+END_SRC
 *** インクリメンタルサーチ
     minibuffer 内では強制的に skk off.
-    #+BEGIN_SRC emacs-lisp :tangle init-wl.el
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
 (add-hook 'skk-mode-hook
           (lambda ()
             (and (skk-in-minibuffer-p)
@@ -2237,7 +2219,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :quelpa (org
            :fetcher file
            :path "~/.emacs.d/modules/org-mode/lisp"
-           :version 9.1.9)
+           :version 9.1.14)
   :defer t
   :bind (("C-x n s" . org-narrow-to-subtree)
          ("C-x n w" . widen))
@@ -2696,7 +2678,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :config
     (setq org-export-with-toc nil
           org-export-with-section-numbers nil
-          org-latex-with-hyperref nil)
+          org-latex-hyperref-template nil)
     ;; for Beamer
     (add-to-list 'org-export-options-alist
                  '(:shortdate    "SHORTDATE" nil nil))
@@ -3129,7 +3111,7 @@ Related [[wiki:index][Index]]
   素の =ruby-mode=. =Gemfile= なんかも ruby-mode で
   #+BEGIN_SRC emacs-lisp
 (use-package ruby-mode
-  :mode ("\\.rb$"  "Capfile" "Gemfile")
+  :mode ("\\.rb"  "Capfile" "Gemfile")
   :interpreter "ruby"
   :config
   ;; マジックコメントは自分で入れる
@@ -3414,7 +3396,8 @@ Related [[wiki:index][Index]]
   :config
   (setq moomin-history-file
         (concat my:d:tmp ".moomin_history"))
-  (load (concat my:d:password-store "/moomin.gpg"))
+  (with-eval-after-load "moomin"
+    (load (concat my:d:password-store "/moomin.gpg")))
   )
 #+END_SRC
 * 基本的なキーバインドの設定
@@ -3466,6 +3449,10 @@ Related [[wiki:index][Index]]
 * フォントと色
   そろそろテーマにした方が良い，とは思ってはいる．
   #+BEGIN_SRC emacs-lisp
+(setq ansi-color-names-vector
+      [unspecified "#242424" "#FF4c4c" "#4cff4c" "#ffff4c"
+                   "#4c4cff" "#ff4cff" "#4cffff" "#f6f3e8"]
+      )
 (defun my:load-window-config ()
   "load window-system specific settings"
   (interactive)

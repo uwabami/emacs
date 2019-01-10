@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2019-01-10 20:07:02
+#+DATE: 2019-01-10 20:08:37
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -773,7 +773,9 @@ init.el: README.org
   - [ ] Debian パッケージ版は古い．更新すべき
   #+BEGIN_SRC emacs-lisp
 (use-package elscreen
-  :ensure t
+  :quelpa (elscreen
+           :fetcher github
+           :repo "emacs-jp/elscreen")
   :init
   (setq elscreen-tab-display-control nil
         elscreen-prefix-key (kbd "C-o")

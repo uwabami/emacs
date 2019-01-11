@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2019-01-11 17:38:08
+#+DATE: 2019-01-11 17:39:44
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -1521,11 +1521,11 @@ video/*; xdg-open %s;
 (setq wl-prefetch-threshold nil)
      #+END_SRC
      終了時に確認しない
-     #+BEGIN_SRC emacs-lisp   :tangle init-wl.el
+     #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
 (setq wl-interactive-exit nil)
      #+END_SRC
-     送信時は確認する   :tangle init-wl.el
-     #+BEGIN_SRC emacs-lisp
+     送信時は確認する
+     #+BEGIN_SRC emacs-lisp :tangle init-wl.el
 (setq wl-interactive-send t)
      #+END_SRC
 **** misc.

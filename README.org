@@ -1045,20 +1045,25 @@ File.open(src, "r") {|f|
    #+END_SRC
 * インクリメンタル検索: =migemo=
   #+BEGIN_SRC emacs-lisp
-(use-package migemo
-  :if (executable-find "cmigemo")
-  :quelpa (migemo
-           :fetcher github
-           :repo "uwabami/migemo")
-  :config
-  (setq migemo-command "cmigemo"
-        migemo-options '("-q" "--emacs")
-        migemo-dictionary "/usr/share/cmigemo/utf-8/migemo-dict"
-        migemo-user-dictionary nil
-        migemo-regex-dictionary nil
-        migemo-coding-system 'utf-8-unix)
-  (migemo-init)
-  )
+    (use-package migemo
+      :if (executable-find "cmigemo")
+      :quelpa (migemo
+               :fetcher github
+               :repo "uwabami/migemo")
+      :config
+      (cond
+       ((and (eq system-type 'darwin)
+             (file-directory-p "/usr/local/share/migemo/utf-8/"))
+        (setq migemo-dictionary "/usr/local/share/migemo/utf-8/migemo-dict"))
+       (t
+        (setq migemo-dictionary "/usr/share/cmigemo/utf-8/migemo-dict")))
+      (setq migemo-command "cmigemo"
+            migemo-options '("-q" "--emacs")
+            migemo-user-dictionary nil
+            migemo-regex-dictionary nil
+            migemo-coding-system 'utf-8-unix)
+      (migemo-init)
+      )
   #+END_SRC
 * 補完: =ido=
   補完は =ido= が軽いし速いので好み.

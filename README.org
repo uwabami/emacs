@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2019-01-11 17:39:44
+#+DATE: 2019-01-11 17:41:39
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -2169,6 +2169,164 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (add-hook 'org-mode-hook 'my:org-timestamp-hook)
   )
    #+END_SRC
+** Agenda: スケジュール，TODO 表示
+   GTD 用の設定．後述の =org-gcal= と =orgmine= で取得したデータも表示している．
+   ついでに
+    - 土曜日をの face を追加.
+    - 祝日, 休日を日曜と同じfaceにする.
+   なんて事もやっている．元ネタは [[https://julien.danjou.info/blog/2010/org-mode-and-holidays][Org-mode and holidays]]
+  #+BEGIN_SRC emacs-lisp
+(use-package org-agenda
+  :bind (("C-c a" . org-agenda))
+  :init
+  (defface my:org-agenda-date-saturday
+    '((t (:foreground "#7FBFFF" :bold t )))
+    "Agenda 表示中の土曜日用のface")
+  (defface my:org-agenda-date-today-saturday
+    '((t (:inherit my:org-agenda-date-saturday :underline t)))
+    "Agenda 表示中の今日かつ土曜日用のface")
+  (defface my:org-agenda-date-today-weekend
+    '((t (:inherit org-agenda-date-weekend :underline t)))
+    "Agenda 表示中の今日かつ日・祝日用のface")
+  ;; こっからは org-gcal で同期したカレンダーの色
+  (defface my:org-agenda-calendar-KUSM
+    '((t (:foreground "#7FFF7F")))
+    "Agenda 表示中, KUSM.org の表示 face"
+    :group 'org-agenda )
+  (defface my:org-agenda-calendar-Schedule
+    '((t (:foreground "#7FFFFF")))
+    "Agenda 表示中, Schedule.org の表示 face"
+    :group 'org-agenda )
+  (defface my:org-agenda-calendar-GFD
+    '((t (:foreground "#FFFF7F")))
+    "Agenda 表示中, GFD.org の表示 face"
+    :group 'org-agenda )
+  (defface my:org-agenda-calendar-DebianJP
+    '((t (:foreground "#BF7FFF")))
+    "Agenda 表示中, DebianJP.org の表示 face"
+    :group 'org-agenda )
+  (defface my:org-agenda-calendar-twitter
+    '((t (:foreground "#CCCCCC")))
+    "Agenda 表示中, Twitter log の表示 face"
+    :group 'org-agenda )
+  ;; 更新用の関数 - とりあえず動いているので良しとするが，リファクタリングしたい
+  (defun my:org-agenda-day-face-function (date)
+    "Compute DATE face for saturday, holidays."
+    (cl-dolist (file (org-agenda-files nil 'ifmode))
+      (cond
+       ((member (calendar-day-of-week date) '(7))
+        (if (org-agenda-todayp date)
+            (cl-return 'my:org-agenda-date-today-weekend))
+        (cl-return 'org-agenda-date-weekend))
+       ((member (calendar-day-of-week date) '(6))
+        (if (org-agenda-todayp date)
+            (cl-return 'my:org-agenda-date-today-saturday))
+        (cl-return 'my:org-agenda-date-saturday)))
+      (let ((face
+             (cl-dolist (entry (org-agenda-get-day-entries file date))
+               (let ((category (with-temp-buffer
+                                 (insert entry)
+                                 (org-get-category (point-min)))))
+                 (when (or (string= "祝日" category)
+                           (string= "休日" category))
+                   (if (org-agenda-todayp date)
+                       (cl-return 'my:org-agenda-date-today-weekend)
+                     (cl-return 'org-agenda-date-weekend)))))))
+        (when face (cl-return face)))))
+  :config
+  ;; 使用するファイル
+  (dolist (file
+           '("Archive.org"
+             "Holidays.org"
+             "Memo.org"
+             "Schedule.org"
+             "MHC.org"
+             "GFD.org"
+             "KUSM.org"
+             "DebianJP.org"
+             "twitter.org"
+             "journal.org"
+             "redmine_GFD.org"
+             "redmine_FluidSoc.org"
+             "redmine_KUSM.org"
+             ))
+    (add-to-list 'org-agenda-files (concat my:d:org file)))
+  (add-to-list 'org-agenda-files (locate-user-emacs-file "README.org"))
+  ;; 表示のカスタマイズ
+  (setq org-agenda-span 'day                   ;; day or week
+        org-agenda-format-date "%Y/%m/%d (%a)" ;; YY/MM/DD (曜)
+        org-agenda-weekend-days '(0)           ;; 日曜始まり
+        ;; 表示関数
+        org-agenda-day-face-function 'my:org-agenda-day-face-function
+        org-agenda-custom-commands             ;; GTD 用の設定
+        '(
+          ("n" "agenda and all TODO list"
+           (
+            (agenda ""
+                    ((org-agenda-ndays 1)
+                     (org-agenda-entry-types '(:timestamp :sexp))))
+            (todo "TODO"
+                  ((org-agenda-prefix-format " %i %-22:c"))
+                  )
+            (todo "新規|着手|進行中|確認"
+                  ((org-agenda-prefix-format " %i %-22:c"))
+                  )
+            (todo "WAIT"
+                  ((org-agenda-prefix-format " %i %-22:c"))
+                  )
+            (todo "SOMEDAY"
+                  ((org-agenda-prefix-format " %i %-22:c"))
+                  )
+            ))
+          ("N" "All memo entry"
+           (;;
+            (todo "MEMO")
+            ))
+           )
+        )
+  ;; 色付け
+  (add-hook 'org-agenda-finalize-hook
+            (lambda ()
+              (save-excursion
+                (goto-char (point-min))
+                (while (re-search-forward "KUSM:" nil t)
+                  (add-text-properties (match-beginning 0) (point-at-eol)
+                                     '(face my:org-agenda-calendar-KUSM)))
+                (goto-char (point-min))
+                (while (re-search-forward "Schedule:" nil t)
+                  (add-text-properties (match-beginning 0) (point-at-eol)
+                                       '(face my:org-agenda-calendar-Schedule)))
+                (goto-char (point-min))
+                (while (re-search-forward "MHC:" nil t)
+                  (add-text-properties (match-beginning 0) (point-at-eol)
+                                       '(face my:org-agenda-calendar-Schedule)))
+                (goto-char (point-min))
+                (while (re-search-forward "DebianJP:" nil t)
+                  (add-text-properties (match-beginning 0) (point-at-eol)
+                                       '(face my:org-agenda-calendar-DebianJP)))
+                (goto-char (point-min))
+                (while (re-search-forward "GFD:" nil t)
+                  (add-text-properties (match-beginning 0) (point-at-eol)
+                                       '(face my:org-agenda-calendar-GFD)))
+                (goto-char (point-min))
+                (while (re-search-forward "twitter:" nil t)
+                  (add-text-properties (match-beginning 0) (point-at-eol)
+                                       '(face my:org-agenda-calendar-twitter)))
+                (goto-char (point-min))
+                (while (re-search-forward "誕生日:" nil t)
+                  (add-text-properties (match-beginning 0) (point-at-eol)
+                                       '(face org-agenda-date-weekend)))
+                (goto-char (point-min))
+                (while (re-search-forward "祝日:" nil t)
+                  (add-text-properties (match-beginning 0) (point-at-eol)
+                                       '(face org-agenda-date-weekend)))
+                (goto-char (point-min))
+                (while (re-search-forward "休日:" nil t)
+                  (add-text-properties (match-beginning 0) (point-at-eol)
+                                       '(face org-agenda-date-weekend)))
+                )))
+  )
+  #+END_SRC
 * フォントと色
   そろそろテーマにした方が良い，とは思ってはいる．
   #+BEGIN_SRC emacs-lisp

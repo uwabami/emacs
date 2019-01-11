@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2019-01-11 16:40:57
+#+DATE: 2019-01-11 16:42:57
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -601,28 +601,28 @@ init.el: README.org
    上手くうごいてくれていない、ような。
    #+BEGIN_SRC emacs-lisp
 (use-package eww
-  :config
   ;; vi like <- vimperator, vimium に慣れてしまったので
-  (bind-keys :map eww-mode-map
-             ("r"  . eww-reload)
-             ("o"  . eww)
-             ("&"  . eww-browse-with-external-browser)
-             ("b"  . eww-back-url)
-             ("]"  . eww-next-url)
-             ("["  . eww-previous-url)
-             ("g"  . eww-top-url)
-             ("+"  . my:eww-increase-width)
-             ("-"  . my:eww-decrease-width)
-             ("h"  . backward-char)
-             ("j"  . next-line)
-             ("k"  . previous-line)
-             ("l"  . forward-char)
-             ("/"  . isearch-forward)
-             ("?"  . isearch-backward)
-             ("n"  . isearch-next)
-             ("N"  . isearch-previous)
-             ("f"  . ace-link-eww)
-             )
+  :bind (:map eww-mode-map
+              ("r"  . eww-reload)
+              ("o"  . eww)
+              ("&"  . eww-browse-with-external-browser)
+              ("b"  . eww-back-url)
+              ("]"  . eww-next-url)
+              ("["  . eww-previous-url)
+              ("g"  . eww-top-url)
+              ("+"  . my:eww-increase-width)
+              ("-"  . my:eww-decrease-width)
+              ("h"  . backward-char)
+              ("j"  . next-line)
+              ("k"  . previous-line)
+              ("l"  . forward-char)
+              ("/"  . isearch-forward)
+              ("?"  . isearch-backward)
+              ("n"  . isearch-next)
+              ("N"  . isearch-previous)
+              ("f"  . ace-link-eww)
+              )
+  :config
   ;; eww
   (unless (file-directory-p (expand-file-name "eww" my:d:tmp))
     (make-directory (expand-file-name "eww" my:d:tmp)))

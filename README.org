@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2019-01-11 17:07:23
+#+DATE: 2019-01-11 17:11:52
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -2099,6 +2099,78 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (calendar-set-date-style 'iso)
   )
   #+END_SRC
+* Org
+  =org-mode= が無いと生きていけない体になりました
+** 基本設定: =org=
+   目新しい設定はしていない，と思う．強いて言えば
+   以前のメモの整理のために [[http://howm.osdn.jp/index-j.html][howm: Hitori Otegaru Wiki Modoki]] も使っていたので,
+   howm も有効にしている，ぐらい．
+   #+BEGIN_SRC emacs-lisp
+(defvar my:d:org (concat (getenv "HOME") "/Nextcloud/org/"))
+(unless (file-directory-p my:d:org)
+  (make-directory my:d:org))
+(use-package org
+  :bind (("C-x n s" . org-narrow-to-subtree)
+         ("C-x n w" . widen))
+  :init
+  (with-eval-after-load "org"
+    (setq org-file-apps-defaults '((remote . emacs)  ;; xdg-open 任せ
+                                   (system . "xdg-open %s")
+                                   (t      . "xdg-open %s")))
+    (setq org-file-apps-defaults-gnu '((remote . emacs)  ;; xdg-open 任せ
+                                       (system . "xdg-open %s")
+                                       (t      . "xdg-open %s")))
+    )
+  :config
+  (setq org-directory my:d:org                 ;; Nextcloud に保存する
+        org-return-follows-link t              ;; return でリンクを辿る
+        org-startup-folded t                   ;; 見出しを畳んで表示
+        org-startup-truncated t                ;; 折り返し無し
+        org-emphasis-alist                     ;; 基本 "-nw" なので色変更
+        (cons '("+" '(:strike-through t :foreground "#999999"))
+              (cl-delete "+" org-emphasis-alist :key 'car :test 'equal))
+        org-completion-use-ido t
+        ;; GTD: 状態の追加
+        org-todo-keywords
+        '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)" "CANCEL(c)" "SOMEDAY(s)")
+          (type "ARTICLE(a)")
+          (type "MEMO(m)")
+          )
+        ;; GTD: タグの追加
+        org-tag-alist '(("OFFICE"     . ?o)
+                        ("HOME"       . ?h)
+                        ("MAIL"       . ?m)
+                        ("WORK"       . ?w)
+                        ("Debian"     . ?d)
+                        ("Computer"   . ?c)
+                        ("Book"       . ?b)
+                        ("Emacs"      . ?e)
+                        ("TeX"        . ?t)
+                        ("Ruby"       . ?r)
+                        )
+        )
+  ;; GTD: TODO→...→DONE としたエントリを =Arhive.org= に移動
+  (defun my:org-archive-done-tasks ()
+    (interactive)
+    (org-map-entries 'org-archive-subtree "/DONE" 'file))
+  (setq org-archive-location "Archive.org::")
+  (add-hook 'org-todo-statistics-hook 'my:org-archive-done-tasks)
+  (add-hook 'org-todo-after-statistics-hook 'my:org-archive-done-tasks)
+  ;; 文字コード強制 ... 今時いらないかも．
+  (modify-coding-system-alist 'file "\\.org\\'" 'utf-8)
+  ;; howm ファイルも org-mode で．
+  (add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
+  (add-to-list 'auto-mode-alist '("\\.howm$" . org-mode))
+  ;;; timestamp 更新文字列の変更
+  ;;  org-mode では ＃+DATE: をひっかける用に(＃は小文字)．
+  (defun my:org-timestamp-hook ()
+    "Change `time-stamp-start' in org-mode"
+    (set (make-local-variable 'time-stamp-start) "#\\+DATE: 2")
+    (set (make-local-variable 'time-stamp-end)   "\$")
+    )
+  (add-hook 'org-mode-hook 'my:org-timestamp-hook)
+  )
+   #+END_SRC
 * フォントと色
   そろそろテーマにした方が良い，とは思ってはいる．
   #+BEGIN_SRC emacs-lisp

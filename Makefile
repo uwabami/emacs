@@ -1,14 +1,15 @@
 # -*- mode: makefile -*-
 EMACS	?= emacs
-EL		= init-ddskk.el
-EL		+= $(shell dpkg -l wl-beta 2>&1 | grep -q ^ii && echo init-wl.el )
-EL		+= $(shell dpkg -l wl 2>&1 | grep -q ^ii && echo init-wl.el )
-ELC		= $(EL:%.el=%.elc)
+# EL		= init-ddskk.el
+# EL		+= $(shell dpkg -l wl-beta 2>&1 | grep -q ^ii && echo init-wl.el )
+# EL		+= $(shell dpkg -l wl 2>&1 | grep -q ^ii && echo init-wl.el )
+# ELC		= $(EL:%.el=%.elc)
 
-all: bootstrap init.elc $(ELC)
+all: bootstrap init.elc
+# all: init.elc $(ELC)
 bootstrap: tmp/bootstrap-stamp
-tmp/bootstrap-stamp:
-	git submodule update --init
+tmp/bootstrap-stamp: init.el
+# 	git submodule update --init
 	mkdir -p tmp
 	chmod 700 tmp
 # 	$(EMACS) -q --batch -l org-install.el

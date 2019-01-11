@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2019-01-11 17:45:15
+#+DATE: 2019-01-11 17:54:08
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -2372,6 +2372,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    素晴しい!!
    [[https://github.com/kametoku/orgmine][kametoku/orgmine: Emacs minor mode for org-mode with redmine integration]]
    #+BEGIN_SRC emacs-lisp
+(unless (locate-library "elmine")
+  (package-install 'elmine))
 (use-package orgmine
   :if  (and my:d:password-store
             (file-directory-p my:d:org))
@@ -2381,7 +2383,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
            :fetcher github
            :repo "kametoku/orgmine")
   :init
-  (use-package elmine :ensure t)
   (add-to-list 'safe-local-variable-values
                '(orgmine-note-block-begin . "#+BEGIN_SRC textile"))
   (add-hook 'org-mode-hook

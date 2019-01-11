@@ -1,5 +1,5 @@
 #+TITLE: Emacs の設定
-#+DATE: 2019-01-11 01:58:25
+#+DATE: 2019-01-11 14:45:00
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * ヘッダ
   #+BEGIN_SRC emacs-lisp
@@ -712,6 +712,38 @@ File.open(src, "r") {|f|
         smex-prompt-string "smex: "
         smex-flex-matching nil
         )
+  )
+   #+END_SRC
+* 認証関連: =id-manager=, =plstore=, =oauth2=, =password-store=
+** oauth2, plstore
+   oauth2 の認証情報は =plstore= で保存される．
+   ファイルの置き場所と暗号鍵の設定をしておく.
+   #+BEGIN_SRC emacs-lisp
+(leaf oauth2
+  :ensure t
+  :init
+  (leaf plstore
+    :if (getenv "GPG_KEY_ID")
+    :init
+    (setq plstore-secret-keys 'silent
+          plstore-encrypt-to (getenv "GPG_KEY_ID")))
+  (setq oauth2-token-file (concat my:d:tmp "oauth2.plstore")))
+   #+END_SRC
+** password-store
+   #+BEGIN_SRC emacs-lisp
+(leaf password-store
+  :if (and my:d:password-store
+           (executable-find "pass"))
+  :ensure t
+  )
+   #+END_SRC
+** auth-password-store
+   auth-source として =password-store= を使う拡張
+   #+BEGIN_SRC emacs-lisp
+(leaf auth-source-pass
+  :if (and my:d:password-store
+           (executable-find "pass"))
+  :ensure t
   )
    #+END_SRC
 * 起動時間の計測

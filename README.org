@@ -57,6 +57,8 @@ init.el: README.org
   (expand-file-name "share/" user-emacs-directory))
 (defconst my:d:tmp
   (expand-file-name "tmp/" user-emacs-directory))
+(unless (file-directory-p my:d:tmp)
+  (make-directory my:d:tmp))
   #+END_SRC
   ついでに，
   =custom-set-variables= は別ファイルに出力，終了時に削除するようにしています．

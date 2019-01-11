@@ -1,8 +1,8 @@
 # -*- mode: makefile -*-
 EMACS	?= emacs
 EL		= init-ddskk.el
-# EL		+= $(shell dpkg -l wl-beta 2>&1 | grep -q ^ii && echo init-wl.el )
-# EL		+= $(shell dpkg -l wl 2>&1 | grep -q ^ii && echo init-wl.el )
+EL		+= $(shell dpkg -l wl-beta 2>&1 | grep -q ^ii && echo init-wl.el )
+EL		+= $(shell dpkg -l wl 2>&1 | grep -q ^ii && echo init-wl.el )
 ELC		= $(EL:%.el=%.elc)
 
 all: bootstrap init.elc $(ELC)

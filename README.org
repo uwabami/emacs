@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2019-01-11 16:42:57
+#+DATE: 2019-01-11 16:48:47
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -82,7 +82,9 @@ init.el: README.org
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (eval-when-compile
   (unless (file-exists-p (locate-user-emacs-file "tmp/bootstrap-stamp"))
-    (package-refresh-contents)))
+    (package-refresh-contents)
+    (with-temp-buffer (write-file (locate-user-emacs-file "tmp/bootstrap-stamp")))
+    ))
 (package-initialize)
    #+END_SRC
 ** [[https://github.com/jwiegley/use-package][use-package]]

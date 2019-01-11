@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2019-01-11 17:11:52
+#+DATE: 2019-01-11 17:38:08
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -2107,8 +2107,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    howm も有効にしている，ぐらい．
    #+BEGIN_SRC emacs-lisp
 (defvar my:d:org (concat (getenv "HOME") "/Nextcloud/org/"))
-(unless (file-directory-p my:d:org)
-  (make-directory my:d:org))
 (use-package org
   :bind (("C-x n s" . org-narrow-to-subtree)
          ("C-x n w" . widen))

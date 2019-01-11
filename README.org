@@ -1,5 +1,5 @@
 #+TITLE: Emacs の設定
-#+DATE: 2019-01-11 15:01:14
+#+DATE: 2019-01-11 15:07:34
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * ヘッダ
   #+BEGIN_SRC emacs-lisp
@@ -796,7 +796,7 @@ File.open(src, "r") {|f|
 ** Wanderlust 本体の設定
    実際の設定は以下の通り
 *** byte compile 用
-    #+BEGIN_SRC emacs-lisp
+    #+BEGIN_SRC emacs-lisp :tangle init-wl.el
 (eval-and-compile
   (progn
     (require 'wl)

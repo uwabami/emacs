@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2019-01-11 17:41:39
+#+DATE: 2019-01-11 17:45:15
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -2327,6 +2327,75 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                 )))
   )
   #+END_SRC
+** OrgとGoogle カレンダーの連携: =org-gcal=
+*** token 等の置き場所の変更
+    #+BEGIN_SRC emacs-lisp
+(use-package request
+  :ensure t
+  :init
+  (setq request-storage-directory (concat my:d:tmp "request"))
+  (unless (file-directory-p request-storage-directory)
+    (make-directory request-storage-directory)))
+    #+END_SRC
+*** org-gcal 本体の設定
+    実際の情報等は =password-store= を使って設定しておく.
+    ついでに agenda 表示の際の色付けを設定．
+    #+BEGIN_SRC emacs-lisp
+(use-package org-gcal
+  :if (and my:d:password-store
+           (file-directory-p my:d:org))
+  :defer t
+  :ensure t
+  :init
+  (setq org-gcal-dir (concat my:d:tmp "org-gcal"))
+  (unless org-gcal-dir (make-directory org-gcal-dir))
+  (setq org-gcal-token-file (expand-file-name ".org-gcal-token" org-gcal-dir)
+        alert-log-messages t
+        alert-default-style 'log
+        org-gcal-down-days   90  ;; 過去 3 month
+        org-gcal-up-days    180  ;; 未来 6 month
+        org-gcal-auto-archive nil)
+  :config
+  (with-eval-after-load "org-gcal"
+    (load (concat my:d:password-store "/org-gcal.gpg")))
+  )
+    #+END_SRC
+    password-store には multiline で設定を書く．例えば以下:
+    #+BEGIN_SRC emacs-lisp :tangle no
+(setq org-gcal-client-id "XXXXXXXXXXX"
+      org-gcal-client-secret "XXXXXXXXXXX"
+      org-gcal-file-alist
+      '(("XXXXX@gmail.com" . "~/org/Schedule.org")
+        ("YYYYY@group.calendar.google.com" . "~/org/Project1.org")))
+    #+END_SRC
+** OrgとRedmine の連携: =orgmine=
+   素晴しい!!
+   [[https://github.com/kametoku/orgmine][kametoku/orgmine: Emacs minor mode for org-mode with redmine integration]]
+   #+BEGIN_SRC emacs-lisp
+(use-package orgmine
+  :if  (and my:d:password-store
+            (file-directory-p my:d:org))
+  :diminish (orgmine-mode)
+  :commands (orgmine-mode)
+  :quelpa (orgmine
+           :fetcher github
+           :repo "kametoku/orgmine")
+  :init
+  (use-package elmine :ensure t)
+  (add-to-list 'safe-local-variable-values
+               '(orgmine-note-block-begin . "#+BEGIN_SRC textile"))
+  (add-hook 'org-mode-hook
+            (lambda ()
+              (if (assoc "om_server" org-file-properties) (orgmine-mode))))
+  :config
+  (setq orgmine-note-block-begin "#+BEGIN_SRC gfm"   ;; 要調整
+        orgmine-note-block-end   "#+END_SRC\n"
+        orgmine-default-todo-keyword "新規")
+  ;; サーバ設定
+  (with-eval-after-load "orgmine"
+    (load (concat my:d:password-store "/orgmine.gpg")))
+  )
+   #+END_SRC
 * フォントと色
   そろそろテーマにした方が良い，とは思ってはいる．
   #+BEGIN_SRC emacs-lisp

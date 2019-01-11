@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2019-01-11 15:43:45
+#+DATE: 2019-01-11 16:40:57
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -51,14 +51,12 @@ init.el: README.org
   #+END_EXAMPLE
   上記ディレクトリ構成を設定ファイルで使用するためにディレクトリ配置を宣言しておきます．
   #+BEGIN_SRC emacs-lisp
-    (when load-file-name
-      (setq user-emacs-directory (file-name-directory load-file-name)))
-    (defconst my:d:share
-      (expand-file-name "share/" user-emacs-directory))
-    (defconst my:d:tmp
-      (expand-file-name "tmp/" user-emacs-directory))
-    (unless (file-directory-p my:d:tmp)
-      (make-directory my:d:tmp))
+(when load-file-name
+  (setq user-emacs-directory (file-name-directory load-file-name)))
+(defconst my:d:share
+  (expand-file-name "share/" user-emacs-directory))
+(defconst my:d:tmp
+  (expand-file-name "tmp/" user-emacs-directory))
   #+END_SRC
   ついでに，
   =custom-set-variables= は別ファイルに出力，終了時に削除するようにしています．
@@ -76,17 +74,16 @@ init.el: README.org
 ** =package.el=
    パッケージは基本的に =pacakge.el= で導入するので、先ずはその設定.
    #+BEGIN_SRC emacs-lisp
-     (setq url-http-attempt-keepalives nil)
-     (require 'package nil 'noerror)
-     (setq package-enable-at-startup t
-	   package-user-dir (expand-file-name "pkg/elpa" user-emacs-directory)
-	   package-gnupghome-dir (expand-file-name ".gnupg" (getenv "HOME")))
-     (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
-     (unless (file-exists-p (expand-file-name "bootstrap-stamp" my:d:tmp))
-       (package-refresh-contents)
-       (with-temp-buffer
-	 (write-file (expand-file-name "bootstrap-stamp" my:d:tmp))))
-     (package-initialize)
+(setq url-http-attempt-keepalives nil)
+(require 'package nil 'noerror)
+(setq package-enable-at-startup t
+      package-user-dir (expand-file-name "pkg/elpa" user-emacs-directory)
+      package-gnupghome-dir (expand-file-name ".gnupg" (getenv "HOME")))
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+(eval-when-compile
+  (unless (file-exists-p (locate-user-emacs-file "tmp/bootstrap-stamp"))
+    (package-refresh-contents)))
+(package-initialize)
    #+END_SRC
 ** [[https://github.com/jwiegley/use-package][use-package]]
    個々のパッケージの設定には [[https://github.com/jwiegley/use-package][use-package]] を利用します．
@@ -299,7 +296,7 @@ init.el: README.org
   (eaw-and-emoji-fullwidth))
    #+END_SRC
 ** OSの違いに起因する条件分岐
-   Mac と Linux では同じ Unicode でも正規化が異なります
+  Mac と Linux では同じ Unicode でも正規化が異なります
    (具体的には Mac のファイルシステムである HFS+ では Unicode の正規化が異なります).
    Unicode の正規化と Mac OS X 特有の事情については
    - [[http://homepage1.nifty.com/nomenclator/unicode/normalization.htm][Unicode正規化とは]]
@@ -326,6 +323,904 @@ init.el: README.org
   (global-set-key [ns-drag-file] 'ns-find-file)
   )
    #+END_SRC
+* 主にEmacs本体に同梱されている拡張に関する設定
+  最近ぼちぼち他の拡張も入れる様になってきた.
+** 標準機能の設定
+*** 表示関連
+    起動時のスプラッシュ画面を表示しない
+    #+BEGIN_SRC emacs-lisp
+(setq inhibit-startup-screen t
+      inhibit-startup-message t)
+    #+END_SRC
+    大抵の場合ターミナル内で =-nw= として起動するし,
+    メニューは触ったことないので使わないので，
+    フレーム, ツールバー等を非表示にする．
+    #+BEGIN_SRC emacs-lisp
+(my:disable-builtin-mode 'tool-bar-mode)
+(my:disable-builtin-mode 'scroll-bar-mode)
+(my:disable-builtin-mode 'menu-bar-mode)
+(my:disable-builtin-mode 'blink-cursor-mode)
+(my:disable-builtin-mode 'column-number-mode)
+    #+END_SRC
+    ベル無効化
+    #+BEGIN_SRC emacs-lisp
+(setq ring-bell-function 'ignore)
+    #+END_SRC
+    現在行のハイライト
+    #+BEGIN_SRC emacs-lisp
+(global-hl-line-mode t)
+    #+END_SRC
+    選択リージョンに色付け
+    #+BEGIN_SRC emacs-lisp
+(setq transient-mark-mode t)
+    #+END_SRC
+    対応する括弧を強調表示
+    #+BEGIN_SRC emacs-lisp
+(show-paren-mode +1)
+(setq show-paren-style 'mixed)
+    #+END_SRC
+    行番号を表示する =linum-mode= は基本使わない(必要に応じて有効にする)
+    ので通常はモードラインに行番号や桁番号を表示しないようする.
+    ついでに =linum-mode= を有効にした場合の桁表示を 5 桁に.
+    #+BEGIN_SRC emacs-lisp
+(my:disable-builtin-mode 'line-number-mode)
+(setq linum-format "%5d ")
+    #+END_SRC
+    debug は表示しない: 必要に応じて t に変更する
+    #+BEGIN_SRC emacs-lisp
+(setq debug-on-error nil)
+    #+END_SRC
+    Compile-Log の非表示:     ほとんど見ないし．
+    #+BEGIN_SRC emacs-lisp
+(let ((win (get-buffer-window "*Compile-Log*")))
+  (when win (delete-window win)))
+    #+END_SRC
+    Warning の抑制: これもほとんど見ないし．
+    #+BEGIN_SRC emacs-lisp
+(setq byte-compile-warnings
+      '(not
+        free-vars
+        unresolved
+        callargs
+        redefine
+;;        obsolete
+        noruntime
+        cl-functions
+        interactive-only
+        make-local
+        ))
+    #+END_SRC
+*** 編集関連
+    yes or no を y or n に
+    #+BEGIN_SRC emacs-lisp
+(fset 'yes-or-no-p 'y-or-n-p)
+    #+END_SRC
+    ファイル名の大文字小文字を区別しない(zsh風)
+    #+BEGIN_SRC emacs-lisp
+(setq read-file-name-completion-ignore-case t)
+    #+END_SRC
+    tab 幅 4, tab でのインデントはしない
+    #+BEGIN_SRC emacs-lisp
+(setq-default tab-width 4)
+(setq-default indent-tabs-mode nil)
+    #+END_SRC
+    文字列は 72 文字で折り返し(RFC2822風味)
+    #+BEGIN_SRC emacs-lisp
+(setq-default fill-column 72)
+(setq paragraph-start '"^\\([ 　・○<\t\n\f]\\|(?[0-9a-zA-Z]+)\\)")
+(setq-default auto-fill-mode nil)
+    #+END_SRC
+    長い行の折り返し:
+    デフォルトは折り返し有で =\C-c M-l= で toggle
+    #+BEGIN_SRC emacs-lisp
+(set-default 'truncate-lines nil)
+(setq truncate-partial-width-windows nil)
+(define-key global-map (kbd "C-c M-l") 'toggle-truncate-lines)
+    #+END_SRC
+    バッファ終端で newline を入れない
+    #+BEGIN_SRC emacs-lisp
+(setq next-line-add-newlines nil)
+    #+END_SRC
+    symlink は常においかける
+    #+BEGIN_SRC emacs-lisp
+(setq vc-follow-symlinks t)
+    #+END_SRC
+    変更のあったファイルの自動再読み込み
+    #+BEGIN_SRC emacs-lisp
+(global-auto-revert-mode 1)
+    #+END_SRC
+    バックアップとauto-saveの作成/位置の変更:
+    #+BEGIN_SRC emacs-lisp
+(setq auto-save-list-file-prefix (concat my:d:tmp ".saves-")
+      auto-save-default t
+      auto-save-timeout 15
+      auto-save-interval 60
+      make-backup-files t
+      backup-by-copying t ; symlink は使わない
+      backup-directory-alist `(("." . ,my:d:tmp))
+      auto-save-file-name-transforms `((".*" ,my:d:tmp t))
+      version-control t
+      kept-new-versions 5
+      kept-old-versions 5
+      delete-old-versions t
+      delete-auto-save-files t
+      )
+    #+END_SRC
+    Undo/Redo:
+    そのうち undohist と undo-tree を試そうと思っているのですが，
+    今のところ特に弄ってません． =undo-limit= は無限大にしたいのですが，どうするのかな...?
+    #+BEGIN_SRC emacs-lisp
+(setq undo-limit 200000
+      undo-strong-limit 260000)
+(savehist-mode 1)
+(setq history-length t  ; t で無制限
+      savehist-file (concat my:d:tmp "history"))
+    #+END_SRC
+** ファイル，デイレクトリ整理
+   =~/.emacs.d/= 以下にファイルが転がるのがなんか嫌なので, 気がつく度に設定している.
+   #+BEGIN_SRC emacs-lisp
+(use-package url
+  :init
+  (setq url-configuration-directory (concat my:d:tmp "url")))
+(use-package nsm
+  :if (featurep 'nsm)
+  :init
+  (setq nsm-settings-file (concat my:d:tmp "network-settings.data")))
+  #+END_SRC
+   他にもイロイロありそう．
+** =recentf=: 最近使ったファイル履歴の保管
+   ファイルを開く際には =ido-recentf-open= を使うので,
+   結局履歴を貯める設定をしている事になっている.
+   #+BEGIN_SRC emacs-lisp
+(use-package recentf
+  :diminish recentf-mode
+  :init
+  (add-hook 'after-init-hook 'recentf-mode)
+  (use-package recentf-ext :ensure t :defer t)
+  :config
+  (setq recentf-max-saved-items 256
+        recentf-save-file (expand-file-name (concat my:d:tmp "recentf"))
+        recentf-auto-cleanup 'never
+        recentf-exclude '(".recentf"
+                          "^/tmp\\.*"
+                          "^/private\\.*"
+                          "^/var/folders\\.*"
+                          "/TAGS$"
+                          "^/home/uwabami/.mozilla/\\.*"
+                          "\\.*草稿\\.*"
+                          ))
+  )
+   #+END_SRC
+   ディレクトリの履歴も取れるので recentf-ext を入れておく
+** =.elc= と =.el= の timestamp を比較し，新しい方を読み込む
+   =load-prefer-newer= は Emacs >= 24.4 から．
+   #+BEGIN_SRC emacs-lisp
+(when (boundp 'load-prefer-newer)
+  (setq load-prefer-newer t))
+   #+END_SRC
+** ガベージコレクションの +頻度を下げる+ 表示をしない
+   message に gc が走っていることを表示しない
+   #+BEGIN_SRC emacs-lisp
+(setq gc-cons-threshold (* 8 1024 1024)
+      garbage-collection-messages nil)
+   #+END_SRC
+   =gc-cons-threshold= はとりあえず default の設定に.
+   メモリ喰いな拡張を入れている場合には, 安易に =gc-cons-threshold= を上げるのは考えものである.
+   「gc が走る→大きな領域を掃除するのでその間 emacs が止まる」という事を頻繁に経験することになるだろう.
+** =abbrev=: 略語展開
+   #+BEGIN_SRC emacs-lisp
+(use-package abbrev
+  :diminish abbrev-mode
+  :config
+  (setq abbrev-file-name (concat my:d:share "abbrev_defs")
+        save-abbrevs t)
+  (setq-default abbrev-mode t)
+  )
+   #+END_SRC
+** =eldoc=: emacs-lisp document
+   #+BEGIN_SRC emacs-lisp
+(use-package eldoc
+  :diminish eldoc-mode
+  :config
+  (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
+  )
+   #+END_SRC
+** =midnight=: 一定期間使用しなかった buffer を自動削除
+   #+BEGIN_SRC emacs-lisp
+(use-package midnight
+  :config
+  (setq clean-buffer-list-delay-general 1))
+   #+END_SRC
+** =uniquify=: モードラインのファイル名にディレクトリも表示する
+   #+BEGIN_SRC emacs-lisp
+(use-package uniquify
+  :config
+  (setq uniquify-buffer-name-style 'post-forward-angle-brackets
+        uniquify-min-dir-content 1))
+   #+END_SRC
+** =whitespace=: 空白の強調表示
+   #+BEGIN_SRC emacs-lisp
+(use-package whitespace
+  :diminish global-whitespace-mode
+  :config
+  (setq whitespace-line-column 72
+        whitespace-style '(face              ; faceを使って視覚化する．
+                           trailing          ; 行末の空白を対象とする．
+                           tabs              ; tab
+                           spaces            ; space
+                           )
+        whitespace-display-mappings '((space-mark ?\u3000 [?\□])
+                                      (tab-mark ?\t [?\u00BB ?\t] [?\\ ?\t]))
+        whitespace-space-regexp "\\(\u3000+\\)"
+        whitespace-global-modes '(not
+                                  eww-mode
+                                  term-mode
+                                  eshell-mode
+                                  org-agenda-mode
+                                  calendar-mode)
+        )
+  (global-whitespace-mode 1)
+  )
+   #+END_SRC
+** =saveplace=: 前回の修正位置を記憶する.
+   記憶の保存先は =~/.emacs.d/tmp/emacs-places= に変更.
+   #+BEGIN_SRC emacs-lisp
+(use-package saveplace
+  :config
+  (setq-default save-place t)
+  (setq save-place-file (concat my:d:tmp "emacs-places")))
+   #+END_SRC
+** =time-stamp=: 保存時に timestamp を自動更新
+   デフォルトではいろいろと衝突したので
+   更新文字列を変更し， =＄Lastupdate: 2= (＄は半角) があったら timestamp を更新する様にした．
+   #+BEGIN_SRC emacs-lisp
+(use-package time-stamp
+  :config
+  (setq time-stamp-active t
+        time-stamp-line-limit 10
+        time-stamp-start "$Lastupdate: 2"
+        time-stamp-end "\\$"
+        time-stamp-format "%03y-%02m-%02d %02H:%02M:%02S")
+  (add-hook 'before-save-hook 'time-stamp))
+   #+END_SRC
+   モード独自の設定(例えば Org とか)に関しては別途．
+** =tramp=: ssh 越しにファイルを編集
+   #+BEGIN_SRC emacs-lisp
+(use-package tramp
+  :config
+  (setq tramp-persistency-file-name (concat my:d:tmp "tramp"))
+  )
+   #+END_SRC
+** =bookmark=: bookmark ファイル
+   イマイチ使いこなせてない. 場所だけ変更しておく.
+   #+BEGIN_SRC emacs-lisp
+(setq bookmark-default-file (concat my:d:share "bookmarks"))
+   #+END_SRC
+** =eww=: 内蔵ブラウザ
+   幅と背景色の指定がメインだが、
+   上手くうごいてくれていない、ような。
+   #+BEGIN_SRC emacs-lisp
+(use-package eww
+  :config
+  ;; vi like <- vimperator, vimium に慣れてしまったので
+  (bind-keys :map eww-mode-map
+             ("r"  . eww-reload)
+             ("o"  . eww)
+             ("&"  . eww-browse-with-external-browser)
+             ("b"  . eww-back-url)
+             ("]"  . eww-next-url)
+             ("["  . eww-previous-url)
+             ("g"  . eww-top-url)
+             ("+"  . my:eww-increase-width)
+             ("-"  . my:eww-decrease-width)
+             ("h"  . backward-char)
+             ("j"  . next-line)
+             ("k"  . previous-line)
+             ("l"  . forward-char)
+             ("/"  . isearch-forward)
+             ("?"  . isearch-backward)
+             ("n"  . isearch-next)
+             ("N"  . isearch-previous)
+             ("f"  . ace-link-eww)
+             )
+  ;; eww
+  (unless (file-directory-p (expand-file-name "eww" my:d:tmp))
+    (make-directory (expand-file-name "eww" my:d:tmp)))
+  (setq eww-bookmarks-directory (expand-file-name "eww" my:d:tmp)
+        eww-search-prefix "https://www.google.com/search?&gws_rd=cr&complete=0&pws=0&tbs=li:1&lr=lang_ja|lang_en&q=")
+  ;; 背景色の設定
+  (defvar eww-disable-colorize t)
+  (defun shr-colorize-region--disable (orig start end fg &optional bg &rest _)
+    (unless eww-disable-colorize
+      (funcall orig start end fg)))
+  (advice-add 'shr-colorize-region :around 'shr-colorize-region--disable)
+  (advice-add 'eww-colorize-region :around 'shr-colorize-region--disable)
+  (defun eww-disable-color ()
+    "eww で文字色を反映させない"
+    (interactive)
+    (setq-local eww-disable-colorize t)
+    (eww-reload))
+  (defun eww-enable-color ()
+    "eww で文字色を反映させる"
+    (interactive)
+    (setq-local eww-disable-colorize nil)
+    (eww-reload))
+  (defun eww-disable-images ()
+    "eww で画像表示させない"
+    (interactive)
+    (setq-local shr-put-image-function 'shr-put-image-alt)
+    (eww-reload))
+  (defun eww-enable-images ()
+    "eww で画像表示させる"
+    (interactive)
+    (setq-local shr-put-image-function 'my:shr-put-image)
+    (eww-reload))
+  (defun my:shr-put-image (spec alt &optional flags)
+    "call xdg-open"
+    (message "spec: %s" spec)
+    (shr-put-image (spec alt &optional flags)))
+  (defun shr-put-image-alt (spec alt &optional flags)
+    (insert alt))
+  ;; はじめから非表示
+  (defun eww-mode-hook--disable-image ()
+    (setq-local shr-put-image-function 'shr-put-image-alt))
+  (add-hook 'eww-mode-hook 'eww-mode-hook--disable-image)
+  ;; テキスト幅の指定
+  (setq shr-width 78)
+  (defvar my:shr-width 78)
+  (defun my:shr-insert-document (&rest them)
+    (let ((shr-width (min (1- (window-width)) my:shr-width)))
+      (apply them)))
+  (defun eww-display-html--fill-column (&rest them)
+    (advice-add 'shr-insert-document :around 'my:shr-insert-document)
+    (unwind-protect
+        (apply them)
+      (advice-remove 'shr-insert-document 'my:shr-insert-document)))
+  (advice-add 'eww-display-html :around 'eww-display-html--fill-column)
+  ;; increase
+  (defun my:eww-increase-width ()
+    (interactive)
+    (make-local-variable 'my:shr-width)
+    (setq my:shr-width  (+ 10 my:shr-width))
+    (eww-reload))
+  ;; decrease
+  (defun my:eww-decrease-width ()
+    (interactive)
+    (make-local-variable 'my:shr-width)
+    (setq my:shr-width  (- my:shr-width 10))
+    (eww-reload))
+  ;; buffer を rename
+  (defun eww-mode-hook--rename-buffer ()
+    "Rename eww browser's buffer so sites open in new page."
+    (rename-buffer "eww" t))
+  (add-hook 'eww-mode-hook 'eww-mode-hook--rename-buffer)
+  )
+   #+END_SRC
+** =browse-url=
+   Firefox の呼び出し方が変わったので，そのために関数を追加．
+   詳細は [[http://www.emacswiki.org/emacs/BrowseUrl]] を参照のこと．
+   #+BEGIN_SRC emacs-lisp
+(use-package browse-url
+  :bind (("C-c C-j" . browse-url-at-point))
+  :config
+  (defun browse-url-firefox (url &optional new-window)
+    "@see http://www.emacswiki.org/emacs/BrowseUrl"
+    (interactive (browse-url-interactive-arg "URL: "))
+    (setq url (browse-url-encode-url url))
+    (let* ((process-environment (browse-url-process-environment))
+           (window-args (if (browse-url-maybe-new-window new-window)
+                            (if browse-url-firefox-new-window-is-tab
+                                '("-new-tab")
+                              '("-new-window"))))
+           (ff-args (append browse-url-firefox-arguments window-args (list url)))
+           (process-name (concat "firefox " url))
+           (process (apply 'start-process process-name nil
+                           browse-url-firefox-program ff-args) ))))
+  (if (executable-find "firefox")
+      (setq browse-url-browser-function 'browse-url-firefox
+            shr-external-browser 'browse-url-firefox)
+    (setq browse-url-browser-function 'eww-browse-url))
+  )
+   #+END_SRC
+** =server=: Emacs server
+   #+BEGIN_SRC emacs-lisp
+(use-package server
+  :config
+  (unless (server-running-p)
+    (server-start)))
+   #+END_SRC
+* Elscreen
+** 導入 [0/1]
+   modeline の表示そのものは無効化しておく．
+   - [ ] Debian パッケージ版は古い．更新すべき
+   #+BEGIN_SRC emacs-lisp
+(use-package elscreen
+  :quelpa (elscreen
+           :fetcher github
+           :repo "emacs-jp/elscreen")
+  :init
+  (setq elscreen-tab-display-control nil
+        elscreen-prefix-key (kbd "C-o")
+        elscreen-display-tab 8
+        elscreen-display-screen-number nil)
+  :config
+  (elscreen-start))
+   #+END_SRC
+** elscreen + zsh での連携
+  詳細は
+  - [[https://masutaka.net/chalow/2011-09-28-1.html][ターミナルの zsh と Emacs を風のように駆け抜ける！]]
+  - [[http://syohex.hatenablog.com/entry/20111026/1319606395][cdeを改良]]
+  - [[https://qiita.com/__hage/items/2dd732b4dd68e124e8bd][cdeとelscreen-separate-buffer-listの相性が悪い]]
+  などを参考に.
+  #+BEGIN_SRC emacs-lisp
+(defun return-current-working-directory-to-shell ()
+  (expand-file-name
+   (with-current-buffer
+       (if (featurep 'elscreen)
+           (let* ((frame-confs (elscreen-get-frame-confs (selected-frame)))
+                  (num (nth 1 (assoc 'screen-history frame-confs)))
+                  (cur-window-conf
+                   (assoc 'window-configuration
+                          (assoc num (assoc 'screen-property frame-confs))))
+                  (marker (nth 2 cur-window-conf)))
+             (marker-buffer marker))
+         (nth 1
+              (assoc 'buffer-list
+                     (nth 1 (nth 1 (current-frame-configuration))))))
+     default-directory)))
+  #+END_SRC
+* 日本語入力: =ddskk=
+  [[http://openlab.ring.gr.jp/skk/ddskk-ja.html][Daredevil SKK (DDSKK)]] をメインで使用中．無いと途方に暮れる．
+  ちなみにGTKが有効になっていると =gtk-immodule= なんかと衝突するので
+  =~/.Xresources= で xim を無効にしておくと良い．
+  例えば以下の様に:
+  #+BEGIN_SRC conf :tangle no
+! disable XIM
+Emacs*useXIM: false
+  #+END_SRC
+** Emacs 本体側の設定
+   実際の設定は別ファイルで行なわれるため
+   ここでは設定ファイルの位置変更を変更している．
+   #+BEGIN_SRC emacs-lisp
+(unless (locate-library "skk")
+  (package-install 'ddskk))
+(use-package skk
+  :bind (("C-x j"   . skk-mode)
+         ("C-x C-j" . skk-mode)
+         ("C-\\"    . skk-mode))
+  :init
+  (setq skk-user-directory (concat my:d:tmp "skk")
+        skk-init-file (concat user-emacs-directory "init-ddskk")
+        default-input-method "japanese-skk" )
+  :config
+  )
+   #+END_SRC
+** DDSKK 本体の設定
+   sticky shift: [[http://homepage1.nifty.com/blankspace/emacs/sticky.html][sticky shift]] を参照のこと.
+   ddskk の 14.2 以降から同梱されるようになった(ありがたい)
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-sticky-key ";")
+   #+END_SRC
+   変換候補の表示位置
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-show-candidates-always-pop-to-buffer t)
+   #+END_SRC
+   候補表示件数を2列に
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-henkan-show-candidates-rows 2)
+   #+END_SRC
+   日本語表示しない
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-japanese-message-and-error nil)
+   #+END_SRC
+   メニューを日本語にしない -> toolbar 非表示だし.
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-show-japanese-menu nil)
+   #+END_SRC
+   注釈の表示
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-show-annotation nil)
+   #+END_SRC
+   インジケータの表示のカスタマイズ
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-latin-mode-string "[_A]")
+(setq skk-hiragana-mode-string "[あ]")
+(setq skk-katakana-mode-string "[ア]")
+(setq skk-jisx0208-latin-mode-string "[Ａ]")
+(setq skk-jisx0201-mode-string "[_ｱ]")
+(setq skk-abbrev-mode-string "[aA]")
+(setq skk-indicator-use-cursor-color nil)
+   #+END_SRC
+   インジケータを左端に表示
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-status-indicator 'left)
+   #+END_SRC
+   mode-line が動くのが許せないので，ちょっと修正
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(defadvice skk-make-indicator-alist
+    (after my:set-skk-default-indicator activate)
+  (dolist (elem
+           '((abbrev " [aA]" . "--[aA]:")
+             (latin " [_A]" . "--[_A]:")
+             (default " [--]" . "--[--]:")))
+    (setq ad-return-value
+          (append (cons elem nil)
+                  (delq (assoc (car elem) ad-return-value) ad-return-value)))))
+(setq skk-show-inline t)
+   #+END_SRC
+   カーソルには色をつけない
+   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-use-color-cursor nil)
+   #+END_SRC
+*** 編集関連
+    キーバインド
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(global-set-key "\C-x\C-j" 'skk-mode)
+(global-set-key "\C-xj" 'skk-mode)
+(global-set-key "\C-j" 'skk-mode)
+(global-set-key "\C-\\" 'skk-mode)
+    #+END_SRC
+    半角カナを入力
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-use-jisx0201-input-method t)
+    #+END_SRC
+    Enter で改行しない
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-egg-like-newline t)
+    #+END_SRC
+    "「"を入力したら"」"も自動で挿入
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-auto-insert-paren t)
+    #+END_SRC
+    句読点変換ルール
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-kuten-touten-alist
+      '(
+        (jp    . ("。" . "、"))
+        (en-jp . ("．" . "，"))
+        (en    . (". " . ", "))
+        ))
+(setq-default skk-kutouten-type 'en)
+    #+END_SRC
+    全角記号の変換: @ での日付入力は使わない
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-rom-kana-rule-list
+      (append skk-rom-kana-rule-list
+              '(("!" nil "!")
+                (":" nil ":")
+                (";" nil ";")
+                ("?" nil "?")
+                ("z " nil "　")
+                ("\\" nil "\\")
+                ("@" nil "@")
+                )))
+    #+END_SRC
+    送り仮名が厳密に正しい候補を優先
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-henkan-strict-okuri-precedence t)
+    #+END_SRC
+    辞書の共有
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-share-private-jisyo t)
+    #+END_SRC
+    変換候補を縦に表示
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-show-inline 'vertical)
+    #+END_SRC
+*** インクリメンタルサーチ
+    minibuffer 内では強制的に skk off.
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(add-hook 'skk-mode-hook
+          (lambda ()
+            (and (skk-in-minibuffer-p)
+                 (skk-mode-exit))))
+(setq skk-isearch-start-mode 'latin)
+    #+END_SRC
+    インクリメンタルサーチは migemo に任せることに．
+*** 辞書の設定
+    追加している辞書の一覧は
+    - [[http://www.chibutsu.org/jisho/][地球物理辞書]]
+    - [[http://www.geocities.jp/living_with_plasma/tanudic.html][天文・天体物理用語の漢字変換用辞書]]
+    - はてなキーワード
+    - [[http://matsucon.net/material/dic/][2ちゃんねる顔文字辞書 MatsuCon]]
+    - [[http://matsucon.net/][MatsuCon]]
+    といった所.
+    はてなキーワードからの辞書の抽出は [[http://d.hatena.ne.jp/znz][znz]] さんの
+     - [[http://rubyist.g.hatena.ne.jp/znz/20060924/p1][「はてなダイアリーキーワードふりがなリスト」を SKK の辞書に変換]]
+    を参考に.
+    [[http://matsucon.net/][MatsuCon]] で公開されている顔文字に関しては
+    顔文字に ; や が含まれている場合に, 適宜quoteする必要があるので
+    以下のスクリプトで適当に変換.
+    #+BEGIN_SRC ruby :tangle no
+#!/usr/bin/env ruby
+require 'nkf'
+src = ARGV[0]
+if ARGV.size < 1
+  puts "usage: ime2skk.rb ime_dictionary"
+  exit 0
+end
+File.open(src, "r") {|f|
+  f.each do |line|
+    line_euc = NKF.nkf("-S -e",line)
+    if line_euc =~ /^([^!]+?)\t(.+?)\t.+$/
+      entry = $1
+      content = $2
+      if content =~/;/
+        puts entry + " /(concat \"" + content.gsub(';','\\\\073') + "\")/"
+      elsif content =~/\//
+        puts entry + " /(concat \"" + content.gsub('/','\\\\057') + "\")/"
+      else
+        puts entry + " /" + content + "/"
+      end
+    end
+  end
+}
+    #+END_SRC
+    他にも quote する必要あるような気もするけれど, それは気がついた時に.
+
+    辞書サーバの指定は以下.
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(cond
+ ((getenv "SKKSERVER")
+  (setq skk-server-host "127.0.0.1"
+        skk-server-portnum "1178"
+        skk-large-jisyo  nil)
+  (add-to-list 'skk-search-prog-list
+               '(skk-server-completion-search) t)
+  (add-to-list 'skk-search-prog-list
+               '(skk-comp-by-server-completion) t))
+ (t
+  (setq skk-get-jisyo-directory (concat my:d:tmp "skk-jisyo")
+        skk-large-jisyo (concat skk-get-jisyo-directory "/SKK-JISYO.L")))
+ )
+(when (file-exists-p "/usr/local/share/skkdic/SKK-JISYO.emoji.utf8")
+  (setq skk-extra-jisyo-file-list
+        (list '("/usr/local/share/skkdic/SKK-JISYO.emoji.utf8" . utf-8))))
+    #+END_SRC
+    辞書登録の際に送り仮名を削除
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-check-okurigana-on-touroku 'auto)
+    #+END_SRC
+    漢字登録のミスをチェックする
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(setq skk-check-okurigana-on-touroku t)
+    #+END_SRC
+*** 動的補完
+    まだ設定していない...
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+    ;; ;; 動的補完
+    ;; (setq skk-dcomp-activate t)
+    ;; (setq skk-dcomp-multiple-activate t)
+    ;; (setq skk-dcomp-multiple-rows 5)
+    ;; ;; 動的補完の複数表示群のフェイス
+    ;; (set-face-foreground 'skk-dcomp-multiple-face "Black")
+    ;; (set-face-background 'skk-dcomp-multiple-face "LightGoldenrodYellow")
+    ;; (set-face-bold-p 'skk-dcomp-multiple-face nil)
+    ;; ;; 動的補完の複数表示郡の補完部分のフェイス
+    ;; (set-face-foreground 'skk-dcomp-multiple-trailing-face "dim gray")
+    ;; (set-face-bold-p 'skk-dcomp-multiple-trailing-face nil)
+    ;; ;; 動的補完の複数表示郡の選択対象のフェイス
+    ;; (set-face-foreground 'skk-dcomp-multiple-selected-face "White")
+    ;; (set-face-background 'skk-dcomp-multiple-selected-face "LightGoldenrod4")
+    ;; (set-face-bold-p 'skk-dcomp-multiple-selected-face nil)
+    #+END_SRC
+*** 部首変換, 総画数変換
+    上手く使いこなせていない
+    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(add-to-list 'skk-search-prog-list
+             '(skk-tankan-search 'skk-search-jisyo-file
+                                 skk-large-jisyo 10000))
+    #+END_SRC
+* Copy & Paste:
+** Linux: =xclip=
+   =xclip= で clipboard とデータをやりとり．
+   #+BEGIN_SRC emacs-lisp
+(use-package xclip
+  :if (and (executable-find "xclip")
+           (eq system-type 'gnu/linux))
+  :ensure t
+  :config
+  (xclip-mode 1))
+   #+END_SRC
+   clipboard と PRIMARY の同期には =gpaste= を使っている．
+** macOS
+   #+BEGIN_SRC emacs-lisp
+(defun my:copy-from-osx ()
+  "Get string via pbpaste"
+  (shell-command-to-string "pbpaste"))
+(defun my:paste-to-osx (text &optional push)
+  "put `TEXT' via pbcopy with `PUSH' mode"
+  (let ((process-connection-type nil))
+    (let ((proc (start-process "pbcopy" "*Messages*" "pbcopy")))
+      (process-send-string proc text)
+      (process-send-eof proc))))
+(if (eq system-type 'darwin)
+    (progn
+      (setq interprogram-cut-function 'my:paste-to-osx
+            interprogram-paste-function 'my:copy-from-osx)))
+   #+END_SRC
+* フォントと色
+  そろそろテーマにした方が良い，とは思ってはいる．
+  #+BEGIN_SRC emacs-lisp
+(setq ansi-color-names-vector
+      [unspecified "#242424" "#FF4c4c" "#4cff4c" "#ffff4c"
+                   "#4c4cff" "#ff4cff" "#4cffff" "#f6f3e8"]
+      )
+(defun my:load-window-config ()
+  "load window-system specific settings"
+  (interactive)
+  (when window-system
+    (progn
+      (set-frame-parameter nil 'alpha 90)
+      (set-face-attribute 'default nil
+                          :family "RictyDiscord"
+                          :height 180)
+      (set-face-attribute 'fixed-pitch nil
+                          :family "RictyDiscord"
+                          :height 180)
+      (set-face-attribute 'variable-pitch nil
+                          :family "RictyDiscord"
+                          :height 180)
+      (set-background-color "#242424")
+      )))
+(setq frame-background-mode (frame-parameter nil 'background-mode))
+(setq default-frame-alist
+      '(
+        (foreground-color . "#F6F3E8")
+        (scroll-bar-foreground-color . "red")
+        (vertical-scroll-bars . right)
+        ))
+(when (window-system)
+  (my:load-window-config))
+  #+END_SRC
+  現在修正中．
+  #+BEGIN_SRC emacs-lisp
+(custom-set-faces
+ '(default                             ((t (:foreground "#F6F3E8" ))))
+ '(cursor                              ((t (:foreground "#4CFF4C" :background "#4CFF4C" ))))
+ ;; basic
+ '(font-lock-builtin-face              ((t (:foreground "#7FBFFF" ))))
+ '(font-lock-comment-delimiter-face    ((t (:foreground "#a5a5a6" ))))
+ '(font-lock-comment-face              ((t (:foreground "#a5a5a6" ))))
+ '(font-lock-constant-face             ((t (:foreground "#FFBF7F" ))))
+ '(font-lock-doc-face                  ((t (:foreground "#7FFF7F" ))))
+ '(font-lock-doc-string-face           ((t (:foreground "#7FFF7F" ))))
+ '(font-lock-function-name-face        ((t (:foreground "#BF7FFF"))))
+ '(font-lock-keyword-face              ((t (:foreground "#FF7F7F"))))
+ '(font-lock-link-face                 ((t (:foreground "#7FFFFF" ))))
+ '(font-lock-negation-char-face        ((t (:foreground "#7FFFFF" :bold t   :italic nil))))
+ '(font-lock-preprocessor-face         ((t (:foreground "#FF4C4C" :bold nil :italic nil))))
+ '(font-lock-regexp-grouping-backslash ((t (:foreground "#A5EE4C" :bold t   :italic nil))))
+ '(font-lock-regexp-grouping-construct ((t (:foreground "#7F7FFF" :bold t   :italic nil))))
+ '(font-lock-string-face               ((t (:foreground "#7FFF7F" ))))
+ '(font-lock-type-face                 ((t (:foreground "#FFFF7F" ))))
+ '(font-lock-variable-name-face        ((t (:foreground "#7F7FFF" ))))
+ '(font-lock-warning-face              ((t (:foreground "#FF7FBF" :bold t ))))
+ '(mode-line                           ((t (:foreground "#F6F3E8" :background "#222244" ))))
+ '(mode-line-inactive                  ((t (:foreground "#666666" :background "#999999" :bold nil ))))
+ '(fringe                              ((t (:foreground "#666666" :background "#282828" ))))
+;; '(hl-line                           ((t (:inherit highlight :underline t ))))
+ '(highlight                           ((t (:background "#556b2f" ))))
+ '(term-color-black                    ((t (:background "#242424" :foreground "#242424"))))
+ '(term-color-blue                     ((t (:background "#4c4cff" :foreground "#4c4cff"))))
+ '(term-color-cyan                     ((t (:background "#4cffff" :foreground "#4cffff"))))
+ '(term-color-green                    ((t (:background "#4cff4c" :foreground "#4cff4c"))))
+ '(term-color-magenta                  ((t (:background "#ff4cff" :foreground "#ff4cff"))))
+ '(term-color-red                      ((t (:background "#ff4c4c" :foreground "#ff4c4c"))))
+ '(term-color-white                    ((t (:background "#f6f3e8" :foreground "#f6f3e8"))))
+ '(term-color-yellow                   ((t (:background "#ffff4c" :foreground "#ffff4c"))))
+  ;;
+ '(minibuffer-prompt                   ((t (:foreground "#BF7FFF" ))))
+ '(region                              ((t (:background "#222244" ))))
+ ;; dired
+ '(dired-directory                     ((t (:bold t :foreground "#7F7FFF" ))))
+ '(dired-flagged                       ((t (:inherit error ))))
+ ;; '(dired-header
+ '(dired-ignored                       ((t (:inherit shadow ))))
+ ;; '(dired-mark
+ ;; '(dired-marked
+ '(dired-perm-write                    ((t (:bold t :foreground "#FFFF7F" ))))
+ '(dired-symlink                       ((t (:bold t :foreground "#7FFFFF" ))))
+ '(dired-warning                       ((t (:inherit font-lock-warning-face ))))
+ ;; helm
+ '(helm-source-header                  ((t (:foreground "#F6F3E8" :background "#224488" :bold t))))
+ '(helm-visible-mark                   ((t (:inherit highlight ))))
+ '(helm-selection                      ((t (:inherit highlight ))))
+ '(helm-selection-line                 ((t (:inherit highlight ))))
+ '(helm-ff-directory                   ((t (:inherit dired-directory ))))
+ '(helm-bookmark-directory             ((t (:inherit helm-ff-directory ))))
+ '(helm-buffer-directory               ((t (:inherit helm-ff-directory ))))
+ '(helm-ff-dotted-directory            ((t (:inherit helm-ff-directory ))))
+ '(helm-ff-file                        ((t (:inherit default ))))
+ '(helm-bookmark-file                  ((t (:inherit helm-ff-file ))))
+ '(helm-buffer-file                    ((t (:inherit helm-ff-file ))))
+ '(helm-grep-file                      ((t (:inherit helm-ff-file ))))
+ '(helm-etags-file                     ((t (:inherit helm-ff-file ))))
+ '(helm-ff-executable                  ((t (:inherit helm-ff-file :foreground "#7FFF7F" :bold t))))
+ '(helm-ff-symlink                     ((t (:inherit default :foreground "#7FFFFF" :bold t))))
+ '(helm-ff-dotted-symlink-directory    ((t (:inherit helm-ff-symlink ))))
+ '(helm-ff-invalid-symlink             ((t (:inherit default :foreground "#FF7F7F" ))))
+ ;; ido
+ '(ido-first-match                     ((t (:underline t :weight bold))))
+ '(ido-only-match                      ((t (:foreground "#FFFF4C" :overline nil :weight bold))))
+ '(ido-subdir                          ((t (:inherit dired-directory))))
+ ;; '(ido-vertical-first-match-face       ((t (:inherit ido-first-match))))
+ ;;'(ido-vertical-match-face             ((t (:foreground "#4CFF4C"))))
+ ;; '(ido-grid-mode-match ((t (:inherit ido-first-match ))))
+ ;; powerline
+ '(powerline-active1                   ((t (:background "#000000":foreground "#F6F3E8"))))
+ '(powerline-active2                   ((t (:background "#666666" :foreground "#F6F3E8"))))
+ '(powerline-inactive1                 ((t (:inherit modeline-inactive))))
+ '(powerline-inactive2                 ((t (:inherit modeline-inactive))))
+ ;; preview-latex
+ '(font-latex-sectioning-0-face        ((t (:inherit font-latex-sectioning-1-face))))
+ '(font-latex-sectioning-1-face        ((t (:inherit font-latex-sectioning-2-face))))
+ '(font-latex-sectioning-2-face        ((t (:inherit font-latex-sectioning-3-face))))
+ '(font-latex-sectioning-3-face        ((t (:inherit font-latex-sectioning-4-face))))
+ '(font-latex-sectioning-4-face        ((t (:inherit font-latex-sectioning-5-face ))))
+ '(font-latex-sectioning-5-face        ((t (:inherit font-lock-type-face :bold t))))
+ '(font-latex-slide-title-face         ((t (:inherit font-lock-type-face :bold t))))
+ '(font-latex-subscript-face           ((t nil)))
+ '(font-latex-superscript-face         ((t nil)))
+ '(font-latex-math-face                ((t (:inherit font-lock-constant-face ))))
+ '(font-latex-script-char-face         ((t (:inherit font-lock-preprocessor-face :bold t))))
+ '(font-latex-verbatim-face            ((t (:inherit font-lock-doc-string-face ))))
+ ;; elscreen
+ '(elscreen-tab-control-face           ((t (:background "#222244" :foreground "#f6f3e8" :underline t :bold t ))))
+ '(elscreen-tab-current-screen-face    ((t (:background "#222244" :foreground "#f6f3e8" :underline t :bold t ))))
+ '(elscreen-tab-other-screen-face      ((t (:background "#222244" :foreground "#aaaaaa" :underline t :bold nil ))))
+ '(elscreen-tab-background-face        ((t (:background "#222244" :foreground "#aaaaaa" :underline t :bold nil ))))
+ ;; git-gutter
+ '(git-gutter:added                    ((t (:inherit default :bold t :foreground "#4CFF4C" :background "#666666"))))
+ '(git-gutter:deleted                  ((t (:inherit default :bold t :foreground "#FF7FBF" :background "#666666"))))
+ '(git-gutter:modified                 ((t (:inherit default :bold t :foreground "#FFFF4C" :background "#666666"))))
+ '(git-gutter:unchanged                ((t (:inherit default :background "#666666" ))))
+ '(git-gutter:separator-face           ((t (:inherit default :foreground "#FF4C4C" :background "#666666"))))
+  ;;; howm
+ '(howm-mode-keyword-face              ((t (:foreground "#7F7FFF" :background nil ))))
+ '(howm-mode-title-face                ((t (:foreground "#4CFFFF" :background nil ))))
+ '(howm-reminder-deadline-face         ((t (:bold t :foreground "#FF4C4C" :background nil ))))
+ '(howm-reminder-late-deadline-face    ((t (:bold t :underline t :foreground "#FF0000" :background nil ))))
+ '(howm-reminder-today-face            ((t (:bold t :foreground "#FFBF7F" :background nil ))))
+ '(howm-reminder-tomorrow-face         ((t (:bold t :foreground "#FF7FBF" :background nil ))))
+ ;; outline
+ '(outline-1                           ((t (:inherit font-lock-function-name-face :bold t))))
+ '(outline-2                           ((t (:inherit font-lock-string-face :bold t))))
+ '(outline-3                           ((t (:inherit font-lock-keyword-face :bold t))))
+ '(outline-4                           ((t (:inherit font-lock-type-face :bold t ))))
+ '(outline-5                           ((t (:inherit font-lock-constant-face :bold t ))))
+ '(outline-6                           ((t (:inherit font-lock-variable-name-face :bold t))))
+ '(outline-7                           ((t (:inherit font-lock-builtin-face :bold t ))))
+ '(outline-8                           ((t (:inherit font-lock-comment-face :bold t ))))
+ ;; org
+ '(org-agenda-date-today               ((t (:underline t ))))
+ '(org-agenda-date                     ((t (:foreground "#FFFFFF" ))))
+ '(org-agenda-date-weekend             ((t (:foreground "#FF7F7F" :bold t))))
+ '(org-agenda-calendar-event           ((t (:foreground "#F6F3E8" ))))
+ '(org-hide                            ((t (:foreground "#4C4C4C" ))))
+ ;;
+ ;; moinmoin
+ '(moinmoin-h1                         ((t (:inherit outline-1))))
+ '(moinmoin-h2                         ((t (:inherit outline-2))))
+ '(moinmoin-h3                         ((t (:inherit outline-3))))
+ '(moinmoin-h4                         ((t (:inherit outline-4))))
+ '(moinmoin-h5                         ((t (:inherit outline-5))))
+ '(moinmoin-url                        ((t (:inherit font-lock-link-face))))
+ '(moinmoin-url-title                  ((t (:inherit moinmoin-url :bold t))))
+ '(moinmoin-anchor-ref-id              ((t (:inherit moinmoin-url :underline t))))
+ '(moinmoin-anchor-ref-title           ((t (:inherit moinmoin-url :bold t))))
+ '(moinmoin-wiki-link                  ((t (:inherit moinmoin-url :underline t ))))
+ '(moinmoin-inter-wiki-link            ((t (:inherit moinmoin-url :underline t ))))
+ '(moinmoin-item                       ((t (:inherit font-lock-doc-face ))))
+ '(moinmoin-item-2                     ((t (:inherit font-lock-doc-face ))))
+ )
+;; review
+;; '(review-mode-header1-face  ((t (:inherit outline-1))))
+;; '(review-mode-header2-face  ((t (:inherit outline-2))))
+;; '(review-mode-header3-face  ((t (:inherit outline-3))))
+;; '(review-mode-header4-face  ((t (:inherit outline-4))))
+;; '(review-mode-header5-face  ((t (:inherit outline-5))))
+  #+END_SRC
 * LICENSE
   幾つかの関数の元ネタとして Emacs 本体のコードを参照したので，GPL-3 or later です．
   #+BEGIN_EXAMPLE

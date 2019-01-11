@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2019-01-11 15:41:02
+#+DATE: 2019-01-11 15:43:45
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -220,19 +220,109 @@ init.el: README.org
     (format "%s%s" top output)
     ))
    #+END_SRC
-* 常に =cl-lib= を読み込む
-  以前は(今も?)「 =cl.el= は名前衝突があるので byte compile 時以外は読み込まない様にしよう」
-  というお話でした．つまり，
-  #+BEGIN_SRC emacs-lisp :tangle no
-(eval-when-compile (require 'cl))
-  #+END_SRC
-  としておくこと，という．
-
-  今は「 =cl.el= は deprecated なので =cl-lib= を使いましょう」ということみたいです．
-  名前衝突の回避のために，関数の接頭詞として =cl-= が付くようになったのは御愛嬌．
+* 環境変数の読み込み: =exec-path-from-shell=
+  zsh で設定した =PATH= などの環境変数を Emacs に引き継ぐために
+  [[https://github.com/purcell/exec-path-from-shell][purcell/exec-path-from-shell]] を使います．
+  今の所
+  - =SHELL=
+  - =DEBFULLNAME=
+  - =DEBEMAIL=
+  - =TEXMFHOME=
+  - =SKKSERVER=
+  - =http_proxy=
+  - =GPG_KEY_ID=
+  - =GPG_AGENT_INFO=
+  - =PASSWORD_STORE_DIR=
+  - =PATH=
+  を読み込んでいます．
   #+BEGIN_SRC emacs-lisp
-(eval-and-compile (use-package cl-lib))
+(defvar my:d:password-store nil)
+(use-package exec-path-from-shell
+  :ensure t
+  :config
+  (when (memq window-system '(mac ns)) (exec-path-from-shell-initialize))
+  (exec-path-from-shell-copy-envs
+   '("SHELL"
+     "DEBFULLNAME"
+     "DEBEMAIL"
+     "SKKSERVER"
+     "TEXMFHOME"
+     "http_proxy"
+     "GPG_KEY_ID"
+     "GPG_AGENT_INFO"
+     "PASSWORD_STORE_DIR"
+     "PATH"
+     ))
+  (setq user-full-name (concat (getenv "DEBFULLNAME"))
+        user-mail-address (concat (getenv "DEBEMAIL"))
+        my:d:password-store (concat (getenv "PASSWORD_STORE_DIR") "/Emacs/" (system-name)))
+  )
   #+END_SRC
+* 言語の設定
+  日本語, UTF-8 にしています.
+  #+BEGIN_SRC emacs-lisp
+(set-language-environment "Japanese")
+(prefer-coding-system 'utf-8)
+(set-file-name-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+(set-terminal-coding-system 'utf-8)
+(set-default 'buffer-file-coding-system 'utf-8)
+  #+END_SRC
+  その他, 機種依存文字等についての設定をアレコレ.
+** cp5022x.el
+   Emacs23 から内部が Unicode ベースになっています．
+
+   しかし文字コードの変換は GNU libc の iconv をベースにしているため，
+   環境によっては文字の変換がうまく行なえません．
+   そこで言語設定前に =cp5022x.el= をインストールすることにしています．
+   #+BEGIN_SRC emacs-lisp
+(use-package cp5022x
+  :ensure t
+  :config
+  (set-charset-priority 'ascii 'japanese-jisx0208 'latin-jisx0201
+                        'katakana-jisx0201 'iso-8859-1 'unicode)
+  (set-coding-system-priority 'utf-8 'euc-jp 'iso-2022-jp 'cp932)
+  )
+   #+END_SRC
+** East Asian Ambiguos 対応
+   CJK 以外の East Asian Ambiguos，絵文字も2文字幅にするようにしています．
+   拙作の修正ロケールはこちら: [[https://github.com/uwabami/locale-eaw-emoji]]
+   #+BEGIN_SRC emacs-lisp
+(use-package locale-eaw-emoji
+  :quelpa (locale-eaw-emoji
+           :fetcher github
+           :repo "uwabami/locale-eaw-emoji")
+  :config
+  (eaw-and-emoji-fullwidth))
+   #+END_SRC
+** OSの違いに起因する条件分岐
+   Mac と Linux では同じ Unicode でも正規化が異なります
+   (具体的には Mac のファイルシステムである HFS+ では Unicode の正規化が異なります).
+   Unicode の正規化と Mac OS X 特有の事情については
+   - [[http://homepage1.nifty.com/nomenclator/unicode/normalization.htm][Unicode正規化とは]]
+   - [[http://www.sakito.com/2010/05/mac-os-x-normalization.html][Mac OS X におけるファイル名に関するメモ(NFC, NFD等)]]
+   等が参考になるでしょう.
+
+   日本語のファイル名を扱うことは滅多にないものの,
+   たまに祟りがあるのでそれを回避するための設定をしています.
+
+   Windows の場合はファイル名などは cp932 にしているものの,
+   最近 Windows 使っていないので良く知りません(というわけで，設定を捨てました).
+   +さらに，最近は Mac OS でも Emacs 使ってないから，これが正しのか良くわからない...+
+   #+BEGIN_SRC emacs-lisp
+(use-package ucs-normalize
+  :if (eq system-type 'darwin)
+  :config
+  (set-file-name-coding-system 'utf-8-hfs)
+  (setq locale-coding-system 'utf-8-hfs)
+  ;; ついでにキーバインド: Ctrl を Mac から奪い取る
+  (setq mac-pass-control-to-system t)
+  ;; Cmd と Option を逆にする
+  (setq ns-command-modifier 'meta)
+  (setq ns-alternate-modifier 'super)
+  (global-set-key [ns-drag-file] 'ns-find-file)
+  )
+   #+END_SRC
 * LICENSE
   幾つかの関数の元ネタとして Emacs 本体のコードを参照したので，GPL-3 or later です．
   #+BEGIN_EXAMPLE

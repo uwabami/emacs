@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2019-01-11 17:54:08
+#+DATE: 2019-01-11 17:57:08
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -1064,6 +1064,29 @@ File.open(src, "r") {|f|
             migemo-coding-system 'utf-8-unix)
       (migemo-init)
       )
+  #+END_SRC
+* 補完: =auto-complete=
+  ちょいちょい上手く動かなかったりするんだけれど、どうしたモンかな.
+  #+BEGIN_SRC emacs-lisp
+(use-package auto-complete-config
+  :ensure auto-complete
+  :config
+  (ac-flyspell-workaround)
+  (ac-set-trigger-key "M-TAB")
+  (ac-config-default)
+  (add-to-list 'ac-dictionary-directories (concat my:d:share "ac-dict"))
+  (setq ac-comphist-file (concat my:d:tmp "ac-comphist.dat")
+        ac-auto-start 4                          ; 4 文字以上で起動
+        ac-use-menu-map t                        ; キーバインド
+        ac-auto-show-menu 1                      ; 1秒でメニュー表示
+        ac-use-comphist t                        ; 補完候補をソート
+        ac-candidate-limit nil                   ; 補完候補表示を無制限に
+        ac-use-quick-help nil)                   ; tool tip 無し
+  ;; (dolist (mode
+  ;;          '(
+  ;;            ))
+  ;;  (add-to-list 'ac-modes mode))
+  )
   #+END_SRC
 * 補完: =ido=
   補完は =ido= が軽いし速いので好み.
@@ -2397,6 +2420,28 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     (load (concat my:d:password-store "/orgmine.gpg")))
   )
    #+END_SRC
+** Org-Wiki
+    計算機関連のメモは [[https://github.com/uwabami/org-wiki][uwabami/org-wiki]] で書いています．元々は
+    [[https://github.com/caiorss/org-wiki][caiorss/org-wiki]] を使っていたのですが helm 依存の部分を ido に書き換
+    えてます.
+    #+BEGIN_SRC emacs-lisp
+(use-package org-wiki
+  :if (file-directory-p "~/Public/cc-env")
+  :quelpa (org-wiki
+          :fetcher github
+          :repo "uwabami/org-wiki")
+  :bind (("C-x M" . org-wiki ))
+  :config
+  (setq org-wiki-location "~/Public/cc-env"
+        org-wikitemplate "#+TITLE:
+,#+DATE: 20
+,#+LANGUAGE: ja
+,#+REF: cc-env/%n
+,#+LAYOUT: default
+,#+PERMALINK: /cc-env/%n.html
+Related [[wiki:index][Index]]
+"))
+    #+END_SRC
 * フォントと色
   そろそろテーマにした方が良い，とは思ってはいる．
   #+BEGIN_SRC emacs-lisp

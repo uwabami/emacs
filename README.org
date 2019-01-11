@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2019-01-11 16:48:47
+#+DATE: 2019-01-11 16:51:23
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -1043,6 +1043,23 @@ File.open(src, "r") {|f|
       (setq interprogram-cut-function 'my:paste-to-osx
             interprogram-paste-function 'my:copy-from-osx)))
    #+END_SRC
+* インクリメンタル検索: =migemo=
+  #+BEGIN_SRC emacs-lisp
+(use-package migemo
+  :if (executable-find "cmigemo")
+  :quelpa (migemo
+           :fetcher github
+           :repo "uwabami/migemo")
+  :config
+  (setq migemo-command "cmigemo"
+        migemo-options '("-q" "--emacs")
+        migemo-dictionary "/usr/share/cmigemo/utf-8/migemo-dict"
+        migemo-user-dictionary nil
+        migemo-regex-dictionary nil
+        migemo-coding-system 'utf-8-unix)
+  (migemo-init)
+  )
+  #+END_SRC
 * フォントと色
   そろそろテーマにした方が良い，とは思ってはいる．
   #+BEGIN_SRC emacs-lisp

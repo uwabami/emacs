@@ -1,13 +1,12 @@
-#+TITLE: Emacs の設定
+#+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2019-01-12 09:30:22
-#+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
+#+date: 2019-01-12 10:12:35
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
-  #+HTML: <amp-img src="https://travis-ci.org/uwabami/emacs.svg?branch=master" width="72px" height="20px" layout=fixed class="travis_badge"></amp-img>
-  #+HTML: <amp-img src="https://img.shields.io/badge/License-GPLv3-blue.svg" width="92px" height="20px" layout="fixed"></amp-img>
-  #+HTML: <a href="https://github.com/uwabami/emacs"><span class="icon-github"><svg id="SVGRoot" width="20px" height="20px" version="1.1" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="m5.4144 12.761c0 0.0645-0.0742 0.11613-0.16774 0.11613-0.10645 0.01-0.18064-0.0419-0.18064-0.11613 0-0.0645 0.0742-0.11613 0.16774-0.11613 0.0968-0.01 0.18064 0.0419 0.18064 0.11613zm-1.0032-0.14516c-0.0226 0.0645 0.0419 0.13871 0.13871 0.15806 0.0839 0.0323 0.18064 0 0.2-0.0645 0.0194-0.0645-0.0419-0.13871-0.13871-0.16775-0.0839-0.0226-0.17742 0.01-0.2 0.0742zm1.4258-0.0548c-0.0935 0.0226-0.15806 0.0839-0.14838 0.15806 0.01 0.0645 0.0935 0.10645 0.19032 0.0839 0.0936-0.0226 0.15806-0.0839 0.14839-0.14838-0.01-0.0613-0.0968-0.10323-0.19033-0.0935zm2.1226-12.361c-4.4742 0-7.8968 3.3968-7.8968 7.871 0 3.5774 2.2516 6.6387 5.4677 7.7161 0.41291 0.0742 0.55807-0.18064 0.55807-0.39032 0-0.2-0.01-1.3032-0.01-1.9806 0 0-2.2581 0.48387-2.7323-0.96129 0 0-0.36774-0.93871-0.89677-1.1806 0 0-0.73871-0.50645 0.0516-0.49677 0 0 0.80323 0.0645 1.2452 0.83226 0.70645 1.2452 1.8903 0.88709 2.3516 0.67419 0.0742-0.51613 0.28387-0.87419 0.51613-1.0871-1.8032-0.2-3.6226-0.46129-3.6226-3.5645 0-0.8871 0.24516-1.3323 0.76129-1.9-0.0839-0.20968-0.35806-1.0742 0.0839-2.1903 0.6742-0.20967 2.2258 0.87097 2.2258 0.87097 0.64516-0.18064 1.3387-0.27419 2.0258-0.27419 0.68709 0 1.3806 0.0936 2.0258 0.27419 0 0 1.5516-1.0839 2.2258-0.87097 0.44193 1.1194 0.16774 1.9806 0.0839 2.1903 0.51613 0.57096 0.83226 1.0161 0.83226 1.9 0 3.1129-1.9 3.3613-3.7032 3.5645 0.29678 0.25484 0.54839 0.73871 0.54839 1.4968 0 1.0871-0.01 2.4322-0.01 2.6968 0 0.20968 0.14839 0.46452 0.55807 0.39032 3.2258-1.071 5.4129-4.1322 5.4129-7.7097 0-4.4742-3.629-7.871-8.1032-7.871zm-4.7613 11.126c-0.0419 0.0323-0.0323 0.10646 0.0226 0.16775 0.0516 0.0516 0.12581 0.0742 0.16775 0.0323 0.0419-0.0323 0.0323-0.10645-0.0226-0.16774-0.0516-0.0516-0.12581-0.0742-0.16775-0.0323zm-0.34838-0.26129c-0.0226 0.0419 0.01 0.0935 0.0742 0.12581 0.0516 0.0323 0.11613 0.0226 0.13871-0.0226 0.0226-0.0419-0.01-0.0935-0.0742-0.12581-0.0645-0.0194-0.11613-0.01-0.13871 0.0226zm1.0452 1.1484c-0.0516 0.0419-0.0323 0.13871 0.0419 0.2 0.0742 0.0742 0.16775 0.0839 0.20968 0.0323 0.0419-0.0419 0.0226-0.13871-0.0419-0.2-0.071-0.0742-0.16775-0.0839-0.20968-0.0323zm-0.36774-0.47419c-0.0516 0.0323-0.0516 0.11613 0 0.19032 0.0516 0.0742 0.13871 0.10645 0.18064 0.0742 0.0516-0.0419 0.0516-0.1258 0-0.2-0.0452-0.0742-0.12903-0.10645-0.18064-0.0645z" fill="currentColor" stroke-width=".032258"/></svg></span></a>
+  #+html: <amp-img src="https://travis-ci.org/uwabami/emacs.svg?branch=master" width="72px" height="20px" layout=fixed class="travis_badge"></amp-img>
+  #+html: <amp-img src="https://img.shields.io/badge/License-GPLv3-blue.svg" width="92px" height="20px" layout="fixed"></amp-img>
+  #+html: <a href="https://github.com/uwabami/emacs"><span class="icon-github"><svg id="SVGRoot" width="20px" height="20px" version="1.1" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="m5.4144 12.761c0 0.0645-0.0742 0.11613-0.16774 0.11613-0.10645 0.01-0.18064-0.0419-0.18064-0.11613 0-0.0645 0.0742-0.11613 0.16774-0.11613 0.0968-0.01 0.18064 0.0419 0.18064 0.11613zm-1.0032-0.14516c-0.0226 0.0645 0.0419 0.13871 0.13871 0.15806 0.0839 0.0323 0.18064 0 0.2-0.0645 0.0194-0.0645-0.0419-0.13871-0.13871-0.16775-0.0839-0.0226-0.17742 0.01-0.2 0.0742zm1.4258-0.0548c-0.0935 0.0226-0.15806 0.0839-0.14838 0.15806 0.01 0.0645 0.0935 0.10645 0.19032 0.0839 0.0936-0.0226 0.15806-0.0839 0.14839-0.14838-0.01-0.0613-0.0968-0.10323-0.19033-0.0935zm2.1226-12.361c-4.4742 0-7.8968 3.3968-7.8968 7.871 0 3.5774 2.2516 6.6387 5.4677 7.7161 0.41291 0.0742 0.55807-0.18064 0.55807-0.39032 0-0.2-0.01-1.3032-0.01-1.9806 0 0-2.2581 0.48387-2.7323-0.96129 0 0-0.36774-0.93871-0.89677-1.1806 0 0-0.73871-0.50645 0.0516-0.49677 0 0 0.80323 0.0645 1.2452 0.83226 0.70645 1.2452 1.8903 0.88709 2.3516 0.67419 0.0742-0.51613 0.28387-0.87419 0.51613-1.0871-1.8032-0.2-3.6226-0.46129-3.6226-3.5645 0-0.8871 0.24516-1.3323 0.76129-1.9-0.0839-0.20968-0.35806-1.0742 0.0839-2.1903 0.6742-0.20967 2.2258 0.87097 2.2258 0.87097 0.64516-0.18064 1.3387-0.27419 2.0258-0.27419 0.68709 0 1.3806 0.0936 2.0258 0.27419 0 0 1.5516-1.0839 2.2258-0.87097 0.44193 1.1194 0.16774 1.9806 0.0839 2.1903 0.51613 0.57096 0.83226 1.0161 0.83226 1.9 0 3.1129-1.9 3.3613-3.7032 3.5645 0.29678 0.25484 0.54839 0.73871 0.54839 1.4968 0 1.0871-0.01 2.4322-0.01 2.6968 0 0.20968 0.14839 0.46452 0.55807 0.39032 3.2258-1.071 5.4129-4.1322 5.4129-7.7097 0-4.4742-3.629-7.871-8.1032-7.871zm-4.7613 11.126c-0.0419 0.0323-0.0323 0.10646 0.0226 0.16775 0.0516 0.0516 0.12581 0.0742 0.16775 0.0323 0.0419-0.0323 0.0323-0.10645-0.0226-0.16774-0.0516-0.0516-0.12581-0.0742-0.16775-0.0323zm-0.34838-0.26129c-0.0226 0.0419 0.01 0.0935 0.0742 0.12581 0.0516 0.0323 0.11613 0.0226 0.13871-0.0226 0.0226-0.0419-0.01-0.0935-0.0742-0.12581-0.0645-0.0194-0.11613-0.01-0.13871 0.0226zm1.0452 1.1484c-0.0516 0.0419-0.0323 0.13871 0.0419 0.2 0.0742 0.0742 0.16775 0.0839 0.20968 0.0323 0.0419-0.0419 0.0226-0.13871-0.0419-0.2-0.071-0.0742-0.16775-0.0839-0.20968-0.0323zm-0.36774-0.47419c-0.0516 0.0323-0.0516 0.11613 0 0.19032 0.0516 0.0742 0.13871 0.10645 0.18064 0.0742 0.0516-0.0419 0.0516-0.1258 0-0.2-0.0452-0.0742-0.12903-0.10645-0.18064-0.0645z" fill="currentColor" stroke-width=".032258"/></svg></span></a>
 
   基本方針は以下の通り:
 ** Debian パッケージがインストールされているならば，それを優先する
@@ -25,7 +24,7 @@
    というわけで，設定は [[http://orgmode.org/worg/org-contrib/babel/intro.html][Org Babel]] で書いています．
    本ファイル(=README.org=) から，
    Makefile 内の以下のスクリプトで =~/init.el= を生成し，byte-compile します．
-   #+BEGIN_SRC makefile-gmake :tangle no
+   #+begin_src makefile-gmake :tangle no
 init.el: README.org
 	$(EMACS) -q --batch --eval \
 		 "(progn \
@@ -33,13 +32,13 @@ init.el: README.org
 		    (org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\"))"
 %.elc: %.el
 	$(EMACS) -l $< -batch -f batch-byte-compile $<
-   #+END_SRC
+   #+end_src
 * ディレクトリ構成
   分割した設定ファイル群やパッケージで install したパッケージ
   の置き場所は =user-emacs-directory= 以下にまとめています．
 
   試行錯誤の結果，ディレクトリ構成は以下のようにしました:
-  #+BEGIN_EXAMPLE
+  #+begin_example
     ~/.emacs.d/
      |-- Makefile    ←  byte-compile 用の rule
      |-- README.org  ←  本ファイル．`org-babel-tangle' で init.el を生成
@@ -48,9 +47,9 @@ init.el: README.org
          `-- quelpa/ ←  quelpa で導入したパッケージが置かれる場所
      |-- share/      ←  (基本的に)参照するだけの資源置き場所
      `-- tmp/        ←  一次ファイルの置き場所
-  #+END_EXAMPLE
+  #+end_example
   上記ディレクトリ構成を設定ファイルで使用するためにディレクトリ配置を宣言しておきます．
-  #+BEGIN_SRC emacs-lisp
+  #+begin_src emacs-lisp
 (when load-file-name
   (setq user-emacs-directory (file-name-directory load-file-name)))
 (defconst my:d:share
@@ -59,23 +58,23 @@ init.el: README.org
   (expand-file-name "tmp/" user-emacs-directory))
 (unless (file-directory-p my:d:tmp)
   (make-directory my:d:tmp))
-  #+END_SRC
+  #+end_src
   ついでに，
   =custom-set-variables= は別ファイルに出力，終了時に削除するようにしています．
-  #+BEGIN_SRC emacs-lisp
+  #+begin_src emacs-lisp
 (setq custom-file (concat my:d:tmp "custom.el"))
 (add-hook 'kill-emacs-hook
           (lambda ()
             (if (file-exists-p custom-file)
                 (delete-file custom-file))))
-  #+END_SRC
+  #+end_src
   +init.elが汚れる気がしてあまり好きではないのですが...皆さん気にしてないんですかね+
 * Package 関連: =package.el=, [[https://github.com/jwiegley/use-package][use-package]], [[https://github.com/quelpa/quelpa][quelpa]]
   [[https://github.com/jwiegley/use-package][use-package]] のおかけで、
   無いと途方に暮れるパッケージ以外のインストールは無視できるようになります。
 ** =package.el=
    パッケージは基本的に =pacakge.el= で導入するので、先ずはその設定.
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (setq url-http-attempt-keepalives nil)
 (require 'package nil 'noerror)
 (setq package-enable-at-startup t
@@ -88,21 +87,21 @@ init.el: README.org
     (with-temp-buffer (write-file (locate-user-emacs-file "tmp/bootstrap-stamp")))
     ))
 (package-initialize)
-   #+END_SRC
+   #+end_src
 ** [[https://github.com/jwiegley/use-package][use-package]]
    個々のパッケージの設定には [[https://github.com/jwiegley/use-package][use-package]] を利用します．
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (unless (require 'use-package nil t)
   (package-install 'use-package))
 (setq use-package-always-ensure nil)
-   #+END_SRC
+   #+end_src
 ** [[https://framagit.org/steckerhalter/quelpa-use-package][quelpa-use-package]]
    melpa に登録されていないパッケージや自作の elisp 等をインストールできる様に
    [[https://github.com/quelpa/quelpa][quelpa]] を使います. これと [[https://github.com/jwiegley/use-package][use-package]] を連携する [[https://framagit.org/steckerhalter/quelpa-use-package][quelpa-use-package]] を
    melpa から導入しておきます.
    とはいえ、[[https://github.com/quelpa/quelpa][quelpa]] はあくまでオプションですんで,
    melpa の同期はしません.
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (use-package quelpa-use-package
   :ensure t
   :init
@@ -112,38 +111,38 @@ init.el: README.org
         quelpa-update-melpa-p nil
         quelpa-melpa-recipe-stores nil)
   )
-   #+END_SRC
+   #+end_src
 * 独自関数
   細かい独自関数，など．
 ** カーソルのある位置の face を調べる関数
    わりと良く使う. 地味に便利
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (defun my:describe-face-at-point ()
   (interactive)
   (message "%s" (get-char-property (point) 'face)))
-   #+END_SRC
+   #+end_src
 ** 機能を無効化するための関数の定義
    =line-number-mode= など「有効無効をtoggleする関数」は
    慣習的に =0= 以下の数字を指定すると明示的に無効化できるので，
    =-1= を設定する関数を定義しておく.
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (defun my:disable-builtin-mode (mode)
   "与えられた mode が存在するのであれば -1 をセットして無効化"
   (if (fboundp mode) (funcall mode -1)))
-   #+END_SRC
+   #+end_src
 ** dpkg-status
    もっと良い方法がありそうなモンですが．
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (defun my:dpkg-status (package)
   "Return the package status from dpkg --get-selections."
   (string-match "^ii" (shell-command-to-string (format "dpkg -l %s" package))))
-   #+END_SRC
+   #+end_src
 ** 行末の無駄な空白/改行を削除する
    @see [[http://d.hatena.ne.jp/tototoshi/20101202/1291289625][無駄な行末の空白を削除する(Emacs Advent Calendar jp:2010)]]
 
    ただし, RD や Markdown だと空白行に意味があったりするので，
    必要に応じて拡張子で判断して外している．
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (defvar my:delete-trailing-whitespace-exclude-suffix
   (list "\\.rd$" "\\.md$" "\\.rbt$" "\\.rab$"))
 (defun my:delete-trailing-whitespace ()
@@ -154,10 +153,10 @@ init.el: README.org
                     thereis (string-match pattern buffer-file-name)))
     (delete-trailing-whitespace))))
 (add-hook 'before-save-hook 'my:delete-trailing-whitespace)
-   #+END_SRC
+   #+end_src
 ** 空になったファイルを尋ねずに自動削除
    ゴミが残らないし，地味に便利．
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (defun my:delete-file-if-no-contents ()
   (when (and (buffer-file-name (current-buffer))
              (= (point-min) (point-max)))
@@ -166,10 +165,10 @@ init.el: README.org
 (if (not (memq 'my:delete-file-if-no-contents after-save-hook))
     (setq after-save-hook
           (cons 'my:delete-file-if-no-contents after-save-hook)))
-   #+END_SRC
+   #+end_src
 ** scratch を殺さない. 消したら再生成
    ...元ネタがどこだったのか忘れてしまった...
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (defun my:make-scratch (&optional arg)
   (interactive)
   (progn
@@ -201,10 +200,10 @@ init.el: README.org
            (lambda ()
              (unless (member "*scratch*" (my:buffer-name-list))
                (my:make-scratch 1)))))
-   #+END_SRC
+   #+end_src
 ** ファイル名を minibuffer におさまる様に整形
    zsh 風味
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (defun my:shorten-file-path (fpath max-length)
   "Show up to `max-length' characters of a directory name `fpath' like zsh"
   (let* ((path (reverse (split-string (abbreviate-file-name fpath) "/")))
@@ -223,7 +222,7 @@ init.el: README.org
       (setq output (concat "/..." output)))
     (format "%s%s" top output)
     ))
-   #+END_SRC
+   #+end_src
 * 環境変数の読み込み: =exec-path-from-shell=
   zsh で設定した =PATH= などの環境変数を Emacs に引き継ぐために
   [[https://github.com/purcell/exec-path-from-shell][purcell/exec-path-from-shell]] を使います．
@@ -239,7 +238,7 @@ init.el: README.org
   - =PASSWORD_STORE_DIR=
   - =PATH=
   を読み込んでいます．
-  #+BEGIN_SRC emacs-lisp
+  #+begin_src emacs-lisp
 (defvar my:d:password-store nil)
 (use-package exec-path-from-shell
   :ensure t
@@ -261,17 +260,17 @@ init.el: README.org
         user-mail-address (concat (getenv "DEBEMAIL"))
         my:d:password-store (concat (getenv "PASSWORD_STORE_DIR") "/Emacs/" (system-name)))
   )
-  #+END_SRC
+  #+end_src
 * 言語の設定
   日本語, UTF-8 にしています.
-  #+BEGIN_SRC emacs-lisp
+  #+begin_src emacs-lisp
 (set-language-environment "Japanese")
 (prefer-coding-system 'utf-8)
 (set-file-name-coding-system 'utf-8)
 (set-keyboard-coding-system 'utf-8)
 (set-terminal-coding-system 'utf-8)
 (set-default 'buffer-file-coding-system 'utf-8)
-  #+END_SRC
+  #+end_src
   その他, 機種依存文字等についての設定をアレコレ.
 ** cp5022x.el
    Emacs23 から内部が Unicode ベースになっています．
@@ -279,7 +278,7 @@ init.el: README.org
    しかし文字コードの変換は GNU libc の iconv をベースにしているため，
    環境によっては文字の変換がうまく行なえません．
    そこで言語設定前に =cp5022x.el= をインストールすることにしています．
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (use-package cp5022x
   :ensure t
   :config
@@ -287,18 +286,18 @@ init.el: README.org
                         'katakana-jisx0201 'iso-8859-1 'unicode)
   (set-coding-system-priority 'utf-8 'euc-jp 'iso-2022-jp 'cp932)
   )
-   #+END_SRC
+   #+end_src
 ** East Asian Ambiguos 対応
    CJK 以外の East Asian Ambiguos，絵文字も2文字幅にするようにしています．
    拙作の修正ロケールはこちら: [[https://github.com/uwabami/locale-eaw-emoji]]
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (use-package locale-eaw-emoji
   :quelpa (locale-eaw-emoji
            :fetcher github
            :repo "uwabami/locale-eaw-emoji")
   :config
   (eaw-and-emoji-fullwidth))
-   #+END_SRC
+   #+end_src
 ** OSの違いに起因する条件分岐
   Mac と Linux では同じ Unicode でも正規化が異なります
    (具体的には Mac のファイルシステムである HFS+ では Unicode の正規化が異なります).
@@ -313,7 +312,7 @@ init.el: README.org
    Windows の場合はファイル名などは cp932 にしているものの,
    最近 Windows 使っていないので良く知りません(というわけで，設定を捨てました).
    +さらに，最近は Mac OS でも Emacs 使ってないから，これが正しのか良くわからない...+
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (use-package ucs-normalize
   :if (eq system-type 'darwin)
   :config
@@ -326,61 +325,61 @@ init.el: README.org
   (setq ns-alternate-modifier 'super)
   (global-set-key [ns-drag-file] 'ns-find-file)
   )
-   #+END_SRC
+   #+end_src
 * 主にEmacs本体に同梱されている拡張に関する設定
   最近ぼちぼち他の拡張も入れる様になってきた.
 ** 標準機能の設定
 *** 表示関連
     起動時のスプラッシュ画面を表示しない
-    #+BEGIN_SRC emacs-lisp
+    #+begin_src emacs-lisp
 (setq inhibit-startup-screen t
       inhibit-startup-message t)
-    #+END_SRC
+    #+end_src
     大抵の場合ターミナル内で =-nw= として起動するし,
     メニューは触ったことないので使わないので，
     フレーム, ツールバー等を非表示にする．
-    #+BEGIN_SRC emacs-lisp
+    #+begin_src emacs-lisp
 (my:disable-builtin-mode 'tool-bar-mode)
 (my:disable-builtin-mode 'scroll-bar-mode)
 (my:disable-builtin-mode 'menu-bar-mode)
 (my:disable-builtin-mode 'blink-cursor-mode)
 (my:disable-builtin-mode 'column-number-mode)
-    #+END_SRC
+    #+end_src
     ベル無効化
-    #+BEGIN_SRC emacs-lisp
+    #+begin_src emacs-lisp
 (setq ring-bell-function 'ignore)
-    #+END_SRC
+    #+end_src
     現在行のハイライト
-    #+BEGIN_SRC emacs-lisp
+    #+begin_src emacs-lisp
 (global-hl-line-mode t)
-    #+END_SRC
+    #+end_src
     選択リージョンに色付け
-    #+BEGIN_SRC emacs-lisp
+    #+begin_src emacs-lisp
 (setq transient-mark-mode t)
-    #+END_SRC
+    #+end_src
     対応する括弧を強調表示
-    #+BEGIN_SRC emacs-lisp
+    #+begin_src emacs-lisp
 (show-paren-mode +1)
 (setq show-paren-style 'mixed)
-    #+END_SRC
+    #+end_src
     行番号を表示する =linum-mode= は基本使わない(必要に応じて有効にする)
     ので通常はモードラインに行番号や桁番号を表示しないようする.
     ついでに =linum-mode= を有効にした場合の桁表示を 5 桁に.
-    #+BEGIN_SRC emacs-lisp
+    #+begin_src emacs-lisp
 (my:disable-builtin-mode 'line-number-mode)
 (setq linum-format "%5d ")
-    #+END_SRC
+    #+end_src
     debug は表示しない: 必要に応じて t に変更する
-    #+BEGIN_SRC emacs-lisp
+    #+begin_src emacs-lisp
 (setq debug-on-error nil)
-    #+END_SRC
+    #+end_src
     Compile-Log の非表示:     ほとんど見ないし．
-    #+BEGIN_SRC emacs-lisp
+    #+begin_src emacs-lisp
 (let ((win (get-buffer-window "*Compile-Log*")))
   (when win (delete-window win)))
-    #+END_SRC
+    #+end_src
     Warning の抑制: これもほとんど見ないし．
-    #+BEGIN_SRC emacs-lisp
+    #+begin_src emacs-lisp
 (setq byte-compile-warnings
       '(not
         free-vars
@@ -393,48 +392,48 @@ init.el: README.org
         interactive-only
         make-local
         ))
-    #+END_SRC
+    #+end_src
 *** 編集関連
     yes or no を y or n に
-    #+BEGIN_SRC emacs-lisp
+    #+begin_src emacs-lisp
 (fset 'yes-or-no-p 'y-or-n-p)
-    #+END_SRC
+    #+end_src
     ファイル名の大文字小文字を区別しない(zsh風)
-    #+BEGIN_SRC emacs-lisp
+    #+begin_src emacs-lisp
 (setq read-file-name-completion-ignore-case t)
-    #+END_SRC
+    #+end_src
     tab 幅 4, tab でのインデントはしない
-    #+BEGIN_SRC emacs-lisp
+    #+begin_src emacs-lisp
 (setq-default tab-width 4)
 (setq-default indent-tabs-mode nil)
-    #+END_SRC
+    #+end_src
     文字列は 72 文字で折り返し(RFC2822風味)
-    #+BEGIN_SRC emacs-lisp
+    #+begin_src emacs-lisp
 (setq-default fill-column 72)
 (setq paragraph-start '"^\\([ 　・○<\t\n\f]\\|(?[0-9a-zA-Z]+)\\)")
 (setq-default auto-fill-mode nil)
-    #+END_SRC
+    #+end_src
     長い行の折り返し:
     デフォルトは折り返し有で =\C-c M-l= で toggle
-    #+BEGIN_SRC emacs-lisp
+    #+begin_src emacs-lisp
 (set-default 'truncate-lines nil)
 (setq truncate-partial-width-windows nil)
 (define-key global-map (kbd "C-c M-l") 'toggle-truncate-lines)
-    #+END_SRC
+    #+end_src
     バッファ終端で newline を入れない
-    #+BEGIN_SRC emacs-lisp
+    #+begin_src emacs-lisp
 (setq next-line-add-newlines nil)
-    #+END_SRC
+    #+end_src
     symlink は常においかける
-    #+BEGIN_SRC emacs-lisp
+    #+begin_src emacs-lisp
 (setq vc-follow-symlinks t)
-    #+END_SRC
+    #+end_src
     変更のあったファイルの自動再読み込み
-    #+BEGIN_SRC emacs-lisp
+    #+begin_src emacs-lisp
 (global-auto-revert-mode 1)
-    #+END_SRC
+    #+end_src
     バックアップとauto-saveの作成/位置の変更:
-    #+BEGIN_SRC emacs-lisp
+    #+begin_src emacs-lisp
 (setq auto-save-list-file-prefix (concat my:d:tmp ".saves-")
       auto-save-default t
       auto-save-timeout 15
@@ -449,20 +448,20 @@ init.el: README.org
       delete-old-versions t
       delete-auto-save-files t
       )
-    #+END_SRC
+    #+end_src
     Undo/Redo:
     そのうち undohist と undo-tree を試そうと思っているのですが，
     今のところ特に弄ってません． =undo-limit= は無限大にしたいのですが，どうするのかな...?
-    #+BEGIN_SRC emacs-lisp
+    #+begin_src emacs-lisp
 (setq undo-limit 200000
       undo-strong-limit 260000)
 (savehist-mode 1)
 (setq history-length t  ; t で無制限
       savehist-file (concat my:d:tmp "history"))
-    #+END_SRC
+    #+end_src
 ** ファイル，デイレクトリ整理
    =~/.emacs.d/= 以下にファイルが転がるのがなんか嫌なので, 気がつく度に設定している.
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (use-package url
   :init
   (setq url-configuration-directory (concat my:d:tmp "url")))
@@ -470,12 +469,12 @@ init.el: README.org
   :if (featurep 'nsm)
   :init
   (setq nsm-settings-file (concat my:d:tmp "network-settings.data")))
-  #+END_SRC
+  #+end_src
    他にもイロイロありそう．
 ** =recentf=: 最近使ったファイル履歴の保管
    ファイルを開く際には =ido-recentf-open= を使うので,
    結局履歴を貯める設定をしている事になっている.
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (use-package recentf
   :diminish recentf-mode
   :init
@@ -494,25 +493,25 @@ init.el: README.org
                           "\\.*草稿\\.*"
                           ))
   )
-   #+END_SRC
+   #+end_src
    ディレクトリの履歴も取れるので recentf-ext を入れておく
 ** =.elc= と =.el= の timestamp を比較し，新しい方を読み込む
    =load-prefer-newer= は Emacs >= 24.4 から．
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (when (boundp 'load-prefer-newer)
   (setq load-prefer-newer t))
-   #+END_SRC
+   #+end_src
 ** ガベージコレクションの +頻度を下げる+ 表示をしない
    message に gc が走っていることを表示しない
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (setq gc-cons-threshold (* 8 1024 1024)
       garbage-collection-messages nil)
-   #+END_SRC
+   #+end_src
    =gc-cons-threshold= はとりあえず default の設定に.
    メモリ喰いな拡張を入れている場合には, 安易に =gc-cons-threshold= を上げるのは考えものである.
    「gc が走る→大きな領域を掃除するのでその間 emacs が止まる」という事を頻繁に経験することになるだろう.
 ** =abbrev=: 略語展開
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (use-package abbrev
   :diminish abbrev-mode
   :config
@@ -520,30 +519,30 @@ init.el: README.org
         save-abbrevs t)
   (setq-default abbrev-mode t)
   )
-   #+END_SRC
+   #+end_src
 ** =eldoc=: emacs-lisp document
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (use-package eldoc
   :diminish eldoc-mode
   :config
   (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
   )
-   #+END_SRC
+   #+end_src
 ** =midnight=: 一定期間使用しなかった buffer を自動削除
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (use-package midnight
   :config
   (setq clean-buffer-list-delay-general 1))
-   #+END_SRC
+   #+end_src
 ** =uniquify=: モードラインのファイル名にディレクトリも表示する
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (use-package uniquify
   :config
   (setq uniquify-buffer-name-style 'post-forward-angle-brackets
         uniquify-min-dir-content 1))
-   #+END_SRC
+   #+end_src
 ** =whitespace=: 空白の強調表示
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (use-package whitespace
   :diminish global-whitespace-mode
   :config
@@ -565,19 +564,19 @@ init.el: README.org
         )
   (global-whitespace-mode 1)
   )
-   #+END_SRC
+   #+end_src
 ** =saveplace=: 前回の修正位置を記憶する.
    記憶の保存先は =~/.emacs.d/tmp/emacs-places= に変更.
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (use-package saveplace
   :config
   (setq-default save-place t)
   (setq save-place-file (concat my:d:tmp "emacs-places")))
-   #+END_SRC
+   #+end_src
 ** =time-stamp=: 保存時に timestamp を自動更新
    デフォルトではいろいろと衝突したので
    更新文字列を変更し， =＄Lastupdate: 2= (＄は半角) があったら timestamp を更新する様にした．
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (use-package time-stamp
   :config
   (setq time-stamp-active t
@@ -586,24 +585,24 @@ init.el: README.org
         time-stamp-end "\\$"
         time-stamp-format "%03y-%02m-%02d %02H:%02M:%02S")
   (add-hook 'before-save-hook 'time-stamp))
-   #+END_SRC
+   #+end_src
    モード独自の設定(例えば Org とか)に関しては別途．
 ** =tramp=: ssh 越しにファイルを編集
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (use-package tramp
   :config
   (setq tramp-persistency-file-name (concat my:d:tmp "tramp"))
   )
-   #+END_SRC
+   #+end_src
 ** =bookmark=: bookmark ファイル
    イマイチ使いこなせてない. 場所だけ変更しておく.
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (setq bookmark-default-file (concat my:d:share "bookmarks"))
-   #+END_SRC
+   #+end_src
 ** =eww=: 内蔵ブラウザ
    幅と背景色の指定がメインだが、
    上手くうごいてくれていない、ような。
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (use-package eww
   ;; vi like <- vimperator, vimium に慣れてしまったので
   :bind (:map eww-mode-map
@@ -699,11 +698,11 @@ init.el: README.org
     (rename-buffer "eww" t))
   (add-hook 'eww-mode-hook 'eww-mode-hook--rename-buffer)
   )
-   #+END_SRC
+   #+end_src
 ** =browse-url=
    Firefox の呼び出し方が変わったので，そのために関数を追加．
    詳細は [[http://www.emacswiki.org/emacs/BrowseUrl]] を参照のこと．
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (use-package browse-url
   :bind (("C-c C-j" . browse-url-at-point))
   :config
@@ -725,19 +724,19 @@ init.el: README.org
             shr-external-browser 'browse-url-firefox)
     (setq browse-url-browser-function 'eww-browse-url))
   )
-   #+END_SRC
+   #+end_src
 ** =server=: Emacs server
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (use-package server
   :config
   (unless (server-running-p)
     (server-start)))
-   #+END_SRC
+   #+end_src
 * Elscreen
 ** 導入 [0/1]
    modeline の表示そのものは無効化しておく．
    - [ ] Debian パッケージ版は古い．更新すべき
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (use-package elscreen
   :quelpa (elscreen
            :fetcher github
@@ -749,14 +748,14 @@ init.el: README.org
         elscreen-display-screen-number nil)
   :config
   (elscreen-start))
-   #+END_SRC
+   #+end_src
 ** elscreen + zsh での連携
   詳細は
   - [[https://masutaka.net/chalow/2011-09-28-1.html][ターミナルの zsh と Emacs を風のように駆け抜ける！]]
   - [[http://syohex.hatenablog.com/entry/20111026/1319606395][cdeを改良]]
   - [[https://qiita.com/__hage/items/2dd732b4dd68e124e8bd][cdeとelscreen-separate-buffer-listの相性が悪い]]
   などを参考に.
-  #+BEGIN_SRC emacs-lisp
+  #+begin_src emacs-lisp
 (defun return-current-working-directory-to-shell ()
   (expand-file-name
    (with-current-buffer
@@ -772,20 +771,20 @@ init.el: README.org
               (assoc 'buffer-list
                      (nth 1 (nth 1 (current-frame-configuration))))))
      default-directory)))
-  #+END_SRC
+  #+end_src
 * 日本語入力: =ddskk=
   [[http://openlab.ring.gr.jp/skk/ddskk-ja.html][Daredevil SKK (DDSKK)]] をメインで使用中．無いと途方に暮れる．
   ちなみにGTKが有効になっていると =gtk-immodule= なんかと衝突するので
   =~/.Xresources= で xim を無効にしておくと良い．
   例えば以下の様に:
-  #+BEGIN_SRC conf :tangle no
+  #+begin_src conf :tangle no
 ! disable XIM
 Emacs*useXIM: false
-  #+END_SRC
+  #+end_src
 ** Emacs 本体側の設定
    実際の設定は別ファイルで行なわれるため
    ここでは設定ファイルの位置変更を変更している．
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (unless (locate-library "skk")
   (package-install 'ddskk))
 (use-package skk
@@ -798,35 +797,35 @@ Emacs*useXIM: false
         default-input-method "japanese-skk" )
   :config
   )
-   #+END_SRC
+   #+end_src
 ** DDSKK 本体の設定
    sticky shift: [[http://homepage1.nifty.com/blankspace/emacs/sticky.html][sticky shift]] を参照のこと.
    ddskk の 14.2 以降から同梱されるようになった(ありがたい)
-   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+   #+begin_src emacs-lisp :tangle init-ddskk.el
 (setq skk-sticky-key ";")
-   #+END_SRC
+   #+end_src
    変換候補の表示位置
-   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+   #+begin_src emacs-lisp :tangle init-ddskk.el
 (setq skk-show-candidates-always-pop-to-buffer t)
-   #+END_SRC
+   #+end_src
    候補表示件数を2列に
-   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+   #+begin_src emacs-lisp :tangle init-ddskk.el
 (setq skk-henkan-show-candidates-rows 2)
-   #+END_SRC
+   #+end_src
    日本語表示しない
-   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+   #+begin_src emacs-lisp :tangle init-ddskk.el
 (setq skk-japanese-message-and-error nil)
-   #+END_SRC
+   #+end_src
    メニューを日本語にしない -> toolbar 非表示だし.
-   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+   #+begin_src emacs-lisp :tangle init-ddskk.el
 (setq skk-show-japanese-menu nil)
-   #+END_SRC
+   #+end_src
    注釈の表示
-   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+   #+begin_src emacs-lisp :tangle init-ddskk.el
 (setq skk-show-annotation nil)
-   #+END_SRC
+   #+end_src
    インジケータの表示のカスタマイズ
-   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+   #+begin_src emacs-lisp :tangle init-ddskk.el
 (setq skk-latin-mode-string "[_A]")
 (setq skk-hiragana-mode-string "[あ]")
 (setq skk-katakana-mode-string "[ア]")
@@ -834,13 +833,13 @@ Emacs*useXIM: false
 (setq skk-jisx0201-mode-string "[_ｱ]")
 (setq skk-abbrev-mode-string "[aA]")
 (setq skk-indicator-use-cursor-color nil)
-   #+END_SRC
+   #+end_src
    インジケータを左端に表示
-   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+   #+begin_src emacs-lisp :tangle init-ddskk.el
 (setq skk-status-indicator 'left)
-   #+END_SRC
+   #+end_src
    mode-line が動くのが許せないので，ちょっと修正
-   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+   #+begin_src emacs-lisp :tangle init-ddskk.el
 (defadvice skk-make-indicator-alist
     (after my:set-skk-default-indicator activate)
   (dolist (elem
@@ -851,33 +850,33 @@ Emacs*useXIM: false
           (append (cons elem nil)
                   (delq (assoc (car elem) ad-return-value) ad-return-value)))))
 (setq skk-show-inline t)
-   #+END_SRC
+   #+end_src
    カーソルには色をつけない
-   #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+   #+begin_src emacs-lisp :tangle init-ddskk.el
 (setq skk-use-color-cursor nil)
-   #+END_SRC
+   #+end_src
 *** 編集関連
     キーバインド
-    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+    #+begin_src emacs-lisp :tangle init-ddskk.el
 (global-set-key "\C-x\C-j" 'skk-mode)
 (global-set-key "\C-xj" 'skk-mode)
 (global-set-key "\C-j" 'skk-mode)
 (global-set-key "\C-\\" 'skk-mode)
-    #+END_SRC
+    #+end_src
     半角カナを入力
-    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+    #+begin_src emacs-lisp :tangle init-ddskk.el
 (setq skk-use-jisx0201-input-method t)
-    #+END_SRC
+    #+end_src
     Enter で改行しない
-    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+    #+begin_src emacs-lisp :tangle init-ddskk.el
 (setq skk-egg-like-newline t)
-    #+END_SRC
+    #+end_src
     "「"を入力したら"」"も自動で挿入
-    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+    #+begin_src emacs-lisp :tangle init-ddskk.el
 (setq skk-auto-insert-paren t)
-    #+END_SRC
+    #+end_src
     句読点変換ルール
-    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+    #+begin_src emacs-lisp :tangle init-ddskk.el
 (setq skk-kuten-touten-alist
       '(
         (jp    . ("。" . "、"))
@@ -885,9 +884,9 @@ Emacs*useXIM: false
         (en    . (". " . ", "))
         ))
 (setq-default skk-kutouten-type 'en)
-    #+END_SRC
+    #+end_src
     全角記号の変換: @ での日付入力は使わない
-    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+    #+begin_src emacs-lisp :tangle init-ddskk.el
 (setq skk-rom-kana-rule-list
       (append skk-rom-kana-rule-list
               '(("!" nil "!")
@@ -898,28 +897,28 @@ Emacs*useXIM: false
                 ("\\" nil "\\")
                 ("@" nil "@")
                 )))
-    #+END_SRC
+    #+end_src
     送り仮名が厳密に正しい候補を優先
-    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+    #+begin_src emacs-lisp :tangle init-ddskk.el
 (setq skk-henkan-strict-okuri-precedence t)
-    #+END_SRC
+    #+end_src
     辞書の共有
-    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+    #+begin_src emacs-lisp :tangle init-ddskk.el
 (setq skk-share-private-jisyo t)
-    #+END_SRC
+    #+end_src
     変換候補を縦に表示
-    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+    #+begin_src emacs-lisp :tangle init-ddskk.el
 (setq skk-show-inline 'vertical)
-    #+END_SRC
+    #+end_src
 *** インクリメンタルサーチ
     minibuffer 内では強制的に skk off.
-    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+    #+begin_src emacs-lisp :tangle init-ddskk.el
 (add-hook 'skk-mode-hook
           (lambda ()
             (and (skk-in-minibuffer-p)
                  (skk-mode-exit))))
 (setq skk-isearch-start-mode 'latin)
-    #+END_SRC
+    #+end_src
     インクリメンタルサーチは migemo に任せることに．
 *** 辞書の設定
     追加している辞書の一覧は
@@ -935,7 +934,7 @@ Emacs*useXIM: false
     [[http://matsucon.net/][MatsuCon]] で公開されている顔文字に関しては
     顔文字に ; や が含まれている場合に, 適宜quoteする必要があるので
     以下のスクリプトで適当に変換.
-    #+BEGIN_SRC ruby :tangle no
+    #+begin_src ruby :tangle no
 #!/usr/bin/env ruby
 require 'nkf'
 src = ARGV[0]
@@ -959,11 +958,11 @@ File.open(src, "r") {|f|
     end
   end
 }
-    #+END_SRC
+    #+end_src
     他にも quote する必要あるような気もするけれど, それは気がついた時に.
 
     辞書サーバの指定は以下.
-    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+    #+begin_src emacs-lisp :tangle init-ddskk.el
 (cond
  ((getenv "SKKSERVER")
   (setq skk-server-host "127.0.0.1"
@@ -980,18 +979,18 @@ File.open(src, "r") {|f|
 (when (file-exists-p "/usr/local/share/skkdic/SKK-JISYO.emoji.utf8")
   (setq skk-extra-jisyo-file-list
         (list '("/usr/local/share/skkdic/SKK-JISYO.emoji.utf8" . utf-8))))
-    #+END_SRC
+    #+end_src
     辞書登録の際に送り仮名を削除
-    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+    #+begin_src emacs-lisp :tangle init-ddskk.el
 (setq skk-check-okurigana-on-touroku 'auto)
-    #+END_SRC
+    #+end_src
     漢字登録のミスをチェックする
-    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+    #+begin_src emacs-lisp :tangle init-ddskk.el
 (setq skk-check-okurigana-on-touroku t)
-    #+END_SRC
+    #+end_src
 *** 動的補完
     まだ設定していない...
-    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+    #+begin_src emacs-lisp :tangle init-ddskk.el
     ;; ;; 動的補完
     ;; (setq skk-dcomp-activate t)
     ;; (setq skk-dcomp-multiple-activate t)
@@ -1007,28 +1006,28 @@ File.open(src, "r") {|f|
     ;; (set-face-foreground 'skk-dcomp-multiple-selected-face "White")
     ;; (set-face-background 'skk-dcomp-multiple-selected-face "LightGoldenrod4")
     ;; (set-face-bold-p 'skk-dcomp-multiple-selected-face nil)
-    #+END_SRC
+    #+end_src
 *** 部首変換, 総画数変換
     上手く使いこなせていない
-    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+    #+begin_src emacs-lisp :tangle init-ddskk.el
 (add-to-list 'skk-search-prog-list
              '(skk-tankan-search 'skk-search-jisyo-file
                                  skk-large-jisyo 10000))
-    #+END_SRC
+    #+end_src
 * Copy & Paste:
 ** Linux: =xclip=
    =xclip= で clipboard とデータをやりとり．
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (use-package xclip
   :if (and (executable-find "xclip")
            (eq system-type 'gnu/linux))
   :ensure t
   :config
   (xclip-mode 1))
-   #+END_SRC
+   #+end_src
    clipboard と PRIMARY の同期には =gpaste= を使っている．
 ** macOS
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (defun my:copy-from-osx ()
   "Get string via pbpaste"
   (shell-command-to-string "pbpaste"))
@@ -1042,9 +1041,9 @@ File.open(src, "r") {|f|
     (progn
       (setq interprogram-cut-function 'my:paste-to-osx
             interprogram-paste-function 'my:copy-from-osx)))
-   #+END_SRC
+   #+end_src
 * インクリメンタル検索: =migemo=
-  #+BEGIN_SRC emacs-lisp
+  #+begin_src emacs-lisp
     (use-package migemo
       :if (executable-find "cmigemo")
       :quelpa (migemo
@@ -1064,10 +1063,10 @@ File.open(src, "r") {|f|
             migemo-coding-system 'utf-8-unix)
       (migemo-init)
       )
-  #+END_SRC
+  #+end_src
 * 補完: =auto-complete=
   ちょいちょい上手く動かなかったりするんだけれど、どうしたモンかな.
-  #+BEGIN_SRC emacs-lisp
+  #+begin_src emacs-lisp
 (use-package auto-complete-config
   :ensure auto-complete
   :config
@@ -1087,12 +1086,12 @@ File.open(src, "r") {|f|
   ;;            ))
   ;;  (add-to-list 'ac-modes mode))
   )
-  #+END_SRC
+  #+end_src
 * 補完: =ido=
   補完は =ido= が軽いし速いので好み.
   見た目がちょっと簡素すぎる気もするので、なんとか弄りたい所ではある。
 ** =ido= の設定
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (use-package ido
   :bind ("C-x C-f" . ido-find-file)
   :config
@@ -1133,10 +1132,10 @@ File.open(src, "r") {|f|
     (set (make-local-variable 'truncate-lines) nil))
   (add-hook 'ido-minibuffer-setup-hook 'my:ido-disable-line-trucation)
   )
-   #+END_SRC
+   #+end_src
 ** =flx-ido=: flex match の強化
    曖昧マッチが非常に直感的になった．地味に便利で手放せない．
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (use-package flx-ido
   :ensure t
   :config
@@ -1144,10 +1143,10 @@ File.open(src, "r") {|f|
   (setq flx-ido-use-faces nil
         flx-ido-threshold 10000)
   )
-   #+END_SRC
+   #+end_src
 ** =ido-grid-mode=: 候補を並べて表示
    横に並ぶと正直シンドイので並べてみる。
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (use-package ido-grid
   :quelpa (ido-grid
             :fetcher github
@@ -1170,10 +1169,10 @@ File.open(src, "r") {|f|
       (apply o args)
       ))
   )
-   #+END_SRC
+   #+end_src
 ** =ido-recentf=: recentf を ido で
    "recentf-list" の結果を整形して, minibuffer に納まる様に縮小したり
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (defun ido-recentf-open ()
   "Use `ido-completing-read' to \\[find-file] a recent file"
   (interactive)
@@ -1183,10 +1182,10 @@ File.open(src, "r") {|f|
     (let ((selected (ido-completing-read "Files: " (mapcar #'car files))))
       (find-file (assoc-default selected files)))))
 (bind-key "C-x C-r" 'ido-recentf-open)
-   #+END_SRC
+   #+end_src
 ** =smex=
    M-x を ido で。
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (use-package smex
   :bind (("M-x" . smex))
   :ensure t
@@ -1197,14 +1196,14 @@ File.open(src, "r") {|f|
         smex-flex-matching nil
         )
   )
-   #+END_SRC
+   #+end_src
 * 認証関連: =plstore=, =oauth2=, =password-store=
 ** oauth2, plstore
    oauth2 の認証情報は =plstore= で保存される．
    ファイルの置き場所と暗号鍵の設定をしておく.
    また, plstore のデフォルトは対称鍵暗号化なので，
    =GPG_KEY_ID= を設定しておく.
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (use-package oauth2
   :ensure t
   :init
@@ -1216,30 +1215,30 @@ File.open(src, "r") {|f|
     )
   (setq oauth2-token-file (concat my:d:tmp "oauth2.plstore"))
   )
-   #+END_SRC
+   #+end_src
 ** password-store
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (use-package password-store
   :if (and my:d:password-store
            (executable-find "pass"))
   :ensure t
   )
-   #+END_SRC
+   #+end_src
 ** auth-password-store
    auth-source として =password-store= を使う拡張
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (use-package auth-source-pass
   :if (and my:d:password-store
            (executable-find "pass"))
   :ensure t
   )
-   #+END_SRC
+   #+end_src
 * MUA の設定: =wanderlust=
   MUA として Wanderlust を使っている
 ** Emacs 本体側の設定
    Emacs 本体での設定は以下の通り. Wanderlust 自体の設定は別ファイルで行なわれる．
    ここでは =wl-init-file= を指定することで，設定ファイルを明示している．
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (use-package wl
   :if (and (or (my:dpkg-status "wl")
                (my:dpkg-status "wl-beta"))
@@ -1267,7 +1266,7 @@ File.open(src, "r") {|f|
   (unless (file-directory-p (concat elmo-msgdb-directory "/local/Trash"))
     (make-directory (concat elmo-msgdb-directory "/local/Trash")))
   )
-   #+END_SRC
+   #+end_src
    割と =/etc/emacs/site-start.d/65wl-beta.el= と重複している気がするが...
 ** Wanderlust 本体の設定
    実際の設定は以下の通り
@@ -1275,32 +1274,32 @@ File.open(src, "r") {|f|
 **** rail
      SEMI や FLIM などの UA の表示に [[http://uwabami.github.com/rail/][rail]] を使っている.
      ちなみに rail を有効にすると, 以下の様に User-Agent が表示される
-     #+HTML: <div class="col-7 px2 mx-auto">
-     #+HTML: <amp-img layout="responsive" width=640 height=400 src="https://uwabami.github.io/software/rail/images/wanderlust_with_or_without_rail.png" alt="rail preview"></amp-img>
-     #+HTML: </div>
+     #+html: <div class="col-7 px2 mx-auto">
+     #+html: <amp-img layout="responsive" width=640 height=400 src="https://uwabami.github.io/software/rail/images/wanderlust_with_or_without_rail.png" alt="rail preview"></amp-img>
+     #+html: </div>
 
-     #+BEGIN_SRC emacs-lisp :tangle init-wl.el
+     #+begin_src emacs-lisp :tangle init-wl.el
 (eval-when-compile (require 'mime-def))
 (use-package rail
   :config
   (setq rail-emulate-genjis t))
-     #+END_SRC
+     #+end_src
 **** cp5022x を使う
      ISO-2022-JP を CP50220 として扱う.
      [[http://d.hatena.ne.jp/kiwanami/20091103/1257243524][Wanderlustと文字コード]] も参照のこと.
-     #+BEGIN_SRC emacs-lisp :tangle init-wl.el
+     #+begin_src emacs-lisp :tangle init-wl.el
 (add-to-list 'mime-charset-coding-system-alist '(iso-2022-jp . cp50220))
 (setq wl-mime-charset 'iso-2022-jp)
-     #+END_SRC
+     #+end_src
 **** elscreen-wl
      メール作成時に =elscreen= と連携してくれる．便利
-     #+BEGIN_SRC emacs-lisp :tangle init-wl.el
+     #+begin_src emacs-lisp :tangle init-wl.el
 ; (use-package elscreen-wl)
-     #+END_SRC
+     #+end_src
 **** SEMI の追加設定
      HTML メールを表示するために eww を使う.
      mime-setup がロードされる前に記述する必要あり.
-     #+BEGIN_SRC emacs-lisp :tangle init-wl.el
+     #+begin_src emacs-lisp :tangle init-wl.el
 (setq mime-view-text/html-previewer 'shr)
 (setq mime-setup-enable-inline-html 'shr)
 ;; 幅指定 → 実際の関数は eww の設定を参照
@@ -1313,43 +1312,43 @@ File.open(src, "r") {|f|
             'my:mime-shr-preview-text/html)
 ;;
 (use-package mime-setup)
-     #+END_SRC
+     #+end_src
      どのアプリケーションで開くか → =xdg-open= に丸投げ．
-     #+BEGIN_SRC emacs-lisp :tangle init-wl.el
+     #+begin_src emacs-lisp :tangle init-wl.el
 ;; (setq mime-view-mailcap-files '("~/.mailcap"))
-     #+END_SRC
+     #+end_src
      =~/.mailcap= 自体は以下
-     #+BEGIN_SRC conf :tangle no
+     #+begin_src conf :tangle no
 applications/*; xdg-open %s;
 image/*; xdg-open %s;
 video/*; xdg-open %s;
-     #+END_SRC
+     #+end_src
      MIME の例の保存先の変更
-     #+BEGIN_SRC emacs-lisp :tangle init-wl.el
+     #+begin_src emacs-lisp :tangle init-wl.el
 (setq mime-situation-examples-file
       (concat my:d:tmp "mime-example"))
-     #+END_SRC
+     #+end_src
      text/plain を html より優先
-     #+BEGIN_SRC emacs-lisp :tangle no
+     #+begin_src emacs-lisp :tangle no
 (setq mime-view-type-subtype-score-alist
       '(((text . plain) . 0)
         ((text . html)  . 1)
         ))
-     #+END_SRC
+     #+end_src
      音を鳴らすアレやコレの無効化
-    #+BEGIN_SRC emacs-lisp :tangle init-wl.el
+    #+begin_src emacs-lisp :tangle init-wl.el
 (setq mime-play-find-every-situations nil
       mime-play-delete-file-immediately nil
       process-connection-type nil)
-    #+END_SRC
+    #+end_src
 *** 個人情報の設定
     具体的な設定内容は以下のファイルに置いている
-     #+BEGIN_SRC emacs-lisp :tangle init-wl.el
+     #+begin_src emacs-lisp :tangle init-wl.el
      (load (concat my:d:password-store "/wl-info.gpg"))
-     #+END_SRC
+     #+end_src
     設定している内容は以下の通り
 **** 自身のメールアドレスと購読メーリングリストの設定
-     #+BEGIN_SRC emacs-lisp :tangle no
+     #+begin_src emacs-lisp :tangle no
 ;; From: の設定
 (setq wl-from (concat user-full-name " <" user-mail-address ">"))
 ;; (system-name) が FQDN を返さない場合、
@@ -1368,28 +1367,28 @@ video/*; xdg-open %s;
         "emacs-mime-ja@m17n.org"
         ;; "ml@example.com" ...
         ))
-     #+END_SRC
+     #+end_src
 **** 送受信用サーバの設定
      受信(IMAP)
-     #+BEGIN_SRC emacs-lisp :tangle no
+     #+begin_src emacs-lisp :tangle no
 (setq elmo-imap4-default-server "your imap server")
 (setq elmo-imap4-default-port '993)
 (setq elmo-imap4-default-stream-type 'ssl)
-     #+END_SRC
+     #+end_src
      送信(SMTP)
-     #+BEGIN_SRC emacs-lisp :tangle no
+     #+begin_src emacs-lisp :tangle no
 (setq wl-smtp-posting-server "your smtp server")
 (setq wl-smtp-posting-user "your account")
 (setq wl-smtp-posting-port 587)
 (setq wl-smtp-connection-type 'starttls)
 (setq wl-smtp-authenticate-type "login")
-     #+END_SRC
+     #+end_src
 **** From に応じて送信サーバをきりかえる.
      本来はメール作成時/返信時の template の切り替えなのだれど,
      送信時の SMTP の設定を from に合わせてきりかえるようにする.
      default に二重に指定しているのは，
      一度別のアカウントに切り替えた後に再びトグルして戻って来た際に元に戻す(上書き)するため.
-     #+BEGIN_SRC emacs-lisp :tangle no
+     #+begin_src emacs-lisp :tangle no
 (setq wl-template-alist
       '(("default"
          ("From" . wl-from)
@@ -1426,210 +1425,210 @@ video/*; xdg-open %s;
          (wl-smtp-authenticate-type . 'nil)
          )
         ))
-     #+END_SRC
+     #+end_src
      ssh tunnel を自動的にやる事はできないモンだろうか
      (送信時に open して, 送信後に close する, みたいなの).
 
      ついでに template の切り替えに関して幾つか設定.
-      #+BEGIN_SRC emacs-lisp :tangle init-wl.el
+      #+begin_src emacs-lisp :tangle init-wl.el
 ;; template 切り替え時に 内容を表示
 (setq wl-template-visible-select t)
-      #+END_SRC
+      #+end_src
       =draft-mode= で =C-c C-n= をするとテンプレートを切り替え
-      #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
+      #+begin_src emacs-lisp  :tangle init-wl.el
 (define-key wl-draft-mode-map "\C-c\C-n" 'wl-template-select)
-      #+END_SRC
+      #+end_src
       from に応じて wl-from, wl-envelope-from,
       送信 smtp サーバを変更する送信時に変更
-     #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
+     #+begin_src emacs-lisp  :tangle init-wl.el
 (add-hook 'wl-draft-send-hook
           (lambda ()
             (set (make-local-variable 'wl-from)
                  (std11-fetch-field "From"))))
-     #+END_SRC
+     #+end_src
      送信時に自動的に wl-draft-config-alist を適用...しない?
-     #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
+     #+begin_src emacs-lisp  :tangle init-wl.el
 (remove-hook 'wl-draft-send-hook 'wl-draft-config-exec)
-     #+END_SRC
+     #+end_src
 *** 基本設定
 **** imap 関連
      デフォルトの認証設定
      フォルダ名は UTF-7 でエンコードされているので,
      表示する際にこれをデコードする
-     #+BEGIN_SRC emacs-lisp :tangle init-wl.el
+     #+begin_src emacs-lisp :tangle init-wl.el
 (setq elmo-imap4-use-modified-utf7 t)
-     #+END_SRC
+     #+end_src
 **** 非同期チェック
-     #+BEGIN_SRC emacs-lisp :tangle init-wl.el
+     #+begin_src emacs-lisp :tangle init-wl.el
 (setq wl-folder-check-async t)
-     #+END_SRC
+     #+end_src
 **** フォルダの位置の default からの変更
      =~/.cache/wanderlust/= に集約している
      local の Mail folder の位置
-     #+BEGIN_SRC emacs-lisp :tangle init-wl.el
+     #+begin_src emacs-lisp :tangle init-wl.el
 (setq elmo-maildir-folder-path "~/.cache/wanderlust"
       elmo-localdir-folder-path "~/.cache/wanderlust/local")
-     #+END_SRC
+     #+end_src
      local フォルダの設定:
      =.lost+found= は =elmo-maildir-folder-path= からの相対パスになっていることに注意
-     #+BEGIN_SRC emacs-lisp :tangle init-wl.el
+     #+begin_src emacs-lisp :tangle init-wl.el
 (setq elmo-lost+found-folder ".lost+found")
 (setq wl-queue-folder "+queue")
-     #+END_SRC
+     #+end_src
      folders の位置の変更
-     #+BEGIN_SRC emacs-lisp :tangle init-wl.el
+     #+begin_src emacs-lisp :tangle init-wl.el
 (setq wl-folders-file (concat my:d:password-store "/wl-folders.gpg"))
-     #+END_SRC
+     #+end_src
      Drafts, Trash の置き場所
-     #+BEGIN_SRC emacs-lisp :tangle init-wl.el
+     #+begin_src emacs-lisp :tangle init-wl.el
 (setq wl-draft-folder "+Drafts")
 (setq wl-trash-folder "+Trash")
 (setq elmo-lost+found-folder "+lost+found")
 (setq wl-temporary-file-directory "~/Downloads/")
-     #+END_SRC
+     #+end_src
      アドレス帳
-     #+BEGIN_SRC emacs-lisp :tangle init-wl.el
+     #+begin_src emacs-lisp :tangle init-wl.el
 (setq wl-use-petname t)
 (setq wl-address-file  "~/.mua/Address")
-     #+END_SRC
+     #+end_src
      LDAP サーバからアドレスを引くことも可能.
      以前は GCALDaemon を使って local に ldap サーバを上げていたのだけれども,
      Google Contacts の API が変わったらしく
      GCALDaemon で LDAP サーバは使えなくなったのでコメントアウト.
-     #+BEGIN_SRC emacs-lisp :tangle no
+     #+begin_src emacs-lisp :tangle no
 (setq wl-use-ldap t)
 (setq wl-ldap-server "localhost")
 (setq wl-ldap-port "389")
 (setq wl-ldap-base "dc=math,dc=kyoto-u,dc=ac,dc=jp")
-     #+END_SRC
+     #+end_src
      パスワードの保存先
-     #+BEGIN_SRC emacs-lisp :tangle init-wl.el
+     #+begin_src emacs-lisp :tangle init-wl.el
 (setq elmo-passwd-alist-file-name (concat my:d:password-store "/wl-passwd.gpg"))
-     #+END_SRC
+     #+end_src
 **** フォルダ編集時に backup を作成しない.
-     #+BEGIN_SRC emacs-lisp :tangle init-wl.el
+     #+begin_src emacs-lisp :tangle init-wl.el
 (setq wl-fldmgr-make-backup nil)
-     #+END_SRC
+     #+end_src
 **** FCC, BCC の設定
-     #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
+     #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-fcc nil)
      ;; (setq wl-fcc "%Sent")
-     #+END_SRC
+     #+end_src
      fcc を既読にする場合は以下．=wl-fcc= が nil の場合には意味は無い
-     #+BEGIN_SRC emacs-lisp   :tangle init-wl.el
+     #+begin_src emacs-lisp   :tangle init-wl.el
 (setq wl-fcc-force-as-read t)
-     #+END_SRC
+     #+end_src
      bcc は常に自身に.
-      #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
+      #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-bcc (concat user-mail-address))
-      #+END_SRC
+      #+end_src
 **** 起動時に =%INBOX= のみをチェック
-     #+BEGIN_SRC emacs-lisp   :tangle init-wl.el
+     #+begin_src emacs-lisp   :tangle init-wl.el
 (setq wl-auto-check-folder-name "%INBOX")
-     #+END_SRC
+     #+end_src
 **** フォルダ選択時の初期設定
      imap の namespace を毎度入力するのが面倒なので，これを追加しておく.
-     #+BEGIN_SRC emacs-lisp   :tangle init-wl.el
+     #+begin_src emacs-lisp   :tangle init-wl.el
 (setq wl-default-spec "%")
-     #+END_SRC
+     #+end_src
 **** confirm 関連の設定
      スキャン時の問い合わせの無効化.
      ちなみに confirm を nil にしても 問い合わせが無いだけで
      threshold は効くので, 明示的に nil に.
-     #+BEGIN_SRC emacs-lisp   :tangle init-wl.el
+     #+begin_src emacs-lisp   :tangle init-wl.el
 (setq elmo-folder-update-confirm nil)
 (setq elmo-folder-update-threshold nil)
 (setq elmo-message-fetch-confirm nil)
 (setq elmo-message-fetch-threshold nil)
 (setq wl-prefetch-confirm nil)
 (setq wl-prefetch-threshold nil)
-     #+END_SRC
+     #+end_src
      終了時に確認しない
-     #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
+     #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-interactive-exit nil)
-     #+END_SRC
+     #+end_src
      送信時は確認する
-     #+BEGIN_SRC emacs-lisp :tangle init-wl.el
+     #+begin_src emacs-lisp :tangle init-wl.el
 (setq wl-interactive-send t)
-     #+END_SRC
+     #+end_src
 **** misc.
      大きいメッセージを送信時に分割しない
-     #+BEGIN_SRC emacs-lisp   :tangle init-wl.el
+     #+begin_src emacs-lisp   :tangle init-wl.el
 (setq mime-edit-split-message nil)
-     #+END_SRC
+     #+end_src
      スレッドは常に閉じる
-     #+BEGIN_SRC emacs-lisp   :tangle init-wl.el
+     #+begin_src emacs-lisp   :tangle init-wl.el
 (setq wl-thread-insert-opened nil)
-     #+END_SRC
+     #+end_src
      3 pain 表示 -> 使わない
-     #+BEGIN_SRC emacs-lisp   :tangle init-wl.el
+     #+begin_src emacs-lisp   :tangle init-wl.el
 (setq wl-stay-folder-window nil)
-     #+END_SRC
+     #+end_src
      未読を優先的に読む
-     #+BEGIN_SRC emacs-lisp   :tangle init-wl.el
+     #+begin_src emacs-lisp   :tangle init-wl.el
 (setq wl-summary-move-order 'unread)
-     #+END_SRC
+     #+end_src
      改ページ無視
-     #+BEGIN_SRC emacs-lisp   :tangle init-wl.el
+     #+begin_src emacs-lisp   :tangle init-wl.el
 (setq wl-break-pages nil)
-     #+END_SRC
+     #+end_src
      icon を使わない → GUI でもメニュー表示してないし, 体感的には遅くなる
-     #+BEGIN_SRC emacs-lisp   :tangle init-wl.el
+     #+begin_src emacs-lisp   :tangle init-wl.el
 (setq wl-highlight-folder-with-icon nil)
-     #+END_SRC
+     #+end_src
 **** dispose, delete の設定
      Gmail用に%INBOXでは削除を =wl-trash-folder= への移動ではなく，「delete」に．
-     #+BEGIN_SRC emacs-lisp   :tangle init-wl.el
+     #+begin_src emacs-lisp   :tangle init-wl.el
 (add-to-list 'wl-dispose-folder-alist
              '("^%INBOX" . remove))
-     #+END_SRC
+     #+end_src
      迷惑メール関連も
-     #+BEGIN_SRC emacs-lisp   :tangle init-wl.el
+     #+begin_src emacs-lisp   :tangle init-wl.el
 (add-to-list 'wl-dispose-folder-alist
              '(".*Junk$" . remove))
-     #+END_SRC
+     #+end_src
 **** 折り返しの設定
      message は折り返す.
-     #+BEGIN_SRC emacs-lisp   :tangle init-wl.el
+     #+begin_src emacs-lisp   :tangle init-wl.el
 (setq wl-message-truncate-lines nil)
-     #+END_SRC
+     #+end_src
      draft も折り返す
-     #+BEGIN_SRC emacs-lisp   :tangle init-wl.el
+     #+begin_src emacs-lisp   :tangle init-wl.el
 (setq wl-draft-truncate-lines nil)
-     #+END_SRC
+     #+end_src
 **** mode-line の設定
      長いと嫌なのでイロイロ削る
-     #+BEGIN_SRC emacs-lisp   :tangle init-wl.el
+     #+begin_src emacs-lisp   :tangle init-wl.el
 (setq wl-summary-mode-line-format "") ; "%f {%t}(%n/%u/%a)"
 (setq wl-message-mode-line-format "") ; "<< %f:%F>> [%m]"
-     #+END_SRC
+     #+end_src
 *** キーバインド関連
     =use-package= で設定しておいた方が良いかなぁ...
     =C-c C-j= を browse-url に明け渡す
-    #+BEGIN_SRC emacs-lisp :tangle init-wl.el
+    #+begin_src emacs-lisp :tangle init-wl.el
 (define-key wl-draft-mode-map "\C-c\C-j" 'browse-url-at-point)
-    #+END_SRC
+    #+end_src
     =M-u= で unread にする
-    #+BEGIN_SRC emacs-lisp :tangle init-wl.el
+    #+begin_src emacs-lisp :tangle init-wl.el
 (define-key wl-summary-mode-map "\M-u" 'wl-summary-mark-as-unread)
-    #+END_SRC
+    #+end_src
     =i= で sync <- Mew 風
-    #+BEGIN_SRC emacs-lisp :tangle init-wl.el
+    #+begin_src emacs-lisp :tangle init-wl.el
 (define-key wl-summary-mode-map "i" 'wl-summary-sync-update)
-    #+END_SRC
+    #+end_src
     =C-o= は elscreen で使う
-    #+BEGIN_SRC emacs-lisp :tangle init-wl.el
+    #+begin_src emacs-lisp :tangle init-wl.el
 (define-key wl-summary-mode-map "\C-o" nil )
-    #+END_SRC
+    #+end_src
     =M-o= で =auto-refile=  (Mew 風)
-    #+BEGIN_SRC emacs-lisp :tangle init-wl.el
+    #+begin_src emacs-lisp :tangle init-wl.el
 (define-key wl-summary-mode-map "\M-o" 'wl-summary-auto-refile)
-    #+END_SRC
+    #+end_src
 *** flag とフォルダを行き来する関数の追加
     "=" でフラグ付きフォルダと
     実際にメッセージのあるフォルダを行き来する.
     Gmail の「スター付き」フォルダでも有効
-    #+BEGIN_SRC emacs-lisp :tangle init-wl.el
+    #+begin_src emacs-lisp :tangle init-wl.el
 (require 'elmo nil 'noerror)
 (defun my:wl-summary-jump-to-referer-message ()
   (interactive)
@@ -1650,40 +1649,40 @@ video/*; xdg-open %s;
       (when (eq (elmo-folder-type wl-summary-last-visited-folder) 'internal)
         (wl-summary-goto-last-visited-folder)))))
 (define-key wl-summary-mode-map "=" 'my:wl-summary-jump-to-referer-message)
-    #+END_SRC
+    #+end_src
 *** summary-mode の表示のカスタマイズ
 **** 自分が差出人である mail は To:某 と表示
-     #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
+     #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-summary-showto-folder-regexp ".*")
 (setq wl-summary-from-function 'wl-summary-default-from)
-     #+END_SRC
+     #+end_src
 **** サマリ行の表示関連
      サマリ行のフォーマット指定
-     #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
+     #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-summary-line-format
       "%T%P%1@%1>%Y/%M/%D %21(%t%[%19(%c %f%)%]%) %#%~%s"
       wl-summary-width 84)
-     #+END_SRC
+     #+end_src
      サマリ表示は切り詰めない
-     #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
+     #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-subject-length-limit t)
-     #+END_SRC
+     #+end_src
      スレッドの幅の指定
-     #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
+     #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-thread-indent-level 2)
 (setq wl-thread-have-younger-brother-str "+"
       wl-thread-youngest-child-str "+"
       wl-thread-vertical-str "|"
       wl-thread-horizontal-str "-"
       wl-thread-space-str " ")
-     #+END_SRC
+     #+end_src
 
      以下の二つの設定を有効にするには
      =elmo-msgdb-extra-fields= を設定する必要がある.
      この変数は振り分け判定にも使用するのでそこで設定している
 **** Gmail 風に, 自分宛のメールに ">" をつけて表示する
      元ネタ [[http://d.hatena.ne.jp/khiker/20080206/wanderlust]]
-     #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
+     #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-user-mail-address-regexp "^uwabami.*\\|^sasakyh.*")
 ;; 一覧表示での置き換え規則に追加
 (defun my:wl-summary-line-for-me ()
@@ -1704,15 +1703,15 @@ video/*; xdg-open %s;
 (setq wl-summary-line-format-spec-alist
       (append wl-summary-line-format-spec-alist
               '((?> (my:wl-summary-line-for-me)))))
-     #+END_SRC
+     #+end_src
 **** 添付ファイルがあったら, サマリ行に @ を付ける
-     #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
+     #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-summary-line-format-spec-alist
       (append wl-summary-line-format-spec-alist
               '((?@ (wl-summary-line-attached)))))
-     #+END_SRC
+     #+end_src
 **** クォートされた文字列もデコードする
-     #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
+     #+begin_src emacs-lisp  :tangle init-wl.el
 (setq mime-header-lexical-analyzer
       '(
         ;; eword-analyze-quoted-string
@@ -1722,28 +1721,28 @@ video/*; xdg-open %s;
         eword-analyze-special
         eword-analyze-encoded-word
         eword-analyze-atom))
-     #+END_SRC
+     #+end_src
 **** Subject が変わってもスレッドを切らない
-     #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
+     #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-summary-divide-thread-when-subject-changed nil)
-     #+END_SRC
+     #+end_src
 **** Subject での Tab や複数スペースを無視
-     #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
+     #+begin_src emacs-lisp  :tangle init-wl.el
 (defadvice std11-unfold-string (after simply activate)
   (setq ad-return-value
         (elmo-replace-in-string ad-return-value "[ \t]+" " ")))
-     #+END_SRC
+     #+end_src
 **** 重複メッセージを非表示に
      フォルダ内の Message-ID が同じメールを非表示にする
-     #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
+     #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-folder-process-duplicates-alist
       '(
         (".*" . hide)
         ))
-     #+END_SRC
+     #+end_src
 **** sort 順: 返信が来た順
      =flet= を書き換えるのが面倒で =el-x= にある =dflet= を使うように変更
-    #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
+    #+begin_src emacs-lisp  :tangle init-wl.el
 (use-package el-x :ensure t)
 (defun wl-summary-overview-entity-compare-by-reply-date (a b)
   "Compare message A and B by latest date of replies including thread."
@@ -1769,16 +1768,16 @@ video/*; xdg-open %s;
      (max-reply-date (thread-get-family (elmo-message-entity-number b))))))
 (add-to-list 'wl-summary-sort-specs 'reply-date)
 (setq wl-summary-default-sort-spec 'reply-date)
-    #+END_SRC
+    #+end_src
 *** 振り分け設定
     =$= 以外を振り分け対象に
-    #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
+    #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-summary-auto-refile-skip-marks '("$"))
-    #+END_SRC
+    #+end_src
 **** 振り分け判定に使用するヘッダ
      添付の有無の表示にも使うので =Content-Type= も登録.
      あと =Delivered-To= はメールの検索の時に結構重宝している.
-     #+BEGIN_SRC emacs-lisp :tangle init-wl.el
+     #+begin_src emacs-lisp :tangle init-wl.el
 (setq elmo-msgdb-extra-fields
       '(
         "List-Post"
@@ -1800,14 +1799,14 @@ video/*; xdg-open %s;
         "Reply-To"
         "Auto-Submitted"            ;; Git commit/Cron notify
         ))
-     #+END_SRC
+     #+end_src
 *** メッセージ表示
 **** いったん全て非表示に
-     #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
+     #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-message-ignored-field-list '("^.*:"))
-     #+END_SRC
+     #+end_src
 **** 見たいヘッダだけ表示
-     #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
+     #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-message-visible-field-list
       '("^Subject:"
         "^From:"
@@ -1816,10 +1815,10 @@ video/*; xdg-open %s;
         "^Date:"
         "^Message-ID:"
         ))
-     #+END_SRC
+     #+end_src
 **** 表示順の変更
      Mew 風...
-     #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
+     #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-message-sort-field-list
       '("^Subject:"
         "^From:"
@@ -1828,21 +1827,21 @@ video/*; xdg-open %s;
         "^Date:"
         "^Message-ID:"
         ))
-     #+END_SRC
+     #+end_src
 **** From, To を省略表示しない
      To や From にアドレスが沢山指定されていると省略されるので，これを無効化
-     #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
+     #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-message-use-header-narrowing nil)
-     #+END_SRC
+     #+end_src
 *** 作成/返信設定
     自分宛のメールに返信する場合は =To:=, =Cc:= から自分のアドレスを削除
-    #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
+    #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-draft-always-delete-myself t)
-    #+END_SRC
+    #+end_src
     "a" (without-argument)では =Reply-To:= や =From:= などで
     指定された唯一人または唯一つの投稿先に返信.
     また, =X-ML-Name:= と =Reply-To:= がついているなら =Reply-To:= 宛に返信
-    #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
+    #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-draft-reply-without-argument-list
       '((("X-ML-Name" "Reply-To") . (("Reply-To") nil nil))
         ("X-ML-Name" . (("To" "Cc") nil nil))
@@ -1851,35 +1850,35 @@ video/*; xdg-open %s;
         ("Reply-To" . (("Reply-To") nil nil))
         ("Mail-Reply-To" . (("Mail-Reply-To") nil nil))
         ("From" . (("From") nil nil))))
-    #+END_SRC
+    #+end_src
     =C-u a= (with-argument)であれば関係する全ての人・投稿先に返信
-    #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
+    #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-draft-reply-with-argument-list
       '(("Followup-To" . (("From") nil ("Followup-To")))
         ("Newsgroups" . (("From") nil ("Newsgroups")))
         ("Mail-Followup-To" . (("Mail-Followup-To") nil ("Newsgroups")))
         ("From" . (("From") ("To" "Cc") ("Newsgroups")))))
-    #+END_SRC
+    #+end_src
     サマリ表示には petname を使うが, 引用には使わない
-    #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
+    #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-default-draft-cite-decorate-author nil)
-    #+END_SRC
+    #+end_src
 **** メール本文の文字コード
      丸囲み数字なんかが入ってしまうと
      勝手にエンコーディングが変わってしまって鬱陶しい. どうしたモンだろうかね.
-     #+BEGIN_SRC emacs-lisp :tangle no
+     #+begin_src emacs-lisp :tangle no
 (add-hook 'wl-draft-mode-hook
           (lambda ()
             (add-to-list 'mime-charset-type-list '(utf-8 8 nil))))
-     #+END_SRC
+     #+end_src
 **** draft mode で orgtbl を有効に
-     #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
+     #+begin_src emacs-lisp  :tangle init-wl.el
 (add-hook 'wl-draft-mode-hook 'turn-on-orgtbl)
-     #+END_SRC
+     #+end_src
 **** c-sig
      署名の選択に c-sig を使用している.
      設定は以下の通り. Mew 風に =C-c <tab>= で signature を挿入するようにしている
-     #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
+     #+begin_src emacs-lisp  :tangle init-wl.el
 (use-package c-sig
   :init
   :config
@@ -1893,10 +1892,10 @@ video/*; xdg-open %s;
                (define-key (current-local-map) "\C-c\C-w"
                  'insert-signature-eref)))
   )
-     #+END_SRC
+     #+end_src
 *** Face の設定
     デフォルトより細かく指定するために幾つかの face 定義を追加.
-   #+BEGIN_SRC emacs-lisp :tangle init-wl.el
+   #+begin_src emacs-lisp :tangle init-wl.el
 (setq wl-highlight-message-header-alist
       '(("Subject[ \t]*:"
          . wl-highlight-message-subject-header-contents)
@@ -1971,7 +1970,7 @@ video/*; xdg-open %s;
 (my:wl-set-face 'wl-highlight-summary-thread-top-face             '((t (:foreground "#F6F3E8" :bold t :italic nil :weight normal ))))
 ;; (my:wl-set-face 'wl-highlight-summary-unread-face                 '((t (:foreground "#ff4c4c" :bold nil :italic nil :weight normal ))))
 ;; (my:wl-set-face 'wl-highlight-thread-indent-face                  '((t (:underline t :bold nil :italic nil :weight normal ))))
-   #+END_SRC
+   #+end_src
 *** GPG 署名
     以前は mailcrypt を使っていたけれど,
     epa があるので主にキーバインドの設定のみ.
@@ -1980,7 +1979,7 @@ video/*; xdg-open %s;
 
     もっとうまい方法/正攻法がありそうな気がするけれど,
     使えてるから, まあ良いかな, とか.
-    #+BEGIN_SRC emacs-lisp :tangle init-wl.el
+    #+begin_src emacs-lisp :tangle init-wl.el
 (setq mime-pgp-verify-when-preview nil)
 (defun my:epa-wl-decrypt-message ()
   (interactive)
@@ -1998,10 +1997,10 @@ video/*; xdg-open %s;
 (bind-keys :map wl-draft-mode-map
            ("C-c : s" . epa-mail-sign)
            ("C-c : e" . epa-mail-encrypt))
-    #+END_SRC
+    #+end_src
 *** 検索
     notmuchを使う.
-    #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
+    #+begin_src emacs-lisp  :tangle init-wl.el
 (use-package elmo-search
   :bind (:map wl-summary-mode-map
               ("v" . wl-quicksearch-goto-search-folder-wrapper)
@@ -2023,9 +2022,9 @@ video/*; xdg-open %s;
   (setq elmo-search-default-engine 'notmuch-custom)
   (setq wl-quicksearch-folder "[]")
   )
-    #+END_SRC
+    #+end_src
     実際の呼び出しはスレッドを全部取得したいので以下を呼び出している
-    #+BEGIN_SRC sh :tangle no
+    #+begin_src sh :tangle no
 #!/bin/sh
 if [ ! x"$*" = x"" ] ; then
     res=$(notmuch search --output=threads "$*")
@@ -2033,15 +2032,15 @@ fi
 if [ ! x"$res" = x"" ] ; then
     echo $res | xargs notmuch search --sort=oldest-first --output=files
 fi
-    #+END_SRC
+    #+end_src
     検索時にメールが多すぎると怒られるので. 数字は適当.
-    #+BEGIN_SRC emacs-lisp  :tangle init-wl.el
+    #+begin_src emacs-lisp  :tangle init-wl.el
 (setq elmo-multi-divide-number 2000000000)
 (setq elmo-multi-number 2000000000)
-    #+END_SRC
+    #+end_src
 ** Linux Desktop で =mailto:= リンクを扱うために
   ついでに =mailto= のリンクを emacsclient で扱うために，以下の関数を定義しておく
-  #+BEGIN_SRC emacs-lisp
+  #+begin_src emacs-lisp
 (defun my:mailto-compose-mail (mailto-url)
   (if (and (stringp mailto-url)
            (string-match "\\`mailto:" mailto-url))
@@ -2052,9 +2051,9 @@ fi
                (good-headers (remove-if (lambda (h) (member (car h) '(Body))) headers))
                (body (cdr (assoc 'Body headers))))
           (wl-draft good-headers nil nil body)))))
-  #+END_SRC
+  #+end_src
   Desktop の設定では
-  #+BEGIN_SRC sh :tangle no
+  #+begin_src sh :tangle no
 #!/bin/sh
 # emacs-mailto-handler
 
@@ -2065,11 +2064,11 @@ elisp_expr="(my:mailto-compose-mail \"$mailto\")"
 
 emacsclient -a "" -n --eval "$elisp_expr" \
 	'(set-window-dedicated-p (selected-window) t)'
-  #+END_SRC
+  #+end_src
   をメーラとして指定すれば良い．
   GNOME は =.desktop= ファイルが無いと「お気に入り」登録ができないので
   以下のファイルを適当な名前で =~/.local/share/applications/= 以下に放り込んでおくと良いだろう
-  #+BEGIN_SRC conf :tangle no
+  #+begin_src conf :tangle no
 [Desktop Entry]
 Name=Emacs Mail Handler
 GenericName=Mail User Agent
@@ -2083,9 +2082,9 @@ Type=Application
 Categories=GNOME;GTK;Office;Email;
 StartupNotify=false
 MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
-  #+END_SRC
+  #+end_src
 ** メールからの予定の取り込み: =mhc=
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (use-package mhc
   :if (file-directory-p (concat (getenv "HOME") "/.config/mhc"))
   :ensure t
@@ -2094,10 +2093,10 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         mhc-calendar-header-function 'mhc-calendar-make-header-ja
         mhc-calendar-language 'japanese)
   )
-   #+END_SRC
+   #+end_src
 * カレンダー: =japanese-holidays=
   日本の祝日を表示するために =japanese-holidays= をインストール
-  #+BEGIN_SRC emacs-lisp
+  #+begin_src emacs-lisp
 (use-package japanese-holidays
   :ensure t
   :init
@@ -2122,14 +2121,14 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         calendar-week-start-day 0)
   (calendar-set-date-style 'iso)
   )
-  #+END_SRC
+  #+end_src
 * Org
   =org-mode= が無いと生きていけない体になりました
 ** 基本設定: =org=
    目新しい設定はしていない，と思う．強いて言えば
    以前のメモの整理のために [[http://howm.osdn.jp/index-j.html][howm: Hitori Otegaru Wiki Modoki]] も使っていたので,
    howm も有効にしている，ぐらい．
-   #+BEGIN_SRC emacs-lisp
+   #+begin_src emacs-lisp
 (defvar my:d:org (concat (getenv "HOME") "/Nextcloud/org/"))
 (use-package org
   :bind (("C-x n s" . org-narrow-to-subtree)
@@ -2187,19 +2186,35 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   ;;  org-mode では ＃+DATE: をひっかける用に(＃は小文字)．
   (defun my:org-timestamp-hook ()
     "Change `time-stamp-start' in org-mode"
-    (set (make-local-variable 'time-stamp-start) "#\\+DATE: 2")
+    (set (make-local-variable 'time-stamp-start) "#\\+date: 2")
     (set (make-local-variable 'time-stamp-end)   "\$")
     )
   (add-hook 'org-mode-hook 'my:org-timestamp-hook)
   )
-   #+END_SRC
+   #+end_src
+** Babel
+   #+begin_src emacs-lisp
+(use-package org-src
+  :diminish org-src-mode
+  :config
+  (setq org-src-fontify-natively t       ;; font-lock
+        org-src-tab-acts-natively t      ;; indent
+        org-edit-src-content-indentation 0
+        org-src-preserve-indentation t
+        )
+  (when (featurep 'flycheck)
+    (defun my:disable-fylcheck-in-org-src-block ()
+      (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc)))
+    (add-hook 'org-src-mode-hook 'my:disable-fylcheck-in-org-src-block))
+  )
+   #+end_src
 ** Agenda: スケジュール，TODO 表示
    GTD 用の設定．後述の =org-gcal= と =orgmine= で取得したデータも表示している．
    ついでに
     - 土曜日をの face を追加.
     - 祝日, 休日を日曜と同じfaceにする.
    なんて事もやっている．元ネタは [[https://julien.danjou.info/blog/2010/org-mode-and-holidays][Org-mode and holidays]]
-  #+BEGIN_SRC emacs-lisp
+  #+begin_src emacs-lisp
 (use-package org-agenda
   :bind (("C-c a" . org-agenda))
   :init
@@ -2350,82 +2365,83 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                                        '(face org-agenda-date-weekend)))
                 )))
   )
-  #+END_SRC
+  #+end_src
 ** OrgとGoogle カレンダーの連携: =org-gcal=
 *** token 等の置き場所の変更
-    #+BEGIN_SRC emacs-lisp
+    #+begin_src emacs-lisp
 (use-package request
   :ensure t
   :init
   (setq request-storage-directory (concat my:d:tmp "request"))
   (unless (file-directory-p request-storage-directory)
     (make-directory request-storage-directory)))
-    #+END_SRC
+    #+end_src
 *** org-gcal 本体の設定
     実際の情報等は =password-store= を使って設定しておく.
     ついでに agenda 表示の際の色付けを設定．
-    #+BEGIN_SRC emacs-lisp
-      (use-package org-gcal
-        :if (and my:d:password-store
-                 (file-directory-p my:d:org))
-        :defer t
-        :ensure t
-        :init
-        (setq org-gcal-dir (concat my:d:tmp "org-gcal"))
-        (unless org-gcal-dir (make-directory org-gcal-dir))
-        (setq org-gcal-token-file (expand-file-name ".org-gcal-token" org-gcal-dir)
-              alert-log-messages t
-              alert-default-style 'log
-              org-gcal-down-days   90  ;; 過去 3 month
-              org-gcal-up-days    180  ;; 未来 6 month
-              org-gcal-auto-archive nil)
-        (with-eval-after-load "org-gcal"
-          (if (file-directory-p my:d:password-store)
-              (load (concat my:d:password-store "/org-gcal.gpg"))))
-        )
-    #+END_SRC
+    #+begin_src emacs-lisp
+(use-package org-gcal
+  :if (and my:d:password-store
+           (file-directory-p my:d:org))
+  :no-require t
+  :ensure t
+  :init
+  (setq org-gcal-dir (concat my:d:tmp "org-gcal"))
+  (unless org-gcal-dir (make-directory org-gcal-dir))
+  (setq org-gcal-token-file (expand-file-name ".org-gcal-token" org-gcal-dir)
+        alert-log-messages t
+        alert-default-style 'log
+        org-gcal-down-days   90  ;; 過去 3 month
+        org-gcal-up-days    180  ;; 未来 6 month
+        org-gcal-auto-archive nil)
+  (with-eval-after-load "org-gcal"
+    (if (file-directory-p my:d:password-store)
+        (load (concat my:d:password-store "/org-gcal.gpg"))))
+  )
+    #+end_src
     password-store には multiline で設定を書く．例えば以下:
-    #+BEGIN_SRC emacs-lisp :tangle no
+    #+begin_src emacs-lisp :tangle no
 (setq org-gcal-client-id "XXXXXXXXXXX"
       org-gcal-client-secret "XXXXXXXXXXX"
       org-gcal-file-alist
       '(("XXXXX@gmail.com" . "~/org/Schedule.org")
         ("YYYYY@group.calendar.google.com" . "~/org/Project1.org")))
-    #+END_SRC
+    #+end_src
 ** OrgとRedmine の連携: =orgmine=
    素晴しい!!
    [[https://github.com/kametoku/orgmine][kametoku/orgmine: Emacs minor mode for org-mode with redmine integration]]
-   #+BEGIN_SRC emacs-lisp
-     (use-package orgmine
-       :if  (and my:d:password-store
-                 (file-directory-p my:d:org))
-       :diminish (orgmine-mode)
-       :commands (orgmine-mode)
-       :quelpa (orgmine
-                :fetcher github
-                :repo "kametoku/orgmine")
-       :init
-       (use-package elmine :ensure t)
-       (add-to-list 'safe-local-variable-values
-                    '(orgmine-note-block-begin . "#+BEGIN_SRC textile"))
-       (add-hook 'org-mode-hook
-                 (lambda ()
-                   (if (assoc "om_server" org-file-properties) (orgmine-mode))))
-       ;; サーバ設定
-       (with-eval-after-load "orgmine"
-         (if (file-directory-p my:d:password-store)
-             (load (concat my:d:password-store "/orgmine.gpg"))))
-       :config
-       (setq orgmine-note-block-begin "#+BEGIN_SRC gfm"   ;; 要調整
-             orgmine-note-block-end   "#+END_SRC\n"
-             orgmine-default-todo-keyword "新規")
-       )
-   #+END_SRC
+   #+begin_src emacs-lisp
+(use-package orgmine
+  :if  (and my:d:password-store
+            (file-directory-p my:d:org))
+  :no-require t
+  :diminish (orgmine-mode)
+  :commands (orgmine-mode)
+  :quelpa (orgmine
+           :fetcher github
+           :repo "kametoku/orgmine")
+  :init
+  (use-package elmine :ensure t)
+  (add-to-list 'safe-local-variable-values
+               '(orgmine-note-block-begin . "#+begin_src textile"))
+  (add-hook 'org-mode-hook
+            (lambda ()
+              (if (assoc "om_server" org-file-properties) (orgmine-mode))))
+  ;; サーバ設定
+  (with-eval-after-load "orgmine"
+    (if (file-directory-p my:d:password-store)
+        (load (concat my:d:password-store "/orgmine.gpg"))))
+  :config
+  (setq orgmine-note-block-begin "#+begin_src gfm"   ;; 要調整
+        orgmine-note-block-end   "#+end_src\n"
+        orgmine-default-todo-keyword "新規")
+  )
+   #+end_src
 ** Org-Wiki
     計算機関連のメモは [[https://github.com/uwabami/org-wiki][uwabami/org-wiki]] で書いています．元々は
     [[https://github.com/caiorss/org-wiki][caiorss/org-wiki]] を使っていたのですが helm 依存の部分を ido に書き換
     えてます.
-    #+BEGIN_SRC emacs-lisp
+    #+begin_src emacs-lisp
 (use-package org-wiki
   :if (file-directory-p "~/Public/cc-env")
   :no-require t
@@ -2444,10 +2460,10 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 ,#+PERMALINK: /cc-env/%n.html
 Related [[wiki:index][Index]]
 "))
-    #+END_SRC
+    #+end_src
 * フォントと色
   そろそろテーマにした方が良い，とは思ってはいる．
-  #+BEGIN_SRC emacs-lisp
+  #+begin_src emacs-lisp
 (setq ansi-color-names-vector
       [unspecified "#242424" "#FF4c4c" "#4cff4c" "#ffff4c"
                    "#4c4cff" "#ff4cff" "#4cffff" "#f6f3e8"]
@@ -2478,9 +2494,9 @@ Related [[wiki:index][Index]]
         ))
 (when (window-system)
   (my:load-window-config))
-  #+END_SRC
+  #+end_src
   現在修正中．
-  #+BEGIN_SRC emacs-lisp
+  #+begin_src emacs-lisp
 (custom-set-faces
  '(default                             ((t (:foreground "#F6F3E8" ))))
  '(cursor                              ((t (:foreground "#4CFF4C" :background "#4CFF4C" ))))
@@ -2626,10 +2642,10 @@ Related [[wiki:index][Index]]
 ;; '(review-mode-header3-face  ((t (:inherit outline-3))))
 ;; '(review-mode-header4-face  ((t (:inherit outline-4))))
 ;; '(review-mode-header5-face  ((t (:inherit outline-5))))
-  #+END_SRC
+  #+end_src
 * LICENSE
   幾つかの関数の元ネタとして Emacs 本体のコードを参照したので，GPL-3 or later です．
-  #+BEGIN_EXAMPLE
+  #+begin_example
 Copyright (C) 2011--2017 Youhei SASAKI <uwabami@gfd-dennou.org>
 .
 This program is free software: you can redistribute it and/or modify
@@ -2644,4 +2660,4 @@ GNU General Public License for more details.
 .
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
-  #+END_EXAMPLE
+  #+end_example

@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+startup: overview
-#+date: 2019-01-12 10:34:57
+#+date: 2019-01-12 16:01:07
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -1227,6 +1227,7 @@ File.open(src, "r") {|f|
   :if (and (my:dpkg-status "lookup-el")
            (file-exists-p "/usr/local/share/dict/lookup-enabled"))
   :commands (lookup lookup-region lookup-pattern)
+  :no-require t
   :bind (("C-c w" . lookup-pattern)
          ("C-c W" . lookup-word))
   :init
@@ -2687,6 +2688,33 @@ Related [[wiki:index][Index]]
 ;; '(review-mode-header4-face  ((t (:inherit outline-4))))
 ;; '(review-mode-header5-face  ((t (:inherit outline-5))))
   #+end_src
+* =diminish=: モードラインの短縮表示
+  =use-package= で読み込まれているので，可能な限りそちらで指定するように変更．
+  #+BEGIN_SRC emacs-lisp
+(use-package diminish :ensure t)
+(defmacro my:diminish (file mode &optional new-name)
+  "original: https://github.com/larstvei/dot-emacs/blob/master/init.org"
+  `(with-eval-after-load ,file
+     (diminish ,mode ,new-name)))
+(my:diminish "isearch" 'isearch-mode)
+(my:diminish ""        'develock-mode)
+(setq auto-revert-mode-text "")
+  #+END_SRC
+  メジャーモードは =hook= で設定.
+  #+BEGIN_SRC emacs-lisp
+(dolist (hook
+         '(
+           textlie-mode-hook
+           scss-mode-hook
+           emacs-lisp-mode-hook
+           lisp-interaction-mode-hook
+           wl-folder-mode-hook
+           wl-summary-mode-hook
+           wl-draft-mode-hook
+           mime-view-mode-hook
+           ))
+  (add-hook hook '(lambda () (setq mode-name ""))))
+  #+END_SRC
 * LICENSE
   幾つかの関数の元ネタとして Emacs 本体のコードを参照したので，GPL-3 or later です．
   #+begin_example

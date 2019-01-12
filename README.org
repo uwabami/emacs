@@ -1,6 +1,6 @@
 #+TITLE: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
-#+DATE: 2019-01-12 09:26:01
+#+DATE: 2019-01-12 09:30:22
 #+COLUMNS: %25ITEM %TAGS %PRIORITY %TODO
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
@@ -2428,6 +2428,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     #+BEGIN_SRC emacs-lisp
 (use-package org-wiki
   :if (file-directory-p "~/Public/cc-env")
+  :no-require t
+  :commands (org-wiki)
   :quelpa (org-wiki
           :fetcher github
           :repo "uwabami/org-wiki")

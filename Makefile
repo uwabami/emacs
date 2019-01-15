@@ -6,7 +6,13 @@ EL		+= $(shell dpkg -l wl 2>&1 | grep -q ^ii && echo init-wl.el )
 ELC		= $(EL:%.el=%.elc)
 
 all: init.elc $(ELC)
-$(EL): init.el
+$(EL): bootstrap
+bootstrap: tmp/bootstrap-stamp
+tmp/bootstrap-stamp: init.el
+	mkdir -p tmp
+	chmod 700 tmp
+	emacs -q -l init.el --batch --eval '(kill-emacs)'
+	touch $@
 init.el: README.org
 	$(EMACS) -Q -q --batch --eval \
 	   "(progn \

@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+startup: overview
-#+date: 2019-01-12 16:01:07
+#+date: 2019-01-12 16:57:33
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -85,7 +85,7 @@ init.el: README.org
 (eval-when-compile
   (unless (file-exists-p (locate-user-emacs-file "tmp/bootstrap-stamp"))
     (package-refresh-contents)
-    (with-temp-buffer (write-file (locate-user-emacs-file "tmp/bootstrap-stamp")))
+    ;; (with-temp-buffer (write-file (locate-user-emacs-file "tmp/bootstrap-stamp")))
     ))
 (package-initialize)
    #+end_src
@@ -478,6 +478,7 @@ init.el: README.org
    #+begin_src emacs-lisp
 (use-package recentf
   :diminish recentf-mode
+  :defer t
   :init
   (add-hook 'after-init-hook 'recentf-mode)
   (use-package recentf-ext :ensure t :defer t)
@@ -2411,6 +2412,57 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                 )))
   )
   #+end_src
+** Org-journal: 日記
+   単一ファイルに記述すること, および
+   エントリ作成時に日付を入れるために =org-jounnal-new-entry= を =advice= している
+   #+BEGIN_SRC emacs-lisp
+(use-package org-journal
+  :if (and (file-directory-p my:d:org)
+           (>= emacs-major-version 25))
+  :ensure t
+  :init
+  (add-hook 'org-journal-mode-hook
+            (setq truncate-lines t))
+  :config
+  (unbind-key "C-c C-j" org-journal-mode-map)
+  (bind-key   "C-c C-j" 'browse-url-at-point)
+  (setq org-journal-dir my:d:org
+        org-journal-file-format "journal.org"
+        org-journal-date-format "%x (%a)"
+        org-journal-date-prefix "* "
+        org-journal-time-format "<%Y-%m-%d %R> "
+        org-journal-time-prefix "** MEMO "
+        org-journal-find-file 'find-file
+        )
+  (defun my:org-journal-add-date-entry (prefix &optional time)
+    "Insert date entry to `org-journal-file'"
+    (find-file (expand-file-name org-journal-file-format org-journal-dir))
+    (org-journal-decrypt)
+    (unless
+        (string-match (format-time-string org-journal-date-format)
+                      (buffer-substring-no-properties (point-min) (point-max)))
+      (progn
+        (goto-char (point-max))
+        (insert (concat "\n" org-journal-date-prefix
+                        (format-time-string org-journal-date-format)))
+        ))
+    )
+  (advice-add 'org-journal-new-entry :before 'my:org-journal-add-date-entry)
+  )
+;; Key bindings -- 使えてない...
+;; (define-key org-journal-mode-map (kbd "C-c C-f") 'org-journal-open-next-entry)
+;; (define-key org-journal-mode-map (kbd "C-c C-b") 'org-journal-open-previous-entry)
+;; (define-key org-journal-mode-map (kbd "C-c C-j") 'org-journal-new-entry)
+;; (define-key calendar-mode-map "j" 'org-journal-read-entry)
+;; (define-key calendar-mode-map (kbd "C-j") 'org-journal-display-entry)
+;; (define-key calendar-mode-map "]" 'org-journal-next-entry)
+;; (define-key calendar-mode-map "[" 'org-journal-previous-entry)
+;; (define-key calendar-mode-map (kbd "i j") 'org-journal-new-date-entry)
+;; (define-key calendar-mode-map (kbd "f f") 'org-journal-search-forever)
+;; (define-key calendar-mode-map (kbd "f w") 'org-journal-search-calendar-week)
+;; (define-key calendar-mode-map (kbd "f m") 'org-journal-search-calendar-month)
+;; (define-key calendar-mode-map (kbd "f y") 'org-journal-search-calendar-year)))
+   #+END_SRC
 ** OrgとGoogle カレンダーの連携: =org-gcal=
 *** token 等の置き場所の変更
     #+begin_src emacs-lisp
@@ -2530,6 +2582,7 @@ Related [[wiki:index][Index]]
                           :height 180)
       (set-background-color "#242424")
       )))
+(my:load-window-config)
 (setq frame-background-mode (frame-parameter nil 'background-mode))
 (setq default-frame-alist
       '(
@@ -2537,8 +2590,6 @@ Related [[wiki:index][Index]]
         (scroll-bar-foreground-color . "red")
         (vertical-scroll-bars . right)
         ))
-(when (window-system)
-  (my:load-window-config))
   #+end_src
   現在修正中．
   #+begin_src emacs-lisp
@@ -2665,6 +2716,7 @@ Related [[wiki:index][Index]]
  '(org-agenda-date-weekend             ((t (:foreground "#FF7F7F" :bold t))))
  '(org-agenda-calendar-event           ((t (:foreground "#F6F3E8" ))))
  '(org-hide                            ((t (:foreground "#4C4C4C" ))))
+ '(org-block                           ((t (:foreground "#4C4C4C" ))))
  ;;
  ;; moinmoin
  '(moinmoin-h1                         ((t (:inherit outline-1))))

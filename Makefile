@@ -28,3 +28,9 @@ clean:
 distclean: clean
 	rm -fr pkg
 	rm -fr tmp
+
+skk-jisyo: bootstrap
+	mkdir -p tmp/skk-jisyo
+	wget "https://github.com/skk-dev/dict/raw/master/SKK-JISYO.L" \
+		-O tmp/skk-jisyo/SKK-JISYO.L
+

@@ -734,6 +734,27 @@ init.el: README.org
   (unless (server-running-p)
     (server-start)))
    #+end_src
+* 基本的なキーバインドの設定
+  既に手癖になってしまっているアレコレ．
+  特に =[home]= と =[end]= は無いと途方に暮れます．
+  #+BEGIN_SRC emacs-lisp
+(use-package bind-key
+  :config
+  (bind-keys*
+   ("<f2>"    . eww)
+   ("C-h"     . backward-delete-char)
+   ("C-c M-a" . align-regexp)
+   ("C-c ;"   . comment-region)
+   ("C-c M-;" . uncomment-region)
+   ("C-/"     . undo)
+   ("C-x M-b" . ibuffer-other-window)
+   ("C-c M-r" . replace-regexp)
+   ("C-c r"   . replace-string)
+   ("<home>"  . beginning-of-buffer)
+   ("<end>"   . end-of-buffer)
+   ("C-c C-j" . browse-url-at-point)
+   ))
+  #+END_SRC
 * Elscreen
 ** 導入 [0/1]
    modeline の表示そのものは無効化しておく．
@@ -2420,6 +2441,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :if (and (file-directory-p my:d:org)
            (>= emacs-major-version 25))
   :ensure t
+  :after (org)
   :init
   (add-hook 'org-journal-mode-hook
             (setq truncate-lines t))
@@ -2766,6 +2788,14 @@ Related [[wiki:index][Index]]
            mime-view-mode-hook
            ))
   (add-hook hook '(lambda () (setq mode-name ""))))
+  #+END_SRC
+* 起動時間の計測
+  [[http://memo.sugyan.com/entry/20120120/1327037494][起動時間を計測する 改訂版 - すぎゃーんメモ]]
+  #+BEGIN_SRC emacs-lisp
+(add-hook 'after-init-hook
+          (lambda ()
+            (message "init time: %.3f sec"
+                     (float-time (time-subtract after-init-time before-init-time)))))
   #+END_SRC
 * LICENSE
   幾つかの関数の元ネタとして Emacs 本体のコードを参照したので，GPL-3 or later です．

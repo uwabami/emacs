@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+startup: overview
-#+date: 2019-01-12 16:57:33
+#+date: 2019-01-15 18:53:18
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -1092,6 +1092,7 @@ File.open(src, "r") {|f|
   #+begin_src emacs-lisp
 (use-package auto-complete-config
   :ensure auto-complete
+  :diminish auto-complete-mode
   :config
   (ac-flyspell-workaround)
   (ac-set-trigger-key "M-TAB")
@@ -2717,6 +2718,92 @@ Related [[wiki:index][Index]]
   (setq ido-ghq-short-list t)
   )
    #+END_SRC
+* TeX
+** AUCTeX
+   Debian パッケージ版を使う．
+   やっている事は
+   - japanese-latex-mode において, 幾つかのコマンドが追加/上書きされているが， あまり使うことの無いコマンドが表示されるのが嫌なのでそれらを削除．
+   - コンパイルには latexmk を使う
+   と言った所.
+   #+BEGIN_SRC emacs-lisp
+(use-package tex-jp
+  :if (and (executable-find "uplatex")
+           (my:dpkg-status "auctex"))
+  :init (progn
+          (add-hook 'LaTeX-mode-hook #'TeX-source-correlate-mode)
+          (add-hook 'LaTeX-mode-hook #'TeX-PDF-mode)
+          (add-hook 'LaTeX-mode-hook #'turn-on-reftex))
+  :config
+  (add-hook 'LaTeX-mode-hook
+            (function
+             (lambda ()
+               (dolist (command '("pTeX"
+                                  "LaTeX"
+                                  "pLaTeX"
+                                  "pBibTeX"
+                                  "jTeX"
+                                  "jLaTeX"
+                                  "jBibTeX"))
+                 (delq (assoc command TeX-command-list) TeX-command-list))
+               (setq TeX-command-default "LaTeX"
+                     japanese-LaTeX-command-default "LaTeX"
+                     TeX-PDF-mode t
+                     TeX-command-output-list '(("LaTeX" ("pdf")))
+                     )
+               (add-to-list 'TeX-expand-list
+                            '("%(LATEXENC)"
+                              (lambda ()
+                                (let ((str (japanese-TeX-get-encoding-string)))
+                                  (if str (format "%s" str) "")))))
+               (add-to-list 'TeX-command-list
+                            '("LaTeX"
+                              "LATEXENC=%(LATEXENC) latexmk -gg %t"
+                              TeX-run-TeX nil (latex-mode) :help "Run Latexmk")))))
+  (setq TeX-source-correlate-method 'synctex
+        TeX-source-correlate-start-server t
+        TeX-source-correlate-mode t
+        TeX-view-program-selection '((output-dvi "xdvi")
+                                     (output-pdf "Evince")
+                                     (output-html "xdg-open"))
+        TeX-auto-save t
+        TeX-auto-local  (expand-file-name "auctex/auto" my:d:tmp)
+        TeX-style-local (expand-file-name "auctex/style" my:d:tmp)
+        TeX-parse-self t
+        TeX-auto-untabify t
+        font-latex-fontify-script nil
+        font-latex-fontify-sectioning 1.0
+        font-latex-script-display nil
+        reftex-plug-into-AUCTeX t
+        )
+  )
+   #+END_SRC
+   =~/.latexmkrc= は以下の通り
+   #+BEGIN_SRC perl :tangle no
+#!/usr/bin/env perl
+$kanji  = defined $ENV{"LATEXENC"} ? "-kanji=$ENV{\"LATEXENC\"}" : "-kanjii=utf8" ;
+$latex  = "platex -interaction=nonstopmode -src-specials -shell-escape --synctex=1 $kanji";
+$latex_silent = "platex -interaction=batchmode -src-specials -shell-escape --synctex=1 $kanji";
+$bibtex = "pbibtex $kanji";
+$makeindex = "touch -m %D";
+$dvipdf = "dvipdfmx %O -o %D %S";
+$dvips = 'dvips %O -z -f %S | convbkmk -u > %D';
+$ps2pdf = 'ps2pdfwr %O %S %D';
+$pdf_mode = 3;
+$pdf_previewer = 'start xdg-open';
+$pdf_update_method = 0;
+$clean_ext = "snm nav vrb synctex.gz";
+   #+END_SRC
+** Zotero との連携
+   ver.5 以降, 迷走中. 以前ほど楽じゃない気が.
+   #+BEGIN_SRC emacs-lisp
+(use-package emacs-zotero-bib-fetch
+  :quelpa (emacs-zotero-bib-fetch
+           :fetcher url
+           :url "https://gist.githubusercontent.com/andersjohansson/fa7ca643782771b6e15da41514e1358a/raw/25e9f875ef6a34bbdd2c24c34637310596755722/emacs-zotero-bib-fetch.el")
+  :config
+  (add-hook 'TeX-mode-hook 'ezbf-minor-mode)
+  )
+   #+END_SRC
 * フォントと色
   そろそろテーマにした方が良い，とは思ってはいる．
   #+begin_src emacs-lisp
@@ -2875,7 +2962,7 @@ Related [[wiki:index][Index]]
  '(org-agenda-date-weekend             ((t (:foreground "#FF7F7F" :bold t))))
  '(org-agenda-calendar-event           ((t (:foreground "#F6F3E8" ))))
  '(org-hide                            ((t (:foreground "#4C4C4C" ))))
- '(org-block                           ((t (:foreground "#4C4C4C" ))))
+ '(org-block                           ((t (:inherit font-lock-comment-face))))
  ;;
  ;; moinmoin
  '(moinmoin-h1                         ((t (:inherit outline-1))))

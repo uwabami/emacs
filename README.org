@@ -2941,13 +2941,31 @@ Related [[wiki:index][Index]]
            ))
   (add-hook hook '(lambda () (setq mode-name ""))))
   #+END_SRC
-* powerline 本体の設定．
-  default-theme をベースに見たい物だけ表示するようにしてみた．
-  変更点として,
-  - separater は環境によってズレるので，半角スペースに変更
-  - vc-mode でのアイコン表示に U+26A1⚡ High Voltage を使う
-  といった事をしている. East Asian ambiguous Width char の扱いは面倒ですね
-  #+BEGIN_SRC emacs-lisp
+* =powerline=: モードラインを綺麗に
+** ddskk の表示のカスタマイズ
+   SKK の状態がヒョコヒョコ動くのが嫌なので，
+   =skk-modeline-input-mode= に常に現在の状況を表示する様にしておく．
+ #+BEGIN_SRC emacs-lisp
+(defun my:skk-modeline-input-mode ()
+  "skk が読み込まれていない場合でも skk-modeline-input-mode に文字を入れて返す"
+  (unless (boundp 'skk-modeline-inpt-mode)
+    (setq skk-modeline-input-mode "--[--]:")))
+(my:skk-modeline-input-mode)
+   #+END_SRC
+ ddskk そのものに modeline を更新する関数があるので無効化する
+   #+BEGIN_SRC emacs-lisp
+(defadvice skk-setup-modeline (around my:disable-skk-setup-modeline activate)
+  "skk-setup-modeline による modeline の更新を無効化"
+  (setq skk-indicator-alist (skk-make-indicator-alist))
+  (force-mode-line-update t))
+   #+END_SRC
+** powerline 本体の設定．
+   default-theme をベースに見たい物だけ表示するようにしてみた．
+   変更点として,
+   - separater は環境によってズレるので，半角スペースに変更
+   - vc-mode でのアイコン表示に U+26A1⚡ High Voltage を使う
+   といった事をしている. East Asian ambiguous Width char の扱いは面倒ですね
+   #+BEGIN_SRC emacs-lisp
 (use-package powerline
   :ensure t
   :init
@@ -3018,7 +3036,7 @@ Related [[wiki:index][Index]]
         )
   (my:powerline-theme)
   )
- #+END_SRC
+  #+END_SRC
 * 起動時間の計測
   [[http://memo.sugyan.com/entry/20120120/1327037494][起動時間を計測する 改訂版 - すぎゃーんメモ]]
   #+BEGIN_SRC emacs-lisp

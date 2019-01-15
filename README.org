@@ -2580,6 +2580,118 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 Related [[wiki:index][Index]]
 "))
     #+end_src
+* Howm
+  Org を使う前は Howm を使っていました.
+  過去のメモを検索するためだけに未だに Howm を使っています.
+  #+BEGIN_SRC emacs-lisp
+(use-package howm
+  :if (and (my:dpkg-status "howm")
+           (executable-find "ag"))
+  :no-require t
+  :after (org)
+  :diminish howm-mode
+  :bind (:map howm-mode-map
+              ("C-c , ,"     . howm-menu)
+              ("C-c C-c"     . nil)
+              ("C-x C-z C-c" . howm-save-and-kill-buffer/screen))
+  :init
+  (add-hook 'howm-menu-hook (lambda ()
+                              (setq truncate-lines t)))
+  :config
+  ;;; ディレクトリの設定
+  ;; メモの内容は Nextcloud で同期することに
+  (setq howm-directory "~/Nextcloud/org")
+  ;; メニューと履歴を検索対象から除外するために別ディレクトリへ
+  (setq howm-keyword-file "~/Nextcloud/howm/keys"
+        howm-history-file "~/Nextcloud/howm/history"
+        howm-menu-file "~/Nextcloud/howm/menu")
+  ;; メモファイルは日付時刻毎に分離
+  (setq howm-file-name-format "%Y%m%d-%H%M%S.howm")
+  ;;;  メモはorgで書く
+  ;; - org-mode の hook として howm-mode を登録
+  ;; - C-c が org に取られるので, howm の prefix は C-xC-z に
+  (add-hook 'org-mode-hook 'howm-mode)
+  (global-unset-key (kbd "C-x C-z"))
+  (setq howm-prefix (kbd "C-x C-z"))
+  ;; title header は "*"
+  (setq howm-view-title-header "*")
+  ;; :config
+  ;; (use-package "elscreen-howm")
+  ;; 色付けは org-mode 任せ: howm の font-lock を無効化
+  (setq howm-use-color nil)
+  ;;; 以下，決まり文句
+  ;; 検索で大文字小文字を区別しない
+  (setq howm-keyword-case-fold-search t)
+  ;; grep の 代わりに ag を使う
+  (setq howm-view-use-grep t
+        howm-view-grep-command "ag"
+        howm-view-grep-option "--nocolor --nogroup"
+        howm-view-grep-extended-option nil
+        howm-view-grep-fixed-option "-F"
+        howm-view-grep-expr-option nil
+        howm-view-grep-file-stdin-option nil)
+  (defun my:howm:add-dev-null (args)
+    (let ((str   (car args))               ;; 検索文字列
+          (files (nth 1 args)))            ;; ファイルリスト
+      (when (= 1 (length files))           ;; 単一ファイル？
+        (if (file-regular-p (car files))   ;; 通常ファイル？
+            ;; 単一の通常ファイルが指定された場合に /dev/null を追加
+            (setq files (append files '("/dev/null")))))
+      (list str files)))
+  (advice-add 'howm-real-grep-single :filter-args #'my:howm:add-dev-null)
+  ;; 検索対象のディレクトリの追加...とりあえず追加しないことに．
+  (setq howm-search-other-dir nil)
+  ;; 検索対象外のファイル: ad hoc にどんどん増えていくなぁ...
+  (setq howm-excluded-file-regexp
+        "/\\.#\\|[~#]$\\|\\.bak$\\|/CVS/\\|\\.doc\\|\\.pdf\\|\\.txt$\\|\\.html$\\|\\.tex$\\|\\.dvi$\\|\\.fdb_latexmk$\\|\\.ppt$\\|\\.xls$\\|\\.howm-menu$\\|.howm-keys$\\|\\.png$\\|\\.gif$\\|\\.tif$\\|\\.tiff$\\|\\.jpg$\\|\\.jpeg$\\|\\.el$\\|\\.aux$\\|\\.log$\\|Makefile\\|\\.txt$\\|EUC-UCS2\\|\\.fdb_latexmk$\\|latexmkrc\\|\\.gpg$\\|\\.org$")
+  ;; org-mode の日付検索用
+  (setq howm-reminder-regexp-grep-format
+        (concat "<" howm-date-regexp-grep "[ :0-9]*>%s"))
+  (setq howm-reminder-regexp-format
+        (concat "\\(<" howm-date-regexp "[ :0-9]*>\\)\\(\\(%s\\)\\([0-9]*\\)\\)"))
+  ;;; 表示設定
+  (setq howm-menu-top nil
+        howm-menu-lang 'ja)
+  ;; 一覧にタイトル表示しない
+  (setq howm-list-title nil)
+  ;; save 時にメニューを更新しない
+  (setq howm-menu-refresh-after-save nil)
+  (setq howm-refresh-after-save nil)
+  ;; 新規メモを上に
+  (setq howm-prepend t)
+  ;; 全メモ一覧時にタイトル表示
+  (setq howm-list-all-title t)
+  ;; 「最近のメモ」一覧時にタイトル表示
+  (setq howm-list-recent-title t)
+  ;; 「最近のメモ」の表示件数
+  (setq howm-menu-recent-num 20)
+  ;; メニューを 2 時間キャッシュ
+  (setq howm-menu-expiry-hours 2)
+  ;; RET でファイルを開く際, 一覧バッファを消す. C-u RET なら残る
+  (setq howm-view-summary-persistent nil)
+  ;;; メニュー表示用の関数定義
+  ;; 正規表現で検索, 逆順,  表示件数は =howm-menu-recent-num=, という ad hoc な関数
+  (defun my:howm-menu-search (key &optional formatter regexp-p)
+    "Embed search result of KEY into menu, reverse-order, howm-menu-recent-num"
+    (let ((fixed-p (not regexp-p)))
+      (howm-menu-general "menu-search"
+                         formatter
+                         (howm-first-n
+                          (howm-sort-items-by-reverse-date
+                           (howm-view-search-folder-items key (howm-folder) nil fixed-p)
+                           ) howm-menu-recent-num)
+                         )))
+  (setq howm-menu-allow
+        (append '(my:howm-menu-search) howm-menu-allow))
+  ;; 編集テンプレートの
+  (setq howm-dtime-format (concat "<" howm-dtime-body-format ">")
+        howm-insert-date-format "<%s>"
+        howm-template-date-format "<%Y-%m-%d %a %H:%M:%S>"
+        howm-template-file-format "==>%s"
+        howm-template "* MEMO %date %cursor\n%file\n"
+        howm-reminder-today-format (format howm-insert-date-format howm-date-format))
+  )
+  #+END_SRC
 * フォントと色
   そろそろテーマにした方が良い，とは思ってはいる．
   #+begin_src emacs-lisp

@@ -2699,6 +2699,7 @@ Related [[wiki:index][Index]]
    #+BEGIN_SRC emacs-lisp
 (use-package magit
   :bind (("C-x g" . magit-status))
+  :ensure t
   ;; :config
   ;; (setq magit-completing-read-function 'magit-ido-completing-read)
   )
@@ -2940,6 +2941,84 @@ Related [[wiki:index][Index]]
            ))
   (add-hook hook '(lambda () (setq mode-name ""))))
   #+END_SRC
+* powerline 本体の設定．
+  default-theme をベースに見たい物だけ表示するようにしてみた．
+  変更点として,
+  - separater は環境によってズレるので，半角スペースに変更
+  - vc-mode でのアイコン表示に U+26A1⚡ High Voltage を使う
+  といった事をしている. East Asian ambiguous Width char の扱いは面倒ですね
+  #+BEGIN_SRC emacs-lisp
+(use-package powerline
+  :ensure t
+  :init
+  (defpowerline my:powerline-vc
+    (when (and (buffer-file-name (current-buffer)) vc-mode)
+      (format "%s%s"
+              (char-to-string #x26a1)
+              (format-mode-line '(vc-mode vc-mode)))))
+  (defun my:powerline-theme ()
+    "Setup customize theme."
+    (interactive)
+    (setq-default
+     mode-line-format
+     '("%e"
+       (:eval
+        (let* ((active (powerline-selected-window-active))
+               (mode-line-buffer-id (if active 'mode-line-buffer-id 'mode-line-buffer-id-inactive))
+               (mode-line (if active 'mode-line 'mode-line-inactive))
+               (face1 (if active 'powerline-active1 'powerline-inactive1))
+               (face2 (if active 'powerline-active2 'powerline-inactive2))
+               (separator-left (intern (format "powerline-%s-%s"
+                                               (powerline-current-separator)
+                                               (car powerline-default-separator-dir))))
+               (separator-right (intern (format "powerline-%s-%s"
+                                                (powerline-current-separator)
+                                                (cdr powerline-default-separator-dir))))
+               (lhs (list
+                     (powerline-raw (substring skk-modeline-input-mode 2 -1) nil 'l)
+                     (powerline-raw mode-line-mule-info mode-line 'l)
+                     (powerline-raw "%*" mode-line 'l)
+                     (powerline-buffer-id mode-line-buffer-id 'l)
+                     (powerline-raw " ")
+                     (funcall separator-left mode-line face1)
+                     (powerline-major-mode face1 'l)
+                     (powerline-process face1)
+                     (powerline-narrow face1 'l)
+                     (powerline-raw " " face1)
+                     (funcall separator-left face1 face2)
+                     (my:powerline-vc face2 'r)
+                     ))
+               (rhs (list
+                     (powerline-raw global-mode-string face2 'r)
+                     (funcall separator-right face2 face1)
+                     (powerline-raw " " face1)
+                     (powerline-minor-modes face1 'r)
+                     (funcall separator-right face1 mode-line)
+                     (powerline-raw "  ")
+                     (powerline-raw "%6p" mode-line 'r)
+                     ))
+               )
+          (concat (powerline-render lhs)
+                  (powerline-fill face2 (powerline-width rhs))
+                  (powerline-render rhs)))))))
+  :config
+  (setq powerline-default-separator 'utf-8
+        ;; 半角スペース
+        powerline-utf-8-separator-left  #x20
+        powerline-utf-8-separator-right  #x20
+        ;; デフォルトの⇔
+        ;; powerline-utf-8-separator-left  #xe0b0
+        ;; powerline-utf-8-separator-right #xe0b2
+        ;; 上三角, 下三角
+        ;; powerline-utf-8-separator-left  #xe0bc
+        ;; powerline-utf-8-separator-right #xe0be
+        ;; 壊れ枠
+        ;; powerline-utf-8-separator-left  #xe0d2
+        ;; powerline-utf-8-separator-right #xe0d4
+        )
+  (my:powerline-theme)
+  )
+ #+END_SRC
 * 起動時間の計測
   [[http://memo.sugyan.com/entry/20120120/1327037494][起動時間を計測する 改訂版 - すぎゃーんメモ]]
   #+BEGIN_SRC emacs-lisp

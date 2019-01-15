@@ -2692,6 +2692,30 @@ Related [[wiki:index][Index]]
         howm-reminder-today-format (format howm-insert-date-format howm-date-format))
   )
   #+END_SRC
+* VCS
+** magit:
+   magit は Emacs の Git Frontend.
+   結局の所 CUI でコマンド叩く事も多いけれど，これはこれで重宝している．
+   #+BEGIN_SRC emacs-lisp
+(use-package magit
+  :bind (("C-x g" . magit-status))
+  ;; :config
+  ;; (setq magit-completing-read-function 'magit-ido-completing-read)
+  )
+   #+END_SRC
+** VCS: =ido-ghq=
+   ghq list を ido で選んで dired で開く
+   #+BEGIN_SRC emacs-lisp
+(use-package ido-ghq
+  :if (executable-find "ghq")
+  :quelpa (ido-ghq
+           :fetcher github
+           :repo "uwabami/ido-ghq")
+  :bind (("C-x f" . ido-ghq-open))
+  :config
+  (setq ido-ghq-short-list t)
+  )
+   #+END_SRC
 * フォントと色
   そろそろテーマにした方が良い，とは思ってはいる．
   #+begin_src emacs-lisp
@@ -2874,6 +2898,21 @@ Related [[wiki:index][Index]]
 ;; '(review-mode-header4-face  ((t (:inherit outline-4))))
 ;; '(review-mode-header5-face  ((t (:inherit outline-5))))
   #+end_src
+** 対応する括弧を見易く: =rainbow-delimiters=
+   #+BEGIN_SRC emacs-lisp
+(use-package rainbow-delimiters
+  :ensure t
+  :config
+  (add-hook 'emacs-lisp-mode-hook #'rainbow-delimiters-mode))
+   #+END_SRC
+** rainbow-mode
+   =#RRGGBB= のカラーコードに勝手に色が付く．CSS の編集中なんかで地味に便利．
+   #+BEGIN_SRC emacs-lisp
+(use-package rainbow-mode
+  :diminish rainbow-mode
+  :ensure t
+  )
+   #+END_SRC
 * =diminish=: モードラインの短縮表示
   =use-package= で読み込まれているので，可能な限りそちらで指定するように変更．
   #+BEGIN_SRC emacs-lisp

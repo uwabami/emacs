@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+startup: overview
-#+date: 2019-01-15 18:53:18
+#+date: 2019-01-16 14:48:19
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -2718,6 +2718,18 @@ Related [[wiki:index][Index]]
   (setq ido-ghq-short-list t)
   )
    #+END_SRC
+* LSP: =Emacs client/library for the Language Server Protocol=
+  #+BEGIN_SRC emacs-lisp
+(use-package lsp-mode
+  :ensure t
+  :commands lsp
+  )
+(use-package lsp-ui
+  :ensure t
+  :commands lsp-ui-mode
+  :after lsp-mode
+  )
+  #+END_SRC
 * TeX
 ** AUCTeX
    Debian パッケージ版を使う．

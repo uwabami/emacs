@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+startup: overview
-#+date: 2019-01-16 14:48:19
+#+date: 2019-01-18 17:29:58
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -265,7 +265,8 @@ init.el: README.org
 * 言語の設定
   日本語, UTF-8 にしています.
   #+begin_src emacs-lisp
-(set-language-environment "Japanese")
+;; (set-language-environment "Japanese")
+(set-language-environment 'utf-8)
 (prefer-coding-system 'utf-8)
 (set-file-name-coding-system 'utf-8)
 (set-keyboard-coding-system 'utf-8)
@@ -477,7 +478,7 @@ init.el: README.org
    結局履歴を貯める設定をしている事になっている.
    #+begin_src emacs-lisp
 (use-package recentf
-  :diminish recentf-mode
+  :diminish ""
   :defer t
   :init
   (add-hook 'after-init-hook 'recentf-mode)
@@ -515,7 +516,7 @@ init.el: README.org
 ** =abbrev=: 略語展開
    #+begin_src emacs-lisp
 (use-package abbrev
-  :diminish abbrev-mode
+  :diminish ""
   :config
   (setq abbrev-file-name (concat my:d:share "abbrev_defs")
         save-abbrevs t)
@@ -525,7 +526,7 @@ init.el: README.org
 ** =eldoc=: emacs-lisp document
    #+begin_src emacs-lisp
 (use-package eldoc
-  :diminish eldoc-mode
+  :diminish ""
   :config
   (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
   )
@@ -592,6 +593,7 @@ init.el: README.org
 ** =tramp=: ssh 越しにファイルを編集
    #+begin_src emacs-lisp
 (use-package tramp
+  :no-require t
   :config
   (setq tramp-persistency-file-name (concat my:d:tmp "tramp"))
   )
@@ -764,6 +766,7 @@ init.el: README.org
   :quelpa (elscreen
            :fetcher github
            :repo "emacs-jp/elscreen")
+  :no-require t
   :init
   (setq elscreen-tab-display-control nil
         elscreen-prefix-key (kbd "C-o")
@@ -795,6 +798,28 @@ init.el: README.org
                      (nth 1 (nth 1 (current-frame-configuration))))))
      default-directory)))
   #+end_src
+* Emacs内のterminal: =multi-term=
+  eshell はもっさりしているし, ansi-term は複数起動できないので.
+  #+BEGIN_SRC emacs-lisp
+(use-package multi-term
+  :ensure t
+  :no-require t
+  :bind (:map term-raw-map
+              ("C-h" . term-send-backspace)
+              ("C-y" . term-paste))
+  :config
+  (setq multi-term-program (getenv "SHELL"))
+  )
+  #+END_SRC
+  multi-term と elscreen の連携
+  #+BEGIN_SRC emacs-lisp
+(use-package elscreen-multi-term
+  :ensure t
+  :no-require t
+  :after (elscreen multi-term)
+  :bind (("C-c t" . emt-multi-term))
+  )
+  #+END_SRC
 * 日本語入力: =ddskk=
   [[http://openlab.ring.gr.jp/skk/ddskk-ja.html][Daredevil SKK (DDSKK)]] をメインで使用中．無いと途方に暮れる．
   ちなみにGTKが有効になっていると =gtk-immodule= なんかと衝突するので
@@ -1087,30 +1112,55 @@ File.open(src, "r") {|f|
       (migemo-init)
       )
   #+end_src
-* 補完: =auto-complete=
-  ちょいちょい上手く動かなかったりするんだけれど、どうしたモンかな.
+* 補完: =compnay=
+  以前は auto-complete を使っていたが, 最近こちらに乗り換えた.
   #+begin_src emacs-lisp
-(use-package auto-complete-config
-  :ensure auto-complete
-  :diminish auto-complete-mode
+(use-package company
+  :ensure t
+  :bind (("C-M-i" . company-complete))
+  :diminish ""
   :config
-  (ac-flyspell-workaround)
-  (ac-set-trigger-key "M-TAB")
-  (ac-config-default)
-  (add-to-list 'ac-dictionary-directories (concat my:d:share "ac-dict"))
-  (setq ac-comphist-file (concat my:d:tmp "ac-comphist.dat")
-        ac-auto-start 4                          ; 4 文字以上で起動
-        ac-use-menu-map t                        ; キーバインド
-        ac-auto-show-menu 1                      ; 1秒でメニュー表示
-        ac-use-comphist t                        ; 補完候補をソート
-        ac-candidate-limit nil                   ; 補完候補表示を無制限に
-        ac-use-quick-help nil)                   ; tool tip 無し
-  ;; (dolist (mode
-  ;;          '(
-  ;;            ))
-  ;;  (add-to-list 'ac-modes mode))
+  ;; C-n, C-pで補完候補を次/前の候補を選択
+  (define-key company-active-map (kbd "C-n") 'company-select-next)
+  (define-key company-active-map (kbd "C-p") 'company-select-previous)
+  (define-key company-search-map (kbd "C-n") 'company-select-next)
+  (define-key company-search-map (kbd "C-p") 'company-select-previous)
+  ;; C-sで絞り込む
+  (define-key company-active-map (kbd "C-s") 'company-filter-candidates)
+  ;; TABで候補を設定
+  (define-key company-active-map (kbd "C-i") 'company-complete-selection)
+  ;; 各種メジャーモードでも C-M-iで company-modeの補完を使う
+  ;; (define-key emacs-lisp-mode-map (kbd "C-M-i") 'company-complete)
+  (setq company-auto-expand t                 ; 1個目を自動的に補完
+        company-transformers
+        '(company-sort-by-backend-importance) ; ソート順
+        company-idle-delay 0.5                ; 遅延なしにすぐ表示
+        company-minimum-prefix-length 4       ; デフォルトは4
+        company-selection-wrap-around t       ; 候補の最後の次は先頭に戻る
+        completion-ignore-case t
+        company-dabbrev-downcase nil)
+  (global-company-mode)
   )
   #+end_src
+* 補完: =yasnippet=
+  #+BEGIN_SRC emacs-lisp
+(use-package yasnippet
+  :ensure t
+  :diminish yas-minor-mode
+  ;; :bind (:map yas-minor-mode-map
+  ;;             ("<C-tab>" . my:yas-ido-expand))
+  :init
+  (defvar my:snippet-dirs (concat my:d:share "snippets"))
+  (unless (file-directory-p my:snippet-dirs)
+    (make-directory my:snippet-dirs))
+  :config
+  (setq yas-snippet-dirs
+        '(my:snippet-dirs
+         yasnippet-snippets-dir))
+  ;; (setq yas-prompt-function '(yas-ido-prompt))
+  ;; (yas-global-mode 1)
+  )
+  #+END_SRC
 * 補完: =ido=
   補完は =ido= が軽いし速いので好み.
   見た目がちょっと簡素すぎる気もするので、なんとか弄りたい所ではある。
@@ -1235,7 +1285,7 @@ File.open(src, "r") {|f|
    flyspell-mode は別途有効化しておいた方が良いのかもしれない
    #+BEGIN_SRC emacs-lisp
 (use-package flyspell
-  :diminish flyspell-mode
+  :diminish ""
   :config
   (defun my:flyspell-popup-choose (orig event poss word)
     (if (window-system)
@@ -2260,10 +2310,17 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (add-hook 'org-mode-hook 'my:org-timestamp-hook)
   )
    #+end_src
+** Org-Id
+   #+BEGIN_SRC emacs-lisp
+(use-package org-id
+  :config
+  (setq org-id-locations-file (concat my:d:share "org-id-locations"))
+  )
+   #+END_SRC
 ** Babel
    #+begin_src emacs-lisp
 (use-package org-src
-  :diminish org-src-mode
+  :diminish ""
   :config
   (setq org-src-fontify-natively t       ;; font-lock
         org-src-tab-acts-natively t      ;; indent
@@ -2535,7 +2592,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :if  (and my:d:password-store
             (file-directory-p my:d:org))
   :no-require t
-  :diminish (orgmine-mode)
+  :diminish ""
   :commands (orgmine-mode)
   :quelpa (orgmine
            :fetcher github
@@ -2590,7 +2647,7 @@ Related [[wiki:index][Index]]
            (executable-find "ag"))
   :no-require t
   :after (org)
-  :diminish howm-mode
+  :diminish ""
   :bind (:map howm-mode-map
               ("C-c , ,"     . howm-menu)
               ("C-c C-c"     . nil)
@@ -2718,7 +2775,7 @@ Related [[wiki:index][Index]]
   (setq ido-ghq-short-list t)
   )
    #+END_SRC
-* LSP: =Emacs client/library for the Language Server Protocol=
+* 補完: =Emacs client/library for the Language Server Protocol=
   #+BEGIN_SRC emacs-lisp
 (use-package lsp-mode
   :ensure t
@@ -2728,6 +2785,14 @@ Related [[wiki:index][Index]]
   :ensure t
   :commands lsp-ui-mode
   :after lsp-mode
+  :hook (lsp-mode . lsp-ui-mode)
+  )
+(use-package company-lsp
+  :ensure t
+  :after (lsp-mode company yasnippet)
+  :defines company-backends
+  :functions company-backend-with-yas
+  ;; :init (cl-pushnew (company-backend-with-yas 'company-lsp) company-backends)
   )
   #+END_SRC
 * TeX
@@ -2830,13 +2895,13 @@ $clean_ext = "snm nav vrb synctex.gz";
     (progn
       (set-frame-parameter nil 'alpha 90)
       (set-face-attribute 'default nil
-                          :family "RictyDiscord"
+                          :family "RictyDiscord Nerd Font"
                           :height 180)
       (set-face-attribute 'fixed-pitch nil
-                          :family "RictyDiscord"
+                          :family "RictyDiscord Nerd Font"
                           :height 180)
       (set-face-attribute 'variable-pitch nil
-                          :family "RictyDiscord"
+                          :family "RictyDiscord Nerd Font"
                           :height 180)
       (set-background-color "#242424")
       )))
@@ -2990,6 +3055,14 @@ $clean_ext = "snm nav vrb synctex.gz";
  '(moinmoin-inter-wiki-link            ((t (:inherit moinmoin-url :underline t ))))
  '(moinmoin-item                       ((t (:inherit font-lock-doc-face ))))
  '(moinmoin-item-2                     ((t (:inherit font-lock-doc-face ))))
+ ;; company-mode
+ '(company-tooltip                     ((t (:foreground "#242424" :background "#acacac"))))
+ '(company-tooltip-common              ((t (:foreground "#242424" :background "#acacac"))))
+ '(company-tooltip-common-selection    ((t (:foreground "#f6f3e8" :background "#4c4cff"))))
+ '(company-tooltip-selection           ((t (:foreground "#242424" :background "#4c4cff"))))
+ '(company-preview-common              ((t (:background nil :foreground "#acacac" :underline t))))
+ '(company-scrollbar-fg                ((t (:background "#FFBF7F"))))
+ '(company-scrollbar-bg                ((t (:background "#4c4c4c"))))
  )
 ;; review
 ;; '(review-mode-header1-face  ((t (:inherit outline-1))))
@@ -3009,7 +3082,7 @@ $clean_ext = "snm nav vrb synctex.gz";
    =#RRGGBB= のカラーコードに勝手に色が付く．CSS の編集中なんかで地味に便利．
    #+BEGIN_SRC emacs-lisp
 (use-package rainbow-mode
-  :diminish rainbow-mode
+  :diminish ""
   :ensure t
   )
    #+END_SRC
@@ -3121,11 +3194,11 @@ $clean_ext = "snm nav vrb synctex.gz";
   :config
   (setq powerline-default-separator 'utf-8
         ;; 半角スペース
-        powerline-utf-8-separator-left  #x20
-        powerline-utf-8-separator-right  #x20
+        ;; powerline-utf-8-separator-left  #x20
+        ;; powerline-utf-8-separator-right  #x20
         ;; デフォルトの⇔
-        ;; powerline-utf-8-separator-left  #xe0b0
-        ;; powerline-utf-8-separator-right #xe0b2
+        powerline-utf-8-separator-left  #xe0b0
+        powerline-utf-8-separator-right #xe0b2
         ;; 上三角, 下三角
         ;; powerline-utf-8-separator-left  #xe0bc
         ;; powerline-utf-8-separator-right #xe0be

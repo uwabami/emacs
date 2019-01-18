@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+startup: overview
-#+date: 2019-01-18 17:37:33
+#+date: 2019-01-18 17:44:20
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -3197,10 +3197,10 @@ $clean_ext = "snm nav vrb synctex.gz";
          ;; 半角スペース
          (setq powerline-utf-8-separator-left  #x20
                powerline-utf-8-separator-right  #x20))
-        ((t
+        (t
         ;; デフォルトの⇔
           powerline-utf-8-separator-left  #xe0b0
-          powerline-utf-8-separator-right #xe0b2))
+          powerline-utf-8-separator-right #xe0b2)
         ;; 上三角, 下三角
         ;; powerline-utf-8-separator-left  #xe0bc
         ;; powerline-utf-8-separator-right #xe0be

@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+startup: overview
-#+date: 2019-01-18 17:44:20
+#+date: 2019-01-18 17:57:19
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -763,9 +763,7 @@ init.el: README.org
    - [ ] Debian パッケージ版は古い．更新すべき
    #+begin_src emacs-lisp
 (use-package elscreen
-  :quelpa (elscreen
-           :fetcher github
-           :repo "emacs-jp/elscreen")
+  :ensure t
   :no-require t
   :init
   (setq elscreen-tab-display-control nil
@@ -803,7 +801,6 @@ init.el: README.org
   #+BEGIN_SRC emacs-lisp
 (use-package multi-term
   :ensure t
-  :no-require t
   :bind (:map term-raw-map
               ("C-h" . term-send-backspace)
               ("C-y" . term-paste))

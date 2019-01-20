@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+startup: overview
-#+date: 2019-01-20 14:56:55
+#+date: 2019-01-20 14:58:09
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -2646,6 +2646,7 @@ Related [[wiki:index][Index]]
            (executable-find "ag"))
   :no-require t
   :after (org)
+  :commands (howm-menu)
   :diminish ""
   :bind (:map howm-mode-map
               ("C-c , ,"     . howm-menu)
@@ -2721,7 +2722,7 @@ Related [[wiki:index][Index]]
   ;; 「最近のメモ」一覧時にタイトル表示
   (setq howm-list-recent-title t)
   ;; 「最近のメモ」の表示件数
-  (setq howm-menu-recent-num 20)
+  (setq howm-menu-recent-num 15)
   ;; メニューを 2 時間キャッシュ
   (setq howm-menu-expiry-hours 2)
   ;; RET でファイルを開く際, 一覧バッファを消す. C-u RET なら残る

@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+startup: overview
-#+date: 2019-01-18 17:57:19
+#+date: 2019-01-20 14:56:55
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -2407,6 +2407,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
              "DebianJP.org"
              "twitter.org"
              "journal.org"
+             "Wunderlist.org"
              "redmine_GFD.org"
              "redmine_FluidSoc.org"
              "redmine_KUSM.org"
@@ -2635,6 +2636,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 Related [[wiki:index][Index]]
 "))
     #+end_src
+
 * Howm
   Org を使う前は Howm を使っていました.
   過去のメモを検索するためだけに未だに Howm を使っています.
@@ -2878,6 +2880,27 @@ $clean_ext = "snm nav vrb synctex.gz";
   (add-hook 'TeX-mode-hook 'ezbf-minor-mode)
   )
    #+END_SRC
+* 日記: =tDiary=
+  org2blog で tDiary を更新できないか妄想している
+  #+BEGIN_SRC emacs-lisp
+(use-package tdiary-mode
+  :if (and (file-directory-p my:d:password-store)
+           (file-directory-p (concat (getenv "HOME") "/Nextcloud/tdiary")))
+  :quelpa (tdiary-mode
+           :fetcher github
+           :repo "uwabami/tdiary-mode")
+  :commands (tdiary-new tdiary-replace tdiary-append)
+  :config
+  (setq tdiary-text-directory (concat (getenv "HOME") "/Nextcloud/tdiary/")
+        tdiary-diary-list '(("log" "https://uwabami.junkhub.org/log/"))
+        tdiary-style-mode 'org-mode
+        tdiary-text-suffix ".org"
+        )
+  (with-eval-after-load "tdiary-mode"
+    (load (expand-file-name "tdiary-mode.gpg" my:d:password-store))
+    (tdiary-passwd-file-load))
+  )
+  #+END_SRC
 * フォントと色
   そろそろテーマにした方が良い，とは思ってはいる．
   #+begin_src emacs-lisp

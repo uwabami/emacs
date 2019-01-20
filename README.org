@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+startup: overview
-#+date: 2019-01-21 08:56:35
+#+date: 2019-01-21 08:58:00
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -43,9 +43,8 @@ init.el: README.org
     ~/.emacs.d/
      |-- Makefile    ←  byte-compile 用の rule
      |-- README.org  ←  本ファイル．`org-babel-tangle' で init.el を生成
-     |-- pkg/
-         |-- elpa/   ←  package.el で導入したパッケージが置かれる場所
-         `-- quelpa/ ←  quelpa で導入したパッケージが置かれる場所
+     |-- elpa/       ←  package.el で導入したパッケージが置かれる場所
+     |-- quelpa/     ←  quelpa で導入したパッケージが置かれる場所
      |-- share/      ←  (基本的に)参照するだけの資源置き場所
      `-- tmp/        ←  一次ファイルの置き場所
   #+end_example
@@ -79,7 +78,7 @@ init.el: README.org
 (setq url-http-attempt-keepalives nil)
 (require 'package nil 'noerror)
 (setq package-enable-at-startup t
-      package-user-dir (expand-file-name "pkg/elpa" user-emacs-directory)
+      package-user-dir (expand-file-name "elpa" user-emacs-directory) ;; default
       package-gnupghome-dir (expand-file-name ".gnupg" (getenv "HOME")))
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (eval-when-compile
@@ -106,7 +105,7 @@ init.el: README.org
 (use-package quelpa-use-package
   :ensure t
   :init
-  (setq quelpa-dir (expand-file-name "pkg/quelpa" user-emacs-directory)
+  (setq quelpa-dir (expand-file-name "quelpa" user-emacs-directory) ;;default
         quelpa-upgrade-p nil
         quelpa-checkout-melpa-p nil
         quelpa-update-melpa-p nil

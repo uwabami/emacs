@@ -21,7 +21,8 @@ clean:
 	rm -fr auto-save-list *.el *.elc *~
 
 distclean: clean
-	rm -fr pkg
+	rm -fr elpa
+	rm -fr quelpa
 	rm -fr tmp
 
 skk-jisyo: bootstrap

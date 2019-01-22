@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+startup: overview
-#+date: 2019-01-21 08:58:00
+#+date: 2019-01-22 17:30:43
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -43,8 +43,9 @@ init.el: README.org
     ~/.emacs.d/
      |-- Makefile    ←  byte-compile 用の rule
      |-- README.org  ←  本ファイル．`org-babel-tangle' で init.el を生成
-     |-- elpa/       ←  package.el で導入したパッケージが置かれる場所
-     |-- quelpa/     ←  quelpa で導入したパッケージが置かれる場所
+     |-- pkg/
+         |-- elpa/   ←  package.el で導入したパッケージが置かれる場所
+         `-- quelpa/ ←  quelpa で導入したパッケージが置かれる場所
      |-- share/      ←  (基本的に)参照するだけの資源置き場所
      `-- tmp/        ←  一次ファイルの置き場所
   #+end_example
@@ -78,7 +79,7 @@ init.el: README.org
 (setq url-http-attempt-keepalives nil)
 (require 'package nil 'noerror)
 (setq package-enable-at-startup t
-      package-user-dir (expand-file-name "elpa" user-emacs-directory) ;; default
+      package-user-dir (expand-file-name "pkg/elpa" user-emacs-directory)
       package-gnupghome-dir (expand-file-name ".gnupg" (getenv "HOME")))
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (eval-when-compile
@@ -105,7 +106,7 @@ init.el: README.org
 (use-package quelpa-use-package
   :ensure t
   :init
-  (setq quelpa-dir (expand-file-name "quelpa" user-emacs-directory) ;;default
+  (setq quelpa-dir (expand-file-name "pkg/quelpa" user-emacs-directory)
         quelpa-upgrade-p nil
         quelpa-checkout-melpa-p nil
         quelpa-update-melpa-p nil
@@ -811,7 +812,6 @@ init.el: README.org
   #+BEGIN_SRC emacs-lisp
 (use-package elscreen-multi-term
   :ensure t
-  :no-require t
   :after (elscreen multi-term)
   :bind (("C-c t" . emt-multi-term))
   )
@@ -2596,8 +2596,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
            :repo "kametoku/orgmine")
   :init
   (use-package elmine :ensure t)
-  (add-to-list 'safe-local-variable-values
-               '(orgmine-note-block-begin . "#+begin_src textile"))
+  ;; (add-to-list 'safe-local-variable-values
+  ;;              '(orgmine-note-block-begin . "#+begin_src textile"))
   (add-hook 'org-mode-hook
             (lambda ()
               (if (assoc "om_server" org-file-properties) (orgmine-mode))))
@@ -2621,8 +2621,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :no-require t
   :commands (org-wiki)
   :quelpa (org-wiki
-          :fetcher github
-          :repo "uwabami/org-wiki")
+           :fetcher github
+           :repo "uwabami/org-wiki")
   :bind (("C-x M" . org-wiki ))
   :config
   (setq org-wiki-location "~/Public/cc-env"
@@ -2635,7 +2635,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 Related [[wiki:index][Index]]
 "))
     #+end_src
-
 * Howm
   Org を使う前は Howm を使っていました.
   過去のメモを検索するためだけに未だに Howm を使っています.
@@ -2750,6 +2749,17 @@ Related [[wiki:index][Index]]
   )
   #+END_SRC
 * VCS
+** git-commit
+   #+BEGIN_SRC emacs-lisp
+(use-package git-commit
+  :ensure t)
+   #+END_SRC
+** git{attributes,config,ignore}-mode
+   #+BEGIN_SRC emacs-lisp
+(use-package gitattributes-mode :ensure t)
+(use-package gitconfig-mode :ensure t)
+(use-package gitignore-mode :ensure t)
+   #+END_SRC
 ** magit:
    magit は Emacs の Git Frontend.
    結局の所 CUI でコマンド叩く事も多いけれど，これはこれで重宝している．
@@ -2757,8 +2767,12 @@ Related [[wiki:index][Index]]
 (use-package magit
   :bind (("C-x g" . magit-status))
   :ensure t
-  ;; :config
-  ;; (setq magit-completing-read-function 'magit-ido-completing-read)
+  :config
+  (setq magit-completing-read-function 'magit-ido-completing-read
+        magit-refs-show-commit-count 'all
+        magit-log-buffer-file-locked t
+        magit-revision-show-gravatars nil
+        )
   )
    #+END_SRC
 ** VCS: =ido-ghq=
@@ -2774,6 +2788,29 @@ Related [[wiki:index][Index]]
   (setq ido-ghq-short-list t)
   )
    #+END_SRC
+* Project管理: =projectile=
+  沢山 project がある環境だとツライ気がするんだが...
+  #+BEGIN_SRC emacs-lisp
+(use-package projectile
+  :ensure t
+  :disabled t
+  :config
+  (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
+  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+  (setq projectile-project-search-path
+        '("~/.emacs.d/"
+          "~/Sources/")
+        projectile-cache-file (expand-file-name "projectile.cache" my:d:tmp)
+        projectile-known-project-file (expand-file-name "projectile-bookmarks.eld"
+                                                        my:d:share)
+        projectile-enable-caching t
+        projectile-mode-line-prefix ""
+        projectile-mode-line-function
+        (lambda()
+          (format " Proj[%s]" (projectile-project-name)))
+        )
+  )
+  #+END_SRC
 * 補完: =Emacs client/library for the Language Server Protocol=
   #+BEGIN_SRC emacs-lisp
 (use-package lsp-mode
@@ -2886,6 +2923,7 @@ $clean_ext = "snm nav vrb synctex.gz";
 (use-package tdiary-mode
   :if (and (file-directory-p my:d:password-store)
            (file-directory-p (concat (getenv "HOME") "/Nextcloud/tdiary")))
+  :no-require t
   :quelpa (tdiary-mode
            :fetcher github
            :repo "uwabami/tdiary-mode")
@@ -2904,10 +2942,15 @@ $clean_ext = "snm nav vrb synctex.gz";
 * フォントと色
   そろそろテーマにした方が良い，とは思ってはいる．
   #+begin_src emacs-lisp
-(setq ansi-color-names-vector
-      [unspecified "#242424" "#FF4c4c" "#4cff4c" "#ffff4c"
-                   "#4c4cff" "#ff4cff" "#4cffff" "#f6f3e8"]
-      )
+(use-package ansi-color
+  :config
+  (setq ansi-color-names-vector
+        [unspecified
+         "#242424" "#FF4c4c" "#4cff4c" "#ffff4c"
+         "#4c4cff" "#ff4cff" "#4cffff" "#aaaaaa"
+         ])
+  (add-hook 'shell-mode-hook 'ansi-color-for-comint-mode-on)
+  )
 (defun my:load-window-config ()
   "load window-system specific settings"
   (interactive)

@@ -23,6 +23,7 @@ clean:
 distclean: clean
 	rm -fr elpa
 	rm -fr quelpa
+	rm -fr pkg
 	rm -fr tmp
 
 skk-jisyo: bootstrap

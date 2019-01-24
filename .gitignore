@@ -7,6 +7,5 @@ quelpa
 tmp
 *~
 old
-share/bookmarks
-share/org-id-locations
+share/*
 backup.org

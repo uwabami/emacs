@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+startup: overview
-#+date: 2019-01-24 19:14:28
+#+date: 2019-01-28 15:09:09
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -27,12 +27,12 @@
    Makefile 内の以下のスクリプトで =~/init.el= を生成し，byte-compile します．
    #+begin_src makefile-gmake :tangle no
 init.el: README.org
-	$(EMACS) -q --batch --eval \
-		 "(progn \
-		    (require 'ob-tangle) \
-		    (org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\"))"
+$(EMACS) -q --batch --eval \
+"(progn \
+(require 'ob-tangle) \
+(org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\"))"
 %.elc: %.el
-	$(EMACS) -l $< -batch -f batch-byte-compile $<
+$(EMACS) -l $< -batch -f batch-byte-compile $<
    #+end_src
 * ディレクトリ構成
   分割した設定ファイル群やパッケージで install したパッケージ
@@ -98,7 +98,7 @@ init.el: README.org
    モードラインの設定用に delight, diminish も入れておく
    #+BEGIN_SRC emacs-lisp
 (use-package delight :ensure t)
-(use-package delight :diminish t)
+(use-package diminish :ensure t)
    #+END_SRC
 ** [[https://framagit.org/steckerhalter/quelpa-use-package][quelpa-use-package]]
    melpa に登録されていないパッケージや自作の elisp 等をインストールできる様に
@@ -309,7 +309,7 @@ init.el: README.org
   (eaw-and-emoji-fullwidth))
    #+end_src
 ** OSの違いに起因する条件分岐
-  Mac と Linux では同じ Unicode でも正規化が異なります
+   Mac と Linux では同じ Unicode でも正規化が異なります
    (具体的には Mac のファイルシステムである HFS+ では Unicode の正規化が異なります).
    Unicode の正規化と Mac OS X 特有の事情については
    - [[http://homepage1.nifty.com/nomenclator/unicode/normalization.htm][Unicode正規化とは]]
@@ -396,7 +396,7 @@ init.el: README.org
         unresolved
         callargs
         redefine
-;;        obsolete
+        ;;        obsolete
         noruntime
         cl-functions
         interactive-only
@@ -434,10 +434,6 @@ init.el: README.org
     #+begin_src emacs-lisp
 (setq next-line-add-newlines nil)
     #+end_src
-    symlink は常においかける
-    #+begin_src emacs-lisp
-(setq vc-follow-symlinks t)
-    #+end_src
     変更のあったファイルの自動再読み込み
     #+begin_src emacs-lisp
 (global-auto-revert-mode 1)
@@ -460,8 +456,7 @@ init.el: README.org
       )
     #+end_src
     Undo/Redo:
-    そのうち undohist と undo-tree を試そうと思っているのですが，
-    今のところ特に弄ってません． =undo-limit= は無限大にしたいのですが，どうするのかな...?
+    =undo-limit= は無限大にしたいのですが，どうするのかな...?
     #+begin_src emacs-lisp
 (setq undo-limit 200000
       undo-strong-limit 260000)
@@ -479,14 +474,24 @@ init.el: README.org
   :if (featurep 'nsm)
   :init
   (setq nsm-settings-file (concat my:d:tmp "network-settings.data")))
-  #+end_src
+   #+end_src
    他にもイロイロありそう．
+** version管理: =vc=
+   組み込みの vc-mode は modeline の表示にしか使っていない.
+   Git 以外は対応しないことにする
+   #+BEGIN_SRC emacs-lisp
+(use-package vc
+  :config
+  (setq vc-handled-backends '(Git)
+        ;; symlink は常においかける
+        vc-follow-symlinks t)
+  )
+   #+END_SRC
 ** =recentf=: 最近使ったファイル履歴の保管
    ファイルを開く際には =ido-recentf-open= を使うので,
    結局履歴を貯める設定をしている事になっている.
    #+begin_src emacs-lisp
 (use-package recentf
-  :delight
   :defer t
   :init
   (add-hook 'after-init-hook 'recentf-mode)
@@ -524,7 +529,6 @@ init.el: README.org
 ** =abbrev=: 略語展開
    #+begin_src emacs-lisp
 (use-package abbrev
-  :delight
   :config
   (setq abbrev-file-name (concat my:d:share "abbrev_defs")
         save-abbrevs t)
@@ -534,7 +538,6 @@ init.el: README.org
 ** =eldoc=: emacs-lisp document
    #+begin_src emacs-lisp
 (use-package eldoc
-  :delight
   :config
   (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
   )
@@ -550,12 +553,13 @@ init.el: README.org
 (use-package uniquify
   :config
   (setq uniquify-buffer-name-style 'post-forward-angle-brackets
-        uniquify-min-dir-content 1))
+        uniquify-min-dir-content 1
+        )
+  )
    #+end_src
 ** =whitespace=: 空白の強調表示
    #+begin_src emacs-lisp
 (use-package whitespace
-  :delight global-whitespace-mode
   :config
   (setq whitespace-line-column 72
         whitespace-style '(face              ; faceを使って視覚化する．
@@ -782,12 +786,12 @@ init.el: README.org
   (elscreen-start))
    #+end_src
 ** elscreen + zsh での連携
-  詳細は
-  - [[https://masutaka.net/chalow/2011-09-28-1.html][ターミナルの zsh と Emacs を風のように駆け抜ける！]]
-  - [[http://syohex.hatenablog.com/entry/20111026/1319606395][cdeを改良]]
-  - [[https://qiita.com/__hage/items/2dd732b4dd68e124e8bd][cdeとelscreen-separate-buffer-listの相性が悪い]]
-  などを参考に.
-  #+begin_src emacs-lisp
+   詳細は
+   - [[https://masutaka.net/chalow/2011-09-28-1.html][ターミナルの zsh と Emacs を風のように駆け抜ける！]]
+   - [[http://syohex.hatenablog.com/entry/20111026/1319606395][cdeを改良]]
+   - [[https://qiita.com/__hage/items/2dd732b4dd68e124e8bd][cdeとelscreen-separate-buffer-listの相性が悪い]]
+   などを参考に.
+   #+begin_src emacs-lisp
 (defun return-current-working-directory-to-shell ()
   (expand-file-name
    (with-current-buffer
@@ -803,7 +807,7 @@ init.el: README.org
               (assoc 'buffer-list
                      (nth 1 (nth 1 (current-frame-configuration))))))
      default-directory)))
-  #+end_src
+   #+end_src
 * Emacs内のterminal: =multi-term=
   eshell はもっさりしているし, ansi-term は複数起動できないので.
   #+BEGIN_SRC emacs-lisp
@@ -981,7 +985,7 @@ Emacs*useXIM: false
     - [[http://matsucon.net/][MatsuCon]]
     といった所.
     はてなキーワードからの辞書の抽出は [[http://d.hatena.ne.jp/znz][znz]] さんの
-     - [[http://rubyist.g.hatena.ne.jp/znz/20060924/p1][「はてなダイアリーキーワードふりがなリスト」を SKK の辞書に変換]]
+    - [[http://rubyist.g.hatena.ne.jp/znz/20060924/p1][「はてなダイアリーキーワードふりがなリスト」を SKK の辞書に変換]]
     を参考に.
     [[http://matsucon.net/][MatsuCon]] で公開されている顔文字に関しては
     顔文字に ; や が含まれている場合に, 適宜quoteする必要があるので
@@ -1043,21 +1047,21 @@ File.open(src, "r") {|f|
 *** 動的補完
     まだ設定していない...
     #+begin_src emacs-lisp :tangle init-ddskk.el
-    ;; ;; 動的補完
-    ;; (setq skk-dcomp-activate t)
-    ;; (setq skk-dcomp-multiple-activate t)
-    ;; (setq skk-dcomp-multiple-rows 5)
-    ;; ;; 動的補完の複数表示群のフェイス
-    ;; (set-face-foreground 'skk-dcomp-multiple-face "Black")
-    ;; (set-face-background 'skk-dcomp-multiple-face "LightGoldenrodYellow")
-    ;; (set-face-bold-p 'skk-dcomp-multiple-face nil)
-    ;; ;; 動的補完の複数表示郡の補完部分のフェイス
-    ;; (set-face-foreground 'skk-dcomp-multiple-trailing-face "dim gray")
-    ;; (set-face-bold-p 'skk-dcomp-multiple-trailing-face nil)
-    ;; ;; 動的補完の複数表示郡の選択対象のフェイス
-    ;; (set-face-foreground 'skk-dcomp-multiple-selected-face "White")
-    ;; (set-face-background 'skk-dcomp-multiple-selected-face "LightGoldenrod4")
-    ;; (set-face-bold-p 'skk-dcomp-multiple-selected-face nil)
+;; ;; 動的補完
+;; (setq skk-dcomp-activate t)
+;; (setq skk-dcomp-multiple-activate t)
+;; (setq skk-dcomp-multiple-rows 5)
+;; ;; 動的補完の複数表示群のフェイス
+;; (set-face-foreground 'skk-dcomp-multiple-face "Black")
+;; (set-face-background 'skk-dcomp-multiple-face "LightGoldenrodYellow")
+;; (set-face-bold-p 'skk-dcomp-multiple-face nil)
+;; ;; 動的補完の複数表示郡の補完部分のフェイス
+;; (set-face-foreground 'skk-dcomp-multiple-trailing-face "dim gray")
+;; (set-face-bold-p 'skk-dcomp-multiple-trailing-face nil)
+;; ;; 動的補完の複数表示郡の選択対象のフェイス
+;; (set-face-foreground 'skk-dcomp-multiple-selected-face "White")
+;; (set-face-background 'skk-dcomp-multiple-selected-face "LightGoldenrod4")
+;; (set-face-bold-p 'skk-dcomp-multiple-selected-face nil)
     #+end_src
 *** 部首変換, 総画数変換
     上手く使いこなせていない
@@ -1096,26 +1100,39 @@ File.open(src, "r") {|f|
    #+end_src
 * インクリメンタル検索: =migemo=
   #+begin_src emacs-lisp
-    (use-package migemo
-      :if (executable-find "cmigemo")
-      :quelpa (migemo
-               :fetcher github
-               :repo "uwabami/migemo")
-      :config
-      (cond
-       ((and (eq system-type 'darwin)
-             (file-directory-p "/usr/local/share/migemo/utf-8/"))
-        (setq migemo-dictionary "/usr/local/share/migemo/utf-8/migemo-dict"))
-       (t
-        (setq migemo-dictionary "/usr/share/cmigemo/utf-8/migemo-dict")))
-      (setq migemo-command "cmigemo"
-            migemo-options '("-q" "--emacs")
-            migemo-user-dictionary nil
-            migemo-regex-dictionary nil
-            migemo-coding-system 'utf-8-unix)
-      (migemo-init)
-      )
+(use-package migemo
+  :if (executable-find "cmigemo")
+  :quelpa (migemo
+           :fetcher github
+           :repo "uwabami/migemo")
+  :config
+  (cond
+   ((and (eq system-type 'darwin)
+         (file-directory-p "/usr/local/share/migemo/utf-8/"))
+    (setq migemo-dictionary "/usr/local/share/migemo/utf-8/migemo-dict"))
+   (t
+    (setq migemo-dictionary "/usr/share/cmigemo/utf-8/migemo-dict")))
+  (setq migemo-command "cmigemo"
+        migemo-options '("-q" "--emacs")
+        migemo-user-dictionary nil
+        migemo-regex-dictionary nil
+        migemo-coding-system 'utf-8-unix)
+  (migemo-init)
+  )
   #+end_src
+* Undo/Redo: =undo-tree=
+  #+BEGIN_SRC emacs-lisp
+(use-package undo-tree
+  :ensure t
+  :config
+  (setq undo-tree-auto-save-history t
+        my:undo-tree-history-dir (let ((dir (concat my:d:tmp
+                                                    "undo-tree-history/")))
+                                   (make-directory dir :parents) dir)
+        undo-tree-history-directory-alist `(("." . ,my:undo-tree-history-dir)))
+  (global-undo-tree-mode +1)
+  )
+  #+END_SRC
 * 補完: =ido=
   補完は =ido= が軽いし速いので好み.
   見た目がちょっと簡素すぎる気もするので、なんとか弄りたい所ではある。
@@ -1246,7 +1263,6 @@ File.open(src, "r") {|f|
 (use-package company
   :ensure t
   :bind (("C-M-i" . company-complete))
-  :delight
   :config
   ;; C-n, C-pで補完候補を次/前の候補を選択
   (define-key company-active-map (kbd "C-n") 'company-select-next)
@@ -1267,14 +1283,13 @@ File.open(src, "r") {|f|
         company-selection-wrap-around t       ; 候補の最後の次は先頭に戻る
         completion-ignore-case t
         company-dabbrev-downcase nil)
-  (global-company-mode)
+  (global-company-mode +1)
   )
   #+end_src
 * 補完: =yasnippet=
   #+BEGIN_SRC emacs-lisp
 (use-package yasnippet
   :ensure t
-  :delight yas-minor-mode
   :bind (:map yas-minor-mode-map
               ("<C-tab>" . my:yas-ido-expand))
   :init
@@ -1306,7 +1321,7 @@ File.open(src, "r") {|f|
   :config
   (setq yas-snippet-dirs
         '(my:snippet-dirs
-         yasnippet-snippets-dir))
+          yasnippet-snippets-dir))
   (setq yas-prompt-function '(yas-ido-prompt))
   (add-hook 'after-init-hook
             (lambda ()
@@ -1327,7 +1342,6 @@ File.open(src, "r") {|f|
    flyspell-mode は別途有効化しておいた方が良いのかもしれない
    #+BEGIN_SRC emacs-lisp
 (use-package flyspell
-  :diminish ""
   :config
   (defun my:flyspell-popup-choose (orig event poss word)
     (if (window-system)
@@ -1425,6 +1439,23 @@ File.open(src, "r") {|f|
     (make-directory (concat elmo-msgdb-directory "/local")))
   (unless (file-directory-p (concat elmo-msgdb-directory "/local/Trash"))
     (make-directory (concat elmo-msgdb-directory "/local/Trash")))
+  ;; face の色付け用の関数の定義
+  (defun my:wl-set-face (face spec)
+    (make-face face)
+    (cond ((fboundp 'face-spec-set)
+           (face-spec-set face spec))
+          (t
+           (wl-declare-face face spec))))
+  ;; mode-line 弄り
+  (defun my:wl-mode-line-buffer-identification (&optional id)
+    (force-mode-line-update t))
+  :config
+  (with-eval-after-load 'wl
+    (advice-add 'wl-mode-line-buffer-identification :override 'my:wl-mode-line-buffer-identification))
+  (add-hook 'wl-folder-mode-hook  (lambda () (setq mode-name "📁")))
+  (add-hook 'wl-summary-mode-hook (lambda () (setq mode-name "📂")))
+  (add-hook 'wl-draft-mode-hook   (lambda () (setq mode-name "📄")))
+  (add-hook 'mime-view-mode-hook  (lambda () (setq mode-name "📧")))
   )
    #+end_src
    割と =/etc/emacs/site-start.d/65wl-beta.el= と重複している気がするが...
@@ -1454,7 +1485,7 @@ File.open(src, "r") {|f|
 **** elscreen-wl
      メール作成時に =elscreen= と連携してくれる．便利
      #+begin_src emacs-lisp :tangle init-wl.el
-; (use-package elscreen-wl)
+                                        ; (use-package elscreen-wl)
      #+end_src
 **** SEMI の追加設定
      HTML メールを表示するために eww を使う.
@@ -1496,16 +1527,16 @@ video/*; xdg-open %s;
         ))
      #+end_src
      音を鳴らすアレやコレの無効化
-    #+begin_src emacs-lisp :tangle init-wl.el
+     #+begin_src emacs-lisp :tangle init-wl.el
 (setq mime-play-find-every-situations nil
       mime-play-delete-file-immediately nil
       process-connection-type nil)
-    #+end_src
+     #+end_src
 *** 個人情報の設定
     具体的な設定内容は以下のファイルに置いている
-     #+begin_src emacs-lisp :tangle init-wl.el
-     (load (concat my:d:password-store "/wl-info.gpg"))
-     #+end_src
+    #+begin_src emacs-lisp :tangle init-wl.el
+(load (concat my:d:password-store "/wl-info.gpg"))
+    #+end_src
     設定している内容は以下の通り
 **** 自身のメールアドレスと購読メーリングリストの設定
      #+begin_src emacs-lisp :tangle no
@@ -1590,16 +1621,16 @@ video/*; xdg-open %s;
      (送信時に open して, 送信後に close する, みたいなの).
 
      ついでに template の切り替えに関して幾つか設定.
-      #+begin_src emacs-lisp :tangle init-wl.el
+     #+begin_src emacs-lisp :tangle init-wl.el
 ;; template 切り替え時に 内容を表示
 (setq wl-template-visible-select t)
-      #+end_src
-      =draft-mode= で =C-c C-n= をするとテンプレートを切り替え
-      #+begin_src emacs-lisp  :tangle init-wl.el
+     #+end_src
+     =draft-mode= で =C-c C-n= をするとテンプレートを切り替え
+     #+begin_src emacs-lisp  :tangle init-wl.el
 (define-key wl-draft-mode-map "\C-c\C-n" 'wl-template-select)
-      #+end_src
-      from に応じて wl-from, wl-envelope-from,
-      送信 smtp サーバを変更する送信時に変更
+     #+end_src
+     from に応じて wl-from, wl-envelope-from,
+     送信 smtp サーバを変更する送信時に変更
      #+begin_src emacs-lisp  :tangle init-wl.el
 (add-hook 'wl-draft-send-hook
           (lambda ()
@@ -1672,16 +1703,16 @@ video/*; xdg-open %s;
 **** FCC, BCC の設定
      #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-fcc nil)
-     ;; (setq wl-fcc "%Sent")
+;; (setq wl-fcc "%Sent")
      #+end_src
      fcc を既読にする場合は以下．=wl-fcc= が nil の場合には意味は無い
      #+begin_src emacs-lisp   :tangle init-wl.el
 (setq wl-fcc-force-as-read t)
      #+end_src
      bcc は常に自身に.
-      #+begin_src emacs-lisp  :tangle init-wl.el
+     #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-bcc (concat user-mail-address))
-      #+end_src
+     #+end_src
 **** 起動時に =%INBOX= のみをチェック
      #+begin_src emacs-lisp   :tangle init-wl.el
 (setq wl-auto-check-folder-name "%INBOX")
@@ -1902,7 +1933,7 @@ video/*; xdg-open %s;
      #+end_src
 **** sort 順: 返信が来た順
      =flet= を書き換えるのが面倒で =el-x= にある =dflet= を使うように変更
-    #+begin_src emacs-lisp  :tangle init-wl.el
+     #+begin_src emacs-lisp  :tangle init-wl.el
 (use-package el-x :ensure t)
 (defun wl-summary-overview-entity-compare-by-reply-date (a b)
   "Compare message A and B by latest date of replies including thread."
@@ -1923,12 +1954,12 @@ video/*; xdg-open %s;
                                 ('t
                                  (string-max2 (thread-number-get-date (car x))
                                               (max-reply-date (cdr x)))))))
-    (string<
-     (max-reply-date (thread-get-family (elmo-message-entity-number a)))
-     (max-reply-date (thread-get-family (elmo-message-entity-number b))))))
+         (string<
+          (max-reply-date (thread-get-family (elmo-message-entity-number a)))
+          (max-reply-date (thread-get-family (elmo-message-entity-number b))))))
 (add-to-list 'wl-summary-sort-specs 'reply-date)
 (setq wl-summary-default-sort-spec 'reply-date)
-    #+end_src
+     #+end_src
 *** 振り分け設定
     =$= 以外を振り分け対象に
     #+begin_src emacs-lisp  :tangle init-wl.el
@@ -1993,6 +2024,138 @@ video/*; xdg-open %s;
      #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-message-use-header-narrowing nil)
      #+end_src
+*** Wanderlust: Face の設定
+    デフォルトより細かく指定するために幾つかの face 定義を追加.
+    #+begin_src emacs-lisp :tangle init-wl.el
+(setq wl-highlight-message-header-alist
+      '(("Subject[ \t]*:"
+         . wl-highlight-message-subject-header-contents)
+        ("From[ \t]*:"
+         . wl-highlight-message-from-header-contents)
+        ("Date[ \t]*:"
+         . wl-highlight-message-date-header-contents)
+        ("\\(.*To\\|Cc\\|Newsgroups\\)[ \t]*:"
+         . wl-highlight-message-important-header-contents)
+        ("\\(User-Agent\\|X-Mailer\\|X-Newsreader\\)[ \t]*:"
+         . wl-highlight-message-unimportant-header-contents)
+        ))
+    #+end_src
+    face の色付け
+    #+BEGIN_SRC emacs-lisp
+(my:wl-set-face 'wl-highlight-folder-closed-face
+                '((t (:foreground "#4cff4c" :bold nil :italic nil :weight normal ))))
+(my:wl-set-face 'wl-highlight-folder-few-face
+                '((t (:foreground "#FF4C4C" :bold t :italic nil :weight bold ))))
+(my:wl-set-face 'wl-highlight-folder-zero-face
+                '((t (:foreground "#f6f3e8" :bold nil :italic nil :weight normal ))))
+(my:wl-set-face 'wl-highlight-message-cited-text-1
+                '((t (:foreground "#7fff7f" :bold nil :italic nil :weight normal ))))
+(my:wl-set-face 'wl-highlight-message-cited-text-2
+                '((t (:foreground "#ffff7f" :bold nil :italic nil :weight normal ))))
+(my:wl-set-face 'wl-highlight-message-cited-text-3
+                '((t (:foreground "#7f7fff" :bold nil :italic nil :weight normal ))))
+(my:wl-set-face 'wl-highlight-message-cited-text-4
+                '((t (:foreground "#7fffff" :bold nil :italic nil :weight normal ))))
+(my:wl-set-face 'wl-highlight-message-cited-text-5
+                '((t (:foreground "#ff7fff" :bold nil :italic nil :weight normal ))))
+(my:wl-set-face 'wl-highlight-message-cited-text-6
+                '((t (:foreground "#ff7f7f" :bold nil :italic nil :weight normal ))))
+(my:wl-set-face 'wl-highlight-message-cited-text-7
+                '((t (:foreground "#4cff4c" :bold nil :italic nil :weight normal ))))
+(my:wl-set-face 'wl-highlight-message-cited-text-8
+                '((t (:foreground "#ffff4c" :bold nil :italic nil :weight normal ))))
+(my:wl-set-face 'wl-highlight-message-cited-text-9
+                '((t (:foreground "#4c4cff" :bold nil :italic nil :weight normal ))))
+(my:wl-set-face 'wl-highlight-message-cited-text-10
+                '((t (:foreground "#4cffff" :bold nil :italic nil :weight normal ))))
+(my:wl-set-face 'wl-highlight-message-cited-text-11
+                '((t (:foreground "#ff4cff" :bold nil :italic nil :weight normal ))))
+(my:wl-set-face 'wl-highlight-message-cited-text-12
+                '((t (:foreground "#ff4c4c" :bold nil :italic nil :weight normal ))))
+(my:wl-set-face 'wl-highlight-message-date-header-contents
+                '((t (:foreground "#4CFF4C" :bold t :italic nil :weight bold ))))
+(my:wl-set-face 'wl-highlight-message-header-contents
+                '((t (:foreground "#aaaaaa" :bold nil :italic nil :weight normal ))))
+(my:wl-set-face 'wl-highlight-message-headers
+                '((t (:foreground "#4CFFFF" :bold t :italic nil :weight bold ))))
+(my:wl-set-face 'wl-highlight-message-important-header-contents2
+                '((t (:foreground "#4CFF4C" :bold nil :italic nil :weight normal ))))
+(my:wl-set-face 'wl-highlight-message-signature
+                '((t (:foreground "#aaaaaa" :bold nil :italic nil :weight normal ))))
+(my:wl-set-face 'wl-highlight-message-important-header-contents
+                '((t (:foreground "#FF4CFF" :bold t :italic nil :weight bold ))))
+(my:wl-set-face 'wl-highlight-message-subject-header-contents
+                '((t (:foreground "#FF4C4C" :bold t :italic nil :weight bold ))))
+(my:wl-set-face 'wl-highlight-message-from-header-contents
+                '((t (:foreground "#FFFF4C" :bold t :italic nil :weight bold ))))
+(my:wl-set-face 'wl-highlight-message-unimportant-header-contents
+                '((t (:foreground "#aaaaaa" :bold nil :italic nil :weight normal ))))
+(my:wl-set-face 'wl-highlight-summary-answered-face
+                '((t (:foreground "#4CFF4C" :bold nil :italic nil :weight normal ))))
+(my:wl-set-face 'wl-highlight-summary-refiled-face
+                '((t (:foreground "#7F7FFF" :bold nil :italic nil :weight normal ))))
+(my:wl-set-face 'wl-highlight-summary-thread-top-face
+                '((t (:foreground "#F6F3E8" :bold nil :italic nil :weight normal ))))
+(my:wl-set-face 'wl-highlight-summary-important-flag-face
+                '((t (:foreground "#ffff4c" :bold nil :italic nil :weight normal ))))
+;;
+;; (my:wl-set-face 'wl-highlight-folder-killed-face
+;;                 '((t (:foreground ,my:h:black :5Dbold nil :italic nil ))))
+;; (my:wl-set-face 'wl-highlight-folder-many-face
+;;                 '((t (:foreground ,my:h:magenta :bold nil :italic nil ))))
+;; (my:wl-set-face 'wl-highlight-folder-opened-face
+;;                 '((t (:foreground "#4cffff" :bold nil :italic nil ))))
+;; (my:wl-set-face 'wl-highlight-folder-path-face
+;;                 '((t (:underline t :bold nil :italic nil ))))
+;; (my:wl-set-face 'wl-highlight-folder-unknown-face
+;;                 '((t (:foreground "#4cffff" :bold nil :italic nil ))))
+;; (my:wl-set-face 'wl-highlight-folder-unread-face
+;;                 '((t (:foreground ,my:n:blue :bold nil :italic nil ))))
+;; (my:wl-set-face 'wl-highlight-header-separator-face
+;;                 '((t (:inherit highlight :bold t ))))
+;; (my:wl-set-face 'wl-highlight-message-citation-header
+;;                 '((t (:foreground ,my:h:green :bold nil :italic nil ))))
+;; (my:wl-set-face 'wl-highlight-summary-copied-face
+;;                 '((t (:foreground "#4CFFFF" :bold nil :italic nil ))))
+;; (my:wl-set-face 'wl-highlight-summary-deleted-face
+;;                 '((t (:foreground ,my:h:black :bold nil :italic nil ))))
+;; (my:wl-set-face 'wl-highlight-summary-displaying-face
+;;                 '((t (:underline t :bold nil :italic nil ))))
+;; (my:wl-set-face 'wl-highlight-summary-disposed-face
+;;                 '((t (:foreground "#aaaaaa" :bold nil :italic nil ))))
+;; (my:wl-set-face 'wl-highlight-summary-flagged-face
+;;                 '((t (:foreground ,my:h:yellow :bold nil :italic nil ))))
+;; (my:wl-set-face 'wl-highlight-summary-forwarded-face
+;;                 '((t (:foreground ,my:h:blue :bold nil :italic nil ))))
+;; (my:wl-set-face 'wl-highlight-summary-high-read-face
+;;                 '((t (:foreground ,my:h:green :bold nil :italic nil ))))
+;; (my:wl-set-face 'wl-highlight-summary-high-unread-face
+;;                 '((t (:foreground ,my:h:orange :bold nil :italic nil ))))
+;; (my:wl-set-face 'wl-highlight-summary-important-face
+;;                 '((t (:foreground "#ffff4c" :bold nil :italic nil ))))
+;; (my:wl-set-face 'wl-highlight-summary-killed-face
+;;                 '((t (:foreground ,my:h:black :bold nil :italic nil ))))
+;; (my:wl-set-face 'wl-highlight-summary-l:read-face
+;;                 '((t (:foreground "#4CFF4C" :bold nil :italic nil ))))
+;; (my:wl-set-face 'wl-highlight-summary-l:unread-face
+;;                 '((t (:foreground ,my:h:lightb :bold nil :italic nil ))))
+;; (my:wl-set-face 'wl-highlight-summary-new-face
+;;                 '((t (:foreground "#ff4c4c" :bold nil :italic nil ))))
+;; (my:wl-set-face 'wl-highlight-summary-normal-face
+;;                 '((t (:foreground "#f6f3e8" :bold nil :italic nil ))))
+;; (my:wl-set-face 'wl-highlight-summary-prefetch-face
+;;                 '((t (:foreground ,my:n:blue :bold nil :italic nil ))))
+;; (my:wl-set-face 'wl-highlight-summary-resend-face
+;;                 '((t (:foreground ,my:h:orange :bold nil :italic nil ))))
+;; (my:wl-set-face 'wl-highlight-summary-target-face
+;;                 '((t (:foreground "#4CFFFF" :bold nil :italic nil ))))
+;; (my:wl-set-face 'wl-highlight-summary-temp-face
+;;                 '((t (:foreground ,my:n:violet :bold nil :italic nil ))))
+;; (my:wl-set-face 'wl-highlight-summary-unread-face
+;;                 '((t (:foreground "#ff4c4c" :bold nil :italic nil ))))
+;; (my:wl-set-face 'wl-highlight-thread-indent-face
+;;                 '((t (:underline t :bold nil :italic nil ))))
+    #+END_SRC
 *** 作成/返信設定
     自分宛のメールに返信する場合は =To:=, =Cc:= から自分のアドレスを削除
     #+begin_src emacs-lisp  :tangle init-wl.el
@@ -2053,84 +2216,6 @@ video/*; xdg-open %s;
                  'insert-signature-eref)))
   )
      #+end_src
-*** Face の設定
-    デフォルトより細かく指定するために幾つかの face 定義を追加.
-   #+begin_src emacs-lisp :tangle init-wl.el
-(setq wl-highlight-message-header-alist
-      '(("Subject[ \t]*:"
-         . wl-highlight-message-subject-header-contents)
-        ("From[ \t]*:"
-         . wl-highlight-message-from-header-contents)
-        ("Date[ \t]*:"
-         . wl-highlight-message-date-header-contents)
-        ("\\(.*To\\|Cc\\|Newsgroups\\)[ \t]*:"
-         . wl-highlight-message-important-header-contents)
-        ("\\(User-Agent\\|X-Mailer\\|X-Newsreader\\)[ \t]*:" .
-         wl-highlight-message-unimportant-header-contents)
-        ))
-(defun my:wl-set-face (face spec)
-  (make-face face)
-  (cond ((fboundp 'face-spec-set)
-         (face-spec-set face spec))
-        (t
-         (wl-declare-face face spec))))
-(my:wl-set-face 'wl-highlight-folder-closed-face                  '((t (:foreground "#4cff4c" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-folder-few-face                     '((t (:foreground "#FF4C4C" :bold t :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-folder-killed-face                  '((t (:foreground "#4c4c4c" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-folder-many-face                    '((t (:foreground "#ff7f7f" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-folder-opened-face                  '((t (:foreground "#4cffff" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-folder-path-face                    '((t (:underline t :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-folder-unknown-face                 '((t (:foreground "#4cffff" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-folder-unread-face                  '((t (:foreground "#4c4cff" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-folder-zero-face                    '((t (:foreground "#F6F3E8" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-header-separator-face               '((t (:inherit highlight :bold t ))))
-(my:wl-set-face 'wl-highlight-message-citation-header             '((t (:foreground "#7fff7f" :bold nil :italic nil ))))
-(my:wl-set-face 'wl-highlight-message-cited-text-1                '((t (:foreground "#7fff7f" :bold nil :italic nil ))))
-(my:wl-set-face 'wl-highlight-message-cited-text-2                '((t (:foreground "#ffff7f" :bold nil :italic nil ))))
-(my:wl-set-face 'wl-highlight-message-cited-text-3                '((t (:foreground "#7f7fff" :bold nil :italic nil ))))
-(my:wl-set-face 'wl-highlight-message-cited-text-4                '((t (:foreground "#7fffff" :bold nil :italic nil ))))
-(my:wl-set-face 'wl-highlight-message-cited-text-5                '((t (:foreground "#ff7fff" :bold nil :italic nil ))))
-(my:wl-set-face 'wl-highlight-message-cited-text-6                '((t (:foreground "#ff7f7f" :bold nil :italic nil ))))
-(my:wl-set-face 'wl-highlight-message-cited-text-7                '((t (:foreground "#4cff4c" :bold nil :italic nil ))))
-(my:wl-set-face 'wl-highlight-message-cited-text-8                '((t (:foreground "#ffff4c" :bold nil :italic nil ))))
-(my:wl-set-face 'wl-highlight-message-cited-text-9                '((t (:foreground "#4c4cff" :bold nil :italic nil ))))
-(my:wl-set-face 'wl-highlight-message-cited-text-10               '((t (:foreground "#4cffff" :bold nil :italic nil ))))
-(my:wl-set-face 'wl-highlight-message-cited-text-11               '((t (:foreground "#ff4cff" :bold nil :italic nil ))))
-(my:wl-set-face 'wl-highlight-message-cited-text-12               '((t (:foreground "#ff4c4c" :bold nil :italic nil ))))
-(my:wl-set-face 'wl-highlight-message-date-header-contents        '((t (:foreground "#4CFF4C" :bold t :italic nil ))))
-(my:wl-set-face 'wl-highlight-message-header-contents             '((t (:foreground "#aaaaaa" :bold nil :italic nil ))))
-(my:wl-set-face 'wl-highlight-message-headers                     '((t (:foreground "#4CFFFF" :bold t :italic nil ))))
-(my:wl-set-face 'wl-highlight-message-important-header-contents2  '((t (:foreground "#4CFF4C" :bold nil :italic nil ))))
-(my:wl-set-face 'wl-highlight-message-signature                   '((t (:foreground "#aaaaaa" :bold nil :italic nil ))))
-(my:wl-set-face 'wl-highlight-message-important-header-contents   '((t (:foreground "#FF4CFF" :bold t :italic nil ))))
-(my:wl-set-face 'wl-highlight-message-subject-header-contents     '((t (:foreground "#FF4C4C" :bold t :italic nil ))))
-(my:wl-set-face 'wl-highlight-message-from-header-contents        '((t (:foreground "#FFFF4C" :bold t :italic nil ))))
-(my:wl-set-face 'wl-highlight-message-unimportant-header-contents '((t (:foreground "#aaaaaa" :bold nil :italic nil ))))
-(my:wl-set-face 'wl-highlight-summary-answered-face               '((t (:foreground "#4CFF4C" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-summary-copied-face                 '((t (:foreground "#4CFFFF" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-summary-deleted-face                '((t (:foreground "#4c4c4c" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-summary-displaying-face             '((t (:underline t :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-summary-disposed-face               '((t (:foreground "#aaaaaa" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-summary-flagged-face                '((t (:foreground "#ffff7f" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-summary-forwarded-face              '((t (:foreground "#7f7fff" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-summary-high-read-face              '((t (:foreground "#7fff7f" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-summary-high-unread-face            '((t (:foreground "#FFBF7F" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-summary-important-face              '((t (:foreground "#ffff4c" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-summary-important-flag-face         '((t (:foreground "#ffff4c" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-summary-killed-face                 '((t (:foreground "#4c4c4c" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-summary-l:read-face                 '((t (:foreground "#4CFF4C" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-summary-l:unread-face               '((t (:foreground "#666666" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-summary-new-face                    '((t (:foreground "#ff4c4c" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-summary-normal-face                 '((t (:foreground "#f6f3e8" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-summary-prefetch-face               '((t (:foreground "#4c4cff" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-summary-refiled-face                '((t (:foreground "#7F7FFF" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-summary-resend-face                 '((t (:foreground "#FFBF7F" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-summary-target-face                 '((t (:foreground "#4CFFFF" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-summary-temp-face                   '((t (:foreground "#BF7FFF" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-summary-thread-top-face             '((t (:foreground "#F6F3E8" :bold t :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-summary-unread-face                 '((t (:foreground "#ff4c4c" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-thread-indent-face                  '((t (:underline t :bold nil :italic nil :weight normal ))))
-   #+end_src
 *** GPG 署名
     以前は mailcrypt を使っていたけれど,
     epa があるので主にキーバインドの設定のみ.
@@ -2167,13 +2252,13 @@ video/*; xdg-open %s;
               :map wl-folder-mode-map
               ("v" . wl-quicksearch-goto-search-folder-wrapper))
   :config
-   ;; (elmo-search-register-engine
-   ;;  'mu-custom 'local-file
-   ;;  :prog "mu"
-   ;;  :args '("find" "-u" elmo-search-split-pattern-list
-   ;;          "--fields" "l" "--sortfield" "date" "-r")
-   ;;  :charset 'utf-8
-   ;;  )
+  ;; (elmo-search-register-engine
+  ;;  'mu-custom 'local-file
+  ;;  :prog "mu"
+  ;;  :args '("find" "-u" elmo-search-split-pattern-list
+  ;;          "--fields" "l" "--sortfield" "date" "-r")
+  ;;  :charset 'utf-8
+  ;;  )
   (elmo-search-register-engine
    'notmuch-custom 'local-file
    :prog "notmuch-query-custom"
@@ -2199,8 +2284,8 @@ fi
 (setq elmo-multi-number 2000000000)
     #+end_src
 ** Linux Desktop で =mailto:= リンクを扱うために
-  ついでに =mailto= のリンクを emacsclient で扱うために，以下の関数を定義しておく
-  #+begin_src emacs-lisp
+   ついでに =mailto= のリンクを emacsclient で扱うために，以下の関数を定義しておく
+   #+begin_src emacs-lisp
 (defun my:mailto-compose-mail (mailto-url)
   (if (and (stringp mailto-url)
            (string-match "\\`mailto:" mailto-url))
@@ -2211,9 +2296,9 @@ fi
                (good-headers (remove-if (lambda (h) (member (car h) '(Body))) headers))
                (body (cdr (assoc 'Body headers))))
           (wl-draft good-headers nil nil body)))))
-  #+end_src
-  Desktop の設定では
-  #+begin_src sh :tangle no
+   #+end_src
+   Desktop の設定では
+   #+begin_src sh :tangle no
 #!/bin/sh
 # emacs-mailto-handler
 
@@ -2223,12 +2308,12 @@ mailto=$(printf '%s\n' "$mailto" | sed -e 's/[\"]/\\&/g')
 elisp_expr="(my:mailto-compose-mail \"$mailto\")"
 
 emacsclient -a "" -n --eval "$elisp_expr" \
-	'(set-window-dedicated-p (selected-window) t)'
-  #+end_src
-  をメーラとして指定すれば良い．
-  GNOME は =.desktop= ファイルが無いと「お気に入り」登録ができないので
-  以下のファイルを適当な名前で =~/.local/share/applications/= 以下に放り込んでおくと良いだろう
-  #+begin_src conf :tangle no
+	        '(set-window-dedicated-p (selected-window) t)'
+   #+end_src
+   をメーラとして指定すれば良い．
+   GNOME は =.desktop= ファイルが無いと「お気に入り」登録ができないので
+   以下のファイルを適当な名前で =~/.local/share/applications/= 以下に放り込んでおくと良いだろう
+   #+begin_src conf :tangle no
 [Desktop Entry]
 Name=Emacs Mail Handler
 GenericName=Mail User Agent
@@ -2242,7 +2327,7 @@ Type=Application
 Categories=GNOME;GTK;Office;Email;
 StartupNotify=false
 MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
-  #+end_src
+   #+end_src
 ** メールからの予定の取り込み: =mhc=
    #+begin_src emacs-lisp
 (use-package mhc
@@ -2362,26 +2447,21 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 ** Babel
    #+begin_src emacs-lisp
 (use-package org-src
-  :diminish ""
   :config
   (setq org-src-fontify-natively t       ;; font-lock
         org-src-tab-acts-natively t      ;; indent
         org-edit-src-content-indentation 0
         org-src-preserve-indentation t
         )
-  (when (featurep 'flycheck)
-    (defun my:disable-fylcheck-in-org-src-block ()
-      (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc)))
-    (add-hook 'org-src-mode-hook 'my:disable-fylcheck-in-org-src-block))
   )
    #+end_src
 ** Agenda: スケジュール，TODO 表示
    GTD 用の設定．後述の =org-gcal= と =orgmine= で取得したデータも表示している．
    ついでに
-    - 土曜日をの face を追加.
-    - 祝日, 休日を日曜と同じfaceにする.
+   - 土曜日をの face を追加.
+   - 祝日, 休日を日曜と同じfaceにする.
    なんて事もやっている．元ネタは [[https://julien.danjou.info/blog/2010/org-mode-and-holidays][Org-mode and holidays]]
-  #+begin_src emacs-lisp
+   #+begin_src emacs-lisp
 (use-package org-agenda
   :bind (("C-c a" . org-agenda))
   :init
@@ -2489,7 +2569,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
            (;;
             (todo "MEMO")
             ))
-           )
+          )
         )
   ;; 色付け
   (add-hook 'org-agenda-finalize-hook
@@ -2498,7 +2578,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                 (goto-char (point-min))
                 (while (re-search-forward "KUSM:" nil t)
                   (add-text-properties (match-beginning 0) (point-at-eol)
-                                     '(face my:org-agenda-calendar-KUSM)))
+                                       '(face my:org-agenda-calendar-KUSM)))
                 (goto-char (point-min))
                 (while (re-search-forward "Schedule:" nil t)
                   (add-text-properties (match-beginning 0) (point-at-eol)
@@ -2533,7 +2613,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                                        '(face org-agenda-date-weekend)))
                 )))
   )
-  #+end_src
+   #+end_src
 ** Org-journal: 日記
    単一ファイルに記述すること, および
    エントリ作成時に日付を入れるために =org-jounnal-new-entry= を =advice= している
@@ -2612,8 +2692,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (defun my:transform-square-brackets-to-round-ones (string-to-transform)
     "Transforms [ into ( and ] into ), other chars left unchanged."
     (concat
-   (mapcar #'(lambda (c) (if (equal c ?\[) ?\( (if (equal c ?\]) ?\) c)))
-           string-to-transform))
+     (mapcar #'(lambda (c) (if (equal c ?\[) ?\( (if (equal c ?\]) ?\) c)))
+             string-to-transform))
     )
   (setq org-default-notes-file (concat my:d:org "journal.org")
         org-capture-templates
@@ -2700,7 +2780,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :if  (and my:d:password-store
             (file-directory-p my:d:org))
   :no-require t
-  :diminish ""
   :commands (orgmine-mode)
   :quelpa (orgmine
            :fetcher github
@@ -2727,10 +2806,10 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   )
    #+end_src
 ** Org-Wiki
-    計算機関連のメモは [[https://github.com/uwabami/org-wiki][uwabami/org-wiki]] で書いています．元々は
-    [[https://github.com/caiorss/org-wiki][caiorss/org-wiki]] を使っていたのですが helm 依存の部分を ido に書き換
-    えてます.
-    #+begin_src emacs-lisp
+   計算機関連のメモは [[https://github.com/uwabami/org-wiki][uwabami/org-wiki]] で書いています．元々は
+   [[https://github.com/caiorss/org-wiki][caiorss/org-wiki]] を使っていたのですが helm 依存の部分を ido に書き換
+   えてます.
+   #+begin_src emacs-lisp
 (use-package org-wiki
   :if (file-directory-p "~/Public/cc-env")
   :no-require t
@@ -2749,7 +2828,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 ,#+PERMALINK: /cc-env/%n.html
 Related [[wiki:index][Index]]
 "))
-    #+end_src
+   #+end_src
 * Howm
   Org を使う前は Howm を使っていました.
   過去のメモを検索するためだけに未だに Howm を使っています.
@@ -2760,7 +2839,6 @@ Related [[wiki:index][Index]]
   :no-require t
   :after (org)
   :commands (howm-menu)
-  :diminish ""
   :bind (:map howm-mode-map
               ("C-c , ,"     . howm-menu)
               ("C-c C-c"     . nil)
@@ -2891,7 +2969,7 @@ Related [[wiki:index][Index]]
         )
   )
    #+END_SRC
-** VCS: =ido-ghq=
+** リポジトリの移動: =ido-ghq=
    ghq list を ido で選んで dired で開く
    #+BEGIN_SRC emacs-lisp
 (use-package ido-ghq
@@ -2904,12 +2982,21 @@ Related [[wiki:index][Index]]
   (setq ido-ghq-short-list t)
   )
    #+END_SRC
+* プロジェクト毎の coding rule の適用: =editorconfig=
+  #+BEGIN_SRC emacs-lisp
+(use-package editorconfig
+  :ensure t
+  :config
+  (editorconfig-mode 1)
+  )
+  #+END_SRC
 * Project管理: =projectile=
-  沢山 project がある環境だとツライ気がする...
+  沢山 project がある環境だとツライ気がする.
+  最近は ghq で移動する事が増えてきたので, どうしたモンかな.
   #+BEGIN_SRC emacs-lisp
 (use-package projectile
   :ensure t
-  :delight '(:eval (concat "P:" (projectile-project-name)))
+  :bind (("C-c p p" . projectile-switch-project))
   :config
   (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
   (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
@@ -2924,13 +3011,59 @@ Related [[wiki:index][Index]]
   (projectile-mode +1)
   )
   #+END_SRC
-* プロジェクト毎の coding rule の適用: =editorconfig=
+* Syntax checker: =flycheck= [0/1]
+  以前は flymake を利用していたけれど, 最近は flycheck を使っている.
+  「デフォルトで良いようにしてくれる」筈なんだけれど,
+  「痒い所に手が届かない」というか, なんというか...
+  まあ, default ってそんなモンだよな.
+  - [ ] autotools なんかだとどうするのが筋かしら?
+  そのうち嫌になって flymake に戻すかも.
   #+BEGIN_SRC emacs-lisp
-(use-package editorconfig
+(use-package flycheck
   :ensure t
-  :delight
+  :init
+  ;; org-src での emacs-lisp-checkdoc は意味が無い
+  (defun my:disable-fylcheck-in-org-src-block ()
+    "Disable emacs-lisp-checkdoc in org-src-block."
+    (interactive)
+    (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc)))
+  ;; projectile-project-root に合わせて include path 等を追加してみるテスト
+  ;; 本当は .dir-local.el を用意すべきかな.
   :config
-  (editorconfig-mode 1)
+  (if (featurep 'org-src)
+      (add-hook 'org-src-mode-hook #'my:disable-fylcheck-in-org-src-block))
+  (if (executable-find "flycheck_chktex.sh")
+      (setq flycheck-tex-chktex-executable "flycheck_chktex.sh"))
+  (add-hook 'after-init-hook #'global-flycheck-mode)
+  )
+  #+END_SRC
+  popup で表示させる [[https://github.com/flycheck/flycheck-popup-tip][flycheck-popup-tip]] も入れておく
+  #+BEGIN_SRC emacs-lisp
+(use-package flycheck-popup-tip
+  :ensure t
+  :config
+  (with-eval-after-load 'flycheck
+    (add-hook 'flycheck-mode-hook #'flycheck-popup-tip-mode))
+  )
+  #+END_SRC
+  status を絵文字で表示
+  #+BEGIN_SRC emacs-lisp
+(use-package flycheck-status-emoji
+  :ensure t
+  :after flycheck
+  :config
+  (setq flycheck-status-emoji-indicator-running          ?🔃
+        flycheck-status-emoji-indicator-finished-ok      ?✔
+        flycheck-status-emoji-indicator-finished-error   ?✖
+        flycheck-status-emoji-indicator-finished-warning ?⚠
+        flycheck-status-emoji-indicator-finished-info    ?💁
+        flycheck-status-emoji-indicator-not-checked      ?🔇
+        flycheck-status-emoji-indicator-no-checker       ?🌸
+        flycheck-status-emoji-indicator-errored          ?✖
+        flycheck-status-emoji-indicator-interrupted      ?😎
+        flycheck-status-emoji-indicator-suspicious       ?❓)
+  (with-eval-after-load 'flycheck
+    (flycheck-status-emoji-mode +1))
   )
   #+END_SRC
 * TeX
@@ -3041,57 +3174,93 @@ $clean_ext = "snm nav vrb synctex.gz";
     (tdiary-passwd-file-load))
   )
   #+END_SRC
-* テーマ, フォント, モードライン
-** ddskk の表示のカスタマイズ
-   SKK の状態がヒョコヒョコ動くのが嫌なので，
-   =skk-modeline-input-mode= に常に現在の状況を表示する様にしておく．
+* テーマ, フォント, モードライン, などなど
+** major/minor モードの表示設定
+   diminish や delight があるわけですが,
+   微妙にこれで指定できない奴もあってアレですね.
    #+BEGIN_SRC emacs-lisp
-(defun my:skk-modeline-input-mode ()
-  "skk が読み込まれていない場合でも skk-modeline-input-mode に文字を入れて返す"
-  (unless (boundp 'skk-modeline-inpt-mode)
-    (setq skk-modeline-input-mode "--[--]:")))
-(my:skk-modeline-input-mode)
-   #+END_SRC
-   ddskk そのものに modeline を更新する関数があるので無効化する
-   #+BEGIN_SRC emacs-lisp
-(defadvice skk-setup-modeline (around my:disable-skk-setup-modeline activate)
-  "skk-setup-modeline による modeline の更新を無効化"
-  (setq skk-indicator-alist (skk-make-indicator-alist))
-  (force-mode-line-update t))
+(defvar my:mode-line-cleaner-alist
+  '( ;; For minor-mode, first char is 'space'
+    (yas-minor-mode         . " Ya")
+    (eldoc-mode             . "")
+    (abbrev-mode            . "")
+    (undo-tree-mode         . "")
+    (flymake-mode           . "")
+    (isearch-mode           . "")
+    (global-whitespace-mode . "")
+    (editorconfig-mode      . "")
+    (company-mode           . " Co")
+    (rainbow-mode           . "")
+    (orgmine-mode           . "")
+    (orgtbl-mode            . "")
+    ;; Major modes
+    (python-mode            . "🐍")
+    (ruby-mode              . "💎")
+    (lisp-interaction-mode  . "LI")
+    (emacs-lisp-mode        . "EL")
+    (markdown-mode          . "MD")
+    (org-mode               . "Og")
+    (org-src-mode           . "Os")
+    (package-menu-mode      . "📦")
+    ))
+(defun my:clean-mode-line ()
+  "Cleanup major/minor mode."
+  (interactive)
+  (cl-loop for (mode . mode-str) in my:mode-line-cleaner-alist
+           do
+           (let ((old-mode-str (cdr (assq mode minor-mode-alist))))
+             (when old-mode-str
+               (setcar old-mode-str mode-str))
+             ;; major mode
+             (when (eq mode major-mode)
+               (setq mode-name mode-str)))))
+(add-hook 'after-change-major-mode-hook 'my:clean-mode-line)
    #+END_SRC
 ** powerline 本体の設定．
    default-theme をベースに見たい物だけ表示するようにしてみた．
    変更点として,
    - separater は環境によってズレるので，半角スペースに変更
-   - vc-mode でのアイコン表示に U+26A1⚡ High Voltage を使う
-   といった事をしている. East Asian ambiguous Width char の扱いは面倒ですね
+   - vc-mode, line number 等のアイコン表示を止める
+   といった事をしている. East Asian ambiguous Width char の扱いは面倒ですね.
    #+BEGIN_SRC emacs-lisp
+;; SKK の状態がヒョコヒョコ動くのが嫌なので，skk-modeline-input-mode= に
+;; 常に現在の状況を表示する様にしておく．
+(defun my:skk-modeline-input-mode ()
+  "skk が読み込まれていない場合でも skk-modeline-input-mode に文字を入れて返す"
+  (unless (boundp 'skk-modeline-inpt-mode)
+    (setq skk-modeline-input-mode "--[--]:")))
+;; 一回呼んでおく?
+(my:skk-modeline-input-mode)
+;; ddskk そのものに modeline を更新する関数があるので無効化する
+(defadvice skk-setup-modeline (around my:disable-skk-setup-modeline activate)
+  "skk-setup-modeline による modeline の更新を無効化"
+  (setq skk-indicator-alist (skk-make-indicator-alist))
+  (force-mode-line-update t))
 (use-package powerline
   :ensure t
   :init
-  ;; 半角スペース
-  (setq powerline-default-separator 'utf-8     ;; UTF-8
-        powerline-utf-8-separator-left  #x20   ;; 半角スペース
-        powerline-utf-8-separator-right  #x20  ;; 半角スペース
-        powerline-display-buffer-size nil
-        powerline-display-mule-info t
-        powerline-display-hud t
-        )
   ;; delight との連携
   ;; @see https://www.emacswiki.org/emacs/DelightedPowerLine
   (defadvice powerline-major-mode (around delight-powerline-major-mode activate)
     "Ensure that powerline's major mode names are delighted."
     (let ((inhibit-mode-name-delight nil))
       ad-do-it))
-  ;; thheme 設定
+  ;; change vc-mode icon
+  (defpowerline my:powerline-vc
+    (when (and (buffer-file-name (current-buffer)) vc-mode)
+      (format "%s%s"
+              (char-to-string #x26a1)
+              (format-mode-line '(vc-mode vc-mode)))))
+  ;; theme のカスタマイズ
   (defun my:powerline-theme ()
-    "skk の indticator を表示するように変更"
+    "Setup the default mode-line."
     (interactive)
     (setq-default mode-line-format
                   '("%e"
                     (:eval
                      (let* ((active (powerline-selected-window-active))
                             (mode-line-buffer-id (if active 'mode-line-buffer-id 'mode-line-buffer-id-inactive))
+                            ;; (mode-line-buffer-id (if active 'mode-line-buffer-id 'mode-line-buffer-id-inactive))
                             (mode-line (if active 'mode-line 'mode-line-inactive))
                             (face1 (if active 'powerline-active1 'powerline-inactive1))
                             (face2 (if active 'powerline-active2 'powerline-inactive2))
@@ -3102,47 +3271,51 @@ $clean_ext = "snm nav vrb synctex.gz";
                                                              (powerline-current-separator)
                                                              (cdr powerline-default-separator-dir))))
                             (lhs (list (powerline-raw (substring skk-modeline-input-mode 2 -1) nil 'l)
+                                       (powerline-raw mode-line-mule-info mode-line 'l)
                                        (powerline-raw "%*" mode-line 'l)
-                                       (when powerline-display-buffer-size
-                                         (powerline-buffer-size mode-line 'l))
-                                       (when powerline-display-mule-info
-                                         (powerline-raw mode-line-mule-info mode-line 'l))
-                                       (powerline-buffer-id mode-line-buffer-id 'l)
-                                       (when (and (boundp 'which-func-mode) which-func-mode)
-                                         (powerline-raw which-func-format nil 'l))
                                        (powerline-raw " ")
+                                       (powerline-major-mode mode-line 'l)
                                        (funcall separator-left mode-line face1)
-                                       (when (and (boundp 'erc-track-minor-mode) erc-track-minor-mode)
-                                         (powerline-raw erc-modified-channels-object face1 'l))
-                                       (powerline-major-mode face1 'l)
-                                       (powerline-process face1)
-                                       (powerline-minor-modes face1 'l)
-                                       (powerline-narrow face1 'l)
+                                       (powerline-raw " " face1)
+                                       (powerline-buffer-id face1 'r)
                                        (powerline-raw " " face1)
                                        (funcall separator-left face1 face2)
-                                       (powerline-vc face2 'r)
-                                       (when (bound-and-true-p nyan-mode)
-                                         (powerline-raw (list (nyan-create)) face2 'l))))
+                                       (powerline-process face2 'r)
+                                       (powerline-minor-modes face2 'r)
+                                       (powerline-narrow face2 'r)
+                                       ))
                             (rhs (list (powerline-raw global-mode-string face2 'r)
                                        (funcall separator-right face2 face1)
-                                       (unless window-system
-                                         (powerline-raw (char-to-string #xe0a1) face1 'l))
-                                       (powerline-raw "%5l" face1 'l)
-                                       (powerline-raw ":" face1 'l)
-                                       (powerline-raw "%3c" face1 'l)
+                                       ;; (powerline-raw "%4l" face1 'l)
+                                       ;; (powerline-raw ":" face1 'l)
+                                       ;; (powerline-raw "%3c" face1 'r)
+                                       (powerline-raw " " face1)
+                                       (my:powerline-vc face1 'c)
+                                       (powerline-raw " " face1)
                                        (funcall separator-right face1 mode-line)
                                        (powerline-raw " ")
                                        (powerline-raw "%6p" mode-line 'l)
+                                       (powerline-raw " /")
+                                       (powerline-buffer-size mode-line 'l)
                                        (powerline-raw " ")
-                                       (when powerline-display-hud
-                                         (powerline-hud face2 face1)))))
+                                       ))
+                            )
                        (concat (powerline-render lhs)
                                (powerline-fill face2 (powerline-width rhs))
-                               (powerline-render rhs)))))))
+                               (powerline-render rhs))
+                       )))))
   :config
+  ;; 半角スペース
+  (setq powerline-default-separator 'utf-8     ;; UTF-8
+        powerline-utf-8-separator-left  #x20   ;; 半角スペース
+        powerline-utf-8-separator-right  #x20  ;; 半角スペース
+        powerline-display-buffer-size nil
+        powerline-display-mule-info t
+        powerline-display-hud t
+        )
   (my:powerline-theme)
   )
-  #+END_SRC
+   #+END_SRC
 ** フォントと色
    そろそろテーマにした方が良い，とは思ってはいる．
    #+begin_src emacs-lisp
@@ -3207,7 +3380,7 @@ $clean_ext = "snm nav vrb synctex.gz";
  '(mode-line                           ((t (:foreground "#F6F3E8" :background "#222244" ))))
  '(mode-line-inactive                  ((t (:foreground "#666666" :background "#999999" :bold nil ))))
  '(fringe                              ((t (:foreground "#666666" :background "#282828" ))))
-;; '(hl-line                           ((t (:inherit highlight :underline t ))))
+ ;; '(hl-line                           ((t (:inherit highlight :underline t ))))
  '(highlight                           ((t (:background "#556b2f" ))))
  '(term-color-black                    ((t (:background "#242424" :foreground "#242424"))))
  '(term-color-blue                     ((t (:background "#4c4cff" :foreground "#4c4cff"))))
@@ -3217,7 +3390,7 @@ $clean_ext = "snm nav vrb synctex.gz";
  '(term-color-red                      ((t (:background "#ff4c4c" :foreground "#ff4c4c"))))
  '(term-color-white                    ((t (:background "#f6f3e8" :foreground "#f6f3e8"))))
  '(term-color-yellow                   ((t (:background "#ffff4c" :foreground "#ffff4c"))))
-  ;;
+ ;;
  '(minibuffer-prompt                   ((t (:foreground "#BF7FFF" ))))
  '(region                              ((t (:background "#222244" ))))
  ;; dired
@@ -3258,8 +3431,8 @@ $clean_ext = "snm nav vrb synctex.gz";
  ;; powerline
  '(powerline-active1                   ((t (:background "#000000":foreground "#F6F3E8"))))
  '(powerline-active2                   ((t (:background "#666666" :foreground "#F6F3E8"))))
- '(powerline-inactive1                 ((t (:inherit modeline-inactive))))
- '(powerline-inactive2                 ((t (:inherit modeline-inactive))))
+ '(powerline-inactive1                 ((t (:inherit mode-line-inactive))))
+ '(powerline-inactive2                 ((t (:inherit mode-line-inactive))))
  ;; preview-latex
  '(font-latex-sectioning-0-face        ((t (:inherit font-latex-sectioning-1-face))))
  '(font-latex-sectioning-1-face        ((t (:inherit font-latex-sectioning-2-face))))
@@ -3338,20 +3511,6 @@ $clean_ext = "snm nav vrb synctex.gz";
 ;; '(review-mode-header4-face  ((t (:inherit outline-4))))
 ;; '(review-mode-header5-face  ((t (:inherit outline-5))))
    #+end_src
-** major/minor モードの表示設定
-   #+BEGIN_SRC emacs-lisp
-(delight '((emacs-lisp-mode       "" :major)
-           (textlie-mode          "" :major)
-           (scss-mode             "" :major)
-           (lisp-interaction-mode "" :major)
-           (wl-folder-mode        "" :major)
-           (wl-summary-mode       "" :major)
-           (wl-draft-mode         "" :major)
-           (mime-view-mode        "" :major)
-           (isearch-mode          nil)
-           (devlock-mode          nil)
-           ))
-   #+END_SRC
 ** 対応する括弧を見易く: =rainbow-delimiters=
    #+BEGIN_SRC emacs-lisp
 (use-package rainbow-delimiters
@@ -3363,7 +3522,6 @@ $clean_ext = "snm nav vrb synctex.gz";
    =#RRGGBB= のカラーコードに勝手に色が付く．CSS の編集中なんかで地味に便利．
    #+BEGIN_SRC emacs-lisp
 (use-package rainbow-mode
-  :delight
   :ensure t
   )
    #+END_SRC
@@ -3393,3 +3551,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
   #+end_example
+
+#+BEGIN_SRC emacs-lisp
+(let* ((state (vc-state (buffer-file-name (current-buffer)))))
+  (cond
+   ((string-equal state "edited")
+    (format "%s" state))
+   ))
+(insert (format-mode-line '(vc-mode vc-mode)))
+#+END_SRC

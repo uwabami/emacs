@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+startup: overview
-#+date: 2019-01-29 14:41:46
+#+date: 2019-01-29 16:45:23
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -1242,6 +1242,11 @@ File.open(src, "r") {|f|
       (find-file (assoc-default selected files)))))
 (bind-key "C-x C-r" 'ido-recentf-open)
    #+end_src
+** =ido-
+   #+BEGIN_SRC emacs-lisp
+(use-package ido-completing-read+
+  :ensure t)
+   #+END_SRC
 ** =smex=
    M-x を ido で。
    #+begin_src emacs-lisp
@@ -2972,10 +2977,11 @@ Related [[wiki:index][Index]]
    飽きたら止めるかもしれないけれど.
    #+BEGIN_SRC emacs-lisp
 (use-package git-gutter+
+  :if (>= emacs-major-version 25)
   :ensure t
   :bind ("C-x G" . global-git-gutter+-mode)
   :config
-  (global-git-gutter+-mode)
+  ;; (global-git-gutter+-mode)
   )
    #+END_SRC
 ** リポジトリの移動: =ido-ghq=

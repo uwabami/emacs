@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+startup: overview
-#+date: 2019-01-29 17:12:42
+#+date: 2019-01-29 17:54:41
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -1443,13 +1443,6 @@ File.open(src, "r") {|f|
     (make-directory (concat elmo-msgdb-directory "/local")))
   (unless (file-directory-p (concat elmo-msgdb-directory "/local/Trash"))
     (make-directory (concat elmo-msgdb-directory "/local/Trash")))
-  ;; face の色付け用の関数の定義
-  (defun my:wl-set-face (face spec)
-    (make-face face)
-    (cond ((fboundp 'face-spec-set)
-           (face-spec-set face spec))
-          (t
-           (wl-declare-face face spec))))
   ;; mode-line 弄り
   (defun my:wl-mode-line-buffer-identification (&optional id)
     (force-mode-line-update t))
@@ -2046,6 +2039,12 @@ video/*; xdg-open %s;
     #+end_src
     face の色付け
     #+BEGIN_SRC emacs-lisp
+(defun my:wl-set-face (face spec)
+  (make-face face)
+  (cond ((fboundp 'face-spec-set)
+         (face-spec-set face spec))
+        (t
+         (wl-declare-face face spec))))
 (my:wl-set-face 'wl-highlight-folder-closed-face
                 '((t (:foreground "#4cff4c" :bold nil :italic nil :weight normal ))))
 (my:wl-set-face 'wl-highlight-folder-few-face
@@ -2981,7 +2980,6 @@ Related [[wiki:index][Index]]
   :ensure t
   :bind ("C-x G" . global-git-gutter+-mode)
   :config
-  ;; (global-git-gutter+-mode)
   )
    #+END_SRC
 ** リポジトリの移動: =ido-ghq=
@@ -3021,6 +3019,10 @@ Related [[wiki:index][Index]]
         (expand-file-name "projectile-bookmarks.eld" my:d:share)
         projectile-enable-caching t
         projectile-find-dir-innclude-top-level t
+        projectile-mode-line-prefix " 📖"
+        projectile-dynamic-mode-line t
+        ;; projectile-mode-line-function
+        ;; #'(lambda () (format " 📖[%s]" (projectile-project-name)))
         )
   (advice-add 'projectile-switch-project :around #'my:ido-grid-force-one-columns)
   (projectile-mode +1)
@@ -3451,91 +3453,91 @@ $clean_ext = "snm nav vrb synctex.gz";
     "skk-setup-modeline による modeline の更新を無効化"
     (setq skk-indicator-alist (skk-make-indicator-alist))
     (force-mode-line-update t))
-  ;; Git 表示 のカスタマイズ
-  (eval-when-compile (require 'subr-x))
-  (defun my:in-git-p ()
-    "Check: 今の作業ディレクトリが Git のリポジトリかどうかをチェックする. "
-    (not (string-match "^fatal" (shell-command-to-string "git rev-parse --git-dir"))))
+  ;; ;; Git 表示 のカスタマイズ
+  ;; (eval-when-compile (require 'subr-x))
+  ;; (defun my:in-git-p ()
+  ;;   "Check: 今の作業ディレクトリが Git のリポジトリかどうかをチェックする. "
+  ;;   (not (string-match "^fatal" (shell-command-to-string "git rev-parse --git-dir"))))
+  ;; ;;
+  ;; (defun my:git-parse-status ()
+  ;;   "Parse: git status を整形 "
+  ;;   (interactive)
+  ;;   (let ((U 0)   ; untracked files
+  ;;         (M 0)   ; modified files
+  ;;         (O 0)   ; other files
+  ;;         (U-files "")
+  ;;         (M-files "")
+  ;;         (O-files ""))
+  ;;     (dolist (line (split-string
+  ;;                    (shell-command-to-string "git status --porcelain")
+  ;;                    "\n"))
+  ;;       (cond
+  ;;        ;; ignore empty line at end
+  ;;        ((string= "" line) nil)
+  ;;        ((string-match "^\\?\\?" line)
+  ;;         (setq U (+ 1 U))
+  ;;         (setq U-files (concat U-files "\n" line)))
+  ;;        ((string-match "^ M" line)
+  ;;         (setq M (+ 1 M))
+  ;;         (setq M-files (concat M-files "\n" line)))
+  ;;        (t
+  ;;         (message "detected other in %s" line)
+  ;;         (setq O (+ 1 O))
+  ;;         (setq O-files (concat O-files "\n" line)))))
+  ;;     ;; construct propertized string
+  ;;     (concat
+  ;;      ;;     "["
+  ;;      (propertize
+  ;;       (format "M:%d" M)
+  ;;       'face (list ':foreground (if (> M 0)
+  ;;                                    "#FF4C4C"
+  ;;                                  "#4CFF4C"))
+  ;;       'help-echo M-files)
+  ;;      "|"
+  ;;      (propertize
+  ;;       (format "U:%d" U)
+  ;;       'face (list ':foreground (if (> U 0) "#FF4C4C" "#4CFF4C"))
+  ;;       'help-echo U-files)
+  ;;      "|"
+  ;;      (propertize
+  ;;       (format "O:%d" O)
+  ;;       'face (list ':foreground (if (> O 0) "$FF4C4C" "#4CFF4C"))
+  ;;       'help-echo O-files)
+  ;;      "> ")))
   ;;
-  (defun my:git-parse-status ()
-    "Parse: git status を整形 "
-    (interactive)
-    (let ((U 0)   ; untracked files
-          (M 0)   ; modified files
-          (O 0)   ; other files
-          (U-files "")
-          (M-files "")
-          (O-files ""))
-      (dolist (line (split-string
-                     (shell-command-to-string "git status --porcelain")
-                     "\n"))
-        (cond
-         ;; ignore empty line at end
-         ((string= "" line) nil)
-         ((string-match "^\\?\\?" line)
-          (setq U (+ 1 U))
-          (setq U-files (concat U-files "\n" line)))
-         ((string-match "^ M" line)
-          (setq M (+ 1 M))
-          (setq M-files (concat M-files "\n" line)))
-         (t
-          (message "detected other in %s" line)
-          (setq O (+ 1 O))
-          (setq O-files (concat O-files "\n" line)))))
-      ;; construct propertized string
-      (concat
-       ;;     "["
-       (propertize
-        (format "M:%d" M)
-        'face (list ':foreground (if (> M 0)
-                                     "#FF4C4C"
-                                   "#4CFF4C"))
-        'help-echo M-files)
-       "|"
-       (propertize
-        (format "U:%d" U)
-        'face (list ':foreground (if (> U 0) "#FF4C4C" "#4CFF4C"))
-        'help-echo U-files)
-       "|"
-       (propertize
-        (format "O:%d" O)
-        'face (list ':foreground (if (> O 0) "$FF4C4C" "#4CFF4C"))
-        'help-echo O-files)
-       "> ")))
-  ;;
-  (defun my:git-remote-status ()
-    "Parse: remote status も含めて status を整形. "
-    (interactive)
-    (let* (;; get the branch we are on.
-           (branch (string-trim
-                    (shell-command-to-string "git rev-parse --abbrev-ref HEAD")))
-           (branch-show (if (string-match "fatal:" branch) "Init" branch))
-           ;; get the remote the branch points to.
-           (remote (string-trim
-                    (shell-command-to-string
-                     (format "git config branch.%s.remote" branch))))
-           (remote-branch (string-trim
-                           (shell-command-to-string
-                            "git for-each-ref --format='%(upstream:short)' $(git symbolic-ref -q HEAD)")))
-           (commits (split-string
-                     (string-trim
-                      (shell-command-to-string
-                       (format
-                        "git rev-list --count --left-right HEAD...%s"
-                        remote-branch)))))
-           (local (nth 0 commits))
-           (local-show (if (string-equal local "fatal:") "-" local))
-           (remotes (nth 1 commits))
-           (remotes-show (if (string-equal remotes "ambiguous") "-" remotes))
-           )
-      (concat
-       " <"
-       (propertize
-        (format "%s" branch-show)
-        'face (list :foreground "#FFBF7F"))
-       "|"
-       (format "↑%s|↓%s" local-show remotes-show)
-       "|")))
+  ;; (defun my:git-remote-status ()
+  ;;   "Parse: remote status も含めて status を整形. "
+  ;;   (interactive)
+  ;;   (let* (;; get the branch we are on.
+  ;;          (branch (string-trim
+  ;;                   (shell-command-to-string "git rev-parse --abbrev-ref HEAD")))
+  ;;          (branch-show (if (string-match "fatal:" branch) "Init" branch))
+  ;;          ;; get the remote the branch points to.
+  ;;          (remote (string-trim
+  ;;                   (shell-command-to-string
+  ;;                    (format "git config branch.%s.remote" branch))))
+  ;;          (remote-branch (string-trim
+  ;;                          (shell-command-to-string
+  ;;                           "git for-each-ref --format='%(upstream:short)' $(git symbolic-ref -q HEAD)")))
+  ;;          (commits (split-string
+  ;;                    (string-trim
+  ;;                     (shell-command-to-string
+  ;;                      (format
+  ;;                       "git rev-list --count --left-right HEAD...%s"
+  ;;                       remote-branch)))))
+  ;;          (local (nth 0 commits))
+  ;;          (local-show (if (string-equal local "fatal:") "-" local))
+  ;;          (remotes (nth 1 commits))
+  ;;          (remotes-show (if (string-equal remotes "ambiguous") "-" remotes))
+  ;;          )
+  ;;     (concat
+  ;;      " <"
+  ;;      (propertize
+  ;;       (format "%s" branch-show)
+  ;;       'face (list :foreground "#FFBF7F"))
+  ;;      "|"
+  ;;      (format "↑%s|↓%s" local-show remotes-show)
+  ;;      "|")))
   ;; delight との連携
   ;; @see https://www.emacswiki.org/emacs/DelightedPowerLine
   (defadvice powerline-major-mode (around delight-powerline-major-mode activate)
@@ -3565,11 +3567,11 @@ $clean_ext = "snm nav vrb synctex.gz";
                             (separator-right (intern (format "powerline-%s-%s"
                                                              (powerline-current-separator)
                                                              (cdr powerline-default-separator-dir))))
-                            (lhs (list (powerline-raw (substring skk-modeline-input-mode 2 -1) nil 'l)
+                            (lhs (list (powerline-raw (substring skk-modeline-input-mode 2 -1) mode-line 'l)
                                        (powerline-raw "%*" mode-line 'l)
                                        (powerline-raw mode-line-mule-info mode-line 'l)
                                        (powerline-raw " ")
-                                       (powerline-major-mode 'l)
+                                       (powerline-major-mode)
                                        (powerline-raw " ")
                                        (funcall separator-left mode-line face1)
                                        ;; (powerline-buffer-id mode-line-buffer-id 'l)

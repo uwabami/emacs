@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+startup: overview
-#+date: 2019-01-29 17:54:41
+#+date: 2019-01-29 18:14:59
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -3001,31 +3001,6 @@ Related [[wiki:index][Index]]
   :ensure t
   :config
   (editorconfig-mode 1)
-  )
-  #+END_SRC
-* Project管理: =projectile=
-  沢山 project がある環境だとツライ気がする.
-  最近は ghq で移動する事が増えてきたので, どうしたモンかな.
-  #+BEGIN_SRC emacs-lisp
-(use-package projectile
-  :ensure t
-  :bind (("C-c p p" . projectile-switch-project))
-  :config
-  (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
-  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
-  (setq projectile-project-search-path nil
-        projectile-cache-file (expand-file-name "projectile.cache" my:d:tmp)
-        projectile-known-projects-file
-        (expand-file-name "projectile-bookmarks.eld" my:d:share)
-        projectile-enable-caching t
-        projectile-find-dir-innclude-top-level t
-        projectile-mode-line-prefix " 📖"
-        projectile-dynamic-mode-line t
-        ;; projectile-mode-line-function
-        ;; #'(lambda () (format " 📖[%s]" (projectile-project-name)))
-        )
-  (advice-add 'projectile-switch-project :around #'my:ido-grid-force-one-columns)
-  (projectile-mode +1)
   )
   #+END_SRC
 * Syntax checker: =flycheck= [0/1]

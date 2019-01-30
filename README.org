@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+startup: overview
-#+date: 2019-01-30 18:06:35
+#+date: 2019-01-30 18:22:35
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -3386,7 +3386,7 @@ $clean_ext = "snm nav vrb synctex.gz";
     ;; (undo-tree-mode         . "")
     ;; (flymake-mode           . "")
     ;; (isearch-mode           . "")
-    (global-whitespace-mode  . " ◻")
+    (global-whitespace-mode  . " ◻️ ")
     ;; (editorconfig-mode      . "")
     ;; (company-mode           . " Co")
     ;; (rainbow-mode           . "")

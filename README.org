@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+startup: overview
-#+date: 2019-01-30 19:30:39
+#+date: 2019-01-30 19:50:09
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -3450,7 +3450,7 @@ $clean_ext = "snm nav vrb synctex.gz";
   (defpowerline my:powerline-vc
     (when (and (buffer-file-name (current-buffer)) vc-mode)
       (format "%s"
-              (replace-regexp-in-string "Git:" ""
+              (replace-regexp-in-string "Git\\(:\\|-\\)" ""
                                         (format-mode-line '(vc-mode vc-mode))))))
   ;; theme のカスタマイズ
   (defun my:powerline-theme ()

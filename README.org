@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+startup: overview
-#+date: 2019-01-29 18:14:59
+#+date: 2019-01-30 17:29:50
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -98,7 +98,14 @@ $(EMACS) -l $< -batch -f batch-byte-compile $<
    モードラインの設定用に delight, diminish も入れておく
    #+BEGIN_SRC emacs-lisp
 (use-package delight :ensure t)
-(use-package diminish :ensure t)
+(use-package diminish
+  :ensure t
+  :config
+  (defmacro my:diminish (file mode &optional new-name)
+    "指定された minor mode の表示を変える"
+    `(with-eval-after-load ,file
+       (diminish ,mode ,new-name)))
+  )
    #+END_SRC
 ** [[https://framagit.org/steckerhalter/quelpa-use-package][quelpa-use-package]]
    melpa に登録されていないパッケージや自作の elisp 等をインストールできる様に
@@ -528,6 +535,7 @@ $(EMACS) -l $< -batch -f batch-byte-compile $<
 ** =abbrev=: 略語展開
    #+begin_src emacs-lisp
 (use-package abbrev
+  :diminish abbrev-mode
   :config
   (setq abbrev-file-name (concat my:d:share "abbrev_defs")
         save-abbrevs t)
@@ -537,6 +545,7 @@ $(EMACS) -l $< -batch -f batch-byte-compile $<
 ** =eldoc=: emacs-lisp document
    #+begin_src emacs-lisp
 (use-package eldoc
+  :diminish eldoc-mode
   :config
   (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
   )
@@ -1123,6 +1132,7 @@ File.open(src, "r") {|f|
   #+BEGIN_SRC emacs-lisp
 (use-package undo-tree
   :ensure t
+  :diminish " 🌴"
   :config
   (setq undo-tree-auto-save-history t
         my:undo-tree-history-dir (let ((dir (concat my:d:tmp
@@ -2999,6 +3009,7 @@ Related [[wiki:index][Index]]
   #+BEGIN_SRC emacs-lisp
 (use-package editorconfig
   :ensure t
+  :diminish " ✒"
   :config
   (editorconfig-mode 1)
   )
@@ -3022,6 +3033,8 @@ Related [[wiki:index][Index]]
   ;; projectile-project-root に合わせて include path 等を追加してみるテスト
   ;; 本当は .dir-local.el を用意すべきかな.
   :config
+  (setq flycheck-emacs-lisp-package-user-dir package-user-dir
+        flycheck-emacs-lisp-load-path 'inherit)
   (if (featurep 'org-src)
       (add-hook 'org-src-mode-hook #'my:disable-fylcheck-in-org-src-block))
   (if (executable-find "flycheck_chktex.sh")
@@ -3042,15 +3055,14 @@ Related [[wiki:index][Index]]
   #+BEGIN_SRC emacs-lisp
 (use-package flycheck-status-emoji
   :ensure t
-  :after flycheck
   :config
   (setq flycheck-status-emoji-indicator-running          ?🔃
         flycheck-status-emoji-indicator-finished-ok      ?✔
         flycheck-status-emoji-indicator-finished-error   ?✖
         flycheck-status-emoji-indicator-finished-warning ?⚠
         flycheck-status-emoji-indicator-finished-info    ?💁
-        flycheck-status-emoji-indicator-not-checked      ?🔇
-        flycheck-status-emoji-indicator-no-checker       ?🌸
+        flycheck-status-emoji-indicator-not-checked      ?🚬
+        flycheck-status-emoji-indicator-no-checker       ?💤
         flycheck-status-emoji-indicator-errored          ?✖
         flycheck-status-emoji-indicator-interrupted      ?😎
         flycheck-status-emoji-indicator-suspicious       ?❓)
@@ -3368,28 +3380,28 @@ $clean_ext = "snm nav vrb synctex.gz";
    #+BEGIN_SRC emacs-lisp
 (defvar my:mode-line-cleaner-alist
   '( ;; For minor-mode, first char is 'space'
-    (yas-minor-mode         . " Ya")
-    (eldoc-mode             . "")
-    (abbrev-mode            . "")
-    (undo-tree-mode         . "")
-    (flymake-mode           . "")
-    (isearch-mode           . "")
-    (global-whitespace-mode . "")
-    (editorconfig-mode      . "")
-    (company-mode           . " Co")
-    (rainbow-mode           . "")
-    (orgmine-mode           . "")
-    (orgtbl-mode            . "")
-    (org-src-mode           . " Os")
-    (git-gutter+-mode       . "")
-    ;; Major modes
-    (python-mode            . "🐍 ")
-    (ruby-mode              . "💎 ")
-    (lisp-interaction-mode  . "LiI")
-    (emacs-lisp-mode        . "Eli")
-    (markdown-mode          . "Mkd")
-    (org-mode               . "Org")
-    (package-menu-mode      . "📦 ")
+    ;; (yas-minor-mode         . " Ya")
+    ;; (eldoc-mode             . "")
+    ;; (abbrev-mode            . "")
+    ;; (undo-tree-mode         . "")
+    ;; (flymake-mode           . "")
+    ;; (isearch-mode           . "")
+    (global-whitespace-mode . " ◻")
+    ;; (editorconfig-mode      . "")
+    ;; (company-mode           . " Co")
+    ;; (rainbow-mode           . "")
+    ;; (orgmine-mode           . "")
+    ;; (orgtbl-mode            . "")
+    (org-src-mode           . "")
+    ;; (git-gutter+-mode       . "")
+    ;; ;; Major modes
+    (python-mode            . "🐍")
+    (ruby-mode              . "💎")
+    ;; (lisp-interaction-mode  . "LiI")
+    ;; (emacs-lisp-mode        . "Eli")
+    ;; (markdown-mode          . "Mkd")
+    (org-mode               . "🦄")
+    (package-menu-mode      . "📦")
     ))
 (defun my:clean-mode-line ()
   "Cleanup major/minor mode."
@@ -3417,11 +3429,15 @@ $clean_ext = "snm nav vrb synctex.gz";
   "skk が読み込まれていない場合でも skk-modeline-input-mode に文字を入れて返す"
   (unless (boundp 'skk-modeline-inpt-mode)
     (setq skk-modeline-input-mode "--[--]:")))
+(my:skk-modeline-input-mode)
+(add-hook 'after-change-major-mode-hook
+          #'(lambda() (skk-mode)(skk-mode)))
 ;; 一回呼んでおく?
 ;; (my:skk-modeline-input-mode)
 ;; 本体の設定
 (use-package powerline
   :ensure t
+  :disabled t
   :init
   ;; ddskk そのものに modeline を更新する関数があるので無効化する
   (defadvice skk-setup-modeline (around my:disable-skk-setup-modeline activate)

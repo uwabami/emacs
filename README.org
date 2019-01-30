@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+startup: overview
-#+date: 2019-01-30 22:19:45
+#+date: 2019-01-30 22:26:35
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -3456,9 +3456,9 @@ $clean_ext = "snm nav vrb synctex.gz";
 (defpowerline my:powerline-buffer-percentage
   (format "%.2s" (let ((current (format-mode-line "%p")))
                    (cond
-                    ((string= current "All") "🔴")
-                    ((string= current "Bottom") "🔺")
-                    ((string= current "Top") "🔻")
+                    ((string= current "All") "・")
+                    ((string= current "Bottom") "↑")
+                    ((string= current "Top") "↓")
                     (t current)
                     ))))
   ;; theme のカスタマイズ

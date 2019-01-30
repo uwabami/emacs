@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+startup: overview
-#+date: 2019-01-30 19:50:09
+#+date: 2019-01-30 22:19:45
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -3452,6 +3452,15 @@ $clean_ext = "snm nav vrb synctex.gz";
       (format "%s"
               (replace-regexp-in-string "Git\\(:\\|-\\)" ""
                                         (format-mode-line '(vc-mode vc-mode))))))
+  ;;
+(defpowerline my:powerline-buffer-percentage
+  (format "%.2s" (let ((current (format-mode-line "%p")))
+                   (cond
+                    ((string= current "All") "🔴")
+                    ((string= current "Bottom") "🔺")
+                    ((string= current "Top") "🔻")
+                    (t current)
+                    ))))
   ;; theme のカスタマイズ
   (defun my:powerline-theme ()
     "Custom theme for personal use."
@@ -3494,7 +3503,7 @@ $clean_ext = "snm nav vrb synctex.gz";
                                        (powerline-narrow face1 'l)
                                        (funcall separator-right face1 mode-line)
                                        (powerline-raw " ")
-                                       (powerline-raw "%6p" mode-line 'l)
+                                       (my:powerline-buffer-percentage mode-line 'l)
                                        (powerline-raw "/" mode-line 'l)
                                        (powerline-buffer-size mode-line 'l)
                                        (powerline-raw " " mode-line 'l)

@@ -3386,7 +3386,7 @@ $clean_ext = "snm nav vrb synctex.gz";
     ;; (undo-tree-mode         . "")
     ;; (flymake-mode           . "")
     ;; (isearch-mode           . "")
-    (global-whitespace-mode  . " ◻️ ")
+    (global-whitespace-mode  . " □")
     ;; (editorconfig-mode      . "")
     ;; (company-mode           . " Co")
     ;; (rainbow-mode           . "")

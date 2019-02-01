@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+startup: overview
-#+date: 2019-01-30 22:26:35
+#+date: 2019-02-01 13:37:09
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -1130,6 +1130,22 @@ File.open(src, "r") {|f|
   #+BEGIN_SRC emacs-lisp
 (use-package undo-tree
   :ensure t
+  :init
+  ;; @see https://github.com/raxod502/radian/commit/0544196c50ddc305f90873ca280bf0c5e3db685b
+  ;; Suppress the message saying that the undo history file was
+  ;; saved (because this happens every single time you save a file).
+  (defun my:undo-tree-suppress-undo-history-saved-message
+      (undo-tree-save-history &rest args)
+    (let ((inhibit-message t))
+      (apply undo-tree-save-history args)))
+  ;; Suppress the message saying that the undo history could not be
+  ;; loaded because the file changed outside of Emacs.
+  (defun my:undo-tree-suppress-buffer-modified-message
+      (undo-tree-load-history &rest args)
+    (let ((inhibit-message t))
+      (apply undo-tree-load-history args)))
+  (advice-add #'undo-tree-load-history :around
+              #'my:undo-tree-suppress-buffer-modified-message)
   :config
   (setq undo-tree-auto-save-history t
         my:undo-tree-history-dir (let ((dir (concat my:d:tmp
@@ -3010,6 +3026,28 @@ Related [[wiki:index][Index]]
   (editorconfig-mode 1)
   )
   #+END_SRC
+* Project管理: =projectile=
+  沢山 project がある環境だとツライ気がする.
+  #+BEGIN_SRC emacs-lisp
+(use-package projectile
+  :ensure t
+  :bind (("C-c p p" . projectile-switch-project))
+  :config
+  (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
+  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+  (setq projectile-project-search-path nil
+        projectile-cache-file (expand-file-name "projectile.cache" my:d:tmp)
+        projectile-known-projects-file
+        (expand-file-name "projectile-bookmarks.eld" my:d:share)
+        projectile-enable-caching t
+        projectile-find-dir-innclude-top-level t
+        projectile-mode-line-prefix ""
+        projectile-mode-line-function #'(lambda () projectile-mode-line-prefix)
+        )
+  (advice-add 'projectile-switch-project :around #'my:ido-grid-force-one-columns)
+  (projectile-mode +1)
+  )
+  #+END_SRC
 * Syntax checker: =flycheck= [0/1]
   以前は flymake を利用していたけれど, 最近は flycheck を使っている.
   「デフォルトで良いようにしてくれる」筈なんだけれど,
@@ -3021,6 +3059,15 @@ Related [[wiki:index][Index]]
 (use-package flycheck
   :ensure t
   :init
+  ;; include path
+  ;; (defun my:setup-flycheck-gfortran-project-path ()
+  ;;   (interactive "P")
+  ;;   (let ((root (ignore-errors
+  ;;                 (format "%sinclude" (projectile-project-root)))))
+  ;;     (when root
+  ;;       (add-to-list
+  ;;        (make-variable-buffer-local 'flycheck-gfortran-include-path)
+  ;;        root))))
   ;; org-src での emacs-lisp-checkdoc は意味が無い
   (defun my:disable-fylcheck-in-org-src-block ()
     "Disable emacs-lisp-checkdoc in org-src-block."
@@ -3390,6 +3437,7 @@ $clean_ext = "snm nav vrb synctex.gz";
     (orgtbl-mode            . "")
     (org-src-mode           . "")
     (git-gutter+-mode       . "")
+    (projectile-mode        . " 📆")
     ;;; Major modes
     (python-mode            . ,(propertize "🐍" 'face '(((:foreground "#7f7fff")))))
     (ruby-mode              . ,(propertize "💎" 'face '(((:foreground "#ff7f7f")))))
@@ -3399,6 +3447,8 @@ $clean_ext = "snm nav vrb synctex.gz";
     (rd-mode                . "RD")
     (org-mode          . ,(propertize "🦄" 'face '(((:foreground "#ffff4c")))))
     (package-menu-mode . ,(propertize "📦" 'face '(((:foreground "#4cFFFF")))))
+    (f90-mode     . ,(propertize "💢" 'face '(((:foreground "#4cff4c")))))
+    (fortran-mode . ,(propertize "💢" 'face '(((:foreground "#4cff4c")))))
     ))
 (defun my:clean-mode-line ()
   "Cleanup major/minor mode."
@@ -3504,8 +3554,8 @@ $clean_ext = "snm nav vrb synctex.gz";
                                        (funcall separator-right face1 mode-line)
                                        (powerline-raw " ")
                                        (my:powerline-buffer-percentage mode-line 'l)
-                                       (powerline-raw "/" mode-line 'l)
-                                       (powerline-buffer-size mode-line 'l)
+                                       ;; (powerline-raw "/" mode-line 'l)
+                                       ;; (powerline-buffer-size mode-line 'l)
                                        (powerline-raw " " mode-line 'l)
                                        )))
                        (concat (powerline-render lhs)

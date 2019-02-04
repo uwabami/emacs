@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+startup: overview
-#+date: 2019-02-01 13:37:09
+#+date: 2019-02-04 22:16:07
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -307,6 +307,7 @@ $(EMACS) -l $< -batch -f batch-byte-compile $<
 ** East Asian Ambiguos 対応
    CJK 以外の East Asian Ambiguos，絵文字も2文字幅にするようにしています．
    拙作の修正ロケールはこちら: [[https://github.com/uwabami/locale-eaw-emoji]]
+   アイコンフォントとして  [[https://github.com/sebastiencs/icons-in-terminal][icons in terminal]] にも対応しています.
    #+begin_src emacs-lisp
 (use-package locale-eaw-emoji
   :quelpa (locale-eaw-emoji
@@ -315,6 +316,9 @@ $(EMACS) -l $< -batch -f batch-byte-compile $<
   :config
   (eaw-and-emoji-fullwidth))
    #+end_src
+   本当は all the icons に対応した方が良いのかもしれないけれど,
+   Surrogate, Variation Selector と Private Use Area の区別がついてない
+   アイコンフォントが多すぎて, 割とシンドイなぁ, とか思ったり.
 ** OSの違いに起因する条件分岐
    Mac と Linux では同じ Unicode でも正規化が異なります
    (具体的には Mac のファイルシステムである HFS+ では Unicode の正規化が異なります).
@@ -1110,7 +1114,7 @@ File.open(src, "r") {|f|
   :if (executable-find "cmigemo")
   :quelpa (migemo
            :fetcher github
-           :repo "uwabami/migemo")
+           :repo "emacs-jp/migemo")
   :config
   (cond
    ((and (eq system-type 'darwin)
@@ -3420,6 +3424,8 @@ $clean_ext = "snm nav vrb synctex.gz";
 ** major/minor モードの表示設定
    diminish や delight があるわけですが,
    微妙にこれで指定できない奴もあってアレですね.
+
+   [[https://github.com/sebastiencs/icons-in-terminal][icons in terminal]] を使っているので, 対応するフォントが必要.
    #+BEGIN_SRC emacs-lisp
 (defvar my:mode-line-cleaner-alist
   `(;; For minor-mode, first char is 'space'
@@ -3439,16 +3445,16 @@ $clean_ext = "snm nav vrb synctex.gz";
     (git-gutter+-mode       . "")
     (projectile-mode        . " 📆")
     ;;; Major modes
-    (python-mode            . ,(propertize "🐍" 'face '(((:foreground "#7f7fff")))))
-    (ruby-mode              . ,(propertize "💎" 'face '(((:foreground "#ff7f7f")))))
-    (lisp-interaction-mode  . "LI")
-    (emacs-lisp-mode        . "EL")
-    (markdown-mode          . "Md")
-    (rd-mode                . "RD")
-    (org-mode          . ,(propertize "🦄" 'face '(((:foreground "#ffff4c")))))
-    (package-menu-mode . ,(propertize "📦" 'face '(((:foreground "#4cFFFF")))))
-    (f90-mode     . ,(propertize "💢" 'face '(((:foreground "#4cff4c")))))
-    (fortran-mode . ,(propertize "💢" 'face '(((:foreground "#4cff4c")))))
+    (python-mode            . ,(propertize " " 'face '(((:foreground "#7f7fff")))))
+    (ruby-mode              . ,(propertize " " 'face '(((:foreground "#ff7f7f")))))
+    (lisp-interaction-mode  . " ")
+    (emacs-lisp-mode        . " ")
+    (markdown-mode          . " ")
+    (rd-mode                . "RD ")
+    (org-mode          . ,(propertize " " 'face '(((:foreground "#ffff4c")))))
+    (package-menu-mode . ,(propertize "📦 " 'face '(((:foreground "#4cFFFF")))))
+    (f90-mode     . ,(propertize " " 'face '(((:foreground "#4cff4c")))))
+    (fortran-mode . ,(propertize " " 'face '(((:foreground "#4cff4c")))))
     ))
 (defun my:clean-mode-line ()
   "Cleanup major/minor mode."

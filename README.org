@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+startup: overview
-#+date: 2019-02-04 22:16:07
+#+date: 2019-02-05 19:07:13
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -319,6 +319,17 @@ $(EMACS) -l $< -batch -f batch-byte-compile $<
    本当は all the icons に対応した方が良いのかもしれないけれど,
    Surrogate, Variation Selector と Private Use Area の区別がついてない
    アイコンフォントが多すぎて, 割とシンドイなぁ, とか思ったり.
+** icon font
+   テスト. all-the-icons のデータを修正して,
+   icons in terminal のデータを読みに行くようにしてみたり
+   #+BEGIN_SRC emacs-lisp
+(use-package all-the-icons
+  :quelpa (all-the-icons
+           :fetcher github
+           :repo "uwabami/all-the-icons.el"
+           :files (:defaults "data"))
+  )
+   #+END_SRC
 ** OSの違いに起因する条件分岐
    Mac と Linux では同じ Unicode でも正規化が異なります
    (具体的には Mac のファイルシステムである HFS+ では Unicode の正規化が異なります).
@@ -3219,11 +3230,12 @@ $clean_ext = "snm nav vrb synctex.gz";
         tdiary-diary-list '(("log" "https://uwabami.junkhub.org/log/"))
         tdiary-style-mode 'org-mode
         tdiary-text-suffix ".org"
+        tdiary-text-save-p t
         )
   (with-eval-after-load "tdiary-mode"
     (load (expand-file-name "tdiary-mode.gpg" my:d:password-store))
     (tdiary-passwd-file-load))
-  )
+  )
   #+END_SRC
 * テーマ, フォント, モードライン, などなど
 ** フォントと色
@@ -3444,17 +3456,6 @@ $clean_ext = "snm nav vrb synctex.gz";
     (org-src-mode           . "")
     (git-gutter+-mode       . "")
     (projectile-mode        . " 📆")
-    ;;; Major modes
-    (python-mode            . ,(propertize " " 'face '(((:foreground "#7f7fff")))))
-    (ruby-mode              . ,(propertize " " 'face '(((:foreground "#ff7f7f")))))
-    (lisp-interaction-mode  . " ")
-    (emacs-lisp-mode        . " ")
-    (markdown-mode          . " ")
-    (rd-mode                . "RD ")
-    (org-mode          . ,(propertize " " 'face '(((:foreground "#ffff4c")))))
-    (package-menu-mode . ,(propertize "📦 " 'face '(((:foreground "#4cFFFF")))))
-    (f90-mode     . ,(propertize " " 'face '(((:foreground "#4cff4c")))))
-    (fortran-mode . ,(propertize " " 'face '(((:foreground "#4cff4c")))))
     ))
 (defun my:clean-mode-line ()
   "Cleanup major/minor mode."
@@ -3479,44 +3480,59 @@ $clean_ext = "snm nav vrb synctex.gz";
 ;; SKK の状態がヒョコヒョコ動くのが嫌なので，skk-modeline-input-mode= に
 ;; 常に現在の状況を表示する様にしておく．
 (defun my:skk-modeline-input-mode ()
-  "skk が読み込まれていない場合でも skk-modeline-input-mode に文字を入れて返す"
+  "SKKが読み込まれていない場合でも skk-modeline-input-mode に文字を入れる."
   (unless (boundp 'skk-modeline-inpt-mode)
     (setq skk-modeline-input-mode "--[--]:")))
 ;; 初回更新
 (my:skk-modeline-input-mode)
 ;; hook
-;; (add-hook 'after-change-major-mode-hook
-;;           #'(lambda() (skk-mode)(skk-mode)))
+(unless (featurep 'powerline)
+  (add-hook 'after-change-major-mode-hook
+            #'(lambda() (skk-mode)(skk-mode))))
 ;; 本体の設定
 (use-package powerline
   :ensure t
   :init
   ;; ddskk そのものに modeline を更新する関数があるので無効化する
-  (defadvice skk-setup-modeline (around my:disable-skk-setup-modeline activate)
+  (defun my:disable-skk-setup-modeline ()
     "skk-setup-modeline による modeline の更新を無効化"
     (setq skk-indicator-alist (skk-make-indicator-alist))
     (force-mode-line-update t))
+  (advice-add 'skk-setup-modeline :override 'my:disable-skk-setup-modeline)
   ;; delight との連携
   ;; @see https://www.emacswiki.org/emacs/DelightedPowerLine
-  (defadvice powerline-major-mode (around delight-powerline-major-mode activate)
-    "Ensure that powerline's major mode names are delighted."
-    (let ((inhibit-mode-name-delight nil))
-      ad-do-it))
+  ;; (defadvice powerline-major-mode (around delight-powerline-major-mode activate)
+  ;;   "Ensure that powerline's major mode names are delighted."
+  ;;   (let ((inhibit-mode-name-delight nil)) ad-do-it))
   ;; Git の表示のカスタマイズ
   (defpowerline my:powerline-vc
     (when (and (buffer-file-name (current-buffer)) vc-mode)
       (format "%s"
               (replace-regexp-in-string "Git\\(:\\|-\\)" ""
                                         (format-mode-line '(vc-mode vc-mode))))))
-  ;;
-(defpowerline my:powerline-buffer-percentage
-  (format "%.2s" (let ((current (format-mode-line "%p")))
-                   (cond
-                    ((string= current "All") "・")
-                    ((string= current "Bottom") "↑")
-                    ((string= current "Top") "↓")
-                    (t current)
-                    ))))
+  (defpowerline my:powerline-buffer-percentage
+    (format "%.2s" (let ((current (format-mode-line "%p")))
+                     (cond
+                      ((string= current "All") "・")
+                      ((string= current "Bottom") "↑")
+                      ((string= current "Top") "↓")
+                      (t current)
+                      ))))
+  ;; major-mode のアイコン表示
+  (defun my:modeline-icon-for-mode (&rest mode)
+    (when (featurep 'all-the-icons)
+      (apply #'all-the-icons-icon-for-mode mode)))
+  (defpowerline my:powerline-major-mode
+    (propertize (format-mode-line (my:modeline-icon-for-mode major-mode))
+                'mouse-face 'mode-line-highlight
+                'help-echo "Major mode\n\ mouse-1: Display major mode menu\n\ mouse-2: Show help for major mode\n\ mouse-3: Toggle minor modes"
+                'local-map (let ((map (make-sparse-keymap)))
+                             (define-key map [mode-line down-mouse-1]
+                               `(menu-item ,(purecopy "Menu Bar") ignore
+                                           :filter (lambda (_) (mouse-menu-major-mode-map))))
+                             (define-key map [mode-line mouse-2] 'describe-mode)
+                             (define-key map [mode-line down-mouse-3] mode-line-mode-menu)
+                             map)))
   ;; theme のカスタマイズ
   (defun my:powerline-theme ()
     "Custom theme for personal use."
@@ -3529,17 +3545,19 @@ $clean_ext = "snm nav vrb synctex.gz";
                             (mode-line (if active 'mode-line 'mode-line-inactive))
                             (face1 (if active 'powerline-active1 'powerline-inactive1))
                             (face2 (if active 'powerline-active2 'powerline-inactive2))
-                            (separator-left (intern (format "powerline-%s-%s"
-                                                            (powerline-current-separator)
-                                                            (car powerline-default-separator-dir))))
-                            (separator-right (intern (format "powerline-%s-%s"
-                                                             (powerline-current-separator)
-                                                             (cdr powerline-default-separator-dir))))
+                            (separator-left
+                             (intern (format "powerline-%s-%s"
+                                             (powerline-current-separator)
+                                             (car powerline-default-separator-dir))))
+                            (separator-right
+                             (intern (format "powerline-%s-%s"
+                                             (powerline-current-separator)
+                                             (cdr powerline-default-separator-dir))))
                             (lhs (list (powerline-raw (substring skk-modeline-input-mode 2 -1) mode-line 'l)
                                        (powerline-raw "%*" mode-line 'l)
                                        (powerline-raw mode-line-mule-info mode-line 'l)
                                        (powerline-raw " ")
-                                       (powerline-major-mode)
+                                       (my:powerline-major-mode)
                                        (powerline-raw " ")
                                        (funcall separator-left mode-line face1)
                                        ;; (powerline-buffer-id mode-line-buffer-id 'l)
@@ -3569,14 +3587,13 @@ $clean_ext = "snm nav vrb synctex.gz";
                                (powerline-render rhs)))))))
   :config
   ;; 半角スペース
-  (setq powerline-default-separator 'utf-8     ;; UTF-8
-        powerline-utf-8-separator-left  #x20   ;; 半角スペース
-        powerline-utf-8-separator-right  #x20  ;; 半角スペース
+  (setq powerline-default-separator 'utf-8     ; UTF-8
+        powerline-utf-8-separator-left #x20    ; 半角スペース
+        powerline-utf-8-separator-right #x20   ; 半角スペース
         powerline-display-buffer-size nil
         powerline-display-mule-info t
         powerline-display-hud t
         )
-  (my:skk-modeline-input-mode)
   (my:powerline-theme)
   )
    #+END_SRC
@@ -3620,3 +3637,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
   #+end_example
+* Test
+  #+BEGIN_SRC emacs-lisp
+  #+END_SRC

@@ -13,7 +13,7 @@ init.el: README.org
 	   "(progn \
 		  (require 'ob-tangle) \
 		  (org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\"))"
-	emacs -q -l init.el --batch --eval '(kill-emacs)'
+	$(EMACS) -q -l init.el --batch --eval '(kill-emacs)'
 %.elc: %.el
 	$(EMACS) -q -l init.el -batch -f batch-byte-compile $<
 # 	@rm -f $<

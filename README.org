@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+startup: overview
-#+date: 2019-02-05 19:07:13
+#+date: 2019-02-21 01:34:57
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -328,6 +328,19 @@ $(EMACS) -l $< -batch -f batch-byte-compile $<
            :fetcher github
            :repo "uwabami/all-the-icons.el"
            :files (:defaults "data"))
+  :config
+  (with-eval-after-load 'all-the-icons
+    (add-to-list 'all-the-icons-mode-icon-alist
+                 '(f90-mode all-the-icons-faicon "facebook" :height 1.0)) ; facebook!
+    (add-to-list 'all-the-icons-mode-icon-alist
+                 '(wl-folder-mode all-the-icons-faicon "folder-o" :height 1.0))
+    (add-to-list 'all-the-icons-mode-icon-alist
+                 '(wl-summary-mode all-the-icons-faicon "folder-open-o" :height 1.0))
+    (add-to-list 'all-the-icons-mode-icon-alist
+                 '(wl-draft-mode all-the-icons-material "drafts" :height 1.0))
+    (add-to-list 'all-the-icons-mode-icon-alist
+                 '(mime-view-mode all-the-icons-faicon "envelope-o" :height 1.0))
+    )
   )
    #+END_SRC
 ** OSの違いに起因する条件分岐
@@ -493,8 +506,8 @@ $(EMACS) -l $< -batch -f batch-byte-compile $<
   :init
   (setq url-configuration-directory (concat my:d:tmp "url")))
 (use-package nsm
-  :if (featurep 'nsm)
-  :init
+  :if (>= emacs-major-version 25)
+  :config
   (setq nsm-settings-file (concat my:d:tmp "network-settings.data")))
    #+end_src
    他にもイロイロありそう．
@@ -528,6 +541,7 @@ $(EMACS) -l $< -batch -f batch-byte-compile $<
                           "/TAGS$"
                           "^/home/uwabami/.mozilla/\\.*"
                           "\\.*草稿\\.*"
+                          "^/[^/:]+:"  ; exclude tramp
                           ))
   )
    #+end_src
@@ -629,6 +643,10 @@ $(EMACS) -l $< -batch -f batch-byte-compile $<
   :no-require t
   :config
   (setq tramp-persistency-file-name (concat my:d:tmp "tramp"))
+  (add-hook 'kill-emacs-hook
+            (lambda ()
+              (if (file-exists-p custom-file)
+                  (delete-file tramp-persistency-file-name))))
   )
    #+end_src
 ** =bookmark=: bookmark ファイル
@@ -1214,6 +1232,18 @@ File.open(src, "r") {|f|
   (defun my:ido-disable-line-trucation ()
     (set (make-local-variable 'truncate-lines) nil))
   (add-hook 'ido-minibuffer-setup-hook 'my:ido-disable-line-trucation)
+  (defun my:ido-remove-tramp-from-cache nil
+    "Remove any TRAMP entries from `ido-dir-file-cache'.
+    This stops tramp from trying to connect to remote hosts on emacs startup,
+    which can be very annoying."
+    (interactive)
+    (setq ido-dir-file-cache
+	      (cl-remove-if
+	       (lambda (x)
+	         (string-match "/\\(rsh\\|ssh\\|telnet\\|su\\|sudo\\|sshx\\|krlogin\\|ksu\\|rcp\\|scp\\|rsync\\|scpx\\|fcp\\|nc\\|ftp\\|smb\\|adb\\):" (car x)))
+	       ido-dir-file-cache)))
+  (add-hook 'kill-emacs-hook
+            #'my:ido-remove-tramp-from-cache)
   )
    #+end_src
 ** =flx-ido=: flex match の強化
@@ -1487,10 +1517,6 @@ File.open(src, "r") {|f|
   :config
   (with-eval-after-load 'wl
     (advice-add 'wl-mode-line-buffer-identification :override 'my:wl-mode-line-buffer-identification))
-  (add-hook 'wl-folder-mode-hook  (lambda () (setq mode-name "📁")))
-  (add-hook 'wl-summary-mode-hook (lambda () (setq mode-name "📂")))
-  (add-hook 'wl-draft-mode-hook   (lambda () (setq mode-name "📄")))
-  (add-hook 'mime-view-mode-hook  (lambda () (setq mode-name "📧")))
   )
    #+end_src
    割と =/etc/emacs/site-start.d/65wl-beta.el= と重複している気がするが...
@@ -3214,6 +3240,43 @@ $clean_ext = "snm nav vrb synctex.gz";
   (add-hook 'TeX-mode-hook 'ezbf-minor-mode)
   )
    #+END_SRC
+* MoinMoin: =moinmoin-mode=, =moomin.el=
+  Debian Wiki や職場の Wiki を編集するための
+  MoinMoin の設定. 編集には [[https://github.com/lurdan/moomin-el][tototoshi/moomin-el: Edit MoinMoin with Emacs]] を使う.
+** =moinmoin-mode=
+   MoinMoin 本体の moinmoin-mode 自体は古くて
+   screen-lines に依存していたりするので folk して更新中.
+   [[https://github.com/uwabami/moinmoin-mode][uwabami/moinmoin-mode: Fork from EmacsForMoinMoin, for Emacs >= 25]]
+   #+BEGIN_SRC emacs-lisp
+(use-package moinmoin-mode
+  :quelpa (moinmoin-mode
+           :fetcher github
+           :repo "uwabami/moinmoin-mode")
+  )
+   #+END_SRC
+   そのうち気になる所を弄る，ということで．
+** =moomin=: =emacs-request + helm + moinmoin-mode=
+   最新の奴だと動かなかったので folk して多少弄った版を使うことに.
+   [[https://github.com/uwabami/moomin-el][uwabami/moomin-el: Edit MoinMoin with Emacs]]
+#+BEGIN_SRC emacs-lisp
+(use-package moomin
+  :if (file-directory-p my:d:password-store)
+  :quelpa (moomin
+           :fetcher github
+           :repo "uwabami/moomin-el")
+  :bind (("C-x w" . ido-moomin)
+         :map moinmoin-mode-map
+         ("C-c C-c" . moomin-save-current-buffer)
+         ("C-c C-s" . moomin-save-current-buffer)
+         ("C-c C-o" . moomin-browse-current-page)
+         ("C-c C-r" . moomin-reload-current-page))
+  :config
+  (with-eval-after-load "moomin"
+    (if (file-directory-p my:d:password-store)
+        (load (concat my:d:password-store "/moomin.gpg"))))
+  (setq moomin-history-file (concat my:d:tmp "moomin_history"))
+  )
+#+END_SRC
 * 日記: =tDiary=
   org2blog で tDiary を更新できないか妄想している
   #+BEGIN_SRC emacs-lisp
@@ -3230,17 +3293,16 @@ $clean_ext = "snm nav vrb synctex.gz";
         tdiary-diary-list '(("log" "https://uwabami.junkhub.org/log/"))
         tdiary-style-mode 'org-mode
         tdiary-text-suffix ".org"
-        tdiary-text-save-p t
+        ;; tdiary-text-save-p t
         )
   (with-eval-after-load "tdiary-mode"
     (load (expand-file-name "tdiary-mode.gpg" my:d:password-store))
     (tdiary-passwd-file-load))
-  )
+  )
   #+END_SRC
 * テーマ, フォント, モードライン, などなど
-** フォントと色
-   そろそろテーマにした方が良い，とは思ってはいる．
-   #+begin_src emacs-lisp
+** ansi color
+   #+BEGIN_SRC emacs-lisp
 (use-package ansi-color
   :config
   (setq ansi-color-names-vector
@@ -3250,34 +3312,11 @@ $clean_ext = "snm nav vrb synctex.gz";
          ])
   (add-hook 'shell-mode-hook 'ansi-color-for-comint-mode-on)
   )
-(defun my:load-window-config ()
-  "load window-system specific settings"
-  (interactive)
-  (when window-system
-    (progn
-      (set-frame-parameter nil 'alpha 90)
-      (set-face-attribute 'default nil
-                          :family "RictyDiscord Nerd Font"
-                          :height 180)
-      (set-face-attribute 'fixed-pitch nil
-                          :family "RictyDiscord Nerd Font"
-                          :height 180)
-      (set-face-attribute 'variable-pitch nil
-                          :family "RictyDiscord Nerd Font"
-                          :height 180)
-      (set-background-color "#242424")
-      )))
-(my:load-window-config)
+   #+END_SRC
+** font-locks
+   現在修正中, そろそろテーマにすべきかしら?
+  #+begin_src emacs-lisp
 (setq frame-background-mode (frame-parameter nil 'background-mode))
-(setq default-frame-alist
-      '(
-        (foreground-color . "#F6F3E8")
-        (scroll-bar-foreground-color . "red")
-        (vertical-scroll-bars . right)
-        ))
-   #+end_src
-   現在修正中．
-   #+begin_src emacs-lisp
 (custom-set-faces
  '(default                             ((t (:foreground "#F6F3E8" ))))
  '(cursor                              ((t (:foreground "#4CFF4C" :background "#4CFF4C" ))))
@@ -3426,13 +3465,7 @@ $clean_ext = "snm nav vrb synctex.gz";
  '(company-scrollbar-fg                ((t (:background "#FFBF7F"))))
  '(company-scrollbar-bg                ((t (:background "#4c4c4c"))))
  )
-;; review
-;; '(review-mode-header1-face  ((t (:inherit outline-1))))
-;; '(review-mode-header2-face  ((t (:inherit outline-2))))
-;; '(review-mode-header3-face  ((t (:inherit outline-3))))
-;; '(review-mode-header4-face  ((t (:inherit outline-4))))
-;; '(review-mode-header5-face  ((t (:inherit outline-5))))
-   #+end_src
+  #+end_src
 ** major/minor モードの表示設定
    diminish や delight があるわけですが,
    微妙にこれで指定できない奴もあってアレですね.
@@ -3447,9 +3480,9 @@ $clean_ext = "snm nav vrb synctex.gz";
     (undo-tree-mode         . " 🌴")
     ;; (flymake-mode           . "")
     (isearch-mode           . " 🔎")
-    (global-whitespace-mode . " □")
+    (global-whitespace-mode . " 　")
     (editorconfig-mode      . "")
-    ;; (company-mode           . " Co")
+    (company-mode           . " ")
     (rainbow-mode           . " 🌈")
     (orgmine-mode           . "")
     (orgtbl-mode            . "")
@@ -3472,10 +3505,6 @@ $clean_ext = "snm nav vrb synctex.gz";
    #+END_SRC
 ** powerline 本体の設定．
    default-theme をベースに見たい物だけ表示するようにしてみた．
-   変更点として,
-   - separater は環境によってズレるので，半角スペースに変更
-   - vc-mode, line number 等のアイコン表示を止める
-   といった事をしている. East Asian ambiguous Width char の扱いは面倒ですね.
    #+BEGIN_SRC emacs-lisp
 ;; SKK の状態がヒョコヒョコ動くのが嫌なので，skk-modeline-input-mode= に
 ;; 常に現在の状況を表示する様にしておく．
@@ -3637,6 +3666,3 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
   #+end_example
-* Test
-  #+BEGIN_SRC emacs-lisp
-  #+END_SRC

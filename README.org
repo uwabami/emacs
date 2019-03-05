@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+startup: overview
-#+date: 2019-02-21 01:34:57
+#+date: 2019-03-04 18:07:41
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -320,16 +320,22 @@ $(EMACS) -l $< -batch -f batch-byte-compile $<
    Surrogate, Variation Selector と Private Use Area の区別がついてない
    アイコンフォントが多すぎて, 割とシンドイなぁ, とか思ったり.
 ** icon font
-   テスト. all-the-icons のデータを修正して,
-   icons in terminal のデータを読みに行くようにしてみたり
+   all-the-icons のデータを修正して,
+   icons in terminal のデータを読みに行くようにしてみたり.
+   - フォントは [[https://github.com/uwabami/icons-in-terminal][github.com/uwabami/icons-in-terminal]]
+   - 修正版は [[https://github.com/uwabami/all-the-icons-in-terminal][all-the-icons-in-terminal]]
+   元ファイルと変えていないので, 実際はデータのみ提供するようにした方が無難, かも.
    #+BEGIN_SRC emacs-lisp
 (use-package all-the-icons
-  :quelpa (all-the-icons
+  :ensure t
+  )
+(use-package all-the-icons-in-terminal
+  :quelpa (all-the-icons-in-terminal
            :fetcher github
-           :repo "uwabami/all-the-icons.el"
+           :repo "uwabami/all-the-icons-in-terminal"
            :files (:defaults "data"))
   :config
-  (with-eval-after-load 'all-the-icons
+  (with-eval-after-load 'all-the-icons-in-terminal
     (add-to-list 'all-the-icons-mode-icon-alist
                  '(f90-mode all-the-icons-faicon "facebook" :height 1.0)) ; facebook!
     (add-to-list 'all-the-icons-mode-icon-alist
@@ -3313,6 +3319,35 @@ $clean_ext = "snm nav vrb synctex.gz";
   (add-hook 'shell-mode-hook 'ansi-color-for-comint-mode-on)
   )
    #+END_SRC
+** フォント
+  #+BEGIN_SRC emacs-lisp
+(defun my:load-window-config ()
+  "load window-system specific settings"
+  (interactive)
+  (when window-system
+    (progn
+      (set-frame-parameter nil 'alpha 90)
+      (set-face-attribute 'default nil
+                          :family "RictyDiscord"
+                          :height 180)
+      (set-face-attribute 'fixed-pitch nil
+                          :family "RictyDiscord"
+                          :height 180)
+      (set-face-attribute 'variable-pitch nil
+                          :family "RictyDiscord"
+                          :height 180)
+      (set-background-color "#242424")
+      )))
+(setq frame-background-mode (frame-parameter nil 'background-mode))
+(setq default-frame-alist
+      '(
+        (foreground-color . "#F6F3E8")
+        (scroll-bar-foreground-color . "red")
+        (vertical-scroll-bars . right)
+        ))
+(when (window-system)
+  (my:load-window-config))
+  #+END_SRC
 ** font-locks
    現在修正中, そろそろテーマにすべきかしら?
   #+begin_src emacs-lisp
@@ -3478,7 +3513,7 @@ $clean_ext = "snm nav vrb synctex.gz";
     (eldoc-mode             . "")
     (abbrev-mode            . "")
     (undo-tree-mode         . " 🌴")
-    ;; (flymake-mode           . "")
+    (flymake-mode           . "")
     (isearch-mode           . " 🔎")
     (global-whitespace-mode . " 　")
     (editorconfig-mode      . "")

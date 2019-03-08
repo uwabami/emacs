@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+startup: overview
-#+date: 2019-03-04 18:07:41
+#+date: 2019-03-06 17:51:32
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -1192,6 +1192,18 @@ File.open(src, "r") {|f|
                                    (make-directory dir :parents) dir)
         undo-tree-history-directory-alist `(("." . ,my:undo-tree-history-dir)))
   (global-undo-tree-mode +1)
+  )
+  #+END_SRC
+* チラ見: =quick-preview.el=
+  ターミナルの場合に上手く動かないので folk 版を作っている
+  #+BEGIN_SRC emacs-lisp
+(use-package quick-preview
+  :quelpa (quick-preview
+           :fetcher github
+           :repo "uwabami/quick-preview.el")
+  :config
+  (global-set-key (kbd "C-c q") 'quick-preview-at-point)
+  (define-key dired-mode-map (kbd "Q") 'quick-preview-at-point)
   )
   #+END_SRC
 * 補完: =ido=

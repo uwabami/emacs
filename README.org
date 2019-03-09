@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+startup: overview
-#+date: 2019-03-06 17:51:32
+#+date: 2019-03-08 11:26:58
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -3534,7 +3534,7 @@ $clean_ext = "snm nav vrb synctex.gz";
     (orgmine-mode           . "")
     (orgtbl-mode            . "")
     (org-src-mode           . "")
-    (git-gutter+-mode       . "")
+    (git-gutter+-mode       . " ")
     (projectile-mode        . " 📆")
     ))
 (defun my:clean-mode-line ()

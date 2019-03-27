@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+startup: overview
-#+date: 2019-03-08 11:26:58
+#+date: 2019-03-26 15:55:57
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -326,9 +326,7 @@ $(EMACS) -l $< -batch -f batch-byte-compile $<
    - 修正版は [[https://github.com/uwabami/all-the-icons-in-terminal][all-the-icons-in-terminal]]
    元ファイルと変えていないので, 実際はデータのみ提供するようにした方が無難, かも.
    #+BEGIN_SRC emacs-lisp
-(use-package all-the-icons
-  :ensure t
-  )
+(use-package all-the-icons :ensure t )
 (use-package all-the-icons-in-terminal
   :quelpa (all-the-icons-in-terminal
            :fetcher github
@@ -1256,10 +1254,10 @@ File.open(src, "r") {|f|
     which can be very annoying."
     (interactive)
     (setq ido-dir-file-cache
-	      (cl-remove-if
-	       (lambda (x)
-	         (string-match "/\\(rsh\\|ssh\\|telnet\\|su\\|sudo\\|sshx\\|krlogin\\|ksu\\|rcp\\|scp\\|rsync\\|scpx\\|fcp\\|nc\\|ftp\\|smb\\|adb\\):" (car x)))
-	       ido-dir-file-cache)))
+          (cl-remove-if
+           (lambda (x)
+             (string-match "/\\(rsh\\|ssh\\|telnet\\|su\\|sudo\\|sshx\\|krlogin\\|ksu\\|rcp\\|scp\\|rsync\\|scpx\\|fcp\\|nc\\|ftp\\|smb\\|adb\\):" (car x)))
+           ido-dir-file-cache)))
   (add-hook 'kill-emacs-hook
             #'my:ido-remove-tramp-from-cache)
   )
@@ -1376,48 +1374,6 @@ File.open(src, "r") {|f|
   (global-company-mode +1)
   )
   #+end_src
-* 補完: =yasnippet=
-  #+BEGIN_SRC emacs-lisp
-(use-package yasnippet
-  :ensure t
-  :bind (:map yas-minor-mode-map
-              ("<C-tab>" . my:yas-ido-expand))
-  :init
-  (defvar my:snippet-dirs (concat my:d:share "snippets"))
-  (unless (file-directory-p my:snippet-dirs)
-    (make-directory my:snippet-dirs))
-  ;; @see https://www.emacswiki.org/emacs/Yasnippet
-  (defun my:yas-ido-expand ()
-    "Lets you select (and expand) a yasnippet key"
-    (interactive)
-    (let ((original-point (point)))
-      (while (and
-              (not (= (point) (point-min) ))
-              (not
-               (string-match "[[:space:]\n]" (char-to-string (char-before)))))
-        (backward-word 1))
-      (let* ((init-word (point))
-             (word (buffer-substring init-word original-point))
-             (list (yas-active-keys)))
-        (goto-char original-point)
-        (let ((key (remove-if-not
-                    (lambda (s) (string-match (concat "^" word) s)) list)))
-          (if (= (length key) 1)
-              (setq key (pop key))
-            (setq key (ido-completing-read "key: " list nil nil word)))
-          (delete-char (- init-word original-point))
-          (insert key)
-          (yas-expand)))))
-  :config
-  (setq yas-snippet-dirs
-        '(my:snippet-dirs
-          yasnippet-snippets-dir))
-  (setq yas-prompt-function '(yas-ido-prompt))
-  (add-hook 'after-init-hook
-            (lambda ()
-              (yas-global-mode 1)))
-  )
-  #+END_SRC
 * 校正，辞書等
 ** spell checker
    ispell はコマンドとして =aspell= を利用する．
@@ -2480,7 +2436,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         org-emphasis-alist                     ;; 基本 "-nw" なので色変更
         (cons '("+" '(:strike-through t :foreground "#999999"))
               (cl-delete "+" org-emphasis-alist :key 'car :test 'equal))
-        org-completion-use-ido t
+        ;; org-completion-use-ido t
         ;; GTD: 状態の追加
         org-todo-keywords
         '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)" "CANCEL(c)" "SOMEDAY(s)")
@@ -2890,30 +2846,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         orgmine-default-todo-keyword "新規")
   )
    #+end_src
-** Org-Wiki
-   計算機関連のメモは [[https://github.com/uwabami/org-wiki][uwabami/org-wiki]] で書いています．元々は
-   [[https://github.com/caiorss/org-wiki][caiorss/org-wiki]] を使っていたのですが helm 依存の部分を ido に書き換
-   えてます.
-   #+begin_src emacs-lisp
-(use-package org-wiki
-  :if (file-directory-p "~/Public/cc-env")
-  :no-require t
-  :commands (org-wiki)
-  :quelpa (org-wiki
-           :fetcher github
-           :repo "uwabami/org-wiki")
-  :bind (("C-x M" . org-wiki ))
-  :config
-  (setq org-wiki-location "~/Public/cc-env"
-        org-wikitemplate "#+TITLE:
-,#+DATE: 20
-,#+LANGUAGE: ja
-,#+REF: cc-env/%n
-,#+LAYOUT: default
-,#+PERMALINK: /cc-env/%n.html
-Related [[wiki:index][Index]]
-"))
-   #+end_src
 * Howm
   Org を使う前は Howm を使っていました.
   過去のメモを検索するためだけに未だに Howm を使っています.
@@ -3047,7 +2979,7 @@ Related [[wiki:index][Index]]
   :bind (("C-x g" . magit-status))
   :ensure t
   :config
-  (setq magit-completing-read-function 'magit-ido-completing-read
+  (setq ;; magit-completing-read-function 'magit-ido-completing-read
         magit-refs-show-commit-count 'all
         magit-log-buffer-file-locked t
         magit-revision-show-gravatars nil
@@ -3064,47 +2996,12 @@ Related [[wiki:index][Index]]
   :config
   )
    #+END_SRC
-** リポジトリの移動: =ido-ghq=
-   ghq list を ido で選んで dired で開く
-   #+BEGIN_SRC emacs-lisp
-(use-package ido-ghq
-  :if (executable-find "ghq")
-  :quelpa (ido-ghq
-           :fetcher github
-           :repo "uwabami/ido-ghq")
-  :bind (("C-x f" . ido-ghq-open))
-  :config
-  (setq ido-ghq-short-list t)
-  )
-   #+END_SRC
 * プロジェクト毎の coding rule の適用: =editorconfig=
   #+BEGIN_SRC emacs-lisp
 (use-package editorconfig
   :ensure t
   :config
   (editorconfig-mode 1)
-  )
-  #+END_SRC
-* Project管理: =projectile=
-  沢山 project がある環境だとツライ気がする.
-  #+BEGIN_SRC emacs-lisp
-(use-package projectile
-  :ensure t
-  :bind (("C-c p p" . projectile-switch-project))
-  :config
-  (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
-  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
-  (setq projectile-project-search-path nil
-        projectile-cache-file (expand-file-name "projectile.cache" my:d:tmp)
-        projectile-known-projects-file
-        (expand-file-name "projectile-bookmarks.eld" my:d:share)
-        projectile-enable-caching t
-        projectile-find-dir-innclude-top-level t
-        projectile-mode-line-prefix ""
-        projectile-mode-line-function #'(lambda () projectile-mode-line-prefix)
-        )
-  (advice-add 'projectile-switch-project :around #'my:ido-grid-force-one-columns)
-  (projectile-mode +1)
   )
   #+END_SRC
 * Syntax checker: =flycheck= [0/1]
@@ -3160,13 +3057,13 @@ Related [[wiki:index][Index]]
   :config
   (setq flycheck-status-emoji-indicator-running          ?🔃
         flycheck-status-emoji-indicator-finished-ok      ?✔
-        flycheck-status-emoji-indicator-finished-error   ?✖
-        flycheck-status-emoji-indicator-finished-warning ?⚠
-        flycheck-status-emoji-indicator-finished-info    ?💁
-        flycheck-status-emoji-indicator-not-checked      ?🚬
+        flycheck-status-emoji-indicator-finished-error   ?
+        flycheck-status-emoji-indicator-finished-warning ?
+        flycheck-status-emoji-indicator-finished-info    ?
+        flycheck-status-emoji-indicator-not-checked      ?
         flycheck-status-emoji-indicator-no-checker       ?💤
         flycheck-status-emoji-indicator-errored          ?✖
-        flycheck-status-emoji-indicator-interrupted      ?😎
+        flycheck-status-emoji-indicator-interrupted      ?
         flycheck-status-emoji-indicator-suspicious       ?❓)
   (with-eval-after-load 'flycheck
     (flycheck-status-emoji-mode +1))
@@ -3258,43 +3155,6 @@ $clean_ext = "snm nav vrb synctex.gz";
   (add-hook 'TeX-mode-hook 'ezbf-minor-mode)
   )
    #+END_SRC
-* MoinMoin: =moinmoin-mode=, =moomin.el=
-  Debian Wiki や職場の Wiki を編集するための
-  MoinMoin の設定. 編集には [[https://github.com/lurdan/moomin-el][tototoshi/moomin-el: Edit MoinMoin with Emacs]] を使う.
-** =moinmoin-mode=
-   MoinMoin 本体の moinmoin-mode 自体は古くて
-   screen-lines に依存していたりするので folk して更新中.
-   [[https://github.com/uwabami/moinmoin-mode][uwabami/moinmoin-mode: Fork from EmacsForMoinMoin, for Emacs >= 25]]
-   #+BEGIN_SRC emacs-lisp
-(use-package moinmoin-mode
-  :quelpa (moinmoin-mode
-           :fetcher github
-           :repo "uwabami/moinmoin-mode")
-  )
-   #+END_SRC
-   そのうち気になる所を弄る，ということで．
-** =moomin=: =emacs-request + helm + moinmoin-mode=
-   最新の奴だと動かなかったので folk して多少弄った版を使うことに.
-   [[https://github.com/uwabami/moomin-el][uwabami/moomin-el: Edit MoinMoin with Emacs]]
-#+BEGIN_SRC emacs-lisp
-(use-package moomin
-  :if (file-directory-p my:d:password-store)
-  :quelpa (moomin
-           :fetcher github
-           :repo "uwabami/moomin-el")
-  :bind (("C-x w" . ido-moomin)
-         :map moinmoin-mode-map
-         ("C-c C-c" . moomin-save-current-buffer)
-         ("C-c C-s" . moomin-save-current-buffer)
-         ("C-c C-o" . moomin-browse-current-page)
-         ("C-c C-r" . moomin-reload-current-page))
-  :config
-  (with-eval-after-load "moomin"
-    (if (file-directory-p my:d:password-store)
-        (load (concat my:d:password-store "/moomin.gpg"))))
-  (setq moomin-history-file (concat my:d:tmp "moomin_history"))
-  )
-#+END_SRC
 * 日記: =tDiary=
   org2blog で tDiary を更新できないか妄想している
   #+BEGIN_SRC emacs-lisp
@@ -3338,16 +3198,21 @@ $clean_ext = "snm nav vrb synctex.gz";
   (interactive)
   (when window-system
     (progn
-      (set-frame-parameter nil 'alpha 90)
+      (set-frame-parameter nil 'alpha 95)
       (set-face-attribute 'default nil
-                          :family "RictyDiscord"
-                          :height 180)
+                          :family "Ricty Discord"
+                          :height 200)
       (set-face-attribute 'fixed-pitch nil
-                          :family "RictyDiscord"
-                          :height 180)
+                          :family "Ricty Discord"
+                          :height 200)
       (set-face-attribute 'variable-pitch nil
-                          :family "RictyDiscord"
-                          :height 180)
+                          :family "Ricty Discord"
+                          :height 200)
+      (set-fontset-font nil
+                        '(#xE0A0 . #xEEE0)
+                        (font-spec :family "icons\-in\-terminal"))
+      (setq use-default-font-for-symbols nil)
+      ;;
       (set-background-color "#242424")
       )))
 (setq frame-background-mode (frame-parameter nil 'background-mode))
@@ -3513,29 +3378,48 @@ $clean_ext = "snm nav vrb synctex.gz";
  '(company-scrollbar-bg                ((t (:background "#4c4c4c"))))
  )
   #+end_src
-** major/minor モードの表示設定
-   diminish や delight があるわけですが,
-   微妙にこれで指定できない奴もあってアレですね.
+** モードラインのカスタマイズ
+*** SKK の調整
+    SKK の状態がヒョコヒョコ動くのが嫌なので，skk-modeline-input-mode= に
+    常に現在の状況を表示する様にしておく．
+    #+BEGIN_SRC emacs-lisp
+(defun my:skk-modeline-input-mode ()
+  "SKKが読み込まれていない場合でも skk-modeline-input-mode に文字を入れる."
+  (unless (boundp 'skk-modeline-inpt-mode)
+    (setq skk-modeline-input-mode "--[--]:")))
+;; 初回更新
+(my:skk-modeline-input-mode)
+;; hook
+(unless (featurep 'powerline)
+  (add-hook 'after-change-major-mode-hook
+            #'(lambda() (skk-mode)(skk-mode))))
+(unless (featurep 'doom-modeline)
+  (add-hook 'after-change-major-mode-hook
+            #'(lambda() (skk-mode)(skk-mode))))
+    #+END_SRC
+*** major/minor モードの表示設定
+    diminish や delight があるわけですが,
+    微妙にこれで指定できない奴もあってアレですね.
 
-   [[https://github.com/sebastiencs/icons-in-terminal][icons in terminal]] を使っているので, 対応するフォントが必要.
-   #+BEGIN_SRC emacs-lisp
+    [[https://github.com/sebastiencs/icons-in-terminal][icons in terminal]] を使っているので, 対応するフォントが必要.
+    #+BEGIN_SRC emacs-lisp
 (defvar my:mode-line-cleaner-alist
   `(;; For minor-mode, first char is 'space'
     ;; (yas-minor-mode         . " Ya")
     (eldoc-mode             . "")
     (abbrev-mode            . "")
-    (undo-tree-mode         . " 🌴")
+    (undo-tree-mode         . "")
     (flymake-mode           . "")
     (isearch-mode           . " 🔎")
-    (global-whitespace-mode . " 　")
+    (global-whitespace-mode . "")
     (editorconfig-mode      . "")
-    (company-mode           . " ")
-    (rainbow-mode           . " 🌈")
+    (company-mode           . "")
+    (rainbow-mode           . "")
     (orgmine-mode           . "")
     (orgtbl-mode            . "")
     (org-src-mode           . "")
     (git-gutter+-mode       . " ")
-    (projectile-mode        . " 📆")
+    (projectile-mode        . " ")
     ))
 (defun my:clean-mode-line ()
   "Cleanup major/minor mode."
@@ -3549,23 +3433,10 @@ $clean_ext = "snm nav vrb synctex.gz";
              (when (eq mode major-mode)
                (setq mode-name mode-str)))))
 (add-hook 'after-change-major-mode-hook 'my:clean-mode-line)
-   #+END_SRC
-** powerline 本体の設定．
-   default-theme をベースに見たい物だけ表示するようにしてみた．
-   #+BEGIN_SRC emacs-lisp
-;; SKK の状態がヒョコヒョコ動くのが嫌なので，skk-modeline-input-mode= に
-;; 常に現在の状況を表示する様にしておく．
-(defun my:skk-modeline-input-mode ()
-  "SKKが読み込まれていない場合でも skk-modeline-input-mode に文字を入れる."
-  (unless (boundp 'skk-modeline-inpt-mode)
-    (setq skk-modeline-input-mode "--[--]:")))
-;; 初回更新
-(my:skk-modeline-input-mode)
-;; hook
-(unless (featurep 'powerline)
-  (add-hook 'after-change-major-mode-hook
-            #'(lambda() (skk-mode)(skk-mode))))
-;; 本体の設定
+    #+END_SRC
+*** powerline 本体の設定．
+    default-theme をベースに見たい物だけ表示するようにしてみた．
+    #+BEGIN_SRC emacs-lisp
 (use-package powerline
   :ensure t
   :init
@@ -3575,11 +3446,6 @@ $clean_ext = "snm nav vrb synctex.gz";
     (setq skk-indicator-alist (skk-make-indicator-alist))
     (force-mode-line-update t))
   (advice-add 'skk-setup-modeline :override 'my:disable-skk-setup-modeline)
-  ;; delight との連携
-  ;; @see https://www.emacswiki.org/emacs/DelightedPowerLine
-  ;; (defadvice powerline-major-mode (around delight-powerline-major-mode activate)
-  ;;   "Ensure that powerline's major mode names are delighted."
-  ;;   (let ((inhibit-mode-name-delight nil)) ad-do-it))
   ;; Git の表示のカスタマイズ
   (defpowerline my:powerline-vc
     (when (and (buffer-file-name (current-buffer)) vc-mode)
@@ -3630,10 +3496,10 @@ $clean_ext = "snm nav vrb synctex.gz";
                                              (powerline-current-separator)
                                              (cdr powerline-default-separator-dir))))
                             (lhs (list (powerline-raw (substring skk-modeline-input-mode 2 -1) mode-line 'l)
-                                       (powerline-raw "%*" mode-line 'l)
                                        (powerline-raw mode-line-mule-info mode-line 'l)
                                        (powerline-raw " ")
                                        (my:powerline-major-mode)
+                                       (powerline-raw "%*" mode-line 'l)
                                        (powerline-raw " ")
                                        (funcall separator-left mode-line face1)
                                        ;; (powerline-buffer-id mode-line-buffer-id 'l)
@@ -3644,18 +3510,16 @@ $clean_ext = "snm nav vrb synctex.gz";
                                        ))
                             (rhs (list (powerline-raw global-mode-string face2 'r)
                                        (funcall separator-right face2 face1)
-                                       ;; (powerline-raw "%4l" face1 'l)
-                                       ;; (powerline-raw ":" face1 'l)
-                                       ;; (powerline-raw "%3c" face1 'r)
-                                       ;; (powerline-raw " " face1)
                                        (powerline-process face1 'l)
                                        (powerline-minor-modes face1 'l)
                                        (powerline-narrow face1 'l)
                                        (funcall separator-right face1 mode-line)
-                                       (powerline-raw " ")
+                                       ;; (powerline-raw " ")
+                                       ;; (powerline-raw "%4l" mode-line 'l)
+                                       ;; (powerline-raw ":" mode-line 'l)
+                                       ;; (powerline-raw "%3c" mode-line 'r)
+                                       ;; (powerline-raw " " mode-line)
                                        (my:powerline-buffer-percentage mode-line 'l)
-                                       ;; (powerline-raw "/" mode-line 'l)
-                                       ;; (powerline-buffer-size mode-line 'l)
                                        (powerline-raw " " mode-line 'l)
                                        )))
                        (concat (powerline-render lhs)
@@ -3672,7 +3536,7 @@ $clean_ext = "snm nav vrb synctex.gz";
         )
   (my:powerline-theme)
   )
-   #+END_SRC
+    #+END_SRC
 ** 対応する括弧を見易く: =rainbow-delimiters=
    #+BEGIN_SRC emacs-lisp
 (use-package rainbow-delimiters

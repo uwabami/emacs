@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil; lexical-binding: t -*-
 #+startup: overview
-#+date: 2019-03-26 15:55:57
+#+date: 2019-05-04 16:10:21
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -327,6 +327,10 @@ $(EMACS) -l $< -batch -f batch-byte-compile $<
    元ファイルと変えていないので, 実際はデータのみ提供するようにした方が無難, かも.
    #+BEGIN_SRC emacs-lisp
 (use-package all-the-icons :ensure t )
+(use-package all-the-icons-dired :ensure t
+  :disabled t
+  :hook (dired-mode . all-the-icons-dired-mode)
+  )
 (use-package all-the-icons-in-terminal
   :quelpa (all-the-icons-in-terminal
            :fetcher github
@@ -518,12 +522,12 @@ $(EMACS) -l $< -batch -f batch-byte-compile $<
 ** version管理: =vc=
    組み込みの vc-mode は mode-line の整形にしか利用しない.
    #+BEGIN_SRC emacs-lisp
-(use-package vc
-  :config
-  (setq vc-handled-backends '(Git)
-        ;; symlink は常においかける
-        vc-follow-symlinks t)
-  )
+;; (use-package vc
+;;   :config
+;;   (setq vc-handled-backends '(Git)
+;;         ;; symlink は常においかける
+;;         vc-follow-symlinks t)
+;;   )
    #+END_SRC
 ** =recentf=: 最近使ったファイル履歴の保管
    ファイルを開く際には =ido-recentf-open= を使うので,
@@ -1163,47 +1167,6 @@ File.open(src, "r") {|f|
   (migemo-init)
   )
   #+end_src
-* Undo/Redo: =undo-tree=
-  #+BEGIN_SRC emacs-lisp
-(use-package undo-tree
-  :ensure t
-  :init
-  ;; @see https://github.com/raxod502/radian/commit/0544196c50ddc305f90873ca280bf0c5e3db685b
-  ;; Suppress the message saying that the undo history file was
-  ;; saved (because this happens every single time you save a file).
-  (defun my:undo-tree-suppress-undo-history-saved-message
-      (undo-tree-save-history &rest args)
-    (let ((inhibit-message t))
-      (apply undo-tree-save-history args)))
-  ;; Suppress the message saying that the undo history could not be
-  ;; loaded because the file changed outside of Emacs.
-  (defun my:undo-tree-suppress-buffer-modified-message
-      (undo-tree-load-history &rest args)
-    (let ((inhibit-message t))
-      (apply undo-tree-load-history args)))
-  (advice-add #'undo-tree-load-history :around
-              #'my:undo-tree-suppress-buffer-modified-message)
-  :config
-  (setq undo-tree-auto-save-history t
-        my:undo-tree-history-dir (let ((dir (concat my:d:tmp
-                                                    "undo-tree-history/")))
-                                   (make-directory dir :parents) dir)
-        undo-tree-history-directory-alist `(("." . ,my:undo-tree-history-dir)))
-  (global-undo-tree-mode +1)
-  )
-  #+END_SRC
-* チラ見: =quick-preview.el=
-  ターミナルの場合に上手く動かないので folk 版を作っている
-  #+BEGIN_SRC emacs-lisp
-(use-package quick-preview
-  :quelpa (quick-preview
-           :fetcher github
-           :repo "uwabami/quick-preview.el")
-  :config
-  (global-set-key (kbd "C-c q") 'quick-preview-at-point)
-  (define-key dired-mode-map (kbd "Q") 'quick-preview-at-point)
-  )
-  #+END_SRC
 * 補完: =ido=
   補完は =ido= が軽いし速いので好み.
   見た目がちょっと簡素すぎる気もするので、なんとか弄りたい所ではある。
@@ -1239,6 +1202,7 @@ File.open(src, "r") {|f|
              ".snm"
              ".synctex.gz"
              ".vrb"
+             ".zwc"
              )
            do (add-to-list 'completion-ignored-extensions ext))
   (add-hook 'ido-setup-hook
@@ -1326,10 +1290,9 @@ File.open(src, "r") {|f|
       (find-file (assoc-default selected files)))))
 (bind-key "C-x C-r" 'ido-recentf-open)
    #+end_src
-** =ido-
+** =ido-ido-completing-read=
    #+BEGIN_SRC emacs-lisp
-(use-package ido-completing-read+
-  :ensure t)
+(use-package ido-completing-read+ :ensure t)
    #+END_SRC
 ** =smex=
    M-x を ido で。
@@ -1345,35 +1308,32 @@ File.open(src, "r") {|f|
         )
   )
    #+end_src
-* 補完: =compnay=
-  以前は auto-complete を使っていたが, 最近こちらに乗り換えた.
-  #+begin_src emacs-lisp
-(use-package company
-  :ensure t
-  :bind (("C-M-i" . company-complete))
+
+** =ido-ghq=: リポジトリの移動
+   ghq list を ido で選んで dired で開く
+   #+BEGIN_SRC emacs-lisp
+(use-package ido-ghq
+  :if (executable-find "ghq")
+  :quelpa (ido-ghq
+           :fetcher github
+           :repo "uwabami/ido-ghq")
+  :bind (("C-x f" . ido-ghq-open))
   :config
-  ;; C-n, C-pで補完候補を次/前の候補を選択
-  (define-key company-active-map (kbd "C-n") 'company-select-next)
-  (define-key company-active-map (kbd "C-p") 'company-select-previous)
-  (define-key company-search-map (kbd "C-n") 'company-select-next)
-  (define-key company-search-map (kbd "C-p") 'company-select-previous)
-  ;; C-sで絞り込む
-  (define-key company-active-map (kbd "C-s") 'company-filter-candidates)
-  ;; TABで候補を設定
-  (define-key company-active-map (kbd "C-i") 'company-complete-selection)
-  ;; 各種メジャーモードでも C-M-iで company-modeの補完を使う
-  ;; (define-key emacs-lisp-mode-map (kbd "C-M-i") 'company-complete)
-  (setq company-auto-expand t                 ; 1個目を自動的に補完
-        company-transformers
-        '(company-sort-by-backend-importance) ; ソート順
-        company-idle-delay 0.5                ; 遅延なしにすぐ表示
-        company-minimum-prefix-length 4       ; デフォルトは4
-        company-selection-wrap-around t       ; 候補の最後の次は先頭に戻る
-        completion-ignore-case t
-        company-dabbrev-downcase nil)
-  (global-company-mode +1)
+  (setq ido-ghq-short-list t)
   )
-  #+end_src
+   #+END_SRC
+* チラ見: =quick-preview.el=
+  ターミナルの場合に上手く動かないので folk 版を作っている
+  #+BEGIN_SRC emacs-lisp
+(use-package quick-preview
+  :quelpa (quick-preview
+           :fetcher github
+           :repo "uwabami/quick-preview.el")
+  :config
+  (global-set-key (kbd "C-c q") 'quick-preview-at-point)
+  (define-key dired-mode-map (kbd "Q") 'quick-preview-at-point)
+  )
+  #+END_SRC
 * 校正，辞書等
 ** spell checker
    ispell はコマンドとして =aspell= を利用する．
@@ -2436,7 +2396,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         org-emphasis-alist                     ;; 基本 "-nw" なので色変更
         (cons '("+" '(:strike-through t :foreground "#999999"))
               (cl-delete "+" org-emphasis-alist :key 'car :test 'equal))
-        ;; org-completion-use-ido t
+        org-completion-use-ido t
         ;; GTD: 状態の追加
         org-todo-keywords
         '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)" "CANCEL(c)" "SOMEDAY(s)")
@@ -2475,7 +2435,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     (set (make-local-variable 'time-stamp-start) "#\\+date: 2")
     (set (make-local-variable 'time-stamp-end)   "\$")
     )
-  (add-hook 'org-mode-hook 'my:org-timestamp-hook)
+  (add-hook #'org-mode-hook #'my:org-timestamp-hook)
   )
    #+end_src
 ** Org-Id
@@ -2516,9 +2476,9 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     '((t (:inherit org-agenda-date-weekend :underline t)))
     "Agenda 表示中の今日かつ日・祝日用のface")
   ;; こっからは org-gcal で同期したカレンダーの色
-  (defface my:org-agenda-calendar-KUSM
+  (defface my:org-agenda-calendar-Univ
     '((t (:foreground "#7FFF7F")))
-    "Agenda 表示中, KUSM.org の表示 face"
+    "Agenda 表示中, Univ.org の表示 face"
     :group 'org-agenda )
   (defface my:org-agenda-calendar-Schedule
     '((t (:foreground "#7FFFFF")))
@@ -2569,14 +2529,13 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
              "Schedule.org"
              "MHC.org"
              "GFD.org"
-             "KUSM.org"
+             "Univ.org"
              "DebianJP.org"
              "twitter.org"
              "journal.org"
              "Wunderlist.org"
              "redmine_GFD.org"
              "redmine_FluidSoc.org"
-             "redmine_KUSM.org"
              ))
     (add-to-list 'org-agenda-files (concat my:d:org file)))
   (add-to-list 'org-agenda-files (locate-user-emacs-file "README.org"))
@@ -2617,9 +2576,9 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
             (lambda ()
               (save-excursion
                 (goto-char (point-min))
-                (while (re-search-forward "KUSM:" nil t)
+                (while (re-search-forward "Univ:" nil t)
                   (add-text-properties (match-beginning 0) (point-at-eol)
-                                       '(face my:org-agenda-calendar-KUSM)))
+                                       '(face my:org-agenda-calendar-Univ)))
                 (goto-char (point-min))
                 (while (re-search-forward "Schedule:" nil t)
                   (add-text-properties (match-beginning 0) (point-at-eol)
@@ -2712,14 +2671,14 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    他には wanderlust のメールを扱えるように =org-wl= を読み込んで template を追加したぐらい.
    notmuch のインデックスの方が良いかもしれない, と最近思っている.
    #+BEGIN_SRC emacs-lisp
-(use-package org-wl
-  :if (and (or (my:dpkg-status "wl-beta")
-               (my:dpkg-status "wl"))
-           (file-directory-p my:d:org))
-  :quelpa (org-wl
-           :fetcher url
-           :url "https://code.orgmode.org/bzg/org-mode/raw/master/contrib/lisp/org-wl.el")
-  )
+;; (use-package org-wl
+;;  :if (and (or (my:dpkg-status "wl-beta")
+;;               (my:dpkg-status "wl"))
+;;           (file-directory-p my:d:org))
+;;  :quelpa (org-wl
+;;           :fetcher url
+;;           :url "https://code.orgmode.org/bzg/org-mode/raw/master/contrib/lisp/org-wl.el")
+;;  )
 (use-package org-capture
   :bind (("C-x m" . org-capture))
   :if (file-directory-p my:d:org)
@@ -2846,6 +2805,238 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         orgmine-default-todo-keyword "新規")
   )
    #+end_src
+** Org-Export
+*** 一般設定
+    #+BEGIN_SRC emacs-lisp
+(use-package ox
+  :init
+  ;; 空行の削除
+  (defun my:remove-org-newlines-at-cjk-text (&optional _mode)
+    "先頭が '*', '#', '|' でなく、改行の前後が日本の文字の場合はその改行を除去"
+    (interactive)
+    (goto-char (point-min))
+    (while (re-search-forward "^\\([^|#*\n].+\\)\\(.\\)\n *\\(.\\)" nil t)
+      (if (and (> (string-to-char (match-string 2)) #x2000)
+               (> (string-to-char (match-string 3)) #x2000))
+          (replace-match "\\1\\2\\3"))
+      (goto-char (point-at-bol))))
+  (with-eval-after-load "ox"
+    (add-hook 'org-export-before-processing-hook
+              'my:remove-org-newlines-at-cjk-text))
+  :config
+    (setq org-export-with-toc nil
+          org-export-with-section-numbers nil)
+    ;; for Beamer
+    (add-to-list 'org-export-options-alist
+                 '(:shortdate    "SHORTDATE" nil nil))
+    (add-to-list 'org-export-options-alist
+                 '(:shorttitle   "SHORTTITLE" nil nil))
+    ;; for Jekyll
+    (add-to-list 'org-export-options-alist
+                 '(:layout    "LAYOUT" nil "default"))
+    (add-to-list 'org-export-options-alist
+                 '(:ref       "REF" nil nil))
+    (add-to-list 'org-export-options-alist
+                 '(:permalink "PERMALINK" nil nil))
+    (add-to-list 'org-export-options-alist
+                 '(:redirect_from "redirect_from" nil nil))
+    (add-to-list 'org-export-options-alist
+                 '(:redirect_to "redirect_to" nil nil))
+    )
+    #+END_SRC
+*** LaTeX export
+    #+BEGIN_SRC emacs-lisp
+(use-package ox-latex
+  :config
+  (setq org-latex-pdf-process '("latexmk %f"))
+  (add-to-list 'org-latex-classes
+               '("my:platex"
+                 "\\documentclass[a4j]{jsarticle}
+                     [NO-DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
+                 ("\\section\{%s\}" . "\\section*\{%s\}")
+                 ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
+                 ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
+               )
+  ;;
+  (add-to-list 'org-latex-classes
+               '("my:bxjsartible"
+                 "\\documentclass[a4j,ja=standard]{bxjsarticle}
+                     [NO-DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
+                 ("\\section\{%s\}" . "\\section*\{%s\}")
+                 ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
+                 ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
+               )
+  ;; "verbatim" → "Verbatim" 置換
+  (defun my:org-latex-filter-fancyvrb (text backend _info)
+    "Convert begin/end{verbatim} to begin/end{Verbatim}.
+  Allows use of the fancyvrb latex package."
+    (when (or (org-export-derived-backend-p backend 'beamer)
+              (org-export-derived-backend-p backend 'latex))
+      (replace-regexp-in-string
+       "\\\\\\(begin\\|end\\){verbatim}"
+       "\\\\\\1{Verbatim}" text)))
+  (add-to-list 'org-export-filter-final-output-functions
+               'my:org-latex-filter-fancyvrb)
+  ;; "tabular" →  "Tabular"  置換
+  ;; (defun my:org-latex-filter-bigtabular (text backend _info)
+  ;;   "Convert begin/end{tabular} to begin/end{Tabular}."
+  ;;   (when (or (org-export-derived-backend-p backend 'beamer)
+  ;;             (org-export-derived-backend-p backend 'latex))
+  ;;     (replace-regexp-in-string
+  ;;      "\\\\\\(begin\\|end\\){tabular}"
+  ;;      "\\\\\\1{Tabular}" text)))
+  ;; (add-to-list 'org-export-filter-final-output-functions
+  ;;              'my:org-latex-filter-bigtabular)
+  )
+    #+END_SRC
+*** Beamer export
+    #+BEGIN_SRC emacs-lisp
+(use-package ox-beamer
+  :config
+  (add-to-list 'org-latex-classes
+               '("my:beamer"
+                 "\\documentclass[dvipdfmx,presentation]{beamer}
+                     [NO-DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
+                 ("\\section\{%s\}" . "\\section*\{%s\}")
+                 ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
+                 ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
+               )
+  ;;
+  (add-to-list 'org-latex-classes
+               '("my:beamer-uplatex"
+                 "\\documentclass[dvipdfmx,presentation]{beamer}
+                     [NO-DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
+                 ("\\section\{%s\}" . "\\section*\{%s\}")
+                 ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
+                 ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
+               )
+  (add-to-list 'org-latex-classes
+               '("my:beamer-pdflatex"
+                 "\\documentclass[unicode,presentation]{beamer}
+                     [NO-DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
+                 ("\\section\{%s\}" . "\\section*\{%s\}")
+                 ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
+                 ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
+               )
+  )
+    #+END_SRC
+    LATEX_CLASS に =my:beamer= を指定すると，上記設定で export される．
+*** HTML export
+    後述の Jekyll 用の設定も参照のこと．
+    #+BEGIN_SRC emacs-lisp
+(use-package ox-html
+  :config
+  (setq org-html-use-infojs nil
+        org-html-html5-fancy t
+        org-export-htmlize-output-type 'inline-css
+        org-html-doctype "html5"
+        org-html-text-markup-alist
+        '((bold           . "<strong>%s</strong>")
+          (code           . "<code>%s</code>")
+          (italic         . "<i>%s</i>")
+          (strike-through . "<del>%s</del>")
+          (underline      . "<span class=\"underline\">%s</span>")
+          (verbatim       . "<code>%s</code>")))
+  )
+    #+END_SRC
+*** Jekyll 用の Backend の定義
+    Web サイトは Jekyll で作成しています．
+    [[https://github.com/yoshinari-nomura/org-octopress][yoshinari-nomura/org-octopress: org-mode in octopress]] の
+    =ox-jekyll= を参考に +改造して+ ，
+    html export の際に必要な yaml front matter を出力できるようにしてます．
+    あと，src-block が liquid に解釈されない様に escape してます．
+     #+BEGIN_SRC emacs-lisp
+(org-export-define-derived-backend 'jekyll 'html
+  :menu-entry
+  '(?j "Jekyl: export to html with YAML front matter."
+       ((?H "To temporary buffer"
+            (lambda (a s v b) (org-jekyll-export-as-html a s v)))
+        (?h "To file" (lambda (a s v b) (org-jekyll-export-to-html a s v)))))
+  :translate-alist
+  '((template  . org-jekyll-template)
+    )
+  :filters-alist
+  '((:filter-final-output . org-jekyll-finalized))
+  )
+;; template
+(defun org-jekyll-template (contents info)
+  "Return complete document string after HTML conversion."
+  (concat (org-jekyll--yaml-front-matter info) contents))
+;;; 幾つかの文字列を置換する
+;;  - liquid templateに誤認される `{%', `%}'
+;;  - `:' の escape
+;;  - table-of-contents の処理
+(defun org-jekyll-finalized (contents _backend info)
+  "Publish src-block to html, Escape liquid tags, e.g. {%, %}"
+  (with-temp-buffer
+    (insert contents)
+    (perform-replace "&$58;" "&#58;" nil nil nil nil nil (point-min) (point-max))
+    (perform-replace "{%" "&#123;%" nil nil nil nil nil (point-min) (point-max))
+    (perform-replace "%}" "%&#125;" nil nil nil nil nil (point-min) (point-max))
+    (perform-replace "<nav id=\"table-of-contents" "<div id=\"toc-wrapper\">
+<nav id=\"table-of-contents" nil nil nil nil nil (point-min) (point-max))
+    (perform-replace "</nav>" (format "</nav>
+</div>
+<a href=\"#toc-toggle\" class=\"btn toc-btn\" id=\"toc-toggle\">%s</a>"
+                                      (org-html--translate "Table of Contents" info))
+                     nil nil nil nil nil (point-min) (point-max))
+    (set-auto-mode t)
+    (buffer-substring-no-properties (point-min) (point-max))))
+;;
+(defun org-jekyll--get-option (info property-name &optional default)
+  (let ((property (org-export-data (plist-get info property-name) info)))
+    (format "%s" (or property default ""))))
+;;
+(defun org-jekyll--yaml-front-matter (info)
+  (let ((title
+         (org-jekyll--get-option info :title))
+        (date
+         (org-jekyll--get-option info :date))
+        (language
+         (org-jekyll--get-option info :language))
+        (layout
+         (org-jekyll--get-option info :layout))
+        (jekyll-ref
+         (org-jekyll--get-option info :ref ))
+        (jekyll-permalink
+         (org-jekyll--get-option info :permalink ))
+        (jekyll-redirect-from
+         (org-jekyll--get-option info :redirect_from ))
+        (jekyll-redirect-to
+         (org-jekyll--get-option info :redirect_to ))
+        (convert-to-yaml-list
+         (lambda (arg)
+           (mapconcat #'(lambda (text)(concat "\n- " text)) (split-string arg) " "))))
+    (concat
+     "---"
+     "\ntitle: "      (s-replace ":" "&$58;" title)
+     "\ndate: "       date
+     "\nlayout: "     layout
+     "\nlang: "       language
+     (unless (string-equal jekyll-ref "")
+       (concat "\nref: " jekyll-ref))
+     (unless (string-equal jekyll-permalink "")
+       (concat "\npermalink: " jekyll-permalink))
+     (unless (string-equal jekyll-redirect-from "")
+       (concat "\nredirect_from: " jekyll-redirect-from))
+     (unless (string-equal jekyll-redirect-to "")
+       (concat "\nredirect_to: " jekyll-redirect-to))
+     "\n---\n")))
+
+(defun org-jekyll-export-as-html
+    (&optional async subtreep visible-only body-only ext-plist)
+  "Export current buffer to a HTML buffer adding some YAML front matter."
+  (interactive)
+  (org-export-to-buffer 'jekyll "*Org Jekyll HTML Export*"
+    async subtreep visible-only body-only ext-plist (lambda () (html-mode))))
+
+(defun org-jekyll-export-to-html
+    (&optional async subtreep visible-only body-only ext-plist)
+  "Export current buffer to a HTML file adding some YAML front matter."
+  (interactive)
+  (let ((outfile (org-export-output-file-name ".html" subtreep)))
+    (org-export-to-file 'jekyll outfile async subtreep visible-only body-only ext-plist)))
+     #+END_SRC
 * Howm
   Org を使う前は Howm を使っていました.
   過去のメモを検索するためだけに未だに Howm を使っています.
@@ -3004,71 +3195,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (editorconfig-mode 1)
   )
   #+END_SRC
-* Syntax checker: =flycheck= [0/1]
-  以前は flymake を利用していたけれど, 最近は flycheck を使っている.
-  「デフォルトで良いようにしてくれる」筈なんだけれど,
-  「痒い所に手が届かない」というか, なんというか...
-  まあ, default ってそんなモンだよな.
-  - [ ] autotools なんかだとどうするのが筋かしら?
-  そのうち嫌になって flymake に戻すかも.
-  #+BEGIN_SRC emacs-lisp
-(use-package flycheck
-  :ensure t
-  :init
-  ;; include path
-  ;; (defun my:setup-flycheck-gfortran-project-path ()
-  ;;   (interactive "P")
-  ;;   (let ((root (ignore-errors
-  ;;                 (format "%sinclude" (projectile-project-root)))))
-  ;;     (when root
-  ;;       (add-to-list
-  ;;        (make-variable-buffer-local 'flycheck-gfortran-include-path)
-  ;;        root))))
-  ;; org-src での emacs-lisp-checkdoc は意味が無い
-  (defun my:disable-fylcheck-in-org-src-block ()
-    "Disable emacs-lisp-checkdoc in org-src-block."
-    (interactive)
-    (setq-local flycheck-disabled-checkers '(emacs-lisp-checkdoc)))
-  ;; projectile-project-root に合わせて include path 等を追加してみるテスト
-  ;; 本当は .dir-local.el を用意すべきかな.
-  :config
-  (setq flycheck-emacs-lisp-package-user-dir package-user-dir
-        flycheck-emacs-lisp-load-path 'inherit)
-  (if (featurep 'org-src)
-      (add-hook 'org-src-mode-hook #'my:disable-fylcheck-in-org-src-block))
-  (if (executable-find "flycheck_chktex.sh")
-      (setq flycheck-tex-chktex-executable "flycheck_chktex.sh"))
-  (add-hook 'after-init-hook #'global-flycheck-mode)
-  )
-  #+END_SRC
-  popup で表示させる [[https://github.com/flycheck/flycheck-popup-tip][flycheck-popup-tip]] も入れておく
-  #+BEGIN_SRC emacs-lisp
-(use-package flycheck-popup-tip
-  :ensure t
-  :config
-  (with-eval-after-load 'flycheck
-    (add-hook 'flycheck-mode-hook #'flycheck-popup-tip-mode))
-  )
-  #+END_SRC
-  status を絵文字で表示
-  #+BEGIN_SRC emacs-lisp
-(use-package flycheck-status-emoji
-  :ensure t
-  :config
-  (setq flycheck-status-emoji-indicator-running          ?🔃
-        flycheck-status-emoji-indicator-finished-ok      ?✔
-        flycheck-status-emoji-indicator-finished-error   ?
-        flycheck-status-emoji-indicator-finished-warning ?
-        flycheck-status-emoji-indicator-finished-info    ?
-        flycheck-status-emoji-indicator-not-checked      ?
-        flycheck-status-emoji-indicator-no-checker       ?💤
-        flycheck-status-emoji-indicator-errored          ?✖
-        flycheck-status-emoji-indicator-interrupted      ?
-        flycheck-status-emoji-indicator-suspicious       ?❓)
-  (with-eval-after-load 'flycheck
-    (flycheck-status-emoji-mode +1))
-  )
-  #+END_SRC
 * TeX
 ** AUCTeX
    Debian パッケージ版を使う．
@@ -3200,13 +3326,13 @@ $clean_ext = "snm nav vrb synctex.gz";
     (progn
       (set-frame-parameter nil 'alpha 95)
       (set-face-attribute 'default nil
-                          :family "Ricty Discord"
+                          :family "Ricty"
                           :height 200)
       (set-face-attribute 'fixed-pitch nil
-                          :family "Ricty Discord"
+                          :family "Ricty"
                           :height 200)
       (set-face-attribute 'variable-pitch nil
-                          :family "Ricty Discord"
+                          :family "Ricty"
                           :height 200)
       (set-fontset-font nil
                         '(#xE0A0 . #xEEE0)
@@ -3301,6 +3427,10 @@ $clean_ext = "snm nav vrb synctex.gz";
  '(ido-vertical-first-match-face       ((t (:inherit ido-first-match))))
  '(ido-vertical-match-face             ((t (:foreground "#4CFF4C"))))
  '(ido-grid-mode-match                 ((t (:inherit ido-first-match ))))
+ ;; ivy
+ '(ivy-current-match                   ((t (:inherit highlight ))))
+ '(ivy-confirm                         ((t (:inherit minibuffer-prompt ))))
+ '(ivy-subdir                          ((t (:inherit dired-directory))))
  ;; powerline
  '(powerline-active1                   ((t (:background "#000000":foreground "#F6F3E8"))))
  '(powerline-active2                   ((t (:background "#666666" :foreground "#F6F3E8"))))

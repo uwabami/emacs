@@ -1,11 +1,10 @@
 *.el
 *.elc
 .org-id-locations
-.bootstrap-stamp
-elpa
-quelpa
+pkg
 tmp
 *~
 old
 share/*
 backup.org
+BACKUP.org

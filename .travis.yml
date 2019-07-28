@@ -4,6 +4,8 @@ cache:
   directories:
     - $HOME/local
 env:
+  before_install:
+    - sudo apt-get install -y ca-certificats gnutls-bin
   global:
     - PATH=$HOME/local/bin:$HOME/local/evm/bin:$PATH
   matrix:
@@ -11,8 +13,9 @@ env:
     - EVM_EMACS=emacs-24.4-travis
     # Debian 9
     - EVM_EMACS=emacs-24.5-travis
-    # Debian unstable
+    # Debian 10
     - EVM_EMACS=emacs-26.1-travis
+    # HEAD
     - EVM_EMACS=emacs-git-snapshot-travis
 before_script:
   - sh .travis-ci/install-evm.sh $EVM_EMACS

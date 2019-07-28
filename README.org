@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
-#+date: 2019-07-28 20:35:15
+#+date: 2019-07-28 23:36:10
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -111,12 +111,13 @@ init.el: README.org
    パッケージは基本的に =pacakge.el= で導入するので，先ずはその設定。
    #+begin_src emacs-lisp
 (setq url-http-attempt-keepalives nil)
+(require 'gnutls nil 'noerror)
 (require 'package nil 'noerror)
 (setq package-enable-at-startup t
       package-user-dir my:d:pkg:elpa
-      package-gnupghome-dir (expand-file-name ".gnupg" (getenv "HOME"))
+      package-gnupghome-dir (expand-file-name ".gnupg" (getenv "HOME")))
       ;; elpa/gnutls workaround
-      gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3")
+      ;; gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3")
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (eval-when-compile
   (unless (file-exists-p (locate-user-emacs-file "tmp/bootstrap-stamp"))

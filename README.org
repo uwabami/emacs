@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
-#+date: 2019-07-28 23:36:10
+#+date: 2019-07-28 23:44:17
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -477,7 +477,7 @@ init.el: README.org
    #+begin_src emacs-lisp
 (dolist (mode
          '(tool-bar-mode
-           scroll-bar-mode
+           ;; scroll-bar-mode
            menu-bar-mode
            blink-cursor-mode
            column-number-mode))
@@ -866,7 +866,6 @@ init.el: README.org
    #+begin_src emacs-lisp
 (leaf browse-url
   :require t
-  :bind (("C-c C-j" . browse-url-at-point))
   :config
   ;; (define-key org-journal-mode-map (kbd "C-c C-j") ')
   (cond ((executable-find "xdg-open")
@@ -1024,7 +1023,9 @@ init.el: README.org
          ("C-c r"   . replace-string)
          ("<home>"  . beginning-of-buffer)
          ("<end>"   . end-of-buffer)
-         ("C-c M-l" . toggle-truncate-lines))
+         ("C-c M-l" . toggle-truncate-lines)
+         ("C-c C-j" . browse-url-at-point)
+         )
   )
    #+end_src
 * カラーコードに色付け: =rainbow-mode=

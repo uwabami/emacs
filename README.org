@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
-#+date: 2019-07-28 23:44:17
+#+date: 2019-07-28 23:51:39
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -3140,7 +3140,7 @@ $clean_ext = "snm nav vrb synctex.gz";
    多少弄った版を使う。
    [[https://github.com/uwabami/moomin-el][uwabami/moomin-el: Edit MoinMoin with Emacs]]
 #+BEGIN_SRC emacs-lisp
-(use-package moomin
+(leaf moomin
   :disabled t
   :if (file-directory-p my:d:password-store)
   :quelpa (moomin

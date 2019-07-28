@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
-#+date: 2019-07-28 23:51:39
+#+date: 2019-07-28 23:57:17
 * はじめに
   ここでは，私の Emacs の設定についてまとめています．
 
@@ -356,7 +356,7 @@ init.el: README.org
    #+BEGIN_SRC emacs-lisp
 (leaf prescient
   :ensure t
-  :commands ivy
+  :commands (ivy ivy-read)
   :init
   (setq prescient-save-file (concat my:d:tmp "prescient-save.el")
         prescient-aggressive-file-save t
@@ -366,13 +366,10 @@ init.el: README.org
   )
 (leaf ivy-prescient
   :ensure t
-  :commands ivy
+  :commands (ivy ivy-read)
   :init
-  (setq ivy-prescient-retain-classic-highlighting t
-        ;; (dolist (command '(counsel-world-clock ;; Merged!
-        ;;                      counsel-app))
-        ;;     (add-to-list 'ivy-prescient-sort-commands command))
-        )
+  (setq ivy-prescient-retain-classic-highlighting t)
+  :config
   (ivy-prescient-mode 1)
   )
    #+END_SRC
@@ -2541,8 +2538,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :bind (("C-x g" . magit-status))
   :ensure t
   :config
+  ;; magit-completing-read-function 'magit-ido-completing-read
   (setq magit-refs-show-commit-count 'all
-        ;; magit-completing-read-function 'magit-ido-completing-read
         magit-log-buffer-file-locked t
         magit-revision-show-gravatars nil
         )
@@ -3143,15 +3140,16 @@ $clean_ext = "snm nav vrb synctex.gz";
 (leaf moomin
   :disabled t
   :if (file-directory-p my:d:password-store)
-  :quelpa (moomin
-           :fetcher github
-           :repo "uwabami/moomin-el")
+  :el-get (moomin
+           :type github
+           :pkgname "uwabami/moomin-el")
   :bind (("C-x w" . ido-moomin)
-         :map moinmoin-mode-map
-         ("C-c C-c" . moomin-save-current-buffer)
-         ("C-c C-s" . moomin-save-current-buffer)
-         ("C-c C-o" . moomin-browse-current-page)
-         ("C-c C-r" . moomin-reload-current-page))
+         (:moinmoin-mode-map
+          ("C-c C-c" . moomin-save-current-buffer)
+          ("C-c C-s" . moomin-save-current-buffer)
+          ("C-c C-o" . moomin-browse-current-page)
+          ("C-c C-r" . moomin-reload-current-page))
+         )
   :config
   (setq moomin-history-file
         (concat my:d:tmp ".moomin_history"))

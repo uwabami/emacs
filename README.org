@@ -1,31 +1,31 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
-#+date: 2019-07-28 23:57:17
+#+date: 2019-08-01 13:40:25
 * はじめに
-  ここでは，私の Emacs の設定についてまとめています．
+  ここでは私の Emacs の設定についてまとめています．
 
   #+html: <amp-img src="https://travis-ci.org/uwabami/emacs.svg?branch=master" width="72px" height="20px" layout=fixed class="travis_badge"></amp-img>
   #+html: <amp-img src="https://img.shields.io/badge/License-GPLv3-blue.svg" width="92px" height="20px" layout="fixed"></amp-img>
   #+html: <a href="https://github.com/uwabami/emacs"><span class="icon-github"><svg id="SVGRoot" width="20px" height="20px" version="1.1" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="m5.4144 12.761c0 0.0645-0.0742 0.11613-0.16774 0.11613-0.10645 0.01-0.18064-0.0419-0.18064-0.11613 0-0.0645 0.0742-0.11613 0.16774-0.11613 0.0968-0.01 0.18064 0.0419 0.18064 0.11613zm-1.0032-0.14516c-0.0226 0.0645 0.0419 0.13871 0.13871 0.15806 0.0839 0.0323 0.18064 0 0.2-0.0645 0.0194-0.0645-0.0419-0.13871-0.13871-0.16775-0.0839-0.0226-0.17742 0.01-0.2 0.0742zm1.4258-0.0548c-0.0935 0.0226-0.15806 0.0839-0.14838 0.15806 0.01 0.0645 0.0935 0.10645 0.19032 0.0839 0.0936-0.0226 0.15806-0.0839 0.14839-0.14838-0.01-0.0613-0.0968-0.10323-0.19033-0.0935zm2.1226-12.361c-4.4742 0-7.8968 3.3968-7.8968 7.871 0 3.5774 2.2516 6.6387 5.4677 7.7161 0.41291 0.0742 0.55807-0.18064 0.55807-0.39032 0-0.2-0.01-1.3032-0.01-1.9806 0 0-2.2581 0.48387-2.7323-0.96129 0 0-0.36774-0.93871-0.89677-1.1806 0 0-0.73871-0.50645 0.0516-0.49677 0 0 0.80323 0.0645 1.2452 0.83226 0.70645 1.2452 1.8903 0.88709 2.3516 0.67419 0.0742-0.51613 0.28387-0.87419 0.51613-1.0871-1.8032-0.2-3.6226-0.46129-3.6226-3.5645 0-0.8871 0.24516-1.3323 0.76129-1.9-0.0839-0.20968-0.35806-1.0742 0.0839-2.1903 0.6742-0.20967 2.2258 0.87097 2.2258 0.87097 0.64516-0.18064 1.3387-0.27419 2.0258-0.27419 0.68709 0 1.3806 0.0936 2.0258 0.27419 0 0 1.5516-1.0839 2.2258-0.87097 0.44193 1.1194 0.16774 1.9806 0.0839 2.1903 0.51613 0.57096 0.83226 1.0161 0.83226 1.9 0 3.1129-1.9 3.3613-3.7032 3.5645 0.29678 0.25484 0.54839 0.73871 0.54839 1.4968 0 1.0871-0.01 2.4322-0.01 2.6968 0 0.20968 0.14839 0.46452 0.55807 0.39032 3.2258-1.071 5.4129-4.1322 5.4129-7.7097 0-4.4742-3.629-7.871-8.1032-7.871zm-4.7613 11.126c-0.0419 0.0323-0.0323 0.10646 0.0226 0.16775 0.0516 0.0516 0.12581 0.0742 0.16775 0.0323 0.0419-0.0323 0.0323-0.10645-0.0226-0.16774-0.0516-0.0516-0.12581-0.0742-0.16775-0.0323zm-0.34838-0.26129c-0.0226 0.0419 0.01 0.0935 0.0742 0.12581 0.0516 0.0323 0.11613 0.0226 0.13871-0.0226 0.0226-0.0419-0.01-0.0935-0.0742-0.12581-0.0645-0.0194-0.11613-0.01-0.13871 0.0226zm1.0452 1.1484c-0.0516 0.0419-0.0323 0.13871 0.0419 0.2 0.0742 0.0742 0.16775 0.0839 0.20968 0.0323 0.0419-0.0419 0.0226-0.13871-0.0419-0.2-0.071-0.0742-0.16775-0.0839-0.20968-0.0323zm-0.36774-0.47419c-0.0516 0.0323-0.0516 0.11613 0 0.19032 0.0516 0.0742 0.13871 0.10645 0.18064 0.0742 0.0516-0.0419 0.0516-0.1258 0-0.2-0.0452-0.0742-0.12903-0.10645-0.18064-0.0645z" fill="currentColor" stroke-width=".032258"/></svg></span></a>
 
   基本方針は以下の通り:
-** Debian パッケージがインストールされているならば，それを優先する
+** Debian パッケージがインストールされているならばそれを優先する
    :[[https://en.wikipedia.org/wiki/Eating_your_own_dog_food][Eating your own dog food - Wikipedia]]
 
    Emacsに関連するDebianパッケージを幾つかメンテナンスしているので，
-   可能な限りDebianパッケージを使うことにしています。
-** [[https://github.com/conao3/leaf.el][leaf.el]]でEmacs のパッケージの導入と設定を行なう。
-   設定には[[https://github.com/conao3/leaf.el][leaf.el]]を利用します。
+   可能な限りDebianパッケージを使うことにしています．
+** [[https://github.com/conao3/leaf.el][leaf.el]]でEmacs のパッケージの導入と設定を行なう
+   設定には[[https://github.com/conao3/leaf.el][leaf.el]]を利用します．
    VCS からインストールしたいパッケージが幾つかあるので，
-   それらについては[[https://github.com/dimitri/el-get][el-get]]を利用しています。
-   今後は[[https://github.com/conao3/feather.el][feather.el]]も試してみたいですね。
+   それらについては[[https://github.com/dimitri/el-get][el-get]]を利用しています．
+   今後は[[https://github.com/conao3/feather.el][feather.el]]も試してみたいですね．
 ** 設定は [[http://orgmode.org/][Org mode]] で書きたい
-   以前こんなブログ記事を書きました: [[http://uwabami.junkhub.org/log/20111213.html#p01][Emacsの設定ファイルをorgで書く]]
+   以前こんなブログ記事を書きました→ [[http://uwabami.junkhub.org/log/20111213.html#p01][Emacsの設定ファイルをorgで書く]]
 
-   というわけで，設定は [[http://orgmode.org/worg/org-contrib/babel/intro.html][Org Babel]] で書いています。
-   本ファイル(=README.org=) から，
-   Makefile 内の以下のスクリプトで =~/init.el= を生成し，byte-compile します。
+   というわけで，設定は [[http://orgmode.org/worg/org-contrib/babel/intro.html][Org Babel]] で書いています.
+   本ファイル(=README.org=) から,
+   Makefile 内の以下のスクリプトで =~/init.el= を生成し，byte-compile します.
    #+begin_src makefile-gmake :tangle no
 EMACS	?= emacs
 init.el: README.org
@@ -37,13 +37,10 @@ init.el: README.org
 %.elc: %.el
 	$(EMACS) -q -l init.el -batch -f batch-byte-compile $<
    #+end_src
-   出力される =init.el= 用のおまじない。
-   =lexsical-binding= を有効にしておきます。
+   ついでに，出力される =init.el= 用のおまじない(?)として
+   =lexsical-binding= を有効にしておきます．
    #+begin_src emacs-lisp
 ;; -*- lexical-binding: t -*-
-;; Configurations for Emacs
-;;                                         Youhei SASAKI <uwabami@gfd-dennou.org>
-;; see also https://uwabami.github.io/cc-env/Emacs.html
    #+end_src
 ** ディレクトリ構成の修正
    分割した設定ファイル群やパッケージでinstallしたパッケージ
@@ -74,22 +71,21 @@ init.el: README.org
   (expand-file-name "pkg/elpa" user-emacs-directory))
 (defconst my:d:pkg:elget
   (expand-file-name "pkg/el-get" user-emacs-directory))
-(dolist (my:d
-         '(my:d:share
-           my:d:tmp
-           my:d:pkg:elpa
-           my:d:pkg:elget))
+(dolist (my:d '(my:d:share
+                my:d:tmp
+                my:d:pkg:elpa
+                my:d:pkg:elget))
   (lambda ()
     (unless (file-directory-p my:d)
       (make-directory my:d t))))
    #+end_src
-   その他, 良く使うディレクトリもここで設定しておきます。
+   その他, 良く使うディレクトリもここで設定しておきます．
    #+BEGIN_SRC emacs-lisp
 (defconst my:d:org (concat (getenv "HOME") "/Nextcloud/org/"))
    #+END_SRC
    ついでに，
    =custom-set-variables= は別ファイルに出力し，
-   終了時に削除するようにしています。
+   終了時に削除するようにしています．
    #+begin_src emacs-lisp
 (setq custom-file (concat my:d:tmp "custom.el"))
 (add-hook 'kill-emacs-hook
@@ -97,18 +93,19 @@ init.el: README.org
             (if (file-exists-p custom-file)
                 (delete-file custom-file))))
    #+end_src
+   暇がある時に =custom.el= の中身を確認して，必要に応じて =init.el= に戻しています．
    +init.elが汚れる気がしてあまり好きではないのですが...皆さん気にしてないんですかね+
 ** Byte-Compile 時の Common Lisp の読み込み
-   =cl= が =cl-lib= になってます。
+   幾つかん関数で =Common-Lisp= 的挙動が期待されているので，
+   =cl-lib= を読み込んでおきます．
    #+begin_src emacs-lisp
-(eval-when-compile
-  (require 'cl-lib nil t))
+(eval-when-compile (require 'cl-lib nil t))
    #+end_src
 * Package 関連: =package.el=, [[https://github.com/conao3/leaf.el][leaf.el]], [[https://github.com/dimitri/el-get][el-get]]
   [[https://github.com/conao3/leaf.el][leaf.el]]のおかげで，
-  無いと途方に暮れるパッケージ以外のインストールは無視できるようになります。
+  無いと途方に暮れるパッケージ以外のインストールは無視できるようになります.
 ** =package.el=
-   パッケージは基本的に =pacakge.el= で導入するので，先ずはその設定。
+   パッケージは基本的に =pacakge.el= で導入するので，先ずはその設定.
    #+begin_src emacs-lisp
 (setq url-http-attempt-keepalives nil)
 (require 'gnutls nil 'noerror)
@@ -116,8 +113,6 @@ init.el: README.org
 (setq package-enable-at-startup t
       package-user-dir my:d:pkg:elpa
       package-gnupghome-dir (expand-file-name ".gnupg" (getenv "HOME")))
-      ;; elpa/gnutls workaround
-      ;; gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3")
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (eval-when-compile
   (unless (file-exists-p (locate-user-emacs-file "tmp/bootstrap-stamp"))
@@ -127,18 +122,19 @@ init.el: README.org
 (package-initialize)
    #+end_src
 ** [[https://github.com/conao3/leaf.el][leaf.el]]
-   個々のパッケージの設定には[[https://github.com/conao3/leaf.el][leaf.el]]を利用します。
+   個々のパッケージの設定には[[https://github.com/conao3/leaf.el][leaf.el]]を利用します.
    #+begin_src emacs-lisp
 (unless (package-installed-p 'leaf)
   (package-install 'leaf))
 (leaf leaf-keywords
   :ensure t
+  :require t
   :config
   (leaf-keywords-init))
    #+end_src
 ** [[https://github.com/dimitri/el-get][el-get]]
    自分で修正した版やオリジナル版を別の場所から持ってくる場合は
-   [[https://github.com/conao3/leaf.el][leaf.el]]から[[https://github.com/dimitri/el-get][el-get]]を呼び出します。
+   [[https://github.com/conao3/leaf.el][leaf.el]]から[[https://github.com/dimitri/el-get][el-get]]を呼び出します.
    #+begin_src emacs-lisp
 (defconst el-get-dir my:d:pkg:elget) ;; override default
 (leaf el-get
@@ -150,7 +146,7 @@ init.el: README.org
    #+end_src
 * 環境変数の読み込み: =exec-path-from-shell=
   shell(zsh)で設定した =PATH= などの環境変数をEmacsに引き継ぐために
-  [[https://github.com/purcell/exec-path-from-shell][purcell/exec-path-from-shell]] を使います。
+  [[https://github.com/purcell/exec-path-from-shell][purcell/exec-path-from-shell]] を使います.
   今の所
   - =SHELL=
   - =DEBFULLNAME=
@@ -166,7 +162,7 @@ init.el: README.org
   #+begin_src emacs-lisp
 (leaf exec-path-from-shell
   :ensure t
-  :init
+  :config
   (setq exec-path-from-shell-check-startup-files nil
         exec-path-from-shell-variables
         '("SHELL"
@@ -179,7 +175,6 @@ init.el: README.org
           "GPG_AGENT_INFO"
           "PASSWORD_STORE_DIR"
           "PATH"))
-  :config
   (exec-path-from-shell-initialize)
   (setq user-full-name (concat (getenv "DEBFULLNAME"))
         user-mail-address (concat (getenv "DEBEMAIL"))
@@ -237,7 +232,7 @@ init.el: README.org
   :ensure t
   :init
   (setq all-the-icons-scale-factor 0.9
-        all-the-icons-default-adjust 0.01)
+        all-the-icons-default-adjust 0.0)
   )
 (leaf all-the-icons-in-terminal
   :el-get (all-the-icons-in-terminal
@@ -275,13 +270,6 @@ init.el: README.org
    #+end_src
 * 独自関数
   細かい独自関数，など．
-** カーソルのある位置の face を調べる関数
-   わりと良く使う. 地味に便利
-   #+begin_src emacs-lisp
-(defun my:describe-face-at-point ()
-  (interactive)
-  (message "%s" (get-char-property (point) 'face)))
-   #+end_src
 ** dpkg-status
    もっと良い方法がありそうなモンですが．
    #+begin_src emacs-lisp
@@ -290,7 +278,7 @@ init.el: README.org
   (string-match "^ii" (shell-command-to-string (format "dpkg -l %s" package))))
    #+end_src
 ** ファイル名を minibuffer におさまる様に整形
-   zsh prompt風味
+   zsh prompt風味．
    #+begin_src emacs-lisp
 (defun my:shorten-file-path (fpath max-length)
   "Show up to `max-length' characters of a directory name `fpath' like zsh"
@@ -311,12 +299,77 @@ init.el: README.org
     (format "%s%s" top output)
     ))
    #+end_src
+** 空になったファイルを尋ねずに自動削除
+   ゴミが残らないし，地味に便利．
+   #+begin_src emacs-lisp
+(defun my:delete-file-if-no-contents ()
+  (when (and (buffer-file-name (current-buffer))
+             (= (point-min) (point-max)))
+    (delete-file
+     (buffer-file-name (current-buffer)))))
+(if (not (memq 'my:delete-file-if-no-contents after-save-hook))
+    (setq after-save-hook
+          (cons 'my:delete-file-if-no-contents after-save-hook)))
+   #+end_src
+
+** scratch を殺さない. 消したら再生成
+   ...元ネタがどこだったのか忘れてしまった...
+   #+begin_src emacs-lisp
+(defun my:make-scratch (&optional arg)
+  (interactive)
+  (progn
+    ;; "*scratch*" を作成して buffer-list に放り込む
+    (set-buffer (get-buffer-create "*scratch*"))
+    (funcall initial-major-mode)
+    (erase-buffer)
+    (when (and initial-scratch-message (not inhibit-startup-message))
+      (insert initial-scratch-message))
+    (or arg
+        (progn
+          (setq arg 0)
+          (switch-to-buffer "*scratch*")))
+    (cond ((= arg 0) (message "*scratch* is cleared up."))
+          ((= arg 1) (message "another *scratch* is created")))))
+;;
+(defun my:buffer-name-list ()
+  (mapcar (function buffer-name) (buffer-list)))
+(add-hook 'kill-buffer-query-functions
+          ;; *scratch* バッファで kill-buffer したら内容を消去するだけにする
+          (function (lambda ()
+                      (if (string= "*scratch*" (buffer-name))
+                          (progn (my:make-scratch 0) nil)
+                        t))))
+(add-hook 'after-save-hook
+          ;; *scratch* バッファの内容を保存したら
+          ;; *scratch* バッファを新しく作る.
+          (function
+           (lambda ()
+             (unless (member "*scratch*" (my:buffer-name-list))
+               (my:make-scratch 1)))))
+   #+end_src
+** 行末の無駄な空白/改行を削除する
+   @see [[http://d.hatena.ne.jp/tototoshi/20101202/1291289625][無駄な行末の空白を削除する(Emacs Advent Calendar jp:2010)]]
+
+   ただし, RD や Markdown だと空白行に意味があったりするので，
+   必要に応じて拡張子で判断して外している．
+   #+begin_src emacs-lisp
+(defvar my:delete-trailing-whitespace-exclude-suffix
+  (list "\\.rd$" "\\.md$" "\\.rbt$" "\\.rab$"))
+(defun my:delete-trailing-whitespace ()
+  (interactive)
+  (cond
+   ((equal nil
+           (cl-loop for pattern in my:delete-trailing-whitespace-exclude-suffix
+                    thereis (string-match pattern buffer-file-name)))
+    (delete-trailing-whitespace))))
+(add-hook 'before-save-hook 'my:delete-trailing-whitespace)
+   #+end_src
 * 補完: =ivy,counsel,swiper=
   counsel が swiper に，swiper が ivy に依存しているので，
   パッケージマネージャを使う場合は，counsel をインストールすれば，
-  3つのパッケージが同時にインストールされます。
-** ivy
-   補完の肝。
+  3つのパッケージが同時にインストールされます.
+** 補完候補の絞り込み: =ivy=
+   まだ試行錯誤中．
    #+BEGIN_SRC emacs-lisp
 (leaf ivy
   :ensure t
@@ -342,23 +395,26 @@ init.el: README.org
         ivy-use-selectable-prompt t
         ivy-fixed-height-minibuffer t
         ivy-wrap t
-        ivy-height 6
+        ivy-height 11
         ivy-display-style 'fancy
         ivy-count-format (concat (all-the-icons-faicon "sort-amount-asc") " [%d/%d] ")
         ivy-extra-directories nil       ; default の "." と ".." を除外
         ivy-initial-inputs-alist nil
+        ;; ivy-sort-functions-alist <-- 入力前のリストの並び
         ;; ivy-format-functions-alist '((t . ivy-format-function-arrow))
         ivy-re-builders-alist '((t . ivy--regex-fuzzy))
         )
   )
    #+END_SRC
-** 補完候補の調整
+** 補完候補の調整: =prescient=
+   過去の候補を記憶しておいてくれる優れモノ．
    #+BEGIN_SRC emacs-lisp
+;; override
 (leaf prescient
   :ensure t
   :commands (ivy ivy-read)
   :init
-  (setq prescient-save-file (concat my:d:tmp "prescient-save.el")
+  (setq prescient-save-file (expand-file-name  "prescient-save.el" my:d:tmp)
         prescient-aggressive-file-save t
         prescient-filter-method '(fuzzy regexp initialism))
   :config
@@ -374,6 +430,7 @@ init.el: README.org
   )
    #+END_SRC
 ** インジケータをアイコンに
+   まだちょっと整形する必要がありそう．
    #+BEGIN_SRC emacs-lisp
 (leaf *ivy-format-function-arrow
   :after ivy
@@ -394,7 +451,7 @@ init.el: README.org
         '((t . my:ivy-format-function-arrow)))
   )
    #+END_SRC
-** =all-the-icons-ivy= アイコン表示
+** アイコン表示: =all-the-icons-ivy=
    #+BEGIN_SRC emacs-lisp
 (leaf all-the-icons-ivy
   :ensure t
@@ -402,24 +459,26 @@ init.el: README.org
   (all-the-icons-ivy-setup)
   )
    #+END_SRC
-** counsel
-   =ivy-read= を使った既存のコマンド群の置き換え
+** =counsel=: =ivy-read= を使った既存のコマンド群の置き換え
+   まだ調整が必要そう．
    #+BEGIN_SRC emacs-lisp
+(leaf smex
+  :ensure t
+  :config
+  (setq smex-save-file (expand-file-name "smex-items" my:d:tmp)
+        smex-history-length 50)
+  )
 (leaf counsel
   :ensure t
   :bind ((("M-x"     . counsel-M-x)
           ("C-x C-r" . my:counsel-recentf)
-          ("C-x C-f" . counsel-find-file))
+          ("C-x C-f" . counsel-find-file)
+          ;;("C-x C-b" . counsel-ibuffer)
+          ;;("C-x b"   . counsel-ibuffer)
+          )
          (:counsel-find-file-map
           ("C-l"     . counsel-up-directory)))
   :init
-  ;; smex を使う
-  (leaf smex
-    :ensure t
-    :init
-    (setq-default smex-save-file
-                  (expand-file-name "smex-items" my:d:tmp))
-    )
   (setq-default counsel-mode-override-describe-bindings t)
   ;; recentf-list が長いので短縮表示
   (defun my:counsel-recentf ()
@@ -432,34 +491,33 @@ init.el: README.org
                                   recentf-list)
               :action (lambda (f)
                         (with-ivy-window
-                          (find-file (car f))))
+                          (find-file (cdr f))))
               :require-match t
               :caller 'counsel-recentf)
     )
   :config
   ;; 補完で無視する拡張子の追加．そのうち増える．
-  (dolist (ext
-           '("./"
-             "../"
-             ".dvi"
-             ".fdb_latexmk"
-             ".fls"
-             ".ilg"
-             ".jqz"
-             ".mod"
-             ".nav"
-             ".out"
-             ".snm"
-             ".synctex.gz"
-             ".vrb"
-             ))
+  (dolist (ext '("./"
+                 "../"
+                 ".dvi"
+                 ".fdb_latexmk"
+                 ".fls"
+                 ".ilg"
+                 ".jqz"
+                 ".mod"
+                 ".nav"
+                 ".out"
+                 ".snm"
+                 ".synctex.gz"
+                 ".vrb"
+                 ))
     (add-to-list 'completion-ignored-extensions ext))
   (setq counsel-find-file-ignore-regexp
         (regexp-opt completion-ignored-extensions))
   )
    #+END_SRC
-** swiper
-   検索強化
+** 検索強化: =swiper=
+   まだ設定していない．migemoと仲良くするために試行錯誤中．
 * 主にEmacs本体および同梱されている拡張に関する設定
   最近ぼちぼち他の拡張も入れる様になってきた.
 ** 標準機能の設定: 表示関連
@@ -593,86 +651,28 @@ init.el: README.org
 (setq history-length t  ; t で無制限
       savehist-file (concat my:d:tmp "history"))
    #+end_src
-** 空になったファイルを尋ねずに自動削除
-   ゴミが残らないし，地味に便利．
-   #+begin_src emacs-lisp
-(defun my:delete-file-if-no-contents ()
-  (when (and (buffer-file-name (current-buffer))
-             (= (point-min) (point-max)))
-    (delete-file
-     (buffer-file-name (current-buffer)))))
-(if (not (memq 'my:delete-file-if-no-contents after-save-hook))
-    (setq after-save-hook
-          (cons 'my:delete-file-if-no-contents after-save-hook)))
-   #+end_src
-
-** scratch を殺さない. 消したら再生成
-   ...元ネタがどこだったのか忘れてしまった...
-   #+begin_src emacs-lisp
-(defun my:make-scratch (&optional arg)
-  (interactive)
-  (progn
-    ;; "*scratch*" を作成して buffer-list に放り込む
-    (set-buffer (get-buffer-create "*scratch*"))
-    (funcall initial-major-mode)
-    (erase-buffer)
-    (when (and initial-scratch-message (not inhibit-startup-message))
-      (insert initial-scratch-message))
-    (or arg
-        (progn
-          (setq arg 0)
-          (switch-to-buffer "*scratch*")))
-    (cond ((= arg 0) (message "*scratch* is cleared up."))
-          ((= arg 1) (message "another *scratch* is created")))))
-;;
-(defun my:buffer-name-list ()
-  (mapcar (function buffer-name) (buffer-list)))
-(add-hook 'kill-buffer-query-functions
-          ;; *scratch* バッファで kill-buffer したら内容を消去するだけにする
-          (function (lambda ()
-                      (if (string= "*scratch*" (buffer-name))
-                          (progn (my:make-scratch 0) nil)
-                        t))))
-(add-hook 'after-save-hook
-          ;; *scratch* バッファの内容を保存したら
-          ;; *scratch* バッファを新しく作る.
-          (function
-           (lambda ()
-             (unless (member "*scratch*" (my:buffer-name-list))
-               (my:make-scratch 1)))))
-   #+end_src
-** 行末の無駄な空白/改行を削除する
-   @see [[http://d.hatena.ne.jp/tototoshi/20101202/1291289625][無駄な行末の空白を削除する(Emacs Advent Calendar jp:2010)]]
-
-   ただし, RD や Markdown だと空白行に意味があったりするので，
-   必要に応じて拡張子で判断して外している．
-   #+begin_src emacs-lisp
-(defvar my:delete-trailing-whitespace-exclude-suffix
-  (list "\\.rd$" "\\.md$" "\\.rbt$" "\\.rab$"))
-(defun my:delete-trailing-whitespace ()
-  (interactive)
-  (cond
-   ((equal nil
-           (cl-loop for pattern in my:delete-trailing-whitespace-exclude-suffix
-                    thereis (string-match pattern buffer-file-name)))
-    (delete-trailing-whitespace))))
-(add-hook 'before-save-hook 'my:delete-trailing-whitespace)
-   #+end_src
 ** ファイル，デイレクトリ整理
    =~/.emacs.d/= 以下にファイルが転がるのがなんか嫌なので, 気がつく度に設定している.
    #+begin_src emacs-lisp
-(leaf *changefilelocation
+(leaf *change-default-file-location
   :init
   (leaf url
     :init
-    (setq url-configuration-directory (concat my:d:tmp "url")))
+    (setq url-configuration-directory (concat my:d:tmp "url"))
+    )
   (leaf nsm
     :if (>= emacs-major-version 25)
     :config
-    (setq nsm-settings-file (concat my:d:tmp "network-settings.data")))
+    (setq nsm-settings-file (concat my:d:tmp "network-settings.data"))
+    )
+  (leaf bookmark
+    :config
+    (setq bookmark-default-file (concat my:d:share "bookmarks"))
+    )
   )
    #+end_src
    他にもイロイロありそう．
+   =bookmark= はちゃんと使いこなしたい所ではあるが．
 ** =.elc= と =.el= の timestamp を比較し，新しい方を読み込む
    =load-prefer-newer= は Emacs >= 24.4 から．
    #+begin_src emacs-lisp
@@ -688,13 +688,8 @@ init.el: README.org
    =gc-cons-threshold= はとりあえず default の設定に.
    メモリ喰いな拡張を入れている場合には, 安易に =gc-cons-threshold= を上げるのは考えものである.
    「gc が走る→大きな領域を掃除するのでその間 emacs が止まる」という事を頻繁に経験することになるだろう.
-** =bookmark=: bookmark ファイル
-   イマイチ使いこなせてない. 場所だけ変更しておく.
-   #+begin_src emacs-lisp
-(setq bookmark-default-file (concat my:d:share "bookmarks"))
-   #+end_src
 ** =recentf=: 最近使ったファイル履歴の保管
-   ファイルを開く際には =ido-recentf-open= を使うので,
+   ファイルを開く際には =counsel-recentf-open= を使うので,
    結局履歴を貯める設定をしている事になっている.
    #+begin_src emacs-lisp
 (leaf recentf-ext :ensure t)
@@ -717,7 +712,7 @@ init.el: README.org
    #+end_src
    ディレクトリの履歴も取れるので recentf-ext を入れておく
 ** =abbrev=: 略語展開
-   あまり上手く使えていない...。
+   あまり上手く使えていない.
    #+begin_src emacs-lisp
 (leaf abbrev
   :config
@@ -731,11 +726,12 @@ init.el: README.org
    #+begin_src emacs-lisp
 (leaf eldoc
   :hook (emacs-lisp-mode-hook . turn-on-eldoc-mode)
-  :config
+  :preface
   (defun my:eldoc-message (f &optional string)
     (unless (active-minibuffer-window)
       (funcall f string)))
-  (advice-add 'eldoc-message :around #'my:eldoc-message)
+  :advice (:around eldoc-message
+                   my:eldoc-message)
   )
    #+end_src
 ** =midnight=: 一定期間使用しなかった buffer を自動削除
@@ -754,6 +750,7 @@ init.el: README.org
   )
    #+end_src
 ** =whitespace=: 空白の強調表示
+   背景も変えようかなぁ...
    #+begin_src emacs-lisp
 (leaf whitespace
   :config
@@ -766,18 +763,17 @@ init.el: README.org
         whitespace-display-mappings '((space-mark ?\u3000 [?\□])
                                       (tab-mark ?\t [?\u00BB ?\t] [?\\ ?\t]))
         whitespace-space-regexp "\\(\u3000+\\)"
-        whitespace-global-modes '(not
-                                  eww-mode
-                                  term-mode
-                                  eshell-mode
-                                  org-agenda-mode
-                                  calendar-mode)
+        whitespace-global-modes '(not eww-mode
+                                      term-mode
+                                      eshell-mode
+                                      org-agenda-mode
+                                      calendar-mode)
         )
   (global-whitespace-mode 1)
   )
    #+end_src
 ** =saveplace=: 前回の修正位置を記憶する.
-   記憶の保存先は =~/.emacs.d/tmp/emacs-places= に変更.
+   記憶の保存先を =~/.emacs.d/tmp/emacs-places= に変更.
    #+begin_src emacs-lisp
 (leaf saveplace
   :config
@@ -789,19 +785,21 @@ init.el: README.org
    更新文字列を変更し， =＄Lastupdate: 2= (＄は半角) があったら timestamp を更新する様にした．
    #+begin_src emacs-lisp
 (leaf time-stamp
+  :hook (before-save-hook . time-stamp)
   :config
   (setq time-stamp-active t
         time-stamp-line-limit 10
         time-stamp-start "$Lastupdate: 2"
         time-stamp-end "\\$"
-        time-stamp-format "%03y-%02m-%02d %02H:%02M:%02S")
-  (add-hook 'before-save-hook 'time-stamp))
+        time-stamp-format "%03y-%02m-%02d %02H:%02M:%02S"
+        )
+  )
    #+end_src
    モード独自の設定(例えば Org とか)に関しては別途．
-** =tramp=: ssh 越しにファイルを編集
+** =tramp=: ssh 越しにファイルを編集 [0/1]
    #+begin_src emacs-lisp
 (leaf tramp
-  :config
+  :init
   (setq tramp-persistency-file-name (concat my:d:tmp "tramp"))
   (add-hook 'kill-emacs-hook
             (lambda ()
@@ -809,9 +807,9 @@ init.el: README.org
                   (delete-file tramp-persistency-file-name))))
   )
    #+end_src
-** =eww=: 内蔵ブラウザ
-   背景色の指定がメインだが、上手くうごいてくれていない、ような。
-   一旦保留
+   - [ ] 偶に挙動不審
+** =eww=: 内蔵ブラウザ [/]
+   背景色の指定と幅の強制が上手く動いてくれない．一旦保留.
    #+begin_src emacs-lisp
 (leaf eww
   :bind (;; ("<f2>"    . eww)
@@ -858,13 +856,14 @@ init.el: README.org
     (eww-reload))
   )
    #+end_src
+   - [ ] 背景色の指定
+   - [ ] 幅の強制
 ** =browse-url=
-   ブラウザ呼び出しは =xdg-open= に丸投げ.
+   ブラウザ呼び出しは =xdg-open/open= に丸投げ.
    #+begin_src emacs-lisp
 (leaf browse-url
   :require t
   :config
-  ;; (define-key org-journal-mode-map (kbd "C-c C-j") ')
   (cond ((executable-find "xdg-open")
          (setq browse-url-browser-function 'browse-url-xdg-open
                shr-external-browser 'browse-url-xdg-open))
@@ -881,10 +880,12 @@ init.el: README.org
   :require t
   :config
   (unless (server-running-p)
-    (server-start)))
+    (server-start))
+  )
    #+end_src
-** =ibuffer=: buffer の操作
-   #+begin_src emacs-lisp
+* =ibuffer=: buffer の操作
+  ibuffer というより hydra の設定の様な気がする．
+  #+begin_src emacs-lisp
 (leaf ibuffer
   :bind (("C-x C-b" . ibuffer-other-window)
          ("C-x b"   . ibuffer-other-window)
@@ -1005,43 +1006,44 @@ init.el: README.org
                 " " (mode 16 16 :left :elide) " " filename-and-process)
           (mark " " (name 16 -1) " " filename)))
   )
-   #+end_src
-** その他, 基本的なキーバインドの設定
-   既に手癖になってしまっているアレコレ．
-   特に =[home]= と =[end]= は無いと途方に暮れます．
-   #+begin_src emacs-lisp
-(leaf *keybind
-  :bind (("C-h"     . backward-delete-char)
-         ("C-c M-a" . align-regexp)
-         ("C-c ;"   . comment-region)
-         ("C-c M-;" . uncomment-region)
-         ("C-/"     . undo)
-         ("C-c M-r" . replace-regexp)
-         ("C-c r"   . replace-string)
-         ("<home>"  . beginning-of-buffer)
-         ("<end>"   . end-of-buffer)
-         ("C-c M-l" . toggle-truncate-lines)
-         ("C-c C-j" . browse-url-at-point)
-         )
-  )
-   #+end_src
+  #+end_src
+* 基本的なキーバインドの設定
+  既に手癖になってしまっているアレコレ．
+  特に =[home]= と =[end]= は無いと途方に暮れます．
+  #+begin_src emacs-lisp
+(leaf-keys (("C-h"     . backward-delete-char)
+            ("C-c M-a" . align-regexp)
+            ("C-c ;"   . comment-region)
+            ("C-c M-;" . uncomment-region)
+            ("C-/"     . undo)
+            ("C-c M-r" . replace-regexp)
+            ("C-c r"   . replace-string)
+            ("<home>"  . beginning-of-buffer)
+            ("<end>"   . end-of-buffer)
+            ("C-c M-l" . toggle-truncate-lines)
+            ("C-c C-j" . browse-url-at-point)
+            ))
+  #+end_src
 * カラーコードに色付け: =rainbow-mode=
   =#RRGGBB= のカラーコードに勝手に色が付く．CSS の編集中なんかで地味に便利．
   #+begin_src emacs-lisp
 (leaf rainbow-mode :ensure t)
   #+end_src
 * 対応する括弧を見易く: =rainbow-delimiters=
+  [[https://www.emacswiki.org/emacs/RainbowDelimiters][RainbowDelimiters]]:
+  global に有効にするのは他のMajor modeとの衝突があるので止めた方が良い，らしい．
   #+begin_src emacs-lisp
 (leaf rainbow-delimiters
   :ensure t
-  :config
-  (add-hook 'emacs-lisp-mode-hook #'rainbow-delimiters-mode))
+  :hook (prog-mode-hook . rainbow-delimiters-mode)
+  )
   #+end_src
 * ファイル操作: =dired=
   アイコンを表示する様にしてみた。
   #+begin_src emacs-lisp
 (leaf all-the-icons-dired
   :ensure t
+  :hook (dired-mode-hook . my:all-the-icons-dired-mode)
   :init
   (define-minor-mode my:all-the-icons-dired-mode
     "Custom: always Display all-the-icons icon for each files in a dired buffer."
@@ -1053,11 +1055,10 @@ init.el: README.org
             (all-the-icons-dired--display)))
       (remove-hook 'dired-after-readin-hook 'all-the-icons-dired--display t)
       (dired-revert)))
-  :hook (dired-mode-hook . my:all-the-icons-dired-mode)
   )
   #+end_src
 * チラ見: =quick-preview.el=
-  ターミナルの場合に上手く動かないので folk 版を作っている
+  ターミナルの場合でも強制的に動くようにした folk 版を作っている.
   #+begin_src emacs-lisp
 (leaf quick-preview
   :el-get (quick-preview
@@ -1069,7 +1070,7 @@ init.el: README.org
   )
   #+end_src
 * Emacs-W3m
-  eww がイマイチしっくり来ないので, 結局[[http://emacs-w3m.namazu.org/index-ja.html][Emacs-w3m]]を使っている。
+  eww がイマイチしっくり来ないので, 結局[[http://emacs-w3m.namazu.org/index-ja.html][Emacs-w3m]]を使っている.
   #+begin_src emacs-lisp
 (leaf w3m
   :if (executable-find "w3m")
@@ -1087,17 +1088,20 @@ init.el: README.org
           ("<down>"  . next-line)))
   :config
   (setq w3m-search-default-engine "google"
-        w3m-use-cookies t)
+        w3m-use-cookies t
+        w3m-use-form t
+        )
   )
   #+end_src
 * =ace-link=: リンクを簡単に辿る [0/1]
   #+begin_src emacs-lisp
 (leaf ace-link
   :ensure t
+  :after w3m
   :bind ((:w3m-mode-map
           ("f" . ace-link-w3m))
-         (:eww-mode-map
-          ("f" . ace-link-eww))
+         ;; (:eww-mode-map
+         ;; ("f" . ace-link-eww))
          )
   :config
   (ace-link-setup-default)
@@ -1257,7 +1261,7 @@ Emacs*useXIM: false
         (en-jp . ("．" . "，"))
         (en    . (". " . ", "))
         ))
-(setq-default skk-kutouten-type 'en)
+(setq-default skk-kutouten-type 'en-jp)
     #+end_src
     全角記号の変換: @ での日付入力は使わない
     #+begin_src emacs-lisp :tangle init-ddskk.el
@@ -1442,19 +1446,21 @@ File.open(src, "r") {|f|
   #+end_src
 * 校正，辞書等
 ** RedPen
-   便利そうなんだけれど, イマイチ上手く使いこなせていない。
+   便利そうなんだけれど, イマイチ上手く使いこなせていない．
    #+begin_src emacs-lisp
 (leaf redpen-paragraph
   :if (executable-find "redpen")
-  ;; :el-get (redpen-paragraph
-  ;;          :type github
-  ;;          :pkgname "karronoli/redpen-paragraph.el")
+  :disabled t
   :ensure t
-  :bind (("C-c R" . redpen-paragraph))
-  :config
-  (defvar redpen-commands
+  :bind ("C-c R" . redpen-paragraph)
+  ;; :hook (kill-emacs-hook . (if (file-exists-p redpen-temporary-filename)
+  ;;                             (delete-file redpen-temporary-filename)))
+  :init
+  (setq redpen-commands
     '("redpen -r json -c ~/.config/redpen/redpen-conf-en.xml %s 2>/dev/null"
-      "redpen -r json -c ~/.config/redpen/redpen-conf-ja.xml %s 2>/dev/null"))
+      "redpen -r json -c ~/.config/redpen/redpen-conf-ja.xml %s 2>/dev/null")
+    )
+  :config
   (add-hook 'kill-emacs-hook
             (lambda ()
               (if (file-exists-p redpen-temporary-filename)
@@ -1474,12 +1480,13 @@ File.open(src, "r") {|f|
    flyspell-mode は別途有効化しておいた方が良いのかもしれない
    #+begin_src emacs-lisp
 (leaf flyspell
-  :config
+  :preface
   (defun my:flyspell-popup-choose (orig event poss word)
     (if (window-system)
         (funcall orig event poss word)
       (flyspell-emacs-popup-textual event poss word)))
-  (advice-add 'flyspell-emacs-popup :around #'my:flyspell-popup-choose)
+  :advice (:around flyspell-emacs-popup
+                   my:flyspell-popup-choose)
   )
    #+end_src
 ** 辞書
@@ -1559,6 +1566,11 @@ File.open(src, "r") {|f|
                (my:dpkg-status "wl-beta"))
            (my:dpkg-status "rail"))
   :commands (wl wl-other-frame wl-draft wl-user-agent wl-user-agent-compose wl-draft-send wl-draft-kill)
+  :preface
+  (defun my:wl-mode-line-buffer-identification (&optional id)
+    (force-mode-line-update t))
+  :advice (:override wl-mode-line-buffer-identification
+                     my:wl-mode-line-buffer-identification)
   :init
   (define-mail-user-agent
     'wl-user-agent
@@ -1580,10 +1592,6 @@ File.open(src, "r") {|f|
   (unless (file-directory-p (concat elmo-msgdb-directory "/local/Trash"))
     (make-directory (concat elmo-msgdb-directory "/local/Trash")))
   :config
-  (defun my:wl-mode-line-buffer-identification (&optional id)
-    (force-mode-line-update t))
-  (advice-add 'wl-mode-line-buffer-identification
-              :override 'my:wl-mode-line-buffer-identification)
   )
    #+end_src
    割と =/etc/emacs/site-start.d/65wl-beta.el= と重複している気がするが...
@@ -1607,8 +1615,10 @@ File.open(src, "r") {|f|
 
      #+begin_src emacs-lisp :tangle init-wl.el
 (leaf rail
-  :config
-  (setq rail-emulate-genjis t))
+  :init
+  (setq rail-emulate-genjis t)
+  :require t
+  )
      #+end_src
 **** cp5022x を使う
      ISO-2022-JP を CP50220 として扱う.
@@ -2381,40 +2391,45 @@ video/*; xdg-open %s;
     もっとうまい方法/正攻法がありそうな気がするけれど,
     使えてるから, まあ良いかな, とか.
     #+begin_src emacs-lisp :tangle init-wl.el
-      (setq mime-pgp-verify-when-preview nil)
-      (defun my:epa-wl-decrypt-message ()
-        (interactive)
-        (save-window-excursion
-          (wl-summary-jump-to-current-message)
-          (wl-message-decrypt-pgp-nonmime)))
-      (defun my:epa-wl-verify-message ()
-        (interactive)
-        (save-selected-window
-          (wl-summary-jump-to-current-message)
-          (wl-message-verify-pgp-nonmime)))
-      (leaf-keys ((:wl-summary-mode-map
-                   ("C-c : d" . my:epa-wl-decrypt-message)
-                   ("C-c : v" . my:epa-wl-verify-message))
-                  (:wl-draft-mode-map
-                   ("C-c : s" . epa-mail-sign)
-                   ("C-c : e" . epa-mail-encrypt))))
+(setq mime-pgp-verify-when-preview nil)
+(defun my:epa-wl-decrypt-message ()
+  (interactive)
+  (save-window-excursion
+    (wl-summary-jump-to-current-message)
+    (wl-message-decrypt-pgp-nonmime)))
+(defun my:epa-wl-verify-message ()
+  (interactive)
+  (save-selected-window
+    (wl-summary-jump-to-current-message)
+    (wl-message-verify-pgp-nonmime)))
+(leaf-keys ((:wl-summary-mode-map
+             ("C-c : d" . my:epa-wl-decrypt-message)
+             ("C-c : v" . my:epa-wl-verify-message))
+            (:wl-draft-mode-map
+             ("C-c : s" . epa-mail-sign)
+             ("C-c : e" . epa-mail-encrypt)))
+           )
     #+end_src
 *** 検索
     notmuchを使う.
     #+begin_src emacs-lisp  :tangle init-wl.el
 (leaf elmo-search
-  :bind ((:wl-summary-mode-map
-          ("v" . wl-quicksearch-goto-search-folder-wrapper))
-         (:wl-folder-mode-map
-          ("v" . wl-quicksearch-goto-search-folder-wrapper)))
   :config
   (elmo-search-register-engine 'notmuch-custom 'local-file
                                :prog "notmuch-query-custom"
                                :args '(elmo-search-split-pattern-list)
                                :charset 'utf-8)
-  (setq elmo-search-default-engine 'notmuch-custom)
-  (setq wl-quicksearch-folder "[]")
+  (setq elmo-search-default-engine 'notmuch-custom))
+(leaf wl-qs
+  :config
+  (setq wl-quicksearch-folder "[]"
+        )
   )
+(leaf-keys ((:wl-summary-mode-map
+             ("v" . wl-quicksearch-goto-search-folder-wrapper))
+            (:wl-folder-mode-map
+             ("v" . wl-quicksearch-goto-search-folder-wrapper)))
+           )
     #+end_src
     実際の呼び出しはスレッドを全部取得したいので以下を呼び出している
     #+begin_src sh :tangle no
@@ -2820,22 +2835,14 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :if (and (file-directory-p my:d:org)
            (>= emacs-major-version 25))
   :ensure t
-  :after (org)
-  :bind (("C-c C-j" . nil)
+  :bind ((("C-c C-j" . nil))
          (:org-journal-mode-map
           ("C-c C-j" . nil)))
-  :init
-  (add-hook 'org-journal-mode-hook
-            (setq truncate-lines t))
+  :advice (:before org-journal-new-entry
+                   my:org-journal-add-date-entry)
   :config
-  (setq org-journal-dir my:d:org
-        org-journal-file-format "journal.org"
-        org-journal-date-format "%x (%a)"
-        org-journal-date-prefix "* "
-        org-journal-time-format "<%Y-%m-%d %R> "
-        org-journal-time-prefix "** MEMO "
-        org-journal-find-file 'find-file
-        )
+  (add-hook 'org-journal-mode-hook (lambda ()
+                                     (setq truncate-lines t)))
   (defun my:org-journal-add-date-entry (prefix &optional time)
     "Insert date entry to `org-journal-file'"
     (find-file (expand-file-name org-journal-file-format org-journal-dir))
@@ -2849,7 +2856,14 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                         (format-time-string org-journal-date-format)))
         ))
     )
-  (advice-add 'org-journal-new-entry :before 'my:org-journal-add-date-entry)
+  (setq org-journal-dir my:d:org
+        org-journal-file-format "journal.org"
+        org-journal-date-format "%x (%a)"
+        org-journal-date-prefix "* "
+        org-journal-time-format "<%Y-%m-%d %R> "
+        org-journal-time-prefix "** MEMO "
+        org-journal-find-file 'find-file
+        )
   )
 ;; Key bindings -- 使えてない...
 ;; (define-key org-journal-mode-map (kbd "C-c C-f") 'org-journal-open-next-entry)
@@ -2879,8 +2893,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
           )
  )
 (leaf org-capture
-  :bind (("C-x m" . org-capture))
   :if (file-directory-p my:d:org)
+  :bind (("C-x m" . org-capture))
   :config
   (defun my:org-journal-add-date-entry-capture ()
     (my:org-journal-add-date-entry nil)
@@ -2995,48 +3009,72 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     )
   )
    #+end_src
+* Outline Magic
+  #+BEGIN_SRC emacs-lisp
+(leaf outline
+  :init
+  (leaf outline-magic
+    :ensure t
+    :bind ((:outline-minor-mode-map
+            ("TAB" . outline-cycle)))
+    :hook ((LaTeX-mode-hook . my:add-outline-headings)
+           (LaTeX-mode-hook . outline-minor-mode))
+    :init
+    (defun my:add-outline-headings()
+      "Custom: Add promotion headings"
+      (setq outline-promotion-headings '("\\chapter"
+                                         "\\section"
+                                         "\\subsection"
+                                         "\\subsubsection"
+                                         "\\paragraph"
+                                         "\\subparagraph")))
+    )
+  )
+  #+END_SRC
 * TeX
 ** AUCTeX
    Debian パッケージ版を使う．
    やっている事は
    - japanese-latex-mode において, 幾つかのコマンドが追加/上書きされているが， あまり使うことの無いコマンドが表示されるのが嫌なのでそれらを削除．
-   - コンパイルには latexmk を使う
+   - コンパイルには[[http://personal.psu.edu/jcc8/software/latexmk/][Latexmk]]を使う
    と言った所.
-   #+begin_src emacs-lisp
+   [[http://personal.psu.edu/jcc8/software/latexmk/][Latexmk]]の設定には[[https://github.com/tom-tan/auctex-latexmk][auctex-latexmk]]を利用する．
+   #+BEGIN_SRC emacs-lisp
 (leaf tex-jp
   :if (and (executable-find "uplatex")
            (my:dpkg-status "auctex"))
-  :init (progn
-          (add-hook 'LaTeX-mode-hook #'TeX-source-correlate-mode)
-          (add-hook 'LaTeX-mode-hook #'TeX-PDF-mode)
-          (add-hook 'LaTeX-mode-hook #'turn-on-reftex))
+  :init
+  (leaf auctex-latexmk
+    :el-get (auctex-latexmk
+             :type github
+             :pkgname "tom-tan/auctex-latexmk")
+    :hook (LaTeX-mode-hook . auctex-latexmk-setup)
+    :config
+    (setq auctex-latexmk-inherit-TeX-PDF-mode nil
+          TeX-command-default "LaTeXMk"
+          japanese-LaTeX-command-default "LaTeX"
+          )
+    )
+  (leaf reftex
+    :hook (LaTeX-mode-hook . reftex-mode)
+    :config
+    (setq reftex-plug-into-AUCTeX t
+          reftex-cite-prompt-optional-args t)
+    )
+  :hook ((LaTeX-mode-hook . TeX-source-correlate-mode)
+         (LaTeX-mode-hook . TeX-PDF-mode))
   :config
-  (add-hook 'LaTeX-mode-hook
-            (function
-             (lambda ()
-               (dolist (command '("pTeX"
-                                  "LaTeX"
-                                  "pLaTeX"
-                                  "pBibTeX"
-                                  "jTeX"
-                                  "jLaTeX"
-                                  "jBibTeX"))
-                 (delq (assoc command TeX-command-list) TeX-command-list))
-               (setq TeX-command-default "LaTeX"
-                     japanese-LaTeX-command-default "LaTeX"
-                     TeX-PDF-mode t
-                     TeX-command-output-list '(("LaTeX" ("pdf")))
-                     )
-               (add-to-list 'TeX-expand-list
-                            '("%(LATEXENC)"
-                              (lambda ()
-                                (let ((str (japanese-TeX-get-encoding-string)))
-                                  (if str (format "%s" str) "")))))
-               (add-to-list 'TeX-command-list
-                            '("LaTeX"
-                              "LATEXENC=%(LATEXENC) latexmk -gg %t"
-                              TeX-run-TeX nil (latex-mode) :help "Run Latexmk")))))
-  (setq TeX-source-correlate-method 'synctex
+  ;; (dolist (command '("pTeX" "pLaTeX" "jTeX" "jLaTeX" "jBibTeX" "Mendex"
+  ;;                    "upMendex" "pBibTeX" "BibTeX" "Biber" "Ps2pdf" ))
+  ;;   (delq (assoc command TeX-command-list) TeX-command-list))
+  (setq japanese-TeX-engine-default 'ptex
+        japanese-LaTeX-default-style "bxjsarticle"
+        TeX-command-output-list '(("LaTeXMk" ("pdf"))
+                                  ("LaTeX"   ("pdf"))
+                                  )
+        TeX-engine 'ptex
+        TeX-PDF-mode t
+        TeX-source-correlate-method 'synctex
         TeX-source-correlate-start-server t
         TeX-source-correlate-mode t
         TeX-view-program-selection '((output-dvi "xdvi")
@@ -3048,12 +3086,11 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         TeX-parse-self t
         TeX-auto-untabify t
         font-latex-fontify-script nil
-        font-latex-fontify-sectioning 1.0
         font-latex-script-display nil
-        reftex-plug-into-AUCTeX t
+        font-latex-fontify-sectioning 1.0
         )
   )
-   #+end_src
+   #+END_SRC
    =~/.latexmkrc= は以下の通り
    #+begin_src perl :tangle no
 #!/usr/bin/env perl
@@ -3070,26 +3107,23 @@ $pdf_previewer = 'start xdg-open';
 $pdf_update_method = 0;
 $clean_ext = "snm nav vrb synctex.gz";
    #+end_src
+
 * Markdown
   あまり好きじゃないんだけれど, 必要に迫られて書く事が増えてきたので設定しておく。
   #+BEGIN_SRC emacs-lisp
 (leaf markdown-mode
   :if (executable-find "pandoc")
   :mode ("\\.\\(md\\|markdown\\|mkd\\)\\'" . gfm-mode)
-  :init
-  (add-hook 'markdown-mode-hook
-            (lambda ()
-              (electric-indent-local-mode -1)
-              (orgtbl-mode)
-              ))
-  (add-hook 'gfm-mode-hook
-            (lambda ()
-              (electric-indent-local-mode -1)
-              (orgtbl-mode)
-              ))
+  :preface
+  (defun my:disable-electric-indent-local-mode ()
+    (electric-indent-local-mode -1))
+  :hook ((markdown-mode-hook . my:disable-electric-indent-local-mode)
+         (gfm-mode-hook      . my:disable-electric-indent-local-mode)
+         )
   :config
   (setq markdown-command
-        "pandoc --from markdown_github -t html5 --mathjax --highlight-style pygments")
+        "pandoc --from markdown_github -t html5 --mathjax --highlight-style pygments"
+        )
   )
   #+END_SRC
 * SCSS
@@ -3136,14 +3170,13 @@ $clean_ext = "snm nav vrb synctex.gz";
    という奴. folk して ido-vertical-mode を support する様に
    多少弄った版を使う。
    [[https://github.com/uwabami/moomin-el][uwabami/moomin-el: Edit MoinMoin with Emacs]]
-#+BEGIN_SRC emacs-lisp
+   #+BEGIN_SRC emacs-lisp
 (leaf moomin
-  :disabled t
   :if (file-directory-p my:d:password-store)
   :el-get (moomin
            :type github
            :pkgname "uwabami/moomin-el")
-  :bind (("C-x w" . ido-moomin)
+  :bind (("C-x w" . counsel--moomin)
          (:moinmoin-mode-map
           ("C-c C-c" . moomin-save-current-buffer)
           ("C-c C-s" . moomin-save-current-buffer)
@@ -3155,7 +3188,7 @@ $clean_ext = "snm nav vrb synctex.gz";
         (concat my:d:tmp ".moomin_history"))
   (load (concat my:d:password-store "/moomin.gpg"))
   )
-#+END_SRC
+   #+END_SRC
 * 日記: =tDiary= [0/1]
   #+begin_src emacs-lisp
 (leaf tdiary-mode
@@ -3217,51 +3250,19 @@ $clean_ext = "snm nav vrb synctex.gz";
       (set-frame-parameter nil 'alpha 95)
       (set-face-attribute 'default nil
                           :family "FSMRMP"
-                          ;; :family "Ricty Discord"
-                          ;; :family "SF Mono Square"
-                          ;; :family "Monospace"
-                          ;; :family "Hackgen"
                           :height 165)
       (set-face-attribute 'fixed-pitch nil
                           :family "FSMRMP"
-                          ;; :family "SF Mono Square"
-                          ;; :family "Monospace"
-                          ;; :family "Hackgen"
                           :height 165)
       (set-face-attribute 'variable-pitch nil
                           :family "FSMRMP"
-                          ;; :family "SF Mono Square"
-                          ;; :family "Monospace"
-                          ;; :family "Hackgen"
                           :height 165)
       (setq use-default-font-for-symbols nil)
       (set-fontset-font nil
                         '(#xE0A0 . #xEEE0)
                         (font-spec :family "FSMRMP" :height 150))
-      ;; (dolist (range
-      ;;          '(
-      ;;            (#x1f000 . #x1f02f)    ; Mahjong Tiles
-      ;;            (#x1f0a0 . #x1f0ff)    ; Playing Cards
-      ;;            (#x1f110 . #x1f19a)    ; Enclosed Alphanumeric Supplement
-      ;;                                   ; Regional Indicator Symbol
-      ;;                                   ; Enclosed Ideographic Supplement,
-      ;;                                   ; Emoticons
-      ;;                                   ; Transport and Map Symbols
-      ;;                                   ; Alchemical Symbols
-      ;;            (#x1f1e6 . #x1f8ff)))
-      ;;   (set-fontset-font nil
-      ;;                     range
-      ;;                     (font-spec :family "Symbola" :height 200)))
-      ;;
-      ;; (set-background-color "#242424")
       )))
 (setq frame-background-mode (frame-parameter nil 'background-mode))
-;; (setq default-frame-alist
-;;       '(
-;;         (foreground-color . "#F6F3E8")
-;;         (scroll-bar-foreground-color . "red")
-;;         (vertical-scroll-bars . right)
-;;         ))
 (when (window-system)
   (my:load-window-config))
   #+end_src
@@ -3269,32 +3270,36 @@ $clean_ext = "snm nav vrb synctex.gz";
    現在修正中, そろそろテーマにすべきかしら?
   #+begin_src emacs-lisp
 (setq frame-background-mode (frame-parameter nil 'background-mode))
+(leaf doom-themes
+  :if (>= emacs-major-version 25)
+  :ensure t
+  )
 (custom-set-faces
- '(default                             ((t (:foreground "#F6F3E8" ))))
- '(cursor                              ((t (:foreground "#4CFF4C" :background "#4CFF4C" ))))
+ '(default                             ((t (:foreground "#F6F3E8"))))
+ '(cursor                              ((t (:foreground "#4CFF4C" :background "#4CFF4C"))))
  ;; basic
- '(font-lock-builtin-face              ((t (:foreground "#7FBFFF" ))))
- '(font-lock-comment-delimiter-face    ((t (:foreground "#a5a5a6" ))))
- '(font-lock-comment-face              ((t (:foreground "#a5a5a6" ))))
- '(font-lock-constant-face             ((t (:foreground "#FFBF7F" ))))
- '(font-lock-doc-face                  ((t (:foreground "#7FFF7F" ))))
- '(font-lock-doc-string-face           ((t (:foreground "#7FFF7F" ))))
+ '(font-lock-builtin-face              ((t (:foreground "#7FBFFF"))))
+ '(font-lock-comment-delimiter-face    ((t (:foreground "#a5a5a6"))))
+ '(font-lock-comment-face              ((t (:foreground "#a5a5a6"))))
+ '(font-lock-constant-face             ((t (:foreground "#FFBF7F"))))
+ '(font-lock-doc-face                  ((t (:foreground "#7FFF7F"))))
+ '(font-lock-doc-string-face           ((t (:foreground "#7FFF7F"))))
  '(font-lock-function-name-face        ((t (:foreground "#BF7FFF"))))
  '(font-lock-keyword-face              ((t (:foreground "#FF7F7F"))))
- '(font-lock-link-face                 ((t (:foreground "#7FFFFF" ))))
+ '(font-lock-link-face                 ((t (:foreground "#7FFFFF"))))
  '(font-lock-negation-char-face        ((t (:foreground "#7FFFFF" :bold t   :italic nil))))
  '(font-lock-preprocessor-face         ((t (:foreground "#FF4C4C" :bold nil :italic nil))))
  '(font-lock-regexp-grouping-backslash ((t (:foreground "#4Cff4C" :bold t   :italic nil))))
  '(font-lock-regexp-grouping-construct ((t (:foreground "#7F7FFF" :bold t   :italic nil))))
- '(font-lock-string-face               ((t (:foreground "#7FFF7F" ))))
- '(font-lock-type-face                 ((t (:foreground "#FFFF7F" ))))
- '(font-lock-variable-name-face        ((t (:foreground "#7F7FFF" ))))
- '(font-lock-warning-face              ((t (:foreground "#FF7FBF" :bold t ))))
- '(mode-line                           ((t (:foreground "#F6F3E8" :background "#222244" ))))
- '(mode-line-inactive                  ((t (:foreground "#666666" :background "#999999" :bold nil ))))
- '(fringe                              ((t (:foreground "#666666" :background "#282828" ))))
- ;; '(hl-line                           ((t (:inherit highlight :underline t ))))
- '(highlight                           ((t (:background "#556b2f" ))))
+ '(font-lock-string-face               ((t (:foreground "#7FFF7F"))))
+ '(font-lock-type-face                 ((t (:foreground "#FFFF7F"))))
+ '(font-lock-variable-name-face        ((t (:foreground "#7F7FFF"))))
+ '(font-lock-warning-face              ((t (:foreground "#FF7FBF" :bold t))))
+ '(mode-line                           ((t (:foreground "#F6F3E8" :background "#222244"))))
+ '(mode-line-inactive                  ((t (:foreground "#666666" :background "#999999" :bold nil))))
+ '(fringe                              ((t (:foreground "#666666" :background "#282828"))))
+ ;; '(hl-line                           ((t (:inherit highlight :underline t))))
+ '(highlight                           ((t (:background "#556b2f"))))
  '(term-color-black                    ((t (:background "#242424" :foreground "#242424"))))
  '(term-color-blue                     ((t (:background "#4c4cff" :foreground "#4c4cff"))))
  '(term-color-cyan                     ((t (:background "#4cffff" :foreground "#4cffff"))))
@@ -3304,50 +3309,50 @@ $clean_ext = "snm nav vrb synctex.gz";
  '(term-color-white                    ((t (:background "#f6f3e8" :foreground "#f6f3e8"))))
  '(term-color-yellow                   ((t (:background "#ffff4c" :foreground "#ffff4c"))))
  ;;
- '(minibuffer-prompt                   ((t (:foreground "#BF7FFF" ))))
- '(region                              ((t (:background "#222244" ))))
+ '(minibuffer-prompt                   ((t (:foreground "#BF7FFF"))))
+ '(region                              ((t (:background "#222244"))))
  ;; dired
- '(dired-directory                     ((t (:bold t :foreground "#7F7FFF" ))))
- '(dired-flagged                       ((t (:inherit error ))))
+ '(dired-directory                     ((t (:bold t :foreground "#7F7FFF"))))
+ '(dired-flagged                       ((t (:inherit error))))
  ;; '(dired-header
- '(dired-ignored                       ((t (:inherit shadow ))))
+ '(dired-ignored                       ((t (:inherit shadow))))
  ;; '(dired-mark
  ;; '(dired-marked
- '(dired-perm-write                    ((t (:bold t :foreground "#FFFF7F" ))))
- '(dired-symlink                       ((t (:bold t :foreground "#7FFFFF" ))))
- '(dired-warning                       ((t (:inherit font-lock-warning-face ))))
+ '(dired-perm-write                    ((t (:bold t :foreground "#FFFF7F"))))
+ '(dired-symlink                       ((t (:bold t :foreground "#7FFFFF"))))
+ '(dired-warning                       ((t (:inherit font-lock-warning-face))))
  ;; helm
  '(helm-source-header                  ((t (:foreground "#F6F3E8" :background "#224488" :bold t))))
- '(helm-visible-mark                   ((t (:inherit highlight ))))
- '(helm-selection                      ((t (:inherit highlight ))))
- '(helm-selection-line                 ((t (:inherit highlight ))))
- '(helm-ff-directory                   ((t (:inherit dired-directory ))))
- '(helm-bookmark-directory             ((t (:inherit helm-ff-directory ))))
- '(helm-buffer-directory               ((t (:inherit helm-ff-directory ))))
- '(helm-ff-dotted-directory            ((t (:inherit helm-ff-directory ))))
- '(helm-ff-file                        ((t (:inherit default ))))
- '(helm-bookmark-file                  ((t (:inherit helm-ff-file ))))
- '(helm-buffer-file                    ((t (:inherit helm-ff-file ))))
- '(helm-grep-file                      ((t (:inherit helm-ff-file ))))
- '(helm-etags-file                     ((t (:inherit helm-ff-file ))))
+ '(helm-visible-mark                   ((t (:inherit highlight))))
+ '(helm-selection                      ((t (:inherit highlight))))
+ '(helm-selection-line                 ((t (:inherit highlight))))
+ '(helm-ff-directory                   ((t (:inherit dired-directory))))
+ '(helm-bookmark-directory             ((t (:inherit helm-ff-directory))))
+ '(helm-buffer-directory               ((t (:inherit helm-ff-directory))))
+ '(helm-ff-dotted-directory            ((t (:inherit helm-ff-directory))))
+ '(helm-ff-file                        ((t (:inherit default))))
+ '(helm-bookmark-file                  ((t (:inherit helm-ff-file))))
+ '(helm-buffer-file                    ((t (:inherit helm-ff-file))))
+ '(helm-grep-file                      ((t (:inherit helm-ff-file))))
+ '(helm-etags-file                     ((t (:inherit helm-ff-file))))
  '(helm-ff-executable                  ((t (:inherit helm-ff-file :foreground "#7FFF7F" :bold t))))
  '(helm-ff-symlink                     ((t (:inherit default :foreground "#7FFFFF" :bold t))))
- '(helm-ff-dotted-symlink-directory    ((t (:inherit helm-ff-symlink ))))
- '(helm-ff-invalid-symlink             ((t (:inherit default :foreground "#FF7F7F" ))))
+ '(helm-ff-dotted-symlink-directory    ((t (:inherit helm-ff-symlink))))
+ '(helm-ff-invalid-symlink             ((t (:inherit default :foreground "#FF7F7F"))))
  ;; ido
  '(ido-first-match                     ((t (:underline t :weight bold))))
  '(ido-only-match                      ((t (:foreground "#FFFF4C" :overline nil :weight bold))))
  '(ido-subdir                          ((t (:inherit dired-directory))))
  '(ido-vertical-first-match-face       ((t (:inherit ido-first-match))))
  '(ido-vertical-match-face             ((t (:foreground "#4CFF4C"))))
- '(ido-grid-mode-match                 ((t (:inherit ido-first-match ))))
+ '(ido-grid-mode-match                 ((t (:inherit ido-first-match))))
  ;; ivy
- '(ivy-current-match                   ((t (:inherit highlight ))))
- '(ivy-confirm                         ((t (:inherit minibuffer-prompt ))))
+ '(ivy-current-match                   ((t (:inherit highlight))))
+ '(ivy-confirm                         ((t (:inherit minibuffer-prompt))))
  '(ivy-subdir                          ((t (:inherit dired-directory))))
- '(ivy-minibuffer-match-face-1         ((t (:inherit 'unspecified foreground "#FF4C4C" ))))
- '(ivy-minibuffer-match-face-2         ((t (:inherit 'unspecified foreground "#4CFF4C" ))))
- '(ivy-minibuffer-match-face-2         ((t (:inherit 'unspecified foreground "#4C4CFF" ))))
+ '(ivy-minibuffer-match-face-1         ((t (:inherit 'unspecified foreground "#FF4C4C"))))
+ '(ivy-minibuffer-match-face-2         ((t (:inherit 'unspecified foreground "#4CFF4C"))))
+ '(ivy-minibuffer-match-face-2         ((t (:inherit 'unspecified foreground "#4C4CFF"))))
  ;; powerline
  '(powerline-active1                   ((t (:background "#000000":foreground "#F6F3E8"))))
  '(powerline-active2                   ((t (:background "#666666" :foreground "#F6F3E8"))))
@@ -3358,49 +3363,62 @@ $clean_ext = "snm nav vrb synctex.gz";
  '(font-latex-sectioning-1-face        ((t (:inherit font-latex-sectioning-2-face))))
  '(font-latex-sectioning-2-face        ((t (:inherit font-latex-sectioning-3-face))))
  '(font-latex-sectioning-3-face        ((t (:inherit font-latex-sectioning-4-face))))
- '(font-latex-sectioning-4-face        ((t (:inherit font-latex-sectioning-5-face ))))
+ '(font-latex-sectioning-4-face        ((t (:inherit font-latex-sectioning-5-face))))
  '(font-latex-sectioning-5-face        ((t (:inherit font-lock-type-face :bold t))))
  '(font-latex-slide-title-face         ((t (:inherit font-lock-type-face :bold t))))
  '(font-latex-subscript-face           ((t nil)))
  '(font-latex-superscript-face         ((t nil)))
- '(font-latex-math-face                ((t (:inherit font-lock-constant-face ))))
+ '(font-latex-math-face                ((t (:inherit font-lock-constant-face))))
  '(font-latex-script-char-face         ((t (:inherit font-lock-preprocessor-face :bold t))))
- '(font-latex-verbatim-face            ((t (:inherit font-lock-doc-string-face ))))
+ '(font-latex-verbatim-face            ((t (:inherit font-lock-doc-string-face))))
  ;; elscreen
- '(elscreen-tab-control-face           ((t (:background "#222244" :foreground "#f6f3e8" :underline t :bold t ))))
- '(elscreen-tab-current-screen-face    ((t (:background "#222244" :foreground "#f6f3e8" :underline t :bold t ))))
- '(elscreen-tab-other-screen-face      ((t (:background "#222244" :foreground "#aaaaaa" :underline t :bold nil ))))
- '(elscreen-tab-background-face        ((t (:background "#222244" :foreground "#aaaaaa" :underline t :bold nil ))))
+ '(elscreen-tab-control-face           ((t (:background "#222244" :foreground "#f6f3e8" :underline t :bold t))))
+ '(elscreen-tab-current-screen-face    ((t (:background "#222244" :foreground "#f6f3e8" :underline t :bold t))))
+ '(elscreen-tab-other-screen-face      ((t (:background "#222244" :foreground "#aaaaaa" :underline t :bold nil))))
+ '(elscreen-tab-background-face        ((t (:background "#222244" :foreground "#aaaaaa" :underline t :bold nil))))
  ;; git-gutter
  '(git-gutter:added                    ((t (:inherit default :bold t :foreground "#4CFF4C" :background "#666666"))))
  '(git-gutter:deleted                  ((t (:inherit default :bold t :foreground "#FF7FBF" :background "#666666"))))
  '(git-gutter:modified                 ((t (:inherit default :bold t :foreground "#FFFF4C" :background "#666666"))))
- '(git-gutter:unchanged                ((t (:inherit default :background "#666666" ))))
+ '(git-gutter:unchanged                ((t (:inherit default :background "#666666"))))
  '(git-gutter:separator-face           ((t (:inherit default :foreground "#FF4C4C" :background "#666666"))))
   ;;; howm
- '(howm-mode-keyword-face              ((t (:foreground "#7F7FFF" :background nil ))))
- '(howm-mode-title-face                ((t (:foreground "#4CFFFF" :background nil ))))
- '(howm-reminder-deadline-face         ((t (:bold t :foreground "#FF4C4C" :background nil ))))
- '(howm-reminder-late-deadline-face    ((t (:bold t :underline t :foreground "#FF0000" :background nil ))))
- '(howm-reminder-today-face            ((t (:bold t :foreground "#FFBF7F" :background nil ))))
- '(howm-reminder-tomorrow-face         ((t (:bold t :foreground "#FF7FBF" :background nil ))))
+ '(howm-mode-keyword-face              ((t (:foreground "#7F7FFF" :background nil))))
+ '(howm-mode-title-face                ((t (:foreground "#4CFFFF" :background nil))))
+ '(howm-reminder-deadline-face         ((t (:bold t :foreground "#FF4C4C" :background nil))))
+ '(howm-reminder-late-deadline-face    ((t (:bold t :underline t :foreground "#FF0000" :background nil))))
+ '(howm-reminder-today-face            ((t (:bold t :foreground "#FFBF7F" :background nil))))
+ '(howm-reminder-tomorrow-face         ((t (:bold t :foreground "#FF7FBF" :background nil))))
  ;; outline
  '(outline-1                           ((t (:inherit font-lock-function-name-face :bold t))))
  '(outline-2                           ((t (:inherit font-lock-string-face :bold t))))
  '(outline-3                           ((t (:inherit font-lock-keyword-face :bold t))))
- '(outline-4                           ((t (:inherit font-lock-type-face :bold t ))))
- '(outline-5                           ((t (:inherit font-lock-constant-face :bold t ))))
+ '(outline-4                           ((t (:inherit font-lock-type-face :bold t))))
+ '(outline-5                           ((t (:inherit font-lock-constant-face :bold t))))
  '(outline-6                           ((t (:inherit font-lock-variable-name-face :bold t))))
- '(outline-7                           ((t (:inherit font-lock-builtin-face :bold t ))))
- '(outline-8                           ((t (:inherit font-lock-comment-face :bold t ))))
+ '(outline-7                           ((t (:inherit font-lock-builtin-face :bold t))))
+ '(outline-8                           ((t (:inherit font-lock-comment-face :bold t))))
  ;; org
- '(org-agenda-date-today               ((t (:underline t :bold t ))))
- '(org-agenda-date                     ((t (:foreground "#FFFFFF" ))))
+ '(org-agenda-date-today               ((t (:underline t :bold t))))
+ '(org-agenda-date                     ((t (:foreground "#FFFFFF"))))
  '(org-agenda-date-weekend             ((t (:foreground "#FF7F7F" :bold t))))
- '(org-agenda-calendar-event           ((t (:foreground "#F6F3E8" ))))
- '(org-hide                            ((t (:foreground "#4C4C4C" ))))
+ '(org-agenda-calendar-event           ((t (:foreground "#F6F3E8"))))
+ '(org-hide                            ((t (:foreground "#4C4C4C"))))
  '(org-block                           ((t (:inherit font-lock-comment-face))))
  ;;
+ ;; rainbow-delimiter
+ ;; '(rainbow-delimiters-unmatched-face   ((t (:foreground "#FFBFFF" :bold t))))
+ '(rainbow-delimiters-mismatched-face  ((t (:foreground "#FFBFFF" :bold t))))
+ ;;
+ '(rainbow-delimiters-depth-1-face     ((t (:foreground "#FF7F7F"))))
+ '(rainbow-delimiters-depth-2-face     ((t (:foreground "#7FFF7F"))))
+ '(rainbow-delimiters-depth-3-face     ((t (:foreground "#7F7FFF"))))
+ '(rainbow-delimiters-depth-4-face     ((t (:foreground "#FFFF7F"))))
+ '(rainbow-delimiters-depth-5-face     ((t (:foreground "#7FFFFF"))))
+ '(rainbow-delimiters-depth-6-face     ((t (:foreground "#FFBF7F"))))
+ '(rainbow-delimiters-depth-7-face     ((t (:foreground "#BFFF7F"))))
+ '(rainbow-delimiters-depth-8-face     ((t (:foreground "#7FBFFF"))))
+ '(rainbow-delimiters-depth-9-face     ((t (:foreground "#FFFFBF"))))
  ;; moinmoin
  '(moinmoin-h1                         ((t (:inherit outline-1))))
  '(moinmoin-h2                         ((t (:inherit outline-2))))
@@ -3411,10 +3429,10 @@ $clean_ext = "snm nav vrb synctex.gz";
  '(moinmoin-url-title                  ((t (:inherit moinmoin-url :bold t))))
  '(moinmoin-anchor-ref-id              ((t (:inherit moinmoin-url :underline t))))
  '(moinmoin-anchor-ref-title           ((t (:inherit moinmoin-url :bold t))))
- '(moinmoin-wiki-link                  ((t (:inherit moinmoin-url :underline t ))))
- '(moinmoin-inter-wiki-link            ((t (:inherit moinmoin-url :underline t ))))
- '(moinmoin-item                       ((t (:inherit font-lock-doc-face ))))
- '(moinmoin-item-2                     ((t (:inherit font-lock-doc-face ))))
+ '(moinmoin-wiki-link                  ((t (:inherit moinmoin-url :underline t))))
+ '(moinmoin-inter-wiki-link            ((t (:inherit moinmoin-url :underline t))))
+ '(moinmoin-item                       ((t (:inherit font-lock-doc-face))))
+ '(moinmoin-item-2                     ((t (:inherit font-lock-doc-face))))
  ;; company-mode
  '(company-tooltip                     ((t (:foreground "#242424" :background "#acacac"))))
  '(company-tooltip-common              ((t (:foreground "#242424" :background "#acacac"))))
@@ -3423,165 +3441,142 @@ $clean_ext = "snm nav vrb synctex.gz";
  '(company-preview-common              ((t (:background nil :foreground "#acacac" :underline t))))
  '(company-scrollbar-fg                ((t (:background "#FFBF7F"))))
  '(company-scrollbar-bg                ((t (:background "#4c4c4c"))))
- )
+)
   #+end_src
-** モードラインのカスタマイズ
-*** SKK の調整
-    SKK の状態がヒョコヒョコ動くのが嫌なので，skk-modeline-input-mode= に
-    常に現在の状況を表示する様にしておく．
-    #+begin_src emacs-lisp
-(defun my:skk-modeline-input-mode ()
-  "SKKが読み込まれていない場合でも skk-modeline-input-mode に文字を入れる."
-  (unless (boundp 'skk-modeline-inpt-mode)
-    (setq skk-modeline-input-mode "--[--]:")))
-;; 初回更新
-(my:skk-modeline-input-mode)
-;; hook
-(unless (featurep 'powerline)
-  (add-hook 'after-change-major-mode-hook
-            #'(lambda() (skk-mode)(skk-mode))))
-(unless (featurep 'doom-modeline)
-  (add-hook 'after-change-major-mode-hook
-            #'(lambda() (skk-mode)(skk-mode))))
-    #+end_src
-*** major/minor モードの表示設定
-    diminish や delight があるわけですが,
-    微妙にこれで指定できない奴もあってアレですね.
-    #+begin_src emacs-lisp
-(defvar my:mode-line-cleaner-alist
-  `(;; For minor-mode, first char is 'space'
-    ;; (yas-minor-mode         . " Ya")
-    (eldoc-mode             . "")
-    (abbrev-mode            . "")
-    (undo-tree-mode         . "")
-    (flymake-mode           . "")
-    (isearch-mode           . "")
-    (global-whitespace-mode . "")
-    (editorconfig-mode      . "")
-    (company-mode           . "")
-    (rainbow-mode           . "")
-    (orgmine-mode           . "")
-    (orgtbl-mode            . "")
-    (org-src-mode           . "")
-    (git-gutter+-mode       . " ")
-    (projectile-mode        . "")
-    ))
-(defun my:clean-mode-line ()
-  "Cleanup major/minor mode."
-  (interactive)
-  (cl-loop for (mode . mode-str) in my:mode-line-cleaner-alist
-           do
-           (let ((old-mode-str (cdr (assq mode minor-mode-alist))))
-             (when old-mode-str
-               (setcar old-mode-str mode-str))
-             ;; major mode
-             (when (eq mode major-mode)
-               (setq mode-name mode-str)))))
-(add-hook 'after-change-major-mode-hook 'my:clean-mode-line)
-    #+end_src
-*** powerline 本体の設定．
-    default-theme をベースに見たい物だけ表示するようにしてみた．
-    #+begin_src emacs-lisp
-(leaf powerline
-  :ensure t
+** モードラインのカスタマイズ: =doom-modeline=
+   細かい所弄ってる．
+   - アイコン表示の際に(EAWのせいで)幅が狂うので，
+     doom-modeline内の幅の勘定をしている関数をoverride
+   - SKKの表示が欲しいので追加
+   - bufferのアイコンはfilenameじゃなくてmajor-modeを見にいく様にしてみた．
+   他にも弄りたい所はあるけれど．
+   #+BEGIN_SRC emacs-lisp
+(leaf *doom-modeline-setup
   :init
-  ;; ddskk そのものに modeline を更新する関数があるので無効化する
-  (defun my:disable-skk-setup-modeline ()
-    "skk-setup-modeline による modeline の更新を無効化"
-    (setq skk-indicator-alist (skk-make-indicator-alist))
-    (force-mode-line-update t))
-  (advice-add 'skk-setup-modeline :override 'my:disable-skk-setup-modeline)
-  ;; Git の表示のカスタマイズ
-  (defpowerline my:powerline-vc
-    (when (and (buffer-file-name (current-buffer)) vc-mode)
-      (format "%s"
-              (replace-regexp-in-string "Git\\(:\\|-\\)" ""
-                                        (format-mode-line '(vc-mode vc-mode))))))
-  (defpowerline my:powerline-buffer-percentage
-    (format "%.2s" (let ((current (format-mode-line "%p")))
-                     (cond
-                      ((string= current "All") "・")
-                      ((string= current "Bottom") "↑")
-                      ((string= current "Top") "↓")
-                      (t current)
-                      ))))
-  ;; major-mode のアイコン表示
-  (defun my:modeline-icon-for-mode (&rest mode)
-    (when (featurep 'all-the-icons)
-      (apply #'all-the-icons-icon-for-mode mode)))
-  (defpowerline my:powerline-major-mode
-    (propertize (format-mode-line (my:modeline-icon-for-mode major-mode))
-                'mouse-face 'mode-line-highlight
-                'help-echo "Major mode\n\ mouse-1: Display major mode menu\n\ mouse-2: Show help for major mode\n\ mouse-3: Toggle minor modes"
-                'local-map (let ((map (make-sparse-keymap)))
-                             (define-key map [mode-line down-mouse-1]
-                               `(menu-item ,(purecopy "Menu Bar") ignore
-                                           :filter (lambda (_) (mouse-menu-major-mode-map))))
-                             (define-key map [mode-line mouse-2] 'describe-mode)
-                             (define-key map [mode-line down-mouse-3] mode-line-mode-menu)
-                             map)))
-  ;; theme のカスタマイズ
-  (defun my:powerline-theme ()
-    "Custom theme for personal use."
-    (interactive)
-    (setq-default mode-line-format
-                  '("%e"
-                    (:eval
-                     (let* ((active (powerline-selected-window-active))
-                            ;; (mode-line-buffer-id (if active 'mode-line-buffer-id 'mode-line-buffer-id-inactive))
-                            (mode-line (if active 'mode-line 'mode-line-inactive))
-                            (face1 (if active 'powerline-active1 'powerline-inactive1))
-                            (face2 (if active 'powerline-active2 'powerline-inactive2))
-                            (separator-left
-                             (intern (format "powerline-%s-%s"
-                                             (powerline-current-separator)
-                                             (car powerline-default-separator-dir))))
-                            (separator-right
-                             (intern (format "powerline-%s-%s"
-                                             (powerline-current-separator)
-                                             (cdr powerline-default-separator-dir))))
-                            (lhs (list (powerline-raw (substring skk-modeline-input-mode 2 -1) mode-line 'l)
-                                       (powerline-raw mode-line-mule-info mode-line 'l)
-                                       (powerline-raw " ")
-                                       (my:powerline-major-mode)
-                                       (powerline-raw "%*" mode-line 'l)
-                                       (powerline-raw " ")
-                                       (funcall separator-left mode-line face1)
-                                       ;; (powerline-buffer-id mode-line-buffer-id 'l)
-                                       (powerline-buffer-id face1 'r)
-                                       (powerline-raw " " face1)
-                                       (funcall separator-left face1 face2)
-                                       (my:powerline-vc face2 'r)
-                                       ))
-                            (rhs (list (powerline-raw global-mode-string face2 'r)
-                                       (funcall separator-right face2 face1)
-                                       (powerline-process face1 'l)
-                                       (powerline-minor-modes face1 'l)
-                                       (powerline-narrow face1 'l)
-                                       (funcall separator-right face1 mode-line)
-                                       ;; (powerline-raw " ")
-                                       ;; (powerline-raw "%4l" mode-line 'l)
-                                       ;; (powerline-raw ":" mode-line 'l)
-                                       ;; (powerline-raw "%3c" mode-line 'r)
-                                       ;; (powerline-raw " " mode-line)
-                                       (my:powerline-buffer-percentage mode-line 'l)
-                                       (powerline-raw " " mode-line 'l)
-                                       )))
-                       (concat (powerline-render lhs)
-                               (powerline-fill face2 (powerline-width rhs))
-                               (powerline-render rhs)))))))
-  :config
-  ;; 半角スペース
-  (setq powerline-default-separator 'utf-8     ; UTF-8
-        powerline-utf-8-separator-left #x20    ; 半角スペース
-        powerline-utf-8-separator-right #x20   ; 半角スペース
-        powerline-display-buffer-size nil
-        powerline-display-mule-info t
-        powerline-display-hud t
-        )
-  (my:powerline-theme)
+  (leaf doom-modeline
+    :ensure t
+    :after all-the-icons-in-terminal
+    :preface
+    (defun my:doom-modeline--set-char-widths (alist)
+      "Do nothing!"
+      )
+    :advice (:override doom-modeline--set-char-widths
+                       my:doom-modeline--set-char-widths)
+    :hook (after-init-hook . doom-modeline-mode)
+    :config
+    (setq doom-modeline-icons-alist
+          '(;; macro
+            ("fiber_manual_record"    . "\xe3cb")
+            ("triangle-right"         . "\xe04c")
+            ;; multiple-cursors
+            ("i-cursor"               . "\xe2f7")
+            ;; vcs
+            ("git-compare"            . "\xe081")
+            ("git-merge"              . "\xe01b")
+            ("arrow-down"             . "\xe035")
+            ("alert"                  . "\xe023")
+            ("git-branch"             . "\xe01a")
+            ;; checker: flycheck/flymake
+            ("do_not_disturb_alt"     . "\xe5e5")
+            ("check"                  . "\xe5ce")
+            ("access_time"            . "\xe439")
+            ("sim_card_alert"         . "\xe5f6")
+            ("pause"                  . "\xe3a0")
+            ("priority_high"          . "\xe617")
+            ;; Persp
+            ("aspect_ratio"           . "\xe64f")
+            ;; LSP
+            ("rocket"                 . "\xe029")
+            ;; github
+            ("github"                 . "\xe173")
+            ;; debug
+            ("bug"                    . "\xe245")
+            ;; mu4e
+            ("email"                  . "\xe3ea")
+            ;; ("mail"                . "\xe158")
+            ;; irc
+            ("message"                . "\xe3f1")
+            ;; Battery
+            ("battery-charging"       . "\xebe4")
+            ("battery-full"           . "\xe2f1")
+            ("battery-three-quarters" . "\xe2f2")
+            ("battery-half"           . "\xe2f3")
+            ("battery-quarter"        . "\xe2f4")
+            ("battery-empty"          . "\xe2f5")
+            )
+          )
+    (setq doom-modeline-height 1
+          doom-modeline-bar-width 0
+          doom-modeline-buffer-file-name-style 'buffer-name
+          doom-modeline-icon t
+          doom-modeline-major-mode-icon t
+          doom-modeline-major-mode-color-icon t
+          doom-modeline-buffer-state-icon nil
+          doom-modeline-buffer-modification-icon nil
+          doom-modeline-minor-modes t
+          doom-modeline-enable-word-count t
+          doom-modeline-buffer-encoding t
+          doom-modeline-indent-info nil
+          doom-modeline-checker-simple-format t
+          doom-modeline-vcs-max-length 12
+          doom-modeline-persp-name t
+          doom-modeline-persp-name-icon t
+          doom-modeline-lsp nil
+          doom-modeline-github nil
+          doom-modeline-github-interval (* 30 60)
+          doom-modeline-mu4e nil
+          doom-modeline-irc nil
+          doom-modeline-irc-stylize 'identity
+          )
+    ;;
+    (defun my:skk-modeline-input-mode ()
+      "SKKが読み込まれていない場合でも skk-modeline-input-mode に文字を入れる."
+      (unless (boundp 'skk-modeline-inpt-mode)
+        (setq skk-modeline-input-mode "--[--]:")))
+    ;; 初回更新
+    (my:skk-modeline-input-mode)
+    ;; hook
+    (add-hook 'after-change-major-mode-hook
+              (lambda() (skk-mode)(skk-mode)))
+    ;;
+    (defvar my:skk-status "--[--]")
+    (eval-when-compile (require 'doom-modeline-core))
+    (doom-modeline-def-segment my:skk-status
+      "Show SKK status."
+      (propertize
+       (substring skk-modeline-input-mode 2 -1)))
+    ;; ddskk そのものに modeline を更新する関数があるので無効化する
+    (defun my:disable-skk-setup-modeline ()
+      "skk-setup-modeline による modeline の更新を無効化"
+      (setq skk-indicator-alist (skk-make-indicator-alist))
+      (force-mode-line-update t))
+    ;;
+    (advice-add 'skk-setup-modeline :override 'my:disable-skk-setup-modeline)
+    ;;
+    (defun my:doom-modeline-update-buffer-file-icon (&rest _)
+      "Update file icon in mode-line, just display major-mode icon. not filename."
+      (setq doom-modeline--buffer-file-icon
+            (when (and doom-modeline-icon doom-modeline-major-mode-icon)
+              (let* ((icon (all-the-icons-icon-for-mode major-mode)))
+                (if (symbolp icon)
+                    (setq icon (doom-modeline-icon-faicon "file-o"
+                                                          :face 'all-the-icons-dsilver)))
+                (unless (symbolp icon)
+                  (propertize icon
+                              'help-echo (format "Major-mode: %s" (format-mode-line mode-name))))))))
+    (advice-add 'doom-modeline-update-buffer-file-icon
+                :override 'my:doom-modeline-update-buffer-file-icon)
+    ;;
+    (doom-modeline-def-modeline 'custom
+      '(" " my:skk-status buffer-info buffer-position matches misc-info remote-host parrot selection-info)
+      '(vcs checker minor-modes buffer-encoding process " ")
+      )
+    (defun setup-custom-doom-modeline ()
+      (doom-modeline-set-modeline 'custom 'default))
+    (add-hook 'doom-modeline-mode-hook 'setup-custom-doom-modeline)
+    )
   )
-    #+end_src
+   #+END_SRC
 * 起動時間の出力
   [[http://memo.sugyan.com/entry/20120120/1327037494][起動時間を計測する 改訂版 - すぎゃーんメモ]]
   #+begin_src emacs-lisp

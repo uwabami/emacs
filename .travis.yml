@@ -1,11 +1,14 @@
 sudo: false
+dist: bionic
+  apt:
+    packages:
+      - ca-certificates
+      - gnutls-bin
 language: emacs-lisp
 cache:
   directories:
     - $HOME/local
 env:
-  before_install:
-    - sudo apt-get install -y ca-certificats gnutls-bin
   global:
     - PATH=$HOME/local/bin:$HOME/local/evm/bin:$PATH
   matrix:

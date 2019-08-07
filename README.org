@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
-#+date: 2019-08-01 13:40:25
+#+date: 2019-08-07 16:36:11
 * はじめに
   ここでは私の Emacs の設定についてまとめています．
 
@@ -112,7 +112,10 @@ init.el: README.org
 (require 'package nil 'noerror)
 (setq package-enable-at-startup t
       package-user-dir my:d:pkg:elpa
-      package-gnupghome-dir (expand-file-name ".gnupg" (getenv "HOME")))
+      package-gnupghome-dir (expand-file-name ".gnupg" (getenv "HOME"))
+      ;; elpa/gnutls workaround
+      gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3"
+      )
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (eval-when-compile
   (unless (file-exists-p (locate-user-emacs-file "tmp/bootstrap-stamp"))
@@ -123,14 +126,19 @@ init.el: README.org
    #+end_src
 ** [[https://github.com/conao3/leaf.el][leaf.el]]
    個々のパッケージの設定には[[https://github.com/conao3/leaf.el][leaf.el]]を利用します.
-   #+begin_src emacs-lisp
+   #+BEGIN_SRC emacs-lisp
 (unless (package-installed-p 'leaf)
   (package-install 'leaf))
+(require 'leaf nil 'noerror)
+;; support optional keywords
 (leaf leaf-keywords
   :ensure t
-  :require t
+  :init
+  (leaf diminish :ensure t :require t)
+  (leaf delight :ensure t :require t)
   :config
-  (leaf-keywords-init))
+  (leaf-keywords-init)
+  )
    #+end_src
 ** [[https://github.com/dimitri/el-get][el-get]]
    自分で修正した版やオリジナル版を別の場所から持ってくる場合は
@@ -141,7 +149,8 @@ init.el: README.org
   :ensure t
   :require t
   :init
-  (setq el-get-git-shallow-clone t)
+  (setq el-get-git-shallow-clone t
+        el-get-notify-type 'message)
   )
    #+end_src
 * 環境変数の読み込み: =exec-path-from-shell=
@@ -715,6 +724,7 @@ init.el: README.org
    あまり上手く使えていない.
    #+begin_src emacs-lisp
 (leaf abbrev
+  :diminish (abbrev-mode "")
   :config
   (setq abbrev-file-name (concat my:d:share "abbrev_defs")
         save-abbrevs t)
@@ -726,6 +736,7 @@ init.el: README.org
    #+begin_src emacs-lisp
 (leaf eldoc
   :hook (emacs-lisp-mode-hook . turn-on-eldoc-mode)
+  :diminish (eldoc-mode "")
   :preface
   (defun my:eldoc-message (f &optional string)
     (unless (active-minibuffer-window)
@@ -753,7 +764,10 @@ init.el: README.org
    背景も変えようかなぁ...
    #+begin_src emacs-lisp
 (leaf whitespace
-  :config
+  :diminish ((global-whitespace-mode "")
+             (whitespace-mode "")
+             )
+  :init
   (setq whitespace-line-column 72
         whitespace-style '(face              ; faceを使って視覚化する．
                            trailing          ; 行末の空白を対象とする．
@@ -769,7 +783,6 @@ init.el: README.org
                                       org-agenda-mode
                                       calendar-mode)
         )
-  (global-whitespace-mode 1)
   )
    #+end_src
 ** =saveplace=: 前回の修正位置を記憶する.
@@ -1599,9 +1612,19 @@ File.open(src, "r") {|f|
    実際の設定は以下の通り
 *** byte-compile の準備
      #+begin_src emacs-lisp :tangle init-wl.el
+(eval-and-compile
+  (leaf el-x
+    :el-get (el-x
+             :type github
+             :pkgname "sigma/el-x"
+             :build `(("make" ,(format "EMACSBIN=%s" el-get-emacs)))
+             :load-path "lisp"
+             )
+    :require t
+    )
+  )
 (eval-when-compile
   (require 'cp5022x)
-  (require 'el-x)
   (require 'wl)
   (require 'mime-def))
      #+end_src
@@ -2090,7 +2113,6 @@ video/*; xdg-open %s;
      元ネタは [[http://ikazuhiro.s206.xrea.com/article.php/20140920115345919][Re: wanderlust で GMail 風、新着レス順にソート]].
      あんまり頑張る気がなかったので =el-x= にある =dflet= を使っている。
      #+begin_src emacs-lisp  :tangle init-wl.el
-(leaf el-x :ensure t :require t)
 (defun wl-summary-overview-entity-compare-by-reply-date (a b)
   "Compare message A and B by latest date of replies including thread."
   (dflet ((string-max2 (x y) (cond ((string< x y) y)
@@ -2590,6 +2612,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    howm も有効にしている，ぐらい．
    #+begin_src emacs-lisp
 (leaf org
+  :delight (org-mode (all-the-icons-icon-for-mode 'org-mode))
   :bind (("C-x n s" . org-narrow-to-subtree)
          ("C-x n w" . widen))
   :init
@@ -2835,12 +2858,15 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :if (and (file-directory-p my:d:org)
            (>= emacs-major-version 25))
   :ensure t
-  :bind ((("C-c C-j" . nil))
-         (:org-journal-mode-map
-          ("C-c C-j" . nil)))
+  ;; :bind (("C-c C-j" . browse-url-at-point)
+  ;; (:org-journal-mode-map
+  ;;        ("C-c C-j" . browse-url-at-point)))
   :advice (:before org-journal-new-entry
                    my:org-journal-add-date-entry)
   :config
+  (eval-and-compile 'browse-url)
+  (with-eval-after-load 'org-journal
+    (global-set-key (kbd "C-c C-j") 'browse-url-at-point))
   (add-hook 'org-journal-mode-hook (lambda ()
                                      (setq truncate-lines t)))
   (defun my:org-journal-add-date-entry (prefix &optional time)
@@ -3016,7 +3042,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (leaf outline-magic
     :ensure t
     :bind ((:outline-minor-mode-map
-            ("TAB" . outline-cycle)))
+            ("C-c TAB" . outline-cycle)))
     :hook ((LaTeX-mode-hook . my:add-outline-headings)
            (LaTeX-mode-hook . outline-minor-mode))
     :init
@@ -3064,14 +3090,12 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :hook ((LaTeX-mode-hook . TeX-source-correlate-mode)
          (LaTeX-mode-hook . TeX-PDF-mode))
   :config
-  ;; (dolist (command '("pTeX" "pLaTeX" "jTeX" "jLaTeX" "jBibTeX" "Mendex"
-  ;;                    "upMendex" "pBibTeX" "BibTeX" "Biber" "Ps2pdf" ))
-  ;;   (delq (assoc command TeX-command-list) TeX-command-list))
+  (dolist (command '("pTeX" "pLaTeX" "jTeX" "jLaTeX" "jBibTeX" "Mendex"
+                     "upMendex" "pBibTeX" "BibTeX" "Biber" "Ps2pdf" ))
+    (delq (assoc command TeX-command-list) TeX-command-list))
   (setq japanese-TeX-engine-default 'ptex
         japanese-LaTeX-default-style "bxjsarticle"
-        TeX-command-output-list '(("LaTeXMk" ("pdf"))
-                                  ("LaTeX"   ("pdf"))
-                                  )
+        TeX-command-output-list '(("LaTeXMk" ("pdf")))
         TeX-engine 'ptex
         TeX-PDF-mode t
         TeX-source-correlate-method 'synctex
@@ -3266,203 +3290,52 @@ $clean_ext = "snm nav vrb synctex.gz";
 (when (window-system)
   (my:load-window-config))
   #+end_src
-** font-locks
-   現在修正中, そろそろテーマにすべきかしら?
-  #+begin_src emacs-lisp
-(setq frame-background-mode (frame-parameter nil 'background-mode))
-(leaf doom-themes
-  :if (>= emacs-major-version 25)
-  :ensure t
+** Major, Minor モードの表示のカスタマイズ: =diminish=, =delight=
+   基本個々のモードの設定でカスタマイズしているけれども．
+   #+BEGIN_SRC emacs-lisp
+(leaf *modeline-string
+  ;; ここでやるより，modeline の設定時に一括で変換した方が良い気もしてきた．
+  :delight ((lisp-interaction-mode
+             (all-the-icons-icon-for-mode 'lisp-interaction-mode))
+            (emacs-lisp-mode
+             (all-the-icons-icon-for-mode 'emacs-lisp-mode))
+            (text-mode
+             (all-the-icons-icon-for-mode 'text-mode))
+            )
   )
-(custom-set-faces
- '(default                             ((t (:foreground "#F6F3E8"))))
- '(cursor                              ((t (:foreground "#4CFF4C" :background "#4CFF4C"))))
- ;; basic
- '(font-lock-builtin-face              ((t (:foreground "#7FBFFF"))))
- '(font-lock-comment-delimiter-face    ((t (:foreground "#a5a5a6"))))
- '(font-lock-comment-face              ((t (:foreground "#a5a5a6"))))
- '(font-lock-constant-face             ((t (:foreground "#FFBF7F"))))
- '(font-lock-doc-face                  ((t (:foreground "#7FFF7F"))))
- '(font-lock-doc-string-face           ((t (:foreground "#7FFF7F"))))
- '(font-lock-function-name-face        ((t (:foreground "#BF7FFF"))))
- '(font-lock-keyword-face              ((t (:foreground "#FF7F7F"))))
- '(font-lock-link-face                 ((t (:foreground "#7FFFFF"))))
- '(font-lock-negation-char-face        ((t (:foreground "#7FFFFF" :bold t   :italic nil))))
- '(font-lock-preprocessor-face         ((t (:foreground "#FF4C4C" :bold nil :italic nil))))
- '(font-lock-regexp-grouping-backslash ((t (:foreground "#4Cff4C" :bold t   :italic nil))))
- '(font-lock-regexp-grouping-construct ((t (:foreground "#7F7FFF" :bold t   :italic nil))))
- '(font-lock-string-face               ((t (:foreground "#7FFF7F"))))
- '(font-lock-type-face                 ((t (:foreground "#FFFF7F"))))
- '(font-lock-variable-name-face        ((t (:foreground "#7F7FFF"))))
- '(font-lock-warning-face              ((t (:foreground "#FF7FBF" :bold t))))
- '(mode-line                           ((t (:foreground "#F6F3E8" :background "#222244"))))
- '(mode-line-inactive                  ((t (:foreground "#666666" :background "#999999" :bold nil))))
- '(fringe                              ((t (:foreground "#666666" :background "#282828"))))
- ;; '(hl-line                           ((t (:inherit highlight :underline t))))
- '(highlight                           ((t (:background "#556b2f"))))
- '(term-color-black                    ((t (:background "#242424" :foreground "#242424"))))
- '(term-color-blue                     ((t (:background "#4c4cff" :foreground "#4c4cff"))))
- '(term-color-cyan                     ((t (:background "#4cffff" :foreground "#4cffff"))))
- '(term-color-green                    ((t (:background "#4cff4c" :foreground "#4cff4c"))))
- '(term-color-magenta                  ((t (:background "#ff4cff" :foreground "#ff4cff"))))
- '(term-color-red                      ((t (:background "#ff4c4c" :foreground "#ff4c4c"))))
- '(term-color-white                    ((t (:background "#f6f3e8" :foreground "#f6f3e8"))))
- '(term-color-yellow                   ((t (:background "#ffff4c" :foreground "#ffff4c"))))
- ;;
- '(minibuffer-prompt                   ((t (:foreground "#BF7FFF"))))
- '(region                              ((t (:background "#222244"))))
- ;; dired
- '(dired-directory                     ((t (:bold t :foreground "#7F7FFF"))))
- '(dired-flagged                       ((t (:inherit error))))
- ;; '(dired-header
- '(dired-ignored                       ((t (:inherit shadow))))
- ;; '(dired-mark
- ;; '(dired-marked
- '(dired-perm-write                    ((t (:bold t :foreground "#FFFF7F"))))
- '(dired-symlink                       ((t (:bold t :foreground "#7FFFFF"))))
- '(dired-warning                       ((t (:inherit font-lock-warning-face))))
- ;; helm
- '(helm-source-header                  ((t (:foreground "#F6F3E8" :background "#224488" :bold t))))
- '(helm-visible-mark                   ((t (:inherit highlight))))
- '(helm-selection                      ((t (:inherit highlight))))
- '(helm-selection-line                 ((t (:inherit highlight))))
- '(helm-ff-directory                   ((t (:inherit dired-directory))))
- '(helm-bookmark-directory             ((t (:inherit helm-ff-directory))))
- '(helm-buffer-directory               ((t (:inherit helm-ff-directory))))
- '(helm-ff-dotted-directory            ((t (:inherit helm-ff-directory))))
- '(helm-ff-file                        ((t (:inherit default))))
- '(helm-bookmark-file                  ((t (:inherit helm-ff-file))))
- '(helm-buffer-file                    ((t (:inherit helm-ff-file))))
- '(helm-grep-file                      ((t (:inherit helm-ff-file))))
- '(helm-etags-file                     ((t (:inherit helm-ff-file))))
- '(helm-ff-executable                  ((t (:inherit helm-ff-file :foreground "#7FFF7F" :bold t))))
- '(helm-ff-symlink                     ((t (:inherit default :foreground "#7FFFFF" :bold t))))
- '(helm-ff-dotted-symlink-directory    ((t (:inherit helm-ff-symlink))))
- '(helm-ff-invalid-symlink             ((t (:inherit default :foreground "#FF7F7F"))))
- ;; ido
- '(ido-first-match                     ((t (:underline t :weight bold))))
- '(ido-only-match                      ((t (:foreground "#FFFF4C" :overline nil :weight bold))))
- '(ido-subdir                          ((t (:inherit dired-directory))))
- '(ido-vertical-first-match-face       ((t (:inherit ido-first-match))))
- '(ido-vertical-match-face             ((t (:foreground "#4CFF4C"))))
- '(ido-grid-mode-match                 ((t (:inherit ido-first-match))))
- ;; ivy
- '(ivy-current-match                   ((t (:inherit highlight))))
- '(ivy-confirm                         ((t (:inherit minibuffer-prompt))))
- '(ivy-subdir                          ((t (:inherit dired-directory))))
- '(ivy-minibuffer-match-face-1         ((t (:inherit 'unspecified foreground "#FF4C4C"))))
- '(ivy-minibuffer-match-face-2         ((t (:inherit 'unspecified foreground "#4CFF4C"))))
- '(ivy-minibuffer-match-face-2         ((t (:inherit 'unspecified foreground "#4C4CFF"))))
- ;; powerline
- '(powerline-active1                   ((t (:background "#000000":foreground "#F6F3E8"))))
- '(powerline-active2                   ((t (:background "#666666" :foreground "#F6F3E8"))))
- '(powerline-inactive1                 ((t (:inherit mode-line-inactive))))
- '(powerline-inactive2                 ((t (:inherit mode-line-inactive))))
- ;; preview-latex
- '(font-latex-sectioning-0-face        ((t (:inherit font-latex-sectioning-1-face))))
- '(font-latex-sectioning-1-face        ((t (:inherit font-latex-sectioning-2-face))))
- '(font-latex-sectioning-2-face        ((t (:inherit font-latex-sectioning-3-face))))
- '(font-latex-sectioning-3-face        ((t (:inherit font-latex-sectioning-4-face))))
- '(font-latex-sectioning-4-face        ((t (:inherit font-latex-sectioning-5-face))))
- '(font-latex-sectioning-5-face        ((t (:inherit font-lock-type-face :bold t))))
- '(font-latex-slide-title-face         ((t (:inherit font-lock-type-face :bold t))))
- '(font-latex-subscript-face           ((t nil)))
- '(font-latex-superscript-face         ((t nil)))
- '(font-latex-math-face                ((t (:inherit font-lock-constant-face))))
- '(font-latex-script-char-face         ((t (:inherit font-lock-preprocessor-face :bold t))))
- '(font-latex-verbatim-face            ((t (:inherit font-lock-doc-string-face))))
- ;; elscreen
- '(elscreen-tab-control-face           ((t (:background "#222244" :foreground "#f6f3e8" :underline t :bold t))))
- '(elscreen-tab-current-screen-face    ((t (:background "#222244" :foreground "#f6f3e8" :underline t :bold t))))
- '(elscreen-tab-other-screen-face      ((t (:background "#222244" :foreground "#aaaaaa" :underline t :bold nil))))
- '(elscreen-tab-background-face        ((t (:background "#222244" :foreground "#aaaaaa" :underline t :bold nil))))
- ;; git-gutter
- '(git-gutter:added                    ((t (:inherit default :bold t :foreground "#4CFF4C" :background "#666666"))))
- '(git-gutter:deleted                  ((t (:inherit default :bold t :foreground "#FF7FBF" :background "#666666"))))
- '(git-gutter:modified                 ((t (:inherit default :bold t :foreground "#FFFF4C" :background "#666666"))))
- '(git-gutter:unchanged                ((t (:inherit default :background "#666666"))))
- '(git-gutter:separator-face           ((t (:inherit default :foreground "#FF4C4C" :background "#666666"))))
-  ;;; howm
- '(howm-mode-keyword-face              ((t (:foreground "#7F7FFF" :background nil))))
- '(howm-mode-title-face                ((t (:foreground "#4CFFFF" :background nil))))
- '(howm-reminder-deadline-face         ((t (:bold t :foreground "#FF4C4C" :background nil))))
- '(howm-reminder-late-deadline-face    ((t (:bold t :underline t :foreground "#FF0000" :background nil))))
- '(howm-reminder-today-face            ((t (:bold t :foreground "#FFBF7F" :background nil))))
- '(howm-reminder-tomorrow-face         ((t (:bold t :foreground "#FF7FBF" :background nil))))
- ;; outline
- '(outline-1                           ((t (:inherit font-lock-function-name-face :bold t))))
- '(outline-2                           ((t (:inherit font-lock-string-face :bold t))))
- '(outline-3                           ((t (:inherit font-lock-keyword-face :bold t))))
- '(outline-4                           ((t (:inherit font-lock-type-face :bold t))))
- '(outline-5                           ((t (:inherit font-lock-constant-face :bold t))))
- '(outline-6                           ((t (:inherit font-lock-variable-name-face :bold t))))
- '(outline-7                           ((t (:inherit font-lock-builtin-face :bold t))))
- '(outline-8                           ((t (:inherit font-lock-comment-face :bold t))))
- ;; org
- '(org-agenda-date-today               ((t (:underline t :bold t))))
- '(org-agenda-date                     ((t (:foreground "#FFFFFF"))))
- '(org-agenda-date-weekend             ((t (:foreground "#FF7F7F" :bold t))))
- '(org-agenda-calendar-event           ((t (:foreground "#F6F3E8"))))
- '(org-hide                            ((t (:foreground "#4C4C4C"))))
- '(org-block                           ((t (:inherit font-lock-comment-face))))
- ;;
- ;; rainbow-delimiter
- ;; '(rainbow-delimiters-unmatched-face   ((t (:foreground "#FFBFFF" :bold t))))
- '(rainbow-delimiters-mismatched-face  ((t (:foreground "#FFBFFF" :bold t))))
- ;;
- '(rainbow-delimiters-depth-1-face     ((t (:foreground "#FF7F7F"))))
- '(rainbow-delimiters-depth-2-face     ((t (:foreground "#7FFF7F"))))
- '(rainbow-delimiters-depth-3-face     ((t (:foreground "#7F7FFF"))))
- '(rainbow-delimiters-depth-4-face     ((t (:foreground "#FFFF7F"))))
- '(rainbow-delimiters-depth-5-face     ((t (:foreground "#7FFFFF"))))
- '(rainbow-delimiters-depth-6-face     ((t (:foreground "#FFBF7F"))))
- '(rainbow-delimiters-depth-7-face     ((t (:foreground "#BFFF7F"))))
- '(rainbow-delimiters-depth-8-face     ((t (:foreground "#7FBFFF"))))
- '(rainbow-delimiters-depth-9-face     ((t (:foreground "#FFFFBF"))))
- ;; moinmoin
- '(moinmoin-h1                         ((t (:inherit outline-1))))
- '(moinmoin-h2                         ((t (:inherit outline-2))))
- '(moinmoin-h3                         ((t (:inherit outline-3))))
- '(moinmoin-h4                         ((t (:inherit outline-4))))
- '(moinmoin-h5                         ((t (:inherit outline-5))))
- '(moinmoin-url                        ((t (:inherit font-lock-link-face))))
- '(moinmoin-url-title                  ((t (:inherit moinmoin-url :bold t))))
- '(moinmoin-anchor-ref-id              ((t (:inherit moinmoin-url :underline t))))
- '(moinmoin-anchor-ref-title           ((t (:inherit moinmoin-url :bold t))))
- '(moinmoin-wiki-link                  ((t (:inherit moinmoin-url :underline t))))
- '(moinmoin-inter-wiki-link            ((t (:inherit moinmoin-url :underline t))))
- '(moinmoin-item                       ((t (:inherit font-lock-doc-face))))
- '(moinmoin-item-2                     ((t (:inherit font-lock-doc-face))))
- ;; company-mode
- '(company-tooltip                     ((t (:foreground "#242424" :background "#acacac"))))
- '(company-tooltip-common              ((t (:foreground "#242424" :background "#acacac"))))
- '(company-tooltip-common-selection    ((t (:foreground "#f6f3e8" :background "#4c4cff"))))
- '(company-tooltip-selection           ((t (:foreground "#242424" :background "#4c4cff"))))
- '(company-preview-common              ((t (:background nil :foreground "#acacac" :underline t))))
- '(company-scrollbar-fg                ((t (:background "#FFBF7F"))))
- '(company-scrollbar-bg                ((t (:background "#4c4c4c"))))
-)
-  #+end_src
-** モードラインのカスタマイズ: =doom-modeline=
-   細かい所弄ってる．
+   #+END_SRC
+
+** doom-modeline
+   細かい所が気になるので，色々弄ってます．
    - アイコン表示の際に(EAWのせいで)幅が狂うので，
      doom-modeline内の幅の勘定をしている関数をoverride
    - SKKの表示が欲しいので追加
-   - bufferのアイコンはfilenameじゃなくてmajor-modeを見にいく様にしてみた．
+   - bufferのアイコンはfilenameじゃなくてmajor-modeを見にいく.
    他にも弄りたい所はあるけれど．
    #+BEGIN_SRC emacs-lisp
-(leaf *doom-modeline-setup
+(leaf *doom-modeline-settings
+  :diminish (;; minor-mode settings
+             (isearch-mode (all-the-icons-faicon "search"))
+             (org-src-mode (all-the-icons-octicon "code"))
+             )
   :init
   (leaf doom-modeline
     :ensure t
+    :hook (after-init-hook . doom-modeline-mode)
     :after all-the-icons-in-terminal
     :preface
     (defun my:doom-modeline--set-char-widths (alist)
-      "Do nothing!"
-      )
+      "Do nothing!")
     :advice (:override doom-modeline--set-char-widths
                        my:doom-modeline--set-char-widths)
-    :hook (after-init-hook . doom-modeline-mode)
+    :init
+    ;; ddskk そのものに modeline を更新する関数があるので無効化する
+    (defun my:disable-skk-setup-modeline ()
+      "skk-setup-modeline による modeline の更新を無効化"
+      (setq skk-indicator-alist (skk-make-indicator-alist))
+      (force-mode-line-update t))
+    ;;
+    (advice-add 'skk-setup-modeline :override 'my:disable-skk-setup-modeline)
     :config
     (setq doom-modeline-icons-alist
           '(;; macro
@@ -3529,29 +3402,67 @@ $clean_ext = "snm nav vrb synctex.gz";
           doom-modeline-irc-stylize 'identity
           )
     ;;
-    (defun my:skk-modeline-input-mode ()
-      "SKKが読み込まれていない場合でも skk-modeline-input-mode に文字を入れる."
-      (unless (boundp 'skk-modeline-inpt-mode)
-        (setq skk-modeline-input-mode "--[--]:")))
-    ;; 初回更新
-    (my:skk-modeline-input-mode)
-    ;; hook
-    (add-hook 'after-change-major-mode-hook
-              (lambda() (skk-mode)(skk-mode)))
-    ;;
-    (defvar my:skk-status "--[--]")
     (eval-when-compile (require 'doom-modeline-core))
-    (doom-modeline-def-segment my:skk-status
-      "Show SKK status."
-      (propertize
-       (substring skk-modeline-input-mode 2 -1)))
-    ;; ddskk そのものに modeline を更新する関数があるので無効化する
-    (defun my:disable-skk-setup-modeline ()
-      "skk-setup-modeline による modeline の更新を無効化"
-      (setq skk-indicator-alist (skk-make-indicator-alist))
-      (force-mode-line-update t))
+    (doom-modeline-def-segment input-method-skk
+      "The current ddskk status."
+      (concat
+       (doom-modeline-spc)
+       (propertize
+        (cond
+         ((not (boundp 'skk-modeline-input-mode))
+          "[--]")
+         (skk-modeline-input-mode
+          (substring skk-modeline-input-mode 2 -1))
+         (t "[--]")
+         )
+        'face (if (doom-modeline--active)
+                  'doom-modeline-buffer-major-mode
+                'mode-line-inactive))))
+    (doom-modeline-def-segment my:buffer-encoding
+      "Displays the encoding and eol style of the buffer."
+      (when doom-modeline-buffer-encoding
+        (propertize
+         (concat
+          (let ((sys (coding-system-plist buffer-file-coding-system) ))
+            (cond ((memq (plist-get sys :category)
+                         '(coding-category-undecided coding-category-utf-8))
+                   " U")
+                  ((memq (plist-get sys :name)
+                         '(coding-category-undecided japanese-iso-8bit))
+                   " E")
+                  ((memq (plist-get sys :name)
+                         '(coding-category-undecided iso-2022-jp))
+                   " J")
+                  ((memq (plist-get sys :name)
+                         '(coding-category-undecided japanese-shift-jis))
+                   " S")
+                  (t " =")))
+          (pcase (coding-system-eol-type buffer-file-coding-system)
+            (0 "U")
+            (1 "D")
+            (2 "A")))
+         'face (if (doom-modeline--active) 'mode-line 'mode-line-inactive)
+         'help-echo 'mode-line-mule-info-help-echo
+         'mouse-face '(:box 0)
+         'local-map mode-line-coding-system-map)))
     ;;
-    (advice-add 'skk-setup-modeline :override 'my:disable-skk-setup-modeline)
+    (doom-modeline-def-segment buffer-position
+      "The buffer position information."
+      (let ((active (doom-modeline--active))
+            (lc '(line-number-mode
+                  (column-number-mode
+                   (doom-modeline-column-zero-based " %l:%c" " %l:%C")
+                   " %l")
+                  (column-number-mode (doom-modeline-column-zero-based " :%c" " :%C")))))
+        (propertize
+         (concat (doom-modeline-spc)
+                 (format-mode-line lc)
+                 (format-mode-line '("" doom-modeline-percent-position "%%")))
+         'face (if active 'mode-line 'mode-line-inactive)
+         'help-echo "Buffer position\n\
+mouse-1: Display Line and Column Mode Menu"
+         'mouse-face '(:box 0)
+         'local-map mode-line-column-line-number-mode-map)))
     ;;
     (defun my:doom-modeline-update-buffer-file-icon (&rest _)
       "Update file icon in mode-line, just display major-mode icon. not filename."
@@ -3559,24 +3470,262 @@ $clean_ext = "snm nav vrb synctex.gz";
             (when (and doom-modeline-icon doom-modeline-major-mode-icon)
               (let* ((icon (all-the-icons-icon-for-mode major-mode)))
                 (if (symbolp icon)
-                    (setq icon (doom-modeline-icon-faicon "file-o"
-                                                          :face 'all-the-icons-dsilver)))
+                    (setq icon (doom-modeline-icon-faicon
+                                "file-o"
+                                :face 'all-the-icons-dsilver)))
                 (unless (symbolp icon)
                   (propertize icon
                               'help-echo (format "Major-mode: %s" (format-mode-line mode-name))))))))
     (advice-add 'doom-modeline-update-buffer-file-icon
                 :override 'my:doom-modeline-update-buffer-file-icon)
     ;;
-    (doom-modeline-def-modeline 'custom
-      '(" " my:skk-status buffer-info buffer-position matches misc-info remote-host parrot selection-info)
-      '(vcs checker minor-modes buffer-encoding process " ")
+    (defvar doom-modeline--buffer-file-state-icon nil)
+    (defun my:doom-modeline-update-buffer-file-state-icon (&rest _)
+      "Update the buffer or file state in mode-line."
+      (setq doom-modeline--buffer-file-state-icon
+            (ignore-errors
+              (cond (buffer-read-only
+                     (doom-modeline-buffer-file-state-icon
+                      "lock"
+                      (all-the-icons-material "lock") ;; "%1*"
+                      'doom-modeline-warning))
+                    ((and buffer-file-name (buffer-modified-p)
+                          doom-modeline-buffer-modification-icon)
+                     (doom-modeline-buffer-file-state-icon
+                      "save"
+                      (all-the-icons-material "save")  ;;"%1*"
+                      'doom-modeline-buffer-modified))
+                    ((and buffer-file-name
+                          (not (file-exists-p buffer-file-name)))
+                     (doom-modeline-buffer-file-state-icon
+                      "edit"
+                      (all-the-icons-faicon "edit") ;; "!"
+                      'doom-modeline-urgent))
+                    ((or (buffer-narrowed-p)
+                         (and (bound-and-true-p fancy-narrow-mode)
+                              (fancy-narrow-active-p)))
+                     (doom-modeline-buffer-file-state-icon
+                      "vertical_align_center"
+                      (all-the-icons-material "vertical_align_center")
+                      ;; "><"
+                      'doom-modeline-warning))
+                    (t "--")))))
+    (advice-add 'doom-modeline-update-buffer-file-state-icon
+                :override 'my:doom-modeline-update-buffer-file-state-icon)
+    ;;
+    (doom-modeline-def-modeline 'main
+      '(;; bar
+        input-method-skk my:buffer-encoding remote-host buffer-info
+                         ;; matches
+                         ;; parrot
+                         ;; selection-info
+                         )
+      '(;; objed-state
+        ;; misc-info
+        ;; persp-name
+        ;; fancy-battery
+        ;; irc
+        ;; mu4e
+        ;; github
+        debug
+        lsp
+        minor-modes
+        ;; indent-info
+        ;; process
+        vcs
+        checker
+        buffer-position
+        " "
+        ;; bar
+        )
       )
-    (defun setup-custom-doom-modeline ()
-      (doom-modeline-set-modeline 'custom 'default))
-    (add-hook 'doom-modeline-mode-hook 'setup-custom-doom-modeline)
     )
   )
    #+END_SRC
+** theme
+   これまで弄っていた font-lock を
+   doom-theme をベースに移植中: [[https://github.com/uwabami/emacs-doom-darkpastel][uwabami/emacs-doom-darkpastel]]
+  #+begin_src emacs-lisp
+;; (setq frame-background-mode (frame-parameter nil 'background-mode))
+(leaf emacs-doom-darkpastel
+  :if (>= emacs-major-version 25)
+  :el-get (emacs-doom-darkpastel
+           :type github
+           :pkgname "uwabami/emacs-doom-darkpastel"
+           :prepare (add-to-list 'custom-theme-load-path default-directory)
+           )
+  :config
+  (load-theme 'doom-darkpastel t)
+  )
+;; (custom-set-faces
+;;  '(default                             ((t (:foreground "#F6F3E8"))))
+;;  '(cursor                              ((t (:foreground "#4CFF4C" :background "#4CFF4C"))))
+;;  ;; basic
+;;  '(font-lock-builtin-face              ((t (:foreground "#7FBFFF"))))
+;;  '(font-lock-comment-delimiter-face    ((t (:foreground "#a5a5a6"))))
+;;  '(font-lock-comment-face              ((t (:foreground "#a5a5a6"))))
+;;  '(font-lock-doc-face                  ((t (:foreground "#7FFF7F"))))
+;;  '(font-lock-doc-string-face           ((t (:foreground "#7FFF7F"))))
+;;  '(font-lock-constant-face             ((t (:foreground "#FFBF7F"))))
+;;  '(font-lock-function-name-face        ((t (:foreground "#BF7FFF"))))
+;;  '(font-lock-keyword-face              ((t (:foreground "#FF7F7F"))))
+;;  '(font-lock-link-face                 ((t (:foreground "#7FFFFF"))))
+;;  '(font-lock-negation-char-face        ((t (:foreground "#7FFFFF" :bold t   :italic nil))))
+;;  '(font-lock-preprocessor-face         ((t (:foreground "#FF4C4C" :bold nil :italic nil))))
+;;  '(font-lock-regexp-grouping-backslash ((t (:foreground "#4Cff4C" :bold t   :italic nil))))
+;;  '(font-lock-regexp-grouping-construct ((t (:foreground "#7F7FFF" :bold t   :italic nil))))
+;;  '(font-lock-string-face               ((t (:foreground "#7FFF7F"))))
+;;  '(font-lock-type-face                 ((t (:foreground "#FFFF7F"))))
+;;  '(font-lock-variable-name-face        ((t (:foreground "#7F7FFF"))))
+;;  '(font-lock-warning-face              ((t (:foreground "#FF7FBF" :bold t))))
+;;  '(mode-line                           ((t (:foreground "#F6F3E8" :background "#222244"))))
+;;  '(mode-line-inactive                  ((t (:foreground "#666666" :background "#999999" :bold nil))))
+;;  '(fringe                              ((t (:foreground "#666666" :background "#282828"))))
+;;  ;; '(hl-line                           ((t (:inherit highlight :underline t))))
+;;  '(highlight                           ((t (:background "#556b2f"))))
+;;  '(term-color-black                    ((t (:background "#242424" :foreground "#242424"))))
+;;  '(term-color-blue                     ((t (:background "#4c4cff" :foreground "#4c4cff"))))
+;;  '(term-color-cyan                     ((t (:background "#4cffff" :foreground "#4cffff"))))
+;;  '(term-color-green                    ((t (:background "#4cff4c" :foreground "#4cff4c"))))
+;;  '(term-color-magenta                  ((t (:background "#ff4cff" :foreground "#ff4cff"))))
+;;  '(term-color-red                      ((t (:background "#ff4c4c" :foreground "#ff4c4c"))))
+;;  '(term-color-white                    ((t (:background "#f6f3e8" :foreground "#f6f3e8"))))
+;;  '(term-color-yellow                   ((t (:background "#ffff4c" :foreground "#ffff4c"))))
+;;  ;;
+;;  '(minibuffer-prompt                   ((t (:foreground "#BF7FFF"))))
+;;  '(region                              ((t (:background "#222244"))))
+;;  ;; dired
+;;  '(dired-directory                     ((t (:bold t :foreground "#7F7FFF"))))
+;;  '(dired-flagged                       ((t (:inherit error))))
+;;  ;; '(dired-header
+;;  '(dired-ignored                       ((t (:inherit shadow))))
+;;  ;; '(dired-mark
+;;  ;; '(dired-marked
+;;  '(dired-perm-write                    ((t (:bold t :foreground "#FFFF7F"))))
+;;  '(dired-symlink                       ((t (:bold t :foreground "#7FFFFF"))))
+;;  '(dired-warning                       ((t (:inherit font-lock-warning-face))))
+;;  ;; helm
+;;  '(helm-source-header                  ((t (:foreground "#F6F3E8" :background "#224488" :bold t))))
+;;  '(helm-visible-mark                   ((t (:inherit highlight))))
+;;  '(helm-selection                      ((t (:inherit highlight))))
+;;  '(helm-selection-line                 ((t (:inherit highlight))))
+;;  '(helm-ff-directory                   ((t (:inherit dired-directory))))
+;;  '(helm-bookmark-directory             ((t (:inherit helm-ff-directory))))
+;;  '(helm-buffer-directory               ((t (:inherit helm-ff-directory))))
+;;  '(helm-ff-dotted-directory            ((t (:inherit helm-ff-directory))))
+;;  '(helm-ff-file                        ((t (:inherit default))))
+;;  '(helm-bookmark-file                  ((t (:inherit helm-ff-file))))
+;;  '(helm-buffer-file                    ((t (:inherit helm-ff-file))))
+;;  '(helm-grep-file                      ((t (:inherit helm-ff-file))))
+;;  '(helm-etags-file                     ((t (:inherit helm-ff-file))))
+;;  '(helm-ff-executable                  ((t (:inherit helm-ff-file :foreground "#7FFF7F" :bold t))))
+;;  '(helm-ff-symlink                     ((t (:inherit default :foreground "#7FFFFF" :bold t))))
+;;  '(helm-ff-dotted-symlink-directory    ((t (:inherit helm-ff-symlink))))
+;;  '(helm-ff-invalid-symlink             ((t (:inherit default :foreground "#FF7F7F"))))
+;;  ;; ido
+;;  '(ido-first-match                     ((t (:underline t :weight bold))))
+;;  '(ido-only-match                      ((t (:foreground "#FFFF4C" :overline nil :weight bold))))
+;;  '(ido-subdir                          ((t (:inherit dired-directory))))
+;;  '(ido-vertical-first-match-face       ((t (:inherit ido-first-match))))
+;;  '(ido-vertical-match-face             ((t (:foreground "#4CFF4C"))))
+;;  '(ido-grid-mode-match                 ((t (:inherit ido-first-match))))
+;;  ;; ivy
+;;  '(ivy-current-match                   ((t (:inherit highlight))))
+;;  '(ivy-confirm                         ((t (:inherit minibuffer-prompt))))
+;;  '(ivy-subdir                          ((t (:inherit dired-directory))))
+;;  '(ivy-minibuffer-match-face-1         ((t (:inherit 'unspecified :foreground "#FF4C4C"))))
+;;  '(ivy-minibuffer-match-face-2         ((t (:inherit 'unspecified :foreground "#4CFF4C"))))
+;;  '(ivy-minibuffer-match-face-2         ((t (:inherit 'unspecified :foreground "#4C4CFF"))))
+;;  ;; powerline
+;;  '(powerline-active1                   ((t (:background "#000000" :foreground "#F6F3E8"))))
+;;  '(powerline-active2                   ((t (:background "#666666" :foreground "#F6F3E8"))))
+;;  '(powerline-inactive1                 ((t (:inherit mode-line-inactive))))
+;;  '(powerline-inactive2                 ((t (:inherit mode-line-inactive))))
+;;  ;; preview-latex
+;;  '(font-latex-sectioning-0-face        ((t (:inherit font-latex-sectioning-1-face))))
+;;  '(font-latex-sectioning-1-face        ((t (:inherit font-latex-sectioning-2-face))))
+;;  '(font-latex-sectioning-2-face        ((t (:inherit font-latex-sectioning-3-face))))
+;;  '(font-latex-sectioning-3-face        ((t (:inherit font-latex-sectioning-4-face))))
+;;  '(font-latex-sectioning-4-face        ((t (:inherit font-latex-sectioning-5-face))))
+;;  '(font-latex-sectioning-5-face        ((t (:inherit font-lock-type-face :bold t))))
+;;  '(font-latex-slide-title-face         ((t (:inherit font-lock-type-face :bold t))))
+;;  '(font-latex-subscript-face           ((t nil)))
+;;  '(font-latex-superscript-face         ((t nil)))
+;;  '(font-latex-math-face                ((t (:inherit font-lock-constant-face))))
+;;  '(font-latex-script-char-face         ((t (:inherit font-lock-preprocessor-face :bold t))))
+;;  '(font-latex-verbatim-face            ((t (:inherit font-lock-doc-string-face))))
+;;  ;; elscreen
+;;  '(elscreen-tab-control-face           ((t (:background "#222244" :foreground "#f6f3e8" :underline t :bold t))))
+;;  '(elscreen-tab-current-screen-face    ((t (:background "#222244" :foreground "#f6f3e8" :underline t :bold t))))
+;;  '(elscreen-tab-other-screen-face      ((t (:background "#222244" :foreground "#aaaaaa" :underline t :bold nil))))
+;;  '(elscreen-tab-background-face        ((t (:background "#222244" :foreground "#aaaaaa" :underline t :bold nil))))
+;;  ;; git-gutter
+;;  '(git-gutter:added                    ((t (:inherit default :bold t :foreground "#4CFF4C" :background "#666666"))))
+;;  '(git-gutter:deleted                  ((t (:inherit default :bold t :foreground "#FF7FBF" :background "#666666"))))
+;;  '(git-gutter:modified                 ((t (:inherit default :bold t :foreground "#FFFF4C" :background "#666666"))))
+;;  '(git-gutter:unchanged                ((t (:inherit default :background "#666666"))))
+;;  '(git-gutter:separator-face           ((t (:inherit default :foreground "#FF4C4C" :background "#666666"))))
+;;   ;;; howm
+;;  '(howm-mode-keyword-face              ((t (:foreground "#7F7FFF" :background nil))))
+;;  '(howm-mode-title-face                ((t (:foreground "#4CFFFF" :background nil))))
+;;  '(howm-reminder-deadline-face         ((t (:bold t :foreground "#FF4C4C" :background nil))))
+;;  '(howm-reminder-late-deadline-face    ((t (:bold t :underline t :foreground "#FF0000" :background nil))))
+;;  '(howm-reminder-today-face            ((t (:bold t :foreground "#FFBF7F" :background nil))))
+;;  '(howm-reminder-tomorrow-face         ((t (:bold t :foreground "#FF7FBF" :background nil))))
+;;  ;; outline
+;;  '(outline-1                           ((t (:inherit font-lock-function-name-face :bold t))))
+;;  '(outline-2                           ((t (:inherit font-lock-string-face :bold t))))
+;;  '(outline-3                           ((t (:inherit font-lock-keyword-face :bold t))))
+;;  '(outline-4                           ((t (:inherit font-lock-type-face :bold t))))
+;;  '(outline-5                           ((t (:inherit font-lock-constant-face :bold t))))
+;;  '(outline-6                           ((t (:inherit font-lock-variable-name-face :bold t))))
+;;  '(outline-7                           ((t (:inherit font-lock-builtin-face :bold t))))
+;;  '(outline-8                           ((t (:inherit font-lock-comment-face :bold t))))
+;;  ;; org
+;;  '(org-agenda-date-today               ((t (:underline t :bold t))))
+;;  '(org-agenda-date                     ((t (:foreground "#FFFFFF"))))
+;;  '(org-agenda-date-weekend             ((t (:foreground "#FF7F7F" :bold t))))
+;;  '(org-agenda-calendar-event           ((t (:foreground "#F6F3E8"))))
+;;  '(org-hide                            ((t (:foreground "#4C4C4C"))))
+;;  '(org-block                           ((t (:inherit font-lock-comment-face))))
+;;  ;;
+;;  ;; rainbow-delimiter
+;;  ;; '(rainbow-delimiters-unmatched-face   ((t (:foreground "#FFBFFF" :bold t))))
+;;  '(rainbow-delimiters-mismatched-face  ((t (:foreground "#FFBFFF" :bold t))))
+;;  ;;
+;;  '(rainbow-delimiters-depth-1-face     ((t (:foreground "#FF7F7F"))))
+;;  '(rainbow-delimiters-depth-2-face     ((t (:foreground "#7FFF7F"))))
+;;  '(rainbow-delimiters-depth-3-face     ((t (:foreground "#7F7FFF"))))
+;;  '(rainbow-delimiters-depth-4-face     ((t (:foreground "#FFFF7F"))))
+;;  '(rainbow-delimiters-depth-5-face     ((t (:foreground "#7FFFFF"))))
+;;  '(rainbow-delimiters-depth-6-face     ((t (:foreground "#FFBF7F"))))
+;;  '(rainbow-delimiters-depth-7-face     ((t (:foreground "#BFFF7F"))))
+;;  '(rainbow-delimiters-depth-8-face     ((t (:foreground "#7FBFFF"))))
+;;  '(rainbow-delimiters-depth-9-face     ((t (:foreground "#FFFFBF"))))
+;;  ;; moinmoin
+;;  '(moinmoin-h1                         ((t (:inherit outline-1))))
+;;  '(moinmoin-h2                         ((t (:inherit outline-2))))
+;;  '(moinmoin-h3                         ((t (:inherit outline-3))))
+;;  '(moinmoin-h4                         ((t (:inherit outline-4))))
+;;  '(moinmoin-h5                         ((t (:inherit outline-5))))
+;;  '(moinmoin-url                        ((t (:inherit font-lock-link-face))))
+;;  '(moinmoin-url-title                  ((t (:inherit moinmoin-url :bold t))))
+;;  '(moinmoin-anchor-ref-id              ((t (:inherit moinmoin-url :underline t))))
+;;  '(moinmoin-anchor-ref-title           ((t (:inherit moinmoin-url :bold t))))
+;;  '(moinmoin-wiki-link                  ((t (:inherit moinmoin-url :underline t))))
+;;  '(moinmoin-inter-wiki-link            ((t (:inherit moinmoin-url :underline t))))
+;;  '(moinmoin-item                       ((t (:inherit font-lock-doc-face))))
+;;  '(moinmoin-item-2                     ((t (:inherit font-lock-doc-face))))
+;;  ;; company-mode
+;;  '(company-tooltip                     ((t (:foreground "#242424" :background "#acacac"))))
+;;  '(company-tooltip-common              ((t (:foreground "#242424" :background "#acacac"))))
+;;  '(company-tooltip-common-selection    ((t (:foreground "#f6f3e8" :background "#4c4cff"))))
+;;  '(company-tooltip-selection           ((t (:foreground "#242424" :background "#4c4cff"))))
+;;  '(company-preview-common              ((t (:background nil :foreground "#acacac" :underline t))))
+;;  '(company-scrollbar-fg                ((t (:background "#FFBF7F"))))
+;;  '(company-scrollbar-bg                ((t (:background "#4c4c4c"))))
+;; )
+  #+end_src
 * 起動時間の出力
   [[http://memo.sugyan.com/entry/20120120/1327037494][起動時間を計測する 改訂版 - すぎゃーんメモ]]
   #+begin_src emacs-lisp

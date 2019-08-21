@@ -5,7 +5,7 @@ EL		+= $(shell dpkg -l wl-beta 2>&1 | grep -q ^ii && echo init-wl.el )
 EL		+= $(shell dpkg -l wl 2>&1 | grep -q ^ii && echo init-wl.el )
 ELC		= $(EL:%.el=%.elc)
 
-all: init.elc $(ELC)
+all: $(ELC) init.elc
 $(EL): init.el
 init.el: README.org
 	mkdir -p tmp
@@ -16,7 +16,7 @@ init.el: README.org
 	$(EMACS) -q -l init.el --batch --eval '(kill-emacs)'
 %.elc: %.el
 	$(EMACS) -q -l init.el -batch -f batch-byte-compile $<
-# 	@rm -f $<
+	@rm -f $<
 
 clean:
 	rm -fr auto-save-list *.el *.elc *~

@@ -234,22 +234,6 @@ init.el: README.org
   )
    #+end_src
    - [ ] 最近，一文字幅強制の方が良いかなぁ，とか悩み中.
-** macOS対応
-   最近良く触る様になったので設定している。
-   +まあ, イマイチ慣れない訳ですけれど+
-   #+begin_src emacs-lisp
-(leaf ucs-normalize
-  :if (eq system-type 'darwin)
-  :defvar (mac-pass-control-to-system ns-command-modifier ns-alternate-modifier)
-  :config
-  (set-file-name-coding-system 'utf-8-hfs)
-  (setq locale-coding-system 'utf-8-hfs)
-  (setq mac-pass-control-to-system t  ;; Ctrl を Mac から奪い取る
-        ns-command-modifier 'meta     ;; Cmd と Option を逆にする
-        ns-alternate-modifier 'super)
-  (global-set-key [ns-drag-file] 'ns-find-file)
-  )
-   #+end_src
 * ターミナルでもicon fontを使いたい。
   [[https://github.com/domtronn/all-the-icons.el][all-the-icons.el]]のデータを修正して,
   [[https://github.com/sebastiencs/icons-in-terminal][icons in terminal]]を修正した自作フォントのデータを読みに行くようにしてみました。
@@ -279,6 +263,25 @@ init.el: README.org
                '(mime-view-mode all-the-icons-faicon "envelope-o"))
   )
   #+end_src
+** macOS対応
+   最近良く触る様になったので設定している。
+   +まあ, イマイチ慣れない訳ですけれど+
+   #+begin_src emacs-lisp
+(leaf *mac-encoding
+  :if (eq system-type 'darwin)
+  (leaf ucs-normalize
+    :require t
+    :defvar (mac-pass-control-to-system ns-command-modifier ns-alternate-modifier)
+    :config
+    (set-file-name-coding-system 'utf-8-hfs)
+    (setq locale-coding-system 'utf-8-hfs)
+    (setq mac-pass-control-to-system t  ;; Ctrl を Mac から奪い取る
+          ns-command-modifier 'meta     ;; Cmd と Option を逆にする
+          ns-alternate-modifier 'super)
+    (global-set-key [ns-drag-file] 'ns-find-file)
+    )
+  )
+   #+end_src
 * 独自関数
   細かい独自関数，など．
 ** dpkg-status

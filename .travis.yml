@@ -1,10 +1,11 @@
 sudo: false
+language: emacs-lisp
 dist: bionic
+addons:
   apt:
     packages:
       - ca-certificates
       - gnutls-bin
-language: emacs-lisp
 cache:
   directories:
     - $HOME/local

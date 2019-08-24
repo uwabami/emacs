@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
-#+date: 2019-08-07 16:36:11
+#+date: 2019-08-24 10:35:17
 * はじめに
   ここでは私の Emacs の設定についてまとめています．
 
@@ -40,7 +40,7 @@ init.el: README.org
    ついでに，出力される =init.el= 用のおまじない(?)として
    =lexsical-binding= を有効にしておきます．
    #+begin_src emacs-lisp
-;; -*- lexical-binding: t -*-
+;; -*- lexical-binding: nil -*-
    #+end_src
 ** ディレクトリ構成の修正
    分割した設定ファイル群やパッケージでinstallしたパッケージ
@@ -84,17 +84,11 @@ init.el: README.org
 (defconst my:d:org (concat (getenv "HOME") "/Nextcloud/org/"))
    #+END_SRC
    ついでに，
-   =custom-set-variables= は別ファイルに出力し，
-   終了時に削除するようにしています．
+   =custom-set-variables= は別ファイルに出力するようにしています．
    #+begin_src emacs-lisp
 (setq custom-file (concat my:d:tmp "custom.el"))
-(add-hook 'kill-emacs-hook
-          (lambda ()
-            (if (file-exists-p custom-file)
-                (delete-file custom-file))))
    #+end_src
    暇がある時に =custom.el= の中身を確認して，必要に応じて =init.el= に戻しています．
-   +init.elが汚れる気がしてあまり好きではないのですが...皆さん気にしてないんですかね+
 ** Byte-Compile 時の Common Lisp の読み込み
    幾つかん関数で =Common-Lisp= 的挙動が期待されているので，
    =cl-lib= を読み込んでおきます．
@@ -148,9 +142,10 @@ init.el: README.org
 (leaf el-get
   :ensure t
   :require t
+  ;; :custom (el-get-notify-type . message)
   :init
-  (setq el-get-git-shallow-clone t
-        el-get-notify-type 'message)
+  (setq el-get-notify-type 'message
+        el-get-git-shallow-clone t)
   )
    #+end_src
 * 環境変数の読み込み: =exec-path-from-shell=
@@ -373,6 +368,28 @@ init.el: README.org
     (delete-trailing-whitespace))))
 (add-hook 'before-save-hook 'my:delete-trailing-whitespace)
    #+end_src
+* インクリメンタル検索: =migemo=
+  稀に暴走する, ような...?
+  #+begin_src emacs-lisp
+(leaf migemo
+  :if (executable-find "cmigemo")
+  :require t
+  :config
+  (cond
+   ((and (eq system-type 'darwin)
+         (file-directory-p "/usr/local/share/migemo/utf-8/"))
+    (setq migemo-dictionary "/usr/local/share/migemo/utf-8/migemo-dict"))
+   (t
+    (setq migemo-dictionary "/usr/share/cmigemo/utf-8/migemo-dict"))
+   )
+  (setq migemo-command "cmigemo"
+        migemo-options '("-q" "--emacs")
+        migemo-user-dictionary nil
+        migemo-regex-dictionary nil
+        migemo-coding-system 'utf-8-unix)
+  (migemo-init)
+  )
+  #+end_src
 * 補完: =ivy,counsel,swiper=
   counsel が swiper に，swiper が ivy に依存しているので，
   パッケージマネージャを使う場合は，counsel をインストールすれば，
@@ -400,7 +417,7 @@ init.el: README.org
   :config
   (setq enable-recursive-minibuffers t
         minibuffer-depth-indicate-mode 1)
-  (setq ivy-use-virtual-buffers t
+  (setq ivy-use-virtual-buffers nil
         ivy-use-selectable-prompt t
         ivy-fixed-height-minibuffer t
         ivy-wrap t
@@ -409,7 +426,8 @@ init.el: README.org
         ivy-count-format (concat (all-the-icons-faicon "sort-amount-asc") " [%d/%d] ")
         ivy-extra-directories nil       ; default の "." と ".." を除外
         ivy-initial-inputs-alist nil
-        ;; ivy-sort-functions-alist <-- 入力前のリストの並び
+        ;; 入力前のリストの並び
+        ;; ivy-sort-functions-alist '((t . ivy--regex-fuzzy))
         ;; ivy-format-functions-alist '((t . ivy-format-function-arrow))
         ivy-re-builders-alist '((t . ivy--regex-fuzzy))
         )
@@ -446,14 +464,15 @@ init.el: README.org
   :config
   (defun my:ivy-format-function-arrow (cands)
     "Custom; Transform CANDS into a string for minibuffer."
+   (setq-local tab-width 1)
     (ivy--format-function-generic
      (lambda (str)
        (concat (all-the-icons-faicon
                 "hand-o-right" :face 'minibuffer-prompt)
-               " " (ivy--add-face str 'ivy-current-match)))
+               "\t" (ivy--add-face str 'ivy-current-match)))
      (lambda (str)
-       (concat ;; (all-the-icons-faicon "hand-o-right" )
-        "   " str))
+       (concat ;; (all-the-icons-faicon "hand-o-right" :foreground 'background)
+        "\t" str))
      cands
      "\n"))
   (setq ivy-format-functions-alist
@@ -527,6 +546,19 @@ init.el: README.org
    #+END_SRC
 ** 検索強化: =swiper=
    まだ設定していない．migemoと仲良くするために試行錯誤中．
+   #+BEGIN_SRC emacs-lisp
+(leaf swiper
+  :init
+  ;; (leaf avy-migemo
+  ;;   :if (executable-find "cmigemo")
+  ;;   :ensure t
+  ;;   :after migemo
+  ;;   :init
+  ;;   (require 'avy-migemo-e.g.swiper)
+  ;;   )
+  ;; :bind ("C-s" . swiper)
+  )
+   #+END_SRC
 * 主にEmacs本体および同梱されている拡張に関する設定
   最近ぼちぼち他の拡張も入れる様になってきた.
 ** 標準機能の設定: 表示関連
@@ -767,6 +799,7 @@ init.el: README.org
   :diminish ((global-whitespace-mode "")
              (whitespace-mode "")
              )
+  :hook (after-init-hook . global-whitespace-mode)
   :init
   (setq whitespace-line-column 72
         whitespace-style '(face              ; faceを使って視覚化する．
@@ -897,107 +930,118 @@ init.el: README.org
   )
    #+end_src
 * =ibuffer=: buffer の操作
-  ibuffer というより hydra の設定の様な気がする．
+  ibuffer というより hydra の設定の様な気がしてきた．
   #+begin_src emacs-lisp
 (leaf ibuffer
   :bind (("C-x C-b" . ibuffer-other-window)
          ("C-x b"   . ibuffer-other-window)
          ("C-x M-b" . ibuffer)
          (:ibuffer-mode-map
-          ("."      . hydra-ibuffer-main/body))
+          ("C-x C-f" . my:ibuffer-counsel-find-file))
+         ;; ("."      . hydra-ibuffer-main/body)
          )
   :init
-  (leaf hydra :ensure t
-    :config
-    (defhydra hydra-ibuffer-main (:color pink :hint nil)
-"
- ^Navigation^ | ^Mark^        | ^Actions^        | ^View^
--^----------^-+-^----^--------+-^-------^--------+-^----^-------
-  _k_:    ʌ   | _m_: mark     | _D_: delete      | _g_: refresh
- _RET_: visit | _u_: unmark   | _S_: save        | _s_: sort
-  _j_:    v   | _*_: specific | _a_: all actions | _/_: filter
--^----------^-+-^----^--------+-^-------^--------+-^----^-------
-"
-    ("j"   ibuffer-forward-line)
-    ("RET" ibuffer-visit-buffer :color blue)
-    ("k"   ibuffer-backward-line)
-    ("m"   ibuffer-mark-forward)
-    ("u"   ibuffer-unmark-forward)
-    ("*"   hydra-ibuffer-mark/body :color blue)
+  (defun my:ibuffer-counsel-find-file ()
+    "Like `counsel-find-file', but default to the directory of the buffer at point."
+    (interactive)
+    (let ((default-directory
+            (let ((buf (ibuffer-current-buffer)))
+              (if (buffer-live-p buf)
+                  (with-current-buffer buf
+                    default-directory)
+                default-directory))))
+      (counsel-find-file default-directory)))
+;;   (leaf hydra :ensure t
+;;     :config
+;;     (defhydra hydra-ibuffer-main (:color pink :hint nil)
+;; "
+;;  ^Navigation^ | ^Mark^        | ^Actions^        | ^View^
+;; -^----------^-+-^----^--------+-^-------^--------+-^----^-------
+;;   _k_:    ʌ   | _m_: mark     | _D_: delete      | _g_: refresh
+;;  _RET_: visit | _u_: unmark   | _S_: save        | _s_: sort
+;;   _j_:    v   | _*_: specific | _a_: all actions | _/_: filter
+;; -^----------^-+-^----^--------+-^-------^--------+-^----^-------
+;; "
+;;     ("j"   ibuffer-forward-line)
+;;     ("RET" ibuffer-visit-buffer :color blue)
+;;     ("k"   ibuffer-backward-line)
+;;     ("m"   ibuffer-mark-forward)
+;;     ("u"   ibuffer-unmark-forward)
+;;     ("*"   hydra-ibuffer-mark/body :color blue)
 
-    ("D"   ibuffer-do-delete)
-    ("S"   ibuffer-do-save)
-    ("a"   hydra-ibuffer-action/body :color blue)
+;;     ("D"   ibuffer-do-delete)
+;;     ("S"   ibuffer-do-save)
+;;     ("a"   hydra-ibuffer-action/body :color blue)
 
-    ("g"   ibuffer-update)
-    ("s"   hydra-ibuffer-sort/body :color blue)
-    ("/"   hydra-ibuffer-filter/body :color blue)
+;;     ("g"   ibuffer-update)
+;;     ("s"   hydra-ibuffer-sort/body :color blue)
+;;     ("/"   hydra-ibuffer-filter/body :color blue)
 
-    ("o" ibuffer-visit-buffer-other-window "other window" :color blue)
-    ("q" quit-window "quit ibuffer" :color blue)
-    ("." nil "toggle hydra" :color blue))
+;;     ("o" ibuffer-visit-buffer-other-window "other window" :color blue)
+;;     ("q" quit-window "quit ibuffer" :color blue)
+;;     ("." nil "toggle hydra" :color blue))
 
-    (defhydra hydra-ibuffer-mark (:color teal :columns 5
-                                         :after-exit (hydra-ibuffer-main/body))
-      "Mark"
-      ("*" ibuffer-unmark-all "unmark all")
-      ("M" ibuffer-mark-by-mode "mode")
-      ("m" ibuffer-mark-modified-buffers "modified")
-      ("u" ibuffer-mark-unsaved-buffers "unsaved")
-      ("s" ibuffer-mark-special-buffers "special")
-      ("r" ibuffer-mark-read-only-buffers "read-only")
-      ("/" ibuffer-mark-dired-buffers "dired")
-      ("e" ibuffer-mark-dissociated-buffers "dissociated")
-      ("h" ibuffer-mark-help-buffers "help")
-      ("z" ibuffer-mark-compressed-file-buffers "compressed")
-      ("b" hydra-ibuffer-main/body "back" :color blue))
+;;     (defhydra hydra-ibuffer-mark (:color teal :columns 5
+;;                                          :after-exit (hydra-ibuffer-main/body))
+;;       "Mark"
+;;       ("*" ibuffer-unmark-all "unmark all")
+;;       ("M" ibuffer-mark-by-mode "mode")
+;;       ("m" ibuffer-mark-modified-buffers "modified")
+;;       ("u" ibuffer-mark-unsaved-buffers "unsaved")
+;;       ("s" ibuffer-mark-special-buffers "special")
+;;       ("r" ibuffer-mark-read-only-buffers "read-only")
+;;       ("/" ibuffer-mark-dired-buffers "dired")
+;;       ("e" ibuffer-mark-dissociated-buffers "dissociated")
+;;       ("h" ibuffer-mark-help-buffers "help")
+;;       ("z" ibuffer-mark-compressed-file-buffers "compressed")
+;;       ("b" hydra-ibuffer-main/body "back" :color blue))
 
-    (defhydra hydra-ibuffer-action (:color teal :columns 4
-                                           :after-exit
-                                           (if (eq major-mode 'ibuffer-mode)
-                                               (hydra-ibuffer-main/body)))
-      "Action"
-      ("A" ibuffer-do-view "view")
-      ("E" ibuffer-do-eval "eval")
-      ("F" ibuffer-do-shell-command-file "shell-command-file")
-      ("I" ibuffer-do-query-replace-regexp "query-replace-regexp")
-      ("H" ibuffer-do-view-other-frame "view-other-frame")
-      ("N" ibuffer-do-shell-command-pipe-replace "shell-cmd-pipe-replace")
-      ("M" ibuffer-do-toggle-modified "toggle-modified")
-      ("O" ibuffer-do-occur "occur")
-      ("P" ibuffer-do-print "print")
-      ("Q" ibuffer-do-query-replace "query-replace")
-      ("R" ibuffer-do-rename-uniquely "rename-uniquely")
-      ("T" ibuffer-do-toggle-read-only "toggle-read-only")
-      ("U" ibuffer-do-replace-regexp "replace-regexp")
-      ("V" ibuffer-do-revert "revert")
-      ("W" ibuffer-do-view-and-eval "view-and-eval")
-      ("X" ibuffer-do-shell-command-pipe "shell-command-pipe")
-      ("b" nil "back"))
+;;     (defhydra hydra-ibuffer-action (:color teal :columns 4
+;;                                            :after-exit
+;;                                            (if (eq major-mode 'ibuffer-mode)
+;;                                                (hydra-ibuffer-main/body)))
+;;       "Action"
+;;       ("A" ibuffer-do-view "view")
+;;       ("E" ibuffer-do-eval "eval")
+;;       ("F" ibuffer-do-shell-command-file "shell-command-file")
+;;       ("I" ibuffer-do-query-replace-regexp "query-replace-regexp")
+;;       ("H" ibuffer-do-view-other-frame "view-other-frame")
+;;       ("N" ibuffer-do-shell-command-pipe-replace "shell-cmd-pipe-replace")
+;;       ("M" ibuffer-do-toggle-modified "toggle-modified")
+;;       ("O" ibuffer-do-occur "occur")
+;;       ("P" ibuffer-do-print "print")
+;;       ("Q" ibuffer-do-query-replace "query-replace")
+;;       ("R" ibuffer-do-rename-uniquely "rename-uniquely")
+;;       ("T" ibuffer-do-toggle-read-only "toggle-read-only")
+;;       ("U" ibuffer-do-replace-regexp "replace-regexp")
+;;       ("V" ibuffer-do-revert "revert")
+;;       ("W" ibuffer-do-view-and-eval "view-and-eval")
+;;       ("X" ibuffer-do-shell-command-pipe "shell-command-pipe")
+;;       ("b" nil "back"))
 
-    (defhydra hydra-ibuffer-sort (:color amaranth :columns 3)
-      "Sort"
-      ("i" ibuffer-invert-sorting "invert")
-      ("a" ibuffer-do-sort-by-alphabetic "alphabetic")
-      ("v" ibuffer-do-sort-by-recency "recently used")
-      ("s" ibuffer-do-sort-by-size "size")
-      ("f" ibuffer-do-sort-by-filename/process "filename")
-      ("m" ibuffer-do-sort-by-major-mode "mode")
-      ("b" hydra-ibuffer-main/body "back" :color blue))
+;;     (defhydra hydra-ibuffer-sort (:color amaranth :columns 3)
+;;       "Sort"
+;;       ("i" ibuffer-invert-sorting "invert")
+;;       ("a" ibuffer-do-sort-by-alphabetic "alphabetic")
+;;       ("v" ibuffer-do-sort-by-recency "recently used")
+;;       ("s" ibuffer-do-sort-by-size "size")
+;;       ("f" ibuffer-do-sort-by-filename/process "filename")
+;;       ("m" ibuffer-do-sort-by-major-mode "mode")
+;;       ("b" hydra-ibuffer-main/body "back" :color blue))
 
-    (defhydra hydra-ibuffer-filter (:color amaranth :columns 4)
-      "Filter"
-      ("m" ibuffer-filter-by-used-mode "mode")
-      ("M" ibuffer-filter-by-derived-mode "derived mode")
-      ("n" ibuffer-filter-by-name "name")
-      ("c" ibuffer-filter-by-content "content")
-      ("e" ibuffer-filter-by-predicate "predicate")
-      ("f" ibuffer-filter-by-filename "filename")
-      (">" ibuffer-filter-by-size-gt "size")
-      ("<" ibuffer-filter-by-size-lt "size")
-      ("/" ibuffer-filter-disable "disable")
-      ("b" hydra-ibuffer-main/body "back" :color blue))
-    )
+;;     (defhydra hydra-ibuffer-filter (:color amaranth :columns 4)
+;;       "Filter"
+;;       ("m" ibuffer-filter-by-used-mode "mode")
+;;       ("M" ibuffer-filter-by-derived-mode "derived mode")
+;;       ("n" ibuffer-filter-by-name "name")
+;;       ("c" ibuffer-filter-by-content "content")
+;;       ("e" ibuffer-filter-by-predicate "predicate")
+;;       ("f" ibuffer-filter-by-filename "filename")
+;;       (">" ibuffer-filter-by-size-gt "size")
+;;       ("<" ibuffer-filter-by-size-lt "size")
+;;       ("/" ibuffer-filter-disable "disable")
+;;       ("b" hydra-ibuffer-main/body "back" :color blue))
+;;     )
   :config
   (define-ibuffer-column icon (:name "  ")
     (let ((icon
@@ -1040,19 +1084,27 @@ init.el: README.org
 * カラーコードに色付け: =rainbow-mode=
   =#RRGGBB= のカラーコードに勝手に色が付く．CSS の編集中なんかで地味に便利．
   #+begin_src emacs-lisp
-(leaf rainbow-mode :ensure t)
+(leaf rainbow-mode
+  :ensure t
+  :config
+  (with-eval-after-load 'rainbow-mode
+    (diminish 'rainbow-mode (format " %s" "\x1F308")))
+  )
   #+end_src
+  モードラインの調整が上手く動いていない気がする(=:diminish= が効かない).
+  しょうがないので =with-eval-after-load= で．
 * 対応する括弧を見易く: =rainbow-delimiters=
   [[https://www.emacswiki.org/emacs/RainbowDelimiters][RainbowDelimiters]]:
   global に有効にするのは他のMajor modeとの衝突があるので止めた方が良い，らしい．
   #+begin_src emacs-lisp
 (leaf rainbow-delimiters
   :ensure t
+  :diminish ""
   :hook (prog-mode-hook . rainbow-delimiters-mode)
   )
   #+end_src
 * ファイル操作: =dired=
-  アイコンを表示する様にしてみた。
+  =all-the-icons-dired= でアイコンを表示する様にしてみた。
   #+begin_src emacs-lisp
 (leaf all-the-icons-dired
   :ensure t
@@ -1072,6 +1124,7 @@ init.el: README.org
   #+end_src
 * チラ見: =quick-preview.el=
   ターミナルの場合でも強制的に動くようにした folk 版を作っている.
+  とはいえ GNOME Sushi 前提なので，GNOME以外の環境だとシンドいかもなぁ...
   #+begin_src emacs-lisp
 (leaf quick-preview
   :el-get (quick-preview
@@ -1106,6 +1159,7 @@ init.el: README.org
         )
   )
   #+end_src
+  とはいえ，これでbrowseすることは滅多に無いのだけれど．
 * =ace-link=: リンクを簡単に辿る [0/1]
   #+begin_src emacs-lisp
 (leaf ace-link
@@ -1178,13 +1232,15 @@ Emacs*useXIM: false
    #+begin_src emacs-lisp
 (unless (locate-library "skk")
   (package-install 'ddskk))
+(defvar skk-user-directory (concat my:d:tmp "skk"))
+(unless (file-directory-p skk-user-directory)
+  (make-directory skk-user-directory))
 (leaf skk
   :bind (("C-x j"   . skk-mode)
          ("C-x C-j" . skk-mode)
          ("C-\\"    . skk-mode))
   :init
-  (setq skk-user-directory (concat my:d:tmp "skk")
-        skk-init-file (concat user-emacs-directory "init-ddskk")
+  (setq skk-init-file (concat user-emacs-directory "init-ddskk")
         default-input-method "japanese-skk" )
   )
    #+end_src
@@ -1435,28 +1491,6 @@ File.open(src, "r") {|f|
         interprogram-paste-function 'my:copy-from-osx)
   )
    #+END_SRC
-* インクリメンタル検索: =migemo=
-  稀に暴走する, ような...?
-  #+begin_src emacs-lisp
-(leaf migemo
-  :if (executable-find "cmigemo")
-  :require t
-  :config
-  (cond
-   ((and (eq system-type 'darwin)
-         (file-directory-p "/usr/local/share/migemo/utf-8/"))
-    (setq migemo-dictionary "/usr/local/share/migemo/utf-8/migemo-dict"))
-   (t
-    (setq migemo-dictionary "/usr/share/cmigemo/utf-8/migemo-dict"))
-   )
-  (setq migemo-command "cmigemo"
-        migemo-options '("-q" "--emacs")
-        migemo-user-dictionary nil
-        migemo-regex-dictionary nil
-        migemo-coding-system 'utf-8-unix)
-  (migemo-init)
-  )
-  #+end_src
 * 校正，辞書等
 ** RedPen
    便利そうなんだけれど, イマイチ上手く使いこなせていない．
@@ -1480,7 +1514,7 @@ File.open(src, "r") {|f|
                   (delete-file redpen-temporary-filename))))
   )
    #+end_src
-** spell checker
+** spell checker: =ispel=, =flyspell=
    ispell はコマンドとして =aspell= を利用する．
    #+begin_src emacs-lisp
 (leaf ispell
@@ -1502,7 +1536,8 @@ File.open(src, "r") {|f|
                    my:flyspell-popup-choose)
   )
    #+end_src
-** 辞書
+** 辞書: =lookup-el=
+   無いとシンドい．
    #+begin_src emacs-lisp
 (leaf lookup
   :if (and (my:dpkg-status "lookup-el")
@@ -1522,6 +1557,19 @@ File.open(src, "r") {|f|
           (ndeb   "/usr/local/share/dict/colloc"    :alias "研究社 英和活用大辞典 ")
           )))
    #+end_src
+** Google翻訳
+   たまに変なのだが，深追いしていない
+   #+BEGIN_SRC emacs-lisp
+(leaf google-translate
+  :bind (("M-o t" . google-translate-at-point)
+         ("M-o T" . google-translate-at-point-reverse))
+  :ensure t
+  :config
+  (setq google-translate-default-source-language "en"
+        google-translate-default-target-language "ja")
+  )
+
+   #+END_SRC
 * 認証関連: =plstore=, =oauth2=, =password-store=
 ** oauth2, plstore
    oauth2 の認証情報は =plstore= で保存される．
@@ -1556,7 +1604,7 @@ File.open(src, "r") {|f|
    #+end_src
 ** id-manager の設定
    ID と Password の簡単な組の管理をするのに非常に重宝していました。
-   最近は =password-store= を使う様になったので, そのうち全部移行しますが, とりあえず。
+   最近は =password-store= を使う様になったのでそのうち全部移行しますが, とりあえず。
    #+BEGIN_SRC emacs-lisp
 (leaf id-manager
   :if (file-exists-p "~/.gnupg/idm-db.gpg")
@@ -2039,13 +2087,12 @@ video/*; xdg-open %s;
      スレッドの幅の指定
      #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-thread-indent-level 2)
-(setq wl-thread-have-younger-brother-str "+"
-      wl-thread-youngest-child-str "+"
-      wl-thread-vertical-str "|"
-      wl-thread-horizontal-str "-"
+(setq wl-thread-have-younger-brother-str "+" ;; "├"
+      wl-thread-youngest-child-str "+" ;; "└"
+      wl-thread-vertical-str "|" ;; "│"
+      wl-thread-horizontal-str "-" ;; "─"
       wl-thread-space-str " ")
      #+end_src
-
      以下の二つの設定を有効にするには
      =elmo-msgdb-extra-fields= を設定する必要がある.
      この変数は振り分け判定にも使用するのでそこで設定している
@@ -2553,57 +2600,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (calendar-set-date-style 'iso)
   )
   #+end_src
-* VCS
-** git{attributes,config,ignore}-mode, git-commit
-   #+begin_src emacs-lisp
-(leaf *git
-  :if (and (>= emacs-major-version 25)
-           (executable-find "git"))
-  :init
-  (leaf git-commit :ensure t)
-  (leaf gitattributes-mode :ensure t)
-  (leaf gitconfig-mode :ensure t)
-  (leaf gitignore-mode :ensure t)
-  )
-   #+end_src
-** magit:
-   magit は Emacs の Git Frontend.
-   結局の所 CUI でコマンド叩く事も多いけれど，これはこれで重宝している．
-   #+begin_src emacs-lisp
-(leaf magit
-  :if (executable-find "git")
-  :bind (("C-x g" . magit-status))
-  :ensure t
-  :config
-  ;; magit-completing-read-function 'magit-ido-completing-read
-  (setq magit-refs-show-commit-count 'all
-        magit-log-buffer-file-locked t
-        magit-revision-show-gravatars nil
-        )
-  )
-   #+end_src
-** Git Gutter+
-   飽きたら止めるかもしれないけれど.
-   #+begin_src emacs-lisp
-(leaf git-gutter+
-  :if (and (executable-find "git")
-           (>= emacs-major-version 25))
-  :ensure t
-  :bind ("C-x G" . global-git-gutter+-mode)
-  )
-   #+end_src
-** ghq
-   #+BEGIN_SRC emacs-lisp
-(leaf ivy-ghq
-  :if (executable-find "ghq")
-  :el-get (ivy-ghq
-           :type github
-           :pkgname "analyticd/ivy-ghq")
-  :bind (("C-x f" . ivy-ghq-open))
-  :config
-  (setq ivy-ghq-short-list t)
-  )
-   #+END_SRC
 * Org-mode
   =org-mode= が無いと生きていけない体になりました
 ** 基本設定: =org=
@@ -2684,6 +2680,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 ** Babel
    #+begin_src emacs-lisp
 (leaf org-src
+  :diminish (org-src-mode (format " %s" (all-the-icons-octicon "code")))
   :config
   (setq org-src-fontify-natively t       ;; font-lock
         org-src-tab-acts-natively t      ;; indent
@@ -2971,19 +2968,18 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   )
    #+end_src
 ** OrgとGoogle カレンダーの連携: =org-gcal=
-*** token 等の置き場所の変更
-    #+begin_src emacs-lisp
+   request token 等の置き場所の変更
+   実際の情報等は =password-store= を使って設定しておく.
+   #+begin_src emacs-lisp
 (leaf request
   :ensure t
   :init
   (setq request-storage-directory (concat my:d:tmp "request"))
   (unless (file-directory-p request-storage-directory)
     (make-directory request-storage-directory)))
-    #+end_src
-*** org-gcal 本体の設定
-    実際の情報等は =password-store= を使って設定しておく.
-    ついでに agenda 表示の際の色付けを設定．
-    #+begin_src emacs-lisp
+   #+end_src
+   ついでに agenda 表示の際の色付けを設定．
+   #+begin_src emacs-lisp
 (leaf org-gcal
   :if (and my:d:password-store
            (file-directory-p my:d:org))
@@ -3000,15 +2996,15 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         org-gcal-auto-archive nil)
   (load (concat my:d:password-store "/org-gcal.gpg"))
   )
-    #+end_src
-    password-store には multiline で設定を書く．例えば以下:
-    #+begin_src emacs-lisp :tangle no
+   #+end_src
+   password-store には multiline で設定を書く．例えば以下:
+   #+begin_src emacs-lisp :tangle no
 (setq org-gcal-client-id "XXXXXXXXXXX"
       org-gcal-client-secret "XXXXXXXXXXX"
       org-gcal-file-alist
       '(("XXXXX@gmail.com" . "~/org/Schedule.org")
         ("YYYYY@group.calendar.google.com" . "~/org/Project1.org")))
-    #+end_src
+   #+end_src
 ** OrgとRedmine の連携: =orgmine=
    素晴しい!!
    [[https://github.com/kametoku/orgmine][kametoku/orgmine: Emacs minor mode for org-mode with redmine integration]]
@@ -3036,6 +3032,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   )
    #+end_src
 * Outline Magic
+  どんどん増えそう．
   #+BEGIN_SRC emacs-lisp
 (leaf outline
   :init
@@ -3057,18 +3054,187 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     )
   )
   #+END_SRC
-* TeX
-** AUCTeX
-   Debian パッケージ版を使う．
-   やっている事は
-   - japanese-latex-mode において, 幾つかのコマンドが追加/上書きされているが， あまり使うことの無いコマンドが表示されるのが嫌なのでそれらを削除．
-   - コンパイルには[[http://personal.psu.edu/jcc8/software/latexmk/][Latexmk]]を使う
-   と言った所.
-   [[http://personal.psu.edu/jcc8/software/latexmk/][Latexmk]]の設定には[[https://github.com/tom-tan/auctex-latexmk][auctex-latexmk]]を利用する．
+* VCS
+** git{attributes,config,ignore}-mode, git-commit
+   #+begin_src emacs-lisp
+(leaf *git
+  :if (and (>= emacs-major-version 25)
+           (executable-find "git"))
+  :init
+  (leaf git-commit :ensure t)
+  (leaf gitattributes-mode :ensure t)
+  (leaf gitconfig-mode :ensure t)
+  (leaf gitignore-mode :ensure t)
+  )
+   #+end_src
+** magit:
+   magit は Emacs の Git Frontend.
+   結局の所 CUI でコマンド叩く事も多いけれど，これはこれで重宝している．
+   #+begin_src emacs-lisp
+(leaf magit
+  :if (executable-find "git")
+  :bind (("C-x g" . magit-status))
+  :ensure t
+  :config
+  ;; magit-completing-read-function 'magit-ido-completing-read
+  (setq magit-refs-show-commit-count 'all
+        magit-log-buffer-file-locked t
+        magit-revision-show-gravatars nil
+        )
+  )
+   #+end_src
+** Git Gutter+
+   飽きたら止めるかもしれないけれど.
+   #+begin_src emacs-lisp
+(leaf git-gutter+
+  :if (and (executable-find "git")
+           (>= emacs-major-version 25))
+  :ensure t
+  :bind ("C-x G" . global-git-gutter+-mode)
+  )
+   #+end_src
+** ghq
    #+BEGIN_SRC emacs-lisp
+(leaf ivy-ghq
+  :if (executable-find "ghq")
+  :el-get (ivy-ghq
+           :type github
+           :pkgname "analyticd/ivy-ghq")
+  :bind (("C-x f" . ivy-ghq-open))
+  :config
+  (setq ivy-ghq-short-list t)
+  )
+   #+END_SRC
+* Project 管理
+  リポジトリの移動には ghq を使っているけれど.
+  #+BEGIN_SRC emacs-lisp
+(leaf projectile
+  :if (executable-find "ghq")
+  :diminish (projectile-mode
+             (format " %s" (all-the-icons-octicon "repo")))
+  :hook (after-init-hook . projectile-mode)
+  :ensure t
+  :bind ((:projectile-mode-map
+          ("C-c p" . projectile-command-map)))
+  :config
+  (setq projectile-known-projects-file
+        (expand-file-name "projectile-bookmarks.eld" my:d:tmp)
+        ;; projectile-project-search-path '("~/Sources"
+        ;;                                  "~/Documents")
+        projectile-cache-file (expand-file-name "projectile.cache" my:d:tmp)
+        projectile-enable-caching t
+        projectile-file-exists-remote-cache-expire (* 10 60)
+        projectile-completion-system 'ivy
+        projectile-dynamic-mode-line nil
+        projectile-mode-line-prefix (format " %s" (all-the-icons-octicon "repo"))
+        )
+  )
+  #+END_SRC
+* 関数定義を辿る: =dump-jump=
+  あまり上手く使えていない
+  #+BEGIN_SRC emacs-lisp
+(leaf dumb-jump
+  :if (executable-find "rg")
+  :ensure t
+  :disabled t
+  :bind (("M-g o" . dumb-jump-go-other-window)
+         ("M-g j" . dumb-jump-go)
+         ("M-g i" . dumb-jump-go-prompt)
+         ("M-g x" . dumb-jump-go-prefer-external)
+         ("M-g z" . dumb-jump-go-prefer-external-other-window))
+  :after ivy
+  :config
+  (setq dumb-jump-selector 'ivy
+        dumb-jump-force-searcher 'rg
+        )
+)
+  #+END_SRC
+* 言語毎の補完: =company-mode=
+  まだうまく使いこなせていない．
+  - [[https://qiita.com/wktkshn/items/3ac46671d1c242a59f7e][company-dabbrevで日本語を補完しない]]
+  を有効にしてみたが，これで良いのかしら...?
+  #+BEGIN_SRC emacs-lisp
+(leaf company
+  :ensure t
+  :diminish (company-mode
+             (format " %s" (all-the-icons-octicon "light-bulb")))
+  :bind ((:company-active-map
+          ("C-n"   . company-select-next)
+          ("C-p"   . company-select-previous)
+          ("<tab>" . company-complete-common-or-cycle))
+         (:company-search-map
+          ("C-p" . company-select-previous)
+          ("C-n" . company-select-next)))
+  :hook (after-init-hook . global-company-mode)
+  :init
+  (defun my:edit-category-table-for-company-dabbrev (&optional table)
+    "日本語をdabbrevから外す"
+    (define-category ?s "word constituents for company-dabbrev" table)
+    (let ((i 0))
+      (while (< i 128)
+        (if (equal ?w (char-syntax i))
+            (modify-category-entry i ?s table)
+          (modify-category-entry i ?s table t))
+        (setq i (1+ i)))))
+  :config
+  ;; (global-set-key (kbd "<tab>") 'company-indent-or-complete-common)
+  (setq company-idle-delay 0
+        company-minimum-prefix-length 4
+        company-selection-wrap-around t)
+  (with-eval-after-load 'company
+    (my:edit-category-table-for-company-dabbrev)
+    ;; (add-hook 'TeX-mode-hook 'edit-category-table-for-company-dabbrev)
+    (setq company-dabbrev-char-regexp "\\cs")
+    )
+  )
+  #+END_SRC
+  - [ ] [[https://github.com/TheBB/company-reftex][TheBB/company-reftex]]
+  - [ ] [[https://github.com/vspinu/company-math][vspinu/company-math]]
+  - [ ] [[https://github.com/alexeyr/company-auctex][alexeyr/company-auctex]]
+* 言語毎のon-the-fly check: =flycheck=
+  わりと決め打ち多くて，flymakeの方が楽かもしれない，とか思ったり．
+  #+BEGIN_SRC emacs-lisp
+(leaf flycheck
+  :ensure t
+  )
+  #+END_SRC
+* LSP
+  #+BEGIN_SRC emacs-lisp
+(leaf lsp-mode
+  :ensure t
+  :hook ((f90-mode     . lsp)
+         (fortran-mode . lsp)
+         )
+  :init
+  (leaf lsp-ui
+    :ensure t
+    :commands lsp-ui-mode
+    :hook (lsp-mode . lsp-ui-mode)
+    :config
+    (setq lsp-ui-flycheck-enable nil) ;; ???
+    )
+  (leaf company-lsp
+    :ensure t
+    :commands company-lsp
+    )
+  :config
+  (setq lsp-prefer-flymake nil  ;; ???
+        lsp-auto-guess-root t
+        )
+  )
+  #+END_SRC
+* TeX: =AUCTeX=
+  Debian パッケージ版を使う．
+  やっている事は
+  - japanese-latex-mode において, 幾つかのコマンドが追加/上書きされているが， あまり使うことの無いコマンドが表示されるのが嫌なのでそれらを削除．
+  - コンパイルには[[http://personal.psu.edu/jcc8/software/latexmk/][Latexmk]]を使う
+  と言った所.
+  [[http://personal.psu.edu/jcc8/software/latexmk/][Latexmk]]の設定には[[https://github.com/tom-tan/auctex-latexmk][auctex-latexmk]]を利用する．
+  #+BEGIN_SRC emacs-lisp
 (leaf tex-jp
   :if (and (executable-find "uplatex")
            (my:dpkg-status "auctex"))
+  :mode ("\\.\\(tex\\|sty\\)\\'" . japanese-latex-mode)
   :init
   (leaf auctex-latexmk
     :el-get (auctex-latexmk
@@ -3093,6 +3259,15 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (dolist (command '("pTeX" "pLaTeX" "jTeX" "jLaTeX" "jBibTeX" "Mendex"
                      "upMendex" "pBibTeX" "BibTeX" "Biber" "Ps2pdf" ))
     (delq (assoc command TeX-command-list) TeX-command-list))
+  (if (executable-find "atril")
+      (add-hook 'LaTeX-mode-hook
+                (function (lambda ()
+                            (add-to-list 'TeX-command-list
+                                         '("Atril"
+                                        ;"synctex view -i \"%n:0:%b\" -o %s.pdf -x \"atril -i %%{page+1} %%{output}\""
+                                           "TeX-atril-sync-view"
+                                           TeX-run-discard-or-function t t :help "Forward search with Atril"))
+                            ))))
   (setq japanese-TeX-engine-default 'ptex
         japanese-LaTeX-default-style "bxjsarticle"
         TeX-command-output-list '(("LaTeXMk" ("pdf")))
@@ -3102,7 +3277,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         TeX-source-correlate-start-server t
         TeX-source-correlate-mode t
         TeX-view-program-selection '((output-dvi "xdvi")
-                                     (output-pdf "Evince")
+                                     (output-pdf "Atril")
+                                     ;; (output-pdf "Evince")
                                      (output-html "xdg-open"))
         TeX-auto-save t
         TeX-auto-local  (expand-file-name "auctex/auto" my:d:tmp)
@@ -3114,9 +3290,9 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         font-latex-fontify-sectioning 1.0
         )
   )
-   #+END_SRC
-   =~/.latexmkrc= は以下の通り
-   #+begin_src perl :tangle no
+  #+END_SRC
+  =~/.latexmkrc= は以下の通り
+  #+begin_src perl :tangle no
 #!/usr/bin/env perl
 $kanji  = defined $ENV{"LATEXENC"} ? "-kanji=$ENV{\"LATEXENC\"}" : "-kanjii=utf8" ;
 $latex  = "platex -interaction=nonstopmode -src-specials -shell-escape --synctex=1 $kanji";
@@ -3130,10 +3306,21 @@ $pdf_mode = 3;
 $pdf_previewer = 'start xdg-open';
 $pdf_update_method = 0;
 $clean_ext = "snm nav vrb synctex.gz";
-   #+end_src
-
+  #+end_src
+* Autoconf
+  いれてみたけれど，はてさて．
+  #+BEGIN_SRC emacs-lisp
+(leaf sh-autoconf
+  :el-get (sh-autoconf
+           :type http
+           :url "https://download.tuxfamily.org/user42/sh-autoconf.el")
+  :mode (("/configure\\.\\(ac\\|in\\)\\'"    . sh-mode)
+         ("/ac\\(include\\|local\\)\\.m4\\'" . sh-mode))
+  )
+  #+END_SRC
 * Markdown
-  あまり好きじゃないんだけれど, 必要に迫られて書く事が増えてきたので設定しておく。
+  markdown自体はあまり好きじゃないんだけれど，
+  必要に迫られて書く事が増えてきたので設定しておく．
   #+BEGIN_SRC emacs-lisp
 (leaf markdown-mode
   :if (executable-find "pandoc")
@@ -3151,6 +3338,7 @@ $clean_ext = "snm nav vrb synctex.gz";
   )
   #+END_SRC
 * SCSS
+  ちょいちょい弄る機会が増えてきたので導入．
   #+BEGIN_SRC emacs-lisp
 (leaf scss-mode
   :if (executable-find "sass")
@@ -3173,7 +3361,6 @@ $clean_ext = "snm nav vrb synctex.gz";
   (leaf textile-mode :ensure t)
   )
   #+END_SRC
-  #+END_SRC
 * MoinMoin: =moinmoin-mode=, =moomin.el=
   Debian Wiki や職場の Wiki を編集するための
   MoinMoin の設定.
@@ -3191,9 +3378,10 @@ $clean_ext = "snm nav vrb synctex.gz";
    そのうち気になる所を弄る，ということで．
 ** =moomin=
    元々は =moomin = emacs-request + helm + moinmoin-mode=
-   という奴. folk して ido-vertical-mode を support する様に
+   という奴. folk して =ido-vertical-mode= を support する様に
    多少弄った版を使う。
    [[https://github.com/uwabami/moomin-el][uwabami/moomin-el: Edit MoinMoin with Emacs]]
+   ...とはいえ，結局 =ido= 使わなくなったので，今後はどうするのか決めていなかったり．
    #+BEGIN_SRC emacs-lisp
 (leaf moomin
   :if (file-directory-p my:d:password-store)
@@ -3235,11 +3423,53 @@ $clean_ext = "snm nav vrb synctex.gz";
   )
   #+end_src
   - [ ] org2blog で tDiary を更新できないか妄想している
+* Tree: =neotree=
+  あまり使っていないけれども.
+  #+BEGIN_SRC emacs-lisp
+(leaf neotree
+  :ensure t
+  :after all-the-icons-in-terminal
+  :advice (:override neo-buffer--insert-fold-symbol
+                     my:neo-buffer--insert-fold-symbol)
+  :commands neotree-toggle
+  :bind (("<f1>"    . neotree-toggle)
+         (:neotree-mode-map
+          ("a"       . neotree-hidden-file-toggle)
+          ("<left>"  . neotree-select-up-node)
+          ("<right>" . neotree-change-root)
+          ("RET"     . my:neotree-enter-hide)))
+  :init
+  (defun my:neo-open-file-hide (full-path &optional arg)
+    "Open file and hiding neotree. The description of FULL-PATH & ARG is in `neotree-enter'."
+    (neo-global--select-mru-window arg)
+    (find-file full-path)
+    (neotree-hide))
+  (defun my:neotree-enter-hide (&optional arg)
+    "Neo-open-file-hide if file, Neo-open-dir if dir. The description of ARG is in `neo-buffer--execute'."
+    (interactive "P")
+    (neo-buffer--execute arg 'my:neo-open-file-hide 'neo-open-dir))
+  :config
+  ;; force icon theme
+  (defun my:neo-buffer--insert-fold-symbol (name &optional node-name)
+    "Write icon by NAME, the icon style affected by neo-theme."
+    (let ((n-insert-image (lambda (n)
+                            (insert-image (neo-buffer--get-icon n))))
+          (n-insert-symbol (lambda (n)
+                             (neo-buffer--insert-with-face
+                              n 'neo-expand-btn-face))))
+      (setq-local tab-width 1)
+      (or (and (equal name 'open)  (insert (all-the-icons-icon-for-dir (directory-file-name node-name) "down")))
+          (and (equal name 'close) (insert (all-the-icons-icon-for-dir (directory-file-name node-name) "right")))
+          (and (equal name 'leaf)  (insert (format "\t%s\t" (all-the-icons-icon-for-file node-name)))))
+      ))
+  )
+  #+END_SRC
 * テーマ, フォント, モードライン, などなど
 ** xterm-color
    色を端末と揃える。
    #+begin_src emacs-lisp
 (leaf xterm-color
+  :disabled t
   :ensure t
   :config
   (setq xterm-color-names
@@ -3274,17 +3504,18 @@ $clean_ext = "snm nav vrb synctex.gz";
       (set-frame-parameter nil 'alpha 95)
       (set-face-attribute 'default nil
                           :family "FSMRMP"
-                          :height 165)
+                          :height 200)
       (set-face-attribute 'fixed-pitch nil
                           :family "FSMRMP"
-                          :height 165)
+                          :height 200)
       (set-face-attribute 'variable-pitch nil
                           :family "FSMRMP"
-                          :height 165)
+                          :height 200)
       (setq use-default-font-for-symbols nil)
       (set-fontset-font nil
                         '(#xE0A0 . #xEEE0)
-                        (font-spec :family "FSMRMP" :height 150))
+                        (font-spec :family "FSMRMP" :height 180))
+      (toggle-frame-maximized)
       )))
 (setq frame-background-mode (frame-parameter nil 'background-mode))
 (when (window-system)
@@ -3304,7 +3535,6 @@ $clean_ext = "snm nav vrb synctex.gz";
             )
   )
    #+END_SRC
-
 ** doom-modeline
    細かい所が気になるので，色々弄ってます．
    - アイコン表示の際に(EAWのせいで)幅が狂うので，
@@ -3315,8 +3545,7 @@ $clean_ext = "snm nav vrb synctex.gz";
    #+BEGIN_SRC emacs-lisp
 (leaf *doom-modeline-settings
   :diminish (;; minor-mode settings
-             (isearch-mode (all-the-icons-faicon "search"))
-             (org-src-mode (all-the-icons-octicon "code"))
+             (isearch-mode (format " %s" (all-the-icons-faicon "search")))
              )
   :init
   (leaf doom-modeline
@@ -3415,9 +3644,7 @@ $clean_ext = "snm nav vrb synctex.gz";
           (substring skk-modeline-input-mode 2 -1))
          (t "[--]")
          )
-        'face (if (doom-modeline--active)
-                  'doom-modeline-buffer-major-mode
-                'mode-line-inactive))))
+        )))
     (doom-modeline-def-segment my:buffer-encoding
       "Displays the encoding and eol style of the buffer."
       (when doom-modeline-buffer-encoding
@@ -3458,7 +3685,7 @@ $clean_ext = "snm nav vrb synctex.gz";
          (concat (doom-modeline-spc)
                  (format-mode-line lc)
                  (format-mode-line '("" doom-modeline-percent-position "%%")))
-         'face (if active 'mode-line 'mode-line-inactive)
+         'face (if (doom-modeline--active) 'mode-line 'mode-line-inactive)
          'help-echo "Buffer position\n\
 mouse-1: Display Line and Column Mode Menu"
          'mouse-face '(:box 0)
@@ -3487,19 +3714,19 @@ mouse-1: Display Line and Column Mode Menu"
               (cond (buffer-read-only
                      (doom-modeline-buffer-file-state-icon
                       "lock"
-                      (all-the-icons-material "lock") ;; "%1*"
+                      (all-the-icons-material "lock")
                       'doom-modeline-warning))
                     ((and buffer-file-name (buffer-modified-p)
                           doom-modeline-buffer-modification-icon)
                      (doom-modeline-buffer-file-state-icon
                       "save"
-                      (all-the-icons-material "save")  ;;"%1*"
+                      (all-the-icons-material "save")
                       'doom-modeline-buffer-modified))
                     ((and buffer-file-name
                           (not (file-exists-p buffer-file-name)))
                      (doom-modeline-buffer-file-state-icon
                       "edit"
-                      (all-the-icons-faicon "edit") ;; "!"
+                      (all-the-icons-faicon "edit")
                       'doom-modeline-urgent))
                     ((or (buffer-narrowed-p)
                          (and (bound-and-true-p fancy-narrow-mode)
@@ -3507,18 +3734,25 @@ mouse-1: Display Line and Column Mode Menu"
                      (doom-modeline-buffer-file-state-icon
                       "vertical_align_center"
                       (all-the-icons-material "vertical_align_center")
-                      ;; "><"
                       'doom-modeline-warning))
-                    (t "--")))))
+                    (t
+                     (doom-modeline-buffer-file-state-icon
+                      "--"
+                      "--"
+                      (if (doom-modeline--active) 'mode-line 'mode-line-inactive)))
+                    ))))
     (advice-add 'doom-modeline-update-buffer-file-state-icon
                 :override 'my:doom-modeline-update-buffer-file-state-icon)
     ;;
     (doom-modeline-def-modeline 'main
       '(;; bar
-        input-method-skk my:buffer-encoding remote-host buffer-info
-                         ;; matches
-                         ;; parrot
-                         ;; selection-info
+        input-method-skk
+        my:buffer-encoding
+        remote-host
+        buffer-info
+        ;; matches
+        ;; parrot
+        ;; selection-info
                          )
       '(;; objed-state
         ;; misc-info
@@ -3527,7 +3761,7 @@ mouse-1: Display Line and Column Mode Menu"
         ;; irc
         ;; mu4e
         ;; github
-        debug
+        ;; debug
         lsp
         minor-modes
         ;; indent-info
@@ -3542,189 +3776,25 @@ mouse-1: Display Line and Column Mode Menu"
     )
   )
    #+END_SRC
-** theme
+** theme: =doom-theme=
    これまで弄っていた font-lock を
    doom-theme をベースに移植中: [[https://github.com/uwabami/emacs-doom-darkpastel][uwabami/emacs-doom-darkpastel]]
   #+begin_src emacs-lisp
 ;; (setq frame-background-mode (frame-parameter nil 'background-mode))
-(leaf emacs-doom-darkpastel
+(leaf *doom-themes
   :if (>= emacs-major-version 25)
-  :el-get (emacs-doom-darkpastel
-           :type github
-           :pkgname "uwabami/emacs-doom-darkpastel"
-           :prepare (add-to-list 'custom-theme-load-path default-directory)
-           )
+  :init
+  (leaf doom-themes :ensure t)
+  (leaf emacs-doom-darkpastel
+    :el-get (emacs-doom-darkpastel
+             :type github
+             :pkgname "uwabami/emacs-doom-darkpastel"
+             :prepare (add-to-list 'custom-theme-load-path default-directory)
+             )
+    )
   :config
   (load-theme 'doom-darkpastel t)
   )
-;; (custom-set-faces
-;;  '(default                             ((t (:foreground "#F6F3E8"))))
-;;  '(cursor                              ((t (:foreground "#4CFF4C" :background "#4CFF4C"))))
-;;  ;; basic
-;;  '(font-lock-builtin-face              ((t (:foreground "#7FBFFF"))))
-;;  '(font-lock-comment-delimiter-face    ((t (:foreground "#a5a5a6"))))
-;;  '(font-lock-comment-face              ((t (:foreground "#a5a5a6"))))
-;;  '(font-lock-doc-face                  ((t (:foreground "#7FFF7F"))))
-;;  '(font-lock-doc-string-face           ((t (:foreground "#7FFF7F"))))
-;;  '(font-lock-constant-face             ((t (:foreground "#FFBF7F"))))
-;;  '(font-lock-function-name-face        ((t (:foreground "#BF7FFF"))))
-;;  '(font-lock-keyword-face              ((t (:foreground "#FF7F7F"))))
-;;  '(font-lock-link-face                 ((t (:foreground "#7FFFFF"))))
-;;  '(font-lock-negation-char-face        ((t (:foreground "#7FFFFF" :bold t   :italic nil))))
-;;  '(font-lock-preprocessor-face         ((t (:foreground "#FF4C4C" :bold nil :italic nil))))
-;;  '(font-lock-regexp-grouping-backslash ((t (:foreground "#4Cff4C" :bold t   :italic nil))))
-;;  '(font-lock-regexp-grouping-construct ((t (:foreground "#7F7FFF" :bold t   :italic nil))))
-;;  '(font-lock-string-face               ((t (:foreground "#7FFF7F"))))
-;;  '(font-lock-type-face                 ((t (:foreground "#FFFF7F"))))
-;;  '(font-lock-variable-name-face        ((t (:foreground "#7F7FFF"))))
-;;  '(font-lock-warning-face              ((t (:foreground "#FF7FBF" :bold t))))
-;;  '(mode-line                           ((t (:foreground "#F6F3E8" :background "#222244"))))
-;;  '(mode-line-inactive                  ((t (:foreground "#666666" :background "#999999" :bold nil))))
-;;  '(fringe                              ((t (:foreground "#666666" :background "#282828"))))
-;;  ;; '(hl-line                           ((t (:inherit highlight :underline t))))
-;;  '(highlight                           ((t (:background "#556b2f"))))
-;;  '(term-color-black                    ((t (:background "#242424" :foreground "#242424"))))
-;;  '(term-color-blue                     ((t (:background "#4c4cff" :foreground "#4c4cff"))))
-;;  '(term-color-cyan                     ((t (:background "#4cffff" :foreground "#4cffff"))))
-;;  '(term-color-green                    ((t (:background "#4cff4c" :foreground "#4cff4c"))))
-;;  '(term-color-magenta                  ((t (:background "#ff4cff" :foreground "#ff4cff"))))
-;;  '(term-color-red                      ((t (:background "#ff4c4c" :foreground "#ff4c4c"))))
-;;  '(term-color-white                    ((t (:background "#f6f3e8" :foreground "#f6f3e8"))))
-;;  '(term-color-yellow                   ((t (:background "#ffff4c" :foreground "#ffff4c"))))
-;;  ;;
-;;  '(minibuffer-prompt                   ((t (:foreground "#BF7FFF"))))
-;;  '(region                              ((t (:background "#222244"))))
-;;  ;; dired
-;;  '(dired-directory                     ((t (:bold t :foreground "#7F7FFF"))))
-;;  '(dired-flagged                       ((t (:inherit error))))
-;;  ;; '(dired-header
-;;  '(dired-ignored                       ((t (:inherit shadow))))
-;;  ;; '(dired-mark
-;;  ;; '(dired-marked
-;;  '(dired-perm-write                    ((t (:bold t :foreground "#FFFF7F"))))
-;;  '(dired-symlink                       ((t (:bold t :foreground "#7FFFFF"))))
-;;  '(dired-warning                       ((t (:inherit font-lock-warning-face))))
-;;  ;; helm
-;;  '(helm-source-header                  ((t (:foreground "#F6F3E8" :background "#224488" :bold t))))
-;;  '(helm-visible-mark                   ((t (:inherit highlight))))
-;;  '(helm-selection                      ((t (:inherit highlight))))
-;;  '(helm-selection-line                 ((t (:inherit highlight))))
-;;  '(helm-ff-directory                   ((t (:inherit dired-directory))))
-;;  '(helm-bookmark-directory             ((t (:inherit helm-ff-directory))))
-;;  '(helm-buffer-directory               ((t (:inherit helm-ff-directory))))
-;;  '(helm-ff-dotted-directory            ((t (:inherit helm-ff-directory))))
-;;  '(helm-ff-file                        ((t (:inherit default))))
-;;  '(helm-bookmark-file                  ((t (:inherit helm-ff-file))))
-;;  '(helm-buffer-file                    ((t (:inherit helm-ff-file))))
-;;  '(helm-grep-file                      ((t (:inherit helm-ff-file))))
-;;  '(helm-etags-file                     ((t (:inherit helm-ff-file))))
-;;  '(helm-ff-executable                  ((t (:inherit helm-ff-file :foreground "#7FFF7F" :bold t))))
-;;  '(helm-ff-symlink                     ((t (:inherit default :foreground "#7FFFFF" :bold t))))
-;;  '(helm-ff-dotted-symlink-directory    ((t (:inherit helm-ff-symlink))))
-;;  '(helm-ff-invalid-symlink             ((t (:inherit default :foreground "#FF7F7F"))))
-;;  ;; ido
-;;  '(ido-first-match                     ((t (:underline t :weight bold))))
-;;  '(ido-only-match                      ((t (:foreground "#FFFF4C" :overline nil :weight bold))))
-;;  '(ido-subdir                          ((t (:inherit dired-directory))))
-;;  '(ido-vertical-first-match-face       ((t (:inherit ido-first-match))))
-;;  '(ido-vertical-match-face             ((t (:foreground "#4CFF4C"))))
-;;  '(ido-grid-mode-match                 ((t (:inherit ido-first-match))))
-;;  ;; ivy
-;;  '(ivy-current-match                   ((t (:inherit highlight))))
-;;  '(ivy-confirm                         ((t (:inherit minibuffer-prompt))))
-;;  '(ivy-subdir                          ((t (:inherit dired-directory))))
-;;  '(ivy-minibuffer-match-face-1         ((t (:inherit 'unspecified :foreground "#FF4C4C"))))
-;;  '(ivy-minibuffer-match-face-2         ((t (:inherit 'unspecified :foreground "#4CFF4C"))))
-;;  '(ivy-minibuffer-match-face-2         ((t (:inherit 'unspecified :foreground "#4C4CFF"))))
-;;  ;; powerline
-;;  '(powerline-active1                   ((t (:background "#000000" :foreground "#F6F3E8"))))
-;;  '(powerline-active2                   ((t (:background "#666666" :foreground "#F6F3E8"))))
-;;  '(powerline-inactive1                 ((t (:inherit mode-line-inactive))))
-;;  '(powerline-inactive2                 ((t (:inherit mode-line-inactive))))
-;;  ;; preview-latex
-;;  '(font-latex-sectioning-0-face        ((t (:inherit font-latex-sectioning-1-face))))
-;;  '(font-latex-sectioning-1-face        ((t (:inherit font-latex-sectioning-2-face))))
-;;  '(font-latex-sectioning-2-face        ((t (:inherit font-latex-sectioning-3-face))))
-;;  '(font-latex-sectioning-3-face        ((t (:inherit font-latex-sectioning-4-face))))
-;;  '(font-latex-sectioning-4-face        ((t (:inherit font-latex-sectioning-5-face))))
-;;  '(font-latex-sectioning-5-face        ((t (:inherit font-lock-type-face :bold t))))
-;;  '(font-latex-slide-title-face         ((t (:inherit font-lock-type-face :bold t))))
-;;  '(font-latex-subscript-face           ((t nil)))
-;;  '(font-latex-superscript-face         ((t nil)))
-;;  '(font-latex-math-face                ((t (:inherit font-lock-constant-face))))
-;;  '(font-latex-script-char-face         ((t (:inherit font-lock-preprocessor-face :bold t))))
-;;  '(font-latex-verbatim-face            ((t (:inherit font-lock-doc-string-face))))
-;;  ;; elscreen
-;;  '(elscreen-tab-control-face           ((t (:background "#222244" :foreground "#f6f3e8" :underline t :bold t))))
-;;  '(elscreen-tab-current-screen-face    ((t (:background "#222244" :foreground "#f6f3e8" :underline t :bold t))))
-;;  '(elscreen-tab-other-screen-face      ((t (:background "#222244" :foreground "#aaaaaa" :underline t :bold nil))))
-;;  '(elscreen-tab-background-face        ((t (:background "#222244" :foreground "#aaaaaa" :underline t :bold nil))))
-;;  ;; git-gutter
-;;  '(git-gutter:added                    ((t (:inherit default :bold t :foreground "#4CFF4C" :background "#666666"))))
-;;  '(git-gutter:deleted                  ((t (:inherit default :bold t :foreground "#FF7FBF" :background "#666666"))))
-;;  '(git-gutter:modified                 ((t (:inherit default :bold t :foreground "#FFFF4C" :background "#666666"))))
-;;  '(git-gutter:unchanged                ((t (:inherit default :background "#666666"))))
-;;  '(git-gutter:separator-face           ((t (:inherit default :foreground "#FF4C4C" :background "#666666"))))
-;;   ;;; howm
-;;  '(howm-mode-keyword-face              ((t (:foreground "#7F7FFF" :background nil))))
-;;  '(howm-mode-title-face                ((t (:foreground "#4CFFFF" :background nil))))
-;;  '(howm-reminder-deadline-face         ((t (:bold t :foreground "#FF4C4C" :background nil))))
-;;  '(howm-reminder-late-deadline-face    ((t (:bold t :underline t :foreground "#FF0000" :background nil))))
-;;  '(howm-reminder-today-face            ((t (:bold t :foreground "#FFBF7F" :background nil))))
-;;  '(howm-reminder-tomorrow-face         ((t (:bold t :foreground "#FF7FBF" :background nil))))
-;;  ;; outline
-;;  '(outline-1                           ((t (:inherit font-lock-function-name-face :bold t))))
-;;  '(outline-2                           ((t (:inherit font-lock-string-face :bold t))))
-;;  '(outline-3                           ((t (:inherit font-lock-keyword-face :bold t))))
-;;  '(outline-4                           ((t (:inherit font-lock-type-face :bold t))))
-;;  '(outline-5                           ((t (:inherit font-lock-constant-face :bold t))))
-;;  '(outline-6                           ((t (:inherit font-lock-variable-name-face :bold t))))
-;;  '(outline-7                           ((t (:inherit font-lock-builtin-face :bold t))))
-;;  '(outline-8                           ((t (:inherit font-lock-comment-face :bold t))))
-;;  ;; org
-;;  '(org-agenda-date-today               ((t (:underline t :bold t))))
-;;  '(org-agenda-date                     ((t (:foreground "#FFFFFF"))))
-;;  '(org-agenda-date-weekend             ((t (:foreground "#FF7F7F" :bold t))))
-;;  '(org-agenda-calendar-event           ((t (:foreground "#F6F3E8"))))
-;;  '(org-hide                            ((t (:foreground "#4C4C4C"))))
-;;  '(org-block                           ((t (:inherit font-lock-comment-face))))
-;;  ;;
-;;  ;; rainbow-delimiter
-;;  ;; '(rainbow-delimiters-unmatched-face   ((t (:foreground "#FFBFFF" :bold t))))
-;;  '(rainbow-delimiters-mismatched-face  ((t (:foreground "#FFBFFF" :bold t))))
-;;  ;;
-;;  '(rainbow-delimiters-depth-1-face     ((t (:foreground "#FF7F7F"))))
-;;  '(rainbow-delimiters-depth-2-face     ((t (:foreground "#7FFF7F"))))
-;;  '(rainbow-delimiters-depth-3-face     ((t (:foreground "#7F7FFF"))))
-;;  '(rainbow-delimiters-depth-4-face     ((t (:foreground "#FFFF7F"))))
-;;  '(rainbow-delimiters-depth-5-face     ((t (:foreground "#7FFFFF"))))
-;;  '(rainbow-delimiters-depth-6-face     ((t (:foreground "#FFBF7F"))))
-;;  '(rainbow-delimiters-depth-7-face     ((t (:foreground "#BFFF7F"))))
-;;  '(rainbow-delimiters-depth-8-face     ((t (:foreground "#7FBFFF"))))
-;;  '(rainbow-delimiters-depth-9-face     ((t (:foreground "#FFFFBF"))))
-;;  ;; moinmoin
-;;  '(moinmoin-h1                         ((t (:inherit outline-1))))
-;;  '(moinmoin-h2                         ((t (:inherit outline-2))))
-;;  '(moinmoin-h3                         ((t (:inherit outline-3))))
-;;  '(moinmoin-h4                         ((t (:inherit outline-4))))
-;;  '(moinmoin-h5                         ((t (:inherit outline-5))))
-;;  '(moinmoin-url                        ((t (:inherit font-lock-link-face))))
-;;  '(moinmoin-url-title                  ((t (:inherit moinmoin-url :bold t))))
-;;  '(moinmoin-anchor-ref-id              ((t (:inherit moinmoin-url :underline t))))
-;;  '(moinmoin-anchor-ref-title           ((t (:inherit moinmoin-url :bold t))))
-;;  '(moinmoin-wiki-link                  ((t (:inherit moinmoin-url :underline t))))
-;;  '(moinmoin-inter-wiki-link            ((t (:inherit moinmoin-url :underline t))))
-;;  '(moinmoin-item                       ((t (:inherit font-lock-doc-face))))
-;;  '(moinmoin-item-2                     ((t (:inherit font-lock-doc-face))))
-;;  ;; company-mode
-;;  '(company-tooltip                     ((t (:foreground "#242424" :background "#acacac"))))
-;;  '(company-tooltip-common              ((t (:foreground "#242424" :background "#acacac"))))
-;;  '(company-tooltip-common-selection    ((t (:foreground "#f6f3e8" :background "#4c4cff"))))
-;;  '(company-tooltip-selection           ((t (:foreground "#242424" :background "#4c4cff"))))
-;;  '(company-preview-common              ((t (:background nil :foreground "#acacac" :underline t))))
-;;  '(company-scrollbar-fg                ((t (:background "#FFBF7F"))))
-;;  '(company-scrollbar-bg                ((t (:background "#4c4c4c"))))
-;; )
   #+end_src
 * 起動時間の出力
   [[http://memo.sugyan.com/entry/20120120/1327037494][起動時間を計測する 改訂版 - すぎゃーんメモ]]

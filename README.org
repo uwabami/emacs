@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
-#+date: 2019-08-24 10:35:17
+#+date: 2019-08-25 14:43:49
 * はじめに
   ここでは私の Emacs の設定についてまとめています．
 
@@ -84,11 +84,17 @@ init.el: README.org
 (defconst my:d:org (concat (getenv "HOME") "/Nextcloud/org/"))
    #+END_SRC
    ついでに，
-   =custom-set-variables= は別ファイルに出力するようにしています．
+   =custom-set-variables= は別ファイルに出し，
+   終了時に削除するようにしています．
    #+begin_src emacs-lisp
 (setq custom-file (concat my:d:tmp "custom.el"))
+(add-hook 'kill-emacs-hook
+          (lambda ()
+            (if (file-exists-p custom-file)
+                (delete-file custom-file))))
    #+end_src
-   暇がある時に =custom.el= の中身を確認して，必要に応じて =init.el= に戻しています．
+   暇がある時に =custom.el= の中身を確認して，
+   必要に応じて =init.el= に戻しています．
 ** Byte-Compile 時の Common Lisp の読み込み
    幾つかん関数で =Common-Lisp= 的挙動が期待されているので，
    =cl-lib= を読み込んでおきます．
@@ -117,6 +123,8 @@ init.el: README.org
     (with-temp-buffer (write-file (locate-user-emacs-file "tmp/bootstrap-stamp")))
     ))
 (package-initialize)
+;; (unless (package-installed-p 'package-utils)
+;;   (package-install 'package-utils))
    #+end_src
 ** [[https://github.com/conao3/leaf.el][leaf.el]]
    個々のパッケージの設定には[[https://github.com/conao3/leaf.el][leaf.el]]を利用します.
@@ -733,13 +741,13 @@ init.el: README.org
    ファイルを開く際には =counsel-recentf-open= を使うので,
    結局履歴を貯める設定をしている事になっている.
    #+begin_src emacs-lisp
-(leaf recentf-ext :ensure t)
+(leaf recentf-ext :disabled t :ensure t)
 (leaf recentf
   :hook (after-init-hook . recentf-mode)
   :config
-  (setq recentf-max-saved-items 256
+  (setq recentf-max-saved-items 128
         recentf-save-file (expand-file-name (concat my:d:tmp "recentf"))
-        recentf-auto-cleanup 'never
+        recentf-auto-cleanup 300
         recentf-exclude '(".recentf"
                           "^/tmp\\.*"
                           "^/private\\.*"
@@ -951,97 +959,97 @@ init.el: README.org
                     default-directory)
                 default-directory))))
       (counsel-find-file default-directory)))
-;;   (leaf hydra :ensure t
-;;     :config
-;;     (defhydra hydra-ibuffer-main (:color pink :hint nil)
-;; "
-;;  ^Navigation^ | ^Mark^        | ^Actions^        | ^View^
-;; -^----------^-+-^----^--------+-^-------^--------+-^----^-------
-;;   _k_:    ʌ   | _m_: mark     | _D_: delete      | _g_: refresh
-;;  _RET_: visit | _u_: unmark   | _S_: save        | _s_: sort
-;;   _j_:    v   | _*_: specific | _a_: all actions | _/_: filter
-;; -^----------^-+-^----^--------+-^-------^--------+-^----^-------
-;; "
-;;     ("j"   ibuffer-forward-line)
-;;     ("RET" ibuffer-visit-buffer :color blue)
-;;     ("k"   ibuffer-backward-line)
-;;     ("m"   ibuffer-mark-forward)
-;;     ("u"   ibuffer-unmark-forward)
-;;     ("*"   hydra-ibuffer-mark/body :color blue)
+  (leaf hydra :ensure t
+    :config
+    (defhydra hydra-ibuffer-main (:color pink :hint nil)
+"
+ ^Navigation^ | ^Mark^        | ^Actions^        | ^View^
+-^----------^-+-^----^--------+-^-------^--------+-^----^-------
+  _k_:    ʌ   | _m_: mark     | _D_: delete      | _g_: refresh
+ _RET_: visit | _u_: unmark   | _S_: save        | _s_: sort
+  _j_:    v   | _*_: specific | _a_: all actions | _/_: filter
+-^----------^-+-^----^--------+-^-------^--------+-^----^-------
+"
+    ("j"   ibuffer-forward-line)
+    ("RET" ibuffer-visit-buffer :color blue)
+    ("k"   ibuffer-backward-line)
+    ("m"   ibuffer-mark-forward)
+    ("u"   ibuffer-unmark-forward)
+    ("*"   hydra-ibuffer-mark/body :color blue)
 
-;;     ("D"   ibuffer-do-delete)
-;;     ("S"   ibuffer-do-save)
-;;     ("a"   hydra-ibuffer-action/body :color blue)
+    ("D"   ibuffer-do-delete)
+    ("S"   ibuffer-do-save)
+    ("a"   hydra-ibuffer-action/body :color blue)
 
-;;     ("g"   ibuffer-update)
-;;     ("s"   hydra-ibuffer-sort/body :color blue)
-;;     ("/"   hydra-ibuffer-filter/body :color blue)
+    ("g"   ibuffer-update)
+    ("s"   hydra-ibuffer-sort/body :color blue)
+    ("/"   hydra-ibuffer-filter/body :color blue)
 
-;;     ("o" ibuffer-visit-buffer-other-window "other window" :color blue)
-;;     ("q" quit-window "quit ibuffer" :color blue)
-;;     ("." nil "toggle hydra" :color blue))
+    ("o" ibuffer-visit-buffer-other-window "other window" :color blue)
+    ("q" quit-window "quit ibuffer" :color blue)
+    ("." nil "toggle hydra" :color blue))
 
-;;     (defhydra hydra-ibuffer-mark (:color teal :columns 5
-;;                                          :after-exit (hydra-ibuffer-main/body))
-;;       "Mark"
-;;       ("*" ibuffer-unmark-all "unmark all")
-;;       ("M" ibuffer-mark-by-mode "mode")
-;;       ("m" ibuffer-mark-modified-buffers "modified")
-;;       ("u" ibuffer-mark-unsaved-buffers "unsaved")
-;;       ("s" ibuffer-mark-special-buffers "special")
-;;       ("r" ibuffer-mark-read-only-buffers "read-only")
-;;       ("/" ibuffer-mark-dired-buffers "dired")
-;;       ("e" ibuffer-mark-dissociated-buffers "dissociated")
-;;       ("h" ibuffer-mark-help-buffers "help")
-;;       ("z" ibuffer-mark-compressed-file-buffers "compressed")
-;;       ("b" hydra-ibuffer-main/body "back" :color blue))
+    (defhydra hydra-ibuffer-mark (:color teal :columns 5
+                                         :after-exit (hydra-ibuffer-main/body))
+      "Mark"
+      ("*" ibuffer-unmark-all "unmark all")
+      ("M" ibuffer-mark-by-mode "mode")
+      ("m" ibuffer-mark-modified-buffers "modified")
+      ("u" ibuffer-mark-unsaved-buffers "unsaved")
+      ("s" ibuffer-mark-special-buffers "special")
+      ("r" ibuffer-mark-read-only-buffers "read-only")
+      ("/" ibuffer-mark-dired-buffers "dired")
+      ("e" ibuffer-mark-dissociated-buffers "dissociated")
+      ("h" ibuffer-mark-help-buffers "help")
+      ("z" ibuffer-mark-compressed-file-buffers "compressed")
+      ("b" hydra-ibuffer-main/body "back" :color blue))
 
-;;     (defhydra hydra-ibuffer-action (:color teal :columns 4
-;;                                            :after-exit
-;;                                            (if (eq major-mode 'ibuffer-mode)
-;;                                                (hydra-ibuffer-main/body)))
-;;       "Action"
-;;       ("A" ibuffer-do-view "view")
-;;       ("E" ibuffer-do-eval "eval")
-;;       ("F" ibuffer-do-shell-command-file "shell-command-file")
-;;       ("I" ibuffer-do-query-replace-regexp "query-replace-regexp")
-;;       ("H" ibuffer-do-view-other-frame "view-other-frame")
-;;       ("N" ibuffer-do-shell-command-pipe-replace "shell-cmd-pipe-replace")
-;;       ("M" ibuffer-do-toggle-modified "toggle-modified")
-;;       ("O" ibuffer-do-occur "occur")
-;;       ("P" ibuffer-do-print "print")
-;;       ("Q" ibuffer-do-query-replace "query-replace")
-;;       ("R" ibuffer-do-rename-uniquely "rename-uniquely")
-;;       ("T" ibuffer-do-toggle-read-only "toggle-read-only")
-;;       ("U" ibuffer-do-replace-regexp "replace-regexp")
-;;       ("V" ibuffer-do-revert "revert")
-;;       ("W" ibuffer-do-view-and-eval "view-and-eval")
-;;       ("X" ibuffer-do-shell-command-pipe "shell-command-pipe")
-;;       ("b" nil "back"))
+    (defhydra hydra-ibuffer-action (:color teal :columns 4
+                                           :after-exit
+                                           (if (eq major-mode 'ibuffer-mode)
+                                               (hydra-ibuffer-main/body)))
+      "Action"
+      ("A" ibuffer-do-view "view")
+      ("E" ibuffer-do-eval "eval")
+      ("F" ibuffer-do-shell-command-file "shell-command-file")
+      ("I" ibuffer-do-query-replace-regexp "query-replace-regexp")
+      ("H" ibuffer-do-view-other-frame "view-other-frame")
+      ("N" ibuffer-do-shell-command-pipe-replace "shell-cmd-pipe-replace")
+      ("M" ibuffer-do-toggle-modified "toggle-modified")
+      ("O" ibuffer-do-occur "occur")
+      ("P" ibuffer-do-print "print")
+      ("Q" ibuffer-do-query-replace "query-replace")
+      ("R" ibuffer-do-rename-uniquely "rename-uniquely")
+      ("T" ibuffer-do-toggle-read-only "toggle-read-only")
+      ("U" ibuffer-do-replace-regexp "replace-regexp")
+      ("V" ibuffer-do-revert "revert")
+      ("W" ibuffer-do-view-and-eval "view-and-eval")
+      ("X" ibuffer-do-shell-command-pipe "shell-command-pipe")
+      ("b" nil "back"))
 
-;;     (defhydra hydra-ibuffer-sort (:color amaranth :columns 3)
-;;       "Sort"
-;;       ("i" ibuffer-invert-sorting "invert")
-;;       ("a" ibuffer-do-sort-by-alphabetic "alphabetic")
-;;       ("v" ibuffer-do-sort-by-recency "recently used")
-;;       ("s" ibuffer-do-sort-by-size "size")
-;;       ("f" ibuffer-do-sort-by-filename/process "filename")
-;;       ("m" ibuffer-do-sort-by-major-mode "mode")
-;;       ("b" hydra-ibuffer-main/body "back" :color blue))
+    (defhydra hydra-ibuffer-sort (:color amaranth :columns 3)
+      "Sort"
+      ("i" ibuffer-invert-sorting "invert")
+      ("a" ibuffer-do-sort-by-alphabetic "alphabetic")
+      ("v" ibuffer-do-sort-by-recency "recently used")
+      ("s" ibuffer-do-sort-by-size "size")
+      ("f" ibuffer-do-sort-by-filename/process "filename")
+      ("m" ibuffer-do-sort-by-major-mode "mode")
+      ("b" hydra-ibuffer-main/body "back" :color blue))
 
-;;     (defhydra hydra-ibuffer-filter (:color amaranth :columns 4)
-;;       "Filter"
-;;       ("m" ibuffer-filter-by-used-mode "mode")
-;;       ("M" ibuffer-filter-by-derived-mode "derived mode")
-;;       ("n" ibuffer-filter-by-name "name")
-;;       ("c" ibuffer-filter-by-content "content")
-;;       ("e" ibuffer-filter-by-predicate "predicate")
-;;       ("f" ibuffer-filter-by-filename "filename")
-;;       (">" ibuffer-filter-by-size-gt "size")
-;;       ("<" ibuffer-filter-by-size-lt "size")
-;;       ("/" ibuffer-filter-disable "disable")
-;;       ("b" hydra-ibuffer-main/body "back" :color blue))
-;;     )
+    (defhydra hydra-ibuffer-filter (:color amaranth :columns 4)
+      "Filter"
+      ("m" ibuffer-filter-by-used-mode "mode")
+      ("M" ibuffer-filter-by-derived-mode "derived mode")
+      ("n" ibuffer-filter-by-name "name")
+      ("c" ibuffer-filter-by-content "content")
+      ("e" ibuffer-filter-by-predicate "predicate")
+      ("f" ibuffer-filter-by-filename "filename")
+      (">" ibuffer-filter-by-size-gt "size")
+      ("<" ibuffer-filter-by-size-lt "size")
+      ("/" ibuffer-filter-disable "disable")
+      ("b" hydra-ibuffer-main/body "back" :color blue))
+    )
   :config
   (define-ibuffer-column icon (:name "  ")
     (let ((icon
@@ -1127,6 +1135,7 @@ init.el: README.org
   とはいえ GNOME Sushi 前提なので，GNOME以外の環境だとシンドいかもなぁ...
   #+begin_src emacs-lisp
 (leaf quick-preview
+  :if (my:dpkg-status "gnome-sushi")
   :el-get (quick-preview
            :type github
            :pkgname "uwabami/quick-preview.el")
@@ -1245,33 +1254,34 @@ Emacs*useXIM: false
   )
    #+end_src
 ** DDSKK 本体の設定
-   sticky shift: [[http://homepage1.nifty.com/blankspace/emacs/sticky.html][sticky shift]] を参照のこと.
-   ddskk の 14.2 以降から同梱されるようになった(ありがたい)
-   #+begin_src emacs-lisp :tangle init-ddskk.el
+*** 基本動作
+    sticky shift: [[http://homepage1.nifty.com/blankspace/emacs/sticky.html][sticky shift]] を参照のこと.
+    ddskk の 14.2 以降から同梱されるようになった(ありがたい)
+    #+begin_src emacs-lisp :tangle init-ddskk.el
 (setq skk-sticky-key ";")
-   #+end_src
-   変換候補の表示位置
-   #+begin_src emacs-lisp :tangle init-ddskk.el
+    #+end_src
+    変換候補の表示位置
+    #+begin_src emacs-lisp :tangle init-ddskk.el
 (setq skk-show-candidates-always-pop-to-buffer t)
-   #+end_src
-   候補表示件数を2列に
-   #+begin_src emacs-lisp :tangle init-ddskk.el
+    #+end_src
+    候補表示件数を2列に
+    #+begin_src emacs-lisp :tangle init-ddskk.el
 (setq skk-henkan-show-candidates-rows 2)
-   #+end_src
-   日本語表示しない
-   #+begin_src emacs-lisp :tangle init-ddskk.el
+    #+end_src
+    日本語表示しない
+    #+begin_src emacs-lisp :tangle init-ddskk.el
 (setq skk-japanese-message-and-error nil)
-   #+end_src
-   メニューを日本語にしない -> toolbar 非表示だし.
-   #+begin_src emacs-lisp :tangle init-ddskk.el
+    #+end_src
+    メニューを日本語にしない -> toolbar 非表示だし.
+    #+begin_src emacs-lisp :tangle init-ddskk.el
 (setq skk-show-japanese-menu nil)
-   #+end_src
-   注釈の表示
-   #+begin_src emacs-lisp :tangle init-ddskk.el
+    #+end_src
+    注釈の表示
+    #+begin_src emacs-lisp :tangle init-ddskk.el
 (setq skk-show-annotation nil)
-   #+end_src
-   インジケータの表示のカスタマイズ
-   #+begin_src emacs-lisp :tangle init-ddskk.el
+    #+end_src
+    インジケータの表示のカスタマイズ
+    #+begin_src emacs-lisp :tangle init-ddskk.el
 (setq skk-latin-mode-string "[_A]")
 (setq skk-hiragana-mode-string "[あ]")
 (setq skk-katakana-mode-string "[ア]")
@@ -1279,13 +1289,13 @@ Emacs*useXIM: false
 (setq skk-jisx0201-mode-string "[_ｱ]")
 (setq skk-abbrev-mode-string "[aA]")
 (setq skk-indicator-use-cursor-color nil)
-   #+end_src
-   インジケータを左端に表示
-   #+begin_src emacs-lisp :tangle init-ddskk.el
+    #+end_src
+    インジケータを左端に表示
+    #+begin_src emacs-lisp :tangle init-ddskk.el
 (setq skk-status-indicator 'left)
-   #+end_src
-   mode-line が動くのが許せないので，ちょっと修正
-   #+begin_src emacs-lisp :tangle init-ddskk.el
+    #+end_src
+    mode-line が動くのが許せないので，ちょっと修正
+    #+begin_src emacs-lisp :tangle init-ddskk.el
 (defadvice skk-make-indicator-alist
     (after my:set-skk-default-indicator activate)
   (dolist (elem
@@ -1296,12 +1306,11 @@ Emacs*useXIM: false
           (append (cons elem nil)
                   (delq (assoc (car elem) ad-return-value) ad-return-value)))))
 (setq skk-show-inline t)
-   #+end_src
-   カーソルには色をつけない
-   #+begin_src emacs-lisp :tangle init-ddskk.el
+    #+end_src
+    カーソルには色をつけない
+    #+begin_src emacs-lisp :tangle init-ddskk.el
 (setq skk-use-color-cursor nil)
-   #+end_src
-*** 編集関連
+    #+end_src
     キーバインド
     #+begin_src emacs-lisp :tangle init-ddskk.el
 (global-set-key "\C-x\C-j" 'skk-mode)
@@ -1357,16 +1366,6 @@ Emacs*useXIM: false
     #+begin_src emacs-lisp :tangle init-ddskk.el
 (setq skk-show-inline 'vertical)
     #+end_src
-*** インクリメンタルサーチ
-    minibuffer 内では強制的に skk off.
-    #+begin_src emacs-lisp :tangle init-ddskk.el
-(add-hook 'skk-mode-hook
-          (lambda ()
-            (and (skk-in-minibuffer-p)
-                 (skk-mode-exit))))
-(setq skk-isearch-start-mode 'latin)
-    #+end_src
-    インクリメンタルサーチは migemo に任せることに．
 *** 辞書の設定
     追加している辞書の一覧は
     - [[http://www.chibutsu.org/jisho/][地球物理辞書]]
@@ -1435,6 +1434,16 @@ File.open(src, "r") {|f|
     #+begin_src emacs-lisp :tangle init-ddskk.el
 (setq skk-check-okurigana-on-touroku t)
     #+end_src
+*** インクリメンタルサーチ
+    minibuffer 内では強制的に skk off.
+    #+begin_src emacs-lisp :tangle init-ddskk.el
+(add-hook 'skk-mode-hook
+          (lambda ()
+            (and (skk-in-minibuffer-p)
+                 (skk-mode-exit))))
+(setq skk-isearch-start-mode 'latin)
+    #+end_src
+    インクリメンタルサーチは migemo に任せることに．
 *** 動的補完
     まだ設定していない...
     #+begin_src emacs-lisp :tangle init-ddskk.el
@@ -2734,7 +2743,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     "Compute DATE face for saturday, holidays."
     (cl-dolist (file (org-agenda-files nil 'ifmode))
       (cond
-       ((member (calendar-day-of-week date) '(7))
+       ((member (calendar-day-of-week date) '(0))
         (if (org-agenda-todayp date)
             (cl-return 'my:org-agenda-date-today-weekend))
         (cl-return 'org-agenda-date-weekend))
@@ -3134,9 +3143,9 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   あまり上手く使えていない
   #+BEGIN_SRC emacs-lisp
 (leaf dumb-jump
+  :disabled t
   :if (executable-find "rg")
   :ensure t
-  :disabled t
   :bind (("M-g o" . dumb-jump-go-other-window)
          ("M-g j" . dumb-jump-go)
          ("M-g i" . dumb-jump-go-prompt)
@@ -3473,7 +3482,7 @@ $clean_ext = "snm nav vrb synctex.gz";
   :ensure t
   :config
   (setq xterm-color-names
-        ["#020202"    ; black
+        ["#000000"    ; black
          "#FF4C4C"    ; red
          "#4Cff4C"    ; green
          "#FFFF4C"    ; yellow
@@ -3482,7 +3491,7 @@ $clean_ext = "snm nav vrb synctex.gz";
          "#4CFFFF"    ; cyan
          "#AAAAAA"]   ; white
         xterm-color-names-bright
-        ["#4C4C4C"    ; black
+        ["#020202"    ; black
          "#FF7F7F"    ; red
          "#7FFF7F"    ; green
          "#FFFF7F"    ; yellow
@@ -3504,20 +3513,19 @@ $clean_ext = "snm nav vrb synctex.gz";
       (set-frame-parameter nil 'alpha 95)
       (set-face-attribute 'default nil
                           :family "FSMRMP"
-                          :height 200)
+                          :height 210)
       (set-face-attribute 'fixed-pitch nil
                           :family "FSMRMP"
-                          :height 200)
+                          :height 210)
       (set-face-attribute 'variable-pitch nil
                           :family "FSMRMP"
-                          :height 200)
+                          :height 210)
       (setq use-default-font-for-symbols nil)
       (set-fontset-font nil
                         '(#xE0A0 . #xEEE0)
-                        (font-spec :family "FSMRMP" :height 180))
+                        (font-spec :family "FSMRMP" :height 200))
       (toggle-frame-maximized)
       )))
-(setq frame-background-mode (frame-parameter nil 'background-mode))
 (when (window-system)
   (my:load-window-config))
   #+end_src
@@ -3806,6 +3814,10 @@ mouse-1: Display Line and Column Mode Menu"
                                   after-init-time
                                   before-init-time)))))
   #+end_src
+  起動時間の計測には esup が便利
+  #+BEGIN_SRC emacs-lisp
+(leaf esup :ensure t)
+  #+END_SRC
 * LICENSE
   幾つかの関数の元ネタとして Emacs 本体のコードを参照したので, GPL-3 or later です．
   #+begin_example

@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
-#+date: 2019-08-25 14:43:49
+#+date: 2019-08-25 15:46:10
 * はじめに
   ここでは私の Emacs の設定についてまとめています．
 
@@ -114,7 +114,7 @@ init.el: README.org
       package-user-dir my:d:pkg:elpa
       package-gnupghome-dir (expand-file-name ".gnupg" (getenv "HOME"))
       ;; elpa/gnutls workaround
-      gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3"
+      ;; gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3"
       )
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (eval-when-compile
@@ -123,8 +123,9 @@ init.el: README.org
     (with-temp-buffer (write-file (locate-user-emacs-file "tmp/bootstrap-stamp")))
     ))
 (package-initialize)
-;; (unless (package-installed-p 'package-utils)
-;;   (package-install 'package-utils))
+;; 惰性
+(unless (package-installed-p 'package-utils)
+  (package-install 'package-utils))
    #+end_src
 ** [[https://github.com/conao3/leaf.el][leaf.el]]
    個々のパッケージの設定には[[https://github.com/conao3/leaf.el][leaf.el]]を利用します.

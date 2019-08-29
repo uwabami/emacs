@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
-#+date: 2019-08-25 15:46:10
+#+date: 2019-08-29 16:34:03
 * はじめに
   ここでは私の Emacs の設定についてまとめています．
 
@@ -125,13 +125,13 @@ init.el: README.org
 (package-initialize)
 ;; 惰性
 (unless (package-installed-p 'package-utils)
-  (package-install 'package-utils))
+  (package-install 'package-utils t))
    #+end_src
 ** [[https://github.com/conao3/leaf.el][leaf.el]]
    個々のパッケージの設定には[[https://github.com/conao3/leaf.el][leaf.el]]を利用します.
    #+BEGIN_SRC emacs-lisp
 (unless (package-installed-p 'leaf)
-  (package-install 'leaf))
+  (package-install 'leaf t))
 (require 'leaf nil 'noerror)
 ;; support optional keywords
 (leaf leaf-keywords
@@ -195,7 +195,7 @@ init.el: README.org
         (concat (getenv "PASSWORD_STORE_DIR") "/Emacs/" (system-name)))
   )
   #+end_src
-* 言語の設定 [/]
+* 言語の設定 [0/1]
   最近のEmacsはlocaleから文字コードを自動判別するらしいので，
   以前良く設定していた以下は不要らしいですね。
   #+begin_src emacs-lisp :tangle no
@@ -251,6 +251,7 @@ init.el: README.org
   :el-get (all-the-icons-in-terminal
            :type github
            :pkgname "uwabami/isfit-plus")
+  :after all-the-icons
   :require t
   :config
   (add-to-list 'all-the-icons-mode-icon-alist
@@ -324,7 +325,6 @@ init.el: README.org
     (setq after-save-hook
           (cons 'my:delete-file-if-no-contents after-save-hook)))
    #+end_src
-
 ** scratch を殺さない. 消したら再生成
    ...元ネタがどこだったのか忘れてしまった...
    #+begin_src emacs-lisp
@@ -377,8 +377,8 @@ init.el: README.org
     (delete-trailing-whitespace))))
 (add-hook 'before-save-hook 'my:delete-trailing-whitespace)
    #+end_src
-* インクリメンタル検索: =migemo=
-  稀に暴走する, ような...?
+* インクリメンタル検索: =migemo= [0/1]
+  無いと途方に暮れる．
   #+begin_src emacs-lisp
 (leaf migemo
   :if (executable-find "cmigemo")
@@ -399,10 +399,9 @@ init.el: README.org
   (migemo-init)
   )
   #+end_src
+  - [ ] 稀に暴走する, ような...?
 * 補完: =ivy,counsel,swiper=
-  counsel が swiper に，swiper が ivy に依存しているので，
-  パッケージマネージャを使う場合は，counsel をインストールすれば，
-  3つのパッケージが同時にインストールされます.
+  @see [[https://qiita.com/takaxp/items/2fde2c119e419713342b][helm を背に ivy の門を叩く - Qiita]]
 ** 補完候補の絞り込み: =ivy=
    まだ試行錯誤中．
    #+BEGIN_SRC emacs-lisp
@@ -742,7 +741,7 @@ init.el: README.org
    ファイルを開く際には =counsel-recentf-open= を使うので,
    結局履歴を貯める設定をしている事になっている.
    #+begin_src emacs-lisp
-(leaf recentf-ext :disabled t :ensure t)
+(leaf recentf-ext :ensure t)
 (leaf recentf
   :hook (after-init-hook . recentf-mode)
   :config
@@ -1131,20 +1130,6 @@ init.el: README.org
       (dired-revert)))
   )
   #+end_src
-* チラ見: =quick-preview.el=
-  ターミナルの場合でも強制的に動くようにした folk 版を作っている.
-  とはいえ GNOME Sushi 前提なので，GNOME以外の環境だとシンドいかもなぁ...
-  #+begin_src emacs-lisp
-(leaf quick-preview
-  :if (my:dpkg-status "gnome-sushi")
-  :el-get (quick-preview
-           :type github
-           :pkgname "uwabami/quick-preview.el")
-  :bind (("C-c q" . quick-preview-at-point)
-         (:dired-mode-map
-          ("Q"    . quick-preview-at-point)))
-  )
-  #+end_src
 * Emacs-W3m
   eww がイマイチしっくり来ないので, 結局[[http://emacs-w3m.namazu.org/index-ja.html][Emacs-w3m]]を使っている.
   #+begin_src emacs-lisp
@@ -1240,11 +1225,11 @@ Emacs*useXIM: false
    実際の設定は別ファイルで行なわれるため
    ここでは設定ファイルの位置変更を変更している．
    #+begin_src emacs-lisp
-(unless (locate-library "skk")
-  (package-install 'ddskk))
 (defvar skk-user-directory (concat my:d:tmp "skk"))
 (unless (file-directory-p skk-user-directory)
   (make-directory skk-user-directory))
+(unless (locate-library "skk")
+  (package-install 'ddskk t))
 (leaf skk
   :bind (("C-x j"   . skk-mode)
          ("C-x C-j" . skk-mode)
@@ -1256,6 +1241,10 @@ Emacs*useXIM: false
    #+end_src
 ** DDSKK 本体の設定
 *** 基本動作
+    byte-compile の為の読み込み
+#+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
+(eval-when-compile (require 'skk))
+#+END_SRC
     sticky shift: [[http://homepage1.nifty.com/blankspace/emacs/sticky.html][sticky shift]] を参照のこと.
     ddskk の 14.2 以降から同梱されるようになった(ありがたい)
     #+begin_src emacs-lisp :tangle init-ddskk.el
@@ -1267,7 +1256,7 @@ Emacs*useXIM: false
     #+end_src
     候補表示件数を2列に
     #+begin_src emacs-lisp :tangle init-ddskk.el
-(setq skk-henkan-show-candidates-rows 2)
+(setq skk-henkan-number-to-display-candidates 2)
     #+end_src
     日本語表示しない
     #+begin_src emacs-lisp :tangle init-ddskk.el
@@ -1712,7 +1701,6 @@ File.open(src, "r") {|f|
      メール作成時に =elscreen= と連携してくれる．便利
      #+begin_src emacs-lisp :tangle init-wl.el
 (leaf elscreen-wl
-  :disabled t
   :el-get (elscreen-wl
            :type github
            :pkgname "syohex/emacs-elscreen-wl")
@@ -2918,13 +2906,13 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    notmuch のインデックスの方が良いかもしれない, と最近思っている.
    #+begin_src emacs-lisp
 (leaf ol-wl
- :if (and (or (my:dpkg-status "wl-beta")
-              (my:dpkg-status "wl"))
-          (file-directory-p my:d:org))
- :el-get (ol-wl
-          :url "https://code.orgmode.org/bzg/org-mode/raw/master/contrib/lisp/ol-wl.el"
-          )
- )
+  :if (and (or (my:dpkg-status "wl-beta")
+               (my:dpkg-status "wl"))
+           (file-directory-p my:d:org))
+  :el-get (ol-wl
+           :url "https://code.orgmode.org/bzg/org-mode/raw/master/contrib/lisp/ol-wl.el"
+           )
+  )
 (leaf org-capture
   :if (file-directory-p my:d:org)
   :bind (("C-x m" . org-capture))
@@ -3208,7 +3196,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :ensure t
   )
   #+END_SRC
-* LSP
+* LSP:
+  まだ設定中.
   #+BEGIN_SRC emacs-lisp
 (leaf lsp-mode
   :ensure t
@@ -3263,8 +3252,9 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     (setq reftex-plug-into-AUCTeX t
           reftex-cite-prompt-optional-args t)
     )
-  :hook ((LaTeX-mode-hook . TeX-source-correlate-mode)
-         (LaTeX-mode-hook . TeX-PDF-mode))
+  :hook (LaTeX-mode-hook . (lambda ()
+                             (TeX-source-correlate-mode)
+                             (TeX-PDF-mode)))
   :config
   (dolist (command '("pTeX" "pLaTeX" "jTeX" "jLaTeX" "jBibTeX" "Mendex"
                      "upMendex" "pBibTeX" "BibTeX" "Biber" "Ps2pdf" ))
@@ -3369,6 +3359,7 @@ $clean_ext = "snm nav vrb synctex.gz";
     )
   (leaf generic-x)
   (leaf textile-mode :ensure t)
+  (leaf lua-mode :ensure t)
   )
   #+END_SRC
 * MoinMoin: =moinmoin-mode=, =moomin.el=
@@ -3514,17 +3505,17 @@ $clean_ext = "snm nav vrb synctex.gz";
       (set-frame-parameter nil 'alpha 95)
       (set-face-attribute 'default nil
                           :family "FSMRMP"
-                          :height 210)
+                          :height 220)
       (set-face-attribute 'fixed-pitch nil
                           :family "FSMRMP"
-                          :height 210)
+                          :height 220)
       (set-face-attribute 'variable-pitch nil
                           :family "FSMRMP"
-                          :height 210)
+                          :height 220)
       (setq use-default-font-for-symbols nil)
       (set-fontset-font nil
                         '(#xE0A0 . #xEEE0)
-                        (font-spec :family "FSMRMP" :height 200))
+                        (font-spec :family "FSMRMP" :height 220))
       (toggle-frame-maximized)
       )))
 (when (window-system)
@@ -3559,23 +3550,43 @@ $clean_ext = "snm nav vrb synctex.gz";
   :init
   (leaf doom-modeline
     :ensure t
-    :hook (after-init-hook . doom-modeline-mode)
-    :after all-the-icons-in-terminal
-    :preface
-    (defun my:doom-modeline--set-char-widths (alist)
-      "Do nothing!")
-    :advice (:override doom-modeline--set-char-widths
-                       my:doom-modeline--set-char-widths)
     :init
-    ;; ddskk そのものに modeline を更新する関数があるので無効化する
-    (defun my:disable-skk-setup-modeline ()
+    (defun my:doom-modeline--set-char-widths (alist)
+      "Do nothing")
+    (defun my:skk-setup-modeline ()
       "skk-setup-modeline による modeline の更新を無効化"
-      (setq skk-indicator-alist (skk-make-indicator-alist))
+      (eval-when-compile (require 'skk))
+      (if (fboundp 'skk-make-indicator-alist)
+          (setq skk-indicator-alist (skk-make-indicator-alist)))
       (force-mode-line-update t))
-    ;;
-    (advice-add 'skk-setup-modeline :override 'my:disable-skk-setup-modeline)
+    :advice ((:override doom-modeline--set-char-widths
+                       my:doom-modeline--set-char-widths)
+             (:override skk-setup-modeline
+                        my:skk-setup-modeline))
     :config
-    (setq doom-modeline-icons-alist
+    (setq doom-modeline-height 1
+          doom-modeline-bar-width 0
+          doom-modeline-buffer-file-name-style 'buffer-name
+          doom-modeline-icon t
+          doom-modeline-major-mode-icon t
+          doom-modeline-major-mode-color-icon t
+          doom-modeline-buffer-state-icon nil
+          doom-modeline-buffer-modification-icon nil
+          doom-modeline-minor-modes t
+          doom-modeline-enable-word-count t
+          doom-modeline-buffer-encoding t
+          doom-modeline-indent-info nil
+          doom-modeline-checker-simple-format t
+          doom-modeline-vcs-max-length 12
+          doom-modeline-persp-name t
+          doom-modeline-persp-name-icon t
+          doom-modeline-lsp nil
+          doom-modeline-github nil
+          doom-modeline-github-interval (* 30 60)
+          doom-modeline-mu4e nil
+          doom-modeline-irc nil
+          doom-modeline-irc-stylize 'identity
+          doom-modeline-icons-alist
           '(;; macro
             ("fiber_manual_record"    . "\xe3cb")
             ("triangle-right"         . "\xe04c")
@@ -3616,44 +3627,23 @@ $clean_ext = "snm nav vrb synctex.gz";
             ("battery-empty"          . "\xe2f5")
             )
           )
-    (setq doom-modeline-height 1
-          doom-modeline-bar-width 0
-          doom-modeline-buffer-file-name-style 'buffer-name
-          doom-modeline-icon t
-          doom-modeline-major-mode-icon t
-          doom-modeline-major-mode-color-icon t
-          doom-modeline-buffer-state-icon nil
-          doom-modeline-buffer-modification-icon nil
-          doom-modeline-minor-modes t
-          doom-modeline-enable-word-count t
-          doom-modeline-buffer-encoding t
-          doom-modeline-indent-info nil
-          doom-modeline-checker-simple-format t
-          doom-modeline-vcs-max-length 12
-          doom-modeline-persp-name t
-          doom-modeline-persp-name-icon t
-          doom-modeline-lsp nil
-          doom-modeline-github nil
-          doom-modeline-github-interval (* 30 60)
-          doom-modeline-mu4e nil
-          doom-modeline-irc nil
-          doom-modeline-irc-stylize 'identity
-          )
-    ;;
-    (eval-when-compile (require 'doom-modeline-core))
-    (doom-modeline-def-segment input-method-skk
+    )
+  :config
+  ;; (eval-when-compile (require 'doom-modeline))
+  (with-eval-after-load 'doom-modeline
+    (doom-modeline-def-segment my:input-method-skk
       "The current ddskk status."
       (concat
-       (doom-modeline-spc)
        (propertize
         (cond
          ((not (boundp 'skk-modeline-input-mode))
           "[--]")
          (skk-modeline-input-mode
           (substring skk-modeline-input-mode 2 -1))
-         (t "[--]")
-         )
-        )))
+         (t
+          "[--]")
+         ))))
+    ;;
     (doom-modeline-def-segment my:buffer-encoding
       "Displays the encoding and eol style of the buffer."
       (when doom-modeline-buffer-encoding
@@ -3682,8 +3672,8 @@ $clean_ext = "snm nav vrb synctex.gz";
          'mouse-face '(:box 0)
          'local-map mode-line-coding-system-map)))
     ;;
-    (doom-modeline-def-segment buffer-position
-      "The buffer position information."
+    (doom-modeline-def-segment my:buffer-position
+      "The buffer position information, drop nyan-mode"
       (let ((active (doom-modeline--active))
             (lc '(line-number-mode
                   (column-number-mode
@@ -3700,73 +3690,27 @@ mouse-1: Display Line and Column Mode Menu"
          'mouse-face '(:box 0)
          'local-map mode-line-column-line-number-mode-map)))
     ;;
-    (defun my:doom-modeline-update-buffer-file-icon (&rest _)
-      "Update file icon in mode-line, just display major-mode icon. not filename."
-      (setq doom-modeline--buffer-file-icon
-            (when (and doom-modeline-icon doom-modeline-major-mode-icon)
-              (let* ((icon (all-the-icons-icon-for-mode major-mode)))
-                (if (symbolp icon)
-                    (setq icon (doom-modeline-icon-faicon
-                                "file-o"
-                                :face 'all-the-icons-dsilver)))
-                (unless (symbolp icon)
-                  (propertize icon
-                              'help-echo (format "Major-mode: %s" (format-mode-line mode-name))))))))
-    (advice-add 'doom-modeline-update-buffer-file-icon
-                :override 'my:doom-modeline-update-buffer-file-icon)
-    ;;
-    (defvar doom-modeline--buffer-file-state-icon nil)
-    (defun my:doom-modeline-update-buffer-file-state-icon (&rest _)
-      "Update the buffer or file state in mode-line."
-      (setq doom-modeline--buffer-file-state-icon
-            (ignore-errors
-              (cond (buffer-read-only
-                     (doom-modeline-buffer-file-state-icon
-                      "lock"
-                      (all-the-icons-material "lock")
-                      'doom-modeline-warning))
-                    ((and buffer-file-name (buffer-modified-p)
-                          doom-modeline-buffer-modification-icon)
-                     (doom-modeline-buffer-file-state-icon
-                      "save"
-                      (all-the-icons-material "save")
-                      'doom-modeline-buffer-modified))
-                    ((and buffer-file-name
-                          (not (file-exists-p buffer-file-name)))
-                     (doom-modeline-buffer-file-state-icon
-                      "edit"
-                      (all-the-icons-faicon "edit")
-                      'doom-modeline-urgent))
-                    ((or (buffer-narrowed-p)
-                         (and (bound-and-true-p fancy-narrow-mode)
-                              (fancy-narrow-active-p)))
-                     (doom-modeline-buffer-file-state-icon
-                      "vertical_align_center"
-                      (all-the-icons-material "vertical_align_center")
-                      'doom-modeline-warning))
-                    (t
-                     (doom-modeline-buffer-file-state-icon
-                      "--"
-                      "--"
-                      (if (doom-modeline--active) 'mode-line 'mode-line-inactive)))
-                    ))))
-    (advice-add 'doom-modeline-update-buffer-file-state-icon
-                :override 'my:doom-modeline-update-buffer-file-state-icon)
-    ;;
     (doom-modeline-def-modeline 'main
       '(;; bar
-        input-method-skk
+        my:input-method-skk
+        ;; workspace-name
         my:buffer-encoding
-        remote-host
+        major-mode
         buffer-info
-        ;; matches
+        ;; window-number
+        ;; modals
+        matches
+        ;; remote-host
         ;; parrot
         ;; selection-info
-                         )
-      '(;; objed-state
+        )
+      ;;
+      '(
+        ;; objed-state
         ;; misc-info
         ;; persp-name
         ;; fancy-battery
+        ;; grip
         ;; irc
         ;; mu4e
         ;; github
@@ -3774,15 +3718,14 @@ mouse-1: Display Line and Column Mode Menu"
         lsp
         minor-modes
         ;; indent-info
-        ;; process
+        process
         vcs
         checker
-        buffer-position
-        " "
-        ;; bar
+        my:buffer-position
         )
       )
     )
+  (doom-modeline-mode +1)
   )
    #+END_SRC
 ** theme: =doom-theme=

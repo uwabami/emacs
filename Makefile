@@ -16,7 +16,7 @@ init.el: README.org
 	$(EMACS) -q -l init.el --batch --eval '(kill-emacs)'
 %.elc: %.el
 	$(EMACS) -q -l init.el -batch -f batch-byte-compile $<
-	@rm -f $<
+#	@rm -f $<
 
 clean:
 	rm -fr auto-save-list *.el *.elc *~

@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
-#+date: 2019-08-29 16:34:03
+#+date: 2019-10-10 08:49:11
 * はじめに
   ここでは私の Emacs の設定についてまとめています．
 
@@ -104,17 +104,17 @@ init.el: README.org
 * Package 関連: =package.el=, [[https://github.com/conao3/leaf.el][leaf.el]], [[https://github.com/dimitri/el-get][el-get]]
   [[https://github.com/conao3/leaf.el][leaf.el]]のおかげで，
   無いと途方に暮れるパッケージ以外のインストールは無視できるようになります.
-** =package.el=
+** TODO =package.el= [0/1]
    パッケージは基本的に =pacakge.el= で導入するので，先ずはその設定.
    #+begin_src emacs-lisp
-(setq url-http-attempt-keepalives nil)
-(require 'gnutls nil 'noerror)
+;; (setq url-http-attempt-keepalives nil)
+;; (require 'gnutls nil 'noerror)
 (require 'package nil 'noerror)
 (setq package-enable-at-startup t
       package-user-dir my:d:pkg:elpa
       package-gnupghome-dir (expand-file-name ".gnupg" (getenv "HOME"))
       ;; elpa/gnutls workaround
-      ;; gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3"
+      gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3"
       )
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (eval-when-compile
@@ -127,34 +127,30 @@ init.el: README.org
 (unless (package-installed-p 'package-utils)
   (package-install 'package-utils t))
    #+end_src
+   - [ ] で，elpa の SSL error の workaround は正しくはどうするの?
 ** [[https://github.com/conao3/leaf.el][leaf.el]]
    個々のパッケージの設定には[[https://github.com/conao3/leaf.el][leaf.el]]を利用します.
+   自分で修正した版やオリジナル版を別の場所から持ってくる場合は
+   [[https://github.com/conao3/leaf.el][leaf.el]]から[[https://github.com/dimitri/el-get][el-get]]を呼び出します.
    #+BEGIN_SRC emacs-lisp
 (unless (package-installed-p 'leaf)
   (package-install 'leaf t))
 (require 'leaf nil 'noerror)
-;; support optional keywords
 (leaf leaf-keywords
   :ensure t
+  :preface (defconst el-get-dir my:d:pkg:elget) ;; override el-get default
   :init
   (leaf diminish :ensure t :require t)
   (leaf delight :ensure t :require t)
+  (leaf el-get
+    :ensure t
+    :require t
+    :init
+    (setq el-get-notify-type 'message
+          el-get-git-shallow-clone t)
+    )
   :config
   (leaf-keywords-init)
-  )
-   #+end_src
-** [[https://github.com/dimitri/el-get][el-get]]
-   自分で修正した版やオリジナル版を別の場所から持ってくる場合は
-   [[https://github.com/conao3/leaf.el][leaf.el]]から[[https://github.com/dimitri/el-get][el-get]]を呼び出します.
-   #+begin_src emacs-lisp
-(defconst el-get-dir my:d:pkg:elget) ;; override default
-(leaf el-get
-  :ensure t
-  :require t
-  ;; :custom (el-get-notify-type . message)
-  :init
-  (setq el-get-notify-type 'message
-        el-get-git-shallow-clone t)
   )
    #+end_src
 * 環境変数の読み込み: =exec-path-from-shell=
@@ -195,7 +191,7 @@ init.el: README.org
         (concat (getenv "PASSWORD_STORE_DIR") "/Emacs/" (system-name)))
   )
   #+end_src
-* 言語の設定 [0/1]
+* TODO 言語の設定 [0/1]
   最近のEmacsはlocaleから文字コードを自動判別するらしいので，
   以前良く設定していた以下は不要らしいですね。
   #+begin_src emacs-lisp :tangle no
@@ -223,7 +219,7 @@ init.el: README.org
   (set-coding-system-priority 'utf-8 'euc-jp 'iso-2022-jp 'cp932)
   )
    #+end_src
-** East Asian Ambiguos 対応
+** TODO East Asian Ambiguos 対応 [0/1]
    East Asian Ambiguosを2文字幅にして, ついでに
    CJK 以外の East Asian Ambiguosと絵文字も2文字幅にするようにしています。
    拙作の修正ロケールはこちら: [[https://github.com/uwabami/locale-eaw-emoji]]
@@ -237,35 +233,7 @@ init.el: README.org
   (eaw-and-emoji-fullwidth)
   )
    #+end_src
-** ターミナルでもicon fontを使いたい。
-   [[https://github.com/domtronn/all-the-icons.el][all-the-icons.el]]のデータを修正して,
-   [[https://github.com/sebastiencs/icons-in-terminal][icons in terminal]]を修正した自作フォントのデータを読みに行くようにしてみました。
-   #+begin_src emacs-lisp
-(leaf all-the-icons
-  :ensure t
-  :init
-  (setq all-the-icons-scale-factor 0.9
-        all-the-icons-default-adjust 0.0)
-  )
-(leaf all-the-icons-in-terminal
-  :el-get (all-the-icons-in-terminal
-           :type github
-           :pkgname "uwabami/isfit-plus")
-  :after all-the-icons
-  :require t
-  :config
-  (add-to-list 'all-the-icons-mode-icon-alist
-               '(f90-mode all-the-icons-faicon "facebook")) ;; facebook!
-  (add-to-list 'all-the-icons-mode-icon-alist
-               '(wl-folder-mode all-the-icons-faicon "folder-o" ))
-  (add-to-list 'all-the-icons-mode-icon-alist
-               '(wl-summary-mode all-the-icons-faicon "folder-open-o"))
-  (add-to-list 'all-the-icons-mode-icon-alist
-               '(wl-draft-mode all-the-icons-material "drafts"))
-  (add-to-list 'all-the-icons-mode-icon-alist
-               '(mime-view-mode all-the-icons-faicon "envelope-o"))
-  )
-   #+end_src
+   - [ ] 最近，一文字幅強制の方が良いかなぁ，とか悩み中.
 ** macOS対応
    最近良く触る様になったので設定している。
    +まあ, イマイチ慣れない訳ですけれど+
@@ -282,13 +250,42 @@ init.el: README.org
   (global-set-key [ns-drag-file] 'ns-find-file)
   )
    #+end_src
+* ターミナルでもicon fontを使いたい。
+  [[https://github.com/domtronn/all-the-icons.el][all-the-icons.el]]のデータを修正して,
+  [[https://github.com/sebastiencs/icons-in-terminal][icons in terminal]]を修正した自作フォントのデータを読みに行くようにしてみました。
+  #+begin_src emacs-lisp
+(leaf all-the-icons
+  :ensure t
+  :init
+  (setq all-the-icons-scale-factor 0.9
+        all-the-icons-default-adjust 0.0)
+  )
+(leaf all-the-icons-in-terminal
+  :el-get (all-the-icons-in-terminal
+           :type github
+           :pkgname "uwabami/isfit-plus")
+  :after all-the-icons
+  :require t
+  :config
+  (add-to-list 'all-the-icons-mode-icon-alist
+               '(f90-mode all-the-icons-faicon "facebook")) ;; facebook!?
+  (add-to-list 'all-the-icons-mode-icon-alist
+               '(wl-folder-mode all-the-icons-faicon "folder-o" ))
+  (add-to-list 'all-the-icons-mode-icon-alist
+               '(wl-summary-mode all-the-icons-faicon "folder-open-o"))
+  (add-to-list 'all-the-icons-mode-icon-alist
+               '(wl-draft-mode all-the-icons-material "drafts"))
+  (add-to-list 'all-the-icons-mode-icon-alist
+               '(mime-view-mode all-the-icons-faicon "envelope-o"))
+  )
+  #+end_src
 * 独自関数
   細かい独自関数，など．
 ** dpkg-status
    もっと良い方法がありそうなモンですが．
    #+begin_src emacs-lisp
 (defun my:dpkg-status (package)
-  "Return the package status from dpkg --get-selections."
+  "Return the `PACKAGE' status from dpkg --get-selections."
   (string-match "^ii" (shell-command-to-string (format "dpkg -l %s" package))))
    #+end_src
 ** ファイル名を minibuffer におさまる様に整形
@@ -310,55 +307,54 @@ init.el: README.org
     ;; 省略
     (when path
       (setq output (concat "/..." output)))
-    (format "%s%s" top output)
-    ))
+    (format "%s%s" top output)))
    #+end_src
 ** 空になったファイルを尋ねずに自動削除
    ゴミが残らないし，地味に便利．
    #+begin_src emacs-lisp
-(defun my:delete-file-if-no-contents ()
-  (when (and (buffer-file-name (current-buffer))
-             (= (point-min) (point-max)))
-    (delete-file
-     (buffer-file-name (current-buffer)))))
-(if (not (memq 'my:delete-file-if-no-contents after-save-hook))
-    (setq after-save-hook
-          (cons 'my:delete-file-if-no-contents after-save-hook)))
+(leaf *delete-file-if-no-contents
+  :preface (defun my:delete-file-if-no-contents ()
+             (when (and (buffer-file-name (current-buffer))
+                        (= (point-min) (point-max)))
+               (delete-file
+                (buffer-file-name (current-buffer)))))
+  :config
+  (if (not (memq 'my:delete-file-if-no-contents after-save-hook))
+      (setq after-save-hook
+            (cons 'my:delete-file-if-no-contents after-save-hook)))
+  )
    #+end_src
 ** scratch を殺さない. 消したら再生成
    ...元ネタがどこだったのか忘れてしまった...
    #+begin_src emacs-lisp
-(defun my:make-scratch (&optional arg)
-  (interactive)
-  (progn
-    ;; "*scratch*" を作成して buffer-list に放り込む
-    (set-buffer (get-buffer-create "*scratch*"))
-    (funcall initial-major-mode)
-    (erase-buffer)
-    (when (and initial-scratch-message (not inhibit-startup-message))
-      (insert initial-scratch-message))
-    (or arg
-        (progn
-          (setq arg 0)
-          (switch-to-buffer "*scratch*")))
-    (cond ((= arg 0) (message "*scratch* is cleared up."))
-          ((= arg 1) (message "another *scratch* is created")))))
-;;
-(defun my:buffer-name-list ()
-  (mapcar (function buffer-name) (buffer-list)))
-(add-hook 'kill-buffer-query-functions
-          ;; *scratch* バッファで kill-buffer したら内容を消去するだけにする
-          (function (lambda ()
-                      (if (string= "*scratch*" (buffer-name))
-                          (progn (my:make-scratch 0) nil)
-                        t))))
-(add-hook 'after-save-hook
-          ;; *scratch* バッファの内容を保存したら
-          ;; *scratch* バッファを新しく作る.
-          (function
-           (lambda ()
-             (unless (member "*scratch*" (my:buffer-name-list))
-               (my:make-scratch 1)))))
+(leaf *keepscratchbuffer
+  :preface
+  (defun my:make-scratch (&optional arg)
+    (interactive)
+    (progn
+      ;; "*scratch*" を作成して buffer-list に放り込む
+      (set-buffer (get-buffer-create "*scratch*"))
+      (funcall initial-major-mode)
+      (erase-buffer)
+      (when (and initial-scratch-message (not inhibit-startup-message))
+        (insert initial-scratch-message))
+      (or arg
+          (progn
+            (setq arg 0)
+            (switch-to-buffer "*scratch*")))
+      (cond ((= arg 0) (message "*scratch* is cleared up."))
+            ((= arg 1) (message "another *scratch* is created")))))
+  ;;
+  (defun my:buffer-name-list ()
+    (mapcar (function buffer-name) (buffer-list)))
+  :hook  ((kill-buffer-query-functions . (lambda ()
+                                           (if (string= "*scratch*" (buffer-name))
+                                               (progn (my:make-scratch 0) nil)
+                                             t)))
+          (after-save-hook . (lambda ()
+                               (unless (member "*scratch*" (my:buffer-name-list))
+                                 (my:make-scratch 1)))))
+  )
    #+end_src
 ** 行末の無駄な空白/改行を削除する
    @see [[http://d.hatena.ne.jp/tototoshi/20101202/1291289625][無駄な行末の空白を削除する(Emacs Advent Calendar jp:2010)]]
@@ -366,214 +362,30 @@ init.el: README.org
    ただし, RD や Markdown だと空白行に意味があったりするので，
    必要に応じて拡張子で判断して外している．
    #+begin_src emacs-lisp
-(defvar my:delete-trailing-whitespace-exclude-suffix
-  (list "\\.rd$" "\\.md$" "\\.rbt$" "\\.rab$"))
-(defun my:delete-trailing-whitespace ()
-  (interactive)
-  (cond
-   ((equal nil
-           (cl-loop for pattern in my:delete-trailing-whitespace-exclude-suffix
-                    thereis (string-match pattern buffer-file-name)))
-    (delete-trailing-whitespace))))
-(add-hook 'before-save-hook 'my:delete-trailing-whitespace)
-   #+end_src
-* インクリメンタル検索: =migemo= [0/1]
-  無いと途方に暮れる．
-  #+begin_src emacs-lisp
-(leaf migemo
-  :if (executable-find "cmigemo")
-  :require t
-  :config
-  (cond
-   ((and (eq system-type 'darwin)
-         (file-directory-p "/usr/local/share/migemo/utf-8/"))
-    (setq migemo-dictionary "/usr/local/share/migemo/utf-8/migemo-dict"))
-   (t
-    (setq migemo-dictionary "/usr/share/cmigemo/utf-8/migemo-dict"))
-   )
-  (setq migemo-command "cmigemo"
-        migemo-options '("-q" "--emacs")
-        migemo-user-dictionary nil
-        migemo-regex-dictionary nil
-        migemo-coding-system 'utf-8-unix)
-  (migemo-init)
-  )
-  #+end_src
-  - [ ] 稀に暴走する, ような...?
-* 補完: =ivy,counsel,swiper=
-  @see [[https://qiita.com/takaxp/items/2fde2c119e419713342b][helm を背に ivy の門を叩く - Qiita]]
-** 補完候補の絞り込み: =ivy=
-   まだ試行錯誤中．
-   #+BEGIN_SRC emacs-lisp
-(leaf ivy
-  :ensure t
-  :init
-  (leaf flx :ensure t)
-  (leaf ivy-hydra
-    :ensure t
-    :commands ivy-read
-    :bind ((:ivy-minibuffer-map
-            ("M-o" . hydra-ivy/body )))
-    )
-  ;; IDO-like ?
-  :bind ((:ivy-minibuffer-map
-          ("RET"   . ivy-alt-done)
-          ;; ("C-j"   . ivy-immediate-done)
-          ;; ("C-RET" . ivy-immediate-done)
-          ))
-  ;;
-  :config
-  (setq enable-recursive-minibuffers t
-        minibuffer-depth-indicate-mode 1)
-  (setq ivy-use-virtual-buffers nil
-        ivy-use-selectable-prompt t
-        ivy-fixed-height-minibuffer t
-        ivy-wrap t
-        ivy-height 11
-        ivy-display-style 'fancy
-        ivy-count-format (concat (all-the-icons-faicon "sort-amount-asc") " [%d/%d] ")
-        ivy-extra-directories nil       ; default の "." と ".." を除外
-        ivy-initial-inputs-alist nil
-        ;; 入力前のリストの並び
-        ;; ivy-sort-functions-alist '((t . ivy--regex-fuzzy))
-        ;; ivy-format-functions-alist '((t . ivy-format-function-arrow))
-        ivy-re-builders-alist '((t . ivy--regex-fuzzy))
-        )
-  )
-   #+END_SRC
-** 補完候補の調整: =prescient=
-   過去の候補を記憶しておいてくれる優れモノ．
-   #+BEGIN_SRC emacs-lisp
-;; override
-(leaf prescient
-  :ensure t
-  :commands (ivy ivy-read)
-  :init
-  (setq prescient-save-file (expand-file-name  "prescient-save.el" my:d:tmp)
-        prescient-aggressive-file-save t
-        prescient-filter-method '(fuzzy regexp initialism))
-  :config
-  (prescient-persist-mode 1)
-  )
-(leaf ivy-prescient
-  :ensure t
-  :commands (ivy ivy-read)
-  :init
-  (setq ivy-prescient-retain-classic-highlighting t)
-  :config
-  (ivy-prescient-mode 1)
-  )
-   #+END_SRC
-** インジケータをアイコンに
-   まだちょっと整形する必要がありそう．
-   #+BEGIN_SRC emacs-lisp
-(leaf *ivy-format-function-arrow
-  :after ivy
-  :config
-  (defun my:ivy-format-function-arrow (cands)
-    "Custom; Transform CANDS into a string for minibuffer."
-   (setq-local tab-width 1)
-    (ivy--format-function-generic
-     (lambda (str)
-       (concat (all-the-icons-faicon
-                "hand-o-right" :face 'minibuffer-prompt)
-               "\t" (ivy--add-face str 'ivy-current-match)))
-     (lambda (str)
-       (concat ;; (all-the-icons-faicon "hand-o-right" :foreground 'background)
-        "\t" str))
-     cands
-     "\n"))
-  (setq ivy-format-functions-alist
-        '((t . my:ivy-format-function-arrow)))
-  )
-   #+END_SRC
-** アイコン表示: =all-the-icons-ivy=
-   #+BEGIN_SRC emacs-lisp
-(leaf all-the-icons-ivy
-  :ensure t
-  :config
-  (all-the-icons-ivy-setup)
-  )
-   #+END_SRC
-** =counsel=: =ivy-read= を使った既存のコマンド群の置き換え
-   まだ調整が必要そう．
-   #+BEGIN_SRC emacs-lisp
-(leaf smex
-  :ensure t
-  :config
-  (setq smex-save-file (expand-file-name "smex-items" my:d:tmp)
-        smex-history-length 50)
-  )
-(leaf counsel
-  :ensure t
-  :bind ((("M-x"     . counsel-M-x)
-          ("C-x C-r" . my:counsel-recentf)
-          ("C-x C-f" . counsel-find-file)
-          ;;("C-x C-b" . counsel-ibuffer)
-          ;;("C-x b"   . counsel-ibuffer)
-          )
-         (:counsel-find-file-map
-          ("C-l"     . counsel-up-directory)))
-  :init
-  (setq-default counsel-mode-override-describe-bindings t)
-  ;; recentf-list が長いので短縮表示
-  (defun my:counsel-recentf ()
-    "Custom: Find a file on `recentf-list'."
+(leaf *trailing-white-space
+  :preface
+  (defvar my:delete-trailing-whitespace-exclude-suffix
+    (list "\\.rd$" "\\.md$" "\\.rbt$" "\\.rab$"))
+  (defun my:delete-trailing-whitespace ()
     (interactive)
-    (require 'recentf)
-    (recentf-mode)
-    (ivy-read "Recentf: " (mapcar (lambda (f)
-                                    (cons (my:shorten-file-path f 77) f))
-                                  recentf-list)
-              :action (lambda (f)
-                        (with-ivy-window
-                          (find-file (cdr f))))
-              :require-match t
-              :caller 'counsel-recentf)
-    )
-  :config
-  ;; 補完で無視する拡張子の追加．そのうち増える．
-  (dolist (ext '("./"
-                 "../"
-                 ".dvi"
-                 ".fdb_latexmk"
-                 ".fls"
-                 ".ilg"
-                 ".jqz"
-                 ".mod"
-                 ".nav"
-                 ".out"
-                 ".snm"
-                 ".synctex.gz"
-                 ".vrb"
-                 ))
-    (add-to-list 'completion-ignored-extensions ext))
-  (setq counsel-find-file-ignore-regexp
-        (regexp-opt completion-ignored-extensions))
+    (eval-when-compile (require 'cl-lib))
+    (cond
+     ((equal nil
+             (cl-loop for pattern in my:delete-trailing-whitespace-exclude-suffix
+                      thereis (string-match pattern buffer-file-name)))
+      (delete-trailing-whitespace))))
+  :hook (before-save-hook . my:delete-trailing-whitespace)
   )
-   #+END_SRC
-** 検索強化: =swiper=
-   まだ設定していない．migemoと仲良くするために試行錯誤中．
-   #+BEGIN_SRC emacs-lisp
-(leaf swiper
-  :init
-  ;; (leaf avy-migemo
-  ;;   :if (executable-find "cmigemo")
-  ;;   :ensure t
-  ;;   :after migemo
-  ;;   :init
-  ;;   (require 'avy-migemo-e.g.swiper)
-  ;;   )
-  ;; :bind ("C-s" . swiper)
-  )
-   #+END_SRC
+   #+end_src
 * 主にEmacs本体および同梱されている拡張に関する設定
   最近ぼちぼち他の拡張も入れる様になってきた.
 ** 標準機能の設定: 表示関連
-   起動時のスプラッシュ画面を表示しない
+   起動を静かに.
    #+begin_src emacs-lisp
 (setq inhibit-startup-screen t
-      inhibit-startup-message t)
+      inhibit-startup-message t
+      inhibit-startup-echo-area-message t
+      initial-scratch-message nil)
    #+end_src
    大抵の場合ターミナル内で =-nw= として起動するし,
    メニューは触ったことないので使わないので，
@@ -708,6 +520,7 @@ init.el: README.org
   (leaf url
     :init
     (setq url-configuration-directory (concat my:d:tmp "url"))
+    ;; url-user-agent "User-Agent: w3m/0.5.3\r\n"
     )
   (leaf nsm
     :if (>= emacs-major-version 25)
@@ -717,6 +530,10 @@ init.el: README.org
   (leaf bookmark
     :config
     (setq bookmark-default-file (concat my:d:share "bookmarks"))
+    )
+  (leaf eshell
+    :config
+    (setq eshell-directory-name (concat my:d:tmp "eshell"))
     )
   )
    #+end_src
@@ -738,24 +555,46 @@ init.el: README.org
    メモリ喰いな拡張を入れている場合には, 安易に =gc-cons-threshold= を上げるのは考えものである.
    「gc が走る→大きな領域を掃除するのでその間 emacs が止まる」という事を頻繁に経験することになるだろう.
 ** =recentf=: 最近使ったファイル履歴の保管
-   ファイルを開く際には =counsel-recentf-open= を使うので,
+   ファイルを開く際には =ido-recentf-open= を使うので,
    結局履歴を貯める設定をしている事になっている.
    #+begin_src emacs-lisp
 (leaf recentf-ext :ensure t)
 (leaf recentf
+  :init
+  (leaf shut-up :ensure t)
   :hook (after-init-hook . recentf-mode)
+  :preface
+  (defun my:recentf-save-list-silence ()
+    "Shut up"
+    (interactive)
+    (let ((message-log-max nil))
+      (shut-up (recentf-save-list)))
+    (message ""))
+  ;;
+  (defun my:recentf-cleanup-silence ()
+    "Shut up"
+    (interactive)
+    (let ((message-log-max nil))
+      (shut-up (recentf-cleanup)))
+    (message ""))
+  :hook ((focus-out-hook . my:recentf-save-list-silence)
+         (focus-out-hook . my:recentf-cleanup-silence))
   :config
-  (setq recentf-max-saved-items 128
+  (setq recentf-max-saved-items 256
         recentf-save-file (expand-file-name (concat my:d:tmp "recentf"))
-        recentf-auto-cleanup 300
+        recentf-auto-cleanup 'never ;; 300
         recentf-exclude '(".recentf"
                           "^/tmp\\.*"
                           "^/private\\.*"
                           "^/var/folders\\.*"
                           "/TAGS$"
-                          "^/home/uwabami/.mozilla/\\.*"
                           "\\.*草稿\\.*"
+                          "^#\\.*"
+                          "^/home/uwabami/.mozilla/\\.*"
+                          "^/home/uwabami/.emacs.d/tmp/\\.*"
                           "^/[^/:]+:"  ; exclude tramp
+                          "bookmarks"
+                          "org-recent-headings.dat"
                           ))
   )
    #+end_src
@@ -778,11 +617,11 @@ init.el: README.org
   :hook (emacs-lisp-mode-hook . turn-on-eldoc-mode)
   :diminish (eldoc-mode "")
   :preface
-  (defun my:eldoc-message (f &optional string)
+  (defun my:shutup-eldoc-message (f &optional string)
     (unless (active-minibuffer-window)
       (funcall f string)))
   :advice (:around eldoc-message
-                   my:eldoc-message)
+                   my:shutup-eldoc-message)
   )
    #+end_src
 ** =midnight=: 一定期間使用しなかった buffer を自動削除
@@ -810,10 +649,10 @@ init.el: README.org
   :hook (after-init-hook . global-whitespace-mode)
   :init
   (setq whitespace-line-column 72
-        whitespace-style '(face              ; faceを使って視覚化する．
-                           trailing          ; 行末の空白を対象とする．
-                           tabs              ; tab
-                           spaces            ; space
+        whitespace-style '(face        ; faceを使って視覚化する．
+                           trailing    ; 行末の空白を対象とする．
+                           tabs        ; tab
+                           spaces      ; space
                            )
         whitespace-display-mappings '((space-mark ?\u3000 [?\□])
                                       (tab-mark ?\t [?\u00BB ?\t] [?\\ ?\t]))
@@ -830,6 +669,7 @@ init.el: README.org
    記憶の保存先を =~/.emacs.d/tmp/emacs-places= に変更.
    #+begin_src emacs-lisp
 (leaf saveplace
+  :hook (after-init-hook . save-place-mode)
   :config
   (setq-default save-place t)
   (setq save-place-file (concat my:d:tmp "emacs-places")))
@@ -850,7 +690,7 @@ init.el: README.org
   )
    #+end_src
    モード独自の設定(例えば Org とか)に関しては別途．
-** =tramp=: ssh 越しにファイルを編集 [0/1]
+** TODO =tramp=: ssh 越しにファイルを編集 [0/1]
    #+begin_src emacs-lisp
 (leaf tramp
   :init
@@ -862,56 +702,69 @@ init.el: README.org
   )
    #+end_src
    - [ ] 偶に挙動不審
-** =eww=: 内蔵ブラウザ [/]
-   背景色の指定と幅の強制が上手く動いてくれない．一旦保留.
-   #+begin_src emacs-lisp
+** TODO =eww=: 内蔵ブラウザ [0/3]
+   リンクを簡単に辿る(Hit-a-Hint) のために =ace-link= も入れておく
+    #+begin_src emacs-lisp
 (leaf eww
-  :bind (;; ("<f2>"    . eww)
-         (:eww-mode-map
-          ("r"  . eww-reload)
-          ("o"  . eww)
-          ("&"  . eww-browse-with-external-browser)
-          ("b"  . eww-back-url)
-          ("]"  . eww-next-url)
-          ("["  . eww-previous-url)
-          ("g"  . eww-top-url)
-          ("+"  . my:eww-increase-width)
-          ("-"  . my:eww-decrease-width)
-          ("h"  . backward-char)
-          ("j"  . next-line)
-          ("k"  . previous-line)
-          ("l"  . forward-char)
-          ("/"  . isearch-forward)
-          ("?"  . isearch-backward)
-          ("n"  . isearch-next)
-          ("N"  . isearch-previous)))
-         ;;("f"  . ace-link-eww)))
   :init
   (unless (file-directory-p (expand-file-name "eww" my:d:tmp))
     (make-directory (expand-file-name "eww" my:d:tmp)))
+  (leaf ace-link
+    :ensure t
+    :config
+    (ace-link-setup-default)
+    )
+  :bind (("<f2>" . eww)
+         (:eww-mode-map
+          ("r"   . eww-reload)
+          ("o"   . eww)
+          ("&"   . eww-browse-with-external-browser)
+          ("b"   . eww-back-url)
+          ("]"   . eww-next-url)
+          ("["   . eww-previous-url)
+          ("g"   . eww-top-url)
+          ("+"   . my:eww-increase-width)
+          ("-"   . my:eww-decrease-width)
+          ("h"   . backward-char)
+          ("j"   . next-line)
+          ("k"   . previous-line)
+          ("l"   . forward-char)
+          ("/"   . isearch-forward)
+          ("?"   . isearch-backward)
+          ("n"   . isearch-next)
+          ("N"   . isearch-previous)
+          ("f"   . ace-link-eww))
+         )
   :config
+  ;;
+  (defun eww-disable-images ()
+    "ewwで画像表示させない"
+    (interactive)
+    (setq-local shr-put-image-function 'shr-put-image-alt)
+    (eww-reload))
+  ;;
+  (defun eww-enable-images ()
+    "ewwで画像表示させる"
+    (interactive)
+    (setq-local shr-put-image-function 'shr-put-image)
+    (eww-reload))
+  (defun shr-put-image-alt (spec alt &optional flags)
+    (insert alt))
+  ;;
   (setq eww-bookmarks-directory (expand-file-name "eww" my:d:tmp)
-        eww-search-prefix "https://www.google.com/search?&gws_rd=cr&complete=0&pws=0&tbs=li:1&lr=lang_ja|lang_en&q=")
-  (defvar eww-disable-colorize t)
-  (defun my:shr-colorize-region--disable (orig start end fg &optional bg &rest _)
-    (unless eww-disable-colorize
-      (funcall orig start end fg)))
-  (advice-add 'shr-colorize-region :around 'my:shr-colorize-region--disable)
-  (advice-add 'eww-colorize-region :around 'my:shr-colorize-region--disable)
-  (defun eww-disable-color ()
-    "eww で文字色を反映させない"
-    (interactive)
-    (setq-local eww-disable-colorize t)
-    (eww-reload))
-  (defun eww-enable-color ()
-    "eww で文字色を反映させる"
-    (interactive)
-    (setq-local eww-disable-colorize nil)
-    (eww-reload))
+        eww-search-prefix "https://www.google.co.jp/search?btnl&q="
+        shr-use-colors nil
+        shr-use-fonts nil
+        shr-width 72
+        )
+  ;;
+  (defun eww-mode-hook--disable-image ()
+    (setq-local shr-put-image-function 'shr-put-image-alt))
+  (add-hook 'eww-mode-hook 'eww-mode-hook--disable-image)
   )
-   #+end_src
-   - [ ] 背景色の指定
-   - [ ] 幅の強制
+    #+end_src
+    - [ ] 背景色の指定
+    - [ ] 幅の強制
 ** =browse-url=
    ブラウザ呼び出しは =xdg-open/open= に丸投げ.
    #+begin_src emacs-lisp
@@ -925,32 +778,311 @@ init.el: README.org
          (setq browse-url-browser-function 'browse-url-default-macosx-browser
                shr-external-browser 'browse-url-default-macosx-browser))
         (t
-         (setq browse-url-browser-function 'w3m-browse-url)))
+         ;; (setq browse-url-browser-function 'w3m-browse-url)
+         (setq browse-url-browser-function 'eww-browse-url)
+         ))
   )
    #+end_src
 ** =server=: Emacs server
    #+begin_src emacs-lisp
-(leaf server
+(leaf server :hook (after-init-hook . server-start))
+   #+end_src
+* TODO インクリメンタル検索: =migemo= [0/1]
+  無いと途方に暮れる．
+  #+begin_src emacs-lisp
+(leaf migemo
+  :if (executable-find "cmigemo")
   :require t
   :config
-  (unless (server-running-p)
-    (server-start))
+  (cond
+   ((and (eq system-type 'darwin)
+         (file-directory-p "/usr/local/share/migemo/utf-8/"))
+    (setq migemo-dictionary "/usr/local/share/migemo/utf-8/migemo-dict"))
+   (t
+    (setq migemo-dictionary "/usr/share/cmigemo/utf-8/migemo-dict"))
+   )
+  (setq migemo-command "cmigemo"
+        migemo-options '("-q" "--emacs")
+        migemo-user-dictionary nil
+        migemo-regex-dictionary nil
+        migemo-coding-system 'utf-8-unix)
+  (migemo-init)
   )
-   #+end_src
+  #+end_src
+  - [ ] 稀に暴走する, ような...?
+* 補完: =ivy=, =counsel=,  =swiper= [/]
+  以前は =ido= を使っていたのでまだ挙動に戸惑う事があるけれど．
+  - [[https://qiita.com/takaxp/items/2fde2c119e419713342b][helm を背に ivy の門を叩く - Qiita]] を参考の事.
+** =ivy=: 補完の基本設定
+   #+BEGIN_SRC emacs-lisp
+(leaf ivy
+  :ensure t
+  :preface
+  ;; アイコン表示
+  (defun my:ivy-pre-prompt-function ()
+    (format "%s "
+            (all-the-icons-faicon "sort-amount-asc")))
+  ;; 補完候補のアイコン表示
+  (defface my:ivy-arrow-visible
+    '((((class color) (background light)) :foreground "#FFBF7F")
+      (((class color) (background dark)) :foreground "#FFBF7F"))
+    "Face used by Ivy for highlighting the arrow.")
+  (defun my:ivy-format-function-arrow (cands)
+    "Custom: Transform CANDS into a string for minibuffer."
+    (ivy--format-function-generic
+     (lambda (str)
+       (concat " "
+               (all-the-icons-faicon
+                "hand-o-right" :face 'my:ivy-arrow-visible)
+               " " (ivy--add-face str 'ivy-current-match)))
+     (lambda (str)
+       (concat ;; (all-the-icons-faicon "hand-o-right" :foreground 'background)
+        "    " str))
+     cands
+     "\n"))
+  ;; 長い表示を shrink
+  (defun my:ivy--insert-prompt ()
+    "Custom."
+    (when (setq ivy--prompt (ivy-prompt))
+      (unless (memq this-command '(ivy-done
+                                   ivy-alt-done
+                                   ivy-partial-or-done
+                                   counsel-find-symbol))
+        (setq ivy--prompt-extra ""))
+      (let (head tail)
+        (if (string-match "\\(.*?\\)\\(:? ?\\)\\'" ivy--prompt)
+            (progn
+              (setq head (match-string 1 ivy--prompt))
+              (setq tail (match-string 2 ivy--prompt)))
+          (setq head ivy--prompt)
+          (setq tail ""))
+        (let ((inhibit-read-only t)
+              (std-props
+               '(front-sticky t rear-nonsticky t field t read-only t))
+              (n-str
+               (concat
+                (if (and (bound-and-true-p minibuffer-depth-indicate-mode)
+                         (> (minibuffer-depth) 1))
+                    (format "[%d] " (minibuffer-depth))
+                  "")
+                (concat
+                 (if (string-match "%d.*%d" ivy-count-format)
+                     (format head
+                             (1+ ivy--index)
+                             (or (and (ivy-state-dynamic-collection ivy-last)
+                                      ivy--full-length)
+                                 ivy--length))
+                   (format head
+                           (or (and (ivy-state-dynamic-collection ivy-last)
+                                    ivy--full-length)
+                               ivy--length)))
+                 ivy--prompt-extra
+                 tail)))
+              (d-str (if ivy--directory
+                         ;; max で 45文字 + 末尾のファイル名
+                         (my:shorten-file-path ivy--directory 45)
+                       "")))
+          (save-excursion
+            (goto-char (point-min))
+            (delete-region (point-min) (minibuffer-prompt-end))
+            (let ((len-n (length n-str))
+                  (len-d (length d-str))
+                  (ww (window-width)))
+              (setq n-str
+                    (cond ((> (+ len-n len-d) ww)
+                           (concat n-str "\n" d-str "\n"))
+                          ((> (+ len-n len-d (length ivy-text)) ww)
+                           (concat n-str d-str "\n"))
+                          (t
+                           (concat n-str d-str)))))
+            (when ivy-pre-prompt-function
+              (setq n-str (concat (funcall ivy-pre-prompt-function) n-str)))
+            (when ivy-add-newline-after-prompt
+              (setq n-str (concat n-str "\n")))
+            (let ((regex (format "\\([^\n]\\{%d\\}\\)[^\n]" (window-width))))
+              (while (string-match regex n-str)
+                (setq n-str (replace-match
+                             (concat (match-string 1 n-str) "\n")
+                             nil t n-str 1))))
+            (set-text-properties 0 (length n-str)
+                                 `(face minibuffer-prompt ,@std-props)
+                                 n-str)
+            (setq n-str (funcall ivy-set-prompt-text-properties-function
+                                 n-str std-props))
+            (insert n-str))
+          ;; Mark prompt as selected if the user moves there or it is the only
+          ;; option left.  Since the user input stays put, we have to manually
+          ;; remove the face as well.
+          (when ivy--use-selectable-prompt
+            (if (= ivy--index -1)
+                (ivy-add-face-text-property
+                 (minibuffer-prompt-end)
+                 (line-end-position)
+                 'ivy-prompt-match)
+              (remove-list-of-text-properties
+               (minibuffer-prompt-end) (line-end-position) '(face))))
+          ;; get out of the prompt area
+          (constrain-to-field nil (point-max))))))
+  ;;
+  :advice ((:override ivy--insert-prompt
+                      my:ivy--insert-prompt))
+  :init
+  (leaf flx :ensure t)
+  (leaf ivy-hydra :ensure t)
+  (leaf ivy-prescient
+    :ensure t
+    :config
+    (setq prescient-aggressive-file-save t
+          prescient-save-file
+          (expand-file-name (concat my:d:tmp "prescient-save.el"))
+          ivy-prescient-retain-classic-highlighting t
+          prescient-filter-method '(fuzzy regexp initialism)
+          )
+    ;; (1) マイナーモードの有効化
+    (ivy-prescient-mode 1)
+    ;; (2) =counsel-M-x= をイニシャル入力対応にする
+    (setf (alist-get 'counsel-M-x ivy-re-builders-alist)
+          #'ivy-prescient-re-builder)
+    ;; (3) デフォルトのイニシャル入力を上書きする
+    (setf (alist-get t ivy-re-builders-alist) #'ivy--regex-ignore-order)
+    )
+  :config
+  ;; 何回層入ったかプロンプトに表示．
+  (when (setq enable-recursive-minibuffers t)
+    (minibuffer-depth-indicate-mode 1))
+  ;; ESC連打でミニバッファを閉じる
+  (define-key ivy-minibuffer-map
+    (kbd "<escape>") 'minibuffer-keyboard-quit)
+  ;; ivy 本体の設定
+  (setq ivy-use-virtual-buffers t      ;; bookmark, recentf と結合
+        ivy-extra-directories nil      ;; default は "." と ".."
+        ivy-fixed-height-minibuffer t
+        ivy-height 9
+        ivy-wrap t
+        ivy-count-format "[%d/%d] "
+        ivy-pre-prompt-function #'my:ivy-pre-prompt-function
+        ivy-format-functions-alist '((t . my:ivy-format-function-arrow))
+        ivy-use-selectable-prompt t
+        ;; ivy-re-builders-alist '((t . ivy--regex-fuzzy))
+        ;; ivy-initial-inputs-alist nil
+        )
+  ;; (ivy-mode 1)  ;; 幾つか相性悪い奴がいるので, 全体で有効にはしない。
+  )
+   #+END_SRC
+** =all-the-icons-ivy=: 候補のアイコン表示
+   #+BEGIN_SRC emacs-lisp
+(leaf all-the-icons-ivy
+  :ensure t
+  :after all-the-icons-in-terminal
+  :config
+  (all-the-icons-ivy-setup)
+  )
+   #+END_SRC
+** =ivy-rich=: 補完候補の情報を増やす
+   現状は =counsel-M-x= に表示情報を増やすために利用している.
+   #+BEGIN_SRC emacs-lisp
+(leaf ivy-rich
+  :ensure t
+  :preface
+  :init
+  (setq ivy-rich-display-transformers-list
+        '(counsel-M-x
+          (:columns
+           ((counsel-M-x-transformer (:width 36))
+            (ivy-rich-counsel-function-docstring (:face font-lock-doc-face))))
+          ))
+  :config
+  (setq ivy-rich-path-style 'abbrev)
+  (ivy-rich-mode 1)
+  )
+   #+END_SRC
+** =counsel=: ivy による既存コマンドの拡張 [/]
+   #+BEGIN_SRC emacs-lisp
+(leaf counsel
+  :ensure t
+  :after ivy
+  :init
+  (leaf smex
+    :ensure t
+    :config
+    (setq smex-auto-update t
+          smex-save-file (concat my:d:tmp "smex-items")
+          smex-prompt-string "smex: "
+          smex-flex-matching t
+          )
+    )
+  ;;
+  (defun my:counsel-recentf ()
+    "Custom: Find a file on `recentf-list' with shorten-file-path"
+    (interactive)
+    (require 'recentf nil 'noerror)
+    (recentf-mode)
+    (ivy-read "Recentf: " (mapcar (lambda (f)
+                                    (cons (my:shorten-file-path f 70) f))
+                                  recentf-list)
+              :action (lambda (f)
+                        (with-ivy-window
+                          (find-file (cdr f))))
+              :require-match t
+              :caller 'counsel-recentf)
+    )
+  :bind (("C-x C-f" . counsel-find-file)
+         ("C-x C-r" . my:counsel-recentf)
+         ("M-x"     . counsel-M-x)
+         (:counsel-find-file-map
+          ("C-l" . counsel-up-directory)))
+  :config
+  ;; 無視する拡張子の追加
+  (cl-loop for ext in
+           '(".dvi"
+             ".fdb_latexmk"
+             ".fls"
+             ".ilg"
+             ".jqz"
+             ".mod"
+             ".nav"
+             ".out"
+             ".snm"
+             ".synctex.gz"
+             ".vrb"
+             ".zwc"
+             ".DS_Store"
+             )
+           do (add-to-list 'completion-ignored-extensions ext))
+  (setq counsel-find-file-ignore-regexp
+        (regexp-opt completion-ignored-extensions))
+  )
+   #+END_SRC
+   - [ ] smex と amx はどっちが良いかな?
+   - [ ] fzf, ag, ...
+** =swiper= [/]
+   未設定
+* 括弧の扱い: =smartparens=
+  #+BEGIN_SRC emacs-lisp
+(leaf smartparens
+  :ensure t
+  :diminish (smartparens-mode "")
+  :hook (after-init-hook . smartparens-global-mode)
+  :config
+  (require 'smartparens-config)
+  (sp-pair "=" "=" :actions '(wrap))
+  (sp-pair "+" "+" :actions '(wrap))
+  (sp-pair "<" ">" :actions '(wrap))
+  (sp-pair "$" "$" :actions '(wrap))
+  )
+  #+END_SRC
+* Windowのpopup: =popwin=
+  最近あんまり使ってない.
+  #+BEGIN_SRC emacs-lisp
+(leaf popwin :ensure t)
+  #+END_SRC
 * =ibuffer=: buffer の操作
-  ibuffer というより hydra の設定の様な気がしてきた．
+  buffer を眺めるのは ibuffer が好み
   #+begin_src emacs-lisp
 (leaf ibuffer
-  :bind (("C-x C-b" . ibuffer-other-window)
-         ("C-x b"   . ibuffer-other-window)
-         ("C-x M-b" . ibuffer)
-         (:ibuffer-mode-map
-          ("C-x C-f" . my:ibuffer-counsel-find-file))
-         ;; ("."      . hydra-ibuffer-main/body)
-         )
-  :init
-  (defun my:ibuffer-counsel-find-file ()
-    "Like `counsel-find-file', but default to the directory of the buffer at point."
+  :preface
+  (defun my:ibuffer-find-file ()
+    "Like `find-file', but default to the directory of the buffer at point."
     (interactive)
     (let ((default-directory
             (let ((buf (ibuffer-current-buffer)))
@@ -958,98 +1090,13 @@ init.el: README.org
                   (with-current-buffer buf
                     default-directory)
                 default-directory))))
-      (counsel-find-file default-directory)))
-  (leaf hydra :ensure t
-    :config
-    (defhydra hydra-ibuffer-main (:color pink :hint nil)
-"
- ^Navigation^ | ^Mark^        | ^Actions^        | ^View^
--^----------^-+-^----^--------+-^-------^--------+-^----^-------
-  _k_:    ʌ   | _m_: mark     | _D_: delete      | _g_: refresh
- _RET_: visit | _u_: unmark   | _S_: save        | _s_: sort
-  _j_:    v   | _*_: specific | _a_: all actions | _/_: filter
--^----------^-+-^----^--------+-^-------^--------+-^----^-------
-"
-    ("j"   ibuffer-forward-line)
-    ("RET" ibuffer-visit-buffer :color blue)
-    ("k"   ibuffer-backward-line)
-    ("m"   ibuffer-mark-forward)
-    ("u"   ibuffer-unmark-forward)
-    ("*"   hydra-ibuffer-mark/body :color blue)
-
-    ("D"   ibuffer-do-delete)
-    ("S"   ibuffer-do-save)
-    ("a"   hydra-ibuffer-action/body :color blue)
-
-    ("g"   ibuffer-update)
-    ("s"   hydra-ibuffer-sort/body :color blue)
-    ("/"   hydra-ibuffer-filter/body :color blue)
-
-    ("o" ibuffer-visit-buffer-other-window "other window" :color blue)
-    ("q" quit-window "quit ibuffer" :color blue)
-    ("." nil "toggle hydra" :color blue))
-
-    (defhydra hydra-ibuffer-mark (:color teal :columns 5
-                                         :after-exit (hydra-ibuffer-main/body))
-      "Mark"
-      ("*" ibuffer-unmark-all "unmark all")
-      ("M" ibuffer-mark-by-mode "mode")
-      ("m" ibuffer-mark-modified-buffers "modified")
-      ("u" ibuffer-mark-unsaved-buffers "unsaved")
-      ("s" ibuffer-mark-special-buffers "special")
-      ("r" ibuffer-mark-read-only-buffers "read-only")
-      ("/" ibuffer-mark-dired-buffers "dired")
-      ("e" ibuffer-mark-dissociated-buffers "dissociated")
-      ("h" ibuffer-mark-help-buffers "help")
-      ("z" ibuffer-mark-compressed-file-buffers "compressed")
-      ("b" hydra-ibuffer-main/body "back" :color blue))
-
-    (defhydra hydra-ibuffer-action (:color teal :columns 4
-                                           :after-exit
-                                           (if (eq major-mode 'ibuffer-mode)
-                                               (hydra-ibuffer-main/body)))
-      "Action"
-      ("A" ibuffer-do-view "view")
-      ("E" ibuffer-do-eval "eval")
-      ("F" ibuffer-do-shell-command-file "shell-command-file")
-      ("I" ibuffer-do-query-replace-regexp "query-replace-regexp")
-      ("H" ibuffer-do-view-other-frame "view-other-frame")
-      ("N" ibuffer-do-shell-command-pipe-replace "shell-cmd-pipe-replace")
-      ("M" ibuffer-do-toggle-modified "toggle-modified")
-      ("O" ibuffer-do-occur "occur")
-      ("P" ibuffer-do-print "print")
-      ("Q" ibuffer-do-query-replace "query-replace")
-      ("R" ibuffer-do-rename-uniquely "rename-uniquely")
-      ("T" ibuffer-do-toggle-read-only "toggle-read-only")
-      ("U" ibuffer-do-replace-regexp "replace-regexp")
-      ("V" ibuffer-do-revert "revert")
-      ("W" ibuffer-do-view-and-eval "view-and-eval")
-      ("X" ibuffer-do-shell-command-pipe "shell-command-pipe")
-      ("b" nil "back"))
-
-    (defhydra hydra-ibuffer-sort (:color amaranth :columns 3)
-      "Sort"
-      ("i" ibuffer-invert-sorting "invert")
-      ("a" ibuffer-do-sort-by-alphabetic "alphabetic")
-      ("v" ibuffer-do-sort-by-recency "recently used")
-      ("s" ibuffer-do-sort-by-size "size")
-      ("f" ibuffer-do-sort-by-filename/process "filename")
-      ("m" ibuffer-do-sort-by-major-mode "mode")
-      ("b" hydra-ibuffer-main/body "back" :color blue))
-
-    (defhydra hydra-ibuffer-filter (:color amaranth :columns 4)
-      "Filter"
-      ("m" ibuffer-filter-by-used-mode "mode")
-      ("M" ibuffer-filter-by-derived-mode "derived mode")
-      ("n" ibuffer-filter-by-name "name")
-      ("c" ibuffer-filter-by-content "content")
-      ("e" ibuffer-filter-by-predicate "predicate")
-      ("f" ibuffer-filter-by-filename "filename")
-      (">" ibuffer-filter-by-size-gt "size")
-      ("<" ibuffer-filter-by-size-lt "size")
-      ("/" ibuffer-filter-disable "disable")
-      ("b" hydra-ibuffer-main/body "back" :color blue))
-    )
+      (find-file default-directory)))
+  :bind (("C-x C-b" . ibuffer-other-window)
+         ("C-x b"   . ibuffer-other-window)
+         ("C-x M-b" . ibuffer)
+         (:ibuffer-mode-map
+          ("C-x C-f" . my:ibuffer-find-file))
+         )
   :config
   (define-ibuffer-column icon (:name "  ")
     (let ((icon
@@ -1130,48 +1177,12 @@ init.el: README.org
       (dired-revert)))
   )
   #+end_src
-* Emacs-W3m
-  eww がイマイチしっくり来ないので, 結局[[http://emacs-w3m.namazu.org/index-ja.html][Emacs-w3m]]を使っている.
+* TODO =ace-link=: リンクを簡単に辿る [0/1]                          :Debian:
   #+begin_src emacs-lisp
-(leaf w3m
-  :if (executable-find "w3m")
-  :commands (w3m-goto-url w3m-search)
-  :bind (("<f2>"     . w3m)
-         (:w3m-mode-map
-          ("<left>"  . backward-char)
-          ("<right>" . forward-char)
-          ("<up>"    . previous-line)
-          ("<down>"  . next-line))
-         (:w3m-minor-mode-map
-          ("<left>"  . backward-char)
-          ("<right>" . forward-char)
-          ("<up>"    . previous-line)
-          ("<down>"  . next-line)))
-  :config
-  (setq w3m-search-default-engine "google"
-        w3m-use-cookies t
-        w3m-use-form t
-        )
-  )
-  #+end_src
-  とはいえ，これでbrowseすることは滅多に無いのだけれど．
-* =ace-link=: リンクを簡単に辿る [0/1]
-  #+begin_src emacs-lisp
-(leaf ace-link
-  :ensure t
-  :after w3m
-  :bind ((:w3m-mode-map
-          ("f" . ace-link-w3m))
-         ;; (:eww-mode-map
-         ;; ("f" . ace-link-eww))
-         )
-  :config
-  (ace-link-setup-default)
-  )
   #+end_src
   - [ ] Debianパッケージ版は古い。要更新
 * Elscreen
-** 導入 [0/1]
+** TODO 導入 [0/1]                                                   :Debian:
    emacs-jpのfolk版を利用中。
    modeline の表示そのものは無効化しておく．
    #+begin_src emacs-lisp
@@ -1256,7 +1267,7 @@ Emacs*useXIM: false
     #+end_src
     候補表示件数を2列に
     #+begin_src emacs-lisp :tangle init-ddskk.el
-(setq skk-henkan-number-to-display-candidates 2)
+(setq skk-henkan-number-to-display-candidates 5)
     #+end_src
     日本語表示しない
     #+begin_src emacs-lisp :tangle init-ddskk.el
@@ -1495,16 +1506,16 @@ File.open(src, "r") {|f|
    便利そうなんだけれど, イマイチ上手く使いこなせていない．
    #+begin_src emacs-lisp
 (leaf redpen-paragraph
+  :disabled
   :if (executable-find "redpen")
-  :disabled t
   :ensure t
   :bind ("C-c R" . redpen-paragraph)
   ;; :hook (kill-emacs-hook . (if (file-exists-p redpen-temporary-filename)
   ;;                             (delete-file redpen-temporary-filename)))
-  :init
-  (setq redpen-commands
-    '("redpen -r json -c ~/.config/redpen/redpen-conf-en.xml %s 2>/dev/null"
-      "redpen -r json -c ~/.config/redpen/redpen-conf-ja.xml %s 2>/dev/null")
+  :preface
+  (defvar redpen-commands
+    '("redpen -r json -c ~/.config/redpen/redpen-conf-en.xml %s"
+      "redpen -r json -c ~/.config/redpen/redpen-conf-ja.xml %s")
     )
   :config
   (add-hook 'kill-emacs-hook
@@ -1526,6 +1537,7 @@ File.open(src, "r") {|f|
    flyspell-mode は別途有効化しておいた方が良いのかもしれない
    #+begin_src emacs-lisp
 (leaf flyspell
+  :disabled t
   :preface
   (defun my:flyspell-popup-choose (orig event poss word)
     (if (window-system)
@@ -1697,10 +1709,11 @@ File.open(src, "r") {|f|
 (add-to-list 'mime-charset-coding-system-alist '(iso-2022-jp . cp50220))
 (setq wl-mime-charset 'iso-2022-jp)
      #+end_src
-**** elscreen-wl [0/1]
+**** TODO elscreen-wl [0/1]
      メール作成時に =elscreen= と連携してくれる．便利
      #+begin_src emacs-lisp :tangle init-wl.el
 (leaf elscreen-wl
+  :disabled t
   :el-get (elscreen-wl
            :type github
            :pkgname "syohex/emacs-elscreen-wl")
@@ -1711,23 +1724,30 @@ File.open(src, "r") {|f|
      HTML メールを表示するために eww を使う.
      mime-setup がロードされる前に記述する必要あり.
      #+begin_src emacs-lisp :tangle init-wl.el
-;; (setq mime-view-text/html-previewer 'shr)
-;; (setq mime-setup-enable-inline-html 'shr)
-;; 幅指定 → 実際の関数は eww の設定を参照
-;; (defvar my:shr-width 78)
-;; (defun my:shr-insert-document (&rest them)
-;;   (let ((shr-width (min (1- (window-width)) my:shr-width)))
-;;    (apply them)))
-;; (defun my:mime-shr-preview-text/html (&rest args)
-;;   (advice-add 'shr-insert-document :around 'my:shr-insert-document)
-;;   (unwind-protect
-;;       (apply args)
-;;     (advice-remove 'shr-insert-document 'my:shr-insert-document)))
-;; (advice-add 'mime-shr-preview-text/html :around
-;;            'my:mime-shr-preview-text/html)
-;;
-(leaf mime-w3m :require t)
-(leaf mime-setup)
+(leaf mime-setup
+  :preface
+  (setq mime-view-text/html-previewer 'shr
+        mime-setup-enable-inline-html 'shr)
+  (defvar my:shr-width 72)
+  ;;
+  (defun my:shr-insert-document (&rest them)
+    (let ((shr-width my:shr-width)) (apply them)))
+  ;;
+  (defun my:mime-shr-preview-text/html (&rest args)
+    (advice-add 'shr-insert-document :around 'my:shr-insert-document)
+    (unwind-protect
+        (apply args)
+      (advice-remove 'shr-insert-document 'my:shr-insert-document)))
+  ;;
+  (advice-add 'mime-shr-preview-text/html :around
+              'my:mime-shr-preview-text/html)
+  ;;
+  :config
+  (with-eval-after-load 'shr
+    (setq shr-use-colors nil
+          shr-use-fonts nil
+          shr-width 72))
+  )
      #+end_src
      どのアプリケーションで開くか → =xdg-open= に丸投げ．
      #+begin_src emacs-lisp :tangle init-wl.el
@@ -1745,10 +1765,10 @@ video/*; xdg-open %s;
       (concat my:d:tmp "mime-example"))
      #+end_src
      text/plain を html より優先
-     #+begin_src emacs-lisp :tangle no
+     #+begin_src emacs-lisp :tangle init-wl.el
 (setq mime-view-type-subtype-score-alist
-      '(((text . plain) . 0)
-        ((text . html)  . 1)
+      '(((text . plain) . 1)
+        ((text . html)  . 0)
         ))
      #+end_src
      音を鳴らすアレやコレの無効化
@@ -2076,7 +2096,7 @@ video/*; xdg-open %s;
      #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-summary-line-format
       "%T%P%1@%1>%Y/%M/%D %21(%t%[%19(%c %f%)%]%) %#%~%s"
-      wl-summary-width 84)
+      wl-summary-width (- (window-width) 1))
      #+end_src
      サマリ表示は切り詰めない
      #+begin_src emacs-lisp  :tangle init-wl.el
@@ -2208,6 +2228,7 @@ video/*; xdg-open %s;
         "X-ML-Address"
         "X-ML-Name"
         "X-ML-To"
+        "X-Loop"
         "Delivered-To"
         "Content-Type"              ;; 添付の有無の表示の為に追加
         "X-Google-Appengine-App-Id" ;; GAEの送信するメールの振り分け用
@@ -2675,9 +2696,10 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (setq org-id-locations-file (concat my:d:share "org-id-locations"))
   )
    #+end_src
-** Babel
+** TODO Babel [0/1]
    #+begin_src emacs-lisp
 (leaf org-src
+  :after all-the-icons-in-terminal
   :diminish (org-src-mode (format " %s" (all-the-icons-octicon "code")))
   :config
   (setq org-src-fontify-natively t       ;; font-lock
@@ -2687,6 +2709,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         )
   )
    #+end_src
+   - [ ] =diminish= がちゃんと動いていない
 ** Agenda: スケジュール，TODO 表示
    GTD 用の設定．後述の =org-gcal= と =orgmine= で取得したデータも表示している．
    ついでに
@@ -2884,6 +2907,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         org-journal-time-format "<%Y-%m-%d %R> "
         org-journal-time-prefix "** MEMO "
         org-journal-find-file 'find-file
+        org-journal-cache-file (concat my:d:tmp "org-journal.cache")
         )
   )
 ;; Key bindings -- 使えてない...
@@ -3029,6 +3053,243 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     )
   )
    #+end_src
+** Org-Export
+*** 一般設定
+    #+BEGIN_SRC emacs-lisp
+(leaf ox
+  :preface
+  ;; 空行の削除
+  (defun my:remove-org-newlines-at-cjk-text (&optional _mode)
+    "先頭が '*', '#', '|' でなく、改行の前後が日本の文字の場合はその改行を除去"
+    (interactive)
+    (goto-char (point-min))
+    (while (re-search-forward "^\\([^|#*\n].+\\)\\(.\\)\n *\\(.\\)" nil t)
+      (if (and (> (string-to-char (match-string 2)) #x2000)
+               (> (string-to-char (match-string 3)) #x2000))
+          (replace-match "\\1\\2\\3"))
+      (goto-char (point-at-bol))))
+  :hook (org-export-before-processing-hook . my:remove-org-newlines-at-cjk-text)
+  :config
+  (setq org-export-with-toc nil
+        org-export-with-section-numbers nil)
+  ;; for Beamer
+  (add-to-list 'org-export-options-alist
+               '(:shortdate    "SHORTDATE" nil nil))
+  (add-to-list 'org-export-options-alist
+               '(:shorttitle   "SHORTTITLE" nil nil))
+  ;; for Jekyll
+  (add-to-list 'org-export-options-alist
+               '(:layout    "LAYOUT" nil "default"))
+  (add-to-list 'org-export-options-alist
+               '(:ref       "REF" nil nil))
+  (add-to-list 'org-export-options-alist
+               '(:permalink "PERMALINK" nil nil))
+  (add-to-list 'org-export-options-alist
+               '(:redirect_from "redirect_from" nil nil))
+  (add-to-list 'org-export-options-alist
+               '(:redirect_to "redirect_to" nil nil))
+  )
+    #+END_SRC
+*** LaTeX export
+    #+BEGIN_SRC emacs-lisp
+(leaf ox-latex
+  :after ox
+  :config
+  (add-to-list 'org-latex-classes
+               '("my:platex"
+                 "\\documentclass[a4j]{jsarticle}
+                     [NO-DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
+                 ("\\section\{%s\}" . "\\section*\{%s\}")
+                 ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
+                 ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
+               )
+  ;;
+  (add-to-list 'org-latex-classes
+               '("my:bxjsartible"
+                 "\\documentclass[a4j,ja=standard]{bxjsarticle}
+                     [NO-DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
+                 ("\\section\{%s\}" . "\\section*\{%s\}")
+                 ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
+                 ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
+               )
+  (setq org-latex-pdf-process '("latexmk %f"))
+  ;; "verbatim" → "Verbatim" 置換
+  (defun my:org-latex-filter-fancyvrb (text backend _info)
+    "Convert begin/end{verbatim} to begin/end{Verbatim}.
+  Allows use of the fancyvrb latex package."
+    (when (or (org-export-derived-backend-p backend 'beamer)
+              (org-export-derived-backend-p backend 'latex))
+      (replace-regexp-in-string
+       "\\\\\\(begin\\|end\\){verbatim}"
+       "\\\\\\1{Verbatim}" text)))
+  (add-to-list 'org-export-filter-final-output-functions
+               'my:org-latex-filter-fancyvrb)
+  ;; "tabular" →  "Tabular"  置換
+  ;; (defun my:org-latex-filter-bigtabular (text backend _info)
+  ;;   "Convert begin/end{tabular} to begin/end{Tabular}."
+  ;;   (when (or (org-export-derived-backend-p backend 'beamer)
+  ;;             (org-export-derived-backend-p backend 'latex))
+  ;;     (replace-regexp-in-string
+  ;;      "\\\\\\(begin\\|end\\){tabular}"
+  ;;      "\\\\\\1{Tabular}" text)))
+  ;; (add-to-list 'org-export-filter-final-output-functions
+  ;;              'my:org-latex-filter-bigtabular)
+  )
+    #+END_SRC
+*** Beamer export
+    #+BEGIN_SRC emacs-lisp
+(leaf ox-beamer
+  :after ox-latex
+  :config
+  (add-to-list 'org-latex-classes
+               '("my:beamer"
+                 "\\documentclass[dvipdfmx,presentation]{beamer}
+                     [NO-DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
+                 ("\\section\{%s\}" . "\\section*\{%s\}")
+                 ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
+                 ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
+               )
+  ;;
+  (add-to-list 'org-latex-classes
+               '("my:beamer-uplatex"
+                 "\\documentclass[dvipdfmx,presentation]{beamer}
+                     [NO-DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
+                 ("\\section\{%s\}" . "\\section*\{%s\}")
+                 ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
+                 ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
+               )
+  (add-to-list 'org-latex-classes
+               '("my:beamer-pdflatex"
+                 "\\documentclass[unicode,presentation]{beamer}
+                     [NO-DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
+                 ("\\section\{%s\}" . "\\section*\{%s\}")
+                 ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
+                 ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
+               )
+  )
+    #+END_SRC
+    LATEX_CLASS に =my:beamer= を指定すると，上記設定で export される．
+*** HTML export
+    後述の Jekyll 用の設定も参照のこと．
+    #+BEGIN_SRC emacs-lisp
+(leaf ox-html
+  :after ox
+  :config
+  (setq org-html-use-infojs nil
+        org-html-html5-fancy t
+        org-export-htmlize-output-type 'inline-css
+        org-html-doctype "html5"
+        org-html-text-markup-alist
+        '((bold           . "<strong>%s</strong>")
+          (code           . "<code>%s</code>")
+          (italic         . "<i>%s</i>")
+          (strike-through . "<del>%s</del>")
+          (underline      . "<span class=\"underline\">%s</span>")
+          (verbatim       . "<code>%s</code>")))
+  )
+    #+END_SRC
+*** Jekyll 用の Backend の定義
+    Web サイトは Jekyll で作成しています．
+    [[https://github.com/yoshinari-nomura/org-octopress][yoshinari-nomura/org-octopress: org-mode in octopress]] の
+    =ox-jekyll= を参考に +改造して+ ，
+    html export の際に必要な yaml front matter を出力できるようにしてます．
+    あと，src-block が liquid に解釈されない様に escape してます．
+     #+BEGIN_SRC emacs-lisp
+(leaf ox-html
+  :disabled t
+  :config
+  (org-export-define-derived-backend 'jekyll 'html
+    :menu-entry
+    '(?j "Jekyl: export to html with YAML front matter."
+         ((?H "To temporary buffer"
+              (lambda (a s v b) (org-jekyll-export-as-html a s v)))
+          (?h "To file" (lambda (a s v b) (org-jekyll-export-to-html a s v)))))
+    :translate-alist
+    '((template  . org-jekyll-template)
+      )
+    :filters-alist
+    '((:filter-final-output . org-jekyll-finalized))
+    )
+  ;; template
+  (defun org-jekyll-template (contents info)
+    "Return complete document string after HTML conversion."
+    (concat (org-jekyll--yaml-front-matter info) contents))
+  ;; 幾つかの文字列を置換する
+  ;;  - liquid templateに誤認される `{%', `%}'
+  ;;  - `:' の escape
+  ;;  - table-of-contents の処理
+  (defun org-jekyll-finalized (contents _backend info)
+    "Publish src-block to html, Escape liquid tags, e.g. {%, %}"
+    (with-temp-buffer
+      (insert contents)
+      (perform-replace "&$58;" "&#58;" nil nil nil nil nil (point-min) (point-max))
+      (perform-replace "{%" "&#123;%" nil nil nil nil nil (point-min) (point-max))
+      (perform-replace "%}" "%&#125;" nil nil nil nil nil (point-min) (point-max))
+      (perform-replace "<nav id=\"table-of-contents" "<div id=\"toc-wrapper\">
+<nav id=\"table-of-contents" nil nil nil nil nil (point-min) (point-max))
+      (perform-replace "</nav>" (format "</nav>
+</div>
+<a href=\"#toc-toggle\" class=\"btn toc-btn\" id=\"toc-toggle\">%s</a>"
+                                        (org-html--translate "Table of Contents" info))
+                       nil nil nil nil nil (point-min) (point-max))
+      (set-auto-mode t)
+      (buffer-substring-no-properties (point-min) (point-max))))
+  ;;
+  (defun org-jekyll--get-option (info property-name &optional default)
+    (let ((property (org-export-data (plist-get info property-name) info)))
+      (format "%s" (or property default ""))))
+  ;;
+  (defun org-jekyll--yaml-front-matter (info)
+    (let ((title
+           (org-jekyll--get-option info :title))
+          (date
+           (org-jekyll--get-option info :date))
+          (language
+           (org-jekyll--get-option info :language))
+          (layout
+           (org-jekyll--get-option info :layout))
+          (jekyll-ref
+           (org-jekyll--get-option info :ref ))
+          (jekyll-permalink
+           (org-jekyll--get-option info :permalink ))
+          (jekyll-redirect-from
+           (org-jekyll--get-option info :redirect_from ))
+          (jekyll-redirect-to
+           (org-jekyll--get-option info :redirect_to ))
+          (convert-to-yaml-list
+           (lambda (arg)
+             (mapconcat #'(lambda (text)(concat "\n- " text)) (split-string arg) " "))))
+      (concat
+       "---"
+     "\ntitle: "      (s-replace ":" "&$58;" title)
+     "\ndate: "       date
+     "\nlayout: "     layout
+     "\nlang: "       language
+     (unless (string-equal jekyll-ref "")
+       (concat "\nref: " jekyll-ref))
+     (unless (string-equal jekyll-permalink "")
+       (concat "\npermalink: " jekyll-permalink))
+     (unless (string-equal jekyll-redirect-from "")
+       (concat "\nredirect_from: " jekyll-redirect-from))
+     (unless (string-equal jekyll-redirect-to "")
+       (concat "\nredirect_to: " jekyll-redirect-to))
+     "\n---\n")))
+
+(defun org-jekyll-export-as-html
+    (&optional async subtreep visible-only body-only ext-plist)
+  "Export current buffer to a HTML buffer adding some YAML front matter."
+  (interactive)
+  (org-export-to-buffer 'jekyll "*Org Jekyll HTML Export*"
+    async subtreep visible-only body-only ext-plist (lambda () (html-mode))))
+
+(defun org-jekyll-export-to-html
+    (&optional async subtreep visible-only body-only ext-plist)
+  "Export current buffer to a HTML file adding some YAML front matter."
+  (interactive)
+  (let ((outfile (org-export-output-file-name ".html" subtreep)))
+    (org-export-to-file 'jekyll outfile async subtreep visible-only body-only ext-plist)))
+)
+     #+END_SRC
 * Outline Magic
   どんどん増えそう．
   #+BEGIN_SRC emacs-lisp
@@ -3074,8 +3335,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :bind (("C-x g" . magit-status))
   :ensure t
   :config
-  ;; magit-completing-read-function 'magit-ido-completing-read
-  (setq magit-refs-show-commit-count 'all
+  (setq magit-completing-read-function 'ivy-completing-read
+        magit-refs-show-commit-count 'all
         magit-log-buffer-file-locked t
         magit-revision-show-gravatars nil
         )
@@ -3088,23 +3349,13 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :if (and (executable-find "git")
            (>= emacs-major-version 25))
   :ensure t
+  :diminish (git-gutter+-mode
+             (format "%s" (all-the-icons-octicon "git-merge")))
   :bind ("C-x G" . global-git-gutter+-mode)
   )
    #+end_src
-** ghq
-   #+BEGIN_SRC emacs-lisp
-(leaf ivy-ghq
-  :if (executable-find "ghq")
-  :el-get (ivy-ghq
-           :type github
-           :pkgname "analyticd/ivy-ghq")
-  :bind (("C-x f" . ivy-ghq-open))
-  :config
-  (setq ivy-ghq-short-list t)
-  )
-   #+END_SRC
 * Project 管理
-  リポジトリの移動には ghq を使っているけれど.
+  結局上手く使い込なせなくて，リポジトリの移動には ghq を使っているけれど.
   #+BEGIN_SRC emacs-lisp
 (leaf projectile
   :if (executable-find "ghq")
@@ -3124,8 +3375,14 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         projectile-file-exists-remote-cache-expire (* 10 60)
         projectile-completion-system 'ivy
         projectile-dynamic-mode-line nil
-        projectile-mode-line-prefix (format " %s" (all-the-icons-octicon "repo"))
+        projectile-mode-line-prefix (format "%s" (all-the-icons-octicon "repo"))
         )
+  (defun my:projectile-project-find-function (dir)
+    (let ((root (projectile-project-root dir)))
+      (and root (cons 'transient root))))
+  (with-eval-after-load 'project
+    (add-to-list 'project-find-functions
+                 'my:projectile-project-find-function))
   )
   #+END_SRC
 * 関数定義を辿る: =dump-jump=
@@ -3140,13 +3397,94 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
          ("M-g i" . dumb-jump-go-prompt)
          ("M-g x" . dumb-jump-go-prefer-external)
          ("M-g z" . dumb-jump-go-prefer-external-other-window))
-  :after ivy
   :config
-  (setq dumb-jump-selector 'ivy
+  (setq dumb-jump-selector 'ido
         dumb-jump-force-searcher 'rg
         )
 )
   #+END_SRC
+* テンプレート補完: =yasnippet=
+  #+BEGIN_SRC emacs-lisp
+(leaf yasnippet
+  :ensure t
+  :diminish (yas-minor-mode "")
+  :hook (after-init-hook . yas-global-mode)
+  :config
+  (setq yas-snippet-dirs '("~/.emacs.d/share/snippets"))
+  )
+  #+END_SRC
+* TODO LSP: =lsp-mode= [0/1]
+  #+BEGIN_SRC emacs-lisp
+(leaf lsp-mode
+  :ensure t
+  :commands (lsp lsp-deferred)
+  :preface
+  (defun my:lsp-mode-line ()
+    "Custom: disable mode-line text"
+    "")
+  :advice (:override lsp-mode-line
+                     my:lsp-mode-line)
+  ;;
+  :hook ((fortran-mode-hook . lsp-deferred)
+         (f90-mode-hook . lsp-deferred)
+         )
+  :init
+  (leaf lsp-ui
+    :ensure t
+    :commands lsp-ui-mode
+    :preface
+    (defun ladicle/toggle-lsp-ui-doc ()
+      (interactive)
+      (if lsp-ui-doc-mode
+          (progn
+            (lsp-ui-doc-mode -1)
+            (lsp-ui-doc--hide-frame))
+        (lsp-ui-doc-mode 1)))
+    :config
+    (setq lsp-ui-doc-enable t
+          lsp-ui-doc-header t
+          lsp-ui-doc-include-signature t
+          ;; lsp-ui-doc-position 'at-point
+          ;; lsp-ui-doc-max-width 150
+          ;; lsp-ui-doc-max-height 30
+          ;; lsp-ui-doc-use-childframe t
+          ;; lsp-ui-doc-use-webkit t
+          ;; lsp-ui-flycheck
+          lsp-ui-flycheck-enable nil
+          ;; lsp-ui-sideline
+          lsp-ui-sideline-enable nil
+          ;; lsp-ui-imenu
+          lsp-ui-imenu-enable nil
+          ;; lsp-ui-peek
+          lsp-ui-peek-enable t
+          lsp-ui-peek-peek-height 20
+          lsp-ui-peek-list-width 50
+          lsp-ui-peek-fontify 'on-demand
+          )
+    )
+  (leaf company-lsp
+    :ensure t
+    :commands (company-lsp company-lsp-async)
+    :config
+    (setq company-lsp-cache-candidates t ;; auto, t(using a cache), or nil
+          company-lsp-async t
+          company-lsp-enable-snippet t
+          company-lsp-enable-recompletion t)
+    )
+  :config
+  (setq lsp-print-io nil             ;; debug
+        lsp-trace nil
+        lsp-print-performance nil
+        lsp-auto-guess-root t        ;; general
+        lsp-document-sync-method 'incremental
+        lsp-response-timeout 5
+        lsp-prefer-flymake 'flymake
+        lsp-enable-completion-at-point nil
+        lsp-session-file (concat my:d:tmp "lsp-session-v1")
+        )
+  )
+  #+END_SRC
+  - [ ] まだ設定中.
 * 言語毎の補完: =company-mode=
   まだうまく使いこなせていない．
   - [[https://qiita.com/wktkshn/items/3ac46671d1c242a59f7e][company-dabbrevで日本語を補完しない]]
@@ -3155,16 +3493,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 (leaf company
   :ensure t
   :diminish (company-mode
-             (format " %s" (all-the-icons-octicon "light-bulb")))
-  :bind ((:company-active-map
-          ("C-n"   . company-select-next)
-          ("C-p"   . company-select-previous)
-          ("<tab>" . company-complete-common-or-cycle))
-         (:company-search-map
-          ("C-p" . company-select-previous)
-          ("C-n" . company-select-next)))
-  :hook (after-init-hook . global-company-mode)
-  :init
+             (format " %s" (all-the-icons-material "highlight")))
+  :preface
   (defun my:edit-category-table-for-company-dabbrev (&optional table)
     "日本語をdabbrevから外す"
     (define-category ?s "word constituents for company-dabbrev" table)
@@ -3174,6 +3504,16 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
             (modify-category-entry i ?s table)
           (modify-category-entry i ?s table t))
         (setq i (1+ i)))))
+  :bind ((:company-active-map
+          ("C-n"   . company-select-next)
+          ("C-p"   . company-select-previous)
+          ("C-s"   . company-filter-candidates)
+          ("<tab>" . company-complete-common-or-cycle))
+         (:company-search-map
+          ("C-p" . company-select-previous)
+          ("C-n" . company-select-next)))
+  :hook ((after-init-hook . global-company-mode)
+         )
   :config
   ;; (global-set-key (kbd "<tab>") 'company-indent-or-complete-common)
   (setq company-idle-delay 0
@@ -3184,42 +3524,28 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     ;; (add-hook 'TeX-mode-hook 'edit-category-table-for-company-dabbrev)
     (setq company-dabbrev-char-regexp "\\cs")
     )
+  ;; yasnippetとの連携
+  (defvar company-mode/enable-yas t
+    "Enable yasnippet for all backends.")
+  (defun company-mode/backend-with-yas (backend)
+    (if (or (not company-mode/enable-yas)
+            (and (listp backend) (member 'company-yasnippet backend)))
+        backend
+      (append (if (consp backend) backend (list backend))
+              '(:with company-yasnippet))))
+  (setq company-backends
+        (mapcar #'company-mode/backend-with-yas company-backends))
   )
   #+END_SRC
-  - [ ] [[https://github.com/TheBB/company-reftex][TheBB/company-reftex]]
-  - [ ] [[https://github.com/vspinu/company-math][vspinu/company-math]]
-  - [ ] [[https://github.com/alexeyr/company-auctex][alexeyr/company-auctex]]
+  - [X] [[https://github.com/TheBB/company-reftex][TheBB/company-reftex]]
+  - [X] [[https://github.com/vspinu/company-math][vspinu/company-math]]
+  - [X] [[https://github.com/alexeyr/company-auctex][alexeyr/company-auctex]]
 * 言語毎のon-the-fly check: =flycheck=
   わりと決め打ち多くて，flymakeの方が楽かもしれない，とか思ったり．
   #+BEGIN_SRC emacs-lisp
 (leaf flycheck
+  :disabled t
   :ensure t
-  )
-  #+END_SRC
-* LSP:
-  まだ設定中.
-  #+BEGIN_SRC emacs-lisp
-(leaf lsp-mode
-  :ensure t
-  :hook ((f90-mode     . lsp)
-         (fortran-mode . lsp)
-         )
-  :init
-  (leaf lsp-ui
-    :ensure t
-    :commands lsp-ui-mode
-    :hook (lsp-mode . lsp-ui-mode)
-    :config
-    (setq lsp-ui-flycheck-enable nil) ;; ???
-    )
-  (leaf company-lsp
-    :ensure t
-    :commands company-lsp
-    )
-  :config
-  (setq lsp-prefer-flymake nil  ;; ???
-        lsp-auto-guess-root t
-        )
   )
   #+END_SRC
 * TeX: =AUCTeX=
@@ -3230,11 +3556,27 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   と言った所.
   [[http://personal.psu.edu/jcc8/software/latexmk/][Latexmk]]の設定には[[https://github.com/tom-tan/auctex-latexmk][auctex-latexmk]]を利用する．
   #+BEGIN_SRC emacs-lisp
-(leaf tex-jp
+(leaf auctex
   :if (and (executable-find "uplatex")
-           (my:dpkg-status "auctex"))
-  :mode ("\\.\\(tex\\|sty\\)\\'" . japanese-latex-mode)
+           (executable-find "latexmk"))
+  :after company
+  :ensure t
   :init
+  (leaf reftex
+    :config
+    (setq reftex-plug-into-AUCTeX t
+          reftex-cite-prompt-optional-args t)
+    )
+  (leaf company-reftex
+    :ensure t
+    :hook (LaTeX-mode-hook . reftex-mode)
+    )
+  (leaf company-math :ensure t)
+  (leaf company-auctex
+    :ensure t
+    :hook
+    (LaTeX-mode-hook . company-auctex-init)
+    )
   (leaf auctex-latexmk
     :el-get (auctex-latexmk
              :type github
@@ -3246,28 +3588,11 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
           japanese-LaTeX-command-default "LaTeX"
           )
     )
-  (leaf reftex
-    :hook (LaTeX-mode-hook . reftex-mode)
-    :config
-    (setq reftex-plug-into-AUCTeX t
-          reftex-cite-prompt-optional-args t)
-    )
-  :hook (LaTeX-mode-hook . (lambda ()
-                             (TeX-source-correlate-mode)
-                             (TeX-PDF-mode)))
+  ;; auctex hook
+  :hook ((LaTeX-mode-hook . (lambda ()
+                              (TeX-source-correlate-mode)
+                              (TeX-PDF-mode))))
   :config
-  (dolist (command '("pTeX" "pLaTeX" "jTeX" "jLaTeX" "jBibTeX" "Mendex"
-                     "upMendex" "pBibTeX" "BibTeX" "Biber" "Ps2pdf" ))
-    (delq (assoc command TeX-command-list) TeX-command-list))
-  (if (executable-find "atril")
-      (add-hook 'LaTeX-mode-hook
-                (function (lambda ()
-                            (add-to-list 'TeX-command-list
-                                         '("Atril"
-                                        ;"synctex view -i \"%n:0:%b\" -o %s.pdf -x \"atril -i %%{page+1} %%{output}\""
-                                           "TeX-atril-sync-view"
-                                           TeX-run-discard-or-function t t :help "Forward search with Atril"))
-                            ))))
   (setq japanese-TeX-engine-default 'ptex
         japanese-LaTeX-default-style "bxjsarticle"
         TeX-command-output-list '(("LaTeXMk" ("pdf")))
@@ -3277,8 +3602,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         TeX-source-correlate-start-server t
         TeX-source-correlate-mode t
         TeX-view-program-selection '((output-dvi "xdvi")
-                                     (output-pdf "Atril")
-                                     ;; (output-pdf "Evince")
+                                     (output-pdf "Evince")
                                      (output-html "xdg-open"))
         TeX-auto-save t
         TeX-auto-local  (expand-file-name "auctex/auto" my:d:tmp)
@@ -3289,6 +3613,10 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         font-latex-script-display nil
         font-latex-fontify-sectioning 1.0
         )
+  (with-eval-after-load 'tex-jp
+    (dolist (command '("pTeX" "pLaTeX" "jTeX" "jLaTeX" "jBibTeX" "Mendex"
+                       "upMendex" "pBibTeX" "BibTeX" "Biber" "Ps2pdf" ))
+      (delq (assoc command TeX-command-list) TeX-command-list)))
   )
   #+END_SRC
   =~/.latexmkrc= は以下の通り
@@ -3316,6 +3644,34 @@ $clean_ext = "snm nav vrb synctex.gz";
            :url "https://download.tuxfamily.org/user42/sh-autoconf.el")
   :mode (("/configure\\.\\(ac\\|in\\)\\'"    . sh-mode)
          ("/ac\\(include\\|local\\)\\.m4\\'" . sh-mode))
+  )
+  #+END_SRC
+* Fortran
+  #+BEGIN_SRC emacs-lisp
+(leaf f90
+  :mode ("\\.\\(f|F\\)\\(90|95|03|08\\)$" . f90-mode)
+  :config
+  (add-hook 'f90-mode-hook
+            (lambda ()
+              (setq f90-do-indent 2
+                    f90-if-indent 2
+                    f90-type-indent 2
+                    f90-program-indent 2
+                    f90-continuation-indent 2
+                    f90-directive-comment-re "!omp\\$"
+                    f90-indented-comment-re "!"
+                    f90-break-delimiters "[-+\\*/><=,% \t]"
+                    f90-break-before-delimiters t
+                    f90-beginning-ampersand nil
+                    f90-smart-end 'blink
+                    f90-auto-keyword-case nil
+                    f90-leave-line-no nil
+                    f90-comment-region "!! "
+                    f90-indent-comment "! "
+                    indent-tabs-mode nil
+                    f90-font-lock-keywords f90-font-lock-keywords-2)
+              ;; (ggtags-mode 1)
+              ))
   )
   #+END_SRC
 * Markdown
@@ -3362,47 +3718,7 @@ $clean_ext = "snm nav vrb synctex.gz";
   (leaf lua-mode :ensure t)
   )
   #+END_SRC
-* MoinMoin: =moinmoin-mode=, =moomin.el=
-  Debian Wiki や職場の Wiki を編集するための
-  MoinMoin の設定.
-** =moinmoin-mode=
-   MoinMoin 本体の moinmoin-mode 自体は古くて
-   screen-lines に依存していたりするので folk して更新中.
-   [[https://github.com/uwabami/moinmoin-mode][uwabami/moinmoin-mode: Fork from EmacsForMoinMoin, for Emacs >= 25]]
-   #+BEGIN_SRC emacs-lisp
-(leaf moinmoin-mode
-  :el-get (moinmoin-mode
-           :type github
-           :pkgname "uwabami/moinmoin-mode")
-  )
-   #+END_SRC
-   そのうち気になる所を弄る，ということで．
-** =moomin=
-   元々は =moomin = emacs-request + helm + moinmoin-mode=
-   という奴. folk して =ido-vertical-mode= を support する様に
-   多少弄った版を使う。
-   [[https://github.com/uwabami/moomin-el][uwabami/moomin-el: Edit MoinMoin with Emacs]]
-   ...とはいえ，結局 =ido= 使わなくなったので，今後はどうするのか決めていなかったり．
-   #+BEGIN_SRC emacs-lisp
-(leaf moomin
-  :if (file-directory-p my:d:password-store)
-  :el-get (moomin
-           :type github
-           :pkgname "uwabami/moomin-el")
-  :bind (("C-x w" . counsel--moomin)
-         (:moinmoin-mode-map
-          ("C-c C-c" . moomin-save-current-buffer)
-          ("C-c C-s" . moomin-save-current-buffer)
-          ("C-c C-o" . moomin-browse-current-page)
-          ("C-c C-r" . moomin-reload-current-page))
-         )
-  :config
-  (setq moomin-history-file
-        (concat my:d:tmp ".moomin_history"))
-  (load (concat my:d:password-store "/moomin.gpg"))
-  )
-   #+END_SRC
-* 日記: =tDiary= [0/1]
+* TODO 日記: =tDiary= [0/1]
   #+begin_src emacs-lisp
 (leaf tdiary-mode
   :if (and (file-directory-p my:d:password-store)
@@ -3505,22 +3821,76 @@ $clean_ext = "snm nav vrb synctex.gz";
       (set-frame-parameter nil 'alpha 95)
       (set-face-attribute 'default nil
                           :family "FSMRMP"
-                          :height 220)
+                          :height 120)
       (set-face-attribute 'fixed-pitch nil
                           :family "FSMRMP"
-                          :height 220)
+                          :height 120)
       (set-face-attribute 'variable-pitch nil
                           :family "FSMRMP"
-                          :height 220)
-      (setq use-default-font-for-symbols nil)
+                          :height 120)
       (set-fontset-font nil
                         '(#xE0A0 . #xEEE0)
-                        (font-spec :family "FSMRMP" :height 220))
+                        (font-spec :family "FSMRMP" :height 120))
+      (setq use-default-font-for-symbols nil)
+      (set-frame-parameter nil 'alpha 95)
+      ;; (let* (;; (font-family "Ricty Discord")
+      ;;        (font-family "FSMRMP")
+      ;;        ;; (font-family "SF Mono Square")
+      ;;        (font-size 12)
+      ;;        (font-height (* font-size 10))
+      ;;        ;; (jp-font-family "Ricty Discord")
+      ;;        (jp-font-family "FSMRMP")
+      ;;        )
+      ;;   (set-face-attribute 'default nil :family font-family :height font-height)
+      ;;   (let ((name (frame-parameter nil 'font))
+      ;;         (jp-font-spec (font-spec :family jp-font-family))
+      ;;         (jp-characters '(katakana-jisx0201
+      ;;                          cp932-2-byte
+      ;;                          japanese-jisx0212
+      ;;                          japanese-jisx0213-2
+      ;;                          japanese-jisx0213.2004-1))
+      ;;         (font-spec (font-spec :family font-family))
+      ;;         (characters '((?\u00A0 . ?\u00FF)    ; Latin-1
+      ;;                       (?\u0100 . ?\u017F)    ; Latin Extended-A
+      ;;                       (?\u0180 . ?\u024F)    ; Latin Extended-B
+      ;;                       (?\u0250 . ?\u02AF)    ; IPA Extensions
+      ;;                       (?\u0370 . ?\u03FF)))) ; Greek and Coptic
+      ;;     (dolist (jp-character jp-characters)
+      ;;       (set-fontset-font name jp-character jp-font-spec))
+      ;;     (dolist (character characters)
+      ;;       (set-fontset-font name character font-spec))
+      ;;     (add-to-list 'face-font-rescale-alist (cons jp-font-family 1.0))))
+      ;; (set-fontset-font nil
+      ;;                   '(#xE0A0 . #xEEE0)
+      ;;                   (font-spec :family "FSMRMP" :height 240))
       (toggle-frame-maximized)
       )))
 (when (window-system)
   (my:load-window-config))
   #+end_src
+  #+BEGIN_EXAMPLE
+幅の確認:
+Greek, Math, 絵文字は全角，他は半角で 2:1 になっているかの確認用
+
+|abcdefghijkl|
+|ABCDEFGHIJKL|
+|'";:-+=/\~`?|
+|∞≤≥∏∑∫|
+|×±≒≡⊆⊇|
+|αβγδεζ|
+|ηθικλμ|
+|ΑΒΓΔΕΖ|
+|ΗΘΙΚΛΜ|
+|日本語の美観|
+|あいうえおか|
+|アイウエオカ|
+|ｱｲｳｴｵｶｷｸｹｺｻｼ|
+
+| hoge                 | hogeghoe | age              |
+|----------------------+----------+------------------|
+| 今日もいい天気ですね | お、     | 等幅になった👍 🍺|
+|----------------------+----------+------------------|
+  #+END_EXAMPLE
 ** Major, Minor モードの表示のカスタマイズ: =diminish=, =delight=
    基本個々のモードの設定でカスタマイズしているけれども．
    #+BEGIN_SRC emacs-lisp
@@ -3546,6 +3916,7 @@ $clean_ext = "snm nav vrb synctex.gz";
 (leaf *doom-modeline-settings
   :diminish (;; minor-mode settings
              (isearch-mode (format " %s" (all-the-icons-faicon "search")))
+             ;; (org-src-mode (format " %s" (all-the-icons-octicon "code")))
              )
   :init
   (leaf doom-modeline
@@ -3553,16 +3924,71 @@ $clean_ext = "snm nav vrb synctex.gz";
     :init
     (defun my:doom-modeline--set-char-widths (alist)
       "Do nothing")
+    ;;
     (defun my:skk-setup-modeline ()
       "skk-setup-modeline による modeline の更新を無効化"
       (eval-when-compile (require 'skk))
       (if (fboundp 'skk-make-indicator-alist)
           (setq skk-indicator-alist (skk-make-indicator-alist)))
       (force-mode-line-update t))
+    ;;
+    (defvar doom-modeline--buffer-file-state-icon nil)
+    (defun my:doom-modeline-update-buffer-file-state-icon (&rest _)
+      "Update the buffer or file state in mode-line."
+      (setq doom-modeline--buffer-file-state-icon
+            (ignore-errors
+              (cond (buffer-read-only
+                     (doom-modeline-buffer-file-state-icon
+                      "lock"
+                      (all-the-icons-material "lock")
+                      'doom-modeline-warning))
+                    ((and buffer-file-name (buffer-modified-p)
+                          doom-modeline-buffer-modification-icon)
+                     (doom-modeline-buffer-file-state-icon
+                      "save"
+                      (all-the-icons-material "save")
+                      'doom-modeline-buffer-modified))
+                    ((and buffer-file-name
+                          (not (file-exists-p buffer-file-name)))
+                     (doom-modeline-buffer-file-state-icon
+                      "edit"
+                      (all-the-icons-faicon "edit")
+                      'doom-modeline-urgent))
+                    ((or (buffer-narrowed-p)
+                         (and (bound-and-true-p fancy-narrow-mode)
+                              (fancy-narrow-active-p)))
+                     (doom-modeline-buffer-file-state-icon
+                      "vertical_align_center"
+                      (all-the-icons-material "vertical_align_center")
+                      'doom-modeline-warning))
+                    (t
+                     (doom-modeline-buffer-file-state-icon
+                      "--"
+                      "--"
+                      (if (doom-modeline--active) 'mode-line 'mode-line-inactive)))
+                    ))))
+    ;;
+    (defun my:doom-modeline-update-buffer-file-icon (&rest _)
+      "Update file icon in mode-line, just display major-mode icon. not filename."
+      (setq doom-modeline--buffer-file-icon
+            (when (and doom-modeline-icon doom-modeline-major-mode-icon)
+              (let* ((icon (all-the-icons-icon-for-mode major-mode)))
+                (if (symbolp icon)
+                    (setq icon (doom-modeline-icon-faicon
+                                "file-o"
+                                :face 'all-the-icons-dsilver)))
+                (unless (symbolp icon)
+                  (propertize icon
+                              'help-echo (format "Major-mode: %s" (format-mode-line mode-name))))))))
+    ;;
     :advice ((:override doom-modeline--set-char-widths
-                       my:doom-modeline--set-char-widths)
+                        my:doom-modeline--set-char-widths)
              (:override skk-setup-modeline
                         my:skk-setup-modeline))
+             (:override doom-modeline-update-buffer-file-icon
+                        my:doom-modeline-update-buffer-file-icon)
+             (:override doom-modeline-update-buffer-file-state-icon
+                        my:doom-modeline-update-buffer-file-state-icon)
     :config
     (setq doom-modeline-height 1
           doom-modeline-bar-width 0
@@ -3580,7 +4006,7 @@ $clean_ext = "snm nav vrb synctex.gz";
           doom-modeline-vcs-max-length 12
           doom-modeline-persp-name t
           doom-modeline-persp-name-icon t
-          doom-modeline-lsp nil
+          doom-modeline-lsp t
           doom-modeline-github nil
           doom-modeline-github-interval (* 30 60)
           doom-modeline-mu4e nil
@@ -3649,7 +4075,7 @@ $clean_ext = "snm nav vrb synctex.gz";
       (when doom-modeline-buffer-encoding
         (propertize
          (concat
-          (let ((sys (coding-system-plist buffer-file-coding-system) ))
+          (let ((sys (coding-system-plist buffer-file-coding-system)))
             (cond ((memq (plist-get sys :category)
                          '(coding-category-undecided coding-category-utf-8))
                    " U")
@@ -3681,21 +4107,25 @@ $clean_ext = "snm nav vrb synctex.gz";
                    " %l")
                   (column-number-mode (doom-modeline-column-zero-based " :%c" " :%C")))))
         (propertize
-         (concat (doom-modeline-spc)
-                 (format-mode-line lc)
-                 (format-mode-line '("" doom-modeline-percent-position "%%")))
+         (concat (format-mode-line lc)
+                 (format-mode-line '("" doom-modeline-percent-position "%%"))
+                 )
          'face (if (doom-modeline--active) 'mode-line 'mode-line-inactive)
          'help-echo "Buffer position\n\
 mouse-1: Display Line and Column Mode Menu"
          'mouse-face '(:box 0)
          'local-map mode-line-column-line-number-mode-map)))
     ;;
+    (defvar-local doom-modeline--lsp nil)
+    ;;
+    ;;
     (doom-modeline-def-modeline 'main
       '(;; bar
+        " "
         my:input-method-skk
         ;; workspace-name
         my:buffer-encoding
-        major-mode
+        ;; major-mode
         buffer-info
         ;; window-number
         ;; modals
@@ -3721,7 +4151,9 @@ mouse-1: Display Line and Column Mode Menu"
         process
         vcs
         checker
+        " "
         my:buffer-position
+        " "
         )
       )
     )
@@ -3745,6 +4177,7 @@ mouse-1: Display Line and Column Mode Menu"
              )
     )
   :config
+  (setq doom-darkpastel-set-background nil)
   (load-theme 'doom-darkpastel t)
   )
   #+end_src

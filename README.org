@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
-#+date: 2019-10-10 08:49:11
+#+date: 2019-10-10 12:36:23
 * はじめに
   ここでは私の Emacs の設定についてまとめています．
 
@@ -1002,15 +1002,7 @@ init.el: README.org
   :ensure t
   :after ivy
   :init
-  (leaf smex
-    :ensure t
-    :config
-    (setq smex-auto-update t
-          smex-save-file (concat my:d:tmp "smex-items")
-          smex-prompt-string "smex: "
-          smex-flex-matching t
-          )
-    )
+  (leaf s :ensure t :require t)
   ;;
   (defun my:counsel-recentf ()
     "Custom: Find a file on `recentf-list' with shorten-file-path"
@@ -1034,26 +1026,36 @@ init.el: README.org
   :config
   ;; 無視する拡張子の追加
   (cl-loop for ext in
-           '(".dvi"
+           '(;; TeX
+             ".dvi"
              ".fdb_latexmk"
              ".fls"
              ".ilg"
              ".jqz"
-             ".mod"
              ".nav"
              ".out"
              ".snm"
-             ".synctex.gz"
+             ".synctex\\.gz"
              ".vrb"
+             ;; fortran >= 90
+             ".mod"
+             ;; zsh
              ".zwc"
+             ;; libtool
+             ".in"
+             ".libs/"
+             ;; fxxkin Apple
              ".DS_Store"
+             "._DS_Store"
              )
-           do (add-to-list 'completion-ignored-extensions ext))
+           do
+           (add-to-list 'completion-ignored-extensions ext))
   (setq counsel-find-file-ignore-regexp
-        (regexp-opt completion-ignored-extensions))
+        (format "\\%s\\'"
+                (s-replace "/" "\\/"
+                           (s-join "\\'\\|" completion-ignored-extensions))))
   )
    #+END_SRC
-   - [ ] smex と amx はどっちが良いかな?
    - [ ] fzf, ag, ...
 ** =swiper= [/]
    未設定
@@ -1164,7 +1166,7 @@ init.el: README.org
 (leaf all-the-icons-dired
   :ensure t
   :hook (dired-mode-hook . my:all-the-icons-dired-mode)
-  :init
+  :config
   (define-minor-mode my:all-the-icons-dired-mode
     "Custom: always Display all-the-icons icon for each files in a dired buffer."
     :lighter ""
@@ -3016,6 +3018,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         org-gcal-down-days   90  ;; 過去 3 month
         org-gcal-up-days    180  ;; 未来 6 month
         org-gcal-auto-archive nil)
+  :config
   (load (concat my:d:password-store "/org-gcal.gpg"))
   )
    #+end_src
@@ -3314,6 +3317,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   )
   #+END_SRC
 * VCS
+  まあ，ほとんど Git 関連な訳ですが．
 ** git{attributes,config,ignore}-mode, git-commit
    #+begin_src emacs-lisp
 (leaf *git
@@ -3354,6 +3358,19 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :bind ("C-x G" . global-git-gutter+-mode)
   )
    #+end_src
+** ivy-ghq
+   =projectile= はあんまり使わなくて良い気もしている
+   #+BEGIN_SRC emacs-lisp
+(leaf ivy-ghq
+  :if (executable-find "ghq")
+  :el-get (ivy-ghq
+           :type github
+           :pkgname "analyticd/ivy-ghq")
+  :bind (("C-x f" . ivy-ghq-open))
+  :config
+  (setq ivy-ghq-short-list t)
+  )
+   #+END_SRC
 * Project 管理
   結局上手く使い込なせなくて，リポジトリの移動には ghq を使っているけれど.
   #+BEGIN_SRC emacs-lisp
@@ -4177,7 +4194,7 @@ mouse-1: Display Line and Column Mode Menu"
              )
     )
   :config
-  (setq doom-darkpastel-set-background nil)
+  (setq doom-darkpastel-set-background t)
   (load-theme 'doom-darkpastel t)
   )
   #+end_src

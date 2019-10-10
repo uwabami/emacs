@@ -795,6 +795,7 @@ init.el: README.org
   #+begin_src emacs-lisp
 (leaf migemo
   :if (executable-find "cmigemo")
+  :ensure t
   :require t
   :config
   (cond

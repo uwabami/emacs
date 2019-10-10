@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
-#+date: 2019-10-10 12:36:23
+#+date: 2019-10-10 22:43:56
 * はじめに
   ここでは私の Emacs の設定についてまとめています．
 
@@ -1594,19 +1594,18 @@ File.open(src, "r") {|f|
    また, plstore のデフォルトは対称鍵暗号化なので，
    =GPG_KEY_ID= を設定しておく.
    #+begin_src emacs-lisp
-(leaf *authehtification
+(leaf oauth2
   :if (getenv "GPG_KEY_ID")
-  (leaf oauth2
-    :ensure t
-    :init
-    (setq oauth2-token-file (concat my:d:tmp "oauth2.plstore"))
-    )
-  (leaf plstore
-    :ensure t
-    :init
-    (setq plstore-secret-keys 'silent
-          plstore-encrypt-to (getenv "GPG_KEY_ID"))
-    )
+  :ensure t
+  :init
+  (setq oauth2-token-file (concat my:d:tmp "oauth2.plstore"))
+  )
+(leaf plstore
+  :if (getenv "GPG_KEY_ID")
+  :ensure t
+  :init
+  (setq plstore-secret-keys 'silent
+        plstore-encrypt-to (getenv "GPG_KEY_ID"))
   )
    #+end_src
 ** password-store, auth-password-store
@@ -2597,17 +2596,15 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         mhc-calendar-language 'japanese)
   )
    #+end_src
-* カレンダー: =japanese-holidays=
-  日本の祝日を表示するために =japanese-holidays= をインストール
-  #+begin_src emacs-lisp
+* カレンダー表示
+  #+BEGIN_SRC emacs-lisp
 (leaf japanese-holidays
   :ensure t
-  :require t
   :hook ((calendar-today-visible-hook   . japanese-holiday-mark-weekend)
          (calendar-today-invisible-hook . japanese-holiday-mark-weekend)
          (calendar-today-visible-hook   . calendar-mark-today))
   :config
-  (setq calendar-holidays               ; とりあえず日本のみを表示
+  (setq calendar-holidays
         (append japanese-holidays holiday-local-holidays)
         mark-holidays-in-calendar t     ; 祝日をカレンダーに表示
         calendar-month-name-array       ; 月と曜日の表示調整
@@ -2616,15 +2613,13 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         ["日" "月" "火" "水" "木" "金" "土"]
         calendar-day-header-array
         ["日" "月" "火" "水" "木" "金" "土"]
-        calendar-date-style 'iso         ; ISO format (YYYY/MM/DD) に変更
         japanese-holiday-weekend '(0 6)  ; 土曜日・日曜日を祝日として表示
         japanese-holiday-weekend-marker
         '(holiday nil nil nil nil nil japanese-holiday-saturday)
         ;; 日曜開始
         calendar-week-start-day 0)
-  (calendar-set-date-style 'iso)
   )
-  #+end_src
+  #+END_SRC
 * Org-mode
   =org-mode= が無いと生きていけない体になりました
 ** 基本設定: =org=
@@ -2781,6 +2776,9 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                      (cl-return 'org-agenda-date-weekend)))))))
         (when face (cl-return face)))))
   :config
+  (with-eval-after-load 'org-agenda
+    (require 'calendar)
+    (require 'japanese-holidays))
   ;; 使用するファイル
   (dolist (file
            '("Archive.org"
@@ -3011,12 +3009,15 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 (leaf org-gcal
   :if (and my:d:password-store
            (file-directory-p my:d:org))
-  :commands (org-gcal-fetch org-gcal-sync)
+  :disabled t
   :ensure t
-  :init
+  :commands (org-gcal-fetch org-gcal-sync)
+  :preface
   (setq org-gcal-dir (concat my:d:tmp "org-gcal"))
   (unless org-gcal-dir (make-directory org-gcal-dir))
-  (setq org-gcal-token-file (expand-file-name ".org-gcal-token" org-gcal-dir)
+  :init
+  (setq org-gcal-dir (concat my:d:tmp "org-gcal")
+        org-gcal-token-file (expand-file-name ".org-gcal-token" org-gcal-dir)
         alert-log-messages t
         alert-default-style 'log
         org-gcal-down-days   90  ;; 過去 3 month
@@ -3362,7 +3363,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :bind ("C-x G" . global-git-gutter+-mode)
   )
    #+end_src
-** ivy-ghq
+** ghq
    =projectile= はあんまり使わなくて良い気もしている
    #+BEGIN_SRC emacs-lisp
 (leaf ivy-ghq
@@ -3375,42 +3376,10 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (setq ivy-ghq-short-list t)
   )
    #+END_SRC
-* Project 管理
-  結局上手く使い込なせなくて，リポジトリの移動には ghq を使っているけれど.
-  #+BEGIN_SRC emacs-lisp
-(leaf projectile
-  :if (executable-find "ghq")
-  :diminish (projectile-mode
-             (format " %s" (all-the-icons-octicon "repo")))
-  :hook (after-init-hook . projectile-mode)
-  :ensure t
-  :bind ((:projectile-mode-map
-          ("C-c p" . projectile-command-map)))
-  :config
-  (setq projectile-known-projects-file
-        (expand-file-name "projectile-bookmarks.eld" my:d:tmp)
-        ;; projectile-project-search-path '("~/Sources"
-        ;;                                  "~/Documents")
-        projectile-cache-file (expand-file-name "projectile.cache" my:d:tmp)
-        projectile-enable-caching t
-        projectile-file-exists-remote-cache-expire (* 10 60)
-        projectile-completion-system 'ivy
-        projectile-dynamic-mode-line nil
-        projectile-mode-line-prefix (format "%s" (all-the-icons-octicon "repo"))
-        )
-  (defun my:projectile-project-find-function (dir)
-    (let ((root (projectile-project-root dir)))
-      (and root (cons 'transient root))))
-  (with-eval-after-load 'project
-    (add-to-list 'project-find-functions
-                 'my:projectile-project-find-function))
-  )
-  #+END_SRC
-* 関数定義を辿る: =dump-jump=
-  あまり上手く使えていない
+* 関数定義を辿る: =dump-jump=, =smart-jump=
+  あまり上手く使えていない.
   #+BEGIN_SRC emacs-lisp
 (leaf dumb-jump
-  :disabled t
   :if (executable-find "rg")
   :ensure t
   :bind (("M-g o" . dumb-jump-go-other-window)
@@ -3419,93 +3388,16 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
          ("M-g x" . dumb-jump-go-prefer-external)
          ("M-g z" . dumb-jump-go-prefer-external-other-window))
   :config
-  (setq dumb-jump-selector 'ido
+  (setq dumb-jump-selector 'ivy
         dumb-jump-force-searcher 'rg
         )
-)
-  #+END_SRC
-* テンプレート補完: =yasnippet=
-  #+BEGIN_SRC emacs-lisp
-(leaf yasnippet
+  )
+(leaf smart-jump
   :ensure t
-  :diminish (yas-minor-mode "")
-  :hook (after-init-hook . yas-global-mode)
   :config
-  (setq yas-snippet-dirs '("~/.emacs.d/share/snippets"))
+  (smart-jump-setup-default-registers)
   )
   #+END_SRC
-* TODO LSP: =lsp-mode= [0/1]
-  #+BEGIN_SRC emacs-lisp
-(leaf lsp-mode
-  :ensure t
-  :commands (lsp lsp-deferred)
-  :preface
-  (defun my:lsp-mode-line ()
-    "Custom: disable mode-line text"
-    "")
-  :advice (:override lsp-mode-line
-                     my:lsp-mode-line)
-  ;;
-  :hook ((fortran-mode-hook . lsp-deferred)
-         (f90-mode-hook . lsp-deferred)
-         )
-  :init
-  (leaf lsp-ui
-    :ensure t
-    :commands lsp-ui-mode
-    :preface
-    (defun ladicle/toggle-lsp-ui-doc ()
-      (interactive)
-      (if lsp-ui-doc-mode
-          (progn
-            (lsp-ui-doc-mode -1)
-            (lsp-ui-doc--hide-frame))
-        (lsp-ui-doc-mode 1)))
-    :config
-    (setq lsp-ui-doc-enable t
-          lsp-ui-doc-header t
-          lsp-ui-doc-include-signature t
-          ;; lsp-ui-doc-position 'at-point
-          ;; lsp-ui-doc-max-width 150
-          ;; lsp-ui-doc-max-height 30
-          ;; lsp-ui-doc-use-childframe t
-          ;; lsp-ui-doc-use-webkit t
-          ;; lsp-ui-flycheck
-          lsp-ui-flycheck-enable nil
-          ;; lsp-ui-sideline
-          lsp-ui-sideline-enable nil
-          ;; lsp-ui-imenu
-          lsp-ui-imenu-enable nil
-          ;; lsp-ui-peek
-          lsp-ui-peek-enable t
-          lsp-ui-peek-peek-height 20
-          lsp-ui-peek-list-width 50
-          lsp-ui-peek-fontify 'on-demand
-          )
-    )
-  (leaf company-lsp
-    :ensure t
-    :commands (company-lsp company-lsp-async)
-    :config
-    (setq company-lsp-cache-candidates t ;; auto, t(using a cache), or nil
-          company-lsp-async t
-          company-lsp-enable-snippet t
-          company-lsp-enable-recompletion t)
-    )
-  :config
-  (setq lsp-print-io nil             ;; debug
-        lsp-trace nil
-        lsp-print-performance nil
-        lsp-auto-guess-root t        ;; general
-        lsp-document-sync-method 'incremental
-        lsp-response-timeout 5
-        lsp-prefer-flymake 'flymake
-        lsp-enable-completion-at-point nil
-        lsp-session-file (concat my:d:tmp "lsp-session-v1")
-        )
-  )
-  #+END_SRC
-  - [ ] まだ設定中.
 * 言語毎の補完: =company-mode=
   まだうまく使いこなせていない．
   - [[https://qiita.com/wktkshn/items/3ac46671d1c242a59f7e][company-dabbrevで日本語を補完しない]]
@@ -3561,14 +3453,39 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   - [X] [[https://github.com/TheBB/company-reftex][TheBB/company-reftex]]
   - [X] [[https://github.com/vspinu/company-math][vspinu/company-math]]
   - [X] [[https://github.com/alexeyr/company-auctex][alexeyr/company-auctex]]
-* 言語毎のon-the-fly check: =flycheck=
-  わりと決め打ち多くて，flymakeの方が楽かもしれない，とか思ったり．
+* LSP: =eglot=
   #+BEGIN_SRC emacs-lisp
-(leaf flycheck
-  :disabled t
+(leaf eglot
+  :if (executable-find "fortls")
   :ensure t
+  :hook ((f90-mode-hook . eglot-ensure))
+  :config
+;;  (add-hook 'f90-mode-hook 'eglot-ensure)
+  (add-to-list 'eglot-server-programs
+               `(f90-mode . ("fortls"
+                             "--nthreads" "2"
+                             "--incremental_sync"
+                             "--variable_hover"
+                             "--lowercase_intrinsics"
+                             )))
+  )
+(leaf ivy-xref
+  :ensure t
+  :config
+  (setq xref-show-xrefs-function #'ivy-xref-show-xrefs)
   )
   #+END_SRC
+* テンプレート補完: =yasnippet=
+  #+BEGIN_SRC emacs-lisp
+(leaf yasnippet
+  :ensure t
+  :diminish (yas-minor-mode "")
+  :hook (after-init-hook . yas-global-mode)
+  :config
+  (setq yas-snippet-dirs '("~/.emacs.d/share/snippets"))
+  )
+  #+END_SRC
+
 * TeX: =AUCTeX=
   Debian パッケージ版を使う．
   やっている事は
@@ -4198,7 +4115,7 @@ mouse-1: Display Line and Column Mode Menu"
              )
     )
   :config
-  (setq doom-darkpastel-set-background t)
+  (setq doom-darkpastel-set-background nil)
   (load-theme 'doom-darkpastel t)
   )
   #+end_src

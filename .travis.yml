@@ -19,6 +19,8 @@ env:
     - EVM_EMACS=emacs-24.5-travis
     # Debian 10
     - EVM_EMACS=emacs-26.1-travis
+    # Debian unstable
+    - EVM_EMACS=emacs-26.3-travis
     # HEAD
     - EVM_EMACS=emacs-git-snapshot-travis
 before_script:

@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
-#+date: 2019-10-13 15:54:21
+#+date: 2019-10-13 16:02:03
 * はじめに
   ここでは私の Emacs の設定についてまとめています．
 
@@ -649,11 +649,10 @@ init.el: README.org
 ** =server=: Emacs server
    #+begin_src emacs-lisp
 (leaf server
-  :hook
-  (after-init-hook . (lambda ()
-                       (when (and (fboundp 'server-running-p)
-                                  (not (server-running-p)))
-                         (server-start))))
+  :require t
+  :config
+  (unless (server-running-p)
+    (server-start))
   )
    #+end_src
 * 認証関連: =plstore=, =password-store= など

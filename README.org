@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
-#+date: 2019-10-15 15:38:27
+#+date: 2019-10-15 15:52:30
 * はじめに
   ここでは私の Emacs の設定についてまとめています．
 
@@ -982,23 +982,12 @@ init.el: README.org
                       my:ivy--insert-prompt))
   :init
   (leaf flx :ensure t)
-  (leaf ivy-hydra :ensure t)
-  (leaf ivy-prescient
+  (leaf smex
     :ensure t
     :custom
-    `((prescient-aggressive-file-save . t)
-      (prescient-save-file . ,(expand-file-name "prescient-save.el" my:d:tmp))
-      (prescient-filter-method . '(fuzzy regexp initialism))
-      (ivy-prescient-retain-classic-highlighting . t))
-    :config
-    ;; (1) マイナーモードの有効化
-    (ivy-prescient-mode 1)
-    ;; (2) =counsel-M-x= をイニシャル入力対応にする
-    (setf (alist-get 'counsel-M-x ivy-re-builders-alist)
-          #'ivy-prescient-re-builder)
-    ;; (3) デフォルトのイニシャル入力を上書きする
-    (setf (alist-get t ivy-re-builders-alist) #'ivy--regex-ignore-order)
+    `((smex-save-file . ,(expand-file-name "smex-items" my:d:tmp)))
     )
+  (leaf ivy-hydra :ensure t)
   :custom
   ((ivy-use-virtual-buffers     . t)      ;; bookmark, recentf と結合
    (ivy-extra-directories       . nil)      ;; default は "." と ".."
@@ -1008,6 +997,7 @@ init.el: README.org
    (ivy-count-format            . "[%d/%d] ")
    (ivy-pre-prompt-function     . 'my:ivy-pre-prompt-function)
    (ivy-format-functions-alist  . '((t . my:ivy-format-function-arrow)))
+   (ivy-re-builders-alist       . '((t . ivy--regex-fuzzy)))
    (ivy-use-selectable-prompt   . t))
   :bind
   ((:ivy-minibuffer-map )
@@ -1056,7 +1046,7 @@ init.el: README.org
          ("C-x C-r" . my:counsel-recentf)
          ("M-x"     . counsel-M-x)
          (:counsel-find-file-map
-          ("C-l" . counsel-up-directory)))
+          ("C-l"      . counsel-up-directory)))
   :config
   ;; 無視する拡張子の追加
   (cl-loop for ext in
@@ -1091,6 +1081,26 @@ init.el: README.org
   )
    #+END_SRC
    - [ ] fzf, ag, ...
+** =prescient=: 補完候補をより便利に.
+   #+BEGIN_SRC emacs-lisp
+(leaf ivy-prescient
+  :ensure t
+  :after counsel
+  :custom
+  `((prescient-aggressive-file-save . t)
+    (prescient-save-file . ,(expand-file-name "prescient-save.el" my:d:tmp))
+    (prescient-filter-method . '(fuzzy regexp initialism))
+    (ivy-prescient-retain-classic-highlighting . t))
+  :config
+  ;; (1) マイナーモードの有効化
+  (ivy-prescient-mode 1)
+  ;; (2) =counsel-M-x= をイニシャル入力対応にする
+  ;; (setf (alist-get 'counsel-M-x ivy-re-builders-alist)
+  ;;       #'ivy-prescient-re-builder)
+  ;; (3) デフォルトのイニシャル入力を上書きする
+  ;; (setf (alist-get t ivy-re-builders-alist) #'ivy--regex-ignore-order)
+  )
+   #+END_SRC
 ** =swiper= [/]
    未設定
 * Elscreen
@@ -2857,13 +2867,15 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :init
   (leaf request
     :ensure t
-    :init
-    (setq request-storage-directory (concat my:d:tmp "request"))
+    :preface
+    (setq request-storage-directory (expand-file-name "request" my:d:tmp))
     (unless (file-directory-p request-storage-directory)
       (make-directory request-storage-directory))
+    :config
+    (setq request-storage-directory (expand-file-name "request" my:d:tmp))
     )
   ;;
-  (setq org-gcal-dir (concat my:d:tmp "org-gcal")
+  (setq org-gcal-dir (expand-file-name "org-gcal" my:d:tmp)
         org-gcal-token-file (expand-file-name ".org-gcal-token" org-gcal-dir)
         alert-log-messages t
         alert-default-style 'log
@@ -3330,21 +3342,20 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 (leaf flymake
   :if (<= 26.1 (string-to-number emacs-version))
   :ensure t
-  :hook (find-file-hook . flymake-find-file-hook)
-  :config
-  ;; Makefile 無し
-  (defun my:flymake-simple-generic-init (cmd &optional opts)
-    (let* ((temp-file (flymake-init-create-temp-buffer-copy
-                       'flymake-create-temp-inplace))
-           (local-file (file-relative-name
-                        temp-file
-                        (file-name-directory buffer-file-name))))
-      (list cmd (append opts (list local-file)))))
-  ;; Makefile 有り
-  (defun my:flymake-simple-make-or-generic-init (cmd &optional opts)
-    (if (file-exists-p "Makefile")
-        (flymake-simple-make-init)
-      (my:flymake-simple-generic-init cmd opts)))
+  ;; :hook (find-file-hook . flymake-find-file-hook)
+  :custom
+  ((flymake-allowed-file-name-masks . '(("\\.\\(?:c\\(?:pp\\|xx\\|\\+\\+\\)?\\|CC\\)\\'" flymake-proc-simple-make-init nil flymake-proc-real-file-name-considering-includes)
+                                        ("\\.xml\\'" flymake-proc-xml-init)
+                                        ("\\.html?\\'" flymake-proc-xml-init)
+                                        ("\\.cs\\'" flymake-proc-simple-make-init)
+                                        ("\\.php[345]?\\'" flymake-proc-php-init)
+                                        ("\\.h\\'" flymake-proc-master-make-header-init flymake-proc-master-cleanup)
+                                        ("\\.java\\'" flymake-proc-simple-make-java-init flymake-proc-simple-java-cleanup)
+                                        ("[0-9]+\\.tex\\'" flymake-proc-master-tex-init flymake-proc-master-cleanup)
+                                        ("\\.tex\\'" flymake-proc-simple-tex-init)
+                                        ("\\.idl\\'" flymake-proc-simple-make-init)
+                                        ("\\.\\(f\\|F\\)\\(9\\|0\\)?\\(0\\|3\\)?\\'" flymake-proc-simple-make-init))
+                                    ))
   )
   #+END_SRC
   - [ ] 設定調整が必要

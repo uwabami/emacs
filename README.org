@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
-#+date: 2019-10-13 16:02:03
+#+date: 2019-10-15 15:38:27
 * はじめに
   ここでは私の Emacs の設定についてまとめています．
 
@@ -118,28 +118,25 @@ init.el: README.org
    自分で修正した版やオリジナル版を別の場所から持ってくる場合は
    [[https://github.com/conao3/leaf.el][leaf.el]]から[[https://github.com/dimitri/el-get][el-get]]を呼び出します.
    #+BEGIN_SRC emacs-lisp
-(unless (package-installed-p 'leaf)
-  (package-install 'leaf t))
-(require 'leaf nil 'noerror)
-(leaf leaf
-  :require t
-  :config
-  (leaf diminish :ensure t)
-  (leaf delight  :ensure t)
-  (leaf el-get
-    :ensure t
-    :require t
-    :preface
-    (defconst el-get-dir my:d:pkg:elget) ;; override el-get default
-    :custom ((el-get-notify-type       . 'message)
-             (el-get-git-shallow-clone . t))
-    )
-  (leaf leaf-keywords
-    :ensure t
-    :config
-    (leaf-keywords-init)
-    )
-  )
+     (unless (package-installed-p 'leaf)
+       (package-install 'leaf t))
+     (require 'leaf nil 'noerror)
+     (leaf leaf-keywords
+       :ensure t
+       :init
+       (leaf diminish :ensure t)
+       (leaf delight  :ensure t)
+       (leaf el-get
+         :ensure t
+         :require t
+         :preface
+         (defconst el-get-dir my:d:pkg:elget) ;; override el-get default
+         :custom ((el-get-notify-type       . 'message)
+                  (el-get-git-shallow-clone . t))
+         )
+       :config
+       (leaf-keywords-init)
+       )
    #+end_src
 * =exec-path-from-shell=: 環境変数の読み込み
   shell(zsh)で設定した =PATH= などの環境変数をEmacsに引き継ぐために
@@ -176,10 +173,11 @@ init.el: README.org
   (exec-path-from-shell-initialize)
   (setq user-full-name    (concat (getenv "DEBFULLNAME"))
         user-mail-address (concat (getenv "DEBEMAIL")))
-  (if (getenv "PASSWORD_STORE_DIR")
-      (defconst my:d:password-store
+  (defconst my:d:password-store
+    (if (getenv "PASSWORD_STORE_DIR")
         (expand-file-name (concat "Emacs/" (system-name))
-                          (getenv "PASSWORD_STORE_DIR"))))
+                          (getenv "PASSWORD_STORE_DIR")))
+    nil)
   )
   #+end_src
 * 独自関数
@@ -285,12 +283,14 @@ init.el: README.org
    設定ファイルに極力移す.
    #+BEGIN_SRC emacs-lisp
 (leaf cus-edit
+  :preface
+  (setq custom-file (expand-file-name "custom.el" my:d:tmp))
   :custom
   `((custom-file . ,(expand-file-name "custom.el" my:d:tmp)))
   :hook
-  ((kill-emacs-hook . (lambda ()
-                        (if (file-exists-p custom-file)
-                            (delete-file custom-file)))))
+  `((kill-emacs-hook . (lambda ()
+                         (if (file-exists-p custom-file)
+                             (delete-file custom-file)))))
   )
    #+END_SRC
 ** =customize= で設定していたアレコレ
@@ -369,7 +369,7 @@ init.el: README.org
   #+END_SRC
 ** =hl-mode=: 現在行のハイライト
   #+BEGIN_SRC emacs-lisp
-(leaf hl-mode
+(leaf hl-line
   :hook
   (emacs-startup-hook . global-hl-line-mode)
   )
@@ -383,7 +383,7 @@ init.el: README.org
   #+END_SRC
 ** =show-paren-mode=: 対応する括弧を強調表示
   #+BEGIN_SRC emacs-lisp
-(leaf show-paren-mode
+(leaf paren
   :custom
   ((show-paren-style  . 'mixed))
   :hook
@@ -551,13 +551,15 @@ init.el: README.org
 ** SOMEDAY =tramp=: ssh 越しにファイルを編集 [0/1]
    #+begin_src emacs-lisp
 (leaf tramp
+  :preface
+  (setq tramp-persistency-file-name (expand-file-name "tramp" my:d:tmp))
+  :custom
+  `((tramp-persistency-file-name . ,(expand-file-name "tramp" my:d:tmp))
+    )
   :hook
   (kill-emacs-hook . (lambda ()
                        (if (file-exists-p custom-file)
                            (delete-file tramp-persistency-file-name))))
-  :custom
-  `((tramp-persistency-file-name . ,(expand-file-name "tramp" my:d:tmp))
-    )
   )
    #+end_src
    - [ ] 偶に挙動不審
@@ -3539,7 +3541,7 @@ $clean_ext = "snm nav vrb synctex.gz";
 * TODO 日記: =tDiary= [0/1]
   #+begin_src emacs-lisp
 (leaf tdiary-mode
-  :if (and (file-directory-p my:d:password-store)
+  :if (and my:d:password-store
            (file-directory-p (concat (getenv "HOME") "/Nextcloud/tdiary")))
   :commands tdiary-mode tdiary-replace tdiary-append
   :el-get (tdiary-mode

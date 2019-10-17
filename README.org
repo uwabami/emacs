@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
-#+date: 2019-10-15 15:52:30
+#+date: 2019-10-18 02:18:15
 * はじめに
   ここでは私の Emacs の設定についてまとめています．
 
@@ -1370,6 +1370,90 @@ File.open(src, "r") {|f|
                  (skk-mode-exit))))
 (setq skk-isearch-start-mode 'latin)
     #+end_src
+* 校正，辞書等
+** =redpen-paragraph=: [[http://redpen.cc/][redpen]] による文章校正
+   うまく動いていない. 一旦保留
+   #+BEGIN_SRC emacs-lisp
+(leaf redpen-paragraph
+  :disabled t
+  :if (and (executable-find "redpen")
+           (file-directory-p "~/.config/redpen"))
+  :ensure t
+  :bind
+  (("C-c C-r" . redpen-paragraph))
+  :hook
+  ((LaTeX-mode-hook . (lambda ()
+                        (setq redpen-commands
+                              '(
+                                ;; for english command
+                                "redpen -r json2 -c ~/.config/redpen/redpen-conf-en.xml -f latex %s 2>/dev/null"
+                                ;; for japanese command
+                                "redpen -r json2 -c ~/.config/redpen/redpen-conf-ja.xml -f latex %s 2>/dev/null"
+                                )))
+                        ))
+  :config
+  ;; default
+  (setq redpen-commands
+    '(
+      ;; for english command
+      "redpen -r json2 -c ~/.config/redpen/redpen-conf-en.xml %s 2>/dev/null"
+      ;; for japanese command
+      "redpen -r json2 -c ~/.config/redpen/redpen-conf-ja.xml %s 2>/dev/null"
+      )
+    redpen-paragraph-force-reading-whole t)
+  )
+   #+END_SRC
+** =ispell=: spell checker
+   ispell はコマンドとして =aspell= を利用する.
+   #+BEGIN_SRC emacs-lisp
+(leaf ispell
+  :if (file-executable-p "aspell")
+  :custom
+  (ispell-program-name . "aspell")
+  :config
+  (add-to-list 'ispell-skip-region-alist '("[^\000-\377]+"))
+  )
+   #+END_SRC
+** =flyspell=: on-the-fly spell checker [0/1]
+   flyspell-mode は別途有効化しておいた方が良いのかもしれない
+   #+BEGIN_SRC emacs-lisp
+(leaf flyspell
+  :ensure t
+  :diminish flyspell-mode
+  :defun
+  flyspell-emacs-popup-textual
+  :preface
+  (defun my:flyspell-popup-choose (orig event poss word)
+    (if (window-system)
+        (funcall orig event poss word)
+      (flyspell-emacs-popup-textual event poss word)))
+  :advice (:around flyspell-emacs-popup
+                   my:flyspell-popup-choose)
+  :hook
+  ;; flyspell-prog-mode との switch が欲しい
+  ((find-file-hook . flyspell-mode))
+  )
+   #+END_SRC
+   - [ ] flyspell-prog-mode との switch が欲しい
+** 辞書
+   EPWING化した辞書群を検索するために =lookup-el= ver. 1.4 系列を利用
+   #+BEGIN_SRC emacs-lisp
+(leaf lookup
+  :if (and (my:dpkg-status "lookup-el")
+           (file-exists-p "/usr/local/share/dict/lookup-enabled"))
+  :commands (lookup lookup-region lookup-pattern)
+  :bind (("C-c w" . lookup-pattern)
+         ("C-c W" . lookup-word))
+  :custom
+  (lookup-search-agents . '((ndeb "/usr/local/share/dict/eijiro" :alias "英辞郎")
+                            (ndeb "/usr/local/share/dict/waeijiro" :alias "和英辞郎")
+                            (ndeb "/usr/local/share/dict/rikagaku5" :alias "理化学辞典 第5版")
+                            (ndeb "/usr/local/share/dict/koujien4" :alias "広辞苑 第4版")
+                            (ndeb "/usr/local/share/dict/wadai5" :alias "研究社 和英大辞典 第5版")
+                            (ndeb "/usr/local/share/dict/eidai6" :alias "研究社 英和大辞典 第6版")
+                            (ndeb "/usr/local/share/dict/colloc" :alias "研究社 英和活用大辞典 ")))
+  )
+   #+END_SRC
 * Copy & Paste:
 ** Linux では =xclip= を利用
    clipboard と PRIMARY の同期には =gpaste= を使っている．
@@ -2874,19 +2958,22 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     :config
     (setq request-storage-directory (expand-file-name "request" my:d:tmp))
     )
-  ;;
-  (setq org-gcal-dir (expand-file-name "org-gcal" my:d:tmp)
-        org-gcal-token-file (expand-file-name ".org-gcal-token" org-gcal-dir)
-        alert-log-messages t
-        alert-default-style 'log
-        org-gcal-down-days   90  ;; 過去 3 month
-        org-gcal-up-days    180  ;; 未来 6 month
-        org-gcal-auto-archive nil)
+  :custom
+  `((org-gcal-dir          . ,(expand-file-name
+                               "org-gcal" my:d:tmp))
+    (org-gcal-token-file   . ,(expand-file-name
+                               "org-gcal/.org-gcal-token" my:d:tmp))
+    (org-gcal-down-days    . 90)  ;; 過去 3 month
+    (org-gcal-up-days      . 180)  ;; 未来 6 month
+    (org-gcal-auto-archive . nil)
+    (org-gcal-notify-p     . nil)
+    ;;
+    (alert-log-messages    . t)
+    (alert-default-style   .'log))
   :pl-setq
   (org-gcal-client-id
    org-gcal-client-secret
    org-gcal-file-alist)
-;;  (load (concat my:d:password-store "/org-gcal.gpg"))
   )
    #+end_src
    password-store には multiline で設定を書く．例えば以下:
@@ -3264,60 +3351,63 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   #+BEGIN_SRC emacs-lisp
 (leaf company
   :ensure t
-  :diminish (company-mode
-             (format " %s" (all-the-icons-material "highlight")))
+  :diminish company-mode
+  :custom
+  ((company-idle-delay            . 0)
+   (company-minimum-prefix-length . 4)
+   (company-selection-wrap-around . t)
+   ;; disable some noisy default backends
+   (company-backends . '(company-files company-capf
+                                       (company-gtags
+                                        company-etags
+                                        company-keywords))))
+  :defun
+  (compnay-complete-common ivy-alt-done)
   :preface
-  (defun my:edit-category-table-for-company-dabbrev (&optional table)
-    "日本語をdabbrevから外す"
-    (define-category ?s "word constituents for company-dabbrev" table)
-    (let ((i 0))
-      (while (< i 128)
-        (if (equal ?w (char-syntax i))
-            (modify-category-entry i ?s table)
-          (modify-category-entry i ?s table t))
-        (setq i (1+ i)))))
-  :bind ((:company-active-map
-          ("C-n"     . company-select-next)
-          ("C-p"     . company-select-previous)
-          ("C-s"     . company-filter-candidates)
-          ("C-<tab>" . company-complete-common-or-cycle))
-         (:company-search-map
-          ("C-p" . company-select-previous)
-          ("C-n" . company-select-next)))
-  :hook ((after-init-hook . global-company-mode)
-         )
-  :config
-  ;; (global-set-key (kbd "<tab>") 'company-indent-or-complete-common)
-  (setq company-idle-delay 0
-        company-minimum-prefix-length 4
-        company-selection-wrap-around t)
-  (with-eval-after-load 'company
-    (my:edit-category-table-for-company-dabbrev)
-    ;; (add-hook 'TeX-mode-hook 'edit-category-table-for-company-dabbrev)
-    (setq company-dabbrev-char-regexp "\\cs")
+  (defun my:company-indent-or-complete-common ()
+    "Custom: disable company-complete in minibuffer"
+    (interactive)
+    (if (minibufferp) (ivy-alt-done)
+      company-indent-or-complete-common))
+  :bind
+  (("<tab>"    . my:company-indent-or-complete-common)
+   (:company-active-map
+    ("C-n"     . company-select-next)
+    ("C-p"     . company-select-previous)
+    ("C-s"     . company-filter-candidates)
+    ("C-<tab>" . company-complete-common-or-cycle)
+    ("<tab>"   . my:company-indent-or-complete-common)
     )
-  ;; yasnippetとの連携
-  (defvar company-mode/enable-yas t
-    "Enable yasnippet for all backends.")
-  (defun company-mode/backend-with-yas (backend)
-    (if (or (not company-mode/enable-yas)
-            (and (listp backend) (member 'company-yasnippet backend)))
-        backend
-      (append (if (consp backend) backend (list backend))
-              '(:with company-yasnippet))))
-  (setq company-backends
-        (mapcar #'company-mode/backend-with-yas company-backends))
+   (:company-search-map
+    ("C-p" . company-select-previous)
+    ("C-n" . company-select-next)))
+  :hook
+  ((after-init-hook . global-company-mode))
+  ;; :config
+  ;; ;; yasnippetとの連携 -- とりあえず無効化
+  ;; (defvar company-mode/enable-yas nil
+  ;;   "Enable yasnippet for all backends.")
+  ;; (defun company-mode/backend-with-yas (backend)
+  ;;   (if (or (not company-mode/enable-yas)
+  ;;           (and (listp backend) (member 'company-yasnippet backend)))
+  ;;       backend
+  ;;     (append (if (consp backend) backend (list backend))
+  ;;             '(:with company-yasnippet))))
+  ;; (setq company-backends
+  ;;       (mapcar #'company-mode/backend-with-yas company-backends))
   )
   #+END_SRC
   - [X] [[https://github.com/TheBB/company-reftex][TheBB/company-reftex]]
   - [X] [[https://github.com/vspinu/company-math][vspinu/company-math]]
   - [X] [[https://github.com/alexeyr/company-auctex][alexeyr/company-auctex]]
 * テンプレート補完: =yasnippet=
+  意図しない所で発火してテンプレートが挿入されてしまうので
+  保留中
   #+BEGIN_SRC emacs-lisp
   (leaf yasnippet
-    :disabled t
     :ensure t
     :diminish yas-minor-mode
+    :disabled t
     :custom
     `((yas-indent-line  . 'fixed)
       (yas-snippet-dirs . '(,(expand-file-name "snippets" my:d:share))))
@@ -3326,6 +3416,9 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
             ("C-<tab>" . nil)
             ("<tab>"   . nil))  ; for company
            (yas-minor-mode-map
+            ("<tab>"   . nil)
+            ("C-<tab>" . nil)
+            ("C-c y e" . yas-expand)
             ("C-c y i" . yas-insert-snippet)
             ("C-c y n" . yas-new-snippet)
             ("C-c y v" . yas-visit-snippet-file)
@@ -3337,25 +3430,19 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     )
   #+END_SRC
 * TODO =flymake=: on-the-fly check [/]
-  =flycheck= はいろいろやりすぎてて辛い.
+  on-the-fly syntax checker.
+  同様の拡張には =flycheck= があるけれど,
+  =flycheck= はいろいろやりすぎてて私には合わない.
   #+BEGIN_SRC emacs-lisp
 (leaf flymake
   :if (<= 26.1 (string-to-number emacs-version))
   :ensure t
-  ;; :hook (find-file-hook . flymake-find-file-hook)
-  :custom
-  ((flymake-allowed-file-name-masks . '(("\\.\\(?:c\\(?:pp\\|xx\\|\\+\\+\\)?\\|CC\\)\\'" flymake-proc-simple-make-init nil flymake-proc-real-file-name-considering-includes)
-                                        ("\\.xml\\'" flymake-proc-xml-init)
-                                        ("\\.html?\\'" flymake-proc-xml-init)
-                                        ("\\.cs\\'" flymake-proc-simple-make-init)
-                                        ("\\.php[345]?\\'" flymake-proc-php-init)
-                                        ("\\.h\\'" flymake-proc-master-make-header-init flymake-proc-master-cleanup)
-                                        ("\\.java\\'" flymake-proc-simple-make-java-init flymake-proc-simple-java-cleanup)
-                                        ("[0-9]+\\.tex\\'" flymake-proc-master-tex-init flymake-proc-master-cleanup)
-                                        ("\\.tex\\'" flymake-proc-simple-tex-init)
-                                        ("\\.idl\\'" flymake-proc-simple-make-init)
-                                        ("\\.\\(f\\|F\\)\\(9\\|0\\)?\\(0\\|3\\)?\\'" flymake-proc-simple-make-init))
-                                    ))
+  :config
+  ;; fortran: need Makefile in current directory
+  ;; (push
+  ;; '("\\.\\(f\\|F\\)\\(9\\|0\\)?\\(0\\|3\\)?\\'"
+  ;;   flymake-proc-simple-make-init) flymake-proc-allowed-file-name-masks)
+  ;; TeX: Update error pattern
   )
   #+END_SRC
   - [ ] 設定調整が必要
@@ -3363,6 +3450,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   =lsp-mode= より設定がシンプルそうなので, こっちを試している
   #+BEGIN_SRC emacs-lisp
 (leaf eglot
+  ;; :disabled t
   :if (executable-find "fortls")
   :ensure t
   :hook ((f90-mode-hook . eglot-ensure))
@@ -3377,6 +3465,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                              )))
   )
 (leaf ivy-xref
+  ;; :disabled t
   :ensure t
   :config
   (setq xref-show-xrefs-function #'ivy-xref-show-xrefs)
@@ -3397,9 +3486,10 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :ensure t
   :init
   (leaf reftex
-    :config
-    (setq reftex-plug-into-AUCTeX t
-          reftex-cite-prompt-optional-args t)
+    :custom
+    ((reftex-plug-into-AUCTeX               . t)
+     (reftex-cite-prompt-optional-args      . t)
+     (reftex-toc-split-windows-horizontally . t))
     )
   (leaf company-reftex
     :ensure t
@@ -3408,6 +3498,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (leaf company-math :ensure t)
   (leaf company-auctex
     :ensure t
+    :disabled t
     :hook
     (LaTeX-mode-hook . company-auctex-init)
     )
@@ -3531,8 +3622,8 @@ $clean_ext = "snm nav vrb synctex.gz";
   :if (executable-find "sass")
   :ensure t
   :mode "\\.scss\\'"
-  :config
-  (setq scss-sass-command (executable-find "sass"))
+  :custom
+  `((scss-sass-command . ,(executable-find "sass")))
   )
   #+END_SRC
 * その他のモード設定
@@ -3554,27 +3645,25 @@ $clean_ext = "snm nav vrb synctex.gz";
 (leaf tdiary-mode
   :if (and my:d:password-store
            (file-directory-p (concat (getenv "HOME") "/Nextcloud/tdiary")))
-  :commands tdiary-mode tdiary-replace tdiary-append
+  :commands (tdiary-mode tdiary-replace tdiary-append)
   :el-get (tdiary-mode
            :type github
            :pkgname "uwabami/tdiary-mode")
-  :commands (tdiary-new tdiary-replace tdiary-append)
+  :defvar tdiary-passwd-file
   :pl-setq
-  ((tdiary-csrf-key      . csrf-key)
-   (tdiary-passwd-file   . password-file))
+  (tdiary-csrf-key tdiary-passwd-file)
   :config
   (setq tdiary-text-directory (concat (getenv "HOME") "/Nextcloud/tdiary/")
         tdiary-diary-list '(("log" "https://uwabami.junkhub.org/log/"))
         tdiary-style-mode 'org-mode
         tdiary-text-suffix ".org"
-        ;; tdiary-text-save-p t
         )
   (tdiary-passwd-file-load)
   )
   #+end_src
   - [ ] org2blog で tDiary を更新できないか妄想している
 * テーマ, フォント, モードライン, などなど
-** xterm-color
+** SOMEDAY xterm-color [0/1]
    色を端末と揃える。
    #+begin_src emacs-lisp
 (leaf xterm-color
@@ -3603,6 +3692,7 @@ $clean_ext = "snm nav vrb synctex.gz";
         )
   )
    #+end_src
+   - [ ] ちゃんと効いてない, ような?
 ** フォント
   #+begin_src emacs-lisp
 (defun my:load-window-config ()
@@ -3625,36 +3715,6 @@ $clean_ext = "snm nav vrb synctex.gz";
                         (font-spec :family "FSMRMP" :height 120))
       (setq use-default-font-for-symbols nil)
       (set-frame-parameter nil 'alpha 95)
-      ;; (let* (;; (font-family "Ricty Discord")
-      ;;        (font-family "FSMRMP")
-      ;;        ;; (font-family "SF Mono Square")
-      ;;        (font-size 12)
-      ;;        (font-height (* font-size 10))
-      ;;        ;; (jp-font-family "Ricty Discord")
-      ;;        (jp-font-family "FSMRMP")
-      ;;        )
-      ;;   (set-face-attribute 'default nil :family font-family :height font-height)
-      ;;   (let ((name (frame-parameter nil 'font))
-      ;;         (jp-font-spec (font-spec :family jp-font-family))
-      ;;         (jp-characters '(katakana-jisx0201
-      ;;                          cp932-2-byte
-      ;;                          japanese-jisx0212
-      ;;                          japanese-jisx0213-2
-      ;;                          japanese-jisx0213.2004-1))
-      ;;         (font-spec (font-spec :family font-family))
-      ;;         (characters '((?\u00A0 . ?\u00FF)    ; Latin-1
-      ;;                       (?\u0100 . ?\u017F)    ; Latin Extended-A
-      ;;                       (?\u0180 . ?\u024F)    ; Latin Extended-B
-      ;;                       (?\u0250 . ?\u02AF)    ; IPA Extensions
-      ;;                       (?\u0370 . ?\u03FF)))) ; Greek and Coptic
-      ;;     (dolist (jp-character jp-characters)
-      ;;       (set-fontset-font name jp-character jp-font-spec))
-      ;;     (dolist (character characters)
-      ;;       (set-fontset-font name character font-spec))
-      ;;     (add-to-list 'face-font-rescale-alist (cons jp-font-family 1.0))))
-      ;; (set-fontset-font nil
-      ;;                   '(#xE0A0 . #xEEE0)
-      ;;                   (font-spec :family "FSMRMP" :height 240))
       (toggle-frame-maximized)
       )))
 (when (window-system)
@@ -3713,9 +3773,10 @@ Greek, Math, 絵文字は全角，他は半角で 2:1 になっているかの�
   :init
   (leaf doom-modeline
     :ensure t
-    :init
+    :preface
     (defun my:doom-modeline--set-char-widths (alist)
       "Do nothing")
+    :init
     ;;
     (defun my:skk-setup-modeline ()
       "skk-setup-modeline による modeline の更新を無効化"
@@ -3968,8 +4029,9 @@ mouse-1: Display Line and Column Mode Menu"
              :prepare (add-to-list 'custom-theme-load-path default-directory)
              )
     )
+  :custom
+  (doom-darkpastel-set-background . nil)
   :config
-  (setq doom-darkpastel-set-background nil)
   (load-theme 'doom-darkpastel t)
   )
   #+end_src

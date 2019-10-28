@@ -1,7 +1,7 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
-#+date: 2019-10-18 02:18:15
+#+date: 2019-10-27 16:44:42
 * はじめに
   ここでは私の Emacs の設定についてまとめています．
 
@@ -13,19 +13,19 @@
 ** Debian パッケージがインストールされているならばそれを優先する
    :[[https://en.wikipedia.org/wiki/Eating_your_own_dog_food][Eating your own dog food - Wikipedia]]
 
-   Emacsに関連するDebianパッケージを幾つかメンテナンスしているので，
+   Emacsに関連するDebianパッケージを幾つかメンテナンスしているので,
    可能な限りDebianパッケージを使うことにしています．
 ** [[https://github.com/conao3/leaf.el][leaf.el]]でEmacs のパッケージの導入と設定を行なう
    設定には[[https://github.com/conao3/leaf.el][leaf.el]]を利用します．
-   VCS からインストールしたいパッケージが幾つかあるので，
+   VCS からインストールしたいパッケージが幾つかあるので,
    それらについては[[https://github.com/dimitri/el-get][el-get]]を利用しています．
    今後は[[https://github.com/conao3/feather.el][feather.el]]も試してみたいですね．
 ** 設定は [[http://orgmode.org/][Org mode]] で書きたい
    以前こんなブログ記事を書きました→ [[http://uwabami.junkhub.org/log/20111213.html#p01][Emacsの設定ファイルをorgで書く]]
 
-   というわけで，設定は [[http://orgmode.org/worg/org-contrib/babel/intro.html][Org Babel]] で書いています.
+   というわけで, 設定は [[http://orgmode.org/worg/org-contrib/babel/intro.html][Org Babel]] で書いています.
    本ファイル(=README.org=) から,
-   Makefile 内の以下のスクリプトで =~/init.el= を生成し，byte-compile します.
+   Makefile 内の以下のスクリプトで =~/init.el= を生成し, byte-compile します.
    #+begin_src makefile-gmake :tangle no
 EMACS   ?= emacs
 init.el: README.org
@@ -37,7 +37,7 @@ init.el: README.org
 %.elc: %.el
     $(EMACS) -q -l init.el -batch -f batch-byte-compile $<
    #+end_src
-   ついでに，出力される =init.el= 用のおまじない(?)として
+   ついでに, 出力される =init.el= 用のおまじない(?)として
    =lexsical-binding= を有効にしておきます．
    #+begin_src emacs-lisp
 ;; -*- lexical-binding: nil -*-
@@ -84,16 +84,16 @@ init.el: README.org
 (defconst my:d:org (concat (getenv "HOME") "/Nextcloud/org/"))
    #+END_SRC
 ** Byte-Compile 時の Common Lisp の読み込み
-   幾つかん関数で =Common-Lisp= 的挙動が期待されているので，
+   幾つかん関数で =Common-Lisp= 的挙動が期待されているので,
    =cl-lib= を読み込んでおきます．
    #+begin_src emacs-lisp
 (eval-when-compile (require 'cl-lib nil t))
    #+end_src
 * Package 関連: =package.el=, [[https://github.com/conao3/leaf.el][leaf.el]], [[https://github.com/dimitri/el-get][el-get]]
-  [[https://github.com/conao3/leaf.el][leaf.el]]のおかげで，
+  [[https://github.com/conao3/leaf.el][leaf.el]]のおかげで,
   無いと途方に暮れるパッケージ以外のインストールは無視できるようになります.
 ** TODO =package.el= [0/1]
-   パッケージは基本的に =pacakge.el= で導入するので，先ずはその設定.
+   パッケージは基本的に =pacakge.el= で導入するので, 先ずはその設定.
    #+begin_src emacs-lisp
 (require 'package nil 'noerror)
 ;; elpa/gnutls workaround
@@ -112,7 +112,7 @@ init.el: README.org
     ))
 (package-initialize)
    #+end_src
-   - [ ] で，elpa の SSL error の workaround は正しくはどうするの?
+   - [ ] で, elpa の SSL error の workaround は正しくはどうするの?
 ** [[https://github.com/conao3/leaf.el][leaf.el]]
    個々のパッケージの設定には[[https://github.com/conao3/leaf.el][leaf.el]]を利用します.
    自分で修正した版やオリジナル版を別の場所から持ってくる場合は
@@ -181,7 +181,7 @@ init.el: README.org
   )
   #+end_src
 * 独自関数
-  細かい独自関数，など．
+  細かい独自関数, など．
 ** dpkg-status
    もっと良い方法がありそうなモンですが．
    #+begin_src emacs-lisp
@@ -211,7 +211,7 @@ init.el: README.org
     (format "%s%s" top output)))
    #+end_src
 ** 空になったファイルを尋ねずに自動削除
-   ゴミが残らないし，地味に便利．
+   ゴミが残らないし, 地味に便利．
    #+begin_src emacs-lisp
 (leaf *delete-file-if-no-contents
   :preface (defun my:delete-file-if-no-contents ()
@@ -260,7 +260,7 @@ init.el: README.org
 ** 行末の無駄な空白/改行を削除する
    @see [[http://d.hatena.ne.jp/tototoshi/20101202/1291289625][無駄な行末の空白を削除する(Emacs Advent Calendar jp:2010)]]
 
-   ただし, RD や Markdown だと空白行に意味があったりするので，
+   ただし, RD や Markdown だと空白行に意味があったりするので,
    必要に応じて拡張子で判断して外している．
    #+begin_src emacs-lisp
 (leaf *trailing-white-space
@@ -301,9 +301,9 @@ init.el: README.org
      「gc が走る→大きな領域を掃除するのでその間 emacs が止まる」
      という事を頻繁に経験することになるだろう.
    - 大抵の場合ターミナル内で =-nw= として起動するし,
-     メニューは触ったことないので使わないので，
+     メニューは触ったことないので使わないので,
      フレーム, ツールバー等を非表示にする．
-   - =.elc= と =.el= の timestamp を比較し，新しい方を読み込む
+   - =.elc= と =.el= の timestamp を比較し, 新しい方を読み込む
     (=load-prefer-newer= は Emacs >= 24.4 から).
    - yes or no を y or n に
    他にもイロイロと. 設定が増えてきたら分ける.
@@ -446,7 +446,7 @@ init.el: README.org
   ((emacs-startup-hook . savehist-mode))
   )
   #+END_SRC
-** ファイル，デイレクトリ整理
+** ファイル, デイレクトリ整理
    =~/.emacs.d/= 以下にファイルが転がるのがなんか嫌なので,
    気がつく度に設定している.
    #+begin_src emacs-lisp
@@ -533,7 +533,7 @@ init.el: README.org
    #+end_src
 ** =time-stamp=: 保存時に timestamp を自動更新
    デフォルトではいろいろと衝突したので
-   更新文字列を変更し， =＄Lastupdate: 2= (＄は半角) があったら
+   更新文字列を変更し,  =＄Lastupdate: 2= (＄は半角) があったら
    timestamp を更新する様にした．
    #+begin_src emacs-lisp
 (leaf time-stamp
@@ -658,7 +658,7 @@ init.el: README.org
   )
    #+end_src
 * 認証関連: =plstore=, =password-store= など
-  - =leaf-plstore= で =plstore= が使えるようになったので，
+  - =leaf-plstore= で =plstore= が使えるようになったので,
     その設定をしておく.
   - =auth-password-store= で auth-source として =password-store= を使う.
   といった事をしている.
@@ -690,7 +690,10 @@ init.el: README.org
   :defun
   (recentf-save-list recentf-cleanup)
   :preface
-  (leaf shut-up :ensure t)
+  (leaf shut-up
+    :ensure t
+    :init
+    (defvar shut-up-ignore t))
   (defun my:recentf-save-list-silence ()
     "Shut up"
     (interactive)
@@ -726,12 +729,13 @@ init.el: README.org
                                  "^/home/uwabami/.emacs.d/tmp/\\.*"
                                  "^/[^/:]+:"
                                  "bookmarks"
-                                 "org-recent-headings.dat")))
+                                 "org-recent-headings.dat"
+                                 )))
   )
   #+end_src
 
 * SOMEDAY 言語の設定 [0/1]
-  最近のEmacsはlocaleから文字コードを自動判別するらしいので，
+  最近のEmacsはlocaleから文字コードを自動判別するらしいので,
   以前良く設定していた以下は不要らしいですね(ホントかな...?)。
   #+begin_src emacs-lisp :tangle no
 (set-language-environment "Japanese")
@@ -745,7 +749,7 @@ init.el: README.org
 ** cp5022x.el
    Emacs23 から内部が Unicode ベースになっています。
 
-   しかし文字コードの変換はGNU libcのiconvをベースにしているため，
+   しかし文字コードの変換はGNU libcのiconvをベースにしているため,
    機種依存文字を含む文字コードの変換をうまく行なえません。
    そこで言語設定前に =cp5022x.el= をインストールすることにしています。
    #+begin_src emacs-lisp
@@ -772,7 +776,7 @@ init.el: README.org
   (eaw-and-emoji-fullwidth)
   )
    #+end_src
-   - [ ] 最近，EAWは一文字幅強制の方が良いかなぁ，とか悩み中.
+   - [ ] 最近, EAWは一文字幅強制の方が良いかなぁ, とか悩み中.
 ** macOS対応
    最近良く触る様になったので設定している。
    +まあ, イマイチ慣れない訳ですけれど+
@@ -792,6 +796,42 @@ init.el: README.org
     )
   )
    #+end_src
+** カレンダー設定
+   表示の更新と =japanese-holidays= による日本の休日の追加
+   #+BEGIN_SRC emacs-lisp
+(leaf calendar
+  ;; :require t
+  :custom
+  (;; 祝日をカレンダーに表示
+   (mark-holidays-in-calendar . t)
+   ;; 月と曜日の表示調整
+   (calendar-month-name-array . ["01" "02" "03" "04" "05" "06"
+                                 "07" "08" "09" "10" "11" "12" ])
+   (calendar-day-name-array   . ["日" "月" "火" "水" "木" "金" "土"])
+   (calendar-day-header-array . ["日" "月" "火" "水" "木" "金" "土"])
+   ;; 日曜開始
+   (calendar-week-start-day   . 0))
+  )
+(leaf japanese-holidays
+  :ensure t
+  :after calendar
+  :hook ((calendar-today-visible-hook   . japanese-holiday-mark-weekend)
+         (calendar-today-invisible-hook . japanese-holiday-mark-weekend)
+         (calendar-today-visible-hook   . calendar-mark-today))
+  :custom
+  ((japanese-holiday-weekend         . '(0 6))
+   (japanese-holiday-weekend-marker  . '(holiday  ;; 日
+                                         nil      ;; 月
+                                         nil      ;; 火
+                                         nil      ;; 水
+                                         nil      ;; 木
+                                         nil      ;; 金
+                                         japanese-holiday-saturday)))
+  :config
+  ;; これは最後にやらないとだめ? with-eval-after-load 的な?
+  (setq calendar-holidays (append japanese-holidays holiday-local-holidays))
+  )
+   #+END_SRC
 * =all-the-icons-in-terminal=: ターミナルでもicon fontを使いたい。
   [[https://github.com/domtronn/all-the-icons.el][all-the-icons.el]]のデータを修正して,
   [[https://github.com/sebastiencs/icons-in-terminal][icons in terminal]]を修正した
@@ -1219,7 +1259,7 @@ Emacs*useXIM: false
     #+begin_src emacs-lisp :tangle init-ddskk.el
 (setq skk-status-indicator 'left)
     #+end_src
-    mode-line が動くのが許せないので，ちょっと修正
+    mode-line が動くのが許せないので, ちょっと修正
     #+begin_src emacs-lisp :tangle init-ddskk.el
 (defadvice skk-make-indicator-alist
     (after my:set-skk-default-indicator activate)
@@ -1261,7 +1301,7 @@ Emacs*useXIM: false
       '(
         (jp    . ("。" . "、"))
         (jp-en . ("。" . ", "))
-        (en-jp . ("．" . "，"))
+        (en-jp . ("．" . ", "))
         (en    . (". " . ", "))
         ))
 (setq-default skk-kutouten-type 'en)
@@ -1370,9 +1410,8 @@ File.open(src, "r") {|f|
                  (skk-mode-exit))))
 (setq skk-isearch-start-mode 'latin)
     #+end_src
-* 校正，辞書等
-** =redpen-paragraph=: [[http://redpen.cc/][redpen]] による文章校正
-   うまく動いていない. 一旦保留
+* 校正, 辞書等
+** SOMEDAY =redpen-paragraph=: [[http://redpen.cc/][redpen]] による文章校正 [/]
    #+BEGIN_SRC emacs-lisp
 (leaf redpen-paragraph
   :disabled t
@@ -1403,6 +1442,7 @@ File.open(src, "r") {|f|
     redpen-paragraph-force-reading-whole t)
   )
    #+END_SRC
+   - [ ] うまく動いていない. 一旦保留
 ** =ispell=: spell checker
    ispell はコマンドとして =aspell= を利用する.
    #+BEGIN_SRC emacs-lisp
@@ -1419,7 +1459,7 @@ File.open(src, "r") {|f|
    #+BEGIN_SRC emacs-lisp
 (leaf flyspell
   :ensure t
-  :diminish flyspell-mode
+  :diminish "F"
   :defun
   flyspell-emacs-popup-textual
   :preface
@@ -1431,11 +1471,11 @@ File.open(src, "r") {|f|
                    my:flyspell-popup-choose)
   :hook
   ;; flyspell-prog-mode との switch が欲しい
-  ((find-file-hook . flyspell-mode))
+  ((LaTeX-mode-hook . flyspell-mode))
   )
    #+END_SRC
    - [ ] flyspell-prog-mode との switch が欲しい
-** 辞書
+** =lookup=: 電子辞書の検索
    EPWING化した辞書群を検索するために =lookup-el= ver. 1.4 系列を利用
    #+BEGIN_SRC emacs-lisp
 (leaf lookup
@@ -1538,7 +1578,7 @@ File.open(src, "r") {|f|
   MUA として Wanderlust を使っている
 ** Emacs 本体側の設定
    Emacs 本体での設定は以下の通り. Wanderlust 自体の設定は別ファイルで行なわれる．
-   ここでは =wl-init-file= を指定することで，設定ファイルを明示している．
+   ここでは =wl-init-file= を指定することで, 設定ファイルを明示している．
    #+begin_src emacs-lisp
 (leaf wl
   :if (and (or (my:dpkg-status "wl")
@@ -1729,7 +1769,7 @@ video/*; xdg-open %s;
 **** From に応じて送信サーバをきりかえる.
      本来はメール作成時/返信時の template の切り替えなのだれど,
      送信時の SMTP の設定を from に合わせてきりかえるようにする.
-     default に二重に指定しているのは，
+     default に二重に指定しているのは,
      一度別のアカウントに切り替えた後に再びトグルして戻って来た際に元に戻す(上書き)するため.
      #+begin_src emacs-lisp :tangle no
 (setq wl-template-alist
@@ -1870,7 +1910,7 @@ video/*; xdg-open %s;
 (setq wl-auto-check-folder-name "%INBOX")
      #+end_src
 **** フォルダ選択時の初期設定
-     imap の namespace を毎度入力するのが面倒なので，これを追加しておく.
+     imap の namespace を毎度入力するのが面倒なので, これを追加しておく.
      #+begin_src emacs-lisp   :tangle init-wl.el
 (setq wl-default-spec "%")
      #+end_src
@@ -1920,7 +1960,7 @@ video/*; xdg-open %s;
 (setq wl-highlight-folder-with-icon nil)
      #+end_src
 **** dispose, delete の設定
-     Gmail用に%INBOXでは削除を =wl-trash-folder= への移動ではなく，「delete」に．
+     Gmail用に%INBOXでは削除を =wl-trash-folder= への移動ではなく, 「delete」に．
      #+begin_src emacs-lisp   :tangle init-wl.el
 (add-to-list 'wl-dispose-folder-alist
              '("^%INBOX" . remove))
@@ -2176,7 +2216,7 @@ video/*; xdg-open %s;
         ))
      #+end_src
 **** From, To を省略表示しない
-     To や From にアドレスが沢山指定されていると省略されるので，これを無効化
+     To や From にアドレスが沢山指定されていると省略されるので, これを無効化
      #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-message-use-header-narrowing nil)
      #+end_src
@@ -2442,7 +2482,7 @@ fi
 (setq elmo-multi-number 2000000000)
     #+end_src
 ** Linux Desktop で =mailto:= リンクを扱うために
-   ついでに =mailto= のリンクを emacsclient で扱うために，
+   ついでに =mailto= のリンクを emacsclient で扱うために,
    以下の関数を定義しておく
    #+begin_src emacs-lisp
 (defun my:mailto-compose-mail (mailto-url)
@@ -2531,7 +2571,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   対応する括弧を強調表示してくれる
   [[https://www.emacswiki.org/emacs/RainbowDelimiters][RainbowDelimiters]]:
   global に有効にするのは他の
-  Major modeとの衝突があるので止めた方が良い，らしい．
+  Major modeとの衝突があるので止めた方が良い, らしい．
   #+begin_src emacs-lisp
 (leaf rainbow-delimiters
   :ensure t
@@ -2542,127 +2582,113 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 * Org-mode
   =org-mode= が無いと生きていけない体になりました
 ** 基本設定: =org=
-   目新しい設定はしていない，と思う．
+   目新しい設定はしていない, と思う．
    #+begin_src emacs-lisp
 (leaf org
   :delight (org-mode (all-the-icons-icon-for-mode 'org-mode))
   :bind (("C-x n s" . org-narrow-to-subtree)
          ("C-x n w" . widen))
-  :init
-  (with-eval-after-load "org"
-    )
-  :config
-  (setq org-directory my:d:org                 ;; Nextcloud に保存する
-        org-return-follows-link t              ;; return でリンクを辿る
-        org-startup-folded t                   ;; 見出しを畳んで表示
-        org-startup-truncated t                ;; 折り返し無し
-        org-emphasis-alist                     ;; 基本 "-nw" なので色変更
-        (cons '("+" '(:strike-through t :foreground "#999999"))
-              (cl-delete "+" org-emphasis-alist :key 'car :test 'equal))
-        org-file-apps-defaults '((remote . emacs)  ;; xdg-open 任せ
-                                 (system . "xdg-open %s")
-                                 (t      . "xdg-open %s"))
-        org-file-apps-defaults-gnu '((remote . emacs)  ;; xdg-open 任せ
-                                     (system . "xdg-open %s")
-                                     (t      . "xdg-open %s"))
-        ;; GTD: 状態の追加
-        org-todo-keywords
-        '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)" "CANCEL(c)" "SOMEDAY(s)")
-          (type "ARTICLE(a)")
-          (type "MEMO(m)")
-          )
-        ;; GTD: タグの追加
-        org-tag-alist '(("OFFICE"     . ?o)
-                        ("HOME"       . ?h)
-                        ("MAIL"       . ?m)
-                        ("WORK"       . ?w)
-                        ("Debian"     . ?d)
-                        ("Computer"   . ?c)
-                        ("Book"       . ?b)
-                        ("Emacs"      . ?e)
-                        ("TeX"        . ?t)
-                        ("Ruby"       . ?r)
-                        )
-        )
-  ;; GTD: TODO→...→DONE としたエントリを =Arhive.org= に移動
-  (defun my:org-archive-done-tasks ()
-    (interactive)
-    (org-map-entries 'org-archive-subtree "/DONE" 'file))
-  (setq org-archive-location "Archive.org::")
-  (add-hook 'org-todo-statistics-hook 'my:org-archive-done-tasks)
-  (add-hook 'org-todo-after-statistics-hook 'my:org-archive-done-tasks)
-  ;; 文字コード強制 ... 今時いらないかも．
-  (modify-coding-system-alist 'file "\\.org\\'" 'utf-8)
-  ;; howm ファイルも org-mode で．
-  (add-to-list 'auto-mode-alist '("\\.org$" . org-mode))
-  (add-to-list 'auto-mode-alist '("\\.howm$" . org-mode))
-  ;;; timestamp 更新文字列の変更
+  :mode
+  ;; 昔のメモ(howm)も org-mode で開く
+  (("\\.org\\'" "\\.howm\\'". org-mode))
+  :preface
+  ;;; timestamp 更新文字列の変更:
   ;;  org-mode では ＃+DATE: をひっかける用に(＃は小文字)．
   (defun my:org-timestamp-hook ()
     "Change `time-stamp-start' in org-mode"
     (set (make-local-variable 'time-stamp-start) "#\\+date: 2")
     (set (make-local-variable 'time-stamp-end)   "\$")
     )
-  (add-hook #'org-mode-hook #'my:org-timestamp-hook)
+  ;; GTD: TODO→...→DONE としたエントリを =Arhive.org= に移動
+  (defun my:org-archive-done-tasks ()
+    (interactive)
+    (org-map-entries 'org-archive-subtree "/DONE" 'file))
+  :hook
+  ((org-mode-hook                  . my:org-timestamp-hook)
+   (org-todo-statistics-hook       . my:org-archive-done-tasks)
+   (org-todo-after-statistics-hook . my:org-archive-done-tasks))
+  :custom
+  `(;; Nextcloud に保存する
+    (org-directory              . ,(expand-file-name my:d:org))
+    ;; return でリンクを辿る
+    (org-return-follows-link    . t)
+    ;; 見出しを畳んで表示
+    (org-startup-folded         . t)
+    ;; 折り返し無し
+    (org-startup-truncated      . t)
+    ;; link handler -> xdg-open 任せ
+    (org-file-apps-defaults     . '((remote . emacs)
+                                    (system . "xdg-open %s")
+                                    (t      . "xdg-open %s")))
+    (org-file-apps-defaults-gnu . '((remote . emacs)
+                                    (system . "xdg-open %s")
+                                    (t      . "xdg-open %s")))
+    ;; GTD: 状態の追加
+    (org-todo-keywords          . '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)" "CANCEL(c)" "SOMEDAY(s)")
+                                    (type "ARTICLE(a)")
+                                    (type "MEMO(m)")))
+    ;; GTD: タグの追加
+    (org-tag-alist              . '(("OFFICE"     . ?o)
+                                    ("HOME"       . ?h)
+                                    ("MAIL"       . ?m)
+                                    ("WORK"       . ?w)
+                                    ("Debian"     . ?d)
+                                    ("Computer"   . ?c)
+                                    ("Book"       . ?b)
+                                    ("Emacs"      . ?e)
+                                    ("TeX"        . ?t)
+                                    ("Ruby"       . ?r)))
+    ;; DONE → Archive.org に移動
+    (org-archive-location       . "Archive.org::")
+    ;; 基本 "-nw" なので色変更
+    )
+  :config
+  ;; +打ち消し+ の font-lock の変更 →これはテーマに任せるべき?
+  (setq org-emphasis-alist
+        (cons '("+" '(:strike-through t :foreground "#999999"))
+              (cl-delete "+" org-emphasis-alist :key 'car :test 'equal)))
   )
    #+end_src
-** Org-Id
+** TODO Org-Id [/]
    使いこなせてないのだけれど.
    #+begin_src emacs-lisp
 (leaf org-id
-  :config
-  (setq org-id-locations-file (concat my:d:share "org-id-locations"))
+  :custom
+  `((org-id-locations-file . ,(expand-file-name "org-id-locations" my:d:share))
+    ;; (org-id-link-to-org-use-id . create-if-interactive-and-no-custom-id)
+    )
   )
    #+end_src
-** TODO Babel [0/1]
+   - [ ] 要設定
+** Babel
    #+begin_src emacs-lisp
-(leaf org-src
+(leaf org-babel
   :after all-the-icons-in-terminal
   :diminish (org-src-mode (format " %s" (all-the-icons-octicon "code")))
-  :config
-  (setq org-src-fontify-natively t       ;; font-lock
-        org-src-tab-acts-natively t      ;; indent
-        org-edit-src-content-indentation 0
-        org-src-preserve-indentation t
-        )
+  :custom
+  (;; font-lock
+   (org-src-fontify-natively         . t)
+   ;; TAB の挙動
+   (org-src-tab-acts-natively        . t)
+   ;; インデント
+   (org-edit-src-content-indentation . 0)
+   ;; インデントを残す
+   (org-src-preserve-indentation     . t))
   )
    #+end_src
-   - [ ] =diminish= がちゃんと動いていない
-** Agenda: スケジュール，TODO 表示
+** Agenda: スケジュール, TODO 表示
    GTD 用の設定．後述の =org-gcal= と =orgmine= で取得したデータも表示している．
    ついでに
    - 土曜日をの face を追加.
    - 祝日, 休日を日曜と同じfaceにする.
    なんて事もやっている．元ネタは [[https://julien.danjou.info/blog/2010/org-mode-and-holidays][Org-mode and holidays]]
    #+begin_src emacs-lisp
-(leaf japanese-holidays
-  :ensure t
-  :init
-  (require 'calendar)
-  :hook ((calendar-today-visible-hook   . japanese-holiday-mark-weekend)
-         (calendar-today-invisible-hook . japanese-holiday-mark-weekend)
-         (calendar-today-visible-hook   . calendar-mark-today))
-  :config
-  (setq calendar-holidays
-        (append japanese-holidays holiday-local-holidays)
-        mark-holidays-in-calendar t     ; 祝日をカレンダーに表示
-        calendar-month-name-array       ; 月と曜日の表示調整
-        ["01" "02" "03" "04" "05" "06" "07" "08" "09" "10" "11" "12" ]
-        calendar-day-name-array
-        ["日" "月" "火" "水" "木" "金" "土"]
-        calendar-day-header-array
-        ["日" "月" "火" "水" "木" "金" "土"]
-        japanese-holiday-weekend '(0 6)  ; 土曜日・日曜日を祝日として表示
-        japanese-holiday-weekend-marker
-        '(holiday nil nil nil nil nil japanese-holiday-saturday)
-        ;; 日曜開始
-        calendar-week-start-day 0)
-  )
 (leaf org-agenda
   :bind (("C-c a" . org-agenda))
   :init
-  (require 'calendar)
+  ;; イケてない...
   (require 'japanese-holidays)
+  ;;
   (defface my:org-agenda-date-saturday
     '((t (:foreground "#7FBFFF" :bold t )))
     "Agenda 表示中の土曜日用のface")
@@ -2693,7 +2719,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     '((t (:foreground "#CCCCCC")))
     "Agenda 表示中, Twitter log の表示 face"
     :group 'org-agenda )
-  ;; 更新用の関数 - とりあえず動いているので良しとするが，リファクタリングしたい
+  ;; 更新用の関数 - とりあえず動いているので良しとするが,
+  ;; リファクタリングしたい
   (defun my:org-agenda-day-face-function (date)
     "Compute DATE face for saturday, holidays."
     (cl-dolist (file (org-agenda-files nil 'ifmode))
@@ -2717,6 +2744,82 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                        (cl-return 'my:org-agenda-date-today-weekend)
                      (cl-return 'org-agenda-date-weekend)))))))
         (when face (cl-return face)))))
+  ;; font-lock の適用
+  (defun my:org-agenda-finalize-font-lock ()
+    "Custom: apply custom font-lock"
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward "Univ:" nil t)
+        (add-text-properties
+         (match-beginning 0) (point-at-eol)
+         '(face my:org-agenda-calendar-Univ)))
+      (goto-char (point-min))
+      (while (re-search-forward "Schedule:" nil t)
+        (add-text-properties (match-beginning 0) (point-at-eol)
+                             '(face my:org-agenda-calendar-Schedule)))
+      (goto-char (point-min))
+      (while (re-search-forward "MHC:" nil t)
+        (add-text-properties (match-beginning 0) (point-at-eol)
+                             '(face my:org-agenda-calendar-Schedule)))
+      (goto-char (point-min))
+      (while (re-search-forward "DebianJP:" nil t)
+        (add-text-properties (match-beginning 0) (point-at-eol)
+                             '(face my:org-agenda-calendar-DebianJP)))
+      (goto-char (point-min))
+      (while (re-search-forward "GFD:" nil t)
+        (add-text-properties (match-beginning 0) (point-at-eol)
+                             '(face my:org-agenda-calendar-GFD)))
+      (goto-char (point-min))
+      (while (re-search-forward "twitter:" nil t)
+        (add-text-properties (match-beginning 0) (point-at-eol)
+                             '(face my:org-agenda-calendar-twitter)))
+      (goto-char (point-min))
+      (while (re-search-forward "誕生日:" nil t)
+        (add-text-properties (match-beginning 0) (point-at-eol)
+                             '(face org-agenda-date-weekend)))
+      (goto-char (point-min))
+      (while (re-search-forward "祝日:" nil t)
+        (add-text-properties (match-beginning 0) (point-at-eol)
+                             '(face org-agenda-date-weekend)))
+      (goto-char (point-min))
+      (while (re-search-forward "休日:" nil t)
+        (add-text-properties (match-beginning 0) (point-at-eol)
+                             '(face org-agenda-date-weekend)))))
+  :hook
+  ;; 色付け
+  ((org-agenda-finalize-hook . my:org-agenda-finalize-font-lock))
+  :custom
+  (;; day or week
+   (org-agenda-span              . 'day)
+   ;; YY/MM/DD (曜)
+   (org-agenda-format-date       . "%Y/%m/%d (%a)")
+   ;; 日曜始まり
+   (org-agenda-weekend-days      . '(0))
+   ;; 表示関数
+   (org-agenda-day-face-function . 'my:org-agenda-day-face-function)
+   ;; GTD 用の設定
+   (org-agenda-custom-commands
+    . '(
+        ("n" "agenda and all TODO list"
+         (
+          (agenda ""
+                  ((org-agenda-ndays 1)
+                   (org-agenda-entry-types '(:timestamp :sexp))))
+          (todo "TODO"
+                ((org-agenda-prefix-format " %i %-22:c")))
+          (todo "新規|着手|進行中|確認"
+                ((org-agenda-prefix-format " %i %-22:c")))
+          (todo "WAIT"
+                ((org-agenda-prefix-format " %i %-22:c")))
+
+          (todo "SOMEDAY"
+                ((org-agenda-prefix-format " %i %-22:c")))
+          ))
+        ("N" "All memo entry"
+         (;;
+          (todo "MEMO")
+          ))
+        )))
   :config
   ;; 使用するファイル
   (dolist (file
@@ -2734,86 +2837,14 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
              "redmine_GFD.org"
              "redmine_FluidSoc.org"
              ))
-    (add-to-list 'org-agenda-files (concat my:d:org file)))
+    (add-to-list 'org-agenda-files (expand-file-name file my:d:org)))
   (add-to-list 'org-agenda-files (locate-user-emacs-file "README.org"))
-  ;; 表示のカスタマイズ
-  (setq org-agenda-span 'day                   ;; day or week
-        org-agenda-format-date "%Y/%m/%d (%a)" ;; YY/MM/DD (曜)
-        org-agenda-weekend-days '(0)           ;; 日曜始まり
-        ;; 表示関数
-        org-agenda-day-face-function 'my:org-agenda-day-face-function
-        org-agenda-custom-commands             ;; GTD 用の設定
-        '(
-          ("n" "agenda and all TODO list"
-           (
-            (agenda ""
-                    ((org-agenda-ndays 1)
-                     (org-agenda-entry-types '(:timestamp :sexp))))
-            (todo "TODO"
-                  ((org-agenda-prefix-format " %i %-22:c"))
-                  )
-            (todo "新規|着手|進行中|確認"
-                  ((org-agenda-prefix-format " %i %-22:c"))
-                  )
-            (todo "WAIT"
-                  ((org-agenda-prefix-format " %i %-22:c"))
-                  )
-            (todo "SOMEDAY"
-                  ((org-agenda-prefix-format " %i %-22:c"))
-                  )
-            ))
-          ("N" "All memo entry"
-           (;;
-            (todo "MEMO")
-            ))
-          )
-        )
-  ;; 色付け
-  (add-hook 'org-agenda-finalize-hook
-            (lambda ()
-              (save-excursion
-                (goto-char (point-min))
-                (while (re-search-forward "Univ:" nil t)
-                  (add-text-properties (match-beginning 0) (point-at-eol)
-                                       '(face my:org-agenda-calendar-Univ)))
-                (goto-char (point-min))
-                (while (re-search-forward "Schedule:" nil t)
-                  (add-text-properties (match-beginning 0) (point-at-eol)
-                                       '(face my:org-agenda-calendar-Schedule)))
-                (goto-char (point-min))
-                (while (re-search-forward "MHC:" nil t)
-                  (add-text-properties (match-beginning 0) (point-at-eol)
-                                       '(face my:org-agenda-calendar-Schedule)))
-                (goto-char (point-min))
-                (while (re-search-forward "DebianJP:" nil t)
-                  (add-text-properties (match-beginning 0) (point-at-eol)
-                                       '(face my:org-agenda-calendar-DebianJP)))
-                (goto-char (point-min))
-                (while (re-search-forward "GFD:" nil t)
-                  (add-text-properties (match-beginning 0) (point-at-eol)
-                                       '(face my:org-agenda-calendar-GFD)))
-                (goto-char (point-min))
-                (while (re-search-forward "twitter:" nil t)
-                  (add-text-properties (match-beginning 0) (point-at-eol)
-                                       '(face my:org-agenda-calendar-twitter)))
-                (goto-char (point-min))
-                (while (re-search-forward "誕生日:" nil t)
-                  (add-text-properties (match-beginning 0) (point-at-eol)
-                                       '(face org-agenda-date-weekend)))
-                (goto-char (point-min))
-                (while (re-search-forward "祝日:" nil t)
-                  (add-text-properties (match-beginning 0) (point-at-eol)
-                                       '(face org-agenda-date-weekend)))
-                (goto-char (point-min))
-                (while (re-search-forward "休日:" nil t)
-                  (add-text-properties (match-beginning 0) (point-at-eol)
-                                       '(face org-agenda-date-weekend)))
-                )))
   )
    #+end_src
 ** Org-journal: 日記
    単一ファイルに記述すること, および
-   エントリ作成時に日付を入れるために =org-jounnal-new-entry= を =advice= している
+   エントリ作成時に日付を入れるために =org-jounnal-new-entry=
+   を =advice= している
    #+begin_src emacs-lisp
 (leaf org-journal
   :if (and (file-directory-p my:d:org)
@@ -2822,14 +2853,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   ;; :bind (("C-c C-j" . browse-url-at-point)
   ;; (:org-journal-mode-map
   ;;        ("C-c C-j" . browse-url-at-point)))
-  :advice (:before org-journal-new-entry
-                   my:org-journal-add-date-entry)
-  :config
-  (eval-and-compile 'browse-url)
-  (with-eval-after-load 'org-journal
-    (global-set-key (kbd "C-c C-j") 'browse-url-at-point))
-  (add-hook 'org-journal-mode-hook (lambda ()
-                                     (setq truncate-lines t)))
+  :init
   (defun my:org-journal-add-date-entry (prefix &optional time)
     "Insert date entry to `org-journal-file'"
     (find-file (expand-file-name org-journal-file-format org-journal-dir))
@@ -2841,17 +2865,27 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         (goto-char (point-max))
         (insert (concat "\n" org-journal-date-prefix
                         (format-time-string org-journal-date-format)))
-        ))
+        )))
+  ;;
+  :advice (:before org-journal-new-entry
+                   my:org-journal-add-date-entry)
+  :custom
+  `((org-journal-dir         . ,(expand-file-name my:d:org))
+    (org-journal-file-format . "journal.org")
+    (org-journal-date-format . "%x (%a)")
+    (org-journal-date-prefix . "* ")
+    (org-journal-time-format . "<%Y-%m-%d %R> ")
+    (org-journal-time-prefix . "** MEMO ")
+    (org-journal-find-file   . 'find-file)
+    (org-journal-cache-file  . ,(expand-file-name "org-journal.cache" my:d:tmp))
     )
-  (setq org-journal-dir my:d:org
-        org-journal-file-format "journal.org"
-        org-journal-date-format "%x (%a)"
-        org-journal-date-prefix "* "
-        org-journal-time-format "<%Y-%m-%d %R> "
-        org-journal-time-prefix "** MEMO "
-        org-journal-find-file 'find-file
-        org-journal-cache-file (concat my:d:tmp "org-journal.cache")
-        )
+  :hook
+  ((org-journal-mode-hook . (lambda()
+                              (setq-local truncate-lines t))))
+  :config
+  (eval-and-compile 'browse-url)
+  (with-eval-after-load 'org-journal
+    (global-set-key (kbd "C-c C-j") 'browse-url-at-point))
   )
 ;; Key bindings -- 使えてない...
 ;; (define-key org-journal-mode-map (kbd "C-c C-f") 'org-journal-open-next-entry)
@@ -2935,8 +2969,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 ** OrgとGoogle カレンダーの連携: =org-gcal=
    request token 等の置き場所の変更
    実際の情報等は =password-store= を使って設定しておく.
-   #+begin_src emacs-lisp
-   #+end_src
    ついでに agenda 表示の際の色付けを設定．
    #+begin_src emacs-lisp
 (leaf org-gcal
@@ -2975,14 +3007,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    org-gcal-client-secret
    org-gcal-file-alist)
   )
-   #+end_src
-   password-store には multiline で設定を書く．例えば以下:
-   #+begin_src emacs-lisp :tangle no
-(setq org-gcal-client-id "XXXXXXXXXXX"
-      org-gcal-client-secret "XXXXXXXXXXX"
-      org-gcal-file-alist
-      '(("XXXXX@gmail.com" . "~/org/Schedule.org")
-        ("YYYYY@group.calendar.google.com" . "~/org/Project1.org")))
    #+end_src
 ** OrgとRedmine の連携: =orgmine=
    素晴しい!!
@@ -3025,10 +3049,74 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                (> (string-to-char (match-string 3)) #x2000))
           (replace-match "\\1\\2\\3"))
       (goto-char (point-at-bol))))
-  :hook (org-export-before-processing-hook . my:remove-org-newlines-at-cjk-text)
+  :hook
+  ((org-export-before-processing-hook . my:remove-org-newlines-at-cjk-text))
+  :custom
+  ((org-export-backends             . '(;; built-in
+                                        ascii
+                                        html
+                                        latex
+                                        beamer))
+   (org-export-with-toc             . nil)
+   (org-export-with-section-numbers . nil)
+   )
   :config
-  (setq org-export-with-toc nil
-        org-export-with-section-numbers nil)
+  (leaf ox-latex
+    :preface
+    ;; "verbatim" → "Verbatim" 置換
+    (defun my:org-latex-filter-fancyvrb (text backend _info)
+      "Convert begin/end{verbatim} to begin/end{Verbatim}.
+  Allows use of the fancyvrb latex package."
+      (when (or (org-export-derived-backend-p backend 'beamer)
+                (org-export-derived-backend-p backend 'latex))
+        (replace-regexp-in-string
+         "\\\\\\(begin\\|end\\){verbatim}"
+         "\\\\\\1{Verbatim}" text)))
+    ;; "tabular" →  "Tabular"  置換
+    (defun my:org-latex-filter-bigtabular (text backend _info)
+      "Convert begin/end{tabular} to begin/end{Tabular}."
+      (when (or (org-export-derived-backend-p backend 'beamer)
+                (org-export-derived-backend-p backend 'latex))
+        (replace-regexp-in-string
+         "\\\\\\(begin\\|end\\){tabular}"
+         "\\\\\\1{Tabular}" text)))
+    :init
+    (leaf ox-beamer)
+    :custom
+    `((org-latex-default-class . "my:platex")
+      (org-latex-pdf-process   . '("latexmk -pvc %f"))
+      (org-latex-classes
+       . '(("my:platex"
+            "\\documentclass[a4j]{jsarticle}
+            [NO-DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
+            ("\\section\{%s\}" . "\\section*\{%s\}")
+            ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
+            ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
+           ("my:beamer"
+            "\\documentclass[dvipdfmx,presentation]{beamer}
+             [NO-DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
+            ("\\section\{%s\}" . "\\section*\{%s\}")
+            ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
+            ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))))
+      (org-export-filter-final-output-functions
+       . '(my:org-latex-filter-fancyvrb
+           my:org-latex-filter-bigtabular))
+      )
+    )
+  (leaf ox-html
+    :custom
+    ((org-html-use-infojs            . nil)
+     (org-html-html5-fancy           . t)
+     (org-export-htmlize-output-type . 'inline-css)
+     (org-html-doctype               . "html5")
+     (org-html-text-markup-alist
+      . '((bold           . "<strong>%s</strong>")
+          (code           . "<code>%s</code>")
+          (italic         . "<i>%s</i>")
+          (strike-through . "<del>%s</del>")
+          (underline      . "<span class=\"underline\">%s</span>")
+          (verbatim       . "<code>%s</code>"))))
+    )
   ;; for Beamer
   (add-to-list 'org-export-options-alist
                '(:shortdate    "SHORTDATE" nil nil))
@@ -3047,110 +3135,12 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                '(:redirect_to "redirect_to" nil nil))
   )
     #+END_SRC
-*** LaTeX export
-    #+BEGIN_SRC emacs-lisp
-(leaf ox-latex
-  :after ox
-  :config
-  (add-to-list 'org-latex-classes
-               '("my:platex"
-                 "\\documentclass[a4j]{jsarticle}
-                     [NO-DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
-                 ("\\section\{%s\}" . "\\section*\{%s\}")
-                 ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
-                 ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
-               )
-  ;;
-  (add-to-list 'org-latex-classes
-               '("my:bxjsartible"
-                 "\\documentclass[a4j,ja=standard]{bxjsarticle}
-                     [NO-DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
-                 ("\\section\{%s\}" . "\\section*\{%s\}")
-                 ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
-                 ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
-               )
-  (setq org-latex-pdf-process '("latexmk %f"))
-  ;; "verbatim" → "Verbatim" 置換
-  (defun my:org-latex-filter-fancyvrb (text backend _info)
-    "Convert begin/end{verbatim} to begin/end{Verbatim}.
-  Allows use of the fancyvrb latex package."
-    (when (or (org-export-derived-backend-p backend 'beamer)
-              (org-export-derived-backend-p backend 'latex))
-      (replace-regexp-in-string
-       "\\\\\\(begin\\|end\\){verbatim}"
-       "\\\\\\1{Verbatim}" text)))
-  (add-to-list 'org-export-filter-final-output-functions
-               'my:org-latex-filter-fancyvrb)
-  ;; "tabular" →  "Tabular"  置換
-  ;; (defun my:org-latex-filter-bigtabular (text backend _info)
-  ;;   "Convert begin/end{tabular} to begin/end{Tabular}."
-  ;;   (when (or (org-export-derived-backend-p backend 'beamer)
-  ;;             (org-export-derived-backend-p backend 'latex))
-  ;;     (replace-regexp-in-string
-  ;;      "\\\\\\(begin\\|end\\){tabular}"
-  ;;      "\\\\\\1{Tabular}" text)))
-  ;; (add-to-list 'org-export-filter-final-output-functions
-  ;;              'my:org-latex-filter-bigtabular)
-  )
-    #+END_SRC
-*** Beamer export
-    #+BEGIN_SRC emacs-lisp
-(leaf ox-beamer
-  :after ox-latex
-  :config
-  (add-to-list 'org-latex-classes
-               '("my:beamer"
-                 "\\documentclass[dvipdfmx,presentation]{beamer}
-                     [NO-DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
-                 ("\\section\{%s\}" . "\\section*\{%s\}")
-                 ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
-                 ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
-               )
-  ;;
-  (add-to-list 'org-latex-classes
-               '("my:beamer-uplatex"
-                 "\\documentclass[dvipdfmx,presentation]{beamer}
-                     [NO-DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
-                 ("\\section\{%s\}" . "\\section*\{%s\}")
-                 ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
-                 ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
-               )
-  (add-to-list 'org-latex-classes
-               '("my:beamer-pdflatex"
-                 "\\documentclass[unicode,presentation]{beamer}
-                     [NO-DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
-                 ("\\section\{%s\}" . "\\section*\{%s\}")
-                 ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
-                 ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
-               )
-  )
-    #+END_SRC
-    LATEX_CLASS に =my:beamer= を指定すると，上記設定で export される．
-*** HTML export
-    後述の Jekyll 用の設定も参照のこと．
-    #+BEGIN_SRC emacs-lisp
-(leaf ox-html
-  :after ox
-  :config
-  (setq org-html-use-infojs nil
-        org-html-html5-fancy t
-        org-export-htmlize-output-type 'inline-css
-        org-html-doctype "html5"
-        org-html-text-markup-alist
-        '((bold           . "<strong>%s</strong>")
-          (code           . "<code>%s</code>")
-          (italic         . "<i>%s</i>")
-          (strike-through . "<del>%s</del>")
-          (underline      . "<span class=\"underline\">%s</span>")
-          (verbatim       . "<code>%s</code>")))
-  )
-    #+END_SRC
 *** Jekyll 用の Backend の定義
     Web サイトは Jekyll で作成しています．
     [[https://github.com/yoshinari-nomura/org-octopress][yoshinari-nomura/org-octopress: org-mode in octopress]] の
-    =ox-jekyll= を参考に +改造して+ ，
+    =ox-jekyll= を参考に +改造して+ ,
     html export の際に必要な yaml front matter を出力できるようにしてます．
-    あと，src-block が liquid に解釈されない様に escape してます．
+    あと, src-block が liquid に解釈されない様に escape してます．
      #+BEGIN_SRC emacs-lisp
 (leaf ox-html
   :disabled t
@@ -3271,7 +3261,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   )
   #+END_SRC
 * VCS
-  まあ，ほとんど Git 関連な訳ですが．
+  まあ, ほとんど Git 関連な訳ですが．
 ** git{attributes,config,ignore}-mode, git-commit
    #+begin_src emacs-lisp
 (leaf *git
@@ -3285,7 +3275,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    #+end_src
 ** magit:
    magit は Emacs の Git Frontend.
-   結局の所 CUI でコマンド叩く事も多いけれど，これはこれで重宝している．
+   結局の所 CUI でコマンド叩く事も多いけれど, これはこれで重宝している．
    #+begin_src emacs-lisp
 (leaf magit
   :bind (("C-x g" . magit-status))
@@ -3347,7 +3337,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 * 言語毎の補完: =company-mode=
   まだうまく使いこなせていない．
   - [[https://qiita.com/wktkshn/items/3ac46671d1c242a59f7e][company-dabbrevで日本語を補完しない]]
-  を有効にしてみたが，これで良いのかしら...?
+  を有効にしてみたが, これで良いのかしら...?
   #+BEGIN_SRC emacs-lisp
 (leaf company
   :ensure t
@@ -3361,28 +3351,30 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                                        (company-gtags
                                         company-etags
                                         company-keywords))))
-  :defun
-  (compnay-complete-common ivy-alt-done)
-  :preface
-  (defun my:company-indent-or-complete-common ()
-    "Custom: disable company-complete in minibuffer"
-    (interactive)
-    (if (minibufferp) (ivy-alt-done)
-      company-indent-or-complete-common))
   :bind
-  (("<tab>"    . my:company-indent-or-complete-common)
+  (;; ("<tab>"    . company-indent-or-complete-common)
    (:company-active-map
     ("C-n"     . company-select-next)
     ("C-p"     . company-select-previous)
     ("C-s"     . company-filter-candidates)
     ("C-<tab>" . company-complete-common-or-cycle)
-    ("<tab>"   . my:company-indent-or-complete-common)
+    ("<tab>"   . company-indent-or-complete-common)
     )
    (:company-search-map
     ("C-p" . company-select-previous)
     ("C-n" . company-select-next)))
   :hook
-  ((after-init-hook . global-company-mode))
+  ((after-init-hook       . global-company-mode)
+   (minibuffer-setup-hook . (lambda ()
+                              (company-mode -1)))
+   )
+  )
+  ;; :config
+  ;; (defun my:company-indent-or-complete-common ()
+  ;;   "Custom: disable company-complete in minibuffer"
+  ;;   (interactive)
+  ;;   (if (minibufferp) (ivy-alt-done)
+  ;;     company-indent-or-complete-common))
   ;; :config
   ;; ;; yasnippetとの連携 -- とりあえず無効化
   ;; (defvar company-mode/enable-yas nil
@@ -3395,7 +3387,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   ;;             '(:with company-yasnippet))))
   ;; (setq company-backends
   ;;       (mapcar #'company-mode/backend-with-yas company-backends))
-  )
   #+END_SRC
   - [X] [[https://github.com/TheBB/company-reftex][TheBB/company-reftex]]
   - [X] [[https://github.com/vspinu/company-math][vspinu/company-math]]
@@ -3474,7 +3465,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 * TeX: =AUCTeX=
   Debian パッケージ版を使う．
   やっている事は
-  - japanese-latex-mode において, 幾つかのコマンドが追加/上書きされているが， あまり使うことの無いコマンドが表示されるのが嫌なのでそれらを削除．
+  - japanese-latex-mode において, 幾つかのコマンドが追加/上書きされているが,  あまり使うことの無いコマンドが表示されるのが嫌なのでそれらを削除．
   - コンパイルには[[http://personal.psu.edu/jcc8/software/latexmk/][Latexmk]]を使う
   と言った所.
   [[http://personal.psu.edu/jcc8/software/latexmk/][Latexmk]]の設定には[[https://github.com/tom-tan/auctex-latexmk][auctex-latexmk]]を利用する．
@@ -3561,7 +3552,7 @@ $pdf_update_method = 0;
 $clean_ext = "snm nav vrb synctex.gz";
   #+end_src
 * Autoconf
-  いれてみたけれど，はてさて．
+  いれてみたけれど, はてさて．
   #+BEGIN_SRC emacs-lisp
 (leaf sh-autoconf
   :el-get (sh-autoconf
@@ -3597,7 +3588,7 @@ $clean_ext = "snm nav vrb synctex.gz";
   )
   #+END_SRC
 * Markdown
-  markdown自体はあまり好きじゃないんだけれど，
+  markdown自体はあまり好きじゃないんだけれど,
   必要に迫られて書く事が増えてきたので設定しておく．
   #+BEGIN_SRC emacs-lisp
 (leaf markdown-mode
@@ -3722,7 +3713,7 @@ $clean_ext = "snm nav vrb synctex.gz";
   #+end_src
   #+BEGIN_EXAMPLE
 幅の確認:
-Greek, Math, 絵文字は全角，他は半角で 2:1 になっているかの確認用
+Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確認用
 
 |abcdefghijkl|
 |ABCDEFGHIJKL|
@@ -3747,7 +3738,7 @@ Greek, Math, 絵文字は全角，他は半角で 2:1 になっているかの�
    基本個々のモードの設定でカスタマイズしているけれども．
    #+BEGIN_SRC emacs-lisp
 (leaf *modeline-string
-  ;; ここでやるより，modeline の設定時に一括で変換した方が良い気もしてきた．
+  ;; ここでやるより, modeline の設定時に一括で変換した方が良い気もしてきた．
   :delight ((lisp-interaction-mode
              (all-the-icons-icon-for-mode 'lisp-interaction-mode))
             (emacs-lisp-mode
@@ -3758,8 +3749,8 @@ Greek, Math, 絵文字は全角，他は半角で 2:1 になっているかの�
   )
    #+END_SRC
 ** doom-modeline
-   細かい所が気になるので，色々弄ってます．
-   - アイコン表示の際に(EAWのせいで)幅が狂うので，
+   細かい所が気になるので, 色々弄ってます．
+   - アイコン表示の際に(EAWのせいで)幅が狂うので,
      doom-modeline内の幅の勘定をしている関数をoverride
    - SKKの表示が欲しいので追加
    - bufferのアイコンはfilenameじゃなくてmajor-modeを見にいく.

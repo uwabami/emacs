@@ -93,7 +93,7 @@ init.el: README.org
   [[https://github.com/conao3/leaf.el][leaf.el]]のおかげで,
   無いと途方に暮れるパッケージ以外のインストールは無視できるようになります.
 ** TODO =package.el= [0/1]
-   パッケージは基本的に =pacakge.el= で導入するので, 先ずはその設定.
+   パッケージは基本的に =package.el= で導入するので, 先ずはその設定.
    #+begin_src emacs-lisp
 (require 'package nil 'noerror)
 ;; elpa/gnutls workaround

@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
 #+options: auto-id:t H:6
-#+date: 2019-12-21 15:47:59
+#+date: 2019-12-25 09:17:27
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -1061,46 +1061,254 @@ init.el: README.org
   (migemo-init)
   )
   #+end_src
-* 補完: =ido=
+* 補完: =ivy=, =counsel=,  =swiper= [/]
   :PROPERTIES:
-  :CUSTOM_ID: orge3fb8a64
+  :CUSTOM_ID: org523a6f47
   :END:
-  補完は =ido= が軽いし速いので好み.
-  見た目がちょっと簡素すぎる気もするので、なんとか弄りたい所ではある。
-** =ido= の設定
+  以前は =ido= を使っていたのでまだ挙動に戸惑う事があるけれど．
+  - [[https://qiita.com/takaxp/items/2fde2c119e419713342b][helm を背に ivy の門を叩く - Qiita]] を参考の事.
+** =ivy=: 補完の基本設定
    :PROPERTIES:
-   :CUSTOM_ID: orgc92613c0
+   :CUSTOM_ID: org829c7d26
    :END:
-   #+begin_src emacs-lisp
-(leaf ido
-  :bind (("C-x C-f" . ido-find-file))
-  :preface
-  (defun my:ido-disable-line-trucation ()
-    (set (make-local-variable 'truncate-lines) nil))
-  ;;
-  (defun my:ido-remove-tramp-from-cache nil
-    "Remove any TRAMP entries from `ido-dir-file-cache'.
-    This stops tramp from trying to connect to remote hosts on emacs startup,
-    which can be very annoying."
-    (interactive)
-    (setq ido-dir-file-cache
-          (cl-remove-if
-           (lambda (x)
-             (string-match "/\\(rsh\\|ssh\\|telnet\\|su\\|sudo\\|sshx\\|krlogin\\|ksu\\|rcp\\|scp\\|rsync\\|scpx\\|fcp\\|nc\\|ftp\\|smb\\|adb\\):" (car x)))
-           ido-dir-file-cache)))
-  ;;
-  (defun my:ido-kill-emacs-hook ()
-    (my:ido-remove-tramp-from-cache)
-    (ido-save-history))
-  :advice (:override ido-kill-emacs-hook
-                     my:ido-kill-emacs-hook)
-  :hook ((ido-setup-hook
-          . (lambda ()
-              (define-key ido-completion-map (kbd "C-h") 'ido-delete-backward-updir)
-              (define-key ido-completion-map (kbd "C-l") 'ido-delete-backward-updir)))
-         (ido-minibuffer-setup-hook . my:ido-disable-line-trucation))
+   #+BEGIN_SRC emacs-lisp
+(leaf ivy
+  :ensure t
   :init
-  ;; 補完で無視する拡張子の追加．そのうち増える．
+  (leaf flx :ensure t)
+  (leaf smex
+    :ensure t
+    :custom
+    `((smex-save-file
+       . ,(expand-file-name "smex-items" my:d:tmp))
+      (smex-history-length . 32)
+      )
+    )
+  (leaf ivy-hydra :ensure t)
+  :preface
+  ;; 補完候補のアイコン表示
+  (defface my:ivy-arrow-visible
+    '((((class color) (background light)) :foreground "#FFBF7F")
+      (((class color) (background dark)) :foreground "#FFBF7F"))
+    "Face used by Ivy for highlighting the arrow."
+    :group 'ivy)
+  ;;
+  (defun my:ivy-format-function-arrow (cands)
+    "Custom: Transform CANDS into a string for minibuffer."
+    (setq-local tab-width 1)
+    (ivy--format-function-generic
+     (lambda (str)
+       (concat " "
+               (all-the-icons-faicon
+                "hand-o-right" :face 'my:ivy-arrow-visible)
+               "\t" (ivy--add-face str 'ivy-current-match)))
+     (lambda (str)
+       (concat ;; (all-the-icons-faicon "hand-o-right" :foreground 'background)
+        "   \t" str))
+     cands
+     "\n"))
+  ;; 長い表示を shrink -> advice override
+  (defun my:ivy--insert-prompt ()
+    "Custom."
+    (when (setq ivy--prompt (ivy-prompt))
+      (unless (memq this-command '(ivy-done
+                                   ivy-alt-done
+                                   ivy-partial-or-done
+                                   counsel-find-symbol))
+        (setq ivy--prompt-extra ""))
+      (let (head tail)
+        (if (string-match "\\(.*?\\)\\(:? ?\\)\\'" ivy--prompt)
+            (progn
+              (setq head (match-string 1 ivy--prompt))
+              (setq tail (match-string 2 ivy--prompt)))
+          (setq head ivy--prompt)
+          (setq tail ""))
+        (let ((inhibit-read-only t)
+              (std-props
+               '(front-sticky t rear-nonsticky t field t read-only t))
+              (n-str
+               (concat
+                (if (and (bound-and-true-p minibuffer-depth-indicate-mode)
+                         (> (minibuffer-depth) 1))
+                    (format "[%d] " (minibuffer-depth))
+                  "")
+                (concat
+                 (if (string-match "%d.*%d" ivy-count-format)
+                     (format head
+                             (1+ ivy--index)
+                             (or (and (ivy-state-dynamic-collection ivy-last)
+                                      ivy--full-length)
+                                 ivy--length))
+                   (format head
+                           (or (and (ivy-state-dynamic-collection ivy-last)
+                                    ivy--full-length)
+                               ivy--length)))
+                 ivy--prompt-extra
+                 tail)))
+              (d-str (if ivy--directory
+                         ;; max で 45文字 + 末尾のファイル名
+                         (my:shorten-file-path ivy--directory 45)
+                       "")))
+          (save-excursion
+            (goto-char (point-min))
+            (delete-region (point-min) (minibuffer-prompt-end))
+            (let ((len-n (length n-str))
+                  (len-d (length d-str))
+                  (ww (window-width)))
+              (setq n-str
+                    (cond ((> (+ len-n len-d) ww)
+                           (concat n-str "\n" d-str "\n"))
+                          ((> (+ len-n len-d (length ivy-text)) ww)
+                           (concat n-str d-str "\n"))
+                          (t
+                           (concat n-str d-str)))))
+            (when ivy-pre-prompt-function
+              (setq n-str (concat (funcall ivy-pre-prompt-function) n-str)))
+            (when ivy-add-newline-after-prompt
+              (setq n-str (concat n-str "\n")))
+            (let ((regex (format "\\([^\n]\\{%d\\}\\)[^\n]" (window-width))))
+              (while (string-match regex n-str)
+                (setq n-str (replace-match
+                             (concat (match-string 1 n-str) "\n")
+                             nil t n-str 1))))
+            (set-text-properties 0 (length n-str)
+                                 `(face minibuffer-prompt ,@std-props)
+                                 n-str)
+            (setq n-str (funcall ivy-set-prompt-text-properties-function
+                                 n-str std-props))
+            (insert n-str))
+          ;; Mark prompt as selected if the user moves there or it is the only
+          ;; option left.  Since the user input stays put, we have to manually
+          ;; remove the face as well.
+          (when ivy--use-selectable-prompt
+            (if (= ivy--index -1)
+                (ivy-add-face-text-property
+                 (minibuffer-prompt-end)
+                 (line-end-position)
+                 'ivy-prompt-match)
+              (remove-list-of-text-properties
+               (minibuffer-prompt-end) (line-end-position) '(face))))
+          ;; get out of the prompt area
+          (constrain-to-field nil (point-max))))))
+  ;; リストアイコン表示
+  (defun my:ivy-pre-prompt-function ()
+    (format "%s "
+            (all-the-icons-faicon "sort-amount-asc")))
+  ;;
+  :advice ((:override ivy--insert-prompt
+                      my:ivy--insert-prompt))
+  :custom
+  ((ivy-use-virtual-buffers     . t)      ;; bookmark, recentf と結合
+   (ivy-extra-directories       . nil)      ;; default は "." と ".."
+   (ivy-fixed-height-minibuffer . t)
+   (ivy-height                  . 9)
+   (ivy-wrap                    . t)
+   (ivy-count-format            . "[%d/%d] ")
+   (ivy-pre-prompt-function     . 'my:ivy-pre-prompt-function)
+   (ivy-format-functions-alist  . '((t . my:ivy-format-function-arrow)))
+   ;; (ivy-re-builders-alist       . '((t . ivy--regex-fuzzy)))
+   (ivy-use-selectable-prompt   . t)
+   (ivy-read-action-function    . 'ivy-hydra-read-action)
+   (ivy-initial-inputs-alist
+    .
+    '((counsel-minor . "^+")
+      (counsel-package . "^+")
+      (counsel-org-capture . "^")
+      ;; (counsel-M-x . "^")
+      (counsel-describe-function . "^")
+      (counsel-describe-variable . "^")
+      (org-refile . "^")
+      (org-agenda-refile . "^")
+      (org-capture-refile . "^")
+      (Man-completion-table . "^")
+      (woman . "^")))
+   )
+  :bind
+  ((:ivy-minibuffer-map )
+   ("<escape>" . minibuffer-keyboard-quit))
+  :config
+  ;; 何回層入ったかプロンプトに表示．
+  (when (setq enable-recursive-minibuffers t)
+    (minibuffer-depth-indicate-mode 1))
+  )
+   #+END_SRC
+** =all-the-icons-ivy=: 候補のアイコン表示
+   :PROPERTIES:
+   :CUSTOM_ID: orgb77dc600
+   :END:
+   #+BEGIN_SRC emacs-lisp
+(leaf all-the-icons-ivy
+  :ensure t
+  :after all-the-icons-in-terminal
+  :config
+  (all-the-icons-ivy-setup)
+  )
+   #+END_SRC
+** =counsel=: ivy による既存コマンドの拡張 [/]
+   :PROPERTIES:
+   :CUSTOM_ID: org6cfb3ea9
+   :END:
+   recentf で表示されるリストを短縮する様にしてみた.
+   飽きたら止めるかも.
+
+   ついでに ido の時と同様に "C-f" で fallback して
+   素の find-file に行って欲しいのでその設定を追加したり
+   - [[https://github.com/abo-abo/swiper/issues/1333][Making minibuffer (editing) behaviour during counsel-find-file more like default find-file · Issue #1333 · abo-abo/swiper]]
+   が元ネタ.
+   #+BEGIN_SRC emacs-lisp
+(leaf counsel
+  :ensure t
+  :after ivy
+  :defvar (recentf-list
+           counsel-find-file-ignore-regexp
+           )
+  :init
+  (leaf s :ensure t :require t)
+  ;;
+  (defun my:counsel-find-file-fallback-command ()
+    "Fallback to non-counsel version of current command."
+    (interactive)
+    (when (bound-and-true-p ivy-mode)
+      (ivy-mode -1)
+      (add-hook 'minibuffer-setup-hook
+                'my:counsel-find-file-fallback-command--enable-ivy))
+    (ivy-set-action
+     (lambda (current-path)
+       (let ((old-default-directory default-directory))
+         (let ((i (length current-path)))
+           (while (> i 0)
+             (push (aref current-path (setq i (1- i))) unread-command-events)))
+         (let ((default-directory "")) (call-interactively 'find-file))
+         (setq default-directory old-default-directory))))
+    (ivy-done))
+  (defun my:counsel-find-file-fallback-command--enable-ivy ()
+    (remove-hook 'minibuffer-setup-hook
+                 'my:counsel-find-file-fallback-command--enable-ivy)
+    (ivy-mode t))
+  ;;
+  (defun my:counsel-recentf ()
+    "Custom: Find a file on `recentf-list' with shorten-file-path"
+    (interactive)
+    (require 'recentf nil 'noerror)
+    (recentf-mode)
+    (ivy-read "Recentf: " (mapcar (lambda (f)
+                                    (cons (my:shorten-file-path f 70) f))
+                                  recentf-list)
+              :action (lambda (f)
+                        (with-ivy-window
+                          (find-file (cdr f))))
+              :require-match t
+              :caller 'counsel-recentf))
+  ;;
+  :bind (("C-x C-f" . counsel-find-file)
+         ("C-x C-r" . my:counsel-recentf)
+         ("M-x"     . counsel-M-x)
+         (:counsel-find-file-map
+          ("C-l"    . counsel-up-directory)
+          ("C-f"    . my:counsel-find-file-fallback-command)
+          ))
+  :config
+  ;; 無視する拡張子の追加
   (cl-loop for ext in
            '(;; TeX
              ".dvi"
@@ -1124,159 +1332,38 @@ init.el: README.org
              ".DS_Store"
              "._DS_Store"
              )
-           do (add-to-list 'completion-ignored-extensions ext))
-  :custom
-  `(;; prefix match 入力を先頭一致可能
-    (ido-enable-prefix             . nil)
-    ;; TAB で名前の一致までその後 RET で実行
-    (ido-confirm-unique-completion . t)
-    ;; . を prefix として扱う
-    (ido-enable-dot-prefix         . t)
-    ;; flx matching を試す際には prefix を無効化すること
-    (ido-enable-flex-matching      . t)
-    ;;
-    (ido-default-file-method       . 'selected-window)
-    (ido-default-buffer-method     . 'selected-window)
-    ;; avoid [Too Big]
-    (ido-max-directory-size        . 1000000)
-    ;; Tramp では無効化
-    (ido-enable-tramp-completion   . nil)
-    ;; ido-vertical も調べないとアカン様な.
-    (ido-use-faces                 . t)
-    ;; 拡張子には match しない
-    (ido-ignore-extensions         . t)
-    ;; 補完できない場合の挙動 ← "何もしない" は可能かな? nil?
-    (ido-cannot-complete-command   . 'ido-next-match)
-    ;; 補完結果の保存
-    (ido-save-directory-list-file
-     . ,(expand-file-name "ido.last" my:d:tmp)))
-  :config
-  (ido-mode t)
-  ;; (ido-everywhere t)   ; <- 過去の選択を覚えている奴と相性悪い.
-  )
-   #+end_src
-** =flx-ido=: flex match の強化
-   :PROPERTIES:
-   :CUSTOM_ID: org72b78bcc
-   :END:
-   曖昧マッチが非常に直感的になった．地味に便利で手放せない．
-   #+begin_src emacs-lisp
-(leaf flx-ido
-  :ensure t
-  :custom
-  `((flx-ido-use-faces . t)
-    (flx-ido-threshold . 10000))
-  :config
-  (flx-ido-mode 1)
-  )
-   #+end_src
-** =ido-flx-with-migemo=: flx + migemo
-   :PROPERTIES:
-   :CUSTOM_ID: orge285b835
-   :END:
-   これは便利だ
-   #+BEGIN_SRC emacs-lisp
-(leaf ido-flex-with-migemo
-  :if (executable-find "cmigemo")
-  :ensure t
-  :after (flx migemo)
-  :config
-  (ido-flex-with-migemo-mode)
+           do
+           (add-to-list 'completion-ignored-extensions ext))
+  (setq counsel-find-file-ignore-regexp
+        (format "\\%s\\'"
+                (s-replace "/" "\\/"
+                           (s-join "\\'\\|" completion-ignored-extensions))))
   )
    #+END_SRC
-** TODO =ido-vertical-mode=: 候補を縦に並べて表示 [/]
+   - [ ] fzf, ag, ...
+** =prescient=: 補完候補をより便利に.
    :PROPERTIES:
-   :CUSTOM_ID: orgba1f040e
+   :CUSTOM_ID: org7c0366ac
    :END:
-   #+begin_src emacs-lisp
-(leaf ido-vertical-mode
+   #+BEGIN_SRC emacs-lisp
+(leaf ivy-prescient
   :ensure t
-  :after all-the-icons-in-terminal
+  :after counsel
   :custom
-  `(;; 補完候補数の表示
-    (ido-vertical-show-count  . t)
-    ;; キーバインド
-    (ido-vertical-define-keys . 'C-n-C-p-up-down-left-right)
-    ;; minibuffer の高さ制限
-    (ido-max-window-height    . 0.3)
-    ;; 候補選択表示のカスタマイズ
-    (ido-vertical-indicator
-     . ,(format "%s" (all-the-icons-faicon "hand-o-right"))))
+  `(;; (ivy-prescient-enable-filtering . t)
+    (prescient-aggressive-file-save . t)
+    (prescient-save-file
+     . ,(expand-file-name "prescient-save.el" my:d:tmp))
+    (prescient-filter-method . '(fuzzy regexp initialism))
+    (ivy-prescient-retain-classic-highlighting . t))
   :config
-  (ido-vertical-mode 1)
-  )
-   #+end_src
-   - [ ] Debian パッケージは古い．更新すること
-** =ido-recentf=: recentf を ido で
-   :PROPERTIES:
-   :CUSTOM_ID: org56240c5e
-   :END:
-   "recentf-list" の結果を整形して, minibuffer に納まる様に縮小したり
-   #+begin_src emacs-lisp
-(leaf *ido-recentf-open
-  :preface
-  (defun ido-recentf-open ()
-    "Use `ido-completing-read' to \\[find-file] a recent file"
-    (interactive)
-    (let ((files (mapcar (lambda (f)
-                           (cons (my:shorten-file-path f 70) f))
-                         recentf-list)))
-      (let ((selected (ido-completing-read "Files: " (mapcar #'car files))))
-        (find-file (assoc-default selected files)))))
-  :bind ("C-x C-r" . ido-recentf-open)
-  )
-   #+end_src
-** =ido-completing-read=
-   :PROPERTIES:
-   :CUSTOM_ID: orgd3e51409
-   :END:
-   惰性で入れてるが, イマイチ使いこなせてない.
-   #+BEGIN_SRC emacs-lisp
-(leaf ido-completing-read+ :ensure t)
-   #+END_SRC
-** =ido-describe-bindings=
-   :PROPERTIES:
-   :CUSTOM_ID: org7bdacc7a
-   :END:
-   こちらも惰性で入れてるが, イマイチ使いこなせてない.
-   #+BEGIN_SRC emacs-lisp
-(leaf ido-describe-bindings :ensure t)
-   #+END_SRC
-** =smex=
-   :PROPERTIES:
-   :CUSTOM_ID: org28528ad3
-   :END:
-   M-x を ido で. +amx の方が良い?+
-   #+begin_src emacs-lisp
-(leaf smex
-  :bind (("M-x" . smex))
-  :ensure t
-  :custom
-  `(;; 自動更新
-    (smex-auto-update   . t)
-    ;; prompt
-    (smex-prompt-string . "smex: ")
-    ;; flex match
-    (smex-flex-matching . t)
-    ;; 履歴
-    (smex-save-file
-     . ,(expand-file-name "smex-items" my:d:tmp)))
-  )
-   #+end_src
-** ido-ghq
-   :PROPERTIES:
-   :CUSTOM_ID: org7eb97621
-   :END:
-   ghq list を ido で選んで dired で開く
-   #+BEGIN_SRC emacs-lisp
-(leaf ido-ghq
-  :if (executable-find "ghq")
-  :el-get (ido-ghq
-           :type github
-           :pkgname "uwabami/ido-ghq")
-  :bind (("C-x f" . ido-ghq-open))
-  :config
-  (setq ido-ghq-short-list t)
+  ;; (1) マイナーモードの有効化
+  (ivy-prescient-mode 1)
+  ;; (2) =counsel-M-x= をイニシャル入力対応にする
+  ;; (setf (alist-get 'counsel-M-x ivy-re-builders-alist)
+  ;;       #'ivy-prescient-re-builder)
+  ;; (3) デフォルトのイニシャル入力を上書きする
+  ;; (setf (alist-get t ivy-re-builders-alist) #'ivy--regex-ignore-order)
   )
    #+END_SRC
 * Elscreen
@@ -3024,14 +3111,17 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
               (cl-delete "+" org-emphasis-alist :key 'car :test 'equal)))
   )
    #+end_src
-** TODO Org-Id [/]
+** Org-Id
    :PROPERTIES:
    :CUSTOM_ID: org67465ee0
    :END:
-   使いこなせてないのだけれど.
    #+begin_src emacs-lisp
 (leaf org-id
-  :init
+  :custom
+  `((org-id-locations-file . ,(expand-file-name "org-id-locations" my:d:share))
+    ;; (org-id-link-to-org-use-id . create-if-interactive-and-no-custom-id)
+    )
+  :config
   (defun my:add-custom-id ()
     "Add \"CUSTOM_ID\" to the current tree if not assigned yet."
     (interactive)
@@ -3044,27 +3134,12 @@ e.g. \"org3ca6ef0c\"."
       (when (org-uuidgen-p id)
         (downcase (concat "org"  (substring (org-id-new "") 0 8))))))
   ;;
-  (defmacro my:org-with-point-at (pom &rest body)
-    "Move to buffer and point of point-or-marker POM for the duration of BODY."
-    (declare (debug (form body)) (indent 1))
-    (org-with-gensyms (mpom)
-      `(let ((,mpom ,pom))
-         (save-excursion
-           (if (markerp ,mpom) (set-buffer (marker-buffer ,mpom)))
-           (org-with-wide-buffer
-            (goto-char (or ,mpom (point)))
-            ,@body)))))
-  ;;
   (defun my:org-custom-id-get (&optional pom create)
     "Get the CUSTOM_ID property of the entry at point-or-marker POM.
-If POM is nil, refer to the entry at point.  If the entry does
-not have an CUSTOM_ID, the function returns nil.  However, when
-CREATE is non nil, create a CUSTOM_ID if none is present
-already.  In any case, the CUSTOM_ID of the entry is returned.
-
 See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     (interactive)
-    (my:org-with-point-at pom
+    (require 'org-macs nil 'noerror)
+    (org-with-point-at pom
       (let ((id (org-entry-get nil "CUSTOM_ID")))
         (cond
          ((and id (stringp id) (string-match "\\S-" id))
@@ -3089,12 +3164,8 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
           (org-delete-property "ID"))))
     (message "--- done."))
   :config
-  (defun my:add-org-ids-to-headlines-in-file ()
+  (defun my:org-id-add-to-headlines-in-file ()
     "Add CUSTOM_ID properties to all headlines in the current file.
-Which do not already have one.  Only adds ids if the
-`auto-id' option is set to `t' in the file somewhere. ie,
-,#+options: auto-id:t
-
 See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     (interactive)
     (save-excursion
@@ -3103,14 +3174,9 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
       (when (re-search-forward "^#\\+options:.*auto-id:t" (point-max) t)
         (org-map-entries
          (lambda () (my:org-custom-id-get (point) 'create))))))
-  (add-hook 'before-save-hook 'my:add-org-ids-to-headlines-in-file)
-  :custom
-  `((org-id-locations-file . ,(expand-file-name "org-id-locations" my:d:share))
-    ;; (org-id-link-to-org-use-id . create-if-interactive-and-no-custom-id)
-    )
+  (add-hook 'before-save-hook 'my:org-id-add-to-headlines-in-file)
   )
    #+end_src
-   - [ ] 要設定
 ** Babel
    :PROPERTIES:
    :CUSTOM_ID: org99399f3b
@@ -3709,20 +3775,20 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    #+end_src
 ** ghq
    :PROPERTIES:
-   :CUSTOM_ID: orgbf01ab39
+   :CUSTOM_ID: orgf1aa4214
    :END:
    =projectile= はあんまり使わなくて良い気もしている
-  #+BEGIN_SRC emacs-lisp
-(leaf ido-ghq
+   #+BEGIN_SRC emacs-lisp
+(leaf ivy-ghq
   :if (executable-find "ghq")
-  :el-get (ido-ghq
+  :el-get (ivy-ghq
            :type github
-           :pkgname "uwabami/ido-ghq")
-  :bind (("C-x f" . ido-ghq-open))
+           :pkgname "analyticd/ivy-ghq")
+  :bind (("C-x f" . ivy-ghq-open))
   :config
-  (setq ido-ghq-short-list t)
+  (setq ivy-ghq-short-list t)
   )
-  #+END_SRC
+   #+END_SRC
 * 関数定義を辿る: =dump-jump=, =smart-jump=
   :PROPERTIES:
   :CUSTOM_ID: org710c040c

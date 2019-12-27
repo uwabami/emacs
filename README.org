@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
 #+options: auto-id:t H:6
-#+date: 2019-12-27 13:12:35
+#+date: 2019-12-27 14:04:09
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -3272,6 +3272,18 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
              ))
     (add-to-list 'org-agenda-files (expand-file-name file my:d:org)))
   (add-to-list 'org-agenda-files (locate-user-emacs-file "README.org"))
+  ;; (if (file-directory-p
+  ;;      (expand-file-name "Public/" (getenv "HOME")))
+  ;;     (setq org-agenda-files
+  ;;           (append
+  ;;            (directory-files-recursively
+  ;;             (expand-file-name "Public/" (getenv "HOME")) "org$"))))
+  ;; (if (file-directory-p
+  ;;      (expand-file-name "Public/cc-env/" (getenv "HOME")))
+  ;;     (setq org-agenda-files
+  ;;           (append
+  ;;            (directory-files-recursively
+  ;;             (expand-file-name "Public/cc-env" (getenv "HOME")) "org$"))))
   )
    #+end_src
 ** Org-journal: 日記
@@ -3467,6 +3479,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    :END:
    #+BEGIN_SRC emacs-lisp
 (leaf org-wiki
+  :if (file-directory-p "~/Public/cc-env")
   :el-get (org-wiki
            :type github
            :pkgname "uwabami/org-wiki")
@@ -3575,6 +3588,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     exporter は [[https://uwabami.github.com/ox-jekyll][uwabami/ox-jekyll]] にあります.
     #+BEGIN_SRC emacs-lisp
 (leaf ox-jekyll
+  :if (file-directory-p "~/Public/cc-env")
   :el-get (ox-jekyll
            :type github
            :pkgname "uwabami/ox-jekyll")
@@ -3624,7 +3638,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    :END:
    #+BEGIN_SRC emacs-lisp
 (leaf ox-publish
-  :after org-wiki
+  :after (org-wiki org-jekyll)
   :config
   (defun org-wiki-publish ()
     (interactive)

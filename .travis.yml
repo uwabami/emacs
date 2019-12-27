@@ -1,30 +1,39 @@
-sudo: false
+sudo: required
 language: emacs-lisp
-dist: bionic
-addons:
-  apt:
-    packages:
-      - ca-certificates
-      - gnutls-bin
+dist: trusty
+services:
+  - docker
 cache:
-  directories:
-    - $HOME/local
+  - directories:
+      - "$HOME/emacs/"
+matrix:
+  fast_finish: true
+  allow_failures:
+    - env: EMACS_VERSION=snapshot
 env:
-  global:
-    - PATH=$HOME/local/bin:$HOME/local/evm/bin:$PATH
-  matrix:
-    # Debian 8
-    - EVM_EMACS=emacs-24.4-travis
-    # Debian 9
-    - EVM_EMACS=emacs-24.5-travis
-    # Debian 10
-    - EVM_EMACS=emacs-26.1-travis
-    # Debian unstable
-    - EVM_EMACS=emacs-26.3-travis
-    # HEAD
-    - EVM_EMACS=emacs-git-snapshot-travis
-before_script:
-  - sh .travis-ci/install-evm.sh $EVM_EMACS
+  - EMACS_VERSION=25.1
+  - EMACS_VERSION=25.2
+  - EMACS_VERSION=25.3
+  - EMACS_VERSION=26.1
+  - EMACS_VERSION=26.2
+  - EMACS_VERSION=26.3
+  - EMACS_VERSION=snapshot
+before_install:
+  - export PATH="$HOME/bin:$PATH"
+  - wget 'https://raw.githubusercontent.com/flycheck/emacs-travis/master/emacs-travis.mk'
+  - make -f emacs-travis.mk install_gnutls install_emacs
+  - |
+    case $EMACS_VERSION in
+    25.*) EMACS_GNUPGHOME=.cask/$EMACS_VERSION/elpa/gnupg ;;
+    *)    EMACS_GNUPGHOME=$HOME/.emacs.d/elpa/gnupg ;;
+    esac
+    mkdir -p "$EMACS_GNUPGHOME"
+    chmod 700 "$EMACS_GNUPGHOME"
+    wget 'https://git.savannah.gnu.org/cgit/emacs.git/plain/etc/package-keyring.gpg'
+    gpg --homedir "$EMACS_GNUPGHOME" --import package-keyring.gpg
+install:
+  - cask install
+  - sudo pip install python-language-server
 script:
   - emacs --version
   - make EMACS=emacs

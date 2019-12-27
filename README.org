@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
 #+options: auto-id:t H:6
-#+date: 2019-12-25 09:17:27
+#+date: 2019-12-27 13:12:35
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -108,13 +108,13 @@ init.el: README.org
    #+begin_src emacs-lisp
 (eval-when-compile (require 'cl-lib nil t))
    #+end_src
-* Package 関連: =package.el=, [[https://github.com/conao3/leaf.el][leaf.el]], [[https://github.com/dimitri/el-get][el-get]]
+* Package 関連: [[https://emacs-jp.github.io/packages/package-management/package-el][package.el]], [[https://github.com/conao3/leaf.el][leaf.el]], [[https://github.com/dimitri/el-get][el-get]]
   :PROPERTIES:
   :CUSTOM_ID: orgcf4176e7
   :END:
   [[https://github.com/conao3/leaf.el][leaf.el]]のおかげで,
   無いと途方に暮れるパッケージ以外のインストールは無視できるようになります.
-** TODO =package.el= [0/1]
+** TODO  [[https://emacs-jp.github.io/packages/package-management/package-el][package.el]] [0/1]
    :PROPERTIES:
    :CUSTOM_ID: orgc51eb87d
    :END:
@@ -136,7 +136,7 @@ init.el: README.org
     ))
 (package-initialize)
    #+end_src
-   - [ ] で, elpa の SSL error の workaround は正しくはどうするの?
+   - [ ] travis-ci.org での elpa の SSL error の workaround どうしたら良いの?
 ** [[https://github.com/conao3/leaf.el][leaf.el]]
    :PROPERTIES:
    :CUSTOM_ID: orgc2ededbf
@@ -1257,7 +1257,7 @@ init.el: README.org
    :PROPERTIES:
    :CUSTOM_ID: org28528ad3
    :END:
-   M-x を ido で. 以前は smex を利用していたが, amx に乗り換えた. 
+   M-x を ido で. 以前は smex を利用していたが, amx に乗り換えた.
    #+begin_src emacs-lisp
 (leaf amx
   :bind (("M-x" . amx))
@@ -3026,6 +3026,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    :END:
    #+begin_src emacs-lisp
 (leaf org-id
+  :init
+  (leaf org-macs :require t)
   :custom
   `((org-id-locations-file . ,(expand-file-name "org-id-locations" my:d:share))
     ;; (org-id-link-to-org-use-id . create-if-interactive-and-no-custom-id)
@@ -3047,7 +3049,6 @@ e.g. \"org3ca6ef0c\"."
     "Get the CUSTOM_ID property of the entry at point-or-marker POM.
 See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     (interactive)
-    (require 'org-macs nil 'noerror)
     (org-with-point-at pom
       (let ((id (org-entry-get nil "CUSTOM_ID")))
         (cond
@@ -3072,7 +3073,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
           (message "ID: %s" id)
           (org-delete-property "ID"))))
     (message "--- done."))
-  :config
+  ;;
   (defun my:org-id-add-to-headlines-in-file ()
     "Add CUSTOM_ID properties to all headlines in the current file.
 See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
@@ -3083,6 +3084,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
       (when (re-search-forward "^#\\+options:.*auto-id:t" (point-max) t)
         (org-map-entries
          (lambda () (my:org-custom-id-get (point) 'create))))))
+  ;;
   (add-hook 'before-save-hook 'my:org-id-add-to-headlines-in-file)
   )
    #+end_src
@@ -3267,7 +3269,6 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
              "journal.org"
              "redmine_GFD.org"
              "redmine_FluidSoc.org"
-             "web.org"
              ))
     (add-to-list 'org-agenda-files (expand-file-name file my:d:org)))
   (add-to-list 'org-agenda-files (locate-user-emacs-file "README.org"))
@@ -3510,6 +3511,9 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   )
     #+END_SRC
 *** HTML
+    :PROPERTIES:
+    :CUSTOM_ID: org10cd0de1
+    :END:
     #+BEGIN_SRC emacs-lisp
 (leaf ox-html
   :custom
@@ -3596,6 +3600,22 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
        contents)))
   (add-to-list 'org-export-filter-final-output-functions
                'my:org-wiki-jekyll-finalized2)
+  (defun my:org-wiki-jekyll-finalized3 (contents backend info)
+    "Replace some URL"
+    (when (org-export-derived-backend-p backend 'jekyll)
+    (replace-regexp-in-string
+     " id=\"outline-container-org.+\" class=\"outline-.+\""
+     "" contents)))
+  (add-to-list 'org-export-filter-final-output-functions
+               'my:org-wiki-jekyll-finalized3)
+  (defun my:org-wiki-jekyll-finalized4 (contents backend info)
+    "Replace some URL"
+    (when (org-export-derived-backend-p backend 'jekyll)
+    (replace-regexp-in-string
+     "<a id=\"org.+?\"></a>"
+     "" contents)))
+  (add-to-list 'org-export-filter-final-output-functions
+               'my:org-wiki-jekyll-finalized4)
   )
     #+END_SRC
 ** Org-Publish
@@ -4108,25 +4128,25 @@ $clean_ext = "snm nav vrb synctex.gz";
       (set-frame-parameter nil 'alpha 95)
       (set-face-attribute 'default nil
                           :family "FSMRMP"
-                          :height 165)
+                          :height 195)
       (set-face-attribute 'fixed-pitch nil
                           :family "FSMRMP"
-                          :height 165)
+                          :height 195)
       (set-face-attribute 'variable-pitch nil
                           :family "FSMRMP"
-                          :height 165)
+                          :height 195)
       ;; Math symbols
       (set-fontset-font nil
                         '(#x2200 . #x22FF)
-                        (font-spec :family "Ricty" :height 165))
+                        (font-spec :family "Ricty" :height 195))
       ;; Greek
       (set-fontset-font nil
                         '(#x0370 . #x03FF)
-                        (font-spec :family "Ricty" :height 165))
+                        (font-spec :family "Ricty" :height 195))
       ;; Some Icons
       (set-fontset-font nil
                         '(#xE0A0 . #xEEE0)
-                        (font-spec :family "FSMRMP" :height 165))
+                        (font-spec :family "FSMRMP" :height 195))
       (setq use-default-font-for-symbols t)
       (set-frame-parameter nil 'alpha 95)
       (toggle-frame-maximized)

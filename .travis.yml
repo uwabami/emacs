@@ -31,9 +31,6 @@ before_install:
     chmod 700 "$EMACS_GNUPGHOME"
     wget 'https://git.savannah.gnu.org/cgit/emacs.git/plain/etc/package-keyring.gpg'
     gpg --homedir "$EMACS_GNUPGHOME" --import package-keyring.gpg
-install:
-  - cask install
-  - sudo pip install python-language-server
 script:
   - emacs --version
   - make EMACS=emacs

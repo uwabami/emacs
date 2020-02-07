@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
 #+options: auto-id:t H:6
-#+date: 2019-12-27 14:04:09
+#+date: 2020-02-07 15:38:12
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -1845,7 +1845,7 @@ File.open(src, "r") {|f|
      SEMI や FLIM などの UA の表示に [[http://uwabami.github.com/rail/][rail]] を使っている.
      ちなみに rail を有効にすると, 以下の様に User-Agent が表示される
      #+html: <div class="col-7 px2 mx-auto">
-     #+html: <amp-img layout="responsive" width=640 height=400 src="https://uwabami.github.io/software/rail/images/wanderlust_with_or_without_rail.png" alt="rail preview"></amp-img>
+     #+html: <amp-img layout="responsive" width=640 height=400 src="https://uwabami.github.io/software/rail/wanderlust_with_or_without_rail.webp" alt="rail preview"></amp-img>
      #+html: </div>
 
      #+begin_src emacs-lisp :tangle init-wl.el
@@ -2396,6 +2396,15 @@ video/*; xdg-open %s;
         eword-analyze-special
         eword-analyze-encoded-word
         eword-analyze-atom))
+;; (mime-set-field-decoder
+;;  'From nil 'eword-decode-and-unfold-unstructured-field-body)
+;; (mime-set-field-decoder
+;;  'To nil 'eword-decode-and-unfold-unstructured-field-body)
+(with-eval-after-load 'eword-decode
+  (mime-set-field-decoder
+   'From nil 'eword-decode-and-unfold-unstructured-field-body)
+  (mime-set-field-decoder
+   'To nil 'eword-decode-and-unfold-unstructured-field-body))
      #+end_src
 **** Subject が変わってもスレッドを切らない
      :PROPERTIES:
@@ -3512,7 +3521,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
           (replace-match "\\1\\2\\3"))
       (goto-char (point-at-bol))))
   :hook
-  ((org-export-before-processing-hook . my:remove-org-newlines-at-cjk-text))
+  ;; ((org-export-before-processing-hook . my:remove-org-newlines-at-cjk-text))
   :custom
   ((org-export-backends             . '(;; remove somve built-in
                                         ;; html
@@ -3531,7 +3540,15 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
 (leaf ox-html
   :custom
   ((org-html-table-align-individual-fields . nil)
-   (org-html-table-default-attributes . nil))
+   (org-html-table-default-attributes      . nil)
+   (org-html-html5-fancy                   . t)
+   (org-html-doctype                       . "html5")
+   ;; (org-html-container-element             . "div")
+   (org-html-inline-image-rules
+    . '(("file"  . "\\.\\(jpeg\\|jpg\\|png\\|gif\\|webp\\|svg\\)\\'")
+        ("http"  . "\\.\\(jpeg\\|jpg\\|png\\|gif\\|webp\\|svg\\)\\'")
+        ("https" . "\\.\\(jpeg\\|jpg\\|png\\|gif\\|webp\\|svg\\)\\'")))
+   )
 )
     #+END_SRC
 *** LaTeX, Beamer
@@ -3637,8 +3654,8 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    :CUSTOM_ID: orge77c5c82
    :END:
    #+BEGIN_SRC emacs-lisp
-(leaf ox-publish
-  :after (org-wiki org-jekyll)
+(leaf org-publish
+  :after (ox-jekyll org-wiki)
   :config
   (defun org-wiki-publish ()
     (interactive)
@@ -3859,26 +3876,45 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   )
   #+END_SRC
   - [ ] 設定調整が必要
-* LSP: =eglot=
+* LSP: =lsp-mode=
   :PROPERTIES:
   :CUSTOM_ID: org44ddff4c
   :END:
-  =lsp-mode= より設定がシンプルそうなので, こっちを試している
   #+BEGIN_SRC emacs-lisp
-(leaf eglot
-  ;; :disabled t
+(leaf lsp-mode
   :if (executable-find "fortls")
   :ensure t
-  :hook ((f90-mode-hook . eglot-ensure))
-  :config
-;;  (add-hook 'f90-mode-hook 'eglot-ensure)
-  (add-to-list 'eglot-server-programs
-               `(f90-mode . ("fortls"
-                             "--nthreads" "2"
-                             "--incremental_sync"
-                             "--variable_hover"
-                             "--lowercase_intrinsics"
-                             )))
+  :custom
+  ((lsp-print-io             . nil)
+   (lsp-trace                . nil)
+   (lsp-print-performance    . nil)
+   (lsp-auto-guess-root      . t)
+   (lsp-document-sync-method . 'incremental)
+   (lsp-response-timeout     . 5)
+   (lsp-prefer-flymake       .'flymake)
+   )
+  :init
+  (leaf lsp-ui
+    :ensure t
+    :custom
+    ((lsp-ui-doc-enable            . t)
+     (lsp-ui-doc-header            . t)
+     (lsp-ui-doc-include-signature . t)
+     (lsp-ui-doc-position          . 'at-point)
+     (lsp-ui-doc-max-width         . 150)
+     (lsp-ui-doc-max-height        . 30)
+     (lsp-ui-doc-use-childframe    . nil)
+     (lsp-ui-doc-use-webkit        . nil)
+     (lsp-ui-flycheck-enable       . nil)
+     (lsp-ui-peek-enable           . t)
+     (lsp-ui-peek-peek-height      . 20)
+     (lsp-ui-peek-list-width       . 50)
+     (lsp-ui-peek-fontify          . 'on-demand) ;; never, on-demand, or always
+     )
+    )
+  :hook
+  ((lsp-mode-hook . lsp-ui-mode)
+   (f90-mode-hook . lsp))
   )
   #+END_SRC
 * TeX: =AUCTeX=
@@ -4083,12 +4119,16 @@ $clean_ext = "snm nav vrb synctex.gz";
   :defvar tdiary-passwd-file
   :pl-setq
   (tdiary-csrf-key tdiary-passwd-file)
+  ;; :init
+  ;; (setq tdiary-text-save-p t)
   :config
   (setq tdiary-text-directory (concat (getenv "HOME") "/Nextcloud/tdiary/")
         tdiary-diary-list '(("log" "https://uwabami.junkhub.org/log/"))
         tdiary-style-mode 'org-mode
         tdiary-text-suffix ".org")
   (tdiary-passwd-file-load)
+  ;; (with-eval-after-load 'tdiary-mode
+  ;;   (setq tdiary-text-save-p t))
   )
   #+end_src
   - [ ] org2blog で tDiary を更新できないか妄想している
@@ -4167,6 +4207,38 @@ $clean_ext = "snm nav vrb synctex.gz";
       )))
 (when (window-system)
   (my:load-window-config))
+;;
+(defun my:load-side-window-config ()
+  "load window-system specific settings"
+  (interactive)
+  (when window-system
+    (progn
+      (set-frame-parameter nil 'alpha 95)
+      (set-face-attribute 'default nil
+                          :family "FSMRMP"
+                          :height 150)
+      (set-face-attribute 'fixed-pitch nil
+                          :family "FSMRMP"
+                          :height 150)
+      (set-face-attribute 'variable-pitch nil
+                          :family "FSMRMP"
+                          :height 150)
+      ;; Math symbols
+      (set-fontset-font nil
+                        '(#x2200 . #x22FF)
+                        (font-spec :family "Ricty" :height 150))
+      ;; Greek
+      (set-fontset-font nil
+                        '(#x0370 . #x03FF)
+                        (font-spec :family "Ricty" :height 150))
+      ;; Some Icons
+      (set-fontset-font nil
+                        '(#xE0A0 . #xEEE0)
+                        (font-spec :family "FSMRMP" :height 150))
+      (setq use-default-font-for-symbols t)
+      (set-frame-parameter nil 'alpha 95)
+      (toggle-frame-maximized)
+      )))
   #+end_src
   - [ ] FSMRMP のラテン文字が全角にならない. 要調整
   #+BEGIN_EXAMPLE
@@ -4323,29 +4395,29 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
           doom-modeline-irc-stylize 'identity
           doom-modeline-icons-alist
           '(;; macro
-            ("fiber_manual_record"    . "\xe3cb")
-            ("triangle-right"         . "\xe04c")
+            ("fiber_manual_record"    . "\xe849")
+            ("triangle-right"         . "\xf45a")
             ;; multiple-cursors
-            ("i-cursor"               . "\xe2f7")
+            ("i-cursor"               . "\xf246")
             ;; vcs
-            ("git-compare"            . "\xe081")
-            ("git-merge"              . "\xe01b")
-            ("arrow-down"             . "\xe035")
-            ("alert"                  . "\xe023")
-            ("git-branch"             . "\xe01a")
+            ("git-compare"            . "\xf4ac")
+            ("git-merge"              . "\xf423")
+            ("arrow-down"             . "\xf43f")
+            ("alert"                  . "\xf42d")
+            ("git-branch"             . "\xf420")
             ;; checker: flycheck/flymake
-            ("do_not_disturb_alt"     . "\xe5e5")
-            ("check"                  . "\xe5ce")
-            ("access_time"            . "\xe439")
-            ("sim_card_alert"         . "\xe5f6")
-            ("pause"                  . "\xe3a0")
-            ("priority_high"          . "\xe617")
+            ("do_not_disturb_alt"     . "\xeb38")
+            ("check"                  . "\xf62b")
+            ("access_time"            . "\xf64f")
+            ("sim_card_alert"         . "\xe8a7")
+            ("pause"                  . "\xf8e3")
+            ("priority_high"          . "\xea02")
             ;; Persp
-            ("aspect_ratio"           . "\xe64f")
+            ("aspect_ratio"           . "\xe851")
             ;; LSP
-            ("rocket"                 . "\xe029")
+            ("rocket"                 . "\xe862")
             ;; github
-            ("github"                 . "\xe173")
+            ("github"                 . "\xe70a")
             ;; debug
             ("bug"                    . "\xe245")
             ;; mu4e

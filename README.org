@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
 #+options: auto-id:t H:6
-#+date: 2020-02-07 15:38:12
+#+date: 2020-04-01 02:41:51
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -678,75 +678,6 @@ init.el: README.org
   )
    #+end_src
    - [ ] 偶に挙動不審
-** TODO =eww=: 内蔵ブラウザ [0/3]
-   :PROPERTIES:
-   :CUSTOM_ID: org35bd4bc4
-   :END:
-   リンクを簡単に辿る(Hit-a-Hint) のために =ace-link= も入れておく
-    #+begin_src emacs-lisp
-(leaf eww
-  :defvar (shr-put-image-function
-           shr-external-browser)
-  :preface
-  (unless (file-directory-p (expand-file-name "eww" my:d:tmp))
-    (make-directory (expand-file-name "eww" my:d:tmp)))
-  :init
-  (leaf ace-link
-    :ensure t
-    :config
-    (ace-link-setup-default)
-    )
-  :bind (("<f2>" . eww)
-         (:eww-mode-map
-          ("r"   . eww-reload)
-          ("o"   . eww)
-          ("&"   . eww-browse-with-external-browser)
-          ("b"   . eww-back-url)
-          ("]"   . eww-next-url)
-          ("["   . eww-previous-url)
-          ("g"   . eww-top-url)
-          ("+"   . my:eww-increase-width)
-          ("-"   . my:eww-decrease-width)
-          ("h"   . backward-char)
-          ("j"   . next-line)
-          ("k"   . previous-line)
-          ("l"   . forward-char)
-          ("/"   . isearch-forward)
-          ("?"   . isearch-backward)
-          ("n"   . isearch-next)
-          ("N"   . isearch-previous)
-          ("f"   . ace-link-eww))
-         )
-  :init
-  ;;
-  (defun eww-disable-images ()
-    "ewwで画像表示させない"
-    (interactive)
-    (setq-local shr-put-image-function 'shr-put-image-alt)
-    (eww-reload))
-  ;;
-  (defun eww-enable-images ()
-    "ewwで画像表示させる"
-    (interactive)
-    (setq-local shr-put-image-function 'shr-put-image)
-    (eww-reload))
-  (defun shr-put-image-alt (spec alt &optional flags)
-    (insert alt))
-  ;;
-  (setq eww-bookmarks-directory (expand-file-name "eww" my:d:tmp)
-        eww-search-prefix "https://www.google.co.jp/search?btnl&q="
-        shr-use-colors nil
-        shr-use-fonts nil
-        shr-width 72
-        )
-  ;;
-  (defun eww-mode-hook--disable-image ()
-    (setq-local shr-put-image-function 'shr-put-image-alt))
-  (add-hook 'eww-mode-hook 'eww-mode-hook--disable-image)
-  )
-    #+end_src
-    - [ ] 背景色の指定
-    - [ ] 幅の強制
 ** =browse-url=
    :PROPERTIES:
    :CUSTOM_ID: org456d3821
@@ -951,9 +882,7 @@ init.el: README.org
    拙作の修正ロケールはこちら: [[https://github.com/uwabami/locale-eaw-emoji]]
    #+begin_src emacs-lisp
 (leaf locale-eaw-emoji
-  :el-get (locale-eaw-emoji
-           :type github
-           :pkgname "uwabami/locale-eaw-emoji")
+  :el-get uwabami/locale-eaw-emoji
   :after all-the-icons-in-terminal
   :require t
   :config
@@ -1079,6 +1008,9 @@ init.el: README.org
    :END:
    #+begin_src emacs-lisp
 (leaf ido
+  :init
+  (leaf ido-completing-read+ :ensure t)
+  (leaf ido-describe-bindings :ensure t)
   :bind (("C-x C-f" . ido-find-file))
   :preface
   (defun my:ido-disable-line-trucation ()
@@ -1203,6 +1135,11 @@ init.el: README.org
 (leaf ido-vertical-mode
   :ensure t
   :after all-the-icons-in-terminal
+  :preface
+  (defface my:ido-indicator
+    '((((class color) (background light)) :foreground "#FFBF7F")
+      (((class color) (background dark)) :foreground "#FFBF7F"))
+    "Face used by Ido highlighting the arrow.")
   :custom
   `(;; 補完候補数の表示
     (ido-vertical-show-count  . t)
@@ -1212,47 +1149,15 @@ init.el: README.org
     (ido-max-window-height    . 0.3)
     ;; 候補選択表示のカスタマイズ
     (ido-vertical-indicator
-     . ,(format "%s" (all-the-icons-faicon "hand-o-right"))))
+     . ,(format "%s"
+                (all-the-icons-faicon "hand-o-right"
+                                      :face 'my:ido-indicator)))
+    )
   :config
   (ido-vertical-mode 1)
   )
    #+end_src
    - [ ] Debian パッケージは古い．更新すること
-** =ido-recentf=: recentf を ido で
-   :PROPERTIES:
-   :CUSTOM_ID: org56240c5e
-   :END:
-   "recentf-list" の結果を整形して, minibuffer に納まる様に縮小したり
-   #+begin_src emacs-lisp
-(leaf *ido-recentf-open
-  :preface
-  (defun ido-recentf-open ()
-    "Use `ido-completing-read' to \\[find-file] a recent file"
-    (interactive)
-    (let ((files (mapcar (lambda (f)
-                           (cons (my:shorten-file-path f 70) f))
-                         recentf-list)))
-      (let ((selected (ido-completing-read "Files: " (mapcar #'car files))))
-        (find-file (assoc-default selected files)))))
-  :bind ("C-x C-r" . ido-recentf-open)
-  )
-   #+end_src
-** =ido-completing-read=
-   :PROPERTIES:
-   :CUSTOM_ID: orgd3e51409
-   :END:
-   惰性で入れてるが, イマイチ使いこなせてない.
-   #+BEGIN_SRC emacs-lisp
-(leaf ido-completing-read+ :ensure t)
-   #+END_SRC
-** =ido-describe-bindings=
-   :PROPERTIES:
-   :CUSTOM_ID: org7bdacc7a
-   :END:
-   こちらも惰性で入れてるが, イマイチ使いこなせてない.
-   #+BEGIN_SRC emacs-lisp
-(leaf ido-describe-bindings :ensure t)
-   #+END_SRC
 ** =amx=
    :PROPERTIES:
    :CUSTOM_ID: org28528ad3
@@ -1275,43 +1180,155 @@ init.el: README.org
     (amx-history-length . 128))
   )
    #+end_src
-* Elscreen
+** =ido-recentf=: recentf を ido で
+   :PROPERTIES:
+   :CUSTOM_ID: org56240c5e
+   :END:
+   "recentf-list" の結果を整形して, minibuffer に納まる様に縮小したり
+   #+begin_src emacs-lisp
+(leaf *ido-recentf-open
+  :preface
+  (defun ido-recentf-open ()
+    "Use `ido-completing-read' to \\[find-file] a recent file"
+    (interactive)
+    (let ((files (mapcar (lambda (f)
+                           (cons (my:shorten-file-path f 70) f))
+                         recentf-list)))
+      (let ((selected (ido-completing-read "Files: " (mapcar #'car files))))
+        (find-file (assoc-default selected files)))))
+  :bind ("C-x C-r" . ido-recentf-open)
+  )
+   #+end_src
+** ido-ghq
+   :PROPERTIES:
+   :CUSTOM_ID: org7eb97621
+   :END:
+   ghq list を ido で選んで dired で開く
+   #+BEGIN_SRC emacs-lisp
+(leaf ido-ghq
+  :if (executable-find "ghq")
+  :el-get uwabami/ido-ghq
+  :bind (("C-x f" . ido-ghq-open))
+  :config
+  (setq ido-ghq-short-list t)
+  )
+   #+END_SRC
+
+* TODO =eww=: 内蔵ブラウザ [0/3]
+  :PROPERTIES:
+  :CUSTOM_ID: org35bd4bc4
+  :END:
+  リンクを簡単に辿る(Hit-a-Hint) のために =ace-link= も入れておく
+   #+begin_src emacs-lisp
+(leaf eww
+  :defvar (shr-put-image-function
+           shr-external-browser)
+  :preface
+  (unless (file-directory-p (expand-file-name "eww" my:d:tmp))
+    (make-directory (expand-file-name "eww" my:d:tmp)))
+  :init
+  (leaf ace-link
+    :ensure t
+    :config
+    (ace-link-setup-default)
+    )
+  (leaf addressbar
+    :el-get (addressbar
+             :type github
+             :pkgname "lurdan/emacs-addressbar")
+    :custom
+    `((addressbar-persistent-history-directory
+       . ,(expand-file-name my:d:tmp))
+      (addressbar-ignore-url-regexp
+       . "\\(://duckduckgo\\.com/\\|google\\.com/search\\)")
+      (addressbar-search-command-alist
+       .  '("g" . "https://google.com/search?&gws_rd=cr&complete=0&pws=0&tbs=li:1&q="))
+      (addressbar-display-url-max-length . 60)
+      )
+    :config
+    ;; (add-to-list 'ivy-ignore-buffers "\\ \*eww*")
+    )
+  :bind (("<f2>" . eww)
+         (:eww-mode-map
+          ("r"   . eww-reload)
+          ("o"   . eww)
+          ("&"   . eww-browse-with-external-browser)
+          ("b"   . eww-back-url)
+          ("]"   . eww-next-url)
+          ("["   . eww-previous-url)
+          ("g"   . eww-top-url)
+          ("+"   . my:eww-increase-width)
+          ("-"   . my:eww-decrease-width)
+          ("h"   . backward-char)
+          ("j"   . next-line)
+          ("k"   . previous-line)
+          ("l"   . forward-char)
+          ("/"   . isearch-forward)
+          ("?"   . isearch-backward)
+          ("n"   . isearch-next)
+          ("N"   . isearch-previous)
+          ("f"   . ace-link-eww))
+         )
+  :init
+  ;;
+  (defun eww-disable-images ()
+    "ewwで画像表示させない"
+    (interactive)
+    (setq-local shr-put-image-function 'shr-put-image-alt)
+    (eww-reload))
+  ;;
+  (defun eww-enable-images ()
+    "ewwで画像表示させる"
+    (interactive)
+    (setq-local shr-put-image-function 'shr-put-image)
+    (eww-reload))
+  (defun shr-put-image-alt (spec alt &optional flags)
+    (insert alt))
+  ;;
+  (setq eww-bookmarks-directory (expand-file-name "eww" my:d:tmp)
+        eww-search-prefix "https://www.google.com/search?&gws_rd=cr&complete=0&pws=0&tbs=li:1&q="
+        shr-use-colors nil
+        shr-use-fonts nil
+        shr-width 72
+        )
+  ;;
+  (defun eww-mode-hook--disable-image ()
+    (setq-local shr-put-image-function 'shr-put-image-alt))
+  (add-hook 'eww-mode-hook 'eww-mode-hook--disable-image)
+  )
+   #+end_src
+   - [ ] 背景色の指定
+   - [ ] 幅の強制
+* TODO =elscreen=: バッファー用 GNU screen もどき [0/2]
   :PROPERTIES:
   :CUSTOM_ID: orgd9b46f9c
   :END:
-** TODO 導入 [0/1]                                                   :Debian:
-   :PROPERTIES:
-   :CUSTOM_ID: orge28d4f35
-   :END:
-   emacs-jpのfolk版を利用中。
-   modeline の表示そのものは無効化しておく．
-   #+begin_src emacs-lisp
+  emacs-jpのfolk版を利用中.
+  modeline の表示そのものは無効化しておく．
+  #+begin_src emacs-lisp
 (leaf elscreen
-  :el-get (elscreen
-           :type github
-           :pkgname "emacs-jp/elscreen")
+  :el-get emacs-jp/elscreen
   :custom
-  ((elscreen-display-tab           . 8)
-   (elscreen-tab-display-control   . nil)
-   (elscreen-display-screen-number . nil)
-   (elscreen-prefix-key            . "") ;; なんか嫌だなぁ...
+  ((elscreen-display-tab             . 8)
+   (elscreen-tab-display-control     . nil)
+   (elscreen-display-screen-number   . nil)
+   (elscreen-prefix-key              . "") ;; なんかカッコ悪いなぁ...
    )
   :config
   (elscreen-start)
   )
-   #+end_src
-   - [ ] Debian パッケージ版は古い．更新すべき
-** TODO elscreen + zsh での連携 [/]
-   :PROPERTIES:
-   :CUSTOM_ID: org1767ff1c
-   :END:
-   詳細は
-   - [[https://masutaka.net/chalow/2011-09-28-1.html][ターミナルの zsh と Emacs を風のように駆け抜ける！]]
-   - [[http://syohex.hatenablog.com/entry/20111026/1319606395][cdeを改良]]
-   - [[https://qiita.com/__hage/items/2dd732b4dd68e124e8bd][cdeとelscreen-separate-buffer-listの相性が悪い]]
-   などを参考に.
-   #+begin_src emacs-lisp
+  #+end_src
+  - [ ] Debian パッケージ版は古い．更新すべき
+
+  ついでに elscreen⇔ zsh での連携を設定しておく.
+  詳細は
+  - [[https://masutaka.net/chalow/2011-09-28-1.html][ターミナルの zsh と Emacs を風のように駆け抜ける！]]
+  - [[http://syohex.hatenablog.com/entry/20111026/1319606395][cdeを改良]]
+  - [[https://qiita.com/__hage/items/2dd732b4dd68e124e8bd][cdeとelscreen-separate-buffer-listの相性が悪い]]
+  などを参照のこと.
+  #+begin_src emacs-lisp
 (defun return-current-working-directory-to-shell ()
+  (interactive)
   (expand-file-name
    (with-current-buffer
        (if (featurep 'elscreen)
@@ -1326,8 +1343,8 @@ init.el: README.org
               (assoc 'buffer-list
                      (nth 1 (nth 1 (current-frame-configuration))))))
      default-directory)))
-   #+end_src
-   - [ ] 最近動かない事があるのだが...
+  #+end_src
+  - [ ] =counsel-find-file= だと動作しないことがある. 謎
 * 日本語入力: =ddskk=
   :PROPERTIES:
   :CUSTOM_ID: orgb83f65a0
@@ -1870,19 +1887,6 @@ File.open(src, "r") {|f|
 ;;
 (setq wl-mime-charset 'iso-2022-jp)
      #+end_src
-**** elscreen-wl
-     :PROPERTIES:
-     :CUSTOM_ID: orgdbee6f4a
-     :END:
-     メール作成時に =elscreen= と連携してくれる．
-     apel 依存を外した fork 版を使う
-     #+begin_src emacs-lisp :tangle init-wl.el
-(leaf elscreen-wl
-  :el-get (elscreen-wl
-           :type github
-           :pkgname "syohex/emacs-elscreen-wl")
-  )
-     #+end_src
 **** SEMI の追加設定
      :PROPERTIES:
      :CUSTOM_ID: orgc4ec7a62
@@ -1894,7 +1898,7 @@ File.open(src, "r") {|f|
   :preface
   (setq mime-view-text/html-previewer 'shr
         mime-setup-enable-inline-html 'shr)
-  (defvar my:shr-width 72)
+  (defvar my:shr-width 78)
   ;;
   (defun my:shr-insert-document (&rest them)
     (let ((shr-width my:shr-width)) (apply them)))
@@ -3348,14 +3352,20 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    他には wanderlust のメールを扱えるように =org-wl= を読み込んで template を追加したぐらい.
    notmuch のインデックスの方が良いかもしれない, と最近思っている.
    #+begin_src emacs-lisp
-(leaf ol-wl
-  :if (and (or (my:dpkg-status "wl-beta")
-               (my:dpkg-status "wl"))
-           (file-directory-p my:d:org))
-  :el-get (ol-wl
-           :url "https://code.orgmode.org/bzg/org-mode/raw/master/contrib/lisp/ol-wl.el"
-           )
-  )
+;; (leaf ol
+;;   :el-get (ol
+;;            :url "https://code.orgmode.org/bzg/org-mode/raw/master/lisp/ol.el"))
+;; (leaf ol-wl
+;;   :if (or (my:dpkg-status "wl-beta")
+;;           (my:dpkg-status "wl"))
+;;   :after ol
+;;   :el-get (ol-wl
+;;            :url "https://code.orgmode.org/bzg/org-mode/raw/master/contrib/lisp/ol-wl.el"
+;;            )
+;;   :init
+;;   (with-eval-after-load 'wl
+;;     (require 'ol-wl))
+;;   )
 (leaf org-capture
   :if (file-directory-p my:d:org)
   :bind (("C-x m" . org-capture))
@@ -3372,6 +3382,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
      (mapcar #'(lambda (c) (if (equal c ?\[) ?\( (if (equal c ?\]) ?\) c)))
              string-to-transform))
     )
+  ;;
   (setq org-default-notes-file (concat my:d:org "journal.org")
         org-capture-templates
         `(
@@ -3383,13 +3394,13 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
            :kill-buffer t
            )
           ;; "* TODO <%<%Y-%m-%d>> %:subject %^g\n  %?\n  %a\n  #+BEGIN_QUOTE\n%i\n  #+END_QUOTE"
-          ("e" "Email TODO" plain
-           (function my:org-journal-add-date-entry-capture)
-           "** TODO %(format-time-string org-journal-time-format) [[wl:\%5Bmsgid:%:message-id-no-brackets\%5D][%(my:transform-square-brackets-to-round-ones \"%:subject\")]]\n  :PROPERTIES:\n  :CREATED: %u\n  :END:%?\n"
-           :prepend nil
-           :unnarrowed nil
-           :kill-buffer t
-           )
+          ;; ("e" "Email TODO" plain
+          ;;  (function my:org-journal-add-date-entry-capture)
+          ;;  "** TODO %(format-time-string org-journal-time-format) [[wl:\%5Bmsgid:%:message-id-no-brackets\%5D][%(my:transform-square-brackets-to-round-ones \"%:subject\")]]\n  :PROPERTIES:\n  :CREATED: %u\n  :END:%?\n"
+          ;;  :prepend nil
+          ;;  :unnarrowed nil
+          ;;  :kill-buffer t
+          ;;  )
           ("m" "Memo/Journal Entry" plain
            (function my:org-journal-add-date-entry-capture)
            "** MEMO %(format-time-string org-journal-time-format) %?"
@@ -3440,8 +3451,8 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
                                "org-gcal" my:d:tmp))
     (org-gcal-token-file   . ,(expand-file-name
                                "org-gcal/.org-gcal-token" my:d:tmp))
-    (org-gcal-down-days    . 90)  ;; 過去 3 month
-    (org-gcal-up-days      . 180)  ;; 未来 6 month
+    (org-gcal-down-days    . 30)  ;; 過去 1 month
+    (org-gcal-up-days      . 90)  ;; 未来 3 month
     (org-gcal-auto-archive . nil)
     (org-gcal-notify-p     . nil)
     ;;
@@ -3471,9 +3482,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
               (if (assoc "om_server" org-file-properties) (orgmine-mode))))
   (leaf orgmine
     :commands (orgmine-mode)
-    :el-get (orgmine
-             :type github
-             :pkgname "kametoku/orgmine")
+    :el-get kametoku/orgmine
     :pl-setq orgmine-servers
     :config
     (setq orgmine-note-block-begin "#+begin_src gfm"   ;; 要調整
@@ -3493,8 +3502,19 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
            :type github
            :pkgname "uwabami/org-wiki")
   :custom
-  ((org-wiki-location     . "~/Public/cc-env")
+  `((org-wiki-location    . "~/Public/cc-env")
    (org-wiki-publish-root . "{{site.url}}/cc-env/")
+   (org-wiki-template
+    .
+    ,(concat "#+TITLE: %n\n"
+             "#+date: 20\n"
+             "#+LAYOUT: default\n"
+             "#+options: auto-id:t\n"
+             "#+PREMALINK: /cc-env/%n.html\n"
+             "#+REF: cc-env/%n\n"
+             "Related [[wiki:index][Index]] [[~/Public/cc-env/index.org::#orge0707863][Debian]]\n"
+             "* %n\n"
+             ))
    )
   )
    #+END_SRC
@@ -3656,6 +3676,9 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    #+BEGIN_SRC emacs-lisp
 (leaf org-publish
   :after (ox-jekyll org-wiki)
+  :custom
+  `((org-publish-timestamp-directory
+    . ,(expand-file-name "org-timestamps.el" my:d:tmp)))
   :config
   (defun org-wiki-publish ()
     (interactive)
@@ -3727,6 +3750,17 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
         )
   )
    #+end_src
+** Forge
+   :PROPERTIES:
+   :CUSTOM_ID: org6727f452
+   :END:
+   Gitub/Gitlab と Magit の連携
+   #+BEGIN_SRC emacs-lisp
+(leaf forge
+  :disabled t
+  :after magit
+  )
+   #+END_SRC
 ** Git Gutter+
    :PROPERTIES:
    :CUSTOM_ID: org994abf0f
@@ -3741,22 +3775,6 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   :bind ("C-x G" . global-git-gutter+-mode)
   )
    #+end_src
-** ido-ghq
-   :PROPERTIES:
-   :CUSTOM_ID: org7eb97621
-   :END:
-   ghq list を ido で選んで dired で開く
-   #+BEGIN_SRC emacs-lisp
-(leaf ido-ghq
-  :if (executable-find "ghq")
-  :el-get (ido-ghq
-           :type github
-           :pkgname "uwabami/ido-ghq")
-  :bind (("C-x f" . ido-ghq-open))
-  :config
-  (setq ido-ghq-short-list t)
-  )
-   #+END_SRC
 * 関数定義を辿る: =dump-jump=, =smart-jump=
   :PROPERTIES:
   :CUSTOM_ID: org710c040c
@@ -3867,12 +3885,6 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
 (leaf flymake
   :if (<= 26.1 (string-to-number emacs-version))
   :ensure t
-  :config
-  ;; fortran: need Makefile in current directory
-  ;; (push
-  ;; '("\\.\\(f\\|F\\)\\(9\\|0\\)?\\(0\\|3\\)?\\'"
-  ;;   flymake-proc-simple-make-init) flymake-proc-allowed-file-name-masks)
-  ;; TeX: Update error pattern
   )
   #+END_SRC
   - [ ] 設定調整が必要
@@ -3885,13 +3897,14 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   :if (executable-find "fortls")
   :ensure t
   :custom
-  ((lsp-print-io             . nil)
+  `((lsp-print-io             . nil)
    (lsp-trace                . nil)
    (lsp-print-performance    . nil)
    (lsp-auto-guess-root      . t)
    (lsp-document-sync-method . 'incremental)
    (lsp-response-timeout     . 5)
    (lsp-prefer-flymake       .'flymake)
+   (lsp-session-file         .,(expand-file-name "lsp-session-v1" my:d:tmp))
    )
   :init
   (leaf lsp-ui
@@ -3952,9 +3965,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     (LaTeX-mode-hook . company-auctex-init)
     )
   (leaf auctex-latexmk
-    :el-get (auctex-latexmk
-             :type github
-             :pkgname "tom-tan/auctex-latexmk")
+    :el-get tom-tan/auctex-latexmk
     :hook (LaTeX-mode-hook . auctex-latexmk-setup)
     :config
     (setq auctex-latexmk-inherit-TeX-PDF-mode nil
@@ -4113,9 +4124,7 @@ $clean_ext = "snm nav vrb synctex.gz";
   :if (and my:d:password-store
            (file-directory-p (concat (getenv "HOME") "/Nextcloud/tdiary")))
   :commands (tdiary-mode tdiary-replace tdiary-append)
-  :el-get (tdiary-mode
-           :type github
-           :pkgname "uwabami/tdiary-mode")
+  :el-get uwabami/tdiary-mode
   :defvar tdiary-passwd-file
   :pl-setq
   (tdiary-csrf-key tdiary-passwd-file)
@@ -4125,7 +4134,9 @@ $clean_ext = "snm nav vrb synctex.gz";
   (setq tdiary-text-directory (concat (getenv "HOME") "/Nextcloud/tdiary/")
         tdiary-diary-list '(("log" "https://uwabami.junkhub.org/log/"))
         tdiary-style-mode 'org-mode
-        tdiary-text-suffix ".org")
+        tdiary-text-suffix ".org"
+        tdiary-http-timeout 100
+        )
   (tdiary-passwd-file-load)
   ;; (with-eval-after-load 'tdiary-mode
   ;;   (setq tdiary-text-save-p t))

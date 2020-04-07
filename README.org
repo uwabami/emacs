@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
 #+options: auto-id:t H:6
-#+date: 2020-04-01 02:41:51
+#+date: 2020-04-07 20:07:32
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -151,8 +151,7 @@ init.el: README.org
      (leaf leaf-keywords
        :ensure t
        :init
-       (leaf diminish :ensure t)
-       (leaf delight  :ensure t)
+       (leaf blackout :ensure t)
        (leaf el-get
          :ensure t
          :require t
@@ -189,16 +188,17 @@ init.el: README.org
   :defun (exec-path-from-shell-initialize)
   :custom
   ((exec-path-from-shell-check-startup-files . nil)
-   (exec-path-from-shell-variables .  '("SHELL"
-                                        "DEBFULLNAME"
-                                        "DEBEMAIL"
-                                        "SKKSERVER"
-                                        "TEXMFHOME"
-                                        "http_proxy"
-                                        "GPG_KEY_ID"
-                                        "GPG_AGENT_INFO"
-                                        "PASSWORD_STORE_DIR"
-                                        "PATH")))
+   (exec-path-from-shell-variables
+    .  '("SHELL"
+         "DEBFULLNAME"
+         "DEBEMAIL"
+         "SKKSERVER"
+         "TEXMFHOME"
+         "http_proxy"
+         "GPG_KEY_ID"
+         "GPG_AGENT_INFO"
+         "PASSWORD_STORE_DIR"
+         "PATH")))
   :config
   (exec-path-from-shell-initialize)
   (setq user-full-name    (concat (getenv "DEBFULLNAME"))
@@ -389,6 +389,7 @@ init.el: README.org
     (auto-fill-mode         . nil)
     (next-line-add-newlines . nil)  ;; バッファ終端で newline を入れない
     (read-file-name-completion-ignore-case . t)  ; 大文字小文字区別無し
+    (save-abbrevs           . 'silent)
     ;; backup
     (auto-save-list-file-prefix . ,(concat my:d:tmp ".saves-"))
     (auto-save-default       . t)
@@ -559,7 +560,7 @@ init.el: README.org
    #+begin_src emacs-lisp
 (leaf eldoc
   :hook (emacs-lisp-mode-hook . turn-on-eldoc-mode)
-  :diminish (eldoc-mode "")
+  :blackout t
   :preface
   (defun my:shutup-eldoc-message (f &optional string)
     (unless (active-minibuffer-window)
@@ -596,9 +597,8 @@ init.el: README.org
    背景も変えようかなぁ...
    #+begin_src emacs-lisp
 (leaf whitespace
-  :diminish ((global-whitespace-mode "")
-             (whitespace-mode "")
-             )
+  :blackout ((global-whitespace-mode . "")
+             (whitespace-mode        . ""))
   :hook (after-init-hook . global-whitespace-mode)
   :init
   (setq whitespace-line-column 72
@@ -1307,7 +1307,7 @@ init.el: README.org
   modeline の表示そのものは無効化しておく．
   #+begin_src emacs-lisp
 (leaf elscreen
-  :el-get emacs-jp/elscreen
+  :ensure t
   :custom
   ((elscreen-display-tab             . 8)
    (elscreen-tab-display-control     . nil)
@@ -1317,6 +1317,9 @@ init.el: README.org
   :config
   (elscreen-start)
   )
+;; (leaf elscreen-multi-term
+;;   :el-get  wamei/elscreen-multi-term
+;;  )
   #+end_src
   - [ ] Debian パッケージ版は古い．更新すべき
 
@@ -1345,6 +1348,7 @@ init.el: README.org
      default-directory)))
   #+end_src
   - [ ] =counsel-find-file= だと動作しないことがある. 謎
+
 * 日本語入力: =ddskk=
   :PROPERTIES:
   :CUSTOM_ID: orgb83f65a0
@@ -1647,7 +1651,7 @@ File.open(src, "r") {|f|
    #+BEGIN_SRC emacs-lisp
 (leaf flyspell
   :ensure t
-  :diminish "F"
+  :blackout (flyspell-mode . "F")
   :defun
   flyspell-emacs-popup-textual
   :preface
@@ -1784,6 +1788,7 @@ File.open(src, "r") {|f|
   :CUSTOM_ID: org2c2abb9b
   :END:
   MUA として Wanderlust を使っている
+  - [[https://wanderlust.github.io/wl-docs/wl-ja.html][Wanderlust – Yet Another Message Interface On Emacsen –]]
 ** Emacs 本体側の設定(wanderlust)
    :PROPERTIES:
    :CUSTOM_ID: org47a9ca66
@@ -2915,7 +2920,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 (leaf smartparens
   :disabled t
   :ensure t
-  :diminish (smartparens-mode "")
+  :blackout t
   :defun (sp-pair)
   :hook (after-init-hook . smartparens-global-mode)
   :config
@@ -2934,13 +2939,9 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   #+begin_src emacs-lisp
 (leaf rainbow-mode
   :ensure t
-  :config
-  (with-eval-after-load 'rainbow-mode
-    (diminish 'rainbow-mode (format " %s" "\x1F308")))
+  :blackout `((rainbow-mode . ,(format " %s" "\x1F308")))
   )
   #+end_src
-  モードラインの調整が上手く動いていない気がする(=:diminish= が効かない).
-  しょうがないので =with-eval-after-load= で．
 * 対応する括弧を見易く: =rainbow-delimiters=
   :PROPERTIES:
   :CUSTOM_ID: orgdddd3388
@@ -2952,7 +2953,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   #+begin_src emacs-lisp
 (leaf rainbow-delimiters
   :ensure t
-  :diminish ""
+  :blackout t
   :hook (prog-mode-hook . rainbow-delimiters-mode)
   )
   #+end_src
@@ -2968,7 +2969,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    目新しい設定はしていない, と思う．
    #+begin_src emacs-lisp
 (leaf org
-  :delight (org-mode (all-the-icons-icon-for-mode 'org-mode))
+  :blackout `((org-mode . ,(all-the-icons-icon-for-mode 'org-mode)))
   :bind (("C-x n s" . org-narrow-to-subtree)
          ("C-x n w" . widen))
   :mode
@@ -3108,7 +3109,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    #+begin_src emacs-lisp
 (leaf org-babel
   :after all-the-icons-in-terminal
-  :diminish (org-src-mode (format " %s" (all-the-icons-octicon "code")))
+  :blackout `((org-src-mode . ,(format " %s" (all-the-icons-octicon "code"))))
   :custom
   (;; font-lock
    (org-src-fontify-natively         . t)
@@ -3308,6 +3309,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
 (leaf org-journal
   :if (and (file-directory-p my:d:org)
            (>= emacs-major-version 25))
+  :commands (org-journal-update-auto-mode-alist)
   :ensure t
   :bind (("C-x M"    . my:org-journal-new-entry)
          (:org-journal-mode-map
@@ -3770,8 +3772,8 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
 (leaf git-gutter+
   :if (>= emacs-major-version 25)
   :ensure t
-  :diminish (git-gutter+-mode
-             (format "%s" (all-the-icons-octicon "git-merge")))
+  :blackout `((git-gutter+-mode
+               . ,(format "%s" (all-the-icons-octicon "git-merge"))))
   :bind ("C-x G" . global-git-gutter+-mode)
   )
    #+end_src
@@ -3810,7 +3812,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   #+BEGIN_SRC emacs-lisp
 (leaf company
   :ensure t
-  :diminish company-mode
+  :blackout t
   :custom
   ((company-idle-delay            . 0)
    (company-minimum-prefix-length . 4)
@@ -3849,7 +3851,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   #+BEGIN_SRC emacs-lisp
   (leaf yasnippet
     :ensure t
-    :diminish yas-minor-mode
+    :blackout t
     :disabled t
     :custom
     `((yas-indent-line  . 'fixed)
@@ -4275,7 +4277,7 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
 | 今日もいい天気ですね | お、     | 等幅になった👍 🍺|
 |----------------------+----------+------------------|
   #+END_EXAMPLE
-** Major, Minor モードの表示のカスタマイズ: =diminish=, =delight=
+** Major, Minor モードの表示のカスタマイズ: =blackout=
    :PROPERTIES:
    :CUSTOM_ID: org20d8ce5c
    :END:
@@ -4283,13 +4285,13 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
    #+BEGIN_SRC emacs-lisp
 (leaf *modeline-string
   ;; ここでやるより, modeline の設定時に一括で変換した方が良い気もしてきた．
-  :delight ((lisp-interaction-mode
-             (all-the-icons-icon-for-mode 'lisp-interaction-mode))
-            (emacs-lisp-mode
-             (all-the-icons-icon-for-mode 'emacs-lisp-mode))
-            (text-mode
-             (all-the-icons-icon-for-mode 'text-mode))
-            )
+  :blackout ((lisp-interaction-mode
+              (all-the-icons-icon-for-mode 'lisp-interaction-mode))
+             (emacs-lisp-mode
+              (all-the-icons-icon-for-mode 'emacs-lisp-mode))
+             (text-mode
+              (all-the-icons-icon-for-mode 'text-mode))
+             )
   )
    #+END_SRC
 ** doom-modeline
@@ -4304,10 +4306,7 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
    他にも弄りたい所はあるけれど．
    #+BEGIN_SRC emacs-lisp
 (leaf *doom-modeline-settings
-  :diminish (;; minor-mode settings
-             (isearch-mode (format " %s" (all-the-icons-faicon "search")))
-             ;; (org-src-mode (format " %s" (all-the-icons-octicon "code")))
-             )
+  :blackout `((isearch-mode . ,(format " %s" (all-the-icons-faicon "search"))))
   :init
   (leaf doom-modeline
     ;; :disabled t

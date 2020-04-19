@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
 #+options: auto-id:t H:6
-#+date: 2020-04-07 20:07:32
+#+date: 2020-04-19 15:14:45
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -114,7 +114,7 @@ init.el: README.org
   :END:
   [[https://github.com/conao3/leaf.el][leaf.el]]のおかげで,
   無いと途方に暮れるパッケージ以外のインストールは無視できるようになります.
-** TODO  [[https://emacs-jp.github.io/packages/package-management/package-el][package.el]] [0/1]
+** [[https://emacs-jp.github.io/packages/package-management/package-el][package.el]]
    :PROPERTIES:
    :CUSTOM_ID: orgc51eb87d
    :END:
@@ -136,7 +136,6 @@ init.el: README.org
     ))
 (package-initialize)
    #+end_src
-   - [ ] travis-ci.org での elpa の SSL error の workaround どうしたら良いの?
 ** [[https://github.com/conao3/leaf.el][leaf.el]]
    :PROPERTIES:
    :CUSTOM_ID: orgc2ededbf
@@ -145,24 +144,24 @@ init.el: README.org
    自分で修正した版やオリジナル版を別の場所から持ってくる場合は
    [[https://github.com/conao3/leaf.el][leaf.el]]から[[https://github.com/dimitri/el-get][el-get]]を呼び出します.
    #+BEGIN_SRC emacs-lisp
-     (unless (package-installed-p 'leaf)
-       (package-install 'leaf t))
-     (require 'leaf nil 'noerror)
-     (leaf leaf-keywords
-       :ensure t
-       :init
-       (leaf blackout :ensure t)
-       (leaf el-get
-         :ensure t
-         :require t
-         :preface
-         (defconst el-get-dir my:d:pkg:elget) ;; override el-get default
-         :custom ((el-get-notify-type       . 'message)
-                  (el-get-git-shallow-clone . t))
-         )
-       :config
-       (leaf-keywords-init)
-       )
+(unless (package-installed-p 'leaf)
+  (package-install 'leaf t))
+;; (require 'leaf nil 'noerror)
+(leaf leaf-keywords
+  :ensure t
+  :init
+  (leaf blackout :ensure t)
+  (leaf el-get
+    :ensure t
+    :require t
+    :preface
+    (defconst el-get-dir my:d:pkg:elget) ;; override el-get default
+    :custom ((el-get-notify-type       . 'message)
+             (el-get-git-shallow-clone . t))
+    )
+  :config
+  (leaf-keywords-init)
+  )
    #+end_src
 * =exec-path-from-shell=: 環境変数の読み込み
   :PROPERTIES:
@@ -210,6 +209,32 @@ init.el: README.org
     nil)
   )
   #+end_src
+* 認証関連: =plstore=, =password-store= など
+  :PROPERTIES:
+  :CUSTOM_ID: org1a8b35da
+  :END:
+  - =leaf-plstore= で =plstore= が使えるようになったので,
+    その設定をしておく.
+  - =auth-password-store= で auth-source として =password-store= を使う.
+  といった事をしている.
+  #+BEGIN_SRC emacs-lisp
+(leaf *authentication
+  :if (and (getenv "GPG_KEY_ID")
+           (file-directory-p my:d:password-store))
+  :preface
+  (setq leaf-default-plstore
+        (plstore-open
+         (expand-file-name "plstore.plist" my:d:password-store)))
+  :init
+  (leaf password-store :ensure t)
+  (leaf auth-source-pass :ensure t)
+  (leaf plstore
+    :custom
+    `((plstore-secret-keys . 'silent)
+      (plstore-encrypt-to  . ,(getenv "GPG_KEY_ID")))
+    )
+  )
+  #+END_SRC
 * 独自関数
   :PROPERTIES:
   :CUSTOM_ID: org34ff2306
@@ -326,6 +351,41 @@ init.el: README.org
                       thereis (string-match pattern buffer-file-name)))
       (delete-trailing-whitespace))))
   :hook (before-save-hook . my:delete-trailing-whitespace)
+  )
+   #+end_src
+* 言語の設定
+  :PROPERTIES:
+  :CUSTOM_ID: orgadf8c6bf
+  :END:
+  最近のEmacsはlocaleから文字コードを自動判別するらしいので,
+  以前良く設定していた以下は不要らしいですね(ホントかな...?)。
+  #+begin_src emacs-lisp :tangle no
+(set-language-environment "Japanese")
+(prefer-coding-system 'utf-8)
+(set-file-name-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+(set-terminal-coding-system 'utf-8)
+(set-default 'buffer-file-coding-system 'utf-8)
+  #+end_src
+  なお, m17n.org の消滅によって上記設定に関する情報の参照元が消えた。
+  適切な参照元はどこだろう...?
+** cp5022x.el
+   :PROPERTIES:
+   :CUSTOM_ID: org58d8e6f8
+   :END:
+   Emacs23 から内部が Unicode ベースになっています。
+
+   しかし文字コードの変換はGNU libcのiconvをベースにしているため,
+   機種依存文字を含む文字コードの変換をうまく行なえません。
+   そこで言語設定前に =cp5022x.el= をインストールすることにしています。
+   #+begin_src emacs-lisp
+(leaf cp5022x
+  :ensure t
+  :require t
+  :config
+  (set-charset-priority 'ascii 'japanese-jisx0208 'latin-jisx0201
+                        'katakana-jisx0201 'iso-8859-1 'unicode)
+  (set-coding-system-priority 'utf-8 'euc-jp 'iso-2022-jp 'cp932)
   )
    #+end_src
 * 主にEmacs本体, および同梱されている拡張に関する設定
@@ -724,32 +784,6 @@ init.el: README.org
   (defalias 'ps-mule-header-string-charset 'ignore)
   )
    #+END_SRC
-* 認証関連: =plstore=, =password-store= など
-  :PROPERTIES:
-  :CUSTOM_ID: org1a8b35da
-  :END:
-  - =leaf-plstore= で =plstore= が使えるようになったので,
-    その設定をしておく.
-  - =auth-password-store= で auth-source として =password-store= を使う.
-  といった事をしている.
-  #+BEGIN_SRC emacs-lisp
-(leaf *authentication
-  :if (and (getenv "GPG_KEY_ID")
-           (file-directory-p my:d:password-store))
-  :preface
-  (setq leaf-default-plstore
-        (plstore-open
-         (expand-file-name "plstore.plist" my:d:password-store)))
-  :init
-  (leaf password-store :ensure t)
-  (leaf auth-source-pass :ensure t)
-  (leaf plstore
-    :custom
-    `((plstore-secret-keys . 'silent)
-      (plstore-encrypt-to  . ,(getenv "GPG_KEY_ID")))
-    )
-  )
-  #+END_SRC
 * =recentf=: 最近使ったファイル履歴の保管
   :PROPERTIES:
   :CUSTOM_ID: org43970469
@@ -799,46 +833,13 @@ init.el: README.org
                                  "^#\\.*"
                                  "^/home/uwabami/.mozilla/\\.*"
                                  "^/home/uwabami/.emacs.d/tmp/\\.*"
+                                 "^/home/uwabami/.dotfiles/Emacs/tmp/\\.*"
                                  "^/[^/:]+:"
                                  "bookmarks"
                                  "org-recent-headings.dat"
                                  )))
   )
   #+end_src
-* SOMEDAY 言語の設定 [0/1]
-  :PROPERTIES:
-  :CUSTOM_ID: orgadf8c6bf
-  :END:
-  最近のEmacsはlocaleから文字コードを自動判別するらしいので,
-  以前良く設定していた以下は不要らしいですね(ホントかな...?)。
-  #+begin_src emacs-lisp :tangle no
-(set-language-environment "Japanese")
-(prefer-coding-system 'utf-8)
-(set-file-name-coding-system 'utf-8)
-(set-keyboard-coding-system 'utf-8)
-(set-terminal-coding-system 'utf-8)
-(set-default 'buffer-file-coding-system 'utf-8)
-  #+end_src
-  - [ ] m17n.org の消滅によって, 参照元が消えた。適切な参照元はどこだろうか。
-** cp5022x.el
-   :PROPERTIES:
-   :CUSTOM_ID: org58d8e6f8
-   :END:
-   Emacs23 から内部が Unicode ベースになっています。
-
-   しかし文字コードの変換はGNU libcのiconvをベースにしているため,
-   機種依存文字を含む文字コードの変換をうまく行なえません。
-   そこで言語設定前に =cp5022x.el= をインストールすることにしています。
-   #+begin_src emacs-lisp
-(leaf cp5022x
-  :ensure t
-  :require t
-  :config
-  (set-charset-priority 'ascii 'japanese-jisx0208 'latin-jisx0201
-                        'katakana-jisx0201 'iso-8859-1 'unicode)
-  (set-coding-system-priority 'utf-8 'euc-jp 'iso-2022-jp 'cp932)
-  )
-   #+end_src
 * =all-the-icons-in-terminal=: ターミナルでもicon fontを使いたい。
   :PROPERTIES:
   :CUSTOM_ID: orgd903bf1d
@@ -873,7 +874,7 @@ init.el: README.org
                '(mime-view-mode all-the-icons-faicon "envelope-o"))
   )
   #+end_src
-** TODO East Asian Ambiguos 対応 [0/1]
+** SOMEDAY East Asian Ambiguos 対応 [0/1]
    :PROPERTIES:
    :CUSTOM_ID: orgd3ca00ac
    :END:
@@ -1127,7 +1128,7 @@ init.el: README.org
   (ido-flex-with-migemo-mode)
   )
    #+END_SRC
-** TODO =ido-vertical-mode=: 候補を縦に並べて表示 [/]
+** SOMEDAY =ido-vertical-mode=: 候補を縦に並べて表示 [/]
    :PROPERTIES:
    :CUSTOM_ID: orgba1f040e
    :END:
@@ -1214,7 +1215,7 @@ init.el: README.org
   )
    #+END_SRC
 
-* TODO =eww=: 内蔵ブラウザ [0/3]
+* SOMEDAY =eww=: 内蔵ブラウザ [0/3]
   :PROPERTIES:
   :CUSTOM_ID: org35bd4bc4
   :END:
@@ -1299,7 +1300,7 @@ init.el: README.org
    #+end_src
    - [ ] 背景色の指定
    - [ ] 幅の強制
-* TODO =elscreen=: バッファー用 GNU screen もどき [0/2]
+* SOMEDAY =elscreen=: バッファー用 GNU screen もどき [0/2]
   :PROPERTIES:
   :CUSTOM_ID: orgd9b46f9c
   :END:
@@ -1348,7 +1349,6 @@ init.el: README.org
      default-directory)))
   #+end_src
   - [ ] =counsel-find-file= だと動作しないことがある. 謎
-
 * 日本語入力: =ddskk=
   :PROPERTIES:
   :CUSTOM_ID: orgb83f65a0
@@ -1939,11 +1939,11 @@ video/*; xdg-open %s;
 (setq mime-situation-examples-file
       (concat my:d:tmp "mime-example"))
      #+end_src
-     text/plain を html より優先
+     text/plain より html を優先 =(- -;)=
      #+begin_src emacs-lisp :tangle init-wl.el
 (setq mime-view-type-subtype-score-alist
-      '(((text . plain) . 1)
-        ((text . html)  . 0)
+      '(((text . plain) . 0)
+        ((text . html)  . 1)
         ))
      #+end_src
      音を鳴らすアレやコレの無効化
@@ -3007,6 +3007,10 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     (org-file-apps-defaults-gnu . '((remote . emacs)
                                     (system . "xdg-open %s")
                                     (t      . "xdg-open %s")))
+    (org-file-apps              . '((auto-mode . emacs)
+                                    ("\\.mm\\'" . default)
+                                    ("\\.x?html?\\'" . default)
+                                    ("\\.pdf\\'" . "xdg-open %s")))
     ;; GTD: 状態の追加
     (org-todo-keywords          . '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)" "CANCEL(c)" "SOMEDAY(s)")
                                     (type "ARTICLE(a)")
@@ -3032,6 +3036,12 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (setq org-emphasis-alist
         (cons '("+" '(:strike-through t :foreground "#999999"))
               (cl-delete "+" org-emphasis-alist :key 'car :test 'equal)))
+  ;; (with-eval-after-load "org"
+  ;;   (setq org-file-apps '((auto-mode . emacs)
+  ;;                         ("\\.mm\\'" . default)
+  ;;                         ("\\.x?html?\\'" . default)
+  ;;                         ("\\.pdf\\'" . "xdg-open %s")))
+  ;;   )
   )
    #+end_src
 ** Org-Id
@@ -3286,18 +3296,18 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
              ))
     (add-to-list 'org-agenda-files (expand-file-name file my:d:org)))
   (add-to-list 'org-agenda-files (locate-user-emacs-file "README.org"))
-  ;; (if (file-directory-p
-  ;;      (expand-file-name "Public/" (getenv "HOME")))
-  ;;     (setq org-agenda-files
-  ;;           (append
-  ;;            (directory-files-recursively
-  ;;             (expand-file-name "Public/" (getenv "HOME")) "org$"))))
-  ;; (if (file-directory-p
-  ;;      (expand-file-name "Public/cc-env/" (getenv "HOME")))
-  ;;     (setq org-agenda-files
-  ;;           (append
-  ;;            (directory-files-recursively
-  ;;             (expand-file-name "Public/cc-env" (getenv "HOME")) "org$"))))
+  (if (file-directory-p
+       (expand-file-name "Public/" (getenv "HOME")))
+      (dolist (file
+               (directory-files-recursively
+                (expand-file-name "Public/" (getenv "HOME")) "org$"))
+        (add-to-list 'org-agenda-files file)))
+  (if (file-directory-p
+       (expand-file-name "journal/" my:d:org))
+      (dolist (file
+               (directory-files-recursively
+                (expand-file-name "journal/" my:d:org) "org$"))
+        (add-to-list 'org-agenda-files file)))
   )
    #+end_src
 ** Org-journal: 日記
@@ -3354,20 +3364,19 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    他には wanderlust のメールを扱えるように =org-wl= を読み込んで template を追加したぐらい.
    notmuch のインデックスの方が良いかもしれない, と最近思っている.
    #+begin_src emacs-lisp
-;; (leaf ol
-;;   :el-get (ol
-;;            :url "https://code.orgmode.org/bzg/org-mode/raw/master/lisp/ol.el"))
-;; (leaf ol-wl
-;;   :if (or (my:dpkg-status "wl-beta")
-;;           (my:dpkg-status "wl"))
-;;   :after ol
-;;   :el-get (ol-wl
-;;            :url "https://code.orgmode.org/bzg/org-mode/raw/master/contrib/lisp/ol-wl.el"
-;;            )
-;;   :init
-;;   (with-eval-after-load 'wl
-;;     (require 'ol-wl))
-;;   )
+(leaf ol-wl
+  :if (or (my:dpkg-status "wl-beta")
+          (my:dpkg-status "wl"))
+  :preface
+  (leaf ol
+    :el-get (ol
+             :url "https://code.orgmode.org/bzg/org-mode/raw/master/lisp/ol.el"))
+  :el-get (ol-wl
+           :url "https://code.orgmode.org/bzg/org-mode/raw/master/contrib/lisp/ol-wl.el")
+  :init
+  (with-eval-after-load 'wl
+    (require 'ol-wl))
+  )
 (leaf org-capture
   :if (file-directory-p my:d:org)
   :bind (("C-x m" . org-capture))
@@ -3459,7 +3468,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     (org-gcal-notify-p     . nil)
     ;;
     (alert-log-messages    . t)
-    (alert-default-style   .'log))
+    (alert-default-style   .'libnotify))
   :pl-setq
   (org-gcal-client-id
    org-gcal-client-secret
@@ -3507,17 +3516,15 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   `((org-wiki-location    . "~/Public/cc-env")
    (org-wiki-publish-root . "{{site.url}}/cc-env/")
    (org-wiki-template
-    .
-    ,(concat "#+TITLE: %n\n"
-             "#+date: 20\n"
-             "#+LAYOUT: default\n"
-             "#+options: auto-id:t\n"
-             "#+PREMALINK: /cc-env/%n.html\n"
-             "#+REF: cc-env/%n\n"
-             "Related [[wiki:index][Index]] [[~/Public/cc-env/index.org::#orge0707863][Debian]]\n"
-             "* %n\n"
-             ))
-   )
+    . ,(concat "#+TITLE: %n\n"
+               "#+date: 20\n"
+               "#+LAYOUT: default\n"
+               "#+PREMALINK: /cc-env/%n.html\n"
+               "#+options: auto-id:nil\n"
+               "#+REF: cc-env/%n\n"
+               "Related [[wiki:index][Index]] [[~/Public/cc-env/index.org::#orge0707863][Debian]]\n"
+               "* %n\n"
+               )))
   )
    #+END_SRC
 ** Org-Export
@@ -3580,6 +3587,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     #+BEGIN_SRC emacs-lisp
 (leaf ox-latex
   :after ox
+  :preface
   :init
   (leaf ox-beamer
     :custom
@@ -3835,16 +3843,16 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     ("C-p" . company-select-previous)
     ("C-n" . company-select-next)))
   :hook
-  ((after-init-hook       . global-company-mode)
-   (minibuffer-setup-hook . (lambda ()
-                              (company-mode -1)))
+  `((after-init-hook      . global-company-mode)
+   (minibuffer-setup-hook . ,(lambda ()
+                               (company-mode -1)))
    )
   )
   #+END_SRC
   - [X] [[https://github.com/TheBB/company-reftex][TheBB/company-reftex]]
   - [X] [[https://github.com/vspinu/company-math][vspinu/company-math]]
   - [X] [[https://github.com/alexeyr/company-auctex][alexeyr/company-auctex]]
-* SOMEDAY テンプレート補完: =yasnippet= [/]
+* SOMEDAY テンプレート補完: =yasnippet= [0/1]
   :PROPERTIES:
   :CUSTOM_ID: orgffdbe5ff
   :END:
@@ -3874,9 +3882,8 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     (leaf yatemplate :ensure t)
     )
   #+END_SRC
-  - [ ] 意図しない所で発火してテンプレートが挿入されてしまうので
-    保留中
-* TODO =flymake=: on-the-fly check [/]
+  - [ ] 意図しない所で発火してテンプレートが挿入されてしまうので保留中
+* SOMEDAY =flymake=: on-the-fly check [0/1]
   :PROPERTIES:
   :CUSTOM_ID: orgd4b6f681
   :END:
@@ -3936,7 +3943,6 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   :PROPERTIES:
   :CUSTOM_ID: org88a3cb1b
   :END:
-  Debian パッケージ版を使う．
   やっている事は
   - japanese-latex-mode において, 幾つかのコマンドが追加/上書きされているが,  あまり使うことの無いコマンドが表示されるのが嫌なのでそれらを削除．
   - コンパイルには[[http://personal.psu.edu/jcc8/software/latexmk/][Latexmk]]を使う
@@ -3946,26 +3952,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
 (leaf auctex
   :if (and (executable-find "uplatex")
            (executable-find "latexmk"))
-  :after company
-  :ensure t
   :init
-  (leaf reftex
-    :custom
-    ((reftex-plug-into-AUCTeX               . t)
-     (reftex-cite-prompt-optional-args      . t)
-     (reftex-toc-split-windows-horizontally . t))
-    )
-  (leaf company-reftex
-    :ensure t
-    :hook (LaTeX-mode-hook . reftex-mode)
-    )
-  (leaf company-math :ensure t)
-  (leaf company-auctex
-    :ensure t
-    :disabled t
-    :hook
-    (LaTeX-mode-hook . company-auctex-init)
-    )
   (leaf auctex-latexmk
     :el-get tom-tan/auctex-latexmk
     :hook (LaTeX-mode-hook . auctex-latexmk-setup)
@@ -3975,52 +3962,39 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
           japanese-LaTeX-command-default "LaTeX"
           )
     )
+  ;; :ensure t
   ;; auctex hook
-  :hook ((LaTeX-mode-hook . (lambda ()
-                              (TeX-source-correlate-mode)
-                              (TeX-PDF-mode))))
-  :config
-  (setq japanese-TeX-engine-default 'ptex
-        japanese-LaTeX-default-style "bxjsarticle"
-        TeX-command-output-list '(("LaTeXMk" ("pdf")))
-        TeX-engine 'ptex
-        TeX-PDF-mode t
-        TeX-source-correlate-method 'synctex
-        TeX-source-correlate-start-server t
-        TeX-source-correlate-mode t
-        TeX-view-program-selection '((output-dvi "xdvi")
-                                     (output-pdf "Evince")
-                                     (output-html "xdg-open"))
-        TeX-auto-save t
-        TeX-auto-local  (expand-file-name "auctex/auto" my:d:tmp)
-        TeX-style-local (expand-file-name "auctex/style" my:d:tmp)
-        TeX-parse-self t
-        TeX-auto-untabify t
-        font-latex-fontify-script nil
-        font-latex-script-display nil
-        font-latex-fontify-sectioning 1.0
-        )
-  (with-eval-after-load 'tex-jp
-    (dolist (command '("pTeX" "pLaTeX" "jTeX" "jLaTeX" "jBibTeX" "Mendex"
-                       "upMendex" "pBibTeX" "BibTeX" "Biber" "Ps2pdf" ))
-      (delq (assoc command TeX-command-list) TeX-command-list)))
+  ;; :config
   )
   #+END_SRC
   =~/.latexmkrc= は以下の通り
   #+begin_src perl :tangle no
 #!/usr/bin/env perl
-$kanji  = defined $ENV{"LATEXENC"} ? "-kanji=$ENV{\"LATEXENC\"}" : "-kanjii=utf8" ;
-$latex  = "platex -interaction=nonstopmode -src-specials -shell-escape --synctex=1 $kanji";
-$latex_silent = "platex -interaction=batchmode -src-specials -shell-escape --synctex=1 $kanji";
+$kanji = defined $ENV{"LATEXENC"} ? "-kanji=$ENV{\"LATEXENC\"}" : "-kanji=utf8" ;
+$latex  = "platex -interaction=nonstopmode -src-specials -shell-escape --synctex=1 $kanji" ;
+$latex_silent = "platex -interaction=batchmode -src-specials -shell-escape --synctex=1 $kanji" ;
+$pdflatex = "ptex2pdf -e -l -ot '-shell-escape -synctex=1 $kanji'";
 $bibtex = "pbibtex $kanji";
+# disable makeindex/mendex
 $makeindex = "touch -m %D";
+# if ( $ENV{"LATEXENC"} == "jis" ){
+#     $makeindex = "mendex -J %O -c -r -o %D %S ";
+# } elsif ( $ENV{"LATEXENC"} == "euc" ){
+#     $makeindex = "mendex -E %O -c -r -o %D %S ";
+# } elsif ( $ENV{"LATEXENC"} == "sjis" ){
+#     $makeindex = "mendex -S %O -c -r -o %D %S";
+# } else {
+#     $makeindex = "mendex -U %O -c -r -o %D %S";
+# }
 $dvipdf = "dvipdfmx %O -o %D %S";
 $dvips = 'dvips %O -z -f %S | convbkmk -u > %D';
 $ps2pdf = 'ps2pdfwr %O %S %D';
 $pdf_mode = 3;
-$pdf_previewer = 'start xdg-open';
-$pdf_update_method = 0;
-$clean_ext = "snm nav vrb synctex.gz";
+$pdf_previewer = 'xdg-open';
+# $pdf_previewer = 'fwdevince %S %D';
+$pdf_update_method = 1;
+$cleanup_mode = 2;
+$clean_ext = "snm nav vrb synctex.gz spl bbl blg run.xml pgf-plot.table pgf-plot.gnuplot"
   #+end_src
 * Autoconf
   :PROPERTIES:
@@ -4115,9 +4089,47 @@ $clean_ext = "snm nav vrb synctex.gz";
   (leaf generic-x)
   (leaf textile-mode :ensure t)
   (leaf lua-mode :ensure t)
+  (leaf debian-el)
+  (leaf sh-mode
+    :custom ((system-uses-terminfo . nil))
+    )
+  (leaf apt-sources-list :ensure t
+    :custom
+    ((apt-sources-list-suites
+      . '("stable" "stable-backports"
+          "testing" "testing-backports"
+          "unstable" "experimental"
+          "jessie" "jessie-backports"
+          "stretch" "stretch-backports"
+          "buster" "buster-backports"
+          "bullseye"
+          "sid")))
+    )
+  (leaf woman
+    :custom-face
+    ((woman-bold   . '((t (:inherit font-lock-type-face :bold t))))
+     (woman-italic . '((t (:inherit font-lock-keyword-face :underline t)))))
+    )
+  (leaf info-colors
+    :ensure t
+    :hook
+    (Info-selection #'info-colors-fontify-node))
   )
   #+END_SRC
-* TODO 日記: =tDiary= [0/1]
+** SSH config mode
+   :PROPERTIES:
+   :CUSTOM_ID: org993cf404
+   :END:
+   #+BEGIN_SRC emacs-lisp
+(leaf ssh-config-mode
+  :ensure t
+  :mode ((("/\\.ssh/config\\'" "/sshd?_config\\'") . ssh-config-mode)
+         ("/known_hosts\\'"                        . ssh-known-hosts-mode)
+         ("/authorized_keys?\\'"                   . ssh-authorized-keys-mode))
+  :hook (ssh-config-mode . turn-on-font-lock)
+  )
+   #+END_SRC
+* SOMEDAY 日記: =tDiary= [0/1]
   :PROPERTIES:
   :CUSTOM_ID: org9992a617
   :END:
@@ -4182,7 +4194,7 @@ $clean_ext = "snm nav vrb synctex.gz";
   )
    #+end_src
    - [ ] ちゃんと効いてない, ような?
-** TODO フォント [0/1]
+** SOMEDAY フォント [0/1]
    :PROPERTIES:
    :CUSTOM_ID: org356b9857
    :END:
@@ -4592,6 +4604,9 @@ mouse-1: Display Line and Column Mode Menu"
   :PROPERTIES:
   :CUSTOM_ID: orgf87c4e84
   :END:
+  #+BEGIN_SRC emacs-lisp
+(provide 'init)
+  #+END_SRC
   幾つかの関数の元ネタとして Emacs 本体のコードを参照したので,
   GPL-3 or later です．
   #+begin_example
@@ -4610,3 +4625,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
   #+end_example
+* Debug
+  :PROPERTIES:
+  :CUSTOM_ID: orgd89ceb4b
+  :END:
+  #+BEGIN_SRC emacs-lisp
+  #+END_SRC

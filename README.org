@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
 #+options: auto-id:t H:6
-#+date: 2020-05-05 16:37:53
+#+date: 2020-05-14 22:51:39
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -167,18 +167,6 @@ init.el: README.org
   (leaf-keywords-init)
   )
    #+end_src
-* [[https://gitlab.com/koral/gcmh][Koral/gcmh]]: Garbage Collector Magic Hack
-  :PROPERTIES:
-  :CUSTOM_ID: org3133d7dd
-  :END:
-  とりあえず試してみることに
-  #+BEGIN_SRC emacs-lisp :tangle init.el
-(leaf gcmh
-  :ensure t
-  :blackout t
-  :config
-  (gcmh-mode 1))
-  #+END_SRC
 * =exec-path-from-shell=: 環境変数の読み込み
   :PROPERTIES:
   :CUSTOM_ID: org9abae8f2
@@ -240,6 +228,8 @@ init.el: README.org
   (setq leaf-default-plstore
         (plstore-open
          (expand-file-name "plstore.plist" my:d:password-store)))
+  (add-to-list 'vc-directory-exclusion-list
+               (expand-file-name my:d:password-store))
   :init
   (leaf password-store :ensure t)
   (leaf auth-source-pass :ensure t)
@@ -444,9 +434,9 @@ init.el: README.org
   #+begin_src emacs-lisp :tangle init.el
 (leaf cus-start
   :custom
-  `(;; gc -> use gcmh
-    ;; (gc-cons-threshold       . ,(* 8 1024 1024))
-    ;; (garbage-collection-messages . nil)
+  `(
+    (gc-cons-threshold       . ,(* 8 1024 1024))
+    (garbage-collection-messages . nil)
     ;; 表示
     (tool-bar-mode          . nil)  ; 基本 "-nw" なので不要
     (scroll-bar-mode        . nil)  ; 基本 "-nw" なので不要
@@ -589,8 +579,10 @@ init.el: README.org
    :END:
   #+begin_src emacs-lisp :tangle init.el
 (leaf autorevert
-  :hook
-  ((emacs-startup-hook . global-auto-revert-mode))
+  :custom
+  ((auto-revert-interval . 0.1))
+  :global-minor-mode
+  global-auto-revert-mode
   )
   #+end_src
 ** =savehist=: 変更履歴を保存
@@ -733,7 +725,7 @@ init.el: README.org
   )
    #+end_src
    モード独自の設定(例えば Org とか)に関しては別途．
-** SOMEDAY =tramp=: ssh 越しにファイルを編集 [0/1]
+** =tramp=: ssh 越しにファイルを編集
    :PROPERTIES:
    :CUSTOM_ID: org04853162
    :END:
@@ -752,7 +744,6 @@ init.el: README.org
                            (delete-file tramp-persistency-file-name))))
   )
    #+end_src
-   - [ ] 偶に挙動不審
 ** =browse-url=
    :PROPERTIES:
    :CUSTOM_ID: org456d3821
@@ -934,7 +925,7 @@ init.el: README.org
    :CUSTOM_ID: org3416eeb2
    :END:
    #+begin_src
-
+;; nothing - -;
    #+end_src
    - [ ] 使う気になったら何かしなければならない, 気がしている
 ** カレンダー設定
@@ -1245,10 +1236,12 @@ Emacs*useXIM: false
   (dolist (elem
            '((abbrev " [aA]" . "--[aA]:")
              (latin " [_A]" . "--[_A]:")
-             (default " [--]" . "--[--]:")))
+             (default " [--]" . "--[--]:"))
+           )
     (setq ad-return-value
           (append (cons elem nil)
                   (delq (assoc (car elem) ad-return-value) ad-return-value)))))
+;;
 (setq skk-show-inline t)
     #+end_src
     カーソルには色をつけない
@@ -1572,7 +1565,7 @@ File.open(src, "r") {|f|
     ;; prompt
     (amx-prompt-string . "amx: ")
     ;; keybind
-    (amx-show-key-bindings . t)
+    (amx-show-key-bindings . nil)
     ;; 履歴
     (amx-save-file
      . ,(expand-file-name "amx-items" my:d:tmp))
@@ -3044,7 +3037,10 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                                     ("Book"       . ?b)
                                     ("Emacs"      . ?e)
                                     ("TeX"        . ?t)
-                                    ("Ruby"       . ?r)))
+                                    ("Ruby"       . ?r)
+                                    ("IGNORE"     . ?i)
+                                    ("PLANNED"    . ?p)
+                                    ))
     ;; DONE → Archive.org に移動
     (org-archive-location       . "Archive.org::")
     ;; modules → とりあえずクリアしておく
@@ -3312,7 +3308,6 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
              "Univ.org"
              "DebianJP.org"
              "twitter.org"
-             "journal.org"
              "redmine_GFD.org"
              "redmine_FluidSoc.org"
              ))
@@ -3341,18 +3336,17 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
 (leaf org-journal
   :if (and (file-directory-p my:d:org)
            (>= emacs-major-version 25))
-  :commands (org-journal-update-auto-mode-alist)
-  :ensure t
   :bind (("C-x M"    . my:org-journal-new-entry)
          (:org-journal-mode-map
           ("C-c C-c" . my:org-journal-entry-save-and-exit)))
+  :ensure t
   :init
   (defun my:org-journal-new-entry (prefix &optional time)
     "Add new journal entry on new elscreen"
     (interactive "P")
     (elscreen-create)
-    (org-journal-new-entry prefix time))
-
+    (org-journal-new-entry nil time))
+  ;;
   (defun my:org-journal-entry-save-and-exit ()
     "Save journal entry and close elscreen buffer"
     (interactive)
@@ -3363,15 +3357,19 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     . (lambda()
         (setq-local truncate-lines t))))
   :custom
-  `((org-journal-dir                       . ,(expand-file-name "journal/" my:d:org))
+  `((org-journal-file-type                 . 'yearly)
+    (org-journal-dir                       . ,(expand-file-name "journal" my:d:org))
+    (org-journal-file-format               . "%Y.org")
+    (org-journal-cache-file
+     . ,(expand-file-name "org-journal.cache" my:d:tmp))
     (org-journal-date-format               . "%x (%a)")
-    (org-journal-enable-agenda-integration . t)
-    (org-journal-file-format               . "%Y-%m-%d.org")
     (org-journal-time-format               . "<%Y-%m-%d %R> ")
     (org-journal-time-prefix               . "** MEMO ")
+    (org-journal-enable-agenda-integration . t)
     (org-journal-find-file                 . 'find-file)
-    (org-journal-cache-file
-     . ,(expand-file-name "org-journal.cache" my:d:tmp)))
+    (org-journal-carryover-delete-empty-journal . 'ask)
+    (org-journal-start-on-weekday          . 0) ;; sunday
+    )
   :config
   (eval-and-compile 'browse-url)
   (with-eval-after-load 'org-journal
@@ -3383,29 +3381,25 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    :CUSTOM_ID: orgbe835a6b
    :END:
    キーバインドは以前 changelog memo をやっていた時の癖で =C-x m= をメモにしている.
-   他には wanderlust のメールを扱えるように =org-wl= を読み込んで template を追加したぐらい.
-   notmuch のインデックスの方が良いかもしれない, と最近思っている.
    #+begin_src emacs-lisp :tangle init.el
 (leaf org-capture
   :if (file-directory-p my:d:org)
-  ;; :init (leaf ol-wl)
+  :init
+;;  (leaf org-wl
+;;    :if (or (my:dpkg-status "wl")
+;;            (my:dpkg-status "wl-beta"))
+;;    :el-get uwabami/org-wl
+;;    )
   :bind (("C-x m" . org-capture))
+  :pl-setq
+  (my:org:calendar1 my:org:calendar2)   ;; 名前がイケてないっ!
   :config
   (defun my:org-journal-add-date-entry-capture ()
     (org-journal-new-entry t)
     (goto-char (point-max))
     )
-  ;; @see https://github.com/sprig/org-capture-extension/issues/37
-  ;; Brackets '{' '}' in link description cause broken org-mode link #37]]
-  (defun my:transform-square-brackets-to-round-ones (string-to-transform)
-    "Transforms [ into ( and ] into ), other chars left unchanged."
-    (concat
-     (mapcar #'(lambda (c) (if (equal c ?\[) ?\( (if (equal c ?\]) ?\) c)))
-             string-to-transform))
-    )
-  ;;
-  (setq org-default-notes-file (concat my:d:org "journal.org")
-        org-capture-templates
+  (setq org-default-notes-file (expand-file-name "Memo.org" my:d:org))
+  (setq org-capture-templates
         `(
           ("t" "TODO" plain
            (function my:org-journal-add-date-entry-capture)
@@ -3414,24 +3408,30 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
            :unnarrowed nil
            :kill-buffer t
            )
-          ;; ;; "* TODO <%<%Y-%m-%d>> %:subject %^g\n  %?\n  %a\n  #+BEGIN_QUOTE\n%i\n  #+END_QUOTE"
-          ;; ("e" "Email TODO" plain
-          ;;  (function my:org-journal-add-date-entry-capture)
-          ;;  "** TODO %(format-time-string org-journal-time-format) [[wl:\%5Bmsgid:%:message-id-no-brackets\%5D][%(my:transform-square-brackets-to-round-ones \"%:subject\")]]\n  :PROPERTIES:\n  :CREATED: %u\n  :END:%?\n"
-          ;;  :prepend nil
-          ;;  :unnarrowed nil
-          ;;  :kill-buffer t
-          ;;  )
-          ("m" "Memo/Journal Entry" plain
+          ("m" "メモを追加" plain
            (function my:org-journal-add-date-entry-capture)
            "** MEMO %(format-time-string org-journal-time-format) %?"
            :prepend nil
            :unnarrowed nil
            :kill-buffer t
            )
-          ("a" "Aritcle Entry" plain
+          ("a" "少し長めの記事を追加する" plain
            (function my:org-journal-add-date-entry-capture)
            "** ARTICLE %(format-time-string org-journal-time-format) %? "
+           :prepend nil
+           :unnarrowed nil
+           :kill-buffer t
+           )
+          ("s" "個人予定表スケジュールを追加" plain
+           (file ,(expand-file-name "Schedule.org" my:d:org))
+           "* %^{prompt}\n  :PROPERTIES:\n  :calendar-id: %(format \"%s\" my:org:calendar1)\n  :END:\n  :org-gcal:\n%?\n%i\n  :END:"
+           :prepend nil
+           :unnarrowed nil
+           :kill-buffer t
+           )
+          ("u" "仕事予定表スケジュールを追加" plain
+           (file ,(expand-file-name "Univ.org" my:d:org))
+           "* %^{prompt}\n  :PROPERTIES:\n  :calendar-id: %(format \"%s\" my:org:calendar2)\n  :END:\n  :org-gcal:\n%?\n%i\n  :END:"
            :prepend nil
            :unnarrowed nil
            :kill-buffer t
@@ -4228,13 +4228,13 @@ $clean_ext = "snm nav vrb synctex.gz spl bbl blg run.xml pgf-plot.table pgf-plot
       (set-frame-parameter nil 'alpha 95)
       (set-face-attribute 'default nil
                           :family "FSMRMP"
-                          :height 195)
+                          :height 190)
       (set-face-attribute 'fixed-pitch nil
                           :family "FSMRMP"
-                          :height 195)
+                          :height 190)
       (set-face-attribute 'variable-pitch nil
                           :family "FSMRMP"
-                          :height 195)
+                          :height 190)
       ;; Math symbols
       (set-fontset-font nil
                         '(#x2200 . #x22FF)
@@ -4327,263 +4327,69 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
              )
   )
    #+end_src
-** doom-modeline
+** modeline
    :PROPERTIES:
-   :CUSTOM_ID: orge9fff107
+   :CUSTOM_ID: org51edfacc
    :END:
-   細かい所が気になるので, 色々弄ってます．
-   - アイコン表示の際に(EAWのせいで)幅が狂うので,
-     doom-modeline内の幅の勘定をしている関数をoverride
-   - SKKの表示が欲しいので追加
-   - bufferのアイコンはfilenameじゃなくてmajor-modeを見にいく.
-   他にも弄りたい所はあるけれど．
-   #+begin_src emacs-lisp :tangle init.el
-(leaf *doom-modeline-settings
-  :blackout `((isearch-mode . ,(format " %s" (all-the-icons-faicon "search"))))
+   powerline を使ってる
+   #+BEGIN_SRC emacs-lisp
+(leaf powerline
+  :ensure t
   :init
-  (leaf doom-modeline
-    ;; :disabled t
-    :ensure t
-    :preface
-    (defun my:doom-modeline--set-char-widths (alist)
-      "Do nothing")
-    :init
-    ;;
-    (defun my:skk-setup-modeline ()
+  (defun my:powerline-ddskk ()
+    "skkが読み込まれていなくても状態を表示"
+    (cond
+     ((not (boundp 'skk-modeline-input-mode))
+      (setq skk-modeline-input-mode "--[--]:"))
+     (t skk-modeline-input-mode)))
+  ;;
+  (defun my:skk-setup-modeline ()
       "skk-setup-modeline による modeline の更新を無効化"
-      (eval-when-compile (require 'skk))
-      (if (fboundp 'skk-make-indicator-alist)
-          (setq skk-indicator-alist (skk-make-indicator-alist)))
-      (force-mode-line-update t))
-    ;;
-    (defvar doom-modeline--buffer-file-state-icon nil)
-    (defun my:doom-modeline-update-buffer-file-state-icon (&rest _)
-      "Update the buffer or file state in mode-line."
-      (setq doom-modeline--buffer-file-state-icon
-            (ignore-errors
-              (cond (buffer-read-only
-                     (doom-modeline-buffer-file-state-icon
-                      "lock"
-                      (all-the-icons-material "lock")
-                      'doom-modeline-warning))
-                    ((and buffer-file-name (buffer-modified-p)
-                          doom-modeline-buffer-modification-icon)
-                     (doom-modeline-buffer-file-state-icon
-                      "save"
-                      (all-the-icons-material "save")
-                      'doom-modeline-buffer-modified))
-                    ((and buffer-file-name
-                          (not (file-exists-p buffer-file-name)))
-                     (doom-modeline-buffer-file-state-icon
-                      "edit"
-                      (all-the-icons-faicon "edit")
-                      'doom-modeline-urgent))
-                    ((or (buffer-narrowed-p)
-                         (and (bound-and-true-p fancy-narrow-mode)
-                              (fancy-narrow-active-p)))
-                     (doom-modeline-buffer-file-state-icon
-                      "vertical_align_center"
-                      (all-the-icons-material "vertical_align_center")
-                      'doom-modeline-warning))
-                    (t
-                     (doom-modeline-buffer-file-state-icon
-                      "--"
-                      "--"
-                      (if (doom-modeline--active) 'mode-line 'mode-line-inactive)))
-                    ))))
-    ;;
-    (defun my:doom-modeline-update-buffer-file-icon (&rest _)
-      "Update file icon in mode-line, just display major-mode icon. not filename."
-      (setq doom-modeline--buffer-file-icon
-            (when (and doom-modeline-icon doom-modeline-major-mode-icon)
-              (let* ((icon (all-the-icons-icon-for-mode major-mode)))
-                (if (symbolp icon)
-                    (setq icon (all-the-icons-faicon
-                                "file-o"
-                                :face 'all-the-icons-dsilver)))
-                (unless (symbolp icon)
-                  (propertize icon
-                              'help-echo (format "Major-mode: %s" (format-mode-line mode-name))))))))
-    ;;
-    :advice ((:override doom-modeline--set-char-widths
-                        my:doom-modeline--set-char-widths)
-             (:override skk-setup-modeline
-                        my:skk-setup-modeline))
-             (:override doom-modeline-update-buffer-file-icon
-                        my:doom-modeline-update-buffer-file-icon)
-             (:override doom-modeline-update-buffer-file-state-icon
-                        my:doom-modeline-update-buffer-file-state-icon)
-    :config
-    (setq doom-modeline-height 1
-          doom-modeline-bar-width 0
-          doom-modeline-buffer-file-name-style 'buffer-name
-          doom-modeline-icon t
-          doom-modeline-major-mode-icon t
-          doom-modeline-major-mode-color-icon t
-          doom-modeline-buffer-state-icon nil
-          doom-modeline-buffer-modification-icon nil
-          doom-modeline-minor-modes t
-          doom-modeline-enable-word-count t
-          doom-modeline-buffer-encoding t
-          doom-modeline-indent-info nil
-          doom-modeline-checker-simple-format t
-          doom-modeline-vcs-max-length 12
-          doom-modeline-persp-name t
-          doom-modeline-persp-name-icon t
-          doom-modeline-lsp t
-          doom-modeline-github nil
-          doom-modeline-github-interval (* 30 60)
-          doom-modeline-mu4e nil
-          doom-modeline-irc nil
-          doom-modeline-irc-stylize 'identity
-          doom-modeline-icons-alist
-          '(;; macro
-            ("fiber_manual_record"    . "\xe849")
-            ("triangle-right"         . "\xf45a")
-            ;; multiple-cursors
-            ("i-cursor"               . "\xf246")
-            ;; vcs
-            ("git-compare"            . "\xf4ac")
-            ("git-merge"              . "\xf423")
-            ("arrow-down"             . "\xf43f")
-            ("alert"                  . "\xf42d")
-            ("git-branch"             . "\xf420")
-            ;; checker: flycheck/flymake
-            ("do_not_disturb_alt"     . "\xeb38")
-            ("check"                  . "\xf62b")
-            ("access_time"            . "\xf64f")
-            ("sim_card_alert"         . "\xe8a7")
-            ("pause"                  . "\xf8e3")
-            ("priority_high"          . "\xea02")
-            ;; Persp
-            ("aspect_ratio"           . "\xe851")
-            ;; LSP
-            ("rocket"                 . "\xe862")
-            ;; github
-            ("github"                 . "\xe70a")
-            ;; debug
-            ("bug"                    . "\xe245")
-            ;; mu4e
-            ("email"                  . "\xe3ea")
-            ;; ("mail"                . "\xe158")
-            ;; irc
-            ("message"                . "\xe3f1")
-            ;; Battery
-            ("battery-charging"       . "\xebe4")
-            ("battery-full"           . "\xe2f1")
-            ("battery-three-quarters" . "\xe2f2")
-            ("battery-half"           . "\xe2f3")
-            ("battery-quarter"        . "\xe2f4")
-            ("battery-empty"          . "\xe2f5")
-            )
-          )
+    (setq skk-indicator-alist (skk-make-indicator-alist))
+    (force-mode-line-update t))
+  :advice (:override skk-setup-modeline my:skk-setup-modeline)
+  :custom
+  `((powerline-buffer-size-suffix  . nil)
+    (powerline-display-hud         . nil)
+    (powerline-display-buffer-size . nil)
+    (powerline-text-scale-factor   .  1)
     )
   :config
-  ;; (eval-when-compile (require 'doom-modeline))
-  (with-eval-after-load 'doom-modeline
-    (doom-modeline-def-segment my:input-method-skk
-      "The current ddskk status."
-      (concat
-       (propertize
-        (cond
-         ((not (boundp 'skk-modeline-input-mode))
-          "[--]")
-         (skk-modeline-input-mode
-          (substring skk-modeline-input-mode 2 -1))
-         (t
-          "[--]")
-         ))))
-    ;;
-    (doom-modeline-def-segment my:buffer-encoding
-      "Displays the encoding and eol style of the buffer."
-      (when doom-modeline-buffer-encoding
-        (propertize
-         (concat
-          (let ((sys (coding-system-plist buffer-file-coding-system)))
-            (cond ((memq (plist-get sys :category)
-                         '(coding-category-undecided coding-category-utf-8))
-                   " U")
-                  ((memq (plist-get sys :name)
-                         '(coding-category-undecided japanese-iso-8bit))
-                   " E")
-                  ((memq (plist-get sys :name)
-                         '(coding-category-undecided iso-2022-jp))
-                   " J")
-                  ((memq (plist-get sys :name)
-                         '(coding-category-undecided japanese-shift-jis))
-                   " S")
-                  (t " =")))
-          (pcase (coding-system-eol-type buffer-file-coding-system)
-            (0 "U")
-            (1 "D")
-            (2 "A")))
-         'face (if (doom-modeline--active) 'mode-line 'mode-line-inactive)
-         'help-echo 'mode-line-mule-info-help-echo
-         'mouse-face '(:box 0)
-         'local-map mode-line-coding-system-map)))
-    ;;
-    (doom-modeline-def-segment my:buffer-position
-      "The buffer position information, drop nyan-mode"
-      (let ((active (doom-modeline--active))
-            (lc '(line-number-mode
-                  (column-number-mode
-                   (doom-modeline-column-zero-based " %l:%c" " %l:%C")
-                   " %l")
-                  (column-number-mode (doom-modeline-column-zero-based " :%c" " :%C")))))
-        (propertize
-         (concat (format-mode-line lc)
-                 (format-mode-line '("" doom-modeline-percent-position "%%"))
-                 )
-         'face (if (doom-modeline--active) 'mode-line 'mode-line-inactive)
-         'help-echo "Buffer position\n\
-mouse-1: Display Line and Column Mode Menu"
-         'mouse-face '(:box 0)
-         'local-map mode-line-column-line-number-mode-map)))
-    ;;
-    (defvar-local doom-modeline--lsp nil)
-    ;;
-    ;;
-    (doom-modeline-def-modeline 'main
-      '(;; bar
-        " "
-        my:input-method-skk
-        ;; workspace-name
-        my:buffer-encoding
-        ;; major-mode
-        buffer-info
-        ;; window-number
-        ;; modals
-        matches
-        ;; remote-host
-        ;; parrot
-        ;; selection-info
-        )
-      ;;
-      '(
-        ;; objed-state
-        ;; misc-info
-        ;; persp-name
-        ;; fancy-battery
-        ;; grip
-        ;; irc
-        ;; mu4e
-        ;; github
-        ;; debug
-        lsp
-        minor-modes
-        ;; indent-info
-        process
-        vcs
-        checker
-        " "
-        my:buffer-position
-        " "
-        )
-      )
+  (defun my:powerline-theme ()
+    "Setup the default mode-line."
+    (interactive)
+    (my:powerline-ddskk)
+    (setq-default
+     mode-line-format
+     '("%e"
+       (:eval
+        (let* ((active (powerline-selected-window-active))
+               (mode-line-buffer-id (if active 'mode-line-buffer-id 'mode-line-buffer-id-inactive))
+               (mode-line (if active 'mode-line 'mode-line-inactive))
+               (face1 (if active 'mode-line-highlight 'powerline-inactive2))
+               ;; (face1 (if active 'powerline-active1 'powerline-inactive2))
+               ;; (face2 (if active 'powerline-active2 'powerline-inactive2))
+               ;; (face2 (if active 'mode-line-highlight 'powerline-inactive2))
+               (lhs (list (powerline-raw (substring skk-modeline-input-mode 2 -1) mode-line 'l)
+                          (powerline-raw "%*" mode-line 'l)
+                          (powerline-raw mode-line-mule-info mode-line 'l)
+                          (powerline-raw (all-the-icons-icon-for-mode major-mode) mode-line 'l)
+                          (powerline-buffer-id mode-line-buffer-id 'l)
+                          (powerline-raw " ")
+                          ))
+               (rhs (list (powerline-raw global-mode-string face1 'r)
+                          (powerline-vc face1 'r)
+                          (powerline-raw " ")
+                          (powerline-raw "%6p" mode-line 'r)
+                          )))
+          (concat (powerline-render lhs)
+                  (powerline-fill face1 (powerline-width rhs))
+                  (powerline-render rhs))))))
     )
-  (doom-modeline-mode +1)
+  (my:powerline-theme)
+  ;; (powerline-revert)
   )
-   #+end_src
+   #+END_SRC
 ** theme: =doom-theme=
    :PROPERTIES:
    :CUSTOM_ID: org7e722d0e
@@ -4607,7 +4413,7 @@ mouse-1: Display Line and Column Mode Menu"
   (doom-darkpastel-set-background . nil)
   :config
   (load-theme 'doom-darkpastel t)
-  ;; (eaw-and-emoji-fullwidth)
+  (eaw-and-emoji-fullwidth)
   )
   #+end_src
 * 起動時間の出力

@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
 #+options: auto-id:t H:6
-#+date: 2020-05-14 22:51:39
+#+date: 2020-07-19 21:37:40
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -473,6 +473,9 @@ init.el: README.org
     (undo-limit              . 200000)
     (undo-strong-limit       . 260000)
     (history-length          . t)  ;; 無制限(の筈)
+    ;;
+    (safe-local-variable-values
+     . '((org-link-file-path-type . absolute)))
     )
   :config
   (when (boundp 'load-prefer-newer)
@@ -1197,7 +1200,7 @@ Emacs*useXIM: false
     #+end_src
     変換候補の表示位置
     #+begin_src emacs-lisp :tangle init-ddskk.el
-(setq skk-show-candidates-always-pop-to-buffer t)
+(setq skk-show-candidates-always-pop-to-buffer nil)
     #+end_src
     候補表示件数を2列に
     #+begin_src emacs-lisp :tangle init-ddskk.el
@@ -1242,7 +1245,7 @@ Emacs*useXIM: false
           (append (cons elem nil)
                   (delq (assoc (car elem) ad-return-value) ad-return-value)))))
 ;;
-(setq skk-show-inline t)
+;;(setq skk-show-inline t)
     #+end_src
     カーソルには色をつけない
     #+begin_src emacs-lisp :tangle init-ddskk.el
@@ -1301,7 +1304,8 @@ Emacs*useXIM: false
     #+end_src
     変換候補を縦に表示
     #+begin_src emacs-lisp :tangle init-ddskk.el
-(setq skk-show-inline 'vertical)
+;; (setq skk-show-inline 'vertical)
+(setq skk-show-inline nil)
     #+end_src
 *** 辞書の設定
     :PROPERTIES:
@@ -3013,16 +3017,16 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     ;; 折り返し無し
     (org-startup-truncated      . t)
     ;; link handler -> xdg-open 任せ
-    ;; (org-file-apps-defaults     . '((remote . emacs)
-    ;;                                 (system . "xdg-open %s")
-    ;;                                 (t      . "xdg-open %s")))
-    ;; (org-file-apps-defaults-gnu . '((remote . emacs)
-    ;;                                 (system . "xdg-open %s")
-    ;;                                 (t      . "xdg-open %s")))
-    ;; (org-file-apps              . '((auto-mode . emacs)
-    ;;                                 ("\\.mm\\'" . default)
-    ;;                                 ("\\.x?html?\\'" . "xdg-open %s")
-    ;;                                 ("\\.pdf\\'" . "xdg-open %s")))
+    (org-file-apps-defaults     . '((remote . emacs)
+                                    (system . "xdg-open %s")
+                                    (t      . "xdg-open %s")))
+    (org-file-apps-defaults-gnu . '((remote . emacs)
+                                    (system . "xdg-open %s")
+                                    (t      . "xdg-open %s")))
+    (org-file-apps              . '((auto-mode . emacs)
+                                    ("\\.mm\\'" . default)
+                                    ("\\.x?html?\\'" . "xdg-open %s")
+                                    ("\\.pdf\\'" . "xdg-open %s")))
     ;; GTD: 状態の追加
     (org-todo-keywords          . '((sequence "TODO(t)" "WAIT(w)" "|" "DONE(d)" "CANCEL(c)" "SOMEDAY(s)")
                                     (type "ARTICLE(a)")
@@ -3472,8 +3476,8 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
                                "org-gcal" my:d:tmp))
     (org-gcal-token-file   . ,(expand-file-name
                                "org-gcal/.org-gcal-token" my:d:tmp))
-    (org-gcal-down-days    . 30)  ;; 過去 1 month
-    (org-gcal-up-days      . 90)  ;; 未来 3 month
+    (org-gcal-down-days    .  30)  ;; 過去 30 日
+    (org-gcal-up-days      . 180)  ;; 未来 180 日
     (org-gcal-auto-archive . nil)
     (org-gcal-notify-p     . nil)
     ;;
@@ -4228,21 +4232,21 @@ $clean_ext = "snm nav vrb synctex.gz spl bbl blg run.xml pgf-plot.table pgf-plot
       (set-frame-parameter nil 'alpha 95)
       (set-face-attribute 'default nil
                           :family "FSMRMP"
-                          :height 190)
+                          :height 195)
       (set-face-attribute 'fixed-pitch nil
                           :family "FSMRMP"
-                          :height 190)
+                          :height 195)
       (set-face-attribute 'variable-pitch nil
                           :family "FSMRMP"
-                          :height 190)
+                          :height 195)
       ;; Math symbols
       (set-fontset-font nil
                         '(#x2200 . #x22FF)
-                        (font-spec :family "Ricty" :height 195))
+                        (font-spec :family "FSMRMP" :height 195))
       ;; Greek
       (set-fontset-font nil
                         '(#x0370 . #x03FF)
-                        (font-spec :family "Ricty" :height 195))
+                        (font-spec :family "FSMRMP" :height 195))
       ;; Some Icons
       (set-fontset-font nil
                         '(#xE0A0 . #xEEE0)
@@ -4272,16 +4276,16 @@ $clean_ext = "snm nav vrb synctex.gz spl bbl blg run.xml pgf-plot.table pgf-plot
       ;; Math symbols
       (set-fontset-font nil
                         '(#x2200 . #x22FF)
-                        (font-spec :family "Ricty" :height 150))
+                        (font-spec :family "FSMRMP" :height 150))
       ;; Greek
       (set-fontset-font nil
                         '(#x0370 . #x03FF)
-                        (font-spec :family "Ricty" :height 150))
+                        (font-spec :family "FSMRMP" :height 150))
       ;; Some Icons
       (set-fontset-font nil
                         '(#xE0A0 . #xEEE0)
                         (font-spec :family "FSMRMP" :height 150))
-      (setq use-default-font-for-symbols t)
+      (setq use-default-font-for-symbols nil)
       (set-frame-parameter nil 'alpha 95)
       (toggle-frame-maximized)
       )))
@@ -4347,6 +4351,15 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
       "skk-setup-modeline による modeline の更新を無効化"
     (setq skk-indicator-alist (skk-make-indicator-alist))
     (force-mode-line-update t))
+  ;;
+  (defun my:major-mode-icon (mode)
+    "Update file icon in mode-line, just display major-mode icon. not filename."
+    (let* ((icon (all-the-icons-icon-for-mode mode)))
+    (if (symbolp icon)
+        (all-the-icons-faicon "file-code-o"
+                              :face 'all-the-icons-dsilver
+                              :height 1.0)
+      icon)))
   :advice (:override skk-setup-modeline my:skk-setup-modeline)
   :custom
   `((powerline-buffer-size-suffix  . nil)
@@ -4373,7 +4386,8 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
                (lhs (list (powerline-raw (substring skk-modeline-input-mode 2 -1) mode-line 'l)
                           (powerline-raw "%*" mode-line 'l)
                           (powerline-raw mode-line-mule-info mode-line 'l)
-                          (powerline-raw (all-the-icons-icon-for-mode major-mode) mode-line 'l)
+                          (powerline-raw (my:major-mode-icon major-mode) mode-line 'l)
+                          ;; (powerline-raw (all-the-icons-icon-for-mode major-mode) mode-line 'l)
                           (powerline-buffer-id mode-line-buffer-id 'l)
                           (powerline-raw " ")
                           ))
@@ -4433,6 +4447,15 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
   :END:
   #+begin_src emacs-lisp :tangle init.el
 (leaf esup :ensure t)
+(leaf org-bullets
+  :disabled t
+  :ensure t
+  :custom
+   (org-bullets-bullet-list . '(" " "◎ " "□" "・"))
+  :hook
+  (org-mode-hook
+   . (lambda () (org-bullets-mode 1)))
+  )
   #+end_src
 * LICENSE
   :PROPERTIES:

@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
 #+options: auto-id:t H:6
-#+date: 2020-07-19 21:37:40
+#+date: 2020-08-09 00:54:12
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -1406,7 +1406,7 @@ File.open(src, "r") {|f|
 (leaf ido
   :init
   (leaf ido-completing-read+ :ensure t)
-  (leaf ido-describe-bindings :ensure t)
+  ;; (leaf ido-describe-bindings :ensure t)
   :bind (("C-x C-f" . ido-find-file))
   :preface
   (defun my:ido-disable-line-trucation ()
@@ -1921,6 +1921,8 @@ File.open(src, "r") {|f|
      #+begin_src emacs-lisp :tangle init-wl.el
 (leaf mime-setup
   :preface
+  ;; (leaf w3m-load)
+  ;; (leaf mime-w3m :require t)
   (setq mime-view-text/html-previewer 'shr
         mime-setup-enable-inline-html 'shr)
   ;; (defvar my:shr-width 72)
@@ -4285,7 +4287,7 @@ $clean_ext = "snm nav vrb synctex.gz spl bbl blg run.xml pgf-plot.table pgf-plot
       (set-fontset-font nil
                         '(#xE0A0 . #xEEE0)
                         (font-spec :family "FSMRMP" :height 150))
-      (setq use-default-font-for-symbols nil)
+      (setq use-default-font-for-symbols t)
       (set-frame-parameter nil 'alpha 95)
       (toggle-frame-maximized)
       )))
@@ -4331,6 +4333,32 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
              )
   )
    #+end_src
+** theme: =doom-theme=
+   :PROPERTIES:
+   :CUSTOM_ID: org7e722d0e
+   :END:
+   これまで弄っていた font-lock を
+   doom-theme をベースに移植中: [[https://github.com/uwabami/emacs-doom-darkpastel][uwabami/emacs-doom-darkpastel]]
+  #+begin_src emacs-lisp :tangle init.el
+;; (setq frame-background-mode (frame-parameter nil 'background-mode))
+(leaf *doom-themes
+  :if (>= emacs-major-version 25)
+  :init
+  (leaf doom-themes :ensure t)
+  (leaf emacs-doom-darkpastel
+    :el-get (emacs-doom-darkpastel
+             :type github
+             :pkgname "uwabami/emacs-doom-darkpastel"
+             :prepare (add-to-list 'custom-theme-load-path default-directory)
+             )
+    )
+  :custom
+  (doom-darkpastel-set-background . nil)
+  :config
+  (load-theme 'doom-darkpastel t)
+  (eaw-and-emoji-fullwidth)
+  )
+  #+end_src
 ** modeline
    :PROPERTIES:
    :CUSTOM_ID: org51edfacc
@@ -4404,32 +4432,6 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
   ;; (powerline-revert)
   )
    #+END_SRC
-** theme: =doom-theme=
-   :PROPERTIES:
-   :CUSTOM_ID: org7e722d0e
-   :END:
-   これまで弄っていた font-lock を
-   doom-theme をベースに移植中: [[https://github.com/uwabami/emacs-doom-darkpastel][uwabami/emacs-doom-darkpastel]]
-  #+begin_src emacs-lisp :tangle init.el
-;; (setq frame-background-mode (frame-parameter nil 'background-mode))
-(leaf *doom-themes
-  :if (>= emacs-major-version 25)
-  :init
-  (leaf doom-themes :ensure t)
-  (leaf emacs-doom-darkpastel
-    :el-get (emacs-doom-darkpastel
-             :type github
-             :pkgname "uwabami/emacs-doom-darkpastel"
-             :prepare (add-to-list 'custom-theme-load-path default-directory)
-             )
-    )
-  :custom
-  (doom-darkpastel-set-background . nil)
-  :config
-  (load-theme 'doom-darkpastel t)
-  (eaw-and-emoji-fullwidth)
-  )
-  #+end_src
 * 起動時間の出力
   :PROPERTIES:
   :CUSTOM_ID: orgca1f29da
@@ -4447,6 +4449,19 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
   :END:
   #+begin_src emacs-lisp :tangle init.el
 (leaf esup :ensure t)
+(leaf srcery-emacs
+  :disabled t
+  :el-get (srcery-emacs
+           :type github
+           :pkgname "uwabami/srcery-emacs"
+           :prepare (add-to-list 'custom-theme-load-path default-directory)
+           )
+  :custom ((srcery-transparent-background . t)
+           (srcery-org-height . nil)
+           (srcery-bright-black . "#4f4f4f"))
+  :config
+  (load-theme 'srcery t)
+  )
 (leaf org-bullets
   :disabled t
   :ensure t

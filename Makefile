@@ -8,7 +8,8 @@ ELC		= $(EL:%.el=%.elc)
 all: $(ELC) init.elc
 $(EL): init.el
 init.el: README.org
-	mkdir -p tmp
+	@mkdir -p tmp
+	@chmod 700 tmp
 	$(EMACS) -Q -q --batch --eval \
 	   "(progn \
 		  (require 'ob-tangle) \

@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
 #+options: auto-id:t H:6
-#+date: 2020-09-07 22:34:15
+#+date: 2020-09-29 22:45:18
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -54,6 +54,8 @@ init.el: README.org
    =lexsical-binding= を有効にしておきます．
    #+begin_src emacs-lisp :tangle init.el
 ;; -*- lexical-binding: nil -*-
+;; (require 'profiler)
+;; (profiler-start 'cpu)
    #+end_src
 ** ディレクトリ構成の修正
    :PROPERTIES:
@@ -120,23 +122,21 @@ init.el: README.org
    :END:
    パッケージは基本的に =pacakge.el= で導入するので, 先ずはその設定.
    #+begin_src emacs-lisp :tangle init.el
-(require 'package nil 'noerror)
-;; elpa/gnutls workaround
-(if (string< emacs-version "26.3")
-    (setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3"))
-(setq package-enable-at-startup t
-      package-user-dir my:d:pkg:elpa
-      package-gnupghome-dir (expand-file-name ".gnupg" (getenv "HOME"))
-      package-archives
-      '(("gnu"   . "https://elpa.gnu.org/packages/")
-        ("melpa" . "https://melpa.org/packages/")
-        ;; ("org"   . "https://orgmode.org/elpa/")
-        )
-      )
+(eval-and-compile
+  (custom-set-variables
+   '(package-archives '(("gnu"   . "https://elpa.gnu.org/packages/")
+                        ("melpa" . "https://melpa.org/packages/")
+                        ;; ("org"   . "https://orgmode.org/elpa/")
+                        ))
+   '(package-gnupghome-dir (expand-file-name ".gnupg" (getenv "HOME")))
+   '(package-user-dir my:d:pkg:elpa)
+   '(package-enable-at-startup t)
+   ))
 (eval-when-compile
   (unless (file-exists-p (locate-user-emacs-file "tmp/bootstrap-stamp"))
     (package-refresh-contents)
-    (with-temp-buffer (write-file (locate-user-emacs-file "tmp/bootstrap-stamp")))
+    (with-temp-buffer
+      (write-file (locate-user-emacs-file "tmp/bootstrap-stamp")))
     ))
 (package-initialize)
    #+end_src
@@ -149,8 +149,8 @@ init.el: README.org
    [[https://github.com/conao3/leaf.el][leaf.el]]から[[https://github.com/dimitri/el-get][el-get]]を呼び出します.
    #+begin_src emacs-lisp :tangle init.el
 (unless (package-installed-p 'leaf)
+  (package-refresh-contents)
   (package-install 'leaf t))
-;; (require 'leaf nil 'noerror)
 (leaf leaf-keywords
   :ensure t
   :init
@@ -443,7 +443,7 @@ init.el: README.org
 (leaf cus-start
   :custom
   `(
-    ;; (gc-cons-threshold       . ,(* 1024 1024 1024)) ;; 1GiB
+    ;; (gc-cons-threshold       . ,(* 2 1024 1024 1024)) ;; 2GiB
     ;; (garbage-collection-messages . t)
     ;; 表示
     (tool-bar-mode          . nil)  ; 基本 "-nw" なので不要
@@ -494,6 +494,11 @@ init.el: README.org
   ;; GC
   ;; Run GC every 60 seconds if emacs is idle.
   (run-with-idle-timer 60.0 t #'garbage-collect)
+  :hook
+  ;; (emacs-startup-hook
+  ;;  . (lambda ()
+  ;;      (setq gc-cons-threshold 800000) ;; default
+  ;;      ))
   )
   #+end_src
 ** =startup=: 起動は静かに
@@ -1402,140 +1407,49 @@ File.open(src, "r") {|f|
                  (skk-mode-exit))))
 (setq skk-isearch-start-mode 'latin)
     #+end_src
-* 補完: =ivy=, =counsel=,  =swiper=
+* 補完: =ido=
   :PROPERTIES:
-  :CUSTOM_ID: org3babff6c
+  :CUSTOM_ID: orge3fb8a64
   :END:
-  以前は =ido= を使っていたのでまだ挙動に戸惑う事があるけれど．
-  - [[https://qiita.com/takaxp/items/2fde2c119e419713342b][helm を背に ivy の門を叩く - Qiita]] を参考の事.
-** 基本設定: =ivy=
+  補完は =ido= が軽いし速いので好み.
+  見た目がちょっと簡素すぎる気もするので、なんとか弄りたい所ではある。
+** =ido= の設定
    :PROPERTIES:
-   :CUSTOM_ID: orgc6c54867
+   :CUSTOM_ID: orgc92613c0
    :END:
-   #+BEGIN_SRC emacs-lisp
-(leaf ivy
-  :ensure t
+   #+begin_src emacs-lisp :tangle init.el
+(leaf ido
   :init
-  (leaf flx :ensure t)
-  (leaf ivy-hydra :ensure t)
-  :bind
-  ((:ivy-minibuffer-map
-    ("<escape>" . minibuffer-keyboard-quit)))
-  :custom
-  `((ivy-use-virtual-buffers . t)
-    ;; default は "." と ".."
-    (ivy-extra-directories   . nil)
-    (ivy-truncate-lines . t)
-    (ivy-fixed-height-minibuffer . t)
-    (ivy-height . 9)
-    (ivy-wrap   . t)
-    (ivy-use-selectable-prompt . t)
-    (ivy-read-action-function . 'ivy-hydra-read-action)
-    (ivy-count-format . "[%d/%d] ")
-    )
-  )
-   #+END_SRC
-** 補完候補の改善: =prescient=
-   :PROPERTIES:
-   :CUSTOM_ID: org335ca4e4
-   :END:
-   #+BEGIN_SRC emacs-lisp
- (leaf prescient
-   :ensure t
-   :commands (prescient-persist-mode)
-   :custom
-   `((prescient-aggressive-file-save . t)
-     (prescient-save-file
-      . ,(expand-file-name (expand-file-name "tmp/prescient-save.el" user-emacs-directory)))
-     (prescient-filter-method . '(fuzzy regexp initialism))
-     )
-   :global-minor-mode prescient-persist-mode
-   )
-(leaf ivy-prescient
-  :ensure t
-  :after prescient ivy
-  :custom
-  `((ivy-prescient-retain-classic-highlighting . t)
-    )
-  :global-minor-mode t
-  )
-   #+END_SRC
-** =counsel=: ivy による既存コマンドの拡張 [/]
-   :PROPERTIES:
-   :CUSTOM_ID: org0527a687
-   :END:
-   #+BEGIN_SRC emacs-lisp
-(leaf counsel
-  :ensure t
-  ;; :after ivy
+  (leaf ido-completing-read+ :ensure t)
+  ;; (leaf ido-describe-bindings :ensure t)
+  :bind (("C-x C-f" . ido-find-file))
   :preface
-  ;; @see https://github.com/abo-abo/swiper/issues/1333
-  (defun my:counsel-find-file-fallback-command--enable-ivy ()
-    (remove-hook 'minibuffer-setup-hook
-                 'my:counsel-find-file-fallback-command--enable-ivy)
-    (ivy-mode t))
-  (defun my:counsel-find-file-fallback-command ()
-    "Fallback to non-counsel version of find-file."
-    (interactive)
-    (when (bound-and-true-p ivy-mode)
-      (ivy-mode -1)
-      (add-hook 'minibuffer-setup-hook
-                'my:counsel-find-file-fallback-command--enable-ivy))
-    (ivy-set-action
-     (lambda (current-path)
-       (let ((old-default-directory default-directory))
-         (let ((i (length current-path)))
-           (while (> i 0)
-             (push (aref current-path (setq i (1- i))) unread-command-events)))
-         (let ((default-directory ""))
-           (call-interactively 'find-file))
-         (setq default-directory old-default-directory))))
-    (ivy-done))
-  :init
-  (leaf amx
-    :ensure t
-    :custom
-    `(;; backend 'ivy or 'ido or 'auto
-      (amx-backend . 'ivy)
-      ;; prompt
-      (amx-prompt-string . "amx: ")
-      ;; keybind
-      (amx-show-key-bindings . nil)
-      ;; 履歴
-      (amx-save-file
-       . ,(expand-file-name "amx-items" my:d:tmp))
-      (amx-history-length . 64))
-    )
-  (leaf s :ensure t :require t)
+  (defun my:ido-disable-line-trucation ()
+    (set (make-local-variable 'truncate-lines) nil))
   ;;
-  (defun my:counsel-recentf ()
-    "Custom: Find a file on `recentf-list' with shorten-file-path"
+  (defun my:ido-remove-tramp-from-cache nil
+    "Remove any TRAMP entries from `ido-dir-file-cache'.
+    This stops tramp from trying to connect to remote hosts on emacs startup,
+    which can be very annoying."
     (interactive)
-    (require 'recentf nil 'noerror)
-    (recentf-mode)
-    (ivy-read "Recentf: " (mapcar (lambda (f)
-                                    (cons (my:shorten-file-path f 70) f))
-                                  recentf-list)
-              :action (lambda (f)
-                        (with-ivy-window
-                          (find-file (cdr f))))
-              :require-match t
-              :caller 'counsel-recentf)
-    )
-  :bind (("C-x C-f" . counsel-find-file)
-         ("C-x C-r" . my:counsel-recentf)
-         ("M-x"     . counsel-M-x)
-         (:counsel-find-file-map
-          ("C-l" . counsel-up-directory)
-          ("C-f" . my:counsel-find-file-fallback-command) ;;
-          ))
-  :custom
-  `((counsel-yank-pop-separator . "\n----------\n")
-    (counsel-find-file-ignore-regexp
-     . ,(rx-to-string '(or "./" "../") 'no-group)))
-  :global-minor-mode t
-  :config
-  ;; 無視する拡張子の追加
+    (setq ido-dir-file-cache
+          (cl-remove-if
+           (lambda (x)
+             (string-match "/\\(rsh\\|ssh\\|telnet\\|su\\|sudo\\|sshx\\|krlogin\\|ksu\\|rcp\\|scp\\|rsync\\|scpx\\|fcp\\|nc\\|ftp\\|smb\\|adb\\):" (car x)))
+           ido-dir-file-cache)))
+  ;;
+  (defun my:ido-kill-emacs-hook ()
+    (my:ido-remove-tramp-from-cache)
+    (ido-save-history))
+  :advice (:override ido-kill-emacs-hook
+                     my:ido-kill-emacs-hook)
+  :hook ((ido-setup-hook
+          . (lambda ()
+              (define-key ido-completion-map (kbd "C-h") 'ido-delete-backward-updir)
+              (define-key ido-completion-map (kbd "C-l") 'ido-delete-backward-updir)))
+         (ido-minibuffer-setup-hook . my:ido-disable-line-trucation))
+  :init
+  ;; 補完で無視する拡張子の追加．そのうち増える．
   (cl-loop for ext in
            '(;; TeX
              ".dvi"
@@ -1559,104 +1473,194 @@ File.open(src, "r") {|f|
              ".DS_Store"
              "._DS_Store"
              )
-           do
-           (add-to-list 'completion-ignored-extensions ext))
-  (setq counsel-find-file-ignore-regexp
-        (format "\\%s\\'"
-                (s-replace "/" "\\/"
-                           (s-join "\\'\\|" completion-ignored-extensions))))
-  )
-   #+END_SRC
-** =ivy-ghq=
-   :PROPERTIES:
-   :CUSTOM_ID: orge656a4d5
-   :END:
-   =projectile= はあんまり使わなくて良い気もしている
-   #+BEGIN_SRC emacs-lisp
-(leaf ivy-ghq
-  :if (executable-find "ghq")
-  :el-get (ivy-ghq
-           :type github
-           :pkgname "analyticd/ivy-ghq")
-  :bind (("C-x f" . ivy-ghq-open))
+           do (add-to-list 'completion-ignored-extensions ext))
+  :custom
+  `(;; prefix match 入力を先頭一致可能
+    (ido-enable-prefix             . nil)
+    ;; TAB で名前の一致までその後 RET で実行
+    (ido-confirm-unique-completion . t)
+    ;; . を prefix として扱う
+    (ido-enable-dot-prefix         . nil)
+    ;; flx matching を試す際には prefix を無効化すること
+    (ido-enable-flex-matching      . t)
+    ;;
+    (ido-default-file-method       . 'selected-window)
+    (ido-default-buffer-method     . 'selected-window)
+    ;; avoid [Too Big]
+    (ido-max-directory-size        . 1000000)
+    ;; Tramp では無効化
+    (ido-enable-tramp-completion   . nil)
+    ;; ido-vertical も調べないとアカン様な.
+    (ido-use-faces                 . t)
+    ;; 拡張子には match しない
+    (ido-ignore-extensions         . t)
+    ;; 補完できない場合の挙動 ← "何もしない" は可能かな? nil?
+    (ido-cannot-complete-command   . 'ido-next-match)
+    ;; 補完候補が無い場合に search を始める長さ ⇒ -1 で停止
+    (ido-auto-merge-work-directories-length . -1)
+    ;; 補完候補が無い場合に search を始める時間
+    ;; run-with-timer に与える値なので, とりあえず長め(30分)にしておく
+    (ido-auto-merge-delay-time     . 1800)
+    ;; 補完結果の保存
+    (ido-save-directory-list-file
+     . ,(expand-file-name "ido.last" my:d:tmp)))
   :config
-  (setq ivy-ghq-short-list t)
+  (ido-mode t)
+  ;; (ido-everywhere t)   ; <- 過去の選択を覚えている奴と相性悪い.
   )
-   #+END_SRC
-** =ivy-rich=, =all-the-icons-ivy-rich=: 補完候補の情報を増やす
+   #+end_src
+** =flx-ido=: flex match の強化
    :PROPERTIES:
-   :CUSTOM_ID: orgbc552b73
+   :CUSTOM_ID: org72b78bcc
    :END:
-   現状は =counsel-M-x= に表示情報を増やすために利用している.
-   #+BEGIN_SRC emacs-lisp
-(leaf *ivy-icon-rich
-  :init
-  (leaf all-the-icons-ivy-rich :ensure t)
-  (leaf ivy-rich
-    :ensure t
-    :after counsel
-    :preface
-    :init
-    (setq ivy-rich-display-transformers-list
-          '(counsel-M-x
-            (:columns
-             ((counsel-M-x-transformer (:width 36))
-              (ivy-rich-counsel-function-docstring (:face font-lock-doc-face))))
-            ;; counsel-find-file
-            ;; (:columns
-            ;;  (
-            ;;   (all-the-icons-ivy-rich-file-icon)
-            ;;   (ivy-read-file-transformer)
-            ;;   (ivy-rich-candidate)
-            ;;   (ivy-rich-counsel-find-file-truename (:face font-lock-doc-face))))
-            ))
-    :config
-    (setq ivy-rich-path-style 'abbrev)
+   曖昧マッチが非常に直感的になった．地味に便利で手放せない．
+   #+begin_src emacs-lisp :tangle init.el
+(leaf flx-ido
+  :ensure t
+  :custom
+  `((flx-ido-use-faces . t)
+    (flx-ido-threshold . 10000))
+  :config
+  (flx-ido-mode 1)
+  )
+   #+end_src
+** =ido-flx-with-migemo=: flx + migemo
+   :PROPERTIES:
+   :CUSTOM_ID: orge285b835
+   :END:
+   これは便利だ
+   #+begin_src emacs-lisp :tangle init.el
+(leaf ido-flex-with-migemo
+  :if (executable-find "cmigemo")
+  :ensure t
+  :after (flx migemo)
+  :config
+  (ido-flex-with-migemo-mode)
+  )
+   #+end_src
+** SOMEDAY =ido-vertical-mode=: 候補を縦に並べて表示 [/]
+   :PROPERTIES:
+   :CUSTOM_ID: orgba1f040e
+   :END:
+   #+begin_src emacs-lisp :tangle init.el
+(leaf ido-vertical-mode
+  :ensure t
+  :after all-the-icons-in-terminal
+  :preface
+  (defface my:ido-indicator
+    '((((class color) (background light)) :foreground "#FFBF7F")
+      (((class color) (background dark)) :foreground "#FFBF7F"))
+    "Face used by Ido highlighting the arrow.")
+  :custom
+  `(;; 補完候補数の表示
+    (ido-vertical-show-count  . t)
+    ;; キーバインド
+    (ido-vertical-define-keys . 'C-n-C-p-up-down-left-right)
+    ;; minibuffer の高さ制限
+    (ido-max-window-height    . 0.3)
+    ;; 候補選択表示のカスタマイズ
+    (ido-vertical-indicator
+     . ,(format "%s"
+                (all-the-icons-faicon "hand-o-right"
+                                      :face 'my:ido-indicator)))
     )
   :config
-  (all-the-icons-ivy-rich-mode 1)
-  (ivy-rich-mode 1)
+  (ido-vertical-mode 1)
   )
-   #+END_SRC
+   #+end_src
+   - [ ] Debian パッケージは古い．更新すること
+** =amx=
+   :PROPERTIES:
+   :CUSTOM_ID: org28528ad3
+   :END:
+   M-x を ido で. 以前は smex を利用していたが, amx に乗り換えた.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf amx
+  :bind (("M-x" . amx))
+  :ensure t
+  :custom
+  `(;; backend 'ivy or 'ido or 'auto
+    (amx-backend . 'ido)
+    ;; prompt
+    (amx-prompt-string . "amx: ")
+    ;; keybind
+    (amx-show-key-bindings . nil)
+    ;; 履歴
+    (amx-save-file
+     . ,(expand-file-name "amx-items" my:d:tmp))
+    (amx-history-length . 128))
+  )
+   #+end_src
+** =ido-recentf=: recentf を ido で
+   :PROPERTIES:
+   :CUSTOM_ID: org56240c5e
+   :END:
+   "recentf-list" の結果を整形して, minibuffer に納まる様に縮小したり
+   #+begin_src emacs-lisp :tangle init.el
+(leaf *ido-recentf-open
+  :preface
+  (defun ido-recentf-open ()
+    "Use `ido-completing-read' to \\[find-file] a recent file"
+    (interactive)
+    (let ((files (mapcar (lambda (f)
+                           (cons (my:shorten-file-path f 70) f))
+                         recentf-list)))
+      (let ((selected (ido-completing-read "Files: " (mapcar #'car files))))
+        (find-file (assoc-default selected files)))))
+  :bind ("C-x C-r" . ido-recentf-open)
+  )
+   #+end_src
+** ido-ghq
+   :PROPERTIES:
+   :CUSTOM_ID: org7eb97621
+   :END:
+   ghq list を ido で選んで dired で開く
+   #+begin_src emacs-lisp :tangle init.el
+(leaf ido-ghq
+  :if (executable-find "ghq")
+  :el-get uwabami/ido-ghq
+  :bind (("C-x f" . ido-ghq-open))
+  :config
+  (setq ido-ghq-short-list t)
+  )
+   #+end_src
 * 校正, 辞書等
   :PROPERTIES:
   :CUSTOM_ID: org15a06190
   :END:
-** SOMEDAY =redpen-paragraph=: [[http://redpen.cc/][redpen]] による文章校正 [/]
+** =redpen-paragraph=: [[http://redpen.cc/][redpen]] による文章校正
    :PROPERTIES:
    :CUSTOM_ID: orgc780f35e
    :END:
    #+begin_src emacs-lisp :tangle init.el
 (leaf redpen-paragraph
-  :disabled t
   :if (and (executable-find "redpen")
            (file-directory-p "~/.config/redpen"))
   :ensure t
   :bind
   (("C-c C-r" . redpen-paragraph))
   :hook
-  ((LaTeX-mode-hook . (lambda ()
-                        (setq redpen-commands
-                              '(
-                                ;; for english command
-                                "redpen -r json2 -c ~/.config/redpen/redpen-conf-en.xml -f latex %s 2>/dev/null"
-                                ;; for japanese command
-                                "redpen -r json2 -c ~/.config/redpen/redpen-conf-ja.xml -f latex %s 2>/dev/null"
-                                )))
-                        ))
-  :config
-  ;; default
-  (setq redpen-commands
+  ((LaTeX-mode-hook
+    . (lambda ()
+        (setq redpen-commands
+              '(
+                ;; for english command
+                "redpen -r json2 -c ~/.config/redpen/redpen-conf-en.xml -f latex %s 2>/dev/null"
+                ;; for japanese command
+                "redpen -r json2 -c ~/.config/redpen/redpen-conf-ja.xml -f latex %s 2>/dev/null"
+                )))
+    ))
+  :init
+  (defvar redpen-commands
     '(
       ;; for english command
       "redpen -r json2 -c ~/.config/redpen/redpen-conf-en.xml %s 2>/dev/null"
       ;; for japanese command
       "redpen -r json2 -c ~/.config/redpen/redpen-conf-ja.xml %s 2>/dev/null"
-      )
-    redpen-paragraph-force-reading-whole t)
+      ))
+  ;;redpen-paragraph-force-reading-whole t
   )
    #+end_src
-   - [ ] うまく動いていない. 一旦保留
 ** =ispell=: spell checker
    :PROPERTIES:
    :CUSTOM_ID: org3737a28e
@@ -2931,6 +2935,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 (leaf mhc
   :if (file-directory-p (concat (getenv "HOME") "/.config/mhc"))
   :ensure t
+  :disabled t
   :commands (mhc-import)
   :init
   (setq mhc-calendar-day-strings ["日" "月" "火" "水" "木" "金" "土"]
@@ -3432,14 +3437,14 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
            )
           ("m" "メモを追加" plain
            (function my:org-journal-add-date-entry-capture)
-           "** MEMO %(format-time-string org-journal-time-format) %?"
+           "** MEMO %(format-time-string org-journal-time-format)%?"
            :prepend nil
            :unnarrowed nil
            :kill-buffer t
            )
           ("a" "少し長めの記事を追加する" plain
            (function my:org-journal-add-date-entry-capture)
-           "** ARTICLE %(format-time-string org-journal-time-format) %? "
+           "** ARTICLE %(format-time-string org-journal-time-format)%? "
            :prepend nil
            :unnarrowed nil
            :kill-buffer t
@@ -3497,8 +3502,8 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
                                "org-gcal" my:d:tmp))
     (org-gcal-token-file   . ,(expand-file-name
                                "org-gcal/.org-gcal-token" my:d:tmp))
-    (org-gcal-down-days    .  30)  ;; 過去 30 日
-    (org-gcal-up-days      . 180)  ;; 未来 180 日
+    (org-gcal-down-days    . 180)  ;; 未来 180 日
+    (org-gcal-up-days      .  30)  ;; 過去 30 日
     (org-gcal-auto-archive . nil)
     (org-gcal-notify-p     . nil)
     (org-gcal-remove-api-cancelled-evetnts . t)
@@ -3681,8 +3686,8 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     :CUSTOM_ID: org589a50cc
     :END:
     Web サイトは Jekyll で作成しています.
-    以前は org-file を直接 jekyll で処理していましたが,
-    最近は org を Markdown に export して, それを処理する様にしています.
+    以前は org file を直接 jekyll で処理していましたが,
+    最近は org を html に export して, それを処理する様にしています.
 
     exporter は [[https://uwabami.github.com/ox-jekyll][uwabami/ox-jekyll]] にあります.
     #+begin_src emacs-lisp :tangle init.el
@@ -3691,7 +3696,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   :el-get (ox-jekyll
            :type github
            :pkgname "uwabami/ox-jekyll")
-  :after (ox-html org-wiki)
+  :after ox-html
   :config
   (defun my:org-wiki-jekyll-finalized1 (contents backend info)
     "Replace some URL"
@@ -3701,7 +3706,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
                (expand-file-name user-emacs-directory))
        "<a href=\"{{baseurl}}/cc-env/Emacs.html"
        contents)))
-  (add-to-list 'org-export-filter-final-output-functions
+  (add-to-list 'org-export-filter-body-functions
                'my:org-wiki-jekyll-finalized1)
   (defun my:org-wiki-jekyll-finalized2 (contents backend info)
     "Replace some URL"
@@ -3711,7 +3716,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
                (expand-file-name "Public/" (getenv "HOME")))
        "<a href=\"{{site.url}}/"
        contents)))
-  (add-to-list 'org-export-filter-final-output-functions
+  (add-to-list 'org-export-filter-body-functions
                'my:org-wiki-jekyll-finalized2)
   (defun my:org-wiki-jekyll-finalized3 (contents backend info)
     "Replace some URL"
@@ -3719,7 +3724,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     (replace-regexp-in-string
      " id=\"outline-container-org.+\" class=\"outline-.+\""
      "" contents)))
-  (add-to-list 'org-export-filter-final-output-functions
+  (add-to-list 'org-export-filter-body-functions
                'my:org-wiki-jekyll-finalized3)
   (defun my:org-wiki-jekyll-finalized4 (contents backend info)
     "Replace some URL"
@@ -3727,7 +3732,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     (replace-regexp-in-string
      "<a id=\"org.+?\"></a>"
      "" contents)))
-  (add-to-list 'org-export-filter-final-output-functions
+  (add-to-list 'org-export-filter-body-functions
                'my:org-wiki-jekyll-finalized4)
   )
     #+end_src
@@ -3771,7 +3776,9 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
                                          "\\subsection"
                                          "\\subsubsection"
                                          "\\paragraph"
-                                         "\\subparagraph")))
+                                         "\\subparagraph"
+                                         "\\begin{frame}"
+                                         )))
     )
   )
   #+end_src
@@ -3816,7 +3823,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
       (transient-force-fixed-pitch . t))
     )
   :config
-  (setq magit-completing-read-function 'ivy
+  (setq magit-completing-read-function 'ido
         magit-refs-show-commit-count   'all
         magit-log-buffer-file-locked   t
         magit-revision-show-gravatars  nil
@@ -3863,7 +3870,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
          ("M-g i" . dumb-jump-go-prompt)
          ("M-g x" . dumb-jump-go-prefer-external)
          ("M-g z" . dumb-jump-go-prefer-external-other-window))
-  :custom '((dumb-jump-selector       . 'ivy)
+  :custom '((dumb-jump-selector       . 'ido)
             (dumb-jump-force-searcher . 'rg))
   )
 (leaf smart-jump
@@ -4539,9 +4546,11 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
    :CUSTOM_ID: org4c97a1e0
    :END:
   #+begin_src emacs-lisp :tangle init.el
+;; (profiler-report)
+;; (profiler-stop)
 (provide 'init)
 ;; Local Variables:
-;; byte-compile-warnings: (not cl-functions obsolete)
+;; byte-compile-warnings: (not obsolete cl-functions)
 ;; End:
   #+end_src
 ** LICENSE

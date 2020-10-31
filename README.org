@@ -129,12 +129,12 @@ init.el: README.org
   (custom-set-variables
    '(package-archives '(("gnu"   . "https://elpa.gnu.org/packages/")
                         ("melpa" . "https://melpa.org/packages/")
-                        ;; ("org"   . "https://orgmode.org/elpa/")
                         ))
    '(package-gnupghome-dir (expand-file-name ".gnupg" (getenv "HOME")))
    '(package-user-dir my:d:pkg:elpa)
    '(package-enable-at-startup t)
    ))
+(setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3")
 (eval-when-compile
   (unless (file-exists-p (locate-user-emacs-file "tmp/bootstrap-stamp"))
     (setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3")
@@ -213,8 +213,9 @@ init.el: README.org
   (defconst my:d:password-store
     (if (getenv "PASSWORD_STORE_DIR")
         (expand-file-name (concat "Emacs/" (system-name))
-                          (getenv "PASSWORD_STORE_DIR")))
-    nil)
+                          (getenv "PASSWORD_STORE_DIR"))
+      )
+    )
   )
   #+end_src
 * 認証関連: =plstore=, =password-store= など
@@ -229,13 +230,12 @@ init.el: README.org
 (leaf *authentication
   :if (and (getenv "GPG_KEY_ID")
            (file-directory-p my:d:password-store))
-  :preface
+  :init
   (setq leaf-default-plstore
         (plstore-open
          (expand-file-name "plstore.plist" my:d:password-store)))
   (add-to-list 'vc-directory-exclusion-list
                (expand-file-name my:d:password-store))
-  :init
   (leaf auth-source
     :custom
     `((auth-source-gpg-encrypt-to . '(getenv "GPG_KEY_ID"))

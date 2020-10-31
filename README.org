@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
 #+options: auto-id:t H:6
-#+date: 2020-11-01 02:12:57
+#+date: 2020-11-01 02:17:51
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -56,6 +56,9 @@ init.el: README.org
 ;; -*- lexical-binding: nil -*-
 ;; (require 'profiler)
 ;; (profiler-start 'cpu)
+;;
+;; increase gc-cons-threshold duraring startup.
+(setq gc-cons-threshold most-positive-fixnum)
    #+end_src
 ** ディレクトリ構成の修正
    :PROPERTIES:
@@ -441,8 +444,6 @@ init.el: README.org
 (leaf cus-start
   :custom
   `(
-    ;; increase, duraring startup only!!
-    (gc-cons-threshold      . most-positive-fixnum)
     ;; (garbage-collection-messages . t)
     ;; 表示
     (tool-bar-mode          . nil)  ; 基本 "-nw" なので不要
@@ -1524,8 +1525,8 @@ File.open(src, "r") {|f|
   :custom
   `((flx-ido-use-faces . t)
     (flx-ido-threshold . 10000))
-  :config
-  (flx-ido-mode 1)
+  :hook
+  (emacs-startup-hook . (lambda () (flx-ido-mode 1)))
   )
    #+end_src
 ** =ido-flx-with-migemo=: flx + migemo

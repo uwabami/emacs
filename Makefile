@@ -1,8 +1,9 @@
 # -*- mode: makefile -*-
 EMACS	?= emacs
 EL		= init-ddskk.el
-EL		+= $(shell dpkg -l wl-beta 2>&1 | grep -q ^ii && echo init-wl.el )
-EL		+= $(shell dpkg -l wl 2>&1 | grep -q ^ii && echo init-wl.el )
+ifneq (,$(wildcard /etc/emacs/site-start.d/65wl-beta.el))
+EL		+= init-wl.el
+endif
 ELC		= $(EL:%.el=%.elc)
 
 all: $(ELC) init.elc

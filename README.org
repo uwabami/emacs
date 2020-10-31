@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
 #+options: auto-id:t H:6
-#+date: 2020-11-01 01:13:57
+#+date: 2020-11-01 02:12:57
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -257,16 +257,6 @@ init.el: README.org
   :CUSTOM_ID: org34ff2306
   :END:
   細かい独自関数, など．
-** dpkg-status
-   :PROPERTIES:
-   :CUSTOM_ID: orgc5559fad
-   :END:
-   もっと良い方法がありそうなモンですが．
-   #+begin_src emacs-lisp :tangle init.el
-(defun my:dpkg-status (package)
-  "Return the `PACKAGE' status from dpkg --get-selections."
-  (string-match "^ii" (shell-command-to-string (format "dpkg -l %s" package))))
-   #+end_src
 ** ファイル名を minibuffer におさまる様に整形
    :PROPERTIES:
    :CUSTOM_ID: org452a76a8
@@ -1720,7 +1710,7 @@ File.open(src, "r") {|f|
    EPWING化した辞書群を検索するために =lookup-el= ver. 1.4 系列を利用
    #+begin_src emacs-lisp :tangle init.el
 (leaf lookup
-  :if (and (my:dpkg-status "lookup-el")
+  :if (and (file-exists-p "/etc/emacs/site-start.d/50lookup-el.el")
            (file-exists-p "/usr/local/share/dict/lookup-enabled"))
   :commands (lookup lookup-region lookup-pattern)
   :bind (("C-c w" . lookup-pattern)
@@ -1843,15 +1833,28 @@ File.open(src, "r") {|f|
    ここでは =wl-init-file= を指定することで, 設定ファイルを明示している．
    #+begin_src emacs-lisp :tangle init.el
 (leaf wl
-  :if (and (or (my:dpkg-status "wl")
-               (my:dpkg-status "wl-beta"))
-           (my:dpkg-status "rail"))
+  :if (file-exists-p "/etc/emacs/site-start.d/65wl-beta.el")
   :commands (wl wl-other-frame wl-draft wl-user-agent wl-user-agent-compose wl-draft-send wl-draft-kill)
   :preface
   (defun my:wl-mode-line-buffer-identification (&optional id)
     (force-mode-line-update t))
+  (defconst my:d:wl-cache-directory
+    (expand-file-name "wanderlust" "~/.cache"))
+  (unless (file-directory-p
+           (expand-file-name "local/Trash" my:d:wl-cache-directory))
+    (make-directory
+     (expand-file-name "local/Trash" my:d:wl-cache-directory) t))
   :advice (:override wl-mode-line-buffer-identification
                      my:wl-mode-line-buffer-identification)
+  :custom
+  `((elmo-msgdb-directory     . my:d:wl-cache-directory)
+    (elmo-maildir-folder-path . my:d:wl-cache-directory)
+    (elmo-cache-directory     . my:d:wl-cache-directory)
+    (wl-score-files-directory . my:d:wl-cache-directory)
+    (read-mail-command        . #'wl)
+    (wl-init-file
+     . ,(expand-file-name "init-wl" user-emacs-directory))
+    )
   :init
   (define-mail-user-agent
     'wl-user-agent
@@ -1859,20 +1862,6 @@ File.open(src, "r") {|f|
     'wl-draft-send
     'wl-draft-kill
     'mail-send-hook)
-  (setq elmo-msgdb-directory "~/.cache/wanderlust"
-        elmo-maildir-folder-path "~/.cache/wanderlust"
-        elmo-cache-directory "~/.cache/wanderlust"
-        wl-score-files-directory "~/.cache/wanderlust"
-        wl-init-file (concat user-emacs-directory "init-wl")
-        mail-user-agent 'wl-user-agent
-        read-mail-command 'wl)
-  (unless (file-directory-p elmo-msgdb-directory)
-    (make-directory elmo-msgdb-directory))
-  (unless (file-directory-p (concat elmo-msgdb-directory "/local"))
-    (make-directory (concat elmo-msgdb-directory "/local")))
-  (unless (file-directory-p (concat elmo-msgdb-directory "/local/Trash"))
-    (make-directory (concat elmo-msgdb-directory "/local/Trash")))
-  :config
   )
    #+end_src
    割と =/etc/emacs/site-start.d/65wl-beta.el= と重複している気がするが...

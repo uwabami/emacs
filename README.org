@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
 #+options: auto-id:t H:6
-#+date: 2020-11-01 02:17:51
+#+date: 2020-11-01 03:22:33
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -160,14 +160,13 @@ init.el: README.org
   (package-install 'leaf t))
 (leaf leaf-keywords
   :ensure t
+  :require t
   :init
   (leaf blackout :ensure t)
   (leaf el-get
     :ensure t
-    :require t
     :preface
     (defconst el-get-dir my:d:pkg:elget) ;; override el-get default
-    ;; → これ, /etc/emacs/site-start.d/00debian.el に書かないとアカン様な.
     :custom ((el-get-notify-type       . 'message)
              (el-get-git-shallow-clone . t))
     )
@@ -199,16 +198,17 @@ init.el: README.org
   :defun (exec-path-from-shell-initialize)
   :custom
   ((exec-path-from-shell-check-startup-files . nil)
-   (exec-path-from-shell-variables           . '("SHELL"
-                                                 "DEBFULLNAME"
-                                                 "DEBEMAIL"
-                                                 "SKKSERVER"
-                                                 "TEXMFHOME"
-                                                 "http_proxy"
-                                                 "GPG_KEY_ID"
-                                                 "GPG_AGENT_INFO"
-                                                 "PASSWORD_STORE_DIR"
-                                                 "PATH")))
+   (exec-path-from-shell-variables
+    . '("SHELL"
+        "DEBFULLNAME"
+        "DEBEMAIL"
+        "SKKSERVER"
+        "TEXMFHOME"
+        "http_proxy"
+        "GPG_KEY_ID"
+        "GPG_AGENT_INFO"
+        "PASSWORD_STORE_DIR"
+        "PATH")))
   :config
   (exec-path-from-shell-initialize)
   (setq user-full-name    (concat (getenv "DEBFULLNAME"))
@@ -217,6 +217,7 @@ init.el: README.org
     (if (getenv "PASSWORD_STORE_DIR")
         (expand-file-name (concat "Emacs/" (system-name))
                           (getenv "PASSWORD_STORE_DIR"))
+      ""
       )
     )
   )
@@ -598,8 +599,8 @@ init.el: README.org
 (leaf autorevert
   :custom
   ((auto-revert-interval . 0.1))
-  :global-minor-mode
-  global-auto-revert-mode
+  :hook
+  (emacs-startup-hook . global-auto-revert-mode)
   )
   #+end_src
 ** =savehist=: 変更履歴を保存
@@ -609,7 +610,8 @@ init.el: README.org
   #+begin_src emacs-lisp :tangle init.el
 (leaf savehist
   :custom
-  `((savehist-file   . ,(expand-file-name "history" my:d:tmp)))
+  `((savehist-file
+     . ,(expand-file-name "history" my:d:tmp)))
   :hook
   ((emacs-startup-hook . savehist-mode))
   )
@@ -624,13 +626,17 @@ init.el: README.org
 (leaf *change-default-file-location
   :custom
   `(;; url
-    (url-configuration-directory . ,(expand-file-name "url" my:d:tmp))
+    (url-configuration-directory
+     . ,(expand-file-name "url" my:d:tmp))
     ;; nsm
-    (nsm-settings-file . ,(expand-file-name "nsm.data" my:d:tmp ))
+    (nsm-settings-file
+     . ,(expand-file-name "nsm.data" my:d:tmp ))
     ;; bookmark
-    (bookmark-default-file . ,(expand-file-name "bookmarks" my:d:share))
+    (bookmark-default-file
+     . ,(expand-file-name "bookmarks" my:d:share))
     ;; eshell
-    (eshell-directory-name . ,(expand-file-name "eshell" my:d:tmp))
+    (eshell-directory-name
+     . ,(expand-file-name "eshell" my:d:tmp))
     )
   )
    #+end_src
@@ -649,8 +655,9 @@ init.el: README.org
   (defun my:shutup-eldoc-message (f &optional string)
     (unless (active-minibuffer-window)
       (funcall f string)))
-  :advice (:around eldoc-message
-                   my:shutup-eldoc-message)
+  :advice
+  (:around eldoc-message
+           my:shutup-eldoc-message)
   )
    #+end_src
 ** =midnight=: 一定期間使用しなかった buffer を自動削除
@@ -661,8 +668,8 @@ init.el: README.org
 (leaf midnight
   :custom
   ((clean-buffer-list-delay-general . 1))
-  :config
-  (midnight-mode))
+  :hook
+  (emacs-startup-hook . midnight-mode))
    #+end_src
 ** =uniquify=: モードラインのファイル名にディレクトリも表示する
    :PROPERTIES:
@@ -687,11 +694,12 @@ init.el: README.org
   :hook (after-init-hook . global-whitespace-mode)
   :custom
   ((whitespace-line-column      . 72)
-   (whitespace-style            . '(face        ; faceを使う
-                                    trailing    ; 行末の空白を対象.
-                                    tabs        ; tab
-                                    spaces      ; space
-                                    ))
+   (whitespace-style
+    . '(face        ; faceを使う
+        trailing    ; 行末の空白を対象.
+        tabs        ; tab
+        spaces      ; space
+        ))
    (whitespace-display-mappings . '((space-mark ?\u3000 [?\□])
                                     (tab-mark ?\t [?\u00BB ?\t] [?\\ ?\t])))
    (whitespace-space-regexp     . "\\(\u3000+\\)")
@@ -712,9 +720,10 @@ init.el: README.org
 (leaf save-place
   :custom
   `((save-place . t)
-    (save-place-file  . ,(expand-file-name "emacs-places"  my:d:tmp))
+    (save-place-file
+     . ,(expand-file-name "emacs-places"  my:d:tmp))
     )
-  :hook (after-init-hook . save-place-mode)
+  :hook (emacs-startup-hook . save-place-mode)
   :config
   (setq save-place-ingore-files-regexp
         (format "\\(%s\\)\\|\\(%s\\)"
@@ -756,9 +765,10 @@ init.el: README.org
     (tramp-completion-reread-directory-timeout . nil)
     )
   :hook
-  (kill-emacs-hook . (lambda ()
-                       (if (file-exists-p tramp-persistency-file-name)
-                           (delete-file tramp-persistency-file-name))))
+  (kill-emacs-hook
+   . (lambda ()
+       (if (file-exists-p tramp-persistency-file-name)
+           (delete-file tramp-persistency-file-name))))
   )
    #+end_src
 ** =browse-url=
@@ -771,7 +781,7 @@ init.el: README.org
 (leaf browse-url
   :require t
   :bind ("C-c C-j" . browse-url-at-point)
-  :config
+  :defer-config
   (cond ((executable-find "xdg-open")
          (setq browse-url-browser-function 'browse-url-xdg-open
                browse-url-secondary-browser-function 'browse-url-xdg-open))
@@ -841,7 +851,7 @@ init.el: README.org
   :init
   (leaf recentf-ext :ensure t)
   :hook
-  ((after-init-hook . recentf-mode)
+  ((emacs-startup-hook . recentf-mode)
    (focus-out-hook  . my:recentf-save-list-silence)
    (focus-out-hook  . my:recentf-cleanup-silence))
   :custom
@@ -1569,8 +1579,8 @@ File.open(src, "r") {|f|
                 (all-the-icons-faicon "hand-o-right"
                                       :face 'my:ido-indicator)))
     )
-  :config
-  (ido-vertical-mode 1)
+  :hook
+  (emacs-startup-hook . (lambda () (ido-vertical-mode 1)))
   )
    #+end_src
    - [ ] Debian パッケージは古い．更新すること
@@ -3030,9 +3040,9 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     (interactive)
     (org-map-entries 'org-archive-subtree "/DONE" 'file))
   :hook
-  ((org-mode-hook                  . my:org-timestamp-hook)
-   (org-todo-statistics-hook       . my:org-archive-done-tasks)
-   (org-todo-after-statistics-hook . my:org-archive-done-tasks))
+  `((org-mode-hook                  . my:org-timestamp-hook)
+    (org-todo-statistics-hook       . my:org-archive-done-tasks)
+    (org-todo-after-statistics-hook . my:org-archive-done-tasks))
   :custom
   `(;; Nextcloud に保存する
     (org-directory              . ,(expand-file-name my:d:org))
@@ -3075,10 +3085,12 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     (org-archive-location       . "Archive.org::")
     ;; modules → とりあえずクリアしておく
     (org-modules  . '())
-    ;;
-    ;; (org-agenda-inhibit-startup . t)
     )
   :config
+  ;; テンプレート展開
+  (leaf org-tempo
+    :if (>= (string-to-number org-version) 9.2)
+    :require t)
   ;; +打ち消し+ の font-lock の変更 →これはテーマに任せるべき?
   (setq org-emphasis-alist
         (cons '("+" '(:strike-through t :foreground "#999999"))
@@ -3091,13 +3103,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   ;;   )
   )
    #+end_src
-** Org-Tempo: テンプレート補完/展開
-   :PROPERTIES:
-   :CUSTOM_ID: org9eec991e
-   :END:
-   #+begin_src emacs-lisp
-(leaf org-tempo :after org)
-   #+end_src
 ** Org-Id
    :PROPERTIES:
    :CUSTOM_ID: org67465ee0
@@ -3107,7 +3112,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :init
   (leaf org-macs :require t)
   :custom
-  `((org-id-locations-file . ,(expand-file-name "org-id-locations" my:d:share))
+  `((org-id-locations-file
+     . ,(expand-file-name "org-id-locations" my:d:share))
     ;; (org-id-link-to-org-use-id . create-if-interactive-and-no-custom-id)
     )
   :config
@@ -3173,7 +3179,8 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    #+begin_src emacs-lisp :tangle init.el
 (leaf org-babel
   :after all-the-icons-in-terminal
-  :blackout `((org-src-mode . ,(format " %s" (all-the-icons-octicon "code"))))
+  :blackout
+  `((org-src-mode . ,(format " %s" (all-the-icons-octicon "code"))))
   :custom
   (;; font-lock
    (org-src-fontify-natively         . t)
@@ -3197,147 +3204,173 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    #+begin_src emacs-lisp :tangle init.el
 (leaf org-agenda
   :commands org-agenda
-  :init
-  (with-eval-after-load "org-agenda"
-    (defface my:org-agenda-date-saturday
-      '((t (:foreground "#7FBFFF" :bold t )))
-      "Agenda 表示中の土曜日用のface")
-    (defface my:org-agenda-date-today-saturday
-      '((t (:inherit my:org-agenda-date-saturday :underline t)))
-      "Agenda 表示中の今日かつ土曜日用のface")
-    (defface my:org-agenda-date-today-weekend
-      '((t (:inherit org-agenda-date-weekend :underline t)))
-      "Agenda 表示中の今日かつ日・祝日用のface")
-    ;; こっからは org-gcal で同期したカレンダーの色
-    (defface my:org-agenda-calendar-Univ
-      '((t (:foreground "#7FFF7F")))
-      "Agenda 表示中, Univ.org の表示 face"
-      :group 'org-agenda )
-    (defface my:org-agenda-calendar-Schedule
-      '((t (:foreground "#7FFFFF")))
-      "Agenda 表示中, Schedule.org の表示 face"
-      :group 'org-agenda )
-    (defface my:org-agenda-calendar-GFD
-      '((t (:foreground "#FFFF7F")))
-      "Agenda 表示中, GFD.org の表示 face"
-      :group 'org-agenda )
-    (defface my:org-agenda-calendar-DebianJP
-      '((t (:foreground "#BF7FFF")))
-      "Agenda 表示中, DebianJP.org の表示 face"
-      :group 'org-agenda )
-    (defface my:org-agenda-calendar-twitter
-      '((t (:foreground "#CCCCCC")))
-      "Agenda 表示中, Twitter log の表示 face"
-      :group 'org-agenda )
+  ;; :custom
+  ;; (;; day or week
+  ;;  (org-agenda-span              . 'day)
+  ;;  ;; YY/MM/DD (曜)
+  ;;  (org-agenda-format-date       . "%Y/%m/%d (%a)")
+  ;;  ;; 日曜始まり
+  ;;  (org-agenda-start-on-weekday  . 0)
+  ;;  (org-agenda-weekend-days      . '(0))
+  ;;  ;; 繰り返し日付も表示
+  ;;  (org-agenda-repeating-timestampo-show-all . t)
+  ;;  ;; 表示関数
+  ;;  ;; (org-agenda-day-face-function . 'my:org-agenda-day-face-function)
+  ;;  ;; GTD 用の設定
+  ;;  (org-agenda-custom-commands
+  ;;   . '(
+  ;;       ("n" "agenda and all TODO list"
+  ;;        (
+  ;;         (agenda ""
+  ;;                 ((org-agenda-ndays 1)
+  ;;                  (org-agenda-entry-types '(:timestamp :sexp))))
+  ;;         (todo "TODO"
+  ;;               ((org-agenda-prefix-format " %i %-22:c")))
+  ;;         (todo "新規|着手|進行中|確認"
+  ;;               ((org-agenda-prefix-format " %i %-22:c")))
+  ;;         (todo "WAIT"
+  ;;               ((org-agenda-prefix-format " %i %-22:c")))
 
-    ;; 更新用の関数 - とりあえず動いているので良しとするが,
-    ;; リファクタリングしたい
-    (defun my:org-agenda-day-face-function (date)
-      "Compute DATE face for saturday, holidays."
-      (cl-dolist (file (org-agenda-files nil 'ifmode))
-        (cond
-         ((member (calendar-day-of-week date) '(0))
-          (if (org-agenda-todayp date)
-              (cl-return 'my:org-agenda-date-today-weekend))
-          (cl-return 'org-agenda-date-weekend))
-         ((member (calendar-day-of-week date) '(6))
-          (if (org-agenda-todayp date)
-              (cl-return 'my:org-agenda-date-today-saturday))
-          (cl-return 'my:org-agenda-date-saturday)))
-        (let ((face
-               (cl-dolist (entry (org-agenda-get-day-entries file date))
-                 (let ((category (with-temp-buffer
-                                   (insert entry)
-                                   (org-get-category (point-min)))))
-                   (when (or (string= "祝日" category)
-                             (string= "休日" category))
-                     (if (org-agenda-todayp date)
-                         (cl-return 'my:org-agenda-date-today-weekend)
-                       (cl-return 'org-agenda-date-weekend)))))))
-          (when face (cl-return face)))))
-    (setq org-agenda-day-face-function
-          'my:org-agenda-day-face-function)
-    ;; font-lock の適用
-    (defun my:org-agenda-finalize-font-lock ()
-      "Custom: apply custom font-lock"
-      (save-excursion
-        (goto-char (point-min))
-        (while (re-search-forward "Univ:" nil t)
-          (add-text-properties
-           (match-beginning 0) (point-at-eol)
-           '(face my:org-agenda-calendar-Univ)))
-        (goto-char (point-min))
-        (while (re-search-forward "Schedule:" nil t)
-          (add-text-properties (match-beginning 0) (point-at-eol)
-                               '(face my:org-agenda-calendar-Schedule)))
-        (goto-char (point-min))
-        (while (re-search-forward "MHC:" nil t)
-          (add-text-properties (match-beginning 0) (point-at-eol)
-                               '(face my:org-agenda-calendar-Schedule)))
-        (goto-char (point-min))
-        (while (re-search-forward "DebianJP:" nil t)
-          (add-text-properties (match-beginning 0) (point-at-eol)
-                               '(face my:org-agenda-calendar-DebianJP)))
-        (goto-char (point-min))
-        (while (re-search-forward "GFD:" nil t)
-          (add-text-properties (match-beginning 0) (point-at-eol)
-                               '(face my:org-agenda-calendar-GFD)))
-        (goto-char (point-min))
-        (while (re-search-forward "twitter:" nil t)
-          (add-text-properties (match-beginning 0) (point-at-eol)
-                               '(face my:org-agenda-calendar-twitter)))
-        (goto-char (point-min))
-        (while (re-search-forward "誕生日:" nil t)
-          (add-text-properties (match-beginning 0) (point-at-eol)
-                               '(face org-agenda-date-weekend)))
-        (goto-char (point-min))
-        (while (re-search-forward "祝日:" nil t)
-          (add-text-properties (match-beginning 0) (point-at-eol)
-                               '(face org-agenda-date-weekend)))
-        (goto-char (point-min))
-        (while (re-search-forward "休日:" nil t)
-          (add-text-properties (match-beginning 0) (point-at-eol)
-                               '(face org-agenda-date-weekend)))))
-    ;;
-    (add-hook 'org-agenda-finalize-hook
-              #'my:org-agenda-finalize-font-lock)
-    )
-  :custom
-  (;; day or week
-   (org-agenda-span              . 'day)
-   ;; YY/MM/DD (曜)
-   (org-agenda-format-date       . "%Y/%m/%d (%a)")
-   ;; 日曜始まり
-   (org-agenda-start-on-weekday  . 0)
-   (org-agenda-weekend-days      . '(0))
-   ;; 繰り返し日付も表示
-   (org-agenda-repeating-timestampo-show-all . t)
-   ;; 表示関数
-   ;; (org-agenda-day-face-function . 'my:org-agenda-day-face-function)
-   ;; GTD 用の設定
-   (org-agenda-custom-commands
-    . '(
-        ("n" "agenda and all TODO list"
-         (
-          (agenda ""
-                  ((org-agenda-ndays 1)
-                   (org-agenda-entry-types '(:timestamp :sexp))))
-          (todo "TODO"
-                ((org-agenda-prefix-format " %i %-22:c")))
-          (todo "新規|着手|進行中|確認"
-                ((org-agenda-prefix-format " %i %-22:c")))
-          (todo "WAIT"
-                ((org-agenda-prefix-format " %i %-22:c")))
+  ;;         (todo "SOMEDAY"
+  ;;               ((org-agenda-prefix-format " %i %-22:c")))
+  ;;         ))
+  ;;       ("N" "All memo entry"
+  ;;        (;;
+  ;;         (todo "MEMO")
+  ;;         ))
+  ;;       )))
+  :defer-config
+  (defface my:org-agenda-date-saturday
+    '((t (:foreground "#7FBFFF" :bold t )))
+    "Agenda 表示中の土曜日用のface")
+  (defface my:org-agenda-date-today-saturday
+    '((t (:inherit my:org-agenda-date-saturday :underline t)))
+    "Agenda 表示中の今日かつ土曜日用のface")
+  (defface my:org-agenda-date-today-weekend
+    '((t (:inherit org-agenda-date-weekend :underline t)))
+    "Agenda 表示中の今日かつ日・祝日用のface")
+  ;; こっからは org-gcal で同期したカレンダーの色
+  (defface my:org-agenda-calendar-Univ
+    '((t (:foreground "#7FFF7F")))
+    "Agenda 表示中, Univ.org の表示 face"
+    :group 'org-agenda )
+  (defface my:org-agenda-calendar-Schedule
+    '((t (:foreground "#7FFFFF")))
+    "Agenda 表示中, Schedule.org の表示 face"
+    :group 'org-agenda )
+  (defface my:org-agenda-calendar-GFD
+    '((t (:foreground "#FFFF7F")))
+    "Agenda 表示中, GFD.org の表示 face"
+    :group 'org-agenda )
+  (defface my:org-agenda-calendar-DebianJP
+    '((t (:foreground "#BF7FFF")))
+    "Agenda 表示中, DebianJP.org の表示 face"
+    :group 'org-agenda )
+  (defface my:org-agenda-calendar-twitter
+    '((t (:foreground "#CCCCCC")))
+    "Agenda 表示中, Twitter log の表示 face"
+    :group 'org-agenda )
+  ;; 更新用の関数 - とりあえず動いているので良しとするが,
+  ;; リファクタリングしたい
+  (defun my:org-agenda-day-face-function (date)
+    "Compute DATE face for saturday, holidays."
+    (cl-dolist (file (org-agenda-files nil 'ifmode))
+      (cond
+       ((member (calendar-day-of-week date) '(0))
+        (if (org-agenda-todayp date)
+            (cl-return 'my:org-agenda-date-today-weekend))
+        (cl-return 'org-agenda-date-weekend))
+       ((member (calendar-day-of-week date) '(6))
+        (if (org-agenda-todayp date)
+            (cl-return 'my:org-agenda-date-today-saturday))
+        (cl-return 'my:org-agenda-date-saturday)))
+      (let ((face
+             (cl-dolist (entry (org-agenda-get-day-entries file date))
+               (let ((category (with-temp-buffer
+                                 (insert entry)
+                                 (org-get-category (point-min)))))
+                 (when (or (string= "祝日" category)
+                           (string= "休日" category))
+                   (if (org-agenda-todayp date)
+                       (cl-return 'my:org-agenda-date-today-weekend)
+                     (cl-return 'org-agenda-date-weekend)))))))
+        (when face (cl-return face)))))
+  (setq org-agenda-day-face-function
+        'my:org-agenda-day-face-function)
+  ;; font-lock の適用
+  (defun my:org-agenda-finalize-font-lock ()
+    "Custom: apply custom font-lock"
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward "Univ:" nil t)
+        (add-text-properties
+         (match-beginning 0) (point-at-eol)
+         '(face my:org-agenda-calendar-Univ)))
+      (goto-char (point-min))
+      (while (re-search-forward "Schedule:" nil t)
+        (add-text-properties (match-beginning 0) (point-at-eol)
+                             '(face my:org-agenda-calendar-Schedule)))
+      (goto-char (point-min))
+      (while (re-search-forward "MHC:" nil t)
+        (add-text-properties (match-beginning 0) (point-at-eol)
+                             '(face my:org-agenda-calendar-Schedule)))
+      (goto-char (point-min))
+      (while (re-search-forward "DebianJP:" nil t)
+        (add-text-properties (match-beginning 0) (point-at-eol)
+                             '(face my:org-agenda-calendar-DebianJP)))
+      (goto-char (point-min))
+      (while (re-search-forward "GFD:" nil t)
+        (add-text-properties (match-beginning 0) (point-at-eol)
+                             '(face my:org-agenda-calendar-GFD)))
+      (goto-char (point-min))
+      (while (re-search-forward "twitter:" nil t)
+        (add-text-properties (match-beginning 0) (point-at-eol)
+                             '(face my:org-agenda-calendar-twitter)))
+      (goto-char (point-min))
+      (while (re-search-forward "誕生日:" nil t)
+        (add-text-properties (match-beginning 0) (point-at-eol)
+                             '(face org-agenda-date-weekend)))
+      (goto-char (point-min))
+      (while (re-search-forward "祝日:" nil t)
+        (add-text-properties (match-beginning 0) (point-at-eol)
+                             '(face org-agenda-date-weekend)))
+      (goto-char (point-min))
+      (while (re-search-forward "休日:" nil t)
+        (add-text-properties (match-beginning 0) (point-at-eol)
+                             '(face org-agenda-date-weekend)))))
+  ;;
+  (add-hook 'org-agenda-finalize-hook
+            #'my:org-agenda-finalize-font-lock)
+  ;;
+  (setq org-agenda-span 'day
+        org-agenda-format-date "%Y/%m/%d (%a)"
+        org-agenda-start-on-weekday 0
+        org-agenda-weekend-days '(0)
+        org-agenda-repeating-timestampo-show-all t
+        org-agenda-day-face-function 'my:org-agenda-day-face-function
+        org-agenda-custom-commands
+        '(
+          ("n" "agenda and all TODO list"
+           (
+            (agenda ""
+                    ((org-agenda-ndays 1)
+                     (org-agenda-entry-types '(:timestamp :sexp))))
+            (todo "TODO"
+                  ((org-agenda-prefix-format " %i %-22:c")))
+            (todo "新規|着手|進行中|確認"
+                  ((org-agenda-prefix-format " %i %-22:c")))
+            (todo "WAIT"
+                  ((org-agenda-prefix-format " %i %-22:c")))
 
-          (todo "SOMEDAY"
-                ((org-agenda-prefix-format " %i %-22:c")))
-          ))
-        ("N" "All memo entry"
-         (;;
-          (todo "MEMO")
-          ))
-        )))
-  :config
+            (todo "SOMEDAY"
+                  ((org-agenda-prefix-format " %i %-22:c")))
+            ))
+          ("N" "All memo entry"
+           (;;
+            (todo "MEMO")
+            ))
+          )
+        )
   ;; 使用するファイル
   (dolist (file
            '("Archive.org"
@@ -3559,13 +3592,13 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    :END:
    ToDo管理に Trello を使い始めたので, 設定
    #+BEGIN_SRC emacs-lisp
-(leaf org-trello
-  :if (and my:d:password-store
-           (file-directory-p my:d:org))
-  :ensure t
-  :custom
-  `((org-trello-files . '(,(expand-file-name "Trello.org" my:d:org))))
-  )
+;; (leaf org-trello
+;;   :if (and my:d:password-store
+;;            (file-directory-p my:d:org))
+;;   :ensure t
+;;   :custom
+;;   `((org-trello-files . '(,(expand-file-name "Trello.org" my:d:org))))
+;;   )
    #+END_SRC
 ** Org-Wiki
    :PROPERTIES:
@@ -3579,17 +3612,17 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
            :pkgname "uwabami/org-wiki")
   :custom
   `((org-wiki-location    . "~/Public/cc-env")
-   (org-wiki-publish-root . "{{site.url}}/cc-env/")
-   (org-wiki-template
-    . ,(concat "#+TITLE: %n\n"
-               "#+date: 20\n"
-               "#+LAYOUT: default\n"
-               "#+PREMALINK: /cc-env/%n.html\n"
-               "#+options: auto-id:nil\n"
-               "#+REF: cc-env/%n\n"
-               "Related [[wiki:index][Index]] [[~/Public/cc-env/index.org::#orge0707863][Debian]]\n"
-               "* %n\n"
-               )))
+    (org-wiki-publish-root . "{{site.url}}/cc-env/")
+    (org-wiki-template
+     . ,(concat "#+TITLE: %n\n"
+                "#+date: 20\n"
+                "#+LAYOUT: default\n"
+                "#+PREMALINK: /cc-env/%n.html\n"
+                "#+options: auto-id:nil\n"
+                "#+REF: cc-env/%n\n"
+                "Related [[wiki:index][Index]] [[~/Public/cc-env/index.org::#orge0707863][Debian]]\n"
+                "* %n\n"
+                )))
   )
    #+end_src
 ** Org-Export
@@ -4578,10 +4611,13 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
   :END:
   [[http://memo.sugyan.com/entry/20120120/1327037494][起動時間を計測する 改訂版 - すぎゃーんメモ]]
   #+begin_src emacs-lisp :tangle init.el
-(add-hook 'emacs-startup-hook
-          (lambda ()
-            (message "init time: %.3f sec"
-                     (float-time (time-subtract after-init-time before-init-time)))))
+(leaf *show-startup-time
+  :hook
+  (emacs-startup-hook
+   . (lambda ()
+       (message "init time: %.3f sec"
+                (float-time (time-subtract after-init-time before-init-time)))))
+  )
   #+end_src
 * Debug
   :PROPERTIES:
@@ -4593,19 +4629,6 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
   :custom
   ((esup-insignificant-time . 0.01)
    (esup-depth              . 0)) ;; 🤔
-  )
-(leaf srcery-emacs
-  :disabled t
-  :el-get (srcery-emacs
-           :type github
-           :pkgname "uwabami/srcery-emacs"
-           :prepare (add-to-list 'custom-theme-load-path default-directory)
-           )
-  :custom ((srcery-transparent-background . t)
-           (srcery-org-height . nil)
-           (srcery-bright-black . "#4f4f4f"))
-  :config
-  (load-theme 'srcery t)
   )
 (leaf org-bullets
   :disabled t

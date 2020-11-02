@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
 #+options: auto-id:t H:6
-#+date: 2020-11-01 03:22:33
+#+date: 2020-11-02 08:57:04
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -56,9 +56,33 @@ init.el: README.org
 ;; -*- lexical-binding: nil -*-
 ;; (require 'profiler)
 ;; (profiler-start 'cpu)
-;;
-;; increase gc-cons-threshold duraring startup.
-(setq gc-cons-threshold most-positive-fixnum)
+   #+end_src
+** 起動の高速化
+   :PROPERTIES:
+   :CUSTOM_ID: orgae182d4d
+   :END:
+   起動時に garbage collection を発生させない様にする.
+
+   メモリ喰いな拡張を入れている場合には,
+   安易に =gc-cons-threshold= を上げるのは考えものである.
+   「gc が走る→大きな領域を掃除するのでその間 emacs が止まる」
+   という事を頻繁に経験することになるだろう.
+
+   とはいえ, デフォルト値のままだと
+   起動時に結構 garbage-collect が走って遅くなるので,
+   起動時は =most-positive-fixnum= にしておいて,
+   起動後に =emacs-startup-hook= で default に戻すようにしてみた.
+
+   ついでに =idle-timer= で入力が無い時に GC を走らせることに.
+   #+begin_src emacs-lisp :tangle init.el
+(setq gc-cons-threshold most-positive-fixnum
+      ;; garbage-collection-messages t
+      )
+;; Run GC every 60 seconds if emacs is idle.
+(run-with-idle-timer 60.0 t #'garbage-collect)
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (setq gc-cons-threshold 800000)))
    #+end_src
 ** ディレクトリ構成の修正
    :PROPERTIES:
@@ -135,12 +159,11 @@ init.el: README.org
                         ))
    '(package-gnupghome-dir (expand-file-name ".gnupg" (getenv "HOME")))
    '(package-user-dir my:d:pkg:elpa)
-   '(package-enable-at-startup t)
-   ))
-(setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3")
+   '(package-enable-at-startup t))
+  (setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3")
+)
 (eval-when-compile
   (unless (file-exists-p (locate-user-emacs-file "tmp/bootstrap-stamp"))
-    (setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3")
     (package-refresh-contents)
     (with-temp-buffer
       (write-file (locate-user-emacs-file "tmp/bootstrap-stamp")))
@@ -160,7 +183,6 @@ init.el: README.org
   (package-install 'leaf t))
 (leaf leaf-keywords
   :ensure t
-  :require t
   :init
   (leaf blackout :ensure t)
   (leaf el-get
@@ -170,9 +192,8 @@ init.el: README.org
     :custom ((el-get-notify-type       . 'message)
              (el-get-git-shallow-clone . t))
     )
-  :config
-  (leaf-keywords-init)
   )
+(leaf-keywords-init)
    #+end_src
 * =exec-path-from-shell=: 環境変数の読み込み
   :PROPERTIES:
@@ -216,10 +237,7 @@ init.el: README.org
   (defconst my:d:password-store
     (if (getenv "PASSWORD_STORE_DIR")
         (expand-file-name (concat "Emacs/" (system-name))
-                          (getenv "PASSWORD_STORE_DIR"))
-      ""
-      )
-    )
+                          (getenv "PASSWORD_STORE_DIR")) ""))
   )
   #+end_src
 * 認証関連: =plstore=, =password-store= など
@@ -425,15 +443,6 @@ init.el: README.org
    :CUSTOM_ID: orgaee31636
    :END:
    =custom.el= にある設定は極力こちらに移すようにしている.
-   - =gc-cons-threshold= はとりあえずデフォルトのままに.
-     - メモリ喰いな拡張を入れている場合には,
-       安易に =gc-cons-threshold= を上げるのは考えものである.
-       「gc が走る→大きな領域を掃除するのでその間 emacs が止まる」
-       という事を頻繁に経験することになるだろう.
-     - とはいえ, 起動時には結構 garbage-collect が走るので,
-       起動時はl =most-positive-fixnum= にしておいて,
-       起動後に =emacs-startup-hook= で default に戻すようにしてみた.
-     - =idle-timer= で入力が無い時に GC を走らせることにしてみた.
    - 大抵の場合ターミナル内で =-nw= として起動するし,
      メニューは触ったことないので使わないので,
      フレーム, ツールバー等を非表示にする．
@@ -445,7 +454,6 @@ init.el: README.org
 (leaf cus-start
   :custom
   `(
-    ;; (garbage-collection-messages . t)
     ;; 表示
     (tool-bar-mode          . nil)  ; 基本 "-nw" なので不要
     (scroll-bar-mode        . nil)  ; 基本 "-nw" なので不要
@@ -492,14 +500,6 @@ init.el: README.org
     (setq load-prefer-newer t))
   ;; yes or no を y or n に
   (fset 'yes-or-no-p 'y-or-n-p)
-  ;; GC
-  ;; Run GC every 60 seconds if emacs is idle.
-  (run-with-idle-timer 60.0 t #'garbage-collect)
-  :hook
-  (emacs-startup-hook
-   . (lambda ()
-       (setq gc-cons-threshold 800000) ;; default
-       ))
   )
   #+end_src
 ** =startup=: 起動は静かに
@@ -851,7 +851,7 @@ init.el: README.org
   :init
   (leaf recentf-ext :ensure t)
   :hook
-  ((emacs-startup-hook . recentf-mode)
+  ((after-init-hook . recentf-mode)
    (focus-out-hook  . my:recentf-save-list-silence)
    (focus-out-hook  . my:recentf-cleanup-silence))
   :custom
@@ -3116,7 +3116,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
      . ,(expand-file-name "org-id-locations" my:d:share))
     ;; (org-id-link-to-org-use-id . create-if-interactive-and-no-custom-id)
     )
-  :config
+  :defer-config
   (defun my:add-custom-id ()
     "Add \"CUSTOM_ID\" to the current tree if not assigned yet."
     (interactive)
@@ -3204,41 +3204,6 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    #+begin_src emacs-lisp :tangle init.el
 (leaf org-agenda
   :commands org-agenda
-  ;; :custom
-  ;; (;; day or week
-  ;;  (org-agenda-span              . 'day)
-  ;;  ;; YY/MM/DD (曜)
-  ;;  (org-agenda-format-date       . "%Y/%m/%d (%a)")
-  ;;  ;; 日曜始まり
-  ;;  (org-agenda-start-on-weekday  . 0)
-  ;;  (org-agenda-weekend-days      . '(0))
-  ;;  ;; 繰り返し日付も表示
-  ;;  (org-agenda-repeating-timestampo-show-all . t)
-  ;;  ;; 表示関数
-  ;;  ;; (org-agenda-day-face-function . 'my:org-agenda-day-face-function)
-  ;;  ;; GTD 用の設定
-  ;;  (org-agenda-custom-commands
-  ;;   . '(
-  ;;       ("n" "agenda and all TODO list"
-  ;;        (
-  ;;         (agenda ""
-  ;;                 ((org-agenda-ndays 1)
-  ;;                  (org-agenda-entry-types '(:timestamp :sexp))))
-  ;;         (todo "TODO"
-  ;;               ((org-agenda-prefix-format " %i %-22:c")))
-  ;;         (todo "新規|着手|進行中|確認"
-  ;;               ((org-agenda-prefix-format " %i %-22:c")))
-  ;;         (todo "WAIT"
-  ;;               ((org-agenda-prefix-format " %i %-22:c")))
-
-  ;;         (todo "SOMEDAY"
-  ;;               ((org-agenda-prefix-format " %i %-22:c")))
-  ;;         ))
-  ;;       ("N" "All memo entry"
-  ;;        (;;
-  ;;         (todo "MEMO")
-  ;;         ))
-  ;;       )))
   :defer-config
   (defface my:org-agenda-date-saturday
     '((t (:foreground "#7FBFFF" :bold t )))
@@ -3611,7 +3576,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
            :type github
            :pkgname "uwabami/org-wiki")
   :custom
-  `((org-wiki-location    . "~/Public/cc-env")
+  `((org-wiki-location     . "~/Public/cc-env")
     (org-wiki-publish-root . "{{site.url}}/cc-env/")
     (org-wiki-template
      . ,(concat "#+TITLE: %n\n"

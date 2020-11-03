@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
 #+options: auto-id:t H:6
-#+date: 2020-11-02 08:57:04
+#+date: 2020-11-03 16:32:18
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -381,6 +381,23 @@ init.el: README.org
       (delete-trailing-whitespace))))
   :hook (before-save-hook . my:delete-trailing-whitespace)
   )
+   #+end_src
+** ターミナルで =C-M-= を打つために
+   詳細は
+   [[https://superuser.com/questions/83166/using-c-m-to-do-a-query-replace-regexp-in-emacs-running-in-mac-terminal][Using C-M-% to do a query-replace-regexp in Emacs running in Mac terminal]]
+   を参照のこと. terminal では =C-%= (つまり =Control-Shift-5= )が入力できない, という話.
+
+   代わりに =C-x @= を =C-M-= に解釈させるように設定しておく.
+   #+begin_src emacs-lisp :tangle init.el
+; cargo cult adaptation of event-apply-control-modifier
+(defun my:event-apply-control-meta-modifiers (ignore-prompt)
+  (vector
+   (event-apply-modifier (event-apply-modifier (read-event)
+                                               'control 26 "C-")
+                         'meta 27 "M-")))
+(define-key
+  function-key-map (kbd "C-x @")
+  'my:event-apply-control-meta-modifiers)
    #+end_src
 * 言語の設定
   :PROPERTIES:

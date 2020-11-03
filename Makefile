@@ -4,9 +4,10 @@ EL		= init-ddskk.el
 ifneq (,$(wildcard /etc/emacs/site-start.d/65wl-beta.el))
 EL		+= init-wl.el
 endif
+EL		+= early-init.el
 ELC		= $(EL:%.el=%.elc)
 
-all: $(ELC) init.elc
+all: $(ELC) init.elc 
 $(EL): init.el
 init.el: README.org
 	@mkdir -p tmp

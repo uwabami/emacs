@@ -1585,6 +1585,7 @@ File.open(src, "r") {|f|
              ;; fxxkin Apple
              ".DS_Store"
              "._DS_Store"
+             ;; "org-id-locations"
              )
            do (add-to-list 'completion-ignored-extensions ext))
   :custom
@@ -3214,7 +3215,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
      . ,(expand-file-name "org-id-locations" my:d:share))
     ;; (org-id-link-to-org-use-id . create-if-interactive-and-no-custom-id)
     )
-  :defer-config
+  :config
   (defun my:add-custom-id ()
     "Add \"CUSTOM_ID\" to the current tree if not assigned yet."
     (interactive)
@@ -3266,7 +3267,11 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
       (when (re-search-forward "^#\\+options:.*auto-id:t" (point-max) t)
         (org-map-entries
          (lambda () (my:org-custom-id-get (point) 'create))))))
-  :hook (before-save-hook 'my:org-id-add-to-headlines-in-file)
+  :hook (before-save-hook
+         . (lambda ()
+             (when (and (eq major-mode 'org-mode)
+                        (eq buffer-read-only nil))
+               my:org-id-add-to-headlines-in-file)))
   )
    #+end_src
 ** Babel

@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
 #+options: auto-id:t H:6
-#+date: 2020-11-03 16:32:18
+#+date: 2020-11-03 17:09:29
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -54,36 +54,63 @@ init.el: README.org
    =lexsical-binding= を有効にしておきます．
    #+begin_src emacs-lisp :tangle init.el
 ;; -*- lexical-binding: nil -*-
-;; (require 'profiler)
-;; (profiler-start 'cpu)
    #+end_src
 ** 起動の高速化
    :PROPERTIES:
    :CUSTOM_ID: orgae182d4d
    :END:
-   起動時に garbage collection を発生させない様にする.
+   この辺は [[https://emacs-jp.github.io/tips/startup-optimization][Emacs の起動時間を""詰める""]] を参考に. 
+   設定は =early-init.el= に移動した方が良いのかもしれないかな. 
+*** profiler の読み込み
+    :PROPERTIES:
+    :CUSTOM_ID: org373f7f70
+    :END:
+    起動の高速化のために, 必要に応じて有効にしている.
+    #+begin_src emacs-lisp :tangle init.el
+;; (require 'profiler)
+;; (profiler-start 'cpu)
+    #+end_src
+*** Magic File Name を一時的に無効化
+    これだけで 0.2秒縮まった. これは知見である. 
+    #+begin_src emacs-lisp :tangle init.el
+(defconst my:saved-file-name-handler-alist file-name-handler-alist)
+(setq file-name-handler-alist nil)
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (setq file-name-handler-alist my:saved-file-name-handler-alist)))
+    #+end_src
+*** GC の設定
+    起動時に garbage collection を発生させない様にする.
 
-   メモリ喰いな拡張を入れている場合には,
-   安易に =gc-cons-threshold= を上げるのは考えものである.
-   「gc が走る→大きな領域を掃除するのでその間 emacs が止まる」
-   という事を頻繁に経験することになるだろう.
+    メモリ喰いな拡張を入れている場合には,
+    安易に =gc-cons-threshold= を上げるのは考えものである.
+    「gc が走る→大きな領域を掃除するのでその間 emacs が止まる」
+    という事を頻繁に経験することになるだろう.
 
-   とはいえ, デフォルト値のままだと
-   起動時に結構 garbage-collect が走って遅くなるので,
-   起動時は =most-positive-fixnum= にしておいて,
-   起動後に =emacs-startup-hook= で default に戻すようにしてみた.
+    とはいえ, デフォルト値のままだと
+    起動時に結構 garbage-collect が走って遅くなるので,
+    起動時は =most-positive-fixnum= にしておいて,
+    起動後に =emacs-startup-hook= で default に戻すようにしてみた.
 
-   ついでに =idle-timer= で入力が無い時に GC を走らせることに.
-   #+begin_src emacs-lisp :tangle init.el
-(setq gc-cons-threshold most-positive-fixnum
-      ;; garbage-collection-messages t
-      )
+    ついでに =idle-timer= で入力が無い時に GC を走らせることに.
+    #+begin_src emacs-lisp :tangle init.el
+(setq gc-cons-threshold most-positive-fixnum)
 ;; Run GC every 60 seconds if emacs is idle.
 (run-with-idle-timer 60.0 t #'garbage-collect)
 (add-hook 'emacs-startup-hook
           (lambda ()
             (setq gc-cons-threshold 800000)))
-   #+end_src
+    #+end_src
+*** =early-init.el=
+    Emacs >= 27 からの機能. 
+    #+begin_src emacs-lisp :tangle early-init.el
+(push '(menu-bar-lines   . 0) default-frame-alist)
+(push '(tool-bar-lines   . 0) default-frame-alist)
+(setq frame-inhibit-implied-resize t)    
+(setq site-run-file nil)
+;; disable package
+(setq package-enable-at-startup nil)
+    #+end_src
 ** ディレクトリ構成の修正
    :PROPERTIES:
    :CUSTOM_ID: org60bad8a3
@@ -135,7 +162,7 @@ init.el: README.org
    幾つかの関数で =Common-Lisp= 的挙動が期待されているので,
    =cl-lib= を読み込んでおきます．
    #+begin_src emacs-lisp :tangle init.el
-(eval-and-compile (require 'cl-lib nil t))
+(eval-when-compile (require 'cl-lib nil t))
 ;; el-get が cl に依存しているので, ここで
 ;; `Package cl is deprecated' が表示されるのを止めておく.
 (setq byte-compile-warnings '(not cl-functions obsolete))
@@ -383,6 +410,9 @@ init.el: README.org
   )
    #+end_src
 ** ターミナルで =C-M-= を打つために
+   :PROPERTIES:
+   :CUSTOM_ID: org194b826d
+   :END:
    詳細は
    [[https://superuser.com/questions/83166/using-c-m-to-do-a-query-replace-regexp-in-emacs-running-in-mac-terminal][Using C-M-% to do a query-replace-regexp in Emacs running in Mac terminal]]
    を参照のこと. terminal では =C-%= (つまり =Control-Shift-5= )が入力できない, という話.
@@ -395,9 +425,7 @@ init.el: README.org
    (event-apply-modifier (event-apply-modifier (read-event)
                                                'control 26 "C-")
                          'meta 27 "M-")))
-(define-key
-  function-key-map (kbd "C-x @")
-  'my:event-apply-control-meta-modifiers)
+(define-key function-key-map (kbd "C-x @") 'my:event-apply-control-meta-modifiers)
    #+end_src
 * 言語の設定
   :PROPERTIES:
@@ -970,7 +998,6 @@ init.el: README.org
    :CUSTOM_ID: org3416eeb2
    :END:
    #+begin_src emacs-lisp
-;; (require 'cl-lib)
 (leaf *wsl2-path
   :if (getenv "WSL_DISTRO_NAME")
   :init
@@ -1045,7 +1072,7 @@ init.el: README.org
    ;; 日曜開始
    (calendar-week-start-day   . 0))
   :config
-  (with-eval-after-load "calendar"
+  (with-eval-after-load 'calendar
     (leaf japanese-holidays
       :ensure t
       :custom
@@ -3239,8 +3266,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
       (when (re-search-forward "^#\\+options:.*auto-id:t" (point-max) t)
         (org-map-entries
          (lambda () (my:org-custom-id-get (point) 'create))))))
-  ;;
-  (add-hook 'before-save-hook 'my:org-id-add-to-headlines-in-file)
+  :hook (before-save-hook 'my:org-id-add-to-headlines-in-file)
   )
    #+end_src
 ** Babel
@@ -4435,69 +4461,68 @@ $clean_ext = "snm nav vrb synctex.gz spl bbl blg run.xml pgf-plot.table pgf-plot
    :CUSTOM_ID: org356b9857
    :END:
   #+begin_src emacs-lisp :tangle init.el
+;;;###autoload
 (defun my:load-window-config ()
   "load window-system specific settings"
   (interactive)
-  (when window-system
-    (progn
-      (set-frame-parameter nil 'alpha 95)
-      (set-face-attribute 'default nil
-                          :family "FSMRMP"
-                          :height 135)
-      (set-face-attribute 'fixed-pitch nil
-                          :family "FSMRMP"
-                          :height 135)
-      (set-face-attribute 'variable-pitch nil
-                          :family "FSMRMP"
-                          :height 135)
-      ;; Math symbols
-      (set-fontset-font nil
-                        '(#x2200 . #x22FF)
-                        (font-spec :family "FSMRMP" :height 135))
-      ;; Greek
-      (set-fontset-font nil
-                        '(#x0370 . #x03FF)
-                        (font-spec :family "FSMRMP" :height 135))
-      ;; Some Icons
-      (set-fontset-font nil
-                        '(#xE0A0 . #xEEE0)
-                        (font-spec :family "FSMRMP" :height 135))
-      (setq use-default-font-for-symbols t)
-      (toggle-frame-maximized)
-      )))
-(when (window-system)
-  (my:load-window-config))
-;;
+  (progn
+    (set-face-attribute 'default nil
+                        :family "FSMRMP"
+                        :height 135)
+    (set-face-attribute 'fixed-pitch nil
+                        :family "FSMRMP"
+                        :height 135)
+    (set-face-attribute 'variable-pitch nil
+                        :family "FSMRMP"
+                        :height 135)
+    ;; Math symbols
+    (set-fontset-font nil
+                      '(#x2200 . #x22FF)
+                      (font-spec :family "FSMRMP" :height 135))
+    ;; Greek
+    (set-fontset-font nil
+                      '(#x0370 . #x03FF)
+                      (font-spec :family "FSMRMP" :height 135))
+    ;; Some Icons
+    (set-fontset-font nil
+                      '(#xE0A0 . #xEEE0)
+                      (font-spec :family "FSMRMP" :height 135))
+    (setq use-default-font-for-symbols t)
+    ))
+;;;###autoload
 (defun my:load-side-window-config ()
   "load window-system specific settings"
   (interactive)
-  (when window-system
-    (progn
-      (set-face-attribute 'default nil
-                          :family "FSMRMP"
-                          :height 120)
-      (set-face-attribute 'fixed-pitch nil
-                          :family "FSMRMP"
-                          :height 120)
-      (set-face-attribute 'variable-pitch nil
-                          :family "FSMRMP"
-                          :height 120)
-      ;; Math symbols
-      (set-fontset-font nil
-                        '(#x2200 . #x22FF)
-                        (font-spec :family "FSMRMP" :height 120))
-      ;; Greek
-      (set-fontset-font nil
-                        '(#x0370 . #x03FF)
-                        (font-spec :family "FSMRMP" :height 120))
-      ;; Some Icons
-      (set-fontset-font nil
-                        '(#xE0A0 . #xEEE0)
-                        (font-spec :family "FSMRMP" :height 120))
-      (setq use-default-font-for-symbols t)
-      (set-frame-parameter nil 'alpha 95)
-      (toggle-frame-maximized)
-      )))
+  (progn
+    (set-face-attribute 'default nil
+                        :family "FSMRMP"
+                        :height 120)
+    (set-face-attribute 'fixed-pitch nil
+                        :family "FSMRMP"
+                        :height 120)
+    (set-face-attribute 'variable-pitch nil
+                        :family "FSMRMP"
+                        :height 120)
+    ;; Math symbols
+    (set-fontset-font nil
+                      '(#x2200 . #x22FF)
+                      (font-spec :family "FSMRMP" :height 120))
+    ;; Greek
+    (set-fontset-font nil
+                      '(#x0370 . #x03FF)
+                      (font-spec :family "FSMRMP" :height 120))
+    ;; Some Icons
+    (set-fontset-font nil
+                      '(#xE0A0 . #xEEE0)
+                      (font-spec :family "FSMRMP" :height 120))
+    ))
+(leaf *gui
+  :if window-system
+  :config
+  (set-frame-parameter nil 'alpha 95)
+  (setq use-default-font-for-symbols t)
+  (my:load-window-config)
+  )
   #+end_src
   - [ ] FSMRMP のギリシャ文字が全角にならない. 要調整
   #+BEGIN_EXAMPLE
@@ -4678,13 +4703,20 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
   :PROPERTIES:
   :CUSTOM_ID: orgf87c4e84
   :END:
+** profiler report
+   :PROPERTIES:
+   :CUSTOM_ID: org8d339cf7
+   :END:
+   これも必要に応じて
+  #+begin_src emacs-lisp :tangle init.el
+;; (profiler-report)
+;; (profiler-stop)
+  #+end_src
 ** provide の設定
    :PROPERTIES:
    :CUSTOM_ID: org4c97a1e0
    :END:
   #+begin_src emacs-lisp :tangle init.el
-;; (profiler-report)
-;; (profiler-stop)
 (provide 'init)
 ;; Local Variables:
 ;; byte-compile-warnings: (not obsolete cl-functions)

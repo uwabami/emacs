@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
 #+options: auto-id:t H:6
-#+date: 2020-11-03 17:09:29
+#+date: 2020-11-04 03:08:45
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -59,8 +59,8 @@ init.el: README.org
    :PROPERTIES:
    :CUSTOM_ID: orgae182d4d
    :END:
-   この辺は [[https://emacs-jp.github.io/tips/startup-optimization][Emacs の起動時間を""詰める""]] を参考に. 
-   設定は =early-init.el= に移動した方が良いのかもしれないかな. 
+   この辺は [[https://emacs-jp.github.io/tips/startup-optimization][Emacs の起動時間を""詰める""]] を参考に.
+   設定は =early-init.el= に移動した方が良いのかもしれないかな.
 *** profiler の読み込み
     :PROPERTIES:
     :CUSTOM_ID: org373f7f70
@@ -71,7 +71,10 @@ init.el: README.org
 ;; (profiler-start 'cpu)
     #+end_src
 *** Magic File Name を一時的に無効化
-    これだけで 0.2秒縮まった. これは知見である. 
+    :PROPERTIES:
+    :CUSTOM_ID: orgb6dd6727
+    :END:
+    これだけで 0.2秒縮まった. これは知見である.
     #+begin_src emacs-lisp :tangle init.el
 (defconst my:saved-file-name-handler-alist file-name-handler-alist)
 (setq file-name-handler-alist nil)
@@ -80,6 +83,9 @@ init.el: README.org
             (setq file-name-handler-alist my:saved-file-name-handler-alist)))
     #+end_src
 *** GC の設定
+    :PROPERTIES:
+    :CUSTOM_ID: org77e2f299
+    :END:
     起動時に garbage collection を発生させない様にする.
 
     メモリ喰いな拡張を入れている場合には,
@@ -102,11 +108,14 @@ init.el: README.org
             (setq gc-cons-threshold 800000)))
     #+end_src
 *** =early-init.el=
-    Emacs >= 27 からの機能. 
+    :PROPERTIES:
+    :CUSTOM_ID: orgcb2bfa7b
+    :END:
+    Emacs >= 27 からの機能.
     #+begin_src emacs-lisp :tangle early-init.el
 (push '(menu-bar-lines   . 0) default-frame-alist)
 (push '(tool-bar-lines   . 0) default-frame-alist)
-(setq frame-inhibit-implied-resize t)    
+(setq frame-inhibit-implied-resize t)
 (setq site-run-file nil)
 ;; disable package
 (setq package-enable-at-startup nil)
@@ -916,6 +925,7 @@ init.el: README.org
                                  "^/[^/:]+:"
                                  "bookmarks"
                                  "org-recent-headings.dat"
+                                 "^/mnt/c/\\.*"
                                  )))
   )
   #+end_src
@@ -1046,11 +1056,14 @@ init.el: README.org
                (cons (windows-path-convert-file-name (car args))
                      (cdr args))
              args))))
-  :config
-  (set-drvfs-alist)
-  (add-to-list 'file-name-handler-alist
-               (cons windows-path-style-regexp
-                     'windows-path-map-drive-hook-function))
+  :hook
+  (after-init-hook
+   . (lambda ()
+       (progn
+         (set-drvfs-alist)
+         (add-to-list 'my:saved-file-name-handler-alist
+                      (cons windows-path-style-regexp
+                            'windows-path-map-drive-hook-function)))))
   )
    #+end_src
    - [ ] 使う気になったら何かしなければならない, 気がしている
@@ -3208,6 +3221,12 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    :END:
    #+begin_src emacs-lisp :tangle init.el
 (leaf org-id
+  :commands
+  (my:add-custom-id
+   my:get-custom-id
+   my:org-custom-id-get
+   my:delete-all-id-in-file
+   my:org-id-add-to-headlines-in-file)
   :init
   (leaf org-macs :require t)
   :custom
@@ -3267,11 +3286,12 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
       (when (re-search-forward "^#\\+options:.*auto-id:t" (point-max) t)
         (org-map-entries
          (lambda () (my:org-custom-id-get (point) 'create))))))
+  ;;
   :hook (before-save-hook
          . (lambda ()
              (when (and (eq major-mode 'org-mode)
                         (eq buffer-read-only nil))
-               my:org-id-add-to-headlines-in-file)))
+               (my:org-id-add-to-headlines-in-file))))
   )
    #+end_src
 ** Babel

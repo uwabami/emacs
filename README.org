@@ -969,8 +969,62 @@ init.el: README.org
    :PROPERTIES:
    :CUSTOM_ID: org3416eeb2
    :END:
-   #+begin_src
-;; nothing - -;
+   #+begin_src emacs-lisp
+;; (require 'cl-lib)
+(leaf *wsl2-path
+  :if (getenv "WSL_DISTRO_NAME")
+  :init
+  (defun set-drvfs-alist ()
+    (interactive)
+    (setq drvfs-alist
+          (mapcar
+           (lambda (x)
+             (when (string-match "\\(.*\\)|\\(.*?\\)/?$" x)
+               (cons (match-string 1 x) (match-string 2 x))))
+           (split-string (concat
+                          ;; //wsl$ パス情報の追加
+                          (when (or (not (string-match "Microsoft" (shell-command-to-string "uname -v")))
+                                    (>= (string-to-number (nth 1 (split-string operating-system-release "-"))) 18362))
+                            (concat "/|" (shell-command-to-string "wslpath -m /")))
+                          (shell-command-to-string
+                           "mount | grep -E ' type (9p|drvfs) ' | grep -v '^tools on /init type 9p' | sed -r 's/(.*) on (.*) type (9p|drvfs) .*/\\2\\|\\1/' | sed 's!\\\\!/!g'"))
+                         "\n" t))))
+
+  (defconst windows-path-style-regexp "\\`\\(.*/\\)?\\([a-zA-Z]:\\\\.*\\|[a-zA-Z]:/.*\\|\\\\\\\\.*\\|//.*\\)")
+
+  (defun windows-path-convert-file-name (name)
+    (setq name (replace-regexp-in-string windows-path-style-regexp "\\2" name t nil))
+    (setq name (replace-regexp-in-string "\\\\" "/" name))
+    (let ((case-fold-search t))
+      (cl-loop for (mountpoint . source) in drvfs-alist
+               if (string-match (concat "^\\(" (regexp-quote source) "\\)\\($\\|/\\)") name)
+               return (replace-regexp-in-string "^//" "/" (replace-match mountpoint t t name 1))
+               finally return name)))
+
+  (defun windows-path-run-real-handler (operation args)
+    "Run OPERATION with ARGS."
+    (let ((inhibit-file-name-handlers
+           (cons 'windows-path-map-drive-hook-function
+                 (and (eq inhibit-file-name-operation operation)
+                      inhibit-file-name-handlers)))
+          (inhibit-file-name-operation operation))
+      (apply operation args)))
+
+  (defun windows-path-map-drive-hook-function (operation name &rest args)
+    "Run OPERATION on cygwin NAME with ARGS."
+    (windows-path-run-real-handler
+     operation
+     (cons (windows-path-convert-file-name name)
+           (if (stringp (car args))
+               (cons (windows-path-convert-file-name (car args))
+                     (cdr args))
+             args))))
+  :config
+  (set-drvfs-alist)
+  (add-to-list 'file-name-handler-alist
+               (cons windows-path-style-regexp
+                     'windows-path-map-drive-hook-function))
+  )
    #+end_src
    - [ ] 使う気になったら何かしなければならない, 気がしている
 * カレンダー設定
@@ -1399,7 +1453,7 @@ File.open(src, "r") {|f|
     #+begin_src emacs-lisp :tangle init-ddskk.el
 (cond
  ((getenv "SKKSERVER")
-  (setq skk-server-host "127.0.0.1"
+  (setq skk-server-host (getenv "SKKSERVER")
         skk-server-portnum "1178"
         skk-large-jisyo nil)
   (add-to-list 'skk-search-prog-list
@@ -4389,27 +4443,26 @@ $clean_ext = "snm nav vrb synctex.gz spl bbl blg run.xml pgf-plot.table pgf-plot
       (set-frame-parameter nil 'alpha 95)
       (set-face-attribute 'default nil
                           :family "FSMRMP"
-                          :height 195)
+                          :height 135)
       (set-face-attribute 'fixed-pitch nil
                           :family "FSMRMP"
-                          :height 195)
+                          :height 135)
       (set-face-attribute 'variable-pitch nil
                           :family "FSMRMP"
-                          :height 195)
+                          :height 135)
       ;; Math symbols
       (set-fontset-font nil
                         '(#x2200 . #x22FF)
-                        (font-spec :family "FSMRMP" :height 195))
+                        (font-spec :family "FSMRMP" :height 135))
       ;; Greek
       (set-fontset-font nil
                         '(#x0370 . #x03FF)
-                        (font-spec :family "FSMRMP" :height 195))
+                        (font-spec :family "FSMRMP" :height 135))
       ;; Some Icons
       (set-fontset-font nil
                         '(#xE0A0 . #xEEE0)
-                        (font-spec :family "FSMRMP" :height 195))
+                        (font-spec :family "FSMRMP" :height 135))
       (setq use-default-font-for-symbols t)
-      (set-frame-parameter nil 'alpha 95)
       (toggle-frame-maximized)
       )))
 (when (window-system)
@@ -4420,28 +4473,27 @@ $clean_ext = "snm nav vrb synctex.gz spl bbl blg run.xml pgf-plot.table pgf-plot
   (interactive)
   (when window-system
     (progn
-      (set-frame-parameter nil 'alpha 95)
       (set-face-attribute 'default nil
                           :family "FSMRMP"
-                          :height 150)
+                          :height 120)
       (set-face-attribute 'fixed-pitch nil
                           :family "FSMRMP"
-                          :height 150)
+                          :height 120)
       (set-face-attribute 'variable-pitch nil
                           :family "FSMRMP"
-                          :height 150)
+                          :height 120)
       ;; Math symbols
       (set-fontset-font nil
                         '(#x2200 . #x22FF)
-                        (font-spec :family "FSMRMP" :height 150))
+                        (font-spec :family "FSMRMP" :height 120))
       ;; Greek
       (set-fontset-font nil
                         '(#x0370 . #x03FF)
-                        (font-spec :family "FSMRMP" :height 150))
+                        (font-spec :family "FSMRMP" :height 120))
       ;; Some Icons
       (set-fontset-font nil
                         '(#xE0A0 . #xEEE0)
-                        (font-spec :family "FSMRMP" :height 150))
+                        (font-spec :family "FSMRMP" :height 120))
       (setq use-default-font-for-symbols t)
       (set-frame-parameter nil 'alpha 95)
       (toggle-frame-maximized)

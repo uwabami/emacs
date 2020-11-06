@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: content
 #+options: auto-id:t H:6
-#+date: 2020-11-04 03:08:45
+#+date: 2020-11-07 02:36:42
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -186,17 +186,20 @@ init.el: README.org
    :PROPERTIES:
    :CUSTOM_ID: orgc51eb87d
    :END:
-   パッケージは基本的に =pacakge.el= で導入するので, 先ずはその設定.
+   パッケージは基本的に =package.el= で導入するので, 先ずはその設定.
    #+begin_src emacs-lisp :tangle init.el
+;; elpa/gnutls workaround
+(when (or (version= "26.1" emacs-version)
+          (version= "26.2" emacs-version))
+  (setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3"))
 (eval-and-compile
   (custom-set-variables
    '(package-archives '(("gnu"   . "https://elpa.gnu.org/packages/")
                         ("melpa" . "https://melpa.org/packages/")
                         ))
    '(package-gnupghome-dir (expand-file-name ".gnupg" (getenv "HOME")))
-   '(package-user-dir my:d:pkg:elpa)
-   '(package-enable-at-startup t))
-  (setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3")
+   '(package-user-dir my:d:pkg:elpa))
+;;   '(package-enable-at-startup t))
 )
 (eval-when-compile
   (unless (file-exists-p (locate-user-emacs-file "tmp/bootstrap-stamp"))
@@ -2911,7 +2914,11 @@ video/*; xdg-open %s;
      :CUSTOM_ID: org62a575b3
      :END:
      #+begin_src emacs-lisp  :tangle init-wl.el
-(add-hook 'wl-draft-mode-hook 'turn-on-orgtbl)
+(add-hook 'wl-draft-mode-hook
+          (lambda ()
+            (progn
+              (require 'org-table)
+              #'turn-on-orgtbl)))
      #+end_src
 **** c-sig
      :PROPERTIES:
@@ -2921,17 +2928,18 @@ video/*; xdg-open %s;
      設定は以下の通り. Mew 風に =C-c <tab>= で signature を挿入するようにしている
      #+begin_src emacs-lisp  :tangle init-wl.el
 (leaf c-sig
+  :commands insert-signature-eref
   :config
   (eval-when-compile (require 'wl))
   (setq sig-insert-end t
         sig-save-to-sig-name-alist nil
         message-signature-file nil)
-  (define-key wl-draft-mode-map "\C-c\t" 'insert-signature-eref)
-  (add-hook 'wl-draft-mode-hook
-            '(lambda ()
-               (define-key (current-local-map) "\C-c\C-w"
-                 'insert-signature-eref)))
   )
+(define-key wl-draft-mode-map "\C-c\t" 'insert-signature-eref)
+(add-hook 'wl-draft-mode-hook
+          '(lambda ()
+             (define-key (current-local-map) "\C-c\C-w"
+               'insert-signature-eref)))
      #+end_src
 *** GPG 署名
     :PROPERTIES:

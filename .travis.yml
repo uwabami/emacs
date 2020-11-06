@@ -1,28 +1,17 @@
 sudo: false
 language: emacs-lisp
-dist: bionic
-addons:
-  apt:
-    packages:
-      - ca-certificates
-      - gnutls-bin
 cache:
-  directories:
-    - $HOME/local
+  - directories:
+      - $HOME/emacs/
 env:
   global:
     - PATH=$HOME/local/bin:$HOME/local/evm/bin:$PATH
   matrix:
-    # Debian 8
-    - EVM_EMACS=emacs-24.4-travis
-    # Debian 9
-    - EVM_EMACS=emacs-24.5-travis
-    # Debian 10
-    - EVM_EMACS=emacs-26.1-travis
-    # Debian unstable
-    - EVM_EMACS=emacs-26.3-travis
-    # HEAD
-    - EVM_EMACS=emacs-git-snapshot-travis
+    - EVM_EMACS=emacs-26.1-travis-linux-xenial
+    - EVM_EMACS=emacs-26.2-travis-linux-xenial
+    - EVM_EMACS=emacs-26.3-travis-linux-xenial
+    - EVM_EMACS=emacs-27.1-travis-linux-xenial
+    - EVM_EMACS=emacs-git-snapshot-travis-linux-xenial
 before_script:
   - sh .travis-ci/install-evm.sh $EVM_EMACS
 script:

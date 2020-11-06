@@ -1,14 +1,17 @@
 # -*- mode: makefile -*-
 EMACS	?= emacs
 EL		= init-ddskk.el
-EL		+= $(shell dpkg -l wl-beta 2>&1 | grep -q ^ii && echo init-wl.el )
-EL		+= $(shell dpkg -l wl 2>&1 | grep -q ^ii && echo init-wl.el )
+ifneq (,$(wildcard /etc/emacs/site-start.d/65wl-beta.el))
+EL		+= init-wl.el
+endif
+EL		+= early-init.el
 ELC		= $(EL:%.el=%.elc)
 
-all: $(ELC) init.elc
+all: $(ELC) init.elc 
 $(EL): init.el
 init.el: README.org
-	mkdir -p tmp
+	@mkdir -p tmp
+	@chmod 700 tmp
 	$(EMACS) -Q -q --batch --eval \
 	   "(progn \
 		  (require 'ob-tangle) \

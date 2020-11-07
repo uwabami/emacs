@@ -1,8 +1,8 @@
 #+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
-#+startup: content
+#+startup: overview
 #+options: auto-id:t H:6
-#+date: 2020-11-07 02:36:42
+#+date: 2020-11-07 09:04:17
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -29,7 +29,6 @@
    設定には[[https://github.com/conao3/leaf.el][leaf.el]]を利用します．
    VCS からインストールしたいパッケージが幾つかあるので,
    それらについては[[https://github.com/dimitri/el-get][el-get]]を利用しています．
-   今後は[[https://github.com/conao3/feather.el][feather.el]]も試してみたいですね．
 ** 設定は [[http://orgmode.org/][Org mode]] で書きたい
    :PROPERTIES:
    :CUSTOM_ID: org458d9cf4
@@ -50,7 +49,11 @@ init.el: README.org
 %.elc: %.el
     $(EMACS) -q -l init.el -batch -f batch-byte-compile $<
    #+end_src
-   ついでに, 出力される =init.el= 用のおまじない(?)として
+** 設定ファイルのヘッダ
+   :PROPERTIES:
+   :CUSTOM_ID: org990b5166
+   :END:
+   出力される =init.el= 用のヘッダは以下の通り.
    =lexsical-binding= を有効にしておきます．
    #+begin_src emacs-lisp :tangle init.el
 ;; -*- lexical-binding: nil -*-
@@ -61,11 +64,11 @@ init.el: README.org
    :END:
    この辺は [[https://emacs-jp.github.io/tips/startup-optimization][Emacs の起動時間を""詰める""]] を参考に.
    設定は =early-init.el= に移動した方が良いのかもしれないかな.
-*** profiler の読み込み
+*** Emacs Profiler
     :PROPERTIES:
     :CUSTOM_ID: org373f7f70
     :END:
-    起動の高速化のために, 必要に応じて有効にしている.
+    起動の高速化を検証するために, 必要に応じて有効に.
     #+begin_src emacs-lisp :tangle init.el
 ;; (require 'profiler)
 ;; (profiler-start 'cpu)
@@ -100,21 +103,23 @@ init.el: README.org
 
     ついでに =idle-timer= で入力が無い時に GC を走らせることに.
     #+begin_src emacs-lisp :tangle init.el
+(defconst my:default-gc-cons-threshold gc-cons-threshold)
 (setq gc-cons-threshold most-positive-fixnum)
 ;; Run GC every 60 seconds if emacs is idle.
 (run-with-idle-timer 60.0 t #'garbage-collect)
 (add-hook 'emacs-startup-hook
           (lambda ()
-            (setq gc-cons-threshold 800000)))
+            (setq gc-cons-threshold my:default-gc-cons-threshold)))
     #+end_src
-*** =early-init.el=
+*** TODO =early-init.el=
     :PROPERTIES:
     :CUSTOM_ID: orgcb2bfa7b
     :END:
-    Emacs >= 27 からの機能.
+    Emacs >= 27 からの機能だが, いまいち使い方がわからん.
     #+begin_src emacs-lisp :tangle early-init.el
 (push '(menu-bar-lines   . 0) default-frame-alist)
 (push '(tool-bar-lines   . 0) default-frame-alist)
+(push '(scroll-bar-mode  . 0) default-frame-alist)
 (setq frame-inhibit-implied-resize t)
 (setq site-run-file nil)
 ;; disable package
@@ -152,13 +157,6 @@ init.el: README.org
   (expand-file-name "pkg/elpa" user-emacs-directory))
 (defconst my:d:pkg:elget
   (expand-file-name "pkg/el-get" user-emacs-directory))
-(dolist (my:d '(my:d:share
-                my:d:tmp
-                my:d:pkg:elpa
-                my:d:pkg:elget))
-  (lambda ()
-    (unless (file-directory-p my:d)
-      (make-directory my:d t))))
    #+end_src
    その他, 良く使うディレクトリもここで設定しておきます．
    #+begin_src emacs-lisp :tangle init.el
@@ -172,8 +170,11 @@ init.el: README.org
    =cl-lib= を読み込んでおきます．
    #+begin_src emacs-lisp :tangle init.el
 (eval-when-compile (require 'cl-lib nil t))
-;; el-get が cl に依存しているので, ここで
-;; `Package cl is deprecated' が表示されるのを止めておく.
+   #+end_src
+   ついでに Emacs 27 以降は
+   cl が読み込まれていると
+   `Package cl is deprecated' が表示されるので, これを止めておく.
+   #+begin_src emacs-lisp :tangle init.el
 (setq byte-compile-warnings '(not cl-functions obsolete))
    #+end_src
 * Package 関連: [[https://emacs-jp.github.io/packages/package-management/package-el][package.el]], [[https://github.com/conao3/leaf.el][leaf.el]], [[https://github.com/dimitri/el-get][el-get]]
@@ -189,8 +190,7 @@ init.el: README.org
    パッケージは基本的に =package.el= で導入するので, 先ずはその設定.
    #+begin_src emacs-lisp :tangle init.el
 ;; elpa/gnutls workaround
-(when (or (version= "26.1" emacs-version)
-          (version= "26.2" emacs-version))
+(when (version<=  emacs-version "26.2")
   (setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3"))
 (eval-and-compile
   (custom-set-variables
@@ -199,8 +199,7 @@ init.el: README.org
                         ))
    '(package-gnupghome-dir (expand-file-name ".gnupg" (getenv "HOME")))
    '(package-user-dir my:d:pkg:elpa))
-;;   '(package-enable-at-startup t))
-)
+  )
 (eval-when-compile
   (unless (file-exists-p (locate-user-emacs-file "tmp/bootstrap-stamp"))
     (package-refresh-contents)
@@ -879,7 +878,7 @@ init.el: README.org
   :PROPERTIES:
   :CUSTOM_ID: org43970469
   :END:
-  ファイルを開く際には =my:counsel-recentf= を使うので,
+  ファイルを開く際には =ido-recentf= を使うので,
   結局履歴を貯める設定をしている事になっている.
   ディレクトリの履歴も取れるので recentf-ext を入れておく
   #+begin_src emacs-lisp :tangle init.el
@@ -1006,7 +1005,7 @@ init.el: README.org
     )
   )
    #+end_src
-** SOMEDAY Windows(WSL2)対応 [/]
+** Windows(WSL2)対応
    :PROPERTIES:
    :CUSTOM_ID: org3416eeb2
    :END:
@@ -1069,7 +1068,6 @@ init.el: README.org
                             'windows-path-map-drive-hook-function)))))
   )
    #+end_src
-   - [ ] 使う気になったら何かしなければならない, 気がしている
 * カレンダー設定
   :PROPERTIES:
   :CUSTOM_ID: org7d9d4027

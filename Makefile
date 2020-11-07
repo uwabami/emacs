@@ -7,10 +7,13 @@ endif
 EL		+= early-init.el
 ELC		= $(EL:%.el=%.elc)
 
-all: $(ELC) init.elc 
+all: $(ELC) init.elc
 $(EL): init.el
 init.el: README.org
 	@mkdir -p tmp
+	@mkdir -p pkg/elpa
+	@mkdir -p pkg/el-get
+	@mkdir -p share
 	@chmod 700 tmp
 	$(EMACS) -Q -q --batch --eval \
 	   "(progn \

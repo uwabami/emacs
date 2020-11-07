@@ -4,17 +4,12 @@ cache:
   - directories:
       - $HOME/emacs/
 addons:
-  apt:
-    packages:
-      - gnutls-bin
-      - ca-certificates
-      - gnupg2
 env:
   global:
     - PATH=$HOME/local/bin:$HOME/local/evm/bin:$PATH
   matrix:
-    - EVM_EMACS=emacs-26.1-travis-linux-xenial
-    - EVM_EMACS=emacs-26.2-travis-linux-xenial
+    - EVM_EMACS=emacs-26.1-travis-linux-trusty
+    - EVM_EMACS=emacs-26.2-travis-linux-trusty
     - EVM_EMACS=emacs-26.3-travis-linux-xenial
     - EVM_EMACS=emacs-27.1-travis-linux-xenial
     - EVM_EMACS=emacs-git-snapshot-travis-linux-xenial

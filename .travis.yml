@@ -3,16 +3,26 @@ language: emacs-lisp
 cache:
   - directories:
       - $HOME/emacs/
-addons:
 env:
   global:
     - PATH=$HOME/local/bin:$HOME/local/evm/bin:$PATH
-  matrix:
-    - EVM_EMACS=emacs-26.1-travis-linux-trusty
-    - EVM_EMACS=emacs-26.2-travis-linux-trusty
-    - EVM_EMACS=emacs-26.3-travis-linux-xenial
-    - EVM_EMACS=emacs-27.1-travis-linux-xenial
-    - EVM_EMACS=emacs-git-snapshot-travis-linux-xenial
+jobs:
+  include:
+    - os: linux
+      dist: trusty
+      env: EVM_EMACS=emacs-26.1-travis-linux-trusty
+    - os: linux
+      dist: trusty
+      env: EVM_EMACS=emacs-26.2-travis-linux-trusty
+    - os: linux
+      dist: xenial
+      env: EVM_EMACS=emacs-26.3-travis-linux-xenial
+    - os: linux
+      dist: xenial
+      env: EVM_EMACS=emacs-27.1-travis-linux-xenial
+    - os: linux
+      dist: xenial
+      env: EVM_EMACS=emacs-git-snapshot-travis-linux-xenial
 before_script:
   - sh .travis-ci/install-evm.sh $EVM_EMACS
 script:

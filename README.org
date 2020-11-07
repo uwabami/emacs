@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2020-11-07 09:04:17
+#+date: 2020-11-07 23:57:44
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -190,9 +190,9 @@ init.el: README.org
    パッケージは基本的に =package.el= で導入するので, 先ずはその設定.
    #+begin_src emacs-lisp :tangle init.el
 ;; elpa/gnutls workaround
-(when (version<=  emacs-version "26.2")
-  (setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3"))
 (eval-and-compile
+  (when (version<=  emacs-version "26.2")
+    (setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3"))
   (custom-set-variables
    '(package-archives '(("gnu"   . "https://elpa.gnu.org/packages/")
                         ("melpa" . "https://melpa.org/packages/")
@@ -1012,7 +1012,7 @@ init.el: README.org
    #+begin_src emacs-lisp
 (leaf *wsl2-path
   :if (getenv "WSL_DISTRO_NAME")
-  :init
+  :preface
   (defun set-drvfs-alist ()
     (interactive)
     (setq drvfs-alist
@@ -1028,9 +1028,9 @@ init.el: README.org
                           (shell-command-to-string
                            "mount | grep -E ' type (9p|drvfs) ' | grep -v '^tools on /init type 9p' | sed -r 's/(.*) on (.*) type (9p|drvfs) .*/\\2\\|\\1/' | sed 's!\\\\!/!g'"))
                          "\n" t))))
-
+  ;;
   (defconst windows-path-style-regexp "\\`\\(.*/\\)?\\([a-zA-Z]:\\\\.*\\|[a-zA-Z]:/.*\\|\\\\\\\\.*\\|//.*\\)")
-
+  ;;
   (defun windows-path-convert-file-name (name)
     (setq name (replace-regexp-in-string windows-path-style-regexp "\\2" name t nil))
     (setq name (replace-regexp-in-string "\\\\" "/" name))
@@ -1039,7 +1039,7 @@ init.el: README.org
                if (string-match (concat "^\\(" (regexp-quote source) "\\)\\($\\|/\\)") name)
                return (replace-regexp-in-string "^//" "/" (replace-match mountpoint t t name 1))
                finally return name)))
-
+  ;;
   (defun windows-path-run-real-handler (operation args)
     "Run OPERATION with ARGS."
     (let ((inhibit-file-name-handlers
@@ -1048,7 +1048,7 @@ init.el: README.org
                       inhibit-file-name-handlers)))
           (inhibit-file-name-operation operation))
       (apply operation args)))
-
+  ;;
   (defun windows-path-map-drive-hook-function (operation name &rest args)
     "Run OPERATION on cygwin NAME with ARGS."
     (windows-path-run-real-handler
@@ -1546,6 +1546,7 @@ File.open(src, "r") {|f|
    :END:
    #+begin_src emacs-lisp :tangle init.el
 (leaf ido
+  :commands ido-save-history
   :init
   (leaf ido-completing-read+ :ensure t)
   ;; (leaf ido-describe-bindings :ensure t)
@@ -2935,9 +2936,9 @@ video/*; xdg-open %s;
   )
 (define-key wl-draft-mode-map "\C-c\t" 'insert-signature-eref)
 (add-hook 'wl-draft-mode-hook
-          '(lambda ()
-             (define-key (current-local-map) "\C-c\C-w"
-               'insert-signature-eref)))
+          (lambda ()
+            (define-key (current-local-map) "\C-c\C-w"
+              'insert-signature-eref)))
      #+end_src
 *** GPG 署名
     :PROPERTIES:
@@ -3331,7 +3332,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    なんて事もやっている．元ネタは [[https://julien.danjou.info/blog/2010/org-mode-and-holidays][Org-mode and holidays]]
    #+begin_src emacs-lisp :tangle init.el
 (leaf org-agenda
-  :commands org-agenda
+  :commands (org-agenda)
   :defer-config
   (defface my:org-agenda-date-saturday
     '((t (:foreground "#7FBFFF" :bold t )))
@@ -4375,6 +4376,10 @@ $clean_ext = "snm nav vrb synctex.gz spl bbl blg run.xml pgf-plot.table pgf-plot
   #+begin_src emacs-lisp :tangle init.el
 (leaf *misc-mode
   :init
+  (leaf rd-mode
+    :mode "\\.rd$"
+    :hook
+    (rd-mode-hook . rd-show-other-block-all))
   (leaf yaml-mode
     :ensure t
     :mode "\\(\.yml\\|\.yaml\\)"

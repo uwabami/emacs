@@ -3,6 +3,11 @@ language: emacs-lisp
 cache:
   - directories:
       - $HOME/emacs/
+addons:
+  apt:
+    packages:
+      - gnutls-bin
+      - gnupg2
 env:
   global:
     - PATH=$HOME/local/bin:$HOME/local/evm/bin:$PATH

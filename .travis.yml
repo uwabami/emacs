@@ -10,10 +10,10 @@ jobs:
   include:
     - os: linux
       dist: trusty
-      env: EVM_EMACS=emacs-26.1-travis-linux-trusty
+      env: EVM_EMACS=emacs-26.1-travis
     - os: linux
       dist: trusty
-      env: EVM_EMACS=emacs-26.2-travis-linux-trusty
+      env: EVM_EMACS=emacs-26.2-travis
     - os: linux
       dist: xenial
       env: EVM_EMACS=emacs-26.3-travis-linux-xenial

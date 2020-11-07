@@ -22,6 +22,6 @@ before_script:
   - sh .travis-ci/install-evm.sh $EVM_EMACS
 script:
   - emacs --version
-  - make EMACS=emacs
+  - make EMACS="emacs --debug-init"
   - make clean
   - make distclean

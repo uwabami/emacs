@@ -1,5 +1,5 @@
 sudo: false
-language: emacs-lisp
+language: ruby
 cache:
   - directories:
       - $HOME/emacs/
@@ -9,11 +9,35 @@ env:
 jobs:
   include:
     - os: linux
-      dist: trusty
-      env: EVM_EMACS=emacs-26.1-travis
+      dist: xenial
+      env: EVM_EMACS=emacs-24.1-travis
     - os: linux
-      dist: trusty
-      env: EVM_EMACS=emacs-26.2-travis
+      dist: xenial
+      env: EVM_EMACS=emacs-24.2-travis
+    - os: linux
+      dist: xenial
+      env: EVM_EMACS=emacs-24.3-travis
+    - os: linux
+      dist: xenial
+      env: EVM_EMACS=emacs-24.4-travis
+    - os: linux
+      dist: xenial
+      env: EVM_EMACS=emacs-24.5-travis
+    - os: linux
+      dist: xenial
+      env: EVM_EMACS=emacs-25.1-travis
+    - os: linux
+      dist: xenial
+      env: EVM_EMACS=emacs-25.2-travis
+    - os: linux
+      dist: xenial
+      env: EVM_EMACS=emacs-25.3-travis
+    - os: linux
+      dist: xenial
+      env: EVM_EMACS=emacs-26.1-travis-linux-xenial
+    - os: linux
+      dist: xenial
+      env: EVM_EMACS=emacs-26.2-travis-linux-xenial
     - os: linux
       dist: xenial
       env: EVM_EMACS=emacs-26.3-travis-linux-xenial

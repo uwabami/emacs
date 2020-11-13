@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2020-11-07 23:57:44
+#+date: 2020-11-13 10:58:53
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -117,9 +117,11 @@ init.el: README.org
     :END:
     Emacs >= 27 からの機能だが, いまいち使い方がわからん.
     #+begin_src emacs-lisp :tangle early-init.el
-(push '(menu-bar-lines   . 0) default-frame-alist)
-(push '(tool-bar-lines   . 0) default-frame-alist)
-(push '(scroll-bar-mode  . 0) default-frame-alist)
+(push '(menu-bar-lines     . 0) default-frame-alist)
+(push '(tool-bar-lines     . 0) default-frame-alist)
+(push '(scroll-bar-mode    . 0) default-frame-alist)
+(push '(blink-cursor-mode  . 0) default-frame-alist)
+(push '(column-number-mode . 0) default-frame-alist)
 (setq frame-inhibit-implied-resize t)
 (setq site-run-file nil)
 ;; disable package
@@ -240,16 +242,17 @@ init.el: README.org
   shell(zsh)で設定した =PATH= などの環境変数をEmacsに引き継ぐために
   [[https://github.com/purcell/exec-path-from-shell][purcell/exec-path-from-shell]] を使います.
   今の所
-  - =SHELL=
-  - =DEBFULLNAME=
   - =DEBEMAIL=
-  - =TEXMFHOME=
-  - =SKKSERVER=
-  - =http_proxy=
-  - =GPG_KEY_ID=
+  - =DEBFULLNAME=
   - =GPG_AGENT_INFO=
+  - =GPG_KEY_ID=
   - =PASSWORD_STORE_DIR=
   - =PATH=
+  - =SHELL=
+  - =SKKSERVER=
+  - =TEXMFHOME=
+  - =WSL_DISTRO_NAME=
+  - =http_proxy=
   を読み込んでいます(多いな...).
   #+begin_src emacs-lisp :tangle init.el
 (leaf exec-path-from-shell
@@ -257,17 +260,21 @@ init.el: README.org
   :defun (exec-path-from-shell-initialize)
   :custom
   ((exec-path-from-shell-check-startup-files . nil)
+   (exec-path-from-shell-arguments . nil)
    (exec-path-from-shell-variables
-    . '("SHELL"
-        "DEBFULLNAME"
+    . '(
         "DEBEMAIL"
+        "DEBFULLNAME"
+        "GPG_AGENT_INFO"
+        "GPG_KEY_ID"
+        "PASSWORD_STORE_DIR"
+        "PATH"
+        "SHELL"
         "SKKSERVER"
         "TEXMFHOME"
+        "WSL_DISTRO_NAME"
         "http_proxy"
-        "GPG_KEY_ID"
-        "GPG_AGENT_INFO"
-        "PASSWORD_STORE_DIR"
-        "PATH")))
+        )))
   :config
   (exec-path-from-shell-initialize)
   (setq user-full-name    (concat (getenv "DEBFULLNAME"))
@@ -323,6 +330,7 @@ init.el: README.org
    :END:
    zsh prompt風味．
    #+begin_src emacs-lisp :tangle init.el
+;;;###autoload
 (defun my:shorten-file-path (fpath max-length)
   "Show up to `max-length' characters of a directory name `fpath' like zsh"
   (let* ((path (reverse (split-string (abbreviate-file-name fpath) "/")))
@@ -348,15 +356,14 @@ init.el: README.org
    ゴミが残らないし, 地味に便利．
    #+begin_src emacs-lisp :tangle init.el
 (leaf *delete-file-if-no-contents
-  :preface (defun my:delete-file-if-no-contents ()
-             (when (and (buffer-file-name (current-buffer))
-                        (= (point-min) (point-max)))
-               (delete-file
-                (buffer-file-name (current-buffer)))))
-  :config
-  (if (not (memq 'my:delete-file-if-no-contents after-save-hook))
-      (setq after-save-hook
-            (cons 'my:delete-file-if-no-contents after-save-hook)))
+  :preface
+  (defun my:delete-file-if-no-contents ()
+    (when (and (buffer-file-name (current-buffer))
+               (= (point-min) (point-max)))
+      (delete-file
+       (buffer-file-name (current-buffer)))))
+  :hook
+  (after-save-hook . my:delete-file-if-no-contents)
   )
    #+end_src
 ** scratch を殺さない. 消したら再生成
@@ -368,9 +375,9 @@ init.el: README.org
 (leaf *keepscratchbuffer
   :preface
   (defun my:make-scratch (&optional arg)
+    " *scratch* を作成して buffer-list に放り込む."
     (interactive)
     (progn
-      ;; "*scratch*" を作成して buffer-list に放り込む
       (set-buffer (get-buffer-create "*scratch*"))
       (funcall initial-major-mode)
       (erase-buffer)
@@ -382,21 +389,23 @@ init.el: README.org
             (switch-to-buffer "*scratch*")))
       (cond ((= arg 0) (message "*scratch* is cleared up."))
             ((= arg 1) (message "another *scratch* is created")))))
-  ;;
   (defun my:buffer-name-list ()
+    "buffer 一覧の取得"
     (mapcar (function buffer-name) (buffer-list)))
-  :hook  ((kill-buffer-query-functions
-           . (lambda ()
-               (if (string= "*scratch*" (buffer-name))
-                   (progn (my:make-scratch 0) nil)
-                 t)))
-          (after-save-hook
-           . (lambda ()
-               (unless (member "*scratch*" (my:buffer-name-list))
-                 (my:make-scratch 1)))))
+  ;;
+  :hook
+  ((kill-buffer-query-functions
+    . (lambda ()
+        (if (string= "*scratch*" (buffer-name))
+            (progn (my:make-scratch 0) nil)
+          t)))
+   (after-save-hook
+    . (lambda ()
+        (unless (member "*scratch*" (my:buffer-name-list))
+          (my:make-scratch 1)))))
   )
    #+end_src
-** 行末の無駄な空白/改行を削除する
+** SOMEDAY 行末の無駄な空白/改行を削除する [/]
    :PROPERTIES:
    :CUSTOM_ID: org1effd724
    :END:
@@ -417,9 +426,11 @@ init.el: README.org
              (cl-loop for pattern in my:delete-trailing-whitespace-exclude-suffix
                       thereis (string-match pattern buffer-file-name)))
       (delete-trailing-whitespace))))
-  :hook (before-save-hook . my:delete-trailing-whitespace)
+  :hook
+  (before-save-hook . my:delete-trailing-whitespace)
   )
    #+end_src
+   - [ ] =cl 依存の書き換え?=
 ** ターミナルで =C-M-= を打つために
    :PROPERTIES:
    :CUSTOM_ID: org194b826d
@@ -511,11 +522,11 @@ init.el: README.org
   :custom
   `(
     ;; 表示
-    (tool-bar-mode          . nil)  ; 基本 "-nw" なので不要
-    (scroll-bar-mode        . nil)  ; 基本 "-nw" なので不要
-    (menu-bar-mode          . nil)  ; 基本 "-nw" なので不要
-    (blink-cursor-mode      . nil)  ; 基本 "-nw" なので不要
-    (column-number-mode     . nil)  ; 基本 "-nw" なので不要
+    ;; (tool-bar-mode          . nil)  ; 基本 "-nw" なので不要
+    ;; (scroll-bar-mode        . nil)  ; 基本 "-nw" なので不要
+    ;; (menu-bar-mode          . nil)  ; 基本 "-nw" なので不要
+    ;; (blink-cursor-mode      . nil)  ; 基本 "-nw" なので不要
+    ;; (column-number-mode     . nil)  ; 基本 "-nw" なので不要
     (ring-bell-function     . 'ignore)   ; ベル無効化
     ;; 編集
     (tab-width              . 4)    ;; tab 幅 4
@@ -856,10 +867,13 @@ init.el: README.org
    :END:
    #+begin_src emacs-lisp :tangle init.el
 (leaf server
-  :require t
-  :config
-  (unless (server-running-p)
-    (server-start))
+  :hook
+  (emacs-startup-hook
+   . (lambda ()
+       (progn
+         (require 'server)
+         (unless (server-running-p)
+           (server-start)))))
   )
    #+end_src
 ** buffer の印刷
@@ -1989,7 +2003,7 @@ File.open(src, "r") {|f|
     'mail-send-hook)
   )
    #+end_src
-   割と =/etc/emacs/site-start.d/65wl-beta.el= と重複している気がするが...
+   割と =/etc/emacs/site-start.d/65wl-beta.el= と重複している気がするが.
 ** Wanderlust 本体の設定
    :PROPERTIES:
    :CUSTOM_ID: org160184bf
@@ -2897,6 +2911,14 @@ video/*; xdg-open %s;
     #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-default-draft-cite-decorate-author nil)
     #+end_src
+**** ドラフトの自動保存の無効化
+     :PROPERTIES:
+     :CUSTOM_ID: orgc8e9533f
+     :END:
+     偶に暴発している様な...? elscreen のせいかしら.
+     #+begin_src emacs-lisp :tangle init-wl.el
+(setq wl-auto-save-drafts-interval nil)
+     #+end_src
 **** メール本文の文字コード
      :PROPERTIES:
      :CUSTOM_ID: orgccd69748
@@ -4171,7 +4193,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
 (leaf auctex
   :if (and (executable-find "uplatex")
            (executable-find "latexmk"))
-  ;; :ensure t
+  :load-path "/usr/share/emacs/site-lisp/auctex"
   :init
   (unless (file-directory-p (expand-file-name "auctex/auto" my:d:tmp))
     (progn
@@ -4184,9 +4206,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
      (reftex-toc-split-windows-horizontally . t))
     )
   (leaf company-reftex :ensure t)
-;;  (leaf company-auctex
-;;    :ensure t
-;;    )
+  ;; (leaf company-auctex :ensure t)
   (leaf auctex-latexmk
     :el-get tom-tan/auctex-latexmk
     :hook (LaTeX-mode-hook . auctex-latexmk-setup)
@@ -4196,6 +4216,18 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
           japanese-LaTeX-command-default "LaTeX"
           )
     )
+  (load "auctex" t t)
+  (load "preview-latex" t t)
+  :hook
+  (LaTeX-mode-hook
+   . (lambda()
+       (turn-on-reftex)
+       (TeX-source-correlate-mode)
+       (TeX-PDF-mode)
+       (LaTeX-math-mode)
+       ;; (company-auctex-init)
+       (reftex-mode)
+       (outline-minor-mode)))
   :custom
   `((TeX-auto-local
      . ,(expand-file-name "auctex/auto" my:d:tmp))
@@ -4207,29 +4239,20 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     (TeX-source-correlate-mode         . t)
     (TeX-source-correlate-start-server . t)
     (TeX-source-correlate-method       . 'synctex)
-    ;; (font-latex-fontify-script         . nil)
-    ;; (font-latex-script-display         . nil)
-    ;; (font-latex-fontify-sectioning     . 1.0)
+    (font-latex-fontify-script         . nil)
+    (font-latex-script-display         . nil)
+    (font-latex-fontify-sectioning     . 1.0)
     )
   :config
-  (setq TeX-command-output-list '(("LaTeXMk" ("pdf"))))
   (with-eval-after-load 'tex-jp
-    (dolist (command '("pTeX" "pLaTeX" "jTeX" "jLaTeX" "jBibTeX" "Mendex"
-                       "upMendex" "pBibTeX" "BibTeX" "Biber" "Ps2pdf" ))
-      (delq (assoc command TeX-command-list) TeX-command-list))
-    (setq TeX-view-program-selection '((output-dvi "xdvi")
-                                       (output-pdf "Evince")
-                                       (output-html "xdg-open")))
-    )
-  :mode-hook
-  ((LaTeX-mode-hook
-    . ((turn-on-reftex)
-       (TeX-source-correlate-mode)
-       (TeX-PDF-mode)
-       (LaTeX-math-mode)
-       ;; (company-auctex-init)
-       (reftex-mode)
-       (outline-minor-mode))))
+    (progn
+      (dolist (command '("pTeX" "pLaTeX" "jTeX" "jLaTeX" "jBibTeX" "Mendex"
+                         "upMendex" "pBibTeX" "BibTeX" "Biber" "Ps2pdf" ))
+        (delq (assoc command TeX-command-list) TeX-command-list))
+      (setq TeX-command-output-list '(("LaTeXMk" ("pdf")))
+            TeX-view-program-selection '((output-dvi "xdvi")
+                                         (output-pdf "Evince")
+                                         (output-html "xdg-open")))))
   )
   #+end_src
   =~/.latexmkrc= は以下の通り
@@ -4556,8 +4579,8 @@ $clean_ext = "snm nav vrb synctex.gz spl bbl blg run.xml pgf-plot.table pgf-plot
   :if window-system
   :config
   (set-frame-parameter nil 'alpha 95)
-  (setq use-default-font-for-symbols t)
-  (my:load-window-config)
+  (setq use-default-font-for-symbols nil)
+;;  (my:load-window-config)
   )
   #+end_src
   - [ ] FSMRMP のギリシャ文字が全角にならない. 要調整

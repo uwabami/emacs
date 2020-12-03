@@ -897,6 +897,7 @@ init.el: README.org
    手癖で "C-o" を prefix で使いたいので, その設定をしていたり.
    #+begin_src emacs-lisp :tangle init.el
 (leaf tab-bar-mode
+  :emacs>= "27.1"
   :init
   (defvar my:ctrl-o-map (make-sparse-keymap)
     "My original keymap binded to C-o.")

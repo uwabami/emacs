@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2020-11-13 10:58:53
+#+date: 2020-12-03 13:05:18
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -117,15 +117,16 @@ init.el: README.org
     :END:
     Emacs >= 27 からの機能だが, いまいち使い方がわからん.
     #+begin_src emacs-lisp :tangle early-init.el
-(push '(menu-bar-lines     . 0) default-frame-alist)
-(push '(tool-bar-lines     . 0) default-frame-alist)
-(push '(scroll-bar-mode    . 0) default-frame-alist)
-(push '(blink-cursor-mode  . 0) default-frame-alist)
-(push '(column-number-mode . 0) default-frame-alist)
+(push '(menu-bar-lines     . nil) default-frame-alist)
+(push '(tool-bar-lines     . nil) default-frame-alist)
+(push '(scroll-bar-mode    . nil) default-frame-alist)
+(push '(blink-cursor-mode  . nil) default-frame-alist)
+(push '(column-number-mode . nil) default-frame-alist)
 (setq frame-inhibit-implied-resize t)
 (setq site-run-file nil)
-;; disable package
 (setq package-enable-at-startup nil)
+(provide 'early-init)
+;;; early-init.el ends here
     #+end_src
 ** ディレクトリ構成の修正
    :PROPERTIES:
@@ -888,6 +889,55 @@ init.el: README.org
   (defalias 'ps-mule-header-string-charset 'ignore)
   )
    #+end_src
+** =tab-bar-mode=: Emacsの「tab」
+   :PROPERTIES:
+   :CUSTOM_ID: orgcc9538d1
+   :END:
+   Emacs27から同梱された =tab-bar-mode= に elscreen から乗り換えた.
+   手癖で "C-o" を prefix で使いたいので, その設定をしていたり.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf tab-bar-mode
+  :init
+  (defvar my:ctrl-o-map (make-sparse-keymap)
+    "My original keymap binded to C-o.")
+  (defalias 'my:ctrl-o-prefix my:ctrl-o-map)
+  (define-key global-map (kbd "C-o") 'my:ctrl-o-prefix)
+  (define-key my:ctrl-o-map (kbd "c")   'tab-new)
+  (define-key my:ctrl-o-map (kbd "C-c") 'tab-new)
+  (define-key my:ctrl-o-map (kbd "k")   'tab-close)
+  (define-key my:ctrl-o-map (kbd "C-k") 'tab-close)
+  (define-key my:ctrl-o-map (kbd "n")   'tab-next)
+  (define-key my:ctrl-o-map (kbd "C-n") 'tab-next)
+  (define-key my:ctrl-o-map (kbd "p")   'tab-previous)
+  (define-key my:ctrl-o-map (kbd "C-p") 'tab-previous)
+  ;;
+  (defun my:tab-bar-tab-name-truncated ()
+    "Custom: Generate tab name from the buffer of the selected window."
+    (let ((tab-name (buffer-name (window-buffer (minibuffer-selected-window))))
+          (ellipsis (cond
+                     (tab-bar-tab-name-ellipsis)
+                     ((char-displayable-p ?…) "…")
+                     ("..."))))
+      (if (< (length tab-name) tab-bar-tab-name-truncated-max)
+          (format "%-12s" tab-name)
+        (propertize (truncate-string-to-width
+                     tab-name tab-bar-tab-name-truncated-max nil nil
+                     ellipsis)
+                    'help-echo tab-name))))
+  :custom
+  ((tab-bar-close-button-show      . nil)
+   (tab-bar-close-last-tab-choice  . nil)
+   (tab-bar-close-tab-select       . 'left)
+   (tab-bar-history-mode           . nil)
+   (tab-bar-new-tab-choice         . "*scratch*")
+   (tab-bar-new-button-show        . nil)
+   (tab-bar-tab-name-function      . 'my:tab-bar-tab-name-truncated)
+   (tab-bar-tab-name-truncated-max . 12))
+  :config
+  (tab-bar-mode +1)
+  )
+   #+end_src
+  - [[https://masutaka.net/chalow/2011-09-28-1.html][ターミナルの zsh と Emacs を風のように駆け抜ける！]]
 * =recentf=: 最近使ったファイル履歴の保管
   :PROPERTIES:
   :CUSTOM_ID: org43970469
@@ -1251,14 +1301,18 @@ init.el: README.org
    #+end_src
    - [ ] 背景色の指定
    - [ ] 幅の強制
-* SOMEDAY =elscreen=: バッファー用 GNU screen もどき [0/2]
+* =elscreen=: バッファー用 GNU screen もどき
   :PROPERTIES:
   :CUSTOM_ID: orgd9b46f9c
   :END:
+  Emacs >= 27 から =tab-bar-mode= があるので, それに乗り換えた.
+  以下は Emacs <= 26 のお話.
   emacs-jpのfolk版を利用中.
   modeline の表示そのものは無効化しておく．
   #+begin_src emacs-lisp :tangle init.el
+;;
 (leaf elscreen
+  :emacs< "27.1"
   :ensure t
   :custom
   ((elscreen-display-tab             . 8)
@@ -1273,33 +1327,6 @@ init.el: README.org
 ;;   :el-get  wamei/elscreen-multi-term
 ;;  )
   #+end_src
-  - [ ] Debian パッケージ版は古い．更新すべき
-
-  ついでに elscreen⇔ zsh での連携を設定しておく.
-  詳細は
-  - [[https://masutaka.net/chalow/2011-09-28-1.html][ターミナルの zsh と Emacs を風のように駆け抜ける！]]
-  - [[http://syohex.hatenablog.com/entry/20111026/1319606395][cdeを改良]]
-  - [[https://qiita.com/__hage/items/2dd732b4dd68e124e8bd][cdeとelscreen-separate-buffer-listの相性が悪い]]
-  などを参照のこと.
-  #+begin_src emacs-lisp :tangle init.el
-(defun return-current-working-directory-to-shell ()
-  (interactive)
-  (expand-file-name
-   (with-current-buffer
-       (if (featurep 'elscreen)
-           (let* ((frame-confs (elscreen-get-frame-confs (selected-frame)))
-                  (num (nth 1 (assoc 'screen-history frame-confs)))
-                  (cur-window-conf
-                   (assoc 'window-configuration
-                          (assoc num (assoc 'screen-property frame-confs))))
-                  (marker (nth 2 cur-window-conf)))
-             (marker-buffer marker))
-         (nth 1
-              (assoc 'buffer-list
-                     (nth 1 (nth 1 (current-frame-configuration))))))
-     default-directory)))
-  #+end_src
-  - [ ] =counsel-find-file= だと動作しないことがある. 謎
 * 日本語入力: =ddskk=
   :PROPERTIES:
   :CUSTOM_ID: orgb83f65a0
@@ -2518,10 +2545,10 @@ video/*; xdg-open %s;
      スレッドの幅の指定
      #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-thread-indent-level 2)
-(setq wl-thread-have-younger-brother-str "+" ;; "├"
-      wl-thread-youngest-child-str "+" ;; "└"
-      wl-thread-vertical-str "|" ;; "│"
-      wl-thread-horizontal-str "-" ;; "─"
+(setq wl-thread-have-younger-brother-str "+" ;; "├" ;; "+"
+      wl-thread-youngest-child-str "+" ;; "└" ;; "+"
+      wl-thread-vertical-str "|";; "│" ;; "|"
+      wl-thread-horizontal-str "-";; "─" ;; "-"
       wl-thread-space-str " ")
      #+end_src
      以下の二つの設定を有効にするには
@@ -2567,25 +2594,28 @@ video/*; xdg-open %s;
      :PROPERTIES:
      :CUSTOM_ID: org9b1eb3e9
      :END:
+     昔はあれこれ設定してたけど, 今は良いのかな?
+     とりあえず, デコードする長さを default の 1000 から二桁増やしておく.
      #+begin_src emacs-lisp  :tangle init-wl.el
-(setq mime-header-lexical-analyzer
-      '(
-        ;; eword-analyze-quoted-string
-        eword-analyze-domain-literal
-        eword-analyze-comment
-        eword-analyze-spaces
-        eword-analyze-special
-        eword-analyze-encoded-word
-        eword-analyze-atom))
-;; (mime-set-field-decoder
-;;  'From nil 'eword-decode-and-unfold-unstructured-field-body)
-;; (mime-set-field-decoder
-;;  'To nil 'eword-decode-and-unfold-unstructured-field-body)
-(with-eval-after-load 'eword-decode
-  (mime-set-field-decoder
-   'From nil 'eword-decode-and-unfold-unstructured-field-body)
-  (mime-set-field-decoder
-   'To nil 'eword-decode-and-unfold-unstructured-field-body))
+(setq mime-field-decoding-max-size 100000)
+;; (setq mime-header-lexical-analyzer
+;;       '(
+;;         eword-analyze-quoted-string
+;;         eword-analyze-domain-literal
+;;         eword-analyze-comment
+;;         eword-analyze-spaces
+;;         eword-analyze-special
+;;         eword-analyze-encoded-word
+;;         eword-analyze-atom))
+;; ;; (mime-set-field-decoder
+;; ;;  'From nil 'eword-decode-and-unfold-unstructured-field-body)
+;; ;; (mime-set-field-decoder
+;; ;;  'To nil 'eword-decode-and-unfold-unstructured-field-body)
+;; (with-eval-after-load 'eword-decode
+;;   (mime-set-field-decoder
+;;    'From nil 'eword-decode-and-unfold-unstructured-field-body)
+;;   (mime-set-field-decoder
+;;    'To nil 'eword-decode-and-unfold-unstructured-field-body))
      #+end_src
 **** Subject が変わってもスレッドを切らない
      :PROPERTIES:
@@ -3160,7 +3190,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
          ("C-x n w" . widen)
          ("C-c a"   . org-agenda)
          ("C-x m"   . org-capture)
-         ("C-x M"   . my:org-journal-new-entry)
+         ("C-x M"   . org-journal-new-entry)
          )
   :advice
   (:before org-calendar-holiday
@@ -3526,22 +3556,23 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
 (leaf org-journal
   :if (and (file-directory-p my:d:org)
            (>= emacs-major-version 25))
-  :commands my:org-journal-new-entry
-  :bind ((:org-journal-mode-map
-          ("C-c C-c" . my:org-journal-entry-save-and-exit)))
+  ;; :commands my:org-journal-new-entry
+  :commands org-journal-new-entry
+  ;; :bind ((:org-journal-mode-map
+  ;;         ("C-c C-c" . my:org-journal-entry-save-and-exit)))
   :ensure t
   :init
-  (defun my:org-journal-new-entry (prefix &optional time)
-    "Add new journal entry on new elscreen"
-    (interactive "P")
-    (elscreen-create)
-    (org-journal-new-entry nil time))
+  ;; (defun my:org-journal-new-entry (prefix &optional time)
+  ;;   "Add new journal entry on new elscreen"
+  ;;   (interactive "P")
+  ;;   (elscreen-create)
+  ;;   (org-journal-new-entry nil time))
   ;;
-  (defun my:org-journal-entry-save-and-exit ()
-    "Save journal entry and close elscreen buffer"
-    (interactive)
-    (save-buffer)
-    (elscreen-kill))
+  ;; (defun my:org-journal-entry-save-and-exit ()
+  ;;   "Save journal entry and close elscreen buffer"
+  ;;   (interactive)
+  ;;   (save-buffer)
+  ;;   (elscreen-kill))
   :hook
   ((org-journal-mode-hook
     . (lambda()
@@ -4148,13 +4179,13 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   :ensure t
   :custom
   `((lsp-print-io             . nil)
-   (lsp-trace                . nil)
-   (lsp-print-performance    . nil)
-   (lsp-auto-guess-root      . t)
-   (lsp-document-sync-method . 'incremental)
-   (lsp-response-timeout     . 5)
-   (lsp-prefer-flymake       .'flymake)
-   (lsp-session-file         .,(expand-file-name "lsp-session-v1" my:d:tmp))
+    (lsp-trace                . nil)
+    (lsp-print-performance    . nil)
+    (lsp-auto-guess-root      . t)
+    (lsp-document-sync-method . 'incremental)
+    (lsp-response-timeout     . 5)
+    (lsp-prefer-flymake       .'flymake)
+    (lsp-session-file         .,(expand-file-name "lsp-session-v1" my:d:tmp))
    )
   :init
   (leaf lsp-ui
@@ -4308,11 +4339,11 @@ $clean_ext = "snm nav vrb synctex.gz spl bbl blg run.xml pgf-plot.table pgf-plot
   :init
   (leaf f90-indent
     :custom
-    ((f90-do-indent               . 2)
-     (f90-if-indent               . 2)
-     (f90-type-indent             . 2)
-     (f90-program-indent          . 2)
-     (f90-continuation-indent     . 2)
+    ((f90-do-indent               . 3) ;; 2? 4?
+     (f90-if-indent               . 3) ;; 2? 4?
+     (f90-type-indent             . 3) ;; 2? 4?
+     (f90-program-indent          . 3) ;; 2? 4?
+     (f90-continuation-indent     . 3) ;; 2? 4?
      (f90-directive-comment-re    . "!omp\\$" )
      (f90-indented-comment-re     . "!" )
      (f90-break-delimiters        . "[-+\\*/><=,% \t]")
@@ -4427,9 +4458,9 @@ $clean_ext = "snm nav vrb synctex.gz spl bbl blg run.xml pgf-plot.table pgf-plot
           "sid")))
     )
   (leaf woman
-    :custom-face
-    ((woman-bold   . '((t (:inherit font-lock-type-face :bold t))))
-     (woman-italic . '((t (:inherit font-lock-keyword-face :underline t)))))
+    ;; :custom-face
+    ;; ((woman-bold   . '((t (:inherit font-lock-type-face :bold t))))
+    ;; (woman-italic . '((t (:inherit font-lock-keyword-face :underline t)))))
     )
   (leaf info-colors
     :ensure t

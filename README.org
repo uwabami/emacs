@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2020-12-03 13:05:18
+#+date: 2020-12-05 09:52:08
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -933,7 +933,9 @@ init.el: README.org
    (tab-bar-new-tab-choice         . "*scratch*")
    (tab-bar-new-button-show        . nil)
    (tab-bar-tab-name-function      . 'my:tab-bar-tab-name-truncated)
-   (tab-bar-tab-name-truncated-max . 12))
+   (tab-bar-tab-name-truncated-max . 12)
+   (tab-bar-separator              . "")
+   )
   :config
   (tab-bar-mode +1)
   )
@@ -4080,22 +4082,12 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
 (leaf company
   :ensure t
   :blackout t
-  :init
-  (defun edit-category-table-for-company-dabbrev (&optional table)
-    (define-category ?s "word constituents for company-dabbrev" table)
-    (let ((i 0))
-      (while (< i 128)
-        (if (equal ?w (char-syntax i))
-            (modify-category-entry i ?s table)
-          (modify-category-entry i ?s table t))
-        (setq i (1+ i)))))
-  (edit-category-table-for-company-dabbrev)
-  ;; (add-hook 'TeX-mode-hook 'edit-category-table-for-company-dabbrev) ; 下の追記参照
-  (setq company-dabbrev-char-regexp "\\cs")
   :custom
-  ((company-idle-delay            . 0)
-   (company-selection-wrap-around . t)
-   (company-minimum-prefix-length . 4)
+  ((company-require-match             . 'never)
+   (company-idle-delay                . 0)
+   (company-selection-wrap-around     . t)
+   (company-tooltip-align-annotations . t)
+   (company-minimum-prefix-length     . 4)
    ;; disable some noisy default backends
    (company-backends . '(company-files
                          company-capf
@@ -4115,12 +4107,25 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    (:company-search-map
     ("C-p" . company-select-previous)
     ("C-n" . company-select-next)))
-  :hook
-  `((after-init-hook      . global-company-mode)
-    (minibuffer-setup-hook . ,(lambda ()
-                                (company-mode -1)))
-    )
   )
+  ;; :init
+  ;; (defun edit-category-table-for-company-dabbrev (&optional table)
+  ;;   (define-category ?s "word constituents for company-dabbrev" table)
+  ;;   (let ((i 0))
+  ;;     (while (< i 128)
+  ;;       (if (equal ?w (char-syntax i))
+  ;;           (modify-category-entry i ?s table)
+  ;;         (modify-category-entry i ?s table t))
+  ;;       (setq i (1+ i)))))
+  ;; (edit-category-table-for-company-dabbrev)
+  ;; ;; (add-hook 'TeX-mode-hook 'edit-category-table-for-company-dabbrev) ; 下の追記参照
+  ;; (setq company-dabbrev-char-regexp "\\cs")
+  ;; :hook
+  ;; `((after-init-hook      . global-company-mode)
+  ;;   (minibuffer-setup-hook . ,(lambda ()
+  ;;                               (company-mode -1)))
+  ;;   )
+  ;; )
   #+end_src
   - [X] [[https://github.com/TheBB/company-reftex][TheBB/company-reftex]]
   - [X] [[https://github.com/vspinu/company-math][vspinu/company-math]]

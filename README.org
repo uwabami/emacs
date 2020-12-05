@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2020-12-05 21:44:33
+#+date: 2020-12-06 01:47:32
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -1641,14 +1641,29 @@ File.open(src, "r") {|f|
   :global-minor-mode t
   )
    #+END_SRC
-** =counsel=: ivy による既存コマンドの拡張 [/]
+** =counsel=: ivy による既存コマンドの拡張
    :PROPERTIES:
    :CUSTOM_ID: org0527a687
    :END:
    #+BEGIN_SRC emacs-lisp
 (leaf counsel
   :ensure t
-  :preface
+  :init
+  (leaf amx
+    :ensure t
+    :custom
+    `(;; backend 'ivy or 'ido or 'auto
+      (amx-backend           . 'ivy)
+      ;; prompt
+      (amx-prompt-string     . "amx: ")
+      ;; keybind
+      (amx-show-key-bindings . nil)
+      ;; 履歴
+      (amx-save-file
+       . ,(expand-file-name "amx-items" my:d:tmp))
+      (amx-history-length . 128))
+    )
+  (leaf s :ensure t :require t)
   ;; @see https://github.com/abo-abo/swiper/issues/1333
   (defun my:counsel-find-file-fallback-command--enable-ivy ()
     (remove-hook 'minibuffer-setup-hook
@@ -1671,22 +1686,6 @@ File.open(src, "r") {|f|
            (call-interactively 'find-file))
          (setq default-directory old-default-directory))))
     (ivy-done))
-  :init
-  (leaf amx
-    :ensure t
-    :custom
-    `(;; backend 'ivy or 'ido or 'auto
-      (amx-backend           . 'ivy)
-      ;; prompt
-      (amx-prompt-string     . "amx: ")
-      ;; keybind
-      (amx-show-key-bindings . nil)
-      ;; 履歴
-      (amx-save-file
-       . ,(expand-file-name "amx-items" my:d:tmp))
-      (amx-history-length . 128))
-    )
-  (leaf s :ensure t :require t)
   ;;
   (defun my:counsel-recentf ()
     "Custom: Find a file on `recentf-list' with shorten-file-path"
@@ -1713,7 +1712,6 @@ File.open(src, "r") {|f|
   `((counsel-yank-pop-separator . "\n----------\n")
     (counsel-find-file-ignore-regexp
      . ,(rx-to-string '(or "./" "../") 'no-group)))
-  :global-minor-mode t
   :config
   ;; 無視する拡張子の追加
   (cl-loop for ext in
@@ -1769,33 +1767,16 @@ File.open(src, "r") {|f|
    :END:
    現状は =counsel-M-x= に表示情報を増やすために利用している.
    #+BEGIN_SRC emacs-lisp
-(leaf *ivy-icon-rich
-  :init
-  (leaf all-the-icons-ivy-rich :ensure t)
-  (leaf ivy-rich
-    :ensure t
-    :after counsel
-    :preface
-    :init
-    (setq ivy-rich-display-transformers-list
-          '(counsel-M-x
-            (:columns
-             ((counsel-M-x-transformer (:width 34))
-              (ivy-rich-counsel-function-docstring (:face font-lock-doc-face))))
-            ;; counsel-find-file
-            ;; (:columns
-            ;;  (
-            ;;   (all-the-icons-ivy-rich-file-icon)
-            ;;   (ivy-read-file-transformer)
-            ;;   (ivy-rich-candidate)
-            ;;   (ivy-rich-counsel-find-file-truename (:face font-lock-doc-face))))
-            ))
-    :config
-    (setq ivy-rich-path-style 'abbrev)
-    )
-  :config
-  (all-the-icons-ivy-rich-mode 1)
-  (ivy-rich-mode 1)
+(leaf all-the-icons-ivy-rich
+  :ensure t
+  :global-minor-mode t
+  )
+(leaf ivy-rich
+  :ensure t
+  :after ivy
+  :custom
+  `((ivy-rich-path-style . 'abbrev))
+  :global-minor-mode t
   )
    #+END_SRC
 * 校正, 辞書等
@@ -3983,7 +3964,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    :END:
    #+begin_src emacs-lisp :tangle init.el
 (leaf *git
-  :if (>= emacs-major-version 25)
+  :emacs>= 25
   :init
   (leaf git-commit :ensure t)
   (leaf gitattributes-mode :ensure t)
@@ -4013,7 +3994,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
       (transient-force-fixed-pitch . t))
     )
   :config
-  (setq magit-completing-read-function 'ido
+  (setq magit-completing-read-function 'ivy
         magit-refs-show-commit-count   'all
         magit-log-buffer-file-locked   t
         magit-revision-show-gravatars  nil
@@ -4038,7 +4019,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    飽きたら止めるかもしれないけれど.
    #+begin_src emacs-lisp :tangle init.el
 (leaf git-gutter+
-  :if (>= emacs-major-version 25)
+  :emacs>= 25
   :ensure t
   :blackout `((git-gutter+-mode
                . ,(format "%s" (all-the-icons-octicon "git-merge"))))
@@ -4680,7 +4661,7 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
   #+begin_src emacs-lisp :tangle init.el
 ;; (setq frame-background-mode (frame-parameter nil 'background-mode))
 (leaf *doom-themes
-  :if (>= emacs-major-version 25)
+  :emacs>= 25
   :init
   (leaf doom-themes :ensure t)
   (leaf emacs-doom-darkpastel

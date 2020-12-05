@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2020-12-05 09:52:08
+#+date: 2020-12-05 09:57:43
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -897,7 +897,7 @@ init.el: README.org
    手癖で "C-o" を prefix で使いたいので, その設定をしていたり.
    #+begin_src emacs-lisp :tangle init.el
 (leaf tab-bar-mode
-  :emacs>= "27.1"
+  :emacs> "27"
   :init
   (defvar my:ctrl-o-map (make-sparse-keymap)
     "My original keymap binded to C-o.")
@@ -1315,7 +1315,7 @@ init.el: README.org
   #+begin_src emacs-lisp :tangle init.el
 ;;
 (leaf elscreen
-  :emacs< "27.1"
+  :emacs< "27"
   :ensure t
   :custom
   ((elscreen-display-tab             . 8)

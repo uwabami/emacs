@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2020-12-05 09:57:43
+#+date: 2020-12-05 21:44:33
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -1578,50 +1578,144 @@ File.open(src, "r") {|f|
                  (skk-mode-exit))))
 (setq skk-isearch-start-mode 'latin)
     #+end_src
-* 補完: =ido=
+* 補完: =ivy=, =counsel=,  =swiper=
   :PROPERTIES:
-  :CUSTOM_ID: orge3fb8a64
+  :CUSTOM_ID: org3babff6c
   :END:
-  補完は =ido= が軽いし速いので好み.
-  見た目がちょっと簡素すぎる気もするので、なんとか弄りたい所ではある。
-** =ido= の設定
+  以前は =ido= を使っていたのでまだ挙動に戸惑う事があるけれど．
+  - [[https://qiita.com/takaxp/items/2fde2c119e419713342b][helm を背に ivy の門を叩く - Qiita]] を参考の事.
+** 基本設定: =ivy=
    :PROPERTIES:
-   :CUSTOM_ID: orgc92613c0
+   :CUSTOM_ID: orgd0019abf
    :END:
-   #+begin_src emacs-lisp :tangle init.el
-(leaf ido
-  :commands ido-save-history
+   #+BEGIN_SRC emacs-lisp
+(leaf ivy
+  :emacs>= 24.5
+  :ensure t
+  :blackout t
   :init
-  (leaf ido-completing-read+ :ensure t)
-  ;; (leaf ido-describe-bindings :ensure t)
-  :bind (("C-x C-f" . ido-find-file))
+  (leaf flx :ensure t)
+  (leaf ivy-hydra :ensure t)
+  :bind
+  ((:ivy-minibuffer-map
+    ("<escape>" . minibuffer-keyboard-quit)))
+  :custom
+  `((ivy-use-virtual-buffers     . t)
+    (ivy-truncate-lines          . t)
+    (ivy-initial-inputs-alist    . nil)
+    (ivy-extra-directories       . nil) ;; "." と ".." を無視
+    (ivy-fixed-height-minibuffer . t)
+    (ivy-height                  . 9)
+    (ivy-wrap                    . t)
+    (ivy-use-selectable-prompt   . t)
+    (ivy-count-format            . "[%d/%d] ")
+    (ivy-re-builders-alist
+     . '((t . ivy--regex-fuzzy)
+         (swiper . ivy--regex-plus)))
+    (ivy-read-action-function . 'ivy-hydra-read-action)
+    )
+)
+   #+END_SRC
+** 補完候補の改善: =prescient=
+   :PROPERTIES:
+   :CUSTOM_ID: org335ca4e4
+   :END:
+   #+BEGIN_SRC emacs-lisp
+ (leaf prescient
+   :ensure t
+   :commands (prescient-persist-mode)
+   :custom
+   `((prescient-aggressive-file-save . t)
+     (prescient-save-file
+      . ,(expand-file-name (expand-file-name "tmp/prescient-save.el" user-emacs-directory)))
+     (prescient-filter-method . '(fuzzy regexp initialism))
+     )
+   :global-minor-mode prescient-persist-mode
+   )
+(leaf ivy-prescient
+  :ensure t
+  :after prescient ivy
+  :custom
+  `((ivy-prescient-retain-classic-highlighting . t)
+    )
+  :global-minor-mode t
+  )
+   #+END_SRC
+** =counsel=: ivy による既存コマンドの拡張 [/]
+   :PROPERTIES:
+   :CUSTOM_ID: org0527a687
+   :END:
+   #+BEGIN_SRC emacs-lisp
+(leaf counsel
+  :ensure t
   :preface
-  (defun my:ido-disable-line-trucation ()
-    (set (make-local-variable 'truncate-lines) nil))
-  ;;
-  (defun my:ido-remove-tramp-from-cache nil
-    "Remove any TRAMP entries from `ido-dir-file-cache'.
-    This stops tramp from trying to connect to remote hosts on emacs startup,
-    which can be very annoying."
+  ;; @see https://github.com/abo-abo/swiper/issues/1333
+  (defun my:counsel-find-file-fallback-command--enable-ivy ()
+    (remove-hook 'minibuffer-setup-hook
+                 'my:counsel-find-file-fallback-command--enable-ivy)
+    (ivy-mode t))
+  (defun my:counsel-find-file-fallback-command ()
+    "Fallback to non-counsel version of find-file."
     (interactive)
-    (setq ido-dir-file-cache
-          (cl-remove-if
-           (lambda (x)
-             (string-match "/\\(rsh\\|ssh\\|telnet\\|su\\|sudo\\|sshx\\|krlogin\\|ksu\\|rcp\\|scp\\|rsync\\|scpx\\|fcp\\|nc\\|ftp\\|smb\\|adb\\):" (car x)))
-           ido-dir-file-cache)))
-  ;;
-  (defun my:ido-kill-emacs-hook ()
-    (my:ido-remove-tramp-from-cache)
-    (ido-save-history))
-  :advice (:override ido-kill-emacs-hook
-                     my:ido-kill-emacs-hook)
-  :hook ((ido-setup-hook
-          . (lambda ()
-              (define-key ido-completion-map (kbd "C-h") 'ido-delete-backward-updir)
-              (define-key ido-completion-map (kbd "C-l") 'ido-delete-backward-updir)))
-         (ido-minibuffer-setup-hook . my:ido-disable-line-trucation))
+    (when (bound-and-true-p ivy-mode)
+      (ivy-mode -1)
+      (add-hook 'minibuffer-setup-hook
+                'my:counsel-find-file-fallback-command--enable-ivy))
+    (ivy-set-action
+     (lambda (current-path)
+       (let ((old-default-directory default-directory))
+         (let ((i (length current-path)))
+           (while (> i 0)
+             (push (aref current-path (setq i (1- i))) unread-command-events)))
+         (let ((default-directory ""))
+           (call-interactively 'find-file))
+         (setq default-directory old-default-directory))))
+    (ivy-done))
   :init
-  ;; 補完で無視する拡張子の追加．そのうち増える．
+  (leaf amx
+    :ensure t
+    :custom
+    `(;; backend 'ivy or 'ido or 'auto
+      (amx-backend           . 'ivy)
+      ;; prompt
+      (amx-prompt-string     . "amx: ")
+      ;; keybind
+      (amx-show-key-bindings . nil)
+      ;; 履歴
+      (amx-save-file
+       . ,(expand-file-name "amx-items" my:d:tmp))
+      (amx-history-length . 128))
+    )
+  (leaf s :ensure t :require t)
+  ;;
+  (defun my:counsel-recentf ()
+    "Custom: Find a file on `recentf-list' with shorten-file-path"
+    (interactive)
+    (require 'recentf nil 'noerror)
+    (recentf-mode)
+    (ivy-read "Recentf: " (mapcar (lambda (f)
+                                    (cons (my:shorten-file-path f 68) f))
+                                  recentf-list)
+              :action (lambda (f)
+                        (with-ivy-window
+                          (find-file (cdr f))))
+              :require-match t
+              :caller 'counsel-recentf)
+    )
+  :bind (("C-x C-f" . counsel-find-file)
+         ("C-x C-r" . my:counsel-recentf)
+         ("M-x"     . counsel-M-x)
+         (:counsel-find-file-map
+          ("C-l" . counsel-up-directory)
+          ("C-f" . my:counsel-find-file-fallback-command) ;;
+          ))
+  :custom
+  `((counsel-yank-pop-separator . "\n----------\n")
+    (counsel-find-file-ignore-regexp
+     . ,(rx-to-string '(or "./" "../") 'no-group)))
+  :global-minor-mode t
+  :config
+  ;; 無視する拡張子の追加
   (cl-loop for ext in
            '(;; TeX
              ".dvi"
@@ -1644,159 +1738,66 @@ File.open(src, "r") {|f|
              ;; fxxkin Apple
              ".DS_Store"
              "._DS_Store"
-             ;; "org-id-locations"
              )
-           do (add-to-list 'completion-ignored-extensions ext))
-  :custom
-  `(;; prefix match 入力を先頭一致可能
-    (ido-enable-prefix             . nil)
-    ;; TAB で名前の一致までその後 RET で実行
-    (ido-confirm-unique-completion . t)
-    ;; . を prefix として扱う
-    (ido-enable-dot-prefix         . nil)
-    ;; flx matching を試す際には prefix を無効化すること
-    (ido-enable-flex-matching      . t)
-    ;;
-    (ido-default-file-method       . 'selected-window)
-    (ido-default-buffer-method     . 'selected-window)
-    ;; avoid [Too Big]
-    (ido-max-directory-size        . 1000000)
-    ;; Tramp では無効化
-    (ido-enable-tramp-completion   . nil)
-    ;; ido-vertical も調べないとアカン様な.
-    (ido-use-faces                 . t)
-    ;; 拡張子には match しない
-    (ido-ignore-extensions         . t)
-    ;; 補完できない場合の挙動 ← "何もしない" は可能かな? nil?
-    (ido-cannot-complete-command   . 'ido-next-match)
-    ;; 補完候補が無い場合に search を始める長さ ⇒ -1 で停止
-    (ido-auto-merge-work-directories-length . -1)
-    ;; 補完候補が無い場合に search を始める時間
-    ;; run-with-timer に与える値なので, とりあえず長め(30分)にしておく
-    (ido-auto-merge-delay-time     . 1800)
-    ;; 補完結果の保存
-    (ido-save-directory-list-file
-     . ,(expand-file-name "ido.last" my:d:tmp)))
-  :config
-  (ido-mode t)
-  ;; (ido-everywhere t)   ; <- 過去の選択を覚えている奴と相性悪い.
+           do
+           (add-to-list 'completion-ignored-extensions ext))
+  (setq counsel-find-file-ignore-regexp
+        (format "\\%s\\'"
+                (s-replace "/" "\\/"
+                           (s-join "\\'\\|" completion-ignored-extensions))))
   )
-   #+end_src
-** =flx-ido=: flex match の強化
+   #+END_SRC
+** =ivy-ghq=
    :PROPERTIES:
-   :CUSTOM_ID: org72b78bcc
+   :CUSTOM_ID: orge656a4d5
    :END:
-   曖昧マッチが非常に直感的になった．地味に便利で手放せない．
-   #+begin_src emacs-lisp :tangle init.el
-(leaf flx-ido
-  :ensure t
-  :custom
-  `((flx-ido-use-faces . t)
-    (flx-ido-threshold . 10000))
-  :hook
-  (emacs-startup-hook . (lambda () (flx-ido-mode 1)))
-  )
-   #+end_src
-** =ido-flx-with-migemo=: flx + migemo
-   :PROPERTIES:
-   :CUSTOM_ID: orge285b835
-   :END:
-   これは便利だ
-   #+begin_src emacs-lisp :tangle init.el
-(leaf ido-flex-with-migemo
-  :if (executable-find "cmigemo")
-  :ensure t
-  :after (flx migemo)
-  :config
-  (ido-flex-with-migemo-mode)
-  )
-   #+end_src
-** SOMEDAY =ido-vertical-mode=: 候補を縦に並べて表示 [/]
-   :PROPERTIES:
-   :CUSTOM_ID: orgba1f040e
-   :END:
-   #+begin_src emacs-lisp :tangle init.el
-(leaf ido-vertical-mode
-  :ensure t
-  :after all-the-icons-in-terminal
-  :preface
-  (defface my:ido-indicator
-    '((((class color) (background light)) :foreground "#FFBF7F")
-      (((class color) (background dark)) :foreground "#FFBF7F"))
-    "Face used by Ido highlighting the arrow.")
-  :custom
-  `(;; 補完候補数の表示
-    (ido-vertical-show-count  . t)
-    ;; キーバインド
-    (ido-vertical-define-keys . 'C-n-C-p-up-down-left-right)
-    ;; minibuffer の高さ制限
-    (ido-max-window-height    . 0.3)
-    ;; 候補選択表示のカスタマイズ
-    (ido-vertical-indicator
-     . ,(format "%s"
-                (all-the-icons-faicon "hand-o-right"
-                                      :face 'my:ido-indicator)))
-    )
-  :hook
-  (emacs-startup-hook . (lambda () (ido-vertical-mode 1)))
-  )
-   #+end_src
-   - [ ] Debian パッケージは古い．更新すること
-** =amx=
-   :PROPERTIES:
-   :CUSTOM_ID: org28528ad3
-   :END:
-   M-x を ido で. 以前は smex を利用していたが, amx に乗り換えた.
-   #+begin_src emacs-lisp :tangle init.el
-(leaf amx
-  :bind (("M-x" . amx))
-  :ensure t
-  :custom
-  `(;; backend 'ivy or 'ido or 'auto
-    (amx-backend . 'ido)
-    ;; prompt
-    (amx-prompt-string . "amx: ")
-    ;; keybind
-    (amx-show-key-bindings . nil)
-    ;; 履歴
-    (amx-save-file
-     . ,(expand-file-name "amx-items" my:d:tmp))
-    (amx-history-length . 128))
-  )
-   #+end_src
-** =ido-recentf=: recentf を ido で
-   :PROPERTIES:
-   :CUSTOM_ID: org56240c5e
-   :END:
-   "recentf-list" の結果を整形して, minibuffer に納まる様に縮小したり
-   #+begin_src emacs-lisp :tangle init.el
-(leaf *ido-recentf-open
-  :preface
-  (defun ido-recentf-open ()
-    "Use `ido-completing-read' to \\[find-file] a recent file"
-    (interactive)
-    (let ((files (mapcar (lambda (f)
-                           (cons (my:shorten-file-path f 70) f))
-                         recentf-list)))
-      (let ((selected (ido-completing-read "Files: " (mapcar #'car files))))
-        (find-file (assoc-default selected files)))))
-  :bind ("C-x C-r" . ido-recentf-open)
-  )
-   #+end_src
-** ido-ghq
-   :PROPERTIES:
-   :CUSTOM_ID: org7eb97621
-   :END:
-   ghq list を ido で選んで dired で開く
-   #+begin_src emacs-lisp :tangle init.el
-(leaf ido-ghq
+   =projectile= はあんまり使わなくて良い気もしている
+   #+BEGIN_SRC emacs-lisp
+(leaf ivy-ghq
   :if (executable-find "ghq")
-  :el-get uwabami/ido-ghq
-  :bind (("C-x f" . ido-ghq-open))
+  :el-get (ivy-ghq
+           :type github
+           :pkgname "analyticd/ivy-ghq")
+  :bind (("C-x f" . ivy-ghq-open))
   :config
-  (setq ido-ghq-short-list t)
+  (setq ivy-ghq-short-list t)
   )
-   #+end_src
+   #+END_SRC
+** =ivy-rich=, =all-the-icons-ivy-rich=: 補完候補の情報を増やす
+   :PROPERTIES:
+   :CUSTOM_ID: orgbc552b73
+   :END:
+   現状は =counsel-M-x= に表示情報を増やすために利用している.
+   #+BEGIN_SRC emacs-lisp
+(leaf *ivy-icon-rich
+  :init
+  (leaf all-the-icons-ivy-rich :ensure t)
+  (leaf ivy-rich
+    :ensure t
+    :after counsel
+    :preface
+    :init
+    (setq ivy-rich-display-transformers-list
+          '(counsel-M-x
+            (:columns
+             ((counsel-M-x-transformer (:width 34))
+              (ivy-rich-counsel-function-docstring (:face font-lock-doc-face))))
+            ;; counsel-find-file
+            ;; (:columns
+            ;;  (
+            ;;   (all-the-icons-ivy-rich-file-icon)
+            ;;   (ivy-read-file-transformer)
+            ;;   (ivy-rich-candidate)
+            ;;   (ivy-rich-counsel-find-file-truename (:face font-lock-doc-face))))
+            ))
+    :config
+    (setq ivy-rich-path-style 'abbrev)
+    )
+  :config
+  (all-the-icons-ivy-rich-mode 1)
+  (ivy-rich-mode 1)
+  )
+   #+END_SRC
 * 校正, 辞書等
   :PROPERTIES:
   :CUSTOM_ID: org15a06190
@@ -2610,15 +2611,13 @@ video/*; xdg-open %s;
 ;;         eword-analyze-special
 ;;         eword-analyze-encoded-word
 ;;         eword-analyze-atom))
-;; ;; (mime-set-field-decoder
-;; ;;  'From nil 'eword-decode-and-unfold-unstructured-field-body)
-;; ;; (mime-set-field-decoder
-;; ;;  'To nil 'eword-decode-and-unfold-unstructured-field-body)
-;; (with-eval-after-load 'eword-decode
-;;   (mime-set-field-decoder
-;;    'From nil 'eword-decode-and-unfold-unstructured-field-body)
-;;   (mime-set-field-decoder
-;;    'To nil 'eword-decode-and-unfold-unstructured-field-body))
+(with-eval-after-load 'eword-decode
+  (mime-set-field-decoder
+   'From nil 'eword-decode-and-unfold-unstructured-field-body)
+  (mime-set-field-decoder
+   'CC nil 'eword-decode-and-unfold-unstructured-field-body)
+  (mime-set-field-decoder
+   'To nil 'eword-decode-and-unfold-unstructured-field-body))
      #+end_src
 **** Subject が変わってもスレッドを切らない
      :PROPERTIES:
@@ -4107,7 +4106,24 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    (:company-search-map
     ("C-p" . company-select-previous)
     ("C-n" . company-select-next)))
+  :hook
+  `((after-init-hook      . global-company-mode)
+    (minibuffer-setup-hook . ,(lambda ()
+                                (company-mode -1)))
+    )
   )
+;; (leaf company-statistics
+;;   :disabled t
+;;   :ensure t
+;;   :custom
+;;   `((company-statistics-size . 2000)
+;;     (company-statistics-file
+;;      . ,(expand-file-name "company-statistics-cache.el" my:d:tmp))
+;;     (company-transformers
+;;      . (company-sort-by-statistics company-sort-by-backed-importance)))
+;;   :config
+;;   (company-statistics-mode)
+;;   )
   ;; :init
   ;; (defun edit-category-table-for-company-dabbrev (&optional table)
   ;;   (define-category ?s "word constituents for company-dabbrev" table)
@@ -4120,12 +4136,6 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   ;; (edit-category-table-for-company-dabbrev)
   ;; ;; (add-hook 'TeX-mode-hook 'edit-category-table-for-company-dabbrev) ; 下の追記参照
   ;; (setq company-dabbrev-char-regexp "\\cs")
-  ;; :hook
-  ;; `((after-init-hook      . global-company-mode)
-  ;;   (minibuffer-setup-hook . ,(lambda ()
-  ;;                               (company-mode -1)))
-  ;;   )
-  ;; )
   #+end_src
   - [X] [[https://github.com/TheBB/company-reftex][TheBB/company-reftex]]
   - [X] [[https://github.com/vspinu/company-math][vspinu/company-math]]

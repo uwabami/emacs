@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2020-12-06 01:47:32
+#+date: 2020-12-06 03:27:40
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -941,6 +941,22 @@ init.el: README.org
   )
    #+end_src
   - [[https://masutaka.net/chalow/2011-09-28-1.html][ターミナルの zsh と Emacs を風のように駆け抜ける！]]
+* =beacon=: buffer 切り替え時の行の強調表示
+  :PROPERTIES:
+  :CUSTOM_ID: orgb750c5b3
+  :END:
+  #+begin_src emacs-lisp
+(leaf beacon
+  :ensure t
+  :custom
+  `((beacon-color              . "#aa3400")
+    (beacon-size               . 78)
+    (beacon-blink-when-focused . t)
+    )
+  :config
+  (beacon-mode 1)
+  )
+  #+end_src
 * =recentf=: 最近使ったファイル履歴の保管
   :PROPERTIES:
   :CUSTOM_ID: org43970469
@@ -4051,7 +4067,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   (smart-jump-setup-default-registers)
   )
   #+end_src
-* SOMEDAY 言語毎の補完: =company-mode=
+* 言語毎の補完: =company-mode=
   :PROPERTIES:
   :CUSTOM_ID: org935a4dbf
   :END:
@@ -4134,10 +4150,10 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     `((yas-indent-line  . 'fixed)
       (yas-snippet-dirs . '(,(expand-file-name "snippets" my:d:share))))
     :hook (after-init-hook . yas-global-mode)
-    :bind ((yas-keymap
+    :bind ((:yas-keymap
             ("C-<tab>" . nil)
             ("<tab>"   . nil))  ; for company
-           (yas-minor-mode-map
+           (:yas-minor-mode-map
             ("<tab>"   . nil)
             ("C-<tab>" . nil)
             ("C-c y e" . yas-expand)
@@ -4161,7 +4177,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   =flycheck= はいろいろやりすぎてて私には合わない.
   #+begin_src emacs-lisp :tangle init.el
 (leaf flymake
-  :if (<= 26.1 (string-to-number emacs-version))
+  :emacs<= 26.1
   :ensure t
   )
   #+end_src
@@ -4247,15 +4263,14 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   (load "auctex" t t)
   (load "preview-latex" t t)
   :hook
-  (LaTeX-mode-hook
-   . (lambda()
-       (turn-on-reftex)
-       (TeX-source-correlate-mode)
-       (TeX-PDF-mode)
-       (LaTeX-math-mode)
-       ;; (company-auctex-init)
-       (reftex-mode)
-       (outline-minor-mode)))
+  (LaTeX-mode-hook . (lambda()
+                       (turn-on-reftex)
+                       (TeX-source-correlate-mode)
+                       (TeX-PDF-mode)
+                       (LaTeX-math-mode)
+                       ;; (company-auctex-init)
+                       (reftex-mode)
+                       (outline-minor-mode)))
   :custom
   `((TeX-auto-local
      . ,(expand-file-name "auctex/auto" my:d:tmp))
@@ -4367,13 +4382,12 @@ $clean_ext = "snm nav vrb synctex.gz spl bbl blg run.xml pgf-plot.table pgf-plot
   :preface
   (defun my:disable-electric-indent-local-mode ()
     (electric-indent-local-mode -1))
-  :hook ((markdown-mode-hook . my:disable-electric-indent-local-mode)
-         (gfm-mode-hook      . my:disable-electric-indent-local-mode)
-         )
-  :config
-  (setq markdown-command
-        "pandoc --from markdown_github -t html5 --mathjax --highlight-style pygments"
-        )
+  :hook
+  `((markdown-mode-hook . my:disable-electric-indent-local-mode)
+    (gfm-mode-hook      . my:disable-electric-indent-local-mode))
+  :custom
+  `((markdown-command
+     . "pandoc --from markdown_github -t html5 --mathjax --highlight-style pygments"))
   )
   #+end_src
 * SCSS
@@ -4415,7 +4429,7 @@ $clean_ext = "snm nav vrb synctex.gz spl bbl blg run.xml pgf-plot.table pgf-plot
   :ensure t
   :custom
   `((review-mode-use-skk-mode . t)
-    (reivew-use-em . t)
+    (reivew-use-em            . t)
     )
   )
   #+END_SRC

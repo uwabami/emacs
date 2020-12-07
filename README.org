@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2020-12-06 03:27:40
+#+date: 2020-12-08 01:05:52
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -953,6 +953,8 @@ init.el: README.org
     (beacon-size               . 78)
     (beacon-blink-when-focused . t)
     )
+  :custom-face
+  `((beacon-fallback-background . '((t (:background "#556b2f")))))
   :config
   (beacon-mode 1)
   )
@@ -4524,43 +4526,11 @@ $clean_ext = "snm nav vrb synctex.gz spl bbl blg run.xml pgf-plot.table pgf-plot
   :PROPERTIES:
   :CUSTOM_ID: orgbf458527
   :END:
-** SOMEDAY xterm-color [0/1]
-   :PROPERTIES:
-   :CUSTOM_ID: org4c769ff7
-   :END:
-   色を端末と揃える。
-   #+begin_src emacs-lisp :tangle init.el
-(leaf xterm-color
-  :disabled t
-  :ensure t
-  :config
-  (setq xterm-color-names
-        ["#000000"    ; black
-         "#FF4C4C"    ; red
-         "#4Cff4C"    ; green
-         "#FFFF4C"    ; yellow
-         "#4C4CFF"    ; blue
-         "#FF4CFF"    ; magenta
-         "#4CFFFF"    ; cyan
-         "#AAAAAA"]   ; white
-        xterm-color-names-bright
-        ["#020202"    ; black
-         "#FF7F7F"    ; red
-         "#7FFF7F"    ; green
-         "#FFFF7F"    ; yellow
-         "#7F7FFF"    ; blue
-         "#FF7FFF"    ; magenta
-         "#7FFFFF"    ; cyan
-         "#FFFFFF"]   ; white
-        xterm-color-use-bold-for-bright nil
-        )
-  )
-   #+end_src
-   - [ ] ちゃんと効いてない, ような?
 ** SOMEDAY フォント [0/1]
    :PROPERTIES:
    :CUSTOM_ID: org356b9857
    :END:
+   試行錯誤中. とはいえ, GUIで使う事は滅多に無いのでなかなか弄る機会が無い.
   #+begin_src emacs-lisp :tangle init.el
 ;;;###autoload
 (defun my:load-window-config ()

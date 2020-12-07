@@ -1,0 +1,25 @@
+name: test
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.emacs_version == 'snapshot' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        emacs_version:
+          - '24.5'
+          - '25.1'
+          - '25.2'
+          - '25.3'
+          - '26.1'
+          - '26.2'
+          - '26.3'
+          - '27.1'
+          - 'snapshot'
+    steps:
+      - uses: actions/checkout@v1
+      - uses: purcell/setup-emacs@master
+        with:
+          version: ${{ matrix.emacs_version }}
+      - run: make

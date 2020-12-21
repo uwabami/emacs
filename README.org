@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2020-12-08 01:32:48
+#+date: 2020-12-12 22:34:48
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -950,7 +950,7 @@ init.el: README.org
   :ensure t
   :custom
   `((beacon-color              . "#aa3400")
-    (beacon-size               . 78)
+    ;; (beacon-size               . 64)
     (beacon-blink-when-focused . t)
     )
   :custom-face
@@ -2107,23 +2107,21 @@ File.open(src, "r") {|f|
      #+begin_src emacs-lisp :tangle init-wl.el
 (leaf mime-setup
   :preface
-  (leaf w3m-load)
-  (leaf mime-w3m :require t)
-  ;; (setq mime-view-text/html-previewer 'shr
-  ;;       mime-setup-enable-inline-html 'shr)
-  ;; (defvar my:shr-width 72)
-  ;; ;;
-  ;; (defun my:shr-insert-document (&rest them)
-  ;;   (let ((shr-width my:shr-width)) (apply them)))
-  ;; ;;
-  ;; (defun my:mime-shr-preview-text/html (&rest args)
-  ;;   (advice-add 'shr-insert-document :around 'my:shr-insert-document)
-  ;;   (unwind-protect
-  ;;       (apply args)
-  ;;     (advice-remove 'shr-insert-document 'my:shr-insert-document)))
-  ;; :advice
-  ;; (:around mime-shr-preview-text/html
-  ;;          my:mime-shr-preview-text/html)
+  ;; (leaf w3m-load)
+  ;; (leaf mime-w3m :require t)
+  (setq mime-view-text/html-previewer 'shr
+        mime-setup-enable-inline-html 'shr)
+  (defvar my:shr-width 72)
+  (defun my:shr-insert-document (&rest them)
+    (let ((shr-width my:shr-width)) (apply them)))
+  (defun my:mime-shr-preview-text/html (&rest args)
+    (advice-add 'shr-insert-document :around 'my:shr-insert-document)
+    (unwind-protect
+        (apply args)
+      (advice-remove 'shr-insert-document 'my:shr-insert-document)))
+  :advice
+  (:around mime-shr-preview-text/html
+           my:mime-shr-preview-text/html)
   )
      #+end_src
      どのアプリケーションで開くか → =xdg-open= に丸投げ．
@@ -3807,12 +3805,25 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    (org-export-with-section-numbers . nil))
   )
     #+end_src
-*** HTML
+*** Jekyll, HTML
+    :PROPERTIES:
+    :CUSTOM_ID: orgd48f8f82
+    :END:
+    Web サイトは Jekyll で作成しています.
+    以前は org file を直接 jekyll で処理していましたが,
+    最近は org を html に export して, それを処理する様にしています.
+
+    exporter は [[https://uwabami.github.com/ox-jekyll][uwabami/ox-jekyll]] にあります.
     :PROPERTIES:
     :CUSTOM_ID: org10cd0de1
     :END:
     #+begin_src emacs-lisp :tangle init.el
 (leaf ox-html
+  :after ox
+  :init
+  (leaf ox-jekyll
+    :if (file-directory-p "~/Public/cc-env")
+    :el-get uwabami/ox-jekyll)
   :custom
   ((org-html-table-align-individual-fields . nil)
    (org-html-table-default-attributes      . nil)
@@ -3824,7 +3835,49 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
         ("http"  . "\\.\\(jpeg\\|jpg\\|png\\|gif\\|webp\\|svg\\)\\'")
         ("https" . "\\.\\(jpeg\\|jpg\\|png\\|gif\\|webp\\|svg\\)\\'")))
    )
-)
+  :config
+  ;;
+  (defun my:org-wiki-jekyll-finalized1 (contents backend info)
+    "Replace some URL"
+    (when (org-export-derived-backend-p backend 'jekyll)
+      (s-replace
+       (format "<a href=\"file://%sREADME.html"
+               (expand-file-name user-emacs-directory))
+       "<a href=\"{{baseurl}}/cc-env/Emacs.html"
+       contents)))
+  ;;
+  (defun my:org-wiki-jekyll-finalized2 (contents backend info)
+    "Replace some URL"
+    (when (org-export-derived-backend-p backend 'jekyll)
+      (s-replace
+       (format "<a href=\"file://%s"
+               (expand-file-name "Public/" (getenv "HOME")))
+       "<a href=\"{{site.url}}/"
+       contents)))
+  ;;
+  (defun my:org-wiki-jekyll-finalized3 (contents backend info)
+    "Replace some URL"
+    (when (org-export-derived-backend-p backend 'jekyll)
+      (replace-regexp-in-string
+       " id=\"outline-container-org.+\" class=\"outline-.+\""
+       "" contents)))
+  ;;
+  (defun my:org-wiki-jekyll-finalized4 (contents backend info)
+    "Replace some URL"
+    (when (org-export-derived-backend-p backend 'jekyll)
+      (replace-regexp-in-string
+       "<a id=\"org.+?\"></a>"
+       "" contents)))
+  ;;
+  (add-to-list 'org-export-filter-body-functions
+               'my:org-wiki-jekyll-finalized1)
+  (add-to-list 'org-export-filter-body-functions
+               'my:org-wiki-jekyll-finalized2)
+  (add-to-list 'org-export-filter-body-functions
+               'my:org-wiki-jekyll-finalized3)
+  (add-to-list 'org-export-filter-body-functions
+               'my:org-wiki-jekyll-finalized4)
+  )
     #+end_src
 *** LaTeX, Beamer
     :PROPERTIES:
@@ -3874,56 +3927,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     :PROPERTIES:
     :CUSTOM_ID: org589a50cc
     :END:
-    Web サイトは Jekyll で作成しています.
-    以前は org file を直接 jekyll で処理していましたが,
-    最近は org を html に export して, それを処理する様にしています.
-
-    exporter は [[https://uwabami.github.com/ox-jekyll][uwabami/ox-jekyll]] にあります.
     #+begin_src emacs-lisp :tangle init.el
-(leaf ox-jekyll
-  :if (file-directory-p "~/Public/cc-env")
-  :el-get (ox-jekyll
-           :type github
-           :pkgname "uwabami/ox-jekyll")
-  :after ox-html
-  :config
-  (defun my:org-wiki-jekyll-finalized1 (contents backend info)
-    "Replace some URL"
-    (when (org-export-derived-backend-p backend 'jekyll)
-      (s-replace
-       (format "<a href=\"file://%sREADME.html"
-               (expand-file-name user-emacs-directory))
-       "<a href=\"{{baseurl}}/cc-env/Emacs.html"
-       contents)))
-  (add-to-list 'org-export-filter-body-functions
-               'my:org-wiki-jekyll-finalized1)
-  (defun my:org-wiki-jekyll-finalized2 (contents backend info)
-    "Replace some URL"
-    (when (org-export-derived-backend-p backend 'jekyll)
-      (s-replace
-       (format "<a href=\"file://%s"
-               (expand-file-name "Public/" (getenv "HOME")))
-       "<a href=\"{{site.url}}/"
-       contents)))
-  (add-to-list 'org-export-filter-body-functions
-               'my:org-wiki-jekyll-finalized2)
-  (defun my:org-wiki-jekyll-finalized3 (contents backend info)
-    "Replace some URL"
-    (when (org-export-derived-backend-p backend 'jekyll)
-    (replace-regexp-in-string
-     " id=\"outline-container-org.+\" class=\"outline-.+\""
-     "" contents)))
-  (add-to-list 'org-export-filter-body-functions
-               'my:org-wiki-jekyll-finalized3)
-  (defun my:org-wiki-jekyll-finalized4 (contents backend info)
-    "Replace some URL"
-    (when (org-export-derived-backend-p backend 'jekyll)
-    (replace-regexp-in-string
-     "<a id=\"org.+?\"></a>"
-     "" contents)))
-  (add-to-list 'org-export-filter-body-functions
-               'my:org-wiki-jekyll-finalized4)
-  )
     #+end_src
 ** Org-Publish
    :PROPERTIES:
@@ -4643,7 +4647,7 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
    これまで弄っていた font-lock を
    doom-theme をベースに移植中: [[https://github.com/uwabami/emacs-doom-darkpastel][uwabami/emacs-doom-darkpastel]]
   #+begin_src emacs-lisp :tangle init.el
-;; (setq frame-background-mode (frame-parameter nil 'background-mode))
+(setq frame-background-mode (frame-parameter nil 'background-mode))
 (leaf *doom-themes
   :emacs>= 25
   :init
@@ -4749,11 +4753,13 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
                 (float-time (time-subtract after-init-time before-init-time)))))
   )
   #+end_src
-* Debug
+* Debug&Test
   :PROPERTIES:
   :CUSTOM_ID: orgd89ceb4b
   :END:
   #+begin_src emacs-lisp :tangle init.el
+(leaf keg :ensure t)
+(leaf keg-mode :ensure t)
 (leaf esup
   :ensure t
   :custom

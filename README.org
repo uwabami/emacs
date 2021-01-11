@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2020-12-12 22:34:48
+#+date: 2020-12-25 20:36:35
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -550,8 +550,8 @@ init.el: README.org
     (backup-directory-alist  . '(("." . ,my:d:tmp)))
     (auto-save-file-name-transforms . '((".*" ,my:d:tmp t)))
     (version-control         . t)
-    (kept-new-versions       . 5)
-    (kept-old-versions       . 5)
+    (kept-new-versions       . 2)
+    (kept-old-versions       . 2)
     (delete-old-versions     . t)
     (delete-auto-save-files  . t)
     ;; undo/redo - 数字に根拠無し
@@ -4550,6 +4550,20 @@ $clean_ext = "snm nav vrb synctex.gz spl bbl blg run.xml pgf-plot.table pgf-plot
     (set-face-attribute 'variable-pitch nil
                         :family "FSMRMP"
                         :height 135)
+    ;; Japanese
+    (set-fontset-font nil
+                      'japanese-jisx0213.2004-1
+                      (font-spec :family "FSMRMP" :height 135))
+    (set-fontset-font nil
+                      'japanese-jisx0213-2
+                      (font-spec :family "FSMRMP" :height 135))
+    (set-fontset-font nil
+                      'katakana-jisx0201
+                      (font-spec :family "FSMRMP" :height 135))
+    ;; Latin with pronounciation annotations
+    (set-fontset-font nil
+                      '(#x0080 . #x024F)
+                      (font-spec :family "FSMRMP" :height 135))
     ;; Math symbols
     (set-fontset-font nil
                       '(#x2200 . #x22FF)
@@ -4562,7 +4576,6 @@ $clean_ext = "snm nav vrb synctex.gz spl bbl blg run.xml pgf-plot.table pgf-plot
     (set-fontset-font nil
                       '(#xE0A0 . #xEEE0)
                       (font-spec :family "FSMRMP" :height 135))
-    (setq use-default-font-for-symbols t)
     ))
 ;;;###autoload
 (defun my:load-side-window-config ()
@@ -4578,6 +4591,20 @@ $clean_ext = "snm nav vrb synctex.gz spl bbl blg run.xml pgf-plot.table pgf-plot
     (set-face-attribute 'variable-pitch nil
                         :family "FSMRMP"
                         :height 120)
+    ;; Japanese
+    (set-fontset-font nil
+                      'japanese-jisx0213.2004-1
+                      (font-spec :family "FSMRMP" :height 120))
+    (set-fontset-font nil
+                      'japanese-jisx0213-2
+                      (font-spec :family "FSMRMP" :height 120))
+    (set-fontset-font nil
+                      'katakana-jisx0201
+                      (font-spec :family "FSMRMP" :height 120))
+    ;; Latin with pronounciation annotations
+    (set-fontset-font nil
+                      '(#x0080 . #x024F)
+                      (font-spec :family "FSMRMP" :height 120))
     ;; Math symbols
     (set-fontset-font nil
                       '(#x2200 . #x22FF)

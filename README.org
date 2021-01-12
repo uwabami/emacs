@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2020-12-25 20:36:35
+#+date: 2021-01-13 08:57:38
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -519,15 +519,20 @@ init.el: README.org
    - yes or no を y or n に
    他にもイロイロと. 設定が増えてきたら分ける.
   #+begin_src emacs-lisp :tangle init.el
+(leaf *custom
+  :emacs< "27"
+  :custom
+  `(
+    (tool-bar-mode          . nil)  ; 基本 "-nw" なので不要
+    (scroll-bar-mode        . nil)  ; 基本 "-nw" なので不要
+    (menu-bar-mode          . nil)  ; 基本 "-nw" なので不要
+    (blink-cursor-mode      . nil)  ; 基本 "-nw" なので不要
+    (column-number-mode     . nil)  ; 基本 "-nw" なので不要
+    ))
 (leaf cus-start
   :custom
   `(
     ;; 表示
-    ;; (tool-bar-mode          . nil)  ; 基本 "-nw" なので不要
-    ;; (scroll-bar-mode        . nil)  ; 基本 "-nw" なので不要
-    ;; (menu-bar-mode          . nil)  ; 基本 "-nw" なので不要
-    ;; (blink-cursor-mode      . nil)  ; 基本 "-nw" なので不要
-    ;; (column-number-mode     . nil)  ; 基本 "-nw" なので不要
     (ring-bell-function     . 'ignore)   ; ベル無効化
     ;; 編集
     (tab-width              . 4)    ;; tab 幅 4

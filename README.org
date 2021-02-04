@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2021-01-13 08:57:38
+#+date: 2021-02-04 13:43:09
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -1900,6 +1900,60 @@ File.open(src, "r") {|f|
        (ndeb "/usr/local/share/dict/colloc" :alias "研究社 英和活用大辞典 ")))
   )
    #+end_src
+* 翻訳
+  :PROPERTIES:
+  :CUSTOM_ID: org779f9ba7
+  :END:
+** DeepL 翻訳
+   :PROPERTIES:
+   :CUSTOM_ID: orga528b584
+   :END:
+   ブラウザ呼び出し
+   #+begin_src emacs-lisp
+(leaf *deepl-translate
+  :commands my:deepl-translate
+  :bind (("C-x T" . my:deepl-translate))
+  :preface
+  (require 'url-util)
+  (defun my:deepl-translate (&optional string)
+    (interactive)
+    (setq string
+          (cond ((stringp string) string)
+                ((use-region-p)
+                 (buffer-substring (region-beginning) (region-end)))
+                (t
+                 (save-excursion
+                   (let (s)
+                     (forward-char 1)
+                     (backward-sentence)
+                     (setq s (point))
+                     (forward-sentence)
+                     (buffer-substring s (point)))))))
+    (run-at-time 0.1 nil 'deactivate-mark)
+    (browse-url
+     (concat
+      "https://www.deepl.com/translator#en/ja/"
+      (url-hexify-string string)
+      )))
+  )
+   #+end_src
+** Google 翻訳
+   :PROPERTIES:
+   :CUSTOM_ID: org48ef2f56
+   :END:
+   #+begin_src emacs-lisp
+(leaf google-translate
+  :ensure t
+  :init
+  (defun google-translate--search-tkk ()
+    "Search TKK. @see https://github.com/atykhonov/google-translate/issues/52"
+    (list 430675 2721866130))
+  :bind
+  ("C-x t" . google-translate-at-point)
+  :config
+  (setq google-translate-backend-method 'curl)
+  )
+   #+end_src
 * Copy & Paste:
   :PROPERTIES:
   :CUSTOM_ID: org12fd2b4e
@@ -2028,6 +2082,7 @@ File.open(src, "r") {|f|
     (read-mail-command        . #'wl)
     (wl-init-file
      . ,(expand-file-name "init-wl" user-emacs-directory))
+    (wl-demo                  . nil)
     )
   :init
   (define-mail-user-agent
@@ -2789,128 +2844,137 @@ video/*; xdg-open %s;
         ("\\(User-Agent\\|X-Mailer\\|X-Newsreader\\)[ \t]*:"
          . wl-highlight-message-unimportant-header-contents)
         ))
-    #+end_src
-    face の色付け
-    #+begin_src emacs-lisp :tangle init-wl.el
+;; face の色付け
 (defun my:wl-set-face (face spec)
   (make-face face)
   (cond ((fboundp 'face-spec-set)
          (face-spec-set face spec))
         (t
          (wl-declare-face face spec))))
-(my:wl-set-face 'wl-highlight-folder-closed-face
-                '((t (:foreground "#4cff4c" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-folder-few-face
-                '((t (:foreground "#FF4C4C" :bold t :italic nil :weight bold ))))
-(my:wl-set-face 'wl-highlight-folder-zero-face
-                '((t (:foreground "#f6f3e8" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-message-cited-text-1
-                '((t (:foreground "#7fff7f" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-message-cited-text-2
-                '((t (:foreground "#ffff7f" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-message-cited-text-3
-                '((t (:foreground "#7f7fff" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-message-cited-text-4
-                '((t (:foreground "#7fffff" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-message-cited-text-5
-                '((t (:foreground "#ff7fff" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-message-cited-text-6
-                '((t (:foreground "#ff7f7f" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-message-cited-text-7
-                '((t (:foreground "#4cff4c" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-message-cited-text-8
-                '((t (:foreground "#ffff4c" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-message-cited-text-9
-                '((t (:foreground "#4c4cff" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-message-cited-text-10
-                '((t (:foreground "#4cffff" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-message-cited-text-11
-                '((t (:foreground "#ff4cff" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-message-cited-text-12
-                '((t (:foreground "#ff4c4c" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-message-date-header-contents
-                '((t (:foreground "#4CFF4C" :bold t :italic nil :weight bold ))))
-(my:wl-set-face 'wl-highlight-message-header-contents
-                '((t (:foreground "#aaaaaa" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-message-headers
-                '((t (:foreground "#4CFFFF" :bold t :italic nil :weight bold ))))
-(my:wl-set-face 'wl-highlight-message-important-header-contents2
-                '((t (:foreground "#4CFF4C" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-message-signature
-                '((t (:foreground "#aaaaaa" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-message-important-header-contents
-                '((t (:foreground "#FF4CFF" :bold t :italic nil :weight bold ))))
-(my:wl-set-face 'wl-highlight-message-subject-header-contents
-                '((t (:foreground "#FF4C4C" :bold t :italic nil :weight bold ))))
-(my:wl-set-face 'wl-highlight-message-from-header-contents
-                '((t (:foreground "#FFFF4C" :bold t :italic nil :weight bold ))))
-(my:wl-set-face 'wl-highlight-message-unimportant-header-contents
-                '((t (:foreground "#aaaaaa" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-summary-answered-face
-                '((t (:foreground "#4CFF4C" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-summary-refiled-face
-                '((t (:foreground "#7F7FFF" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-summary-thread-top-face
-                '((t (:foreground "#F6F3E8" :bold nil :italic nil :weight normal ))))
-(my:wl-set-face 'wl-highlight-summary-important-flag-face
-                '((t (:foreground "#ffff4c" :bold nil :italic nil :weight normal ))))
 ;;
-;; (my:wl-set-face 'wl-highlight-folder-killed-face
-;;                 '((t (:foreground ,my:h:black :5Dbold nil :italic nil ))))
-;; (my:wl-set-face 'wl-highlight-folder-many-face
-;;                 '((t (:foreground ,my:h:magenta :bold nil :italic nil ))))
-;; (my:wl-set-face 'wl-highlight-folder-opened-face
-;;                 '((t (:foreground "#4cffff" :bold nil :italic nil ))))
-;; (my:wl-set-face 'wl-highlight-folder-path-face
-;;                 '((t (:underline t :bold nil :italic nil ))))
-;; (my:wl-set-face 'wl-highlight-folder-unknown-face
-;;                 '((t (:foreground "#4cffff" :bold nil :italic nil ))))
-;; (my:wl-set-face 'wl-highlight-folder-unread-face
-;;                 '((t (:foreground ,my:n:blue :bold nil :italic nil ))))
-;; (my:wl-set-face 'wl-highlight-header-separator-face
-;;                 '((t (:inherit highlight :bold t ))))
-;; (my:wl-set-face 'wl-highlight-message-citation-header
-;;                 '((t (:foreground ,my:h:green :bold nil :italic nil ))))
-;; (my:wl-set-face 'wl-highlight-summary-copied-face
-;;                 '((t (:foreground "#4CFFFF" :bold nil :italic nil ))))
-;; (my:wl-set-face 'wl-highlight-summary-deleted-face
-;;                 '((t (:foreground ,my:h:black :bold nil :italic nil ))))
-;; (my:wl-set-face 'wl-highlight-summary-displaying-face
-;;                 '((t (:underline t :bold nil :italic nil ))))
-;; (my:wl-set-face 'wl-highlight-summary-disposed-face
-;;                 '((t (:foreground "#aaaaaa" :bold nil :italic nil ))))
-;; (my:wl-set-face 'wl-highlight-summary-flagged-face
-;;                 '((t (:foreground ,my:h:yellow :bold nil :italic nil ))))
-;; (my:wl-set-face 'wl-highlight-summary-forwarded-face
-;;                 '((t (:foreground ,my:h:blue :bold nil :italic nil ))))
-;; (my:wl-set-face 'wl-highlight-summary-high-read-face
-;;                 '((t (:foreground ,my:h:green :bold nil :italic nil ))))
-;; (my:wl-set-face 'wl-highlight-summary-high-unread-face
-;;                 '((t (:foreground ,my:h:orange :bold nil :italic nil ))))
-;; (my:wl-set-face 'wl-highlight-summary-important-face
-;;                 '((t (:foreground "#ffff4c" :bold nil :italic nil ))))
-;; (my:wl-set-face 'wl-highlight-summary-killed-face
-;;                 '((t (:foreground ,my:h:black :bold nil :italic nil ))))
-;; (my:wl-set-face 'wl-highlight-summary-l:read-face
-;;                 '((t (:foreground "#4CFF4C" :bold nil :italic nil ))))
-;; (my:wl-set-face 'wl-highlight-summary-l:unread-face
-;;                 '((t (:foreground ,my:h:lightb :bold nil :italic nil ))))
-;; (my:wl-set-face 'wl-highlight-summary-new-face
-;;                 '((t (:foreground "#ff4c4c" :bold nil :italic nil ))))
-;; (my:wl-set-face 'wl-highlight-summary-normal-face
-;;                 '((t (:foreground "#f6f3e8" :bold nil :italic nil ))))
-;; (my:wl-set-face 'wl-highlight-summary-prefetch-face
-;;                 '((t (:foreground ,my:n:blue :bold nil :italic nil ))))
-;; (my:wl-set-face 'wl-highlight-summary-resend-face
-;;                 '((t (:foreground ,my:h:orange :bold nil :italic nil ))))
-;; (my:wl-set-face 'wl-highlight-summary-target-face
-;;                 '((t (:foreground "#4CFFFF" :bold nil :italic nil ))))
-;; (my:wl-set-face 'wl-highlight-summary-temp-face
-;;                 '((t (:foreground ,my:n:violet :bold nil :italic nil ))))
-;; (my:wl-set-face 'wl-highlight-summary-unread-face
-;;                 '((t (:foreground "#ff4c4c" :bold nil :italic nil ))))
-;; (my:wl-set-face 'wl-highlight-thread-indent-face
-;;                 '((t (:underline t :bold nil :italic nil ))))
+(my:wl-set-face
+ 'wl-highlight-message-subject-header-contents
+ '((t (:foreground "#FF5252" :bold t :italic nil :weight bold ))))
+(my:wl-set-face
+ 'wl-highlight-message-from-header-contents
+ '((t (:foreground "#FFD740" :bold t :italic nil :weight bold ))))
+(my:wl-set-face
+ 'wl-highlight-message-date-header-contents
+ '((t (:foreground "#5CF19E" :bold t :italic nil :weight bold ))))
+    #+end_src
+    以下, 元々定義されているfaceの設定⇒[[#org7e722d0e][doom-theme]] のカスタムテーマに移動
+    #+begin_src emacs-lisp :tangle no
+;; (my:wl-set-face 'wl-highlight-folder-closed-face
+;;                 '((t (:foreground "#4cff4c" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-folder-few-face
+;;                 '((t (:foreground "#FF4C4C" :bold t :italic nil :weight bold ))))
+;; (my:wl-set-face 'wl-highlight-folder-zero-face
+;;                 '((t (:foreground "#f6f3e8" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-message-cited-text-1
+;;                 '((t (:foreground "#7fff7f" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-message-cited-text-2
+;;                 '((t (:foreground "#ffff7f" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-message-cited-text-3
+;;                 '((t (:foreground "#7f7fff" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-message-cited-text-4
+;;                 '((t (:foreground "#7fffff" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-message-cited-text-5
+;;                 '((t (:foreground "#ff7fff" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-message-cited-text-6
+;;                 '((t (:foreground "#ff7f7f" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-message-cited-text-7
+;;                 '((t (:foreground "#4cff4c" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-message-cited-text-8
+;;                 '((t (:foreground "#ffff4c" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-message-cited-text-9
+;;                 '((t (:foreground "#4c4cff" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-message-cited-text-10
+;;                 '((t (:foreground "#4cffff" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-message-cited-text-11
+;;                 '((t (:foreground "#ff4cff" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-message-cited-text-12
+;;                 '((t (:foreground "#ff4c4c" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-message-date-header-contents
+;;                 '((t (:foreground "#4CFF4C" :bold t :italic nil :weight bold ))))
+;; (my:wl-set-face 'wl-highlight-message-header-contents
+;;                 '((t (:foreground "#aaaaaa" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-message-headers
+;;                 '((t (:foreground "#4CFFFF" :bold t :italic nil :weight bold ))))
+;; (my:wl-set-face 'wl-highlight-message-important-header-contents2
+;;                 '((t (:foreground "#4CFF4C" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-message-signature
+;;                 '((t (:foreground "#aaaaaa" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-message-important-header-contents
+;;                 '((t (:foreground "#FF4CFF" :bold t :italic nil :weight bold ))))
+;; (my:wl-set-face 'wl-highlight-message-subject-header-contents
+;;                 '((t (:foreground "#FF4C4C" :bold t :italic nil :weight bold ))))
+;; (my:wl-set-face 'wl-highlight-message-unimportant-header-contents
+;;                 '((t (:foreground "#aaaaaa" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-summary-answered-face
+;;                 '((t (:foreground "#4CFF4C" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-summary-refiled-face
+;;                 '((t (:foreground "#7F7FFF" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-summary-thread-top-face
+;;                 '((t (:foreground "#F6F3E8" :bold nil :italic nil :weight normal ))))
+;; (my:wl-set-face 'wl-highlight-summary-important-flag-face
+;;                 '((t (:foreground "#ffff4c" :bold nil :italic nil :weight normal ))))
+;; ;;
+;; ;; (my:wl-set-face 'wl-highlight-folder-killed-face
+;; ;;                 '((t (:foreground ,my:h:black :5Dbold nil :italic nil ))))
+;; ;; (my:wl-set-face 'wl-highlight-folder-many-face
+;; ;;                 '((t (:foreground ,my:h:magenta :bold nil :italic nil ))))
+;; ;; (my:wl-set-face 'wl-highlight-folder-opened-face
+;; ;;                 '((t (:foreground "#4cffff" :bold nil :italic nil ))))
+;; ;; (my:wl-set-face 'wl-highlight-folder-path-face
+;; ;;                 '((t (:underline t :bold nil :italic nil ))))
+;; ;; (my:wl-set-face 'wl-highlight-folder-unknown-face
+;; ;;                 '((t (:foreground "#4cffff" :bold nil :italic nil ))))
+;; ;; (my:wl-set-face 'wl-highlight-folder-unread-face
+;; ;;                 '((t (:foreground ,my:n:blue :bold nil :italic nil ))))
+;; ;; (my:wl-set-face 'wl-highlight-header-separator-face
+;; ;;                 '((t (:inherit highlight :bold t ))))
+;; ;; (my:wl-set-face 'wl-highlight-message-citation-header
+;; ;;                 '((t (:foreground ,my:h:green :bold nil :italic nil ))))
+;; ;; (my:wl-set-face 'wl-highlight-summary-copied-face
+;; ;;                 '((t (:foreground "#4CFFFF" :bold nil :italic nil ))))
+;; ;; (my:wl-set-face 'wl-highlight-summary-deleted-face
+;; ;;                 '((t (:foreground ,my:h:black :bold nil :italic nil ))))
+;; ;; (my:wl-set-face 'wl-highlight-summary-displaying-face
+;; ;;                 '((t (:underline t :bold nil :italic nil ))))
+;; ;; (my:wl-set-face 'wl-highlight-summary-disposed-face
+;; ;;                 '((t (:foreground "#aaaaaa" :bold nil :italic nil ))))
+;; ;; (my:wl-set-face 'wl-highlight-summary-flagged-face
+;; ;;                 '((t (:foreground ,my:h:yellow :bold nil :italic nil ))))
+;; ;; (my:wl-set-face 'wl-highlight-summary-forwarded-face
+;; ;;                 '((t (:foreground ,my:h:blue :bold nil :italic nil ))))
+;; ;; (my:wl-set-face 'wl-highlight-summary-high-read-face
+;; ;;                 '((t (:foreground ,my:h:green :bold nil :italic nil ))))
+;; ;; (my:wl-set-face 'wl-highlight-summary-high-unread-face
+;; ;;                 '((t (:foreground ,my:h:orange :bold nil :italic nil ))))
+;; ;; (my:wl-set-face 'wl-highlight-summary-important-face
+;; ;;                 '((t (:foreground "#ffff4c" :bold nil :italic nil ))))
+;; ;; (my:wl-set-face 'wl-highlight-summary-killed-face
+;; ;;                 '((t (:foreground ,my:h:black :bold nil :italic nil ))))
+;; ;; (my:wl-set-face 'wl-highlight-summary-l:read-face
+;; ;;                 '((t (:foreground "#4CFF4C" :bold nil :italic nil ))))
+;; ;; (my:wl-set-face 'wl-highlight-summary-l:unread-face
+;; ;;                 '((t (:foreground ,my:h:lightb :bold nil :italic nil ))))
+;; ;; (my:wl-set-face 'wl-highlight-summary-new-face
+;; ;;                 '((t (:foreground "#ff4c4c" :bold nil :italic nil ))))
+;; ;; (my:wl-set-face 'wl-highlight-summary-normal-face
+;; ;;                 '((t (:foreground "#f6f3e8" :bold nil :italic nil ))))
+;; ;; (my:wl-set-face 'wl-highlight-summary-prefetch-face
+;; ;;                 '((t (:foreground ,my:n:blue :bold nil :italic nil ))))
+;; ;; (my:wl-set-face 'wl-highlight-summary-resend-face
+;; ;;                 '((t (:foreground ,my:h:orange :bold nil :italic nil ))))
+;; ;; (my:wl-set-face 'wl-highlight-summary-target-face
+;; ;;                 '((t (:foreground "#4CFFFF" :bold nil :italic nil ))))
+;; ;; (my:wl-set-face 'wl-highlight-summary-temp-face
+;; ;;                 '((t (:foreground ,my:n:violet :bold nil :italic nil ))))
+;; ;; (my:wl-set-face 'wl-highlight-summary-unread-face
+;; ;;                 '((t (:foreground "#ff4c4c" :bold nil :italic nil ))))
+;; ;; (my:wl-set-face 'wl-highlight-thread-indent-face
+;; ;;                 '((t (:underline t :bold nil :italic nil ))))
     #+end_src
 *** 作成/返信設定
     :PROPERTIES:
@@ -3537,12 +3601,12 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
              ))
     (add-to-list 'org-agenda-files (expand-file-name file my:d:org)))
   (add-to-list 'org-agenda-files (locate-user-emacs-file "README.org"))
-  (if (file-directory-p
-       (expand-file-name "Public/" (getenv "HOME")))
-      (dolist (file
-               (directory-files-recursively
-                (expand-file-name "Public/" (getenv "HOME")) "org$"))
-        (add-to-list 'org-agenda-files file)))
+  ;; (if (file-directory-p
+  ;;      (expand-file-name "Public/" (getenv "HOME")))
+  ;;     (dolist (file
+  ;;              (directory-files-recursively
+  ;;               (expand-file-name "Public/" (getenv "HOME")) "org$"))
+  ;;       (add-to-list 'org-agenda-files file)))
   (if (file-directory-p
        (expand-file-name "journal/" my:d:org))
       (dolist (file
@@ -4535,6 +4599,40 @@ $clean_ext = "snm nav vrb synctex.gz spl bbl blg run.xml pgf-plot.table pgf-plot
   :PROPERTIES:
   :CUSTOM_ID: orgbf458527
   :END:
+** xterm-color
+   :PROPERTIES:
+   :CUSTOM_ID: org4c769ff7
+   :END:
+   色を端末と揃える。
+   #+begin_src emacs-lisp :tangle init.el
+(leaf xterm-color
+  :disabled t
+  :ensure t
+  :custom
+  `((xterm-color-names
+     . '["#242424"    ; black
+         "#FF5252"    ; red
+         "#5CF19E"    ; green
+         "#FFD740"    ; yellow
+         "#4C4CFF"    ; blue
+         "#FF4CFF"    ; magenta
+         "#64FCDA"    ; cyan
+         "#B0BEC5"]   ; white
+     )
+    (xterm-color-names-bright
+     . '["#4f4f4f"    ; black
+         "#FF8A80"    ; red
+         "#7FFF7F"    ; green
+         "#FFE57F"    ; yellow
+         "#7F7FFF"    ; blue
+         "#FF7FFF"    ; magenta
+         "#A7FDEB"    ; cyan
+         "#FFFFFF"]   ; white
+     )
+    (xterm-color-use-bold-for-bright . t)
+    )
+  )
+   #+end_src
 ** SOMEDAY フォント [0/1]
    :PROPERTIES:
    :CUSTOM_ID: org356b9857

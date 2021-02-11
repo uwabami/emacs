@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2021-02-04 13:43:09
+#+date: 2021-02-11 10:45:25
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -4085,7 +4085,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
       (transient-force-fixed-pitch . t))
     )
   :config
-  (setq magit-completing-read-function 'ivy
+  (setq magit-completing-read-function 'ivy-completing-read
         magit-refs-show-commit-count   'all
         magit-log-buffer-file-locked   t
         magit-revision-show-gravatars  nil
@@ -4318,11 +4318,14 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     (progn
       (make-directory (expand-file-name "auctex/auto" my:d:tmp) t)
       (make-directory (expand-file-name "auctex/style" my:d:tmp) t)))
+  (leaf biblio :ensure t)
   (leaf reftex
     :custom
     ((reftex-plug-into-AUCTeX               . t)
      (reftex-cite-prompt-optional-args      . t)
-     (reftex-toc-split-windows-horizontally . t))
+     (reftex-toc-split-windows-horizontally . t)
+     ;; (reftex-ref-style-default-list . '("Cleverref"))
+     )
     )
   (leaf company-reftex :ensure t)
   ;; (leaf company-auctex :ensure t)

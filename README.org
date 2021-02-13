@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2021-02-12 00:08:00
+#+date: 2021-02-13 16:41:40
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -1705,7 +1705,7 @@ File.open(src, "r") {|f|
          (let ((i (length current-path)))
            (while (> i 0)
              (push (aref current-path (setq i (1- i))) unread-command-events)))
-         (let ((default-directory ""))
+         (let ((default-directory "/"))
            (call-interactively 'find-file))
          (setq default-directory old-default-directory))))
     (ivy-done))
@@ -4085,7 +4085,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
       (transient-force-fixed-pitch . t))
     )
   :config
-  (setq magit-completing-read-function 'ivy-completing-read
+  (setq magit-completing-read-function 'ido-completing-read
         magit-refs-show-commit-count   'all
         magit-log-buffer-file-locked   t
         magit-revision-show-gravatars  nil

@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2021-02-13 16:41:40
+#+date: 2021-02-15 22:22:22
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -199,6 +199,7 @@ init.el: README.org
   (custom-set-variables
    '(package-archives '(("gnu"   . "https://elpa.gnu.org/packages/")
                         ("melpa" . "https://melpa.org/packages/")
+                        ;; ("org" . "https://orgmode.org/elpa/")
                         ))
    '(package-gnupghome-dir (expand-file-name ".gnupg" (getenv "HOME")))
    '(package-user-dir my:d:pkg:elpa))
@@ -900,6 +901,8 @@ init.el: README.org
    :END:
    Emacs27から同梱された =tab-bar-mode= に elscreen から乗り換えた.
    手癖で "C-o" を prefix で使いたいので, その設定をしていたり.
+
+   Emacs <= 26 では elsceen を使うことに.
    #+begin_src emacs-lisp :tangle init.el
 (leaf tab-bar-mode
   :emacs> "27"
@@ -3253,6 +3256,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    目新しい設定はしていない, と思う．
    #+begin_src emacs-lisp :tangle init.el
 (leaf org
+  :ensure t
   :blackout `((org-mode . ,(all-the-icons-icon-for-mode 'org-mode)))
   :bind (("C-x n s" . org-narrow-to-subtree)
          ("C-x n w" . widen)
@@ -3784,6 +3788,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
 (leaf *orgmine
   :if  (and my:d:password-store
             (file-directory-p my:d:org))
+  :defvar org-keyword-properties
   :init
   (setq enable-local-variables :safe)
   (leaf elmine :ensure t)
@@ -3793,6 +3798,36 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   (leaf orgmine
     :commands (orgmine-mode)
     :el-get kametoku/orgmine
+    :init
+    (defun my:orgmine-default-todo-keyword ()
+      "Custom: use `org-file-properties' for backward compatibility."
+      (or (cdr (assoc-string "om_default_todo" org-file-properties))
+          orgmine-default-todo-keyword
+          (nth 0 org-todo-keywords-1)
+          1))
+
+    (defun my:orgmine-setup ()
+      "Custom: use `org-file-properties' for backward compatibility."
+      (let* ((server (cdr (assoc-string "om_server" org-file-properties t)))
+	         (config (cdr (assoc-string server orgmine-servers t))))
+        (if config
+	        (set (make-local-variable 'orgmine-server) server))
+        (mapc (lambda (elem)
+	            (let* ((key (car elem))
+		               (symbol (intern (format "orgmine-%s" key)))
+		               (value (cdr elem)))
+	              (if (memq key orgmine-valid-variables)
+		              (progn
+		                (set (make-local-variable symbol) value)
+		                (if (eq key 'custom-fields)
+			                (orgmine-setup-custom-fields value)))
+		            (message "orgmine-setup: %s: skipped - invalid name" key))))
+	          config))
+      (orgmine-setup-tags)
+      (run-hooks 'orgmine-setup-hook))
+    :advice
+    '((:override orgmine-default-todo-keyword my:orgmine-default-todo-keyword)
+      (:override orgmine-setup my:orgmine-setup))
     :pl-setq orgmine-servers
     :config
     (setq orgmine-note-block-begin "#+begin_src gfm"   ;; 要調整

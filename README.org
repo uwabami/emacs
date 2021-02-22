@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2021-02-23 05:49:06
+#+date: 2021-02-23 06:46:58
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -874,13 +874,11 @@ init.el: README.org
    :END:
    #+begin_src emacs-lisp :tangle init.el
 (leaf server
+  :commands (server-running-p)
   :hook
-  (emacs-startup-hook
-   . (lambda ()
-       (progn
-         (require 'server)
-         (unless (server-running-p)
-           (server-start)))))
+  (emacs-startup-hook . (lambda ()
+                          (unless (server-running-p)
+                            (server-start))))
   )
    #+end_src
 ** buffer の印刷
@@ -1355,6 +1353,7 @@ Emacs*useXIM: false
 (unless (locate-library "skk")
   (package-install 'ddskk t))
 (leaf skk
+  :commands skk-make-indicator-alist
   :bind (("C-x j"   . skk-mode)
          ("C-x C-j" . skk-mode)
          ("C-\\"    . skk-mode))
@@ -1703,6 +1702,7 @@ File.open(src, "r") {|f|
    これは便利だ
    #+begin_src emacs-lisp :tangle init.el
 (leaf ido-flex-with-migemo
+  :disabled t
   :if (executable-find "cmigemo")
   :ensure t
   :after (flx migemo)
@@ -3341,7 +3341,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    my:get-custom-id
    my:org-custom-id-get
    my:delete-all-id-in-file
-   my:org-id-add-to-headlines-in-file)
+   my:org-id-add-to-headlines-in-file
+   )
   :init
   (leaf org-macs :require t)
   :custom

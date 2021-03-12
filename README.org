@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2021-02-25 20:14:07
+#+date: 2021-03-12 15:57:26
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -556,7 +556,7 @@ init.el: README.org
     (backup-by-copying       . t)  ;; symlink は使わない
     (backup-directory-alist  . '(("." . ,my:d:tmp)))
     (auto-save-file-name-transforms . '((".*" ,my:d:tmp t)))
-    (version-control         . t)
+    (version-control         . nil)
     (kept-new-versions       . 2)
     (kept-old-versions       . 2)
     (delete-old-versions     . t)
@@ -1886,6 +1886,15 @@ File.open(src, "r") {|f|
        (ndeb "/usr/local/share/dict/wadai5" :alias "研究社 和英大辞典 第5版")
        (ndeb "/usr/local/share/dict/eidai6" :alias "研究社 英和大辞典 第6版")
        (ndeb "/usr/local/share/dict/colloc" :alias "研究社 英和活用大辞典 ")))
+  )
+   #+end_src
+** =text-adjust=: 全角文字の撲滅
+   :PROPERTIES:
+   :CUSTOM_ID: org501da28b
+   :END:
+   #+begin_src emacs-lisp
+(leaf text-adjust
+  :el-get uwabami/text-adjust.el
   )
    #+end_src
 * 翻訳
@@ -3728,6 +3737,12 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   (unless (file-directory-p org-gcal-dir)
     (make-directory org-gcal-dir))
   :init
+  (leaf org-generic-id
+    :custom
+    `((org-generic-id-locations-file
+       . ,(expand-file-name "org-generic-id-locations"  my:d:share))
+      )
+    )
   (leaf request
     :ensure t
     :preface
@@ -3747,7 +3762,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
                                "org-gcal/.org-gcal-token" my:d:tmp))
     (org-gcal-down-days    . 180)  ;; 未来 180 日
     (org-gcal-up-days      .  30)  ;; 過去 30 日
-    (org-gcal-auto-archive . nil)
+    (org-gcal-auto-archive . t)
     (org-gcal-notify-p     . nil)
     (org-gcal-remove-api-cancelled-evetnts . t)
     (org-gcal-remove-events-with-cancelled-todo . t)
@@ -4913,6 +4928,12 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
   :CUSTOM_ID: orgd89ceb4b
   :END:
   #+begin_src emacs-lisp :tangle init.el
+;;(leaf emacs
+;;  :preface
+;;  (defun my-advice/window-width (fn &rest args)
+;;    (- (apply fn args) 1))
+;;  :advice (:around window-width my-advice/window-width))
+;;
 (leaf keg :ensure t)
 (leaf keg-mode :ensure t)
 (leaf esup

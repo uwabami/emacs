@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2021-03-12 15:57:26
+#+date: 2021-04-09 10:47:00
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -2154,6 +2154,7 @@ File.open(src, "r") {|f|
              '(gb2312 . gbk))
 ;;
 (setq wl-mime-charset 'iso-2022-jp)
+;; (setq wl-mime-charset 'utf-8-uni)
      #+end_src
 **** SEMI の追加設定
      :PROPERTIES:
@@ -3124,8 +3125,8 @@ fi
     #+end_src
     検索時にメールが多すぎると怒られるので. 数字は適当.
     #+begin_src emacs-lisp  :tangle init-wl.el
-(setq elmo-multi-divide-number 2000000000)
-(setq elmo-multi-number 2000000000)
+(setq elmo-multi-divide-number 2000000
+      elmo-multi-number 2000000)
     #+end_src
 ** Linux Desktop で =mailto:= リンクを扱うために
    :PROPERTIES:
@@ -3277,7 +3278,10 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     (interactive)
     (org-map-entries 'org-archive-subtree "/DONE" 'file))
   :hook
-  `((org-mode-hook                  . my:org-timestamp-hook)
+  `((org-mode-hook
+     . ,(lambda ()
+          (my:org-timestamp-hook)
+          (leaf org-tempo :require t)))
     (org-todo-statistics-hook       . my:org-archive-done-tasks)
     (org-todo-after-statistics-hook . my:org-archive-done-tasks))
   :custom
@@ -3329,8 +3333,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     (org-modules  . '())
     )
   :config
-  ;; テンプレート展開
-  (leaf org-tempo :require t)
   ;; +打ち消し+ の font-lock の変更 →これはテーマに任せるべき?
   (setq org-emphasis-alist
         (cons '("+" '(:strike-through t :foreground "#999999"))
@@ -3611,6 +3613,10 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
         (add-to-list 'org-agenda-files file)))
   )
    #+end_src
+** Org-roam
+   :PROPERTIES:
+   :CUSTOM_ID: orgbbaf7c91
+   :END:
 ** Org-journal: 日記
    :PROPERTIES:
    :CUSTOM_ID: org456c87fa

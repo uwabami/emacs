@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2021-04-09 10:47:00
+#+date: 2021-06-04 22:54:34
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -955,6 +955,7 @@ init.el: README.org
   #+begin_src emacs-lisp
 (leaf beacon
   :ensure t
+  :disabled t
   :custom
   `((beacon-color              . "#aa3400")
     ;; (beacon-size               . 64)
@@ -1071,6 +1072,7 @@ init.el: README.org
   :after all-the-icons-in-terminal
   :require t
   :config
+  ;; (eaw-half-emoji-fullwidth)
   (eaw-and-emoji-fullwidth)
   )
    #+end_src
@@ -1735,26 +1737,28 @@ File.open(src, "r") {|f|
   (emacs-startup-hook . (lambda () (ido-vertical-mode 1)))
   )
    #+end_src
-** =amx=
+** =smex=
    :PROPERTIES:
    :CUSTOM_ID: org28528ad3
    :END:
-   M-x を ido で. 以前は smex を利用していたが, amx に乗り換えた.
+   M-x を ido で.
    #+begin_src emacs-lisp :tangle init.el
 (leaf amx
   :bind (("M-x" . amx))
   :ensure t
   :custom
-  `(;; backend 'ivy or 'ido or 'auto
+  `(;; backend
     (amx-backend . 'ido)
     ;; prompt
     (amx-prompt-string . "amx: ")
-    ;; keybind
-    (amx-show-key-bindings . nil)
     ;; 履歴
     (amx-save-file
      . ,(expand-file-name "amx-items" my:d:tmp))
-    (amx-history-length . 128))
+    (amx-history-length . 128)
+    ;; speed up
+    (amx-ignored-command-matchers . nil)
+    ;; (amx-show-key-bindings  . nil)
+    )
   )
    #+end_src
 ** =ido-recentf=: recentf を ido で
@@ -3250,7 +3254,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    :END:
    目新しい設定はしていない, と思う．
    #+begin_src emacs-lisp :tangle init.el
-(leaf org-plus-contrib
+;; org-plus-contrib
+(leaf org
   :ensure t
   :blackout `((org-mode . ,(all-the-icons-icon-for-mode 'org-mode)))
   :bind (("C-x n s" . org-narrow-to-subtree)
@@ -3553,7 +3558,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   ;;
   (add-hook 'org-agenda-finalize-hook
             #'my:org-agenda-finalize-font-lock)
-  ;;
+
   (setq org-agenda-span 'day
         org-agenda-format-date "%Y/%m/%d (%a)"
         org-agenda-start-on-weekday 0
@@ -4017,11 +4022,17 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
                  '(:institute    "INSTITUTE"   nil nil))
     )
   :custom
-  `((org-latex-default-class . "my:platex")
+  `((org-latex-default-class . "my:uplatex")
     (org-latex-pdf-process   . '("latexmk -pvc %f"))
     (org-latex-classes
-     . '(("my:platex"
-          "\\documentclass[a4j]{jsarticle}
+     . '(("my:uplatex"
+          "\\documentclass[a4j,uplatex]{jsarticle}
+            [NO-DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
+          ("\\section\{%s\}" . "\\section*\{%s\}")
+          ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
+          ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
+         ("my:jlreq"
+          "\\documentclass{jlreq}
             [NO-DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
           ("\\section\{%s\}" . "\\section*\{%s\}")
           ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
@@ -4770,8 +4781,9 @@ $clean_ext = "snm nav vrb synctex.gz spl bbl blg run.xml pgf-plot.table pgf-plot
 (leaf *gui
   :if window-system
   :config
-  (set-frame-parameter nil 'alpha 95)
+  (set-frame-parameter nil 'alpha 90)
   (setq use-default-font-for-symbols nil)
+  (scroll-bar-mode -1)
 ;;  (my:load-window-config)
   )
   #+end_src

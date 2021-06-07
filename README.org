@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2021-06-07 01:13:24
+#+date: 2021-06-07 13:25:09
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -1693,6 +1693,37 @@ File.open(src, "r") {|f|
   :CUSTOM_ID: orge3fb8a64
   :END:
   補完は =ido= が軽いし速いので好み.
+  #+begin_src emacs-lisp :tangle init.el
+(leaf *completion
+  :init
+  ;; 補完で無視する拡張子の追加．そのうち増える．
+  (cl-loop for ext in
+           '(;; TeX
+             ".dvi"
+             ".fdb_latexmk"
+             ".fls"
+             ".ilg"
+             ".jqz"
+             ".nav"
+             ".out"
+             ".snm"
+             ".synctex\\.gz"
+             ".vrb"
+             ;; fortran >= 90
+             ".mod"
+             ;; zsh
+             ".zwc"
+             ;; libtool
+             ".in"
+             ".libs/"
+             ;; fxxkin Apple
+             ".DS_Store"
+             "._DS_Store"
+             ;; "org-id-locations"
+             )
+           do (add-to-list 'completion-ignored-extensions ext))
+  )
+  #+end_src
 ** =ido= 本体の設定
    :PROPERTIES:
    :CUSTOM_ID: orgc92613c0
@@ -1730,32 +1761,6 @@ File.open(src, "r") {|f|
               (define-key ido-completion-map (kbd "C-l") 'ido-delete-backward-updir)))
          (ido-minibuffer-setup-hook . my:ido-disable-line-trucation))
   :init
-  ;; 補完で無視する拡張子の追加．そのうち増える．
-  (cl-loop for ext in
-           '(;; TeX
-             ".dvi"
-             ".fdb_latexmk"
-             ".fls"
-             ".ilg"
-             ".jqz"
-             ".nav"
-             ".out"
-             ".snm"
-             ".synctex\\.gz"
-             ".vrb"
-             ;; fortran >= 90
-             ".mod"
-             ;; zsh
-             ".zwc"
-             ;; libtool
-             ".in"
-             ".libs/"
-             ;; fxxkin Apple
-             ".DS_Store"
-             "._DS_Store"
-             ;; "org-id-locations"
-             )
-           do (add-to-list 'completion-ignored-extensions ext))
   :custom
   `(;; prefix match 入力を先頭一致可能
     (ido-enable-prefix             . nil)
@@ -1835,7 +1840,7 @@ File.open(src, "r") {|f|
     ;; キーバインド
     (ido-vertical-define-keys . 'C-n-C-p-up-down-left-right)
     ;; minibuffer の高さ制限
-    (ido-max-window-height    . 0.3)
+    (ido-max-window-height    . 10) ;;
     ;; 候補選択表示のカスタマイズ
     (ido-vertical-indicator   . ">> ")
     (ido-vertical-decorations  . "")
@@ -1883,7 +1888,7 @@ File.open(src, "r") {|f|
     (let ((files (mapcar (lambda (f)
                            (cons (my:shorten-file-path f 70) f))
                          recentf-list)))
-      (let ((selected (ido-completing-read "Files: " (mapcar #'car files))))
+      (let ((selected (ido-completing-read "Recent Files: " (mapcar #'car files))))
         (find-file (assoc-default selected files)))))
   :bind ("C-x C-r" . ido-recentf-open)
   )
@@ -1900,6 +1905,121 @@ File.open(src, "r") {|f|
   :bind (("C-x f" . ido-ghq-open))
   :config
   (setq ido-ghq-short-list t)
+  )
+   #+end_src
+* 補完: =vertico=, =marginalia=, =consult=
+  :PROPERTIES:
+  :CUSTOM_ID: org5fd7347f
+  :END:
+  最近話題になりだしたので, ちょっと使い始めてみた.
+  =orderless= はまだ試してないけど, 肌に合うかなぁ….
+** =vertico=: 本体
+   :PROPERTIES:
+   :CUSTOM_ID: org8362fd9f
+   :END:
+   [[https://scrapbox.io/emacs/find-file%E3%81%A7Helm%E3%81%BF%E3%81%9F%E3%81%84%E3%81%ABC-l%E3%81%A7%E3%83%87%E3%82%A3%E3%83%AC%E3%82%AF%E3%83%88%E3%83%AA%E3%82%92%E9%81%A1%E3%82%8B][find-fileでHelmみたいにC-lでディレクトリを遡る - emacs]]
+   より, =C-l= で一つ上の階層へ上がれる様にしたり.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf vertico
+  :emacs>= 27.1
+  :ensure t
+  :preface
+  (defun my:disable-selection ()
+    (when (eq minibuffer-completion-table #'org-tags-completion-function)
+      (setq-local vertico-map minibuffer-local-completion-map
+                  completion-cycle-threshold nil
+                  completion-styles '(basic))))
+  ;;
+  (defun my:filename-upto-parent ()
+    "Move to parent directory like \"cd ..\" in find-file."
+    (interactive)
+    (let ((sep (eval-when-compile (regexp-opt '("/" "\\")))))
+      (save-excursion
+        (left-char 1)
+        (when (looking-at-p sep)
+          (delete-char 1)))
+      (save-match-data
+        (when (search-backward-regexp sep nil t)
+          (right-char 1)
+          (filter-buffer-substring (point)
+                                   (save-excursion (end-of-line) (point))
+                                   #'delete)))))
+  :advice
+  (:before vertico--setup
+           my:disable-selection)
+  :bind
+  (:vertico-map (("C-l" . my:filename-upto-parent)))
+  :custom
+  `((vertico-count . 9)
+    (vertico-cycle . t)
+    (vertico-multiline . '(("↓" 0 1
+                            (face vertico-multiline))
+                           ("…" 0 1
+                            (face vertico-multiline))))
+    )
+  :init
+  (setq completion-styles '(basic substring partial-completion flex))
+  (cl-loop for ext in
+           '(;; TeX
+             ".dvi"
+             ".fdb_latexmk"
+             ".fls"
+             ".ilg"
+             ".jqz"
+             ".nav"
+             ".out"
+             ".snm"
+             ".synctex\\.gz"
+             ".vrb"
+             ;; fortran >= 90
+             ".mod"
+             ;; zsh
+             ".zwc"
+             ;; libtool
+             ".in"
+             ".libs/"
+             ;; fxxkin Apple
+             ".DS_Store"
+             "._DS_Store"
+             ;; "org-id-locations"
+             )
+           do (add-to-list 'completion-ignored-extensions ext))
+  ;;
+  (vertico-mode)
+  )
+  #+end_src
+** =marginalia=: リッチな注釈(Enable richer annotations)
+   :PROPERTIES:
+   :CUSTOM_ID: orge9265e4d
+   :END:
+   #+begin_src emacs-lisp :tangle init.el
+(leaf marginalia
+  :emacs>= 26.1
+  :ensure t
+  :bind (("M-A" . marginalia-cycle)
+         (:minibuffer-local-map
+          ("M-A" . marginalia-cycle)
+          ))
+  :init
+  (marginalia-mode +1))
+   #+end_src
+** =consult=: 便利コマンド集
+   :PROPERTIES:
+   :CUSTOM_ID: orged5e5627
+   :END:
+   とりあえず recetnf が使えないと途方に暮れるので
+   =consult-recent-file= のみ.
+   #+begin_src emacs-lisp
+(leaf consult
+  :emacs>= 27.1
+  :ensure t
+  ;; :bind (("C-x C-r" . consult-recent-file))
+  :custom
+  `(;; 増やさないと preview 時に theme がロードされない模様.
+    ;; とりあえず default の 10 倍にしている. 1 MB かな?
+    (consult-preview-raw-size . 1024000))
+  :config
+  (setq consult-config `((consult-recent-file :preview-key nil)))
   )
    #+end_src
 * 翻訳

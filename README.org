@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2021-06-07 13:25:09
+#+date: 2021-06-10 21:26:21
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -225,7 +225,8 @@ init.el: README.org
 (unless (package-installed-p 'leaf)
   (package-refresh-contents)
   (package-install 'leaf t))
-(setq leaf--paths nil) ;; workaround https://github.com/conao3/leaf.el/issues/479
+;; (require 'leaf nil 'noerror)
+(defvar leaf--load-file-name nil)
 (leaf leaf-keywords
   :ensure t
   :init
@@ -1856,21 +1857,16 @@ File.open(src, "r") {|f|
    :END:
    M-x を ido で.
    #+begin_src emacs-lisp :tangle init.el
-(leaf amx
-  :bind (("M-x" . amx))
+(leaf smex
+  :bind (("M-x" . smex))
   :ensure t
   :custom
-  `(;; backend
-    (amx-backend . 'ido)
-    ;; prompt
-    (amx-prompt-string . "amx: ")
+  `(;; prompt
+    (smex-prompt-string . "smex: ")
     ;; 履歴
-    (amx-save-file
-     . ,(expand-file-name "amx-items" my:d:tmp))
-    (amx-history-length . 128)
-    ;; speed up
-    (amx-ignored-command-matchers . nil)
-    ;; (amx-show-key-bindings  . nil)
+    (smex-save-file
+     . ,(expand-file-name "smex-items" my:d:tmp))
+    (smex-history-length . 128)
     )
   )
    #+end_src
@@ -1959,32 +1955,6 @@ File.open(src, "r") {|f|
     )
   :init
   (setq completion-styles '(basic substring partial-completion flex))
-  (cl-loop for ext in
-           '(;; TeX
-             ".dvi"
-             ".fdb_latexmk"
-             ".fls"
-             ".ilg"
-             ".jqz"
-             ".nav"
-             ".out"
-             ".snm"
-             ".synctex\\.gz"
-             ".vrb"
-             ;; fortran >= 90
-             ".mod"
-             ;; zsh
-             ".zwc"
-             ;; libtool
-             ".in"
-             ".libs/"
-             ;; fxxkin Apple
-             ".DS_Store"
-             "._DS_Store"
-             ;; "org-id-locations"
-             )
-           do (add-to-list 'completion-ignored-extensions ext))
-  ;;
   (vertico-mode)
   )
   #+end_src
@@ -1992,6 +1962,8 @@ File.open(src, "r") {|f|
    :PROPERTIES:
    :CUSTOM_ID: orge9265e4d
    :END:
+   行揃えが微妙. あと, ファイル名を省略表示できないのかな?
+   ⇒ [[https://github.com/minad/marginalia/issues/70][Better truncation method for file names #70]]
    #+begin_src emacs-lisp :tangle init.el
 (leaf marginalia
   :emacs>= 26.1
@@ -2001,27 +1973,56 @@ File.open(src, "r") {|f|
           ("M-A" . marginalia-cycle)
           ))
   :init
-  (marginalia-mode +1))
+  (marginalia-mode +1)
+  )
    #+end_src
 ** =consult=: 便利コマンド集
    :PROPERTIES:
    :CUSTOM_ID: orged5e5627
    :END:
    とりあえず recetnf が使えないと途方に暮れるので
-   =consult-recent-file= のみ.
-   #+begin_src emacs-lisp
+   =consult-recent-file= のカスタマイズのみ.
+   #+begin_src emacs-lisp :tangle init.el
 (leaf consult
   :emacs>= 27.1
   :ensure t
-  ;; :bind (("C-x C-r" . consult-recent-file))
+  :bind (("C-x C-r" . my:consult-recent-file))
   :custom
   `(;; 増やさないと preview 時に theme がロードされない模様.
     ;; とりあえず default の 10 倍にしている. 1 MB かな?
     (consult-preview-raw-size . 1024000))
   :config
-  (setq consult-config `((consult-recent-file :preview-key nil)))
+  (defun my:consult-recent-file ()
+    "Find recent using `completing-read'."
+    (interactive)
+    (setq-local marginalia-mode -1)
+    (find-file
+     (consult--read
+      (or (mapcar
+           (lambda (f)
+             (cons (my:shorten-file-path f 70) f)) recentf-list)
+          (user-error "No recent files"))
+      :prompt "Find recent file: "
+      :sort nil
+      :require-match t
+      :category 'file
+      :state (consult--file-preview)
+      :history 'file-name-history)))
+  (setq consult-config `((my:consult-recent-file :preview-key nil)))
   )
    #+end_src
+*** =consult-ghq=: ghq を consult で.
+    :PROPERTIES:
+    :CUSTOM_ID: org90f5d475
+    :END:
+    projectile かなんかを使う方が良さげだが, とりあえず.
+    #+begin_src emacs-lisp
+(leaf consult-ghq
+  :el-get uwabami/consult-ghq
+  :custom
+  `((consult-ghq-short-list . t))
+  )
+    #+end_src
 * 翻訳
   :PROPERTIES:
   :CUSTOM_ID: org779f9ba7

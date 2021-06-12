@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2021-06-10 21:26:21
+#+date: 2021-06-13 00:26:42
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -226,7 +226,7 @@ init.el: README.org
   (package-refresh-contents)
   (package-install 'leaf t))
 ;; (require 'leaf nil 'noerror)
-(defvar leaf--load-file-name nil)
+;; (defvar leaf--load-file-name nil)
 (leaf leaf-keywords
   :ensure t
   :init
@@ -523,17 +523,6 @@ init.el: README.org
     (=load-prefer-newer= は Emacs >= 24.4 から).
    - yes or no を y or n に
    他にもイロイロと. 設定が増えてきたら分ける.
-  #+begin_src emacs-lisp :tangle init.el
-(leaf *custom
-  :emacs< "27"
-  :custom
-  `(
-    (tool-bar-mode          . nil)  ; 基本 "-nw" なので不要
-    (scroll-bar-mode        . nil)  ; 基本 "-nw" なので不要
-    (menu-bar-mode          . nil)  ; 基本 "-nw" なので不要
-    (blink-cursor-mode      . nil)  ; 基本 "-nw" なので不要
-    (column-number-mode     . nil)  ; 基本 "-nw" なので不要
-    ))
 (leaf cus-start
   :custom
   `(
@@ -691,7 +680,7 @@ init.el: README.org
   `((savehist-file
      . ,(expand-file-name "history" my:d:tmp)))
   :hook
-  ((emacs-startup-hook . savehist-mode))
+  ((after-init-hook . savehist-mode))
   )
   #+end_src
 ** ファイル, デイレクトリ整理
@@ -907,7 +896,6 @@ init.el: README.org
    Emacs <= 26 では elsceen を使うことに.
    #+begin_src emacs-lisp :tangle init.el
 (leaf tab-bar-mode
-  :emacs> "27"
   :init
   (defvar my:ctrl-o-map (make-sparse-keymap)
     "My original keymap binded to C-o.")
@@ -985,6 +973,7 @@ init.el: README.org
     :ensure t
     :init
     (defvar shut-up-ignore t))
+  ;;
   (defun my:recentf-save-list-silence ()
     "Shut up"
     (interactive)
@@ -1023,6 +1012,8 @@ init.el: README.org
                                  "bookmarks"
                                  "org-recent-headings.dat"
                                  "^/mnt/c/\\.*"
+                                 "\\.*COMMIT_EDITMSG$"
+                                 "\\.*elpa\\.*-autoloads.el$"
                                  )))
   )
   #+end_src
@@ -1689,11 +1680,16 @@ File.open(src, "r") {|f|
   :el-get uwabami/text-adjust.el
   )
    #+end_src
-* 補完: =ido=
+* 補完: =vertico=, =marginalia=, =consult=
   :PROPERTIES:
-  :CUSTOM_ID: orge3fb8a64
+  :CUSTOM_ID: org5fd7347f
   :END:
-  補完は =ido= が軽いし速いので好み.
+  最近話題になりだしたので, ちょっと使い始めてみた.
+** 無視する拡張子の追加設定
+   :PROPERTIES:
+   :CUSTOM_ID: orgbf52614c
+   :END:
+  とりあえず, 無視するファイルの拡張子を指定しておく.
   #+begin_src emacs-lisp :tangle init.el
 (leaf *completion
   :init
@@ -1725,190 +1721,6 @@ File.open(src, "r") {|f|
            do (add-to-list 'completion-ignored-extensions ext))
   )
   #+end_src
-** =ido= 本体の設定
-   :PROPERTIES:
-   :CUSTOM_ID: orgc92613c0
-   :END:
-   #+begin_src emacs-lisp :tangle init.el
-(leaf ido
-  :commands ido-save-history
-  :init
-  (leaf ido-completing-read+ :ensure t)
-  ;; (leaf ido-describe-bindings :ensure t)
-  :bind (("C-x C-f" . ido-find-file))
-  :preface
-  (defun my:ido-disable-line-trucation ()
-    (set (make-local-variable 'truncate-lines) nil))
-  ;;
-  (defun my:ido-remove-tramp-from-cache nil
-    "Remove any TRAMP entries from `ido-dir-file-cache'.
-    This stops tramp from trying to connect to remote hosts on emacs startup,
-    which can be very annoying."
-    (interactive)
-    (setq ido-dir-file-cache
-          (cl-remove-if
-           (lambda (x)
-             (string-match "/\\(rsh\\|ssh\\|telnet\\|su\\|sudo\\|sshx\\|krlogin\\|ksu\\|rcp\\|scp\\|rsync\\|scpx\\|fcp\\|nc\\|ftp\\|smb\\|adb\\):" (car x)))
-           ido-dir-file-cache)))
-  ;;
-  (defun my:ido-kill-emacs-hook ()
-    (my:ido-remove-tramp-from-cache)
-    (ido-save-history))
-  :advice (:override ido-kill-emacs-hook
-                     my:ido-kill-emacs-hook)
-  :hook ((ido-setup-hook
-          . (lambda ()
-              (define-key ido-completion-map (kbd "C-h") 'ido-delete-backward-updir)
-              (define-key ido-completion-map (kbd "C-l") 'ido-delete-backward-updir)))
-         (ido-minibuffer-setup-hook . my:ido-disable-line-trucation))
-  :init
-  :custom
-  `(;; prefix match 入力を先頭一致可能
-    (ido-enable-prefix             . nil)
-    ;; TAB で名前の一致までその後 RET で実行
-    (ido-confirm-unique-completion . t)
-    ;; . を prefix として扱う
-    (ido-enable-dot-prefix         . nil)
-    ;; flx matching を試す際には prefix を無効化すること
-    (ido-enable-flex-matching      . t)
-    ;;
-    (ido-default-file-method       . 'selected-window)
-    (ido-default-buffer-method     . 'selected-window)
-    ;; avoid [Too Big]
-    (ido-max-directory-size        . 1000000)
-    ;; Tramp では無効化
-    (ido-enable-tramp-completion   . nil)
-    ;; ido-vertical も調べないとアカン様な.
-    (ido-use-faces                 . t)
-    ;; 拡張子には match しない
-    (ido-ignore-extensions         . t)
-    ;; 補完できない場合の挙動 ← "何もしない" は可能かな? nil?
-    (ido-cannot-complete-command   . 'ido-next-match)
-    ;; 補完候補が無い場合に search を始める長さ ⇒ -1 で停止
-    (ido-auto-merge-work-directories-length . -1)
-    ;; 補完候補が無い場合に search を始める時間
-    ;; run-with-timer に与える値なので, とりあえず長め(30分)にしておく
-    (ido-auto-merge-delay-time     . 1800)
-    ;; 補完結果の保存
-    (ido-save-directory-list-file
-     . ,(expand-file-name "ido.last" my:d:tmp)))
-  :config
-  (ido-mode t)
-  ;; (ido-everywhere t)   ; ← 過去の選択を覚えている奴と相性悪い.
-  )
-   #+end_src
-** =flx-ido=: flex match の強化
-   :PROPERTIES:
-   :CUSTOM_ID: org72b78bcc
-   :END:
-   曖昧マッチが非常に直感的になった．地味に便利で手放せない．
-   #+begin_src emacs-lisp :tangle init.el
-(leaf flx-ido
-  :ensure t
-  :custom
-  `((flx-ido-use-faces . nil)
-    (flx-ido-threshold . 10000))
-  :hook
-  (emacs-startup-hook . (lambda () (flx-ido-mode 1)))
-  )
-   #+end_src
-** =ido-flx-with-migemo=: flx + migemo
-   :PROPERTIES:
-   :CUSTOM_ID: orge285b835
-   :END:
-   これは便利だ
-   #+begin_src emacs-lisp :tangle init.el
-(leaf ido-flex-with-migemo
-  :disabled t
-  :if (executable-find "cmigemo")
-  :ensure t
-  :after (flx migemo)
-  :config
-  (ido-flex-with-migemo-mode)
-  )
-   #+end_src
-** =ido-vertical-mode=: 候補を縦に並べて表示
-   :PROPERTIES:
-   :CUSTOM_ID: orgba1f040e
-   :END:
-   #+begin_src emacs-lisp :tangle init.el
-(leaf ido-vertical-mode
-  :ensure t
-  :after all-the-icons-in-terminal
-  :custom
-  `(;; 補完候補数の表示
-    (ido-vertical-show-count  . t)
-    ;; キーバインド
-    (ido-vertical-define-keys . 'C-n-C-p-up-down-left-right)
-    ;; minibuffer の高さ制限
-    (ido-max-window-height    . 10) ;;
-    ;; 候補選択表示のカスタマイズ
-    (ido-vertical-indicator   . ">> ")
-    (ido-vertical-decorations  . "")
-    (ido-vertical-padding     . "")
-    )
-  :hook
-  (emacs-startup-hook . (lambda () (ido-vertical-mode 1)))
-  )
-   #+end_src
-** =smex=
-   :PROPERTIES:
-   :CUSTOM_ID: org28528ad3
-   :END:
-   M-x を ido で.
-   #+begin_src emacs-lisp :tangle init.el
-(leaf smex
-  :bind (("M-x" . smex))
-  :ensure t
-  :custom
-  `(;; prompt
-    (smex-prompt-string . "smex: ")
-    ;; 履歴
-    (smex-save-file
-     . ,(expand-file-name "smex-items" my:d:tmp))
-    (smex-history-length . 128)
-    )
-  )
-   #+end_src
-** =ido-recentf=: recentf を ido で
-   :PROPERTIES:
-   :CUSTOM_ID: org56240c5e
-   :END:
-   "recentf-list" の結果を整形して, minibuffer に納まる様に縮小したり
-   #+begin_src emacs-lisp :tangle init.el
-(leaf *ido-recentf-open
-  :preface
-  (defun ido-recentf-open ()
-    "Use `ido-completing-read' to \\[find-file] a recent file"
-    (interactive)
-    (let ((files (mapcar (lambda (f)
-                           (cons (my:shorten-file-path f 70) f))
-                         recentf-list)))
-      (let ((selected (ido-completing-read "Recent Files: " (mapcar #'car files))))
-        (find-file (assoc-default selected files)))))
-  :bind ("C-x C-r" . ido-recentf-open)
-  )
-   #+end_src
-** ido-ghq
-   :PROPERTIES:
-   :CUSTOM_ID: org7eb97621
-   :END:
-   ghq list を ido で選んで dired で開く
-   #+begin_src emacs-lisp :tangle init.el
-(leaf ido-ghq
-  :if (executable-find "ghq")
-  :el-get uwabami/ido-ghq
-  :bind (("C-x f" . ido-ghq-open))
-  :config
-  (setq ido-ghq-short-list t)
-  )
-   #+end_src
-* 補完: =vertico=, =marginalia=, =consult=
-  :PROPERTIES:
-  :CUSTOM_ID: org5fd7347f
-  :END:
-  最近話題になりだしたので, ちょっと使い始めてみた.
-  =orderless= はまだ試してないけど, 肌に合うかなぁ….
 ** =vertico=: 本体
    :PROPERTIES:
    :CUSTOM_ID: org8362fd9f
@@ -1917,7 +1729,6 @@ File.open(src, "r") {|f|
    より, =C-l= で一つ上の階層へ上がれる様にしたり.
    #+begin_src emacs-lisp :tangle init.el
 (leaf vertico
-  :emacs>= 27.1
   :ensure t
   :preface
   (defun my:disable-selection ()
@@ -1953,9 +1764,8 @@ File.open(src, "r") {|f|
                            ("…" 0 1
                             (face vertico-multiline))))
     )
-  :init
-  (setq completion-styles '(basic substring partial-completion flex))
-  (vertico-mode)
+  :config
+  :hook (after-init-hook . vertico-mode)
   )
   #+end_src
 ** =marginalia=: リッチな注釈(Enable richer annotations)
@@ -1966,14 +1776,13 @@ File.open(src, "r") {|f|
    ⇒ [[https://github.com/minad/marginalia/issues/70][Better truncation method for file names #70]]
    #+begin_src emacs-lisp :tangle init.el
 (leaf marginalia
-  :emacs>= 26.1
   :ensure t
   :bind (("M-A" . marginalia-cycle)
          (:minibuffer-local-map
           ("M-A" . marginalia-cycle)
           ))
-  :init
-  (marginalia-mode +1)
+  :hook
+  (after-init-hook . marginalia-mode)
   )
    #+end_src
 ** =consult=: 便利コマンド集
@@ -1984,31 +1793,20 @@ File.open(src, "r") {|f|
    =consult-recent-file= のカスタマイズのみ.
    #+begin_src emacs-lisp :tangle init.el
 (leaf consult
-  :emacs>= 27.1
   :ensure t
-  :bind (("C-x C-r" . my:consult-recent-file))
+  :bind (("C-x C-r" . consult-recent-file))
   :custom
   `(;; 増やさないと preview 時に theme がロードされない模様.
     ;; とりあえず default の 10 倍にしている. 1 MB かな?
-    (consult-preview-raw-size . 1024000))
-  :config
-  (defun my:consult-recent-file ()
-    "Find recent using `completing-read'."
-    (interactive)
-    (setq-local marginalia-mode -1)
-    (find-file
-     (consult--read
-      (or (mapcar
-           (lambda (f)
-             (cons (my:shorten-file-path f 70) f)) recentf-list)
-          (user-error "No recent files"))
-      :prompt "Find recent file: "
-      :sort nil
-      :require-match t
-      :category 'file
-      :state (consult--file-preview)
-      :history 'file-name-history)))
-  (setq consult-config `((my:consult-recent-file :preview-key nil)))
+    ;; (consult-preview-raw-size . 1024000)
+    (consult-preview-key  . nil)
+    (consult-narrow-key   . "<")
+    )
+  ;; :advice
+  ;;   (:override register-preview
+  ;;              consult-register-window)
+  ;; :config
+  ;;   (setq consult-preview-key (kbd "M-."))
   )
    #+end_src
 *** =consult-ghq=: ghq を consult で.
@@ -2023,6 +1821,22 @@ File.open(src, "r") {|f|
   `((consult-ghq-short-list . t))
   )
     #+end_src
+** =orderless=: 補完候補の選択
+   :PROPERTIES:
+   :CUSTOM_ID: orgc12df551
+   :END:
+   イロイロと凝れそうだけど, とりあえずはデフォルトのままで.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf orderless
+  :ensure t
+  ;; :init (leaf flx :ensure t)
+  :custom
+  `((completion-styles . '(orderless))
+    (orderless-matching-styles
+     . '(orderless-initialism orderless-flex orderless-regexp orderless-literal))
+    )
+  )
+   #+end_src
 * 翻訳
   :PROPERTIES:
   :CUSTOM_ID: org779f9ba7
@@ -4231,7 +4045,6 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    :END:
    #+begin_src emacs-lisp :tangle init.el
 (leaf *git
-  :emacs>= 25
   :init
   (leaf git-commit :ensure t)
   (leaf gitattributes-mode :ensure t)
@@ -4286,7 +4099,6 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    飽きたら止めるかもしれないけれど.
    #+begin_src emacs-lisp :tangle init.el
 (leaf git-gutter+
-  :emacs>= 25
   :ensure t
   :blackout `((git-gutter+-mode
                . ,(format "%s" (all-the-icons-octicon "git-merge"))))
@@ -4428,7 +4240,6 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   =flycheck= はいろいろやりすぎてて私には合わない.
   #+begin_src emacs-lisp :tangle init.el
 (leaf flymake
-  :emacs<= 26.1
   :ensure t
   )
   #+end_src
@@ -4959,7 +4770,6 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
   #+begin_src emacs-lisp :tangle init.el
 (setq frame-background-mode (frame-parameter nil 'background-mode))
 (leaf *doom-themes
-  :emacs>= 25
   :init
   (leaf doom-themes :ensure t)
   (leaf emacs-doom-darkpastel

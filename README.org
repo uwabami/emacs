@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2021-06-13 00:26:42
+#+date: 2021-06-15 11:44:16
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -523,6 +523,7 @@ init.el: README.org
     (=load-prefer-newer= は Emacs >= 24.4 から).
    - yes or no を y or n に
    他にもイロイロと. 設定が増えてきたら分ける.
+   #+begin_src emacs-lisp :tangle init.el
 (leaf cus-start
   :custom
   `(
@@ -1013,7 +1014,8 @@ init.el: README.org
                                  "org-recent-headings.dat"
                                  "^/mnt/c/\\.*"
                                  "\\.*COMMIT_EDITMSG$"
-                                 "\\.*elpa\\.*-autoloads.el$"
+                                 ".*-autoloads.el$"
+                                 "^/home/uwabami/.emacs.d/pkg/\\.*"
                                  )))
   )
   #+end_src
@@ -1816,7 +1818,9 @@ File.open(src, "r") {|f|
     projectile かなんかを使う方が良さげだが, とりあえず.
     #+begin_src emacs-lisp
 (leaf consult-ghq
+  :disabled t
   :el-get uwabami/consult-ghq
+  :bind (("C-x f" . consult-ghq-open))
   :custom
   `((consult-ghq-short-list . t))
   )
@@ -4636,39 +4640,39 @@ $clean_ext = "snm nav vrb synctex.gz spl bbl blg run.xml pgf-plot.table pgf-plot
   (progn
     (set-face-attribute 'default nil
                         :family "FSMRMP"
-                        :height 180)
+                        :height 220)
     (set-face-attribute 'fixed-pitch nil
                         :family "FSMRMP"
-                        :height 180)
+                        :height 220)
     (set-face-attribute 'variable-pitch nil
                         :family "FSMRMP"
-                        :height 180)
+                        :height 220)
     ;; Japanese
     (set-fontset-font nil
                       'japanese-jisx0213.2004-1
-                      (font-spec :family "FSMRMP" :height 180))
+                      (font-spec :family "FSMRMP" :height 220))
     (set-fontset-font nil
                       'japanese-jisx0213-2
-                      (font-spec :family "FSMRMP" :height 180))
+                      (font-spec :family "FSMRMP" :height 220))
     (set-fontset-font nil
                       'katakana-jisx0201
-                      (font-spec :family "FSMRMP" :height 180))
+                      (font-spec :family "FSMRMP" :height 220))
     ;; Latin with pronounciation annotations
     (set-fontset-font nil
                       '(#x0080 . #x024F)
-                      (font-spec :family "FSMRMP" :height 180))
+                      (font-spec :family "FSMRMP" :height 220))
     ;; Math symbols
     (set-fontset-font nil
                       '(#x2200 . #x22FF)
-                      (font-spec :family "FSMRMP" :height 180))
+                      (font-spec :family "FSMRMP" :height 220))
     ;; Greek
     (set-fontset-font nil
                       '(#x0370 . #x03FF)
-                      (font-spec :family "FSMRMP" :height 180))
+                      (font-spec :family "FSMRMP" :height 220))
     ;; Some Icons
     (set-fontset-font nil
                       '(#xE0A0 . #xEEE0)
-                      (font-spec :family "FSMRMP" :height 180))
+                      (font-spec :family "FSMRMP" :height 220))
     ))
 ;;;###autoload
 (defun my:load-side-window-config ()
@@ -4677,39 +4681,39 @@ $clean_ext = "snm nav vrb synctex.gz spl bbl blg run.xml pgf-plot.table pgf-plot
   (progn
     (set-face-attribute 'default nil
                         :family "FSMRMP"
-                        :height 120)
+                        :height 180)
     (set-face-attribute 'fixed-pitch nil
                         :family "FSMRMP"
-                        :height 120)
+                        :height 180)
     (set-face-attribute 'variable-pitch nil
                         :family "FSMRMP"
-                        :height 120)
+                        :height 180)
     ;; Japanese
     (set-fontset-font nil
                       'japanese-jisx0213.2004-1
-                      (font-spec :family "FSMRMP" :height 120))
+                      (font-spec :family "FSMRMP" :height 180))
     (set-fontset-font nil
                       'japanese-jisx0213-2
-                      (font-spec :family "FSMRMP" :height 120))
+                      (font-spec :family "FSMRMP" :height 180))
     (set-fontset-font nil
                       'katakana-jisx0201
-                      (font-spec :family "FSMRMP" :height 120))
+                      (font-spec :family "FSMRMP" :height 180))
     ;; Latin with pronounciation annotations
     (set-fontset-font nil
                       '(#x0080 . #x024F)
-                      (font-spec :family "FSMRMP" :height 120))
+                      (font-spec :family "FSMRMP" :height 180))
     ;; Math symbols
     (set-fontset-font nil
                       '(#x2200 . #x22FF)
-                      (font-spec :family "FSMRMP" :height 120))
+                      (font-spec :family "FSMRMP" :height 180))
     ;; Greek
     (set-fontset-font nil
                       '(#x0370 . #x03FF)
-                      (font-spec :family "FSMRMP" :height 120))
+                      (font-spec :family "FSMRMP" :height 180))
     ;; Some Icons
     (set-fontset-font nil
                       '(#xE0A0 . #xEEE0)
-                      (font-spec :family "FSMRMP" :height 120))
+                      (font-spec :family "FSMRMP" :height 180))
     ))
 (leaf *gui
   :if window-system

@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2021-07-14 09:03:21
+#+date: 2021-08-05 02:04:15
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -111,7 +111,7 @@ init.el: README.org
           (lambda ()
             (setq gc-cons-threshold my:default-gc-cons-threshold)))
     #+end_src
-*** TODO =early-init.el=
+*** =early-init.el=
     :PROPERTIES:
     :CUSTOM_ID: orgcb2bfa7b
     :END:
@@ -1245,6 +1245,24 @@ init.el: README.org
   (migemo-init)
   )
   #+end_src
+* =emacs-w3m=:
+  :PROPERTIES:
+  :CUSTOM_ID: org2d69d5ee
+  :END:
+  #+begin_src emacs-lisp :tangle init.el
+(leaf emacs-w3m
+  :if (executable-find "w3m")
+  :el-get (emacs-w3m
+           :type github
+           :pkgname "emacs-w3m/emacs-w3m"
+           :build `(("autoconf")
+                    ("./configure" ,(format "--with-emacs=%s" el-get-emacs))
+                    ("make"))
+           :info "doc")
+  :load-path
+  `(,(expand-file-name "emacs-w3m/shimbun" my:d:pkg:elget))
+  )
+  #+end_src
 * SOMEDAY =eww=: 内蔵ブラウザ [0/3]
   :PROPERTIES:
   :CUSTOM_ID: org35bd4bc4
@@ -1784,7 +1802,6 @@ File.open(src, "r") {|f|
    ⇒ [[https://github.com/minad/marginalia/issues/70][Better truncation method for file names #70]]
    #+begin_src emacs-lisp :tangle init.el
 (leaf marginalia
-  :disabled t
   :ensure t
   :bind (("M-A" . marginalia-cycle)
          (:minibuffer-local-map
@@ -4818,174 +4835,6 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
    :PROPERTIES:
    :CUSTOM_ID: org7e722d0e
    :END:
-   #+begin_src emacs-lisp :tangle no
-(leaf modus-themes
-  :ensure t
-  :custom
-  `(
-    (modus-themes-inhibit-reload       . t)
-    (modus-themes-bold-constructs      . t)
-    (modus-themes-slanted-constructs   . nil)
-    (modus-themes-syntax               . 'alt-syntax-yellow-comments)
-    (modus-themes-no-mixed-fonts       . t)
-    (modus-themes-links                . 'faint)
-    (modus-themes-prompts              . 'intense-accent)
-    (modus-themes-mode-line            . '(moody accented))
-    (modus-themes-hl-line              . t)
-    (modus-themes-paren-match          . 'subtle-bold)
-    (modus-themes-region               . 'bg-only-no-extend)
-    ;; (modus-themes-subtle-line-numbers  . nil)
-    ;; (modus-themes-success-deuteranopia . nil)
-    ;; (modus-themes-fringes              . nil)
-    ;; (modus-themes-lang-checkers        . straight-underline)
-    ;; (modus-themes-completions          . 'opinionated)
-    ;; (modus-themes-mail-citations       . 'faint)
-    ;; (modus-themes-diffs                . 'desaturated)
-    (modus-themes-org-blocks           . 'tinted-background)
-    ;; (modus-themes-org-agenda
-    ;;  . '((header-block . (variable-pitch scale-title))
-    ;;      (header-date . (grayscale workaholic bold-today))
-    ;;      (scheduled . uniform)
-    ;;      (habit . traffic-light-deuteranopia)))
-    (modus-themes-headings                . '((t . rainbow)))
-    (modus-themes-variable-pitch-ui       . nil)
-    (modus-themes-variable-pitch-headings . nil)
-    (modus-themes-scale-headings          . nil)
-    (modus-themes-scale-1                 . 1)
-    (modus-themes-scale-2                 . 1)
-    (modus-themes-scale-3                 . 1)
-    (modus-themes-scale-4                 . 1)
-    (modus-themes-scale-5                 . 1)
-    (modus-themes-scale-title             . 1)
-    )
-  :init
-  (modus-themes-load-themes)
-  :config
-  (modus-themes-load-vivendi)
-  )
-   #+end_src
-   #+begin_src emacs-lisp :tangle no
-(leaf elemental-theme
-  :el-get zk-phi/elemental-theme
-  :require t
-  :init
-  `(add-to-list 'custom-theme-load-path
-                ,(expand-file-name "elemental-theme/" my:d:pkg:elget))
-  '(custom-set-faces
-    '(default
-       ((t (:foreground "#eceff1" :background "#263238")))
-       )
-    '(elemental-bright-bg-face
-      ((t (:background "#4c4c4c"))))
-    '(elemental-brighter-bg-face
-      ((t (:background "#acacac"))))
-    '(elemental-bright-fg-face
-      ((t (:foreground "#6c6c6c"))))
-    '(elemental-dark-fg-face
-      ((t (:foreground "#c9c9c9"))))
-    '(elemental-darker-fg-face
-      ((t (:foreground "#acacac"))))
-    ;;
-    '(elemental-accent-fg-1-face
-      ((t (:foreground "#bf7fff" :weight bold))))
-    '(elemental-accent-fg-2-face
-      ((t (:foreground "#7fbfff" :weight bold))))
-    '(elemental-accent-fg-3-face
-      ((t (:foreground "#ff7f7f" :weight bold))))
-    '(elemental-accent-fg-4-face
-      ((t (:foreground "#ffff7f" :weight bold))))
-    ;;
-    '(elemental-red-fg-face
-      ((t (:foreground "#ff7fff" :weight bold))))
-    '(elemental-blue-fg-face
-      ((t (:foreground "#7f7fff" :weight bold))))
-    '(elemental-green-fg-face
-      ((t (:foreground "#5CF19E" :weight bold))))
-    '(elemental-orange-fg-face
-      ((t (:foreground "#ffbf7f" :weight bold))))
-    ;;
-    '(elemental-red-underline-face
-      ((t (:underline (:color "#ff7f7f" :style wave)))))
-    '(elemental-yellow-underline-face
-      ((t (:underline (:color "#ffff7f" :style wave)))))
-    ;;
-    '(elemental-ui-prompt
-      ((t (:inherit (elemental-accent-fg-1-face bold)))))
-    ;;
-    '(elemental-ui-component
-      ((t (:inherit default :background "#222244"))))
-    '(elemental-ui-component-diminished
-      ((t (:inherit (elemental-dark-fg-face elemental-ui-component)))))
-    '(elemental-ui-component-transparent
-      ((t (:inherit (elemental-dark-fg-face)))))
-    ;;
-    '(elemental-file-name
-      ((t (:foreground "#7f7fff" :weight bold))))
-    '(elemental-file-executable
-      ((t (:foreground "#7fff7f" :weight bold))))
-    '(elemental-file-special
-      ((t (:foreground "#ff7f7f" :weight bold))))
-    ;;
-    '(hl-line
-      ((t (:background "#556b2f" ))))
-    '(completions-common-part
-      ((t (:inherit default :wight bold))))
-    ;;
-    '(orderless-match-face-0
-      ((t (:inherit elemental-accent-fg-2-face))))
-    '(orderless-match-face-1
-      ((t (:inherit elemental-accent-fg-3-face))))
-    '(orderless-match-face-2
-      ((t (:inherit elemental-accent-fg-4-face))))
-    '(orderless-match-face-3
-      ((t (:inherit elemental-accent-fg-1-face))))
-    ;;
-    '(tab-bar
-      ((t (:inherit elemental-ui-component-diminished ))))
-    '(tab-bar-tab
-      ((t (:inherit elemental-ui-component :weight bold))))
-    '(tab-bar-tab-inactive
-      ((t (:inherit elemental-ui-component-transparent))))
-    ;;
-    '(all-the-icons-red            ((t (:foreground "#ff4c4c"))))
-    '(all-the-icons-lred           ((t (:foreground "#ffe1dd"))))
-    '(all-the-icons-dred           ((t (:foreground "#6a4c49"))))
-    '(all-the-icons-red-alt        ((t (:foreground "#ff4c4c"))))
-    '(all-the-icons-green          ((t (:foreground "#4cff4c"))))
-    '(all-the-icons-lgreen         ((t (:foreground "#e6ffe0"))))
-    '(all-the-icons-dgreen         ((t (:foreground "#50674c"))))
-    '(all-the-icons-yellow         ((t (:foreground "#ffff4c"))))
-    '(all-the-icons-lyellow        ((t (:foreground "#ffffe1"))))
-    '(all-the-icons-dyellow        ((t (:foreground "#68664c"))))
-    '(all-the-icons-blue           ((t (:foreground "#4c4cff"))))
-    '(all-the-icons-blue-alt       ((t (:foreground "#4c4cff"))))
-    '(all-the-icons-lblue          ((t (:foreground "#e5ddff"))))
-    '(all-the-icons-dblue          ((t (:foreground "#4f4967"))))
-    '(all-the-icons-maroon         ((t (:foreground "#ff4cff"))))
-    '(all-the-icons-lmaroon        ((t (:foreground "#ffe3ff"))))
-    '(all-the-icons-dmaroon        ((t (:foreground "#684d66"))))
-    '(all-the-icons-purple         ((t (:foreground "#bf7fff"))))
-    '(all-the-icons-lpurple        ((t (:foreground "#f1e7ff"))))
-    '(all-the-icons-dpurple        ((t (:foreground "#595166"))))
-    '(all-the-icons-orange         ((t (:foreground "#ffbf7f"))))
-    '(all-the-icons-lorange        ((t (:foreground "#ffefe6"))))
-    '(all-the-icons-dorange        ((t (:foreground "#675851"))))
-    '(all-the-icons-cyan           ((t (:foreground "#4cffff"))))
-    '(all-the-icons-cyan-alt       ((t (:foreground "#4cffff"))))
-    '(all-the-icons-lcyan          ((t (:foreground "#e6ffff"))))
-    '(all-the-icons-dcyan          ((t (:foreground "#506666"))))
-    '(all-the-icons-pink           ((t (:foreground "#ff4cff"))))
-    '(all-the-icons-lpink          ((t (:foreground "#ffe3ff"))))
-    '(all-the-icons-dpink          ((t (:foreground "#684d66"))))
-    '(all-the-icons-silver         ((t (:foreground "#a0a0a0"))))
-    '(all-the-icons-lsilver        ((t (:foreground "#808080"))))
-    '(all-the-icons-dsilver        ((t (:foreground "#ababab"))))
-    ;;
-    )
-  :config
-  (enable-theme 'elemental-theme)
-  )
-   #+end_src
    これまで弄っていた font-lock を
    doom-theme をベースに移植中: [[https://github.com/uwabami/emacs-doom-darkpastel][uwabami/emacs-doom-darkpastel]]
   #+begin_src emacs-lisp :tangle init.el
@@ -5104,6 +4953,30 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
 ;;  (defun my-advice/window-width (fn &rest args)
 ;;    (- (apply fn args) 1))
 ;;  :advice (:around window-width my-advice/window-width))
+;;
+;; (leaf elfeed
+;;   :if (file-directory-p my:d:password-store)
+;;   :ensure t
+;;   :custom
+;;   `((elfeed-set-timeout  . 36000)
+;;     (elfeed-db-directory . "~/.cache/elfeed"))
+;;   :config
+;;   (leaf elfeed-goodies
+;;     :ensure t
+;;     :config
+;;     (elfeed-goodies/setup))
+;;   ;;
+;;   (leaf elfeed-protocol
+;;     :ensure t
+;;     :config
+;;     (setq elfeed-feeds
+;;           '(("owncloud+https://uwabami@uwabami.junkhub.org/nextcloud"
+;;              :password (password-store-get "Web/uwabami.junkhub.org/nextcloud")
+;;              )
+;;             ))
+;;     (elfeed-protocol-enable)
+;;     )
+;;   )
 ;;
 (leaf vterm
   :ensure t

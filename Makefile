@@ -10,11 +10,10 @@ ELC		= $(EL:%.el=%.elc)
 all: $(ELC) init.elc
 $(EL): init.el
 init.el: README.org
-	@mkdir -p tmp
+	@mkdir -p ~/.cache/emacs
 	@mkdir -p pkg/elpa
 	@mkdir -p pkg/el-get
 	@mkdir -p share
-	@chmod 700 tmp
 	$(EMACS) -Q -q --batch --eval \
 	   "(progn \
 		  (require 'ob-tangle) \
@@ -29,9 +28,8 @@ clean:
 
 distclean: clean
 	rm -fr pkg
-	rm -fr tmp
 
 skk-jisyo:
-	mkdir -p tmp/skk-jisyo
+	mkdir -p ~/.cache/emacs/skk-jisyo
 	wget "https://github.com/skk-dev/dict/raw/master/SKK-JISYO.L" \
-		-O tmp/skk-jisyo/SKK-JISYO.L
+		-O ~/.cache/emacs/skk-jisyo/SKK-JISYO.L

@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2021-08-15 21:11:03
+#+date: 2021-09-09 11:58:18
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -147,8 +147,8 @@ init.el: README.org
      |-- pkg
      |   |-- elpa/   ←  package.el で導入したパッケージが置かれる場所
      |   `-- el-get/ ←  el-get で導入したパッケージが置かれる場所
-     |-- share/      ←  (基本的に)参照するだけの資源置き場所
-     `-- tmp/        ←  一次ファイルの置き場所
+     `-- share/      ←  (基本的に)参照するだけの資源置き場所
+    ~/.cache/emacs   ←  一次ファイルの置き場所
    #+end_example
    上記ディレクトリ構成を設定ファイルで使用するために
    ディレクトリ配置を宣言しておきます。
@@ -159,7 +159,9 @@ init.el: README.org
 (defconst my:d:share
   (expand-file-name "share/" user-emacs-directory))
 (defconst my:d:tmp
-  (expand-file-name "tmp/" user-emacs-directory))
+  (expand-file-name ".cache/emacs/" (getenv "HOME")))
+(unless (file-directory-p my:d:tmp)
+  (make-directory my:d:tmp))
 (defconst my:d:pkg:elpa
   (expand-file-name "pkg/elpa" user-emacs-directory))
 (defconst my:d:pkg:elget
@@ -167,7 +169,8 @@ init.el: README.org
    #+end_src
    その他, 良く使うディレクトリもここで設定しておきます．
    #+begin_src emacs-lisp :tangle init.el
-(defconst my:d:org (concat (getenv "HOME") "/Nextcloud/org/"))
+(defconst my:d:nextcloud (concat (getenv "HOME") "/Nextcloud"))
+(defconst my:d:org (expand-file-name "org" my:d:nextcloud))
    #+end_src
 ** Byte-Compile 時の Common Lisp の読み込み
    :PROPERTIES:
@@ -209,10 +212,10 @@ init.el: README.org
    '(package-user-dir my:d:pkg:elpa))
   )
 (eval-when-compile
-  (unless (file-exists-p (locate-user-emacs-file "tmp/bootstrap-stamp"))
+  (unless (file-exists-p (expand-file-name "bootstrap-stamp" my:d:tmp))
     (package-refresh-contents)
     (with-temp-buffer
-      (write-file (locate-user-emacs-file "tmp/bootstrap-stamp")))
+      (write-file (expand-file-name "bootstrap-stamp" my:d:tmp)))
     ))
 (package-initialize)
    #+end_src
@@ -700,10 +703,10 @@ init.el: README.org
      . ,(expand-file-name "url" my:d:tmp))
     ;; nsm
     (nsm-settings-file
-     . ,(expand-file-name "nsm.data" my:d:tmp ))
+     . ,(expand-file-name "nsm.data" my:d:tmp))
     ;; bookmark
     (bookmark-default-file
-     . ,(expand-file-name "bookmarks" my:d:share))
+     . ,(expand-file-name "bookmarks" my:d:tmp))
     ;; eshell
     (eshell-directory-name
      . ,(expand-file-name "eshell" my:d:tmp))
@@ -847,7 +850,6 @@ init.el: README.org
    :END:
    ブラウザ呼び出しは =xdg-open/open= に丸投げ.
    #+begin_src emacs-lisp :tangle init.el
-
 (leaf browse-url
   :require t
   :bind ("C-c C-j" . browse-url-at-point)
@@ -1229,7 +1231,7 @@ init.el: README.org
 (leaf migemo
   :if (executable-find "cmigemo")
   :ensure t
-  :require t
+  ;; :require t
   :custom
   '((migemo-user-dictionary  . nil)
     (migemo-regex-dictionary . nil)
@@ -1243,8 +1245,8 @@ init.el: README.org
     (setq migemo-dictionary "/usr/local/share/migemo/utf-8/migemo-dict"))
    (t
     (setq migemo-dictionary "/usr/share/cmigemo/utf-8/migemo-dict")))
-  :config
-  (migemo-init)
+  :hook
+  (after-init-hook . migemo-init)
   )
   #+end_src
 * =emacs-w3m=:
@@ -1704,8 +1706,9 @@ File.open(src, "r") {|f|
        (ndeb "/usr/local/share/dict/rikagaku5" :alias "理化学辞典 第5版")
        (ndeb "/usr/local/share/dict/koujien4" :alias "広辞苑 第4版")
        (ndeb "/usr/local/share/dict/wadai5" :alias "研究社 和英大辞典 第5版")
-       (ndeb "/usr/local/share/dict/eidai6" :alias "研究社 英和大辞典 第6版")
-       (ndeb "/usr/local/share/dict/colloc" :alias "研究社 英和活用大辞典 ")))
+       ;; (ndeb "/usr/local/share/dict/eidai6" :alias "研究社 英和大辞典 第6版")
+       ;; (ndeb "/usr/local/share/dict/colloc" :alias "研究社 英和活用大辞典 ")
+       ))
   )
    #+end_src
 ** =text-adjust=: 全角文字の撲滅
@@ -1722,6 +1725,16 @@ File.open(src, "r") {|f|
   :CUSTOM_ID: org5fd7347f
   :END:
   最近話題になりだしたので, ちょっと使い始めてみた.
+  基本機能の拡張なので, 挙動が手に馴染む感じがとても良い.
+** helm, ivy の無効化
+   :PROPERTIES:
+   :CUSTOM_ID: orgff7e02fd
+   :END:
+   依存する拡張がまだまだ多いので, 一度インストールして邪魔しないようにしておくことに.
+   #+begin_src emacs-lisp
+(leaf helm :ensure t :defer-config (helm-mode -1))
+(leaf ivy :ensure t :defer-config (ivy-mode -1))
+   #+end_src
 ** 無視する拡張子の追加設定
    :PROPERTIES:
    :CUSTOM_ID: orgbf52614c
@@ -1945,13 +1958,18 @@ File.open(src, "r") {|f|
 (leaf google-translate
   :ensure t
   :init
-  (defun google-translate--search-tkk ()
+  (defvar google-translate-translation-directions-alist '(("en" . "ja") ("ja" . "en")))
+  (leaf popup :ensure t)
+  (defun my:google-translate--search-tkk ()
     "Search TKK. @see https://github.com/atykhonov/google-translate/issues/52"
     (list 430675 2721866130))
   :bind
-  ("C-x t" . google-translate-at-point)
+  ("C-x t" . google-translate-smooth-translate)
+  :advice (:override google-translate--search-tkk
+                     my:google-translate--search-tkk)
   :config
-  (setq google-translate-backend-method 'curl)
+  (setq google-translate-translation-directions-alist '(("en" . "ja") ("ja" . "en"))
+        google-translate-backend-method 'curl)
   )
    #+end_src
 * Copy & Paste:
@@ -2187,7 +2205,43 @@ File.open(src, "r") {|f|
      #+end_src
      どのアプリケーションで開くか → =xdg-open= に丸投げ．
      #+begin_src emacs-lisp :tangle init-wl.el
-;; (setq mime-view-mailcap-files '("~/.mailcap"))
+(defvar my-mime-preview-play-current-entity-appname "xdg-open"
+  "meadow なら fiber, mac なら open, linux なら xdg-open")
+
+(cond
+ ((string-match "apple-darwin" system-configuration)
+  (setq my-mime-preview-play-current-entity-appname "open")
+  )
+ ((string-match "linux" system-configuration)
+  (setq my-mime-preview-play-current-entity-appname "xdg-open")
+  ))
+
+(unless (functionp #'mime-preview-play-current-entity-orig)
+  (fset #'mime-preview-play-current-entity-orig
+        (symbol-function #'mime-preview-play-current-entity)))
+(defun mime-preview-play-current-entity (&optional ignore-examples mode)
+  (interactive "P")
+  (if (and mode (not (equal mode "play")))
+      (mime-preview-play-current-entity-orig ignore-examples mode)
+    (let* ((entity (get-text-property (point) 'mime-view-entity))
+           (name (mime-entity-safe-filename entity))
+           (filename (expand-file-name (if (and name (not (string= name "")))
+                                           name
+                                         (make-temp-name "EMI"))
+                                       (make-temp-file "EMI" 'directory))))
+      (mime-write-entity-content entity filename)
+      (message "External method is starting...")
+      (let* ((process-name
+              (concat my-mime-preview-play-current-entity-appname " " filename))
+             (process
+              (start-process process-name
+                             mime-echo-buffer-name
+                             my-mime-preview-play-current-entity-appname
+                             filename)))
+        (set-alist 'mime-mailcap-method-filename-alist process filename)
+        (set-process-sentinel process 'mime-mailcap-method-sentinel)))))
+(setq mime-play-delete-file-immediately nil)
+(setq mime-view-mailcap-files '("~/.mailcap"))
      #+end_src
      =~/.mailcap= 自体は以下
      #+begin_src conf :tangle no
@@ -2210,7 +2264,6 @@ video/*; xdg-open %s;
      音を鳴らすアレやコレの無効化
      #+begin_src emacs-lisp :tangle init-wl.el
 (setq mime-play-find-every-situations nil
-      mime-play-delete-file-immediately nil
       process-connection-type nil)
      #+end_src
 *** 個人情報の設定
@@ -3016,7 +3069,7 @@ video/*; xdg-open %s;
      :END:
      偶に暴発している様な...? elscreen のせいかしら.
      #+begin_src emacs-lisp :tangle init-wl.el
-(setq wl-auto-save-drafts-interval nil)
+(setq wl-auto-save-drafts-interval 300)
      #+end_src
 **** メール本文の文字コード
      :PROPERTIES:
@@ -3261,7 +3314,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
          ("C-x n w" . widen)
          ("C-c a"   . org-agenda)
          ("C-x m"   . org-capture)
-         ("C-x M"   . org-journal-new-entry)
+         ;; ("C-x M"   . org-journal-new-entry)
          )
   :advice
   (:before org-calendar-holiday
@@ -3360,7 +3413,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (leaf org-macs :require t)
   :custom
   `((org-id-locations-file
-     . ,(expand-file-name "org-id-locations" my:d:share))
+     . ,(expand-file-name "org-id-locations" my:d:tmp))
+    (org-id-link-to-org-use-id . 'create-if-interactive-and-no-custom-id)
     ;; (org-id-link-to-org-use-id . create-if-interactive-and-no-custom-id)
     )
   :config
@@ -3443,7 +3497,115 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    (org-src-preserve-indentation     . t))
   )
    #+end_src
-** Agenda: スケジュール, TODO 表示
+** Org-capture: メモ取り
+   :PROPERTIES:
+   :CUSTOM_ID: orgbe835a6b
+   :END:
+   キーバインドは以前 changelog memo をやっていた時の癖で =C-x m= をメモにしている.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf org-capture
+  :if (file-directory-p my:d:org)
+  :commands org-capture
+  :pl-setq
+  (my:org:calendar1 my:org:calendar2)   ;; 名前がイケてないっ!
+  :init (leaf doct :ensure t) ;; capture template を上手く書く拡張
+  :config
+  (setq org-default-notes-file (expand-file-name "INBOX.org" my:d:org))
+  (setq org-capture-templates
+        (doct '(("Org-roam journal"
+                 :keys "m"
+                 :function org-roam-dailies-capture-today
+                 )
+                ;; ("TODO"
+                ;;  :keys "t"
+                ;;  :type plain
+                ;;  :function my:org-journal-add-date-entry-capture
+                ;;  :template "** TODO %(format-time-string org-journal-time-format)%^{title} %^g\n  %?\n  %a"
+                ;;  :prepend nil
+                ;;  :unnarrowed nil
+                ;;  :kill-buffer t
+                ;;  )
+                ;; ("MEMO"
+                ;;  :keys "m"
+                ;;  :type plain
+                ;;  :function my:org-journal-add-date-entry-capture
+                ;;  :template "** MEMO %(format-time-string org-journal-time-format)%^{title} %^g\n   #+\n   %?"
+                ;;  :prepend nil
+                ;;  :unnarrowed nil
+                ;;  :kill-buffer t
+                ;;  )
+                ("Schedule: 個人スケジュール"
+                 :keys "s"
+                 :type plain
+                 :file (lambda ()(expand-file-name "Schedule.org" my:d:org))
+                 :template "* %^{prompt}\n  :PROPERTIES:\n  :calendar-id: %(format \"%s\" my:org:calendar1)\n  :END:\n  :org-gcal:\n%?\n%i\n  :END:"
+                 :prepend nil
+                 :unnarrowed nil
+                 :kill-buffer t
+                 )
+                ("Univ. Schedule: 大学関連"
+                 :keys "u"
+                 :type plain
+                 :file (lambda () (expand-file-name "Univ.org" my:d:org))
+                 :template "* %^{prompt}\n  :PROPERTIES:\n  :calendar-id: %(format \"%s\" my:org:calendar2)\n  :END:\n  :org-gcal:\n%?\n%i\n  :END:"
+                 :prepend nil
+                 :unnarrowed nil
+                 :kill-buffer t
+                 )
+                ))
+        )
+  )
+   #+end_src
+** Org-roam: リンク付きメモ
+   :PROPERTIES:
+   :CUSTOM_ID: orgbbaf7c91
+   :END:
+   #+begin_src emacs-lisp
+(leaf org-roam
+  :if (and (file-directory-p my:d:org)
+           (and (executable-find "rg")
+                (executable-find "sqlite3")))
+  :bind
+  (("C-c n a" . org-roam-alias-add)
+   ("C-c n f" . org-roam-node-find)
+   ("C-c n i" . org-roam-node-insert)
+   ("C-c n o" . org-id-get-create)
+   ("C-c n t" . org-roam-tag-add)
+   ("C-c n l" . org-roam-buffer-toggle)
+   ;; ("C-x M"   . org-roam-dailies-capture-today) ← call from org-capture
+   )
+  :ensure t
+  :init (setq org-roam-v2-ack t)
+  :custom
+  `(;; (org-roam-v2-ack      . t)
+    (org-roam-db-location . ,(expand-file-name "org-roam.db" my:d:tmp))
+    (org-roam-directory   . ,(expand-file-name "roam" my:d:org))
+    (org-roam-mode-section-functions
+     . (list #'org-roam-backlinks-section
+             #'org-roam-reflinks-section
+            ;; #'org-roam-unlinked-references-section
+            ))
+    ;; (org-roam-db-update-on-save . t)
+    (org-roam-dailies-directory . "") ;; relative path→flatten!
+    (org-roam-dailies-capture-templates
+     . '(
+         ("m" "memo" entry "* MEMO <%<%Y-%m-%d %H:%M>> %^{title}\n  %?"
+          :if-new (file+head "%<%Y-%m-%d>.org"
+                             "#+title: %<%Y年%m月%d日(%a)>")
+          :prepend nil
+          )
+         ("t" "ToDo" entry "* ToDo <%<%Y-%m-%d %H:%M>> %^{title}\n  %?"
+          :if-new (file+head "%<%Y-%m-%d>.org"
+                             "#+title: %<%Y年%m月%d日(%a)>")
+          :prepend nil
+          )
+         ))
+     )
+  :defer-config
+  (org-roam-db-autosync-enable)
+  )
+   #+end_src
+** Org-agenda: スケジュール, TODO 表示
    :PROPERTIES:
    :CUSTOM_ID: org016dbf67
    :END:
@@ -3454,7 +3616,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    なんて事もやっている．元ネタは [[https://julien.danjou.info/blog/2010/org-mode-and-holidays][Org-mode and holidays]]
    #+begin_src emacs-lisp :tangle init.el
 (leaf org-agenda
-  :commands (org-agenda)
+  :if (file-directory-p my:d:org)
   :defer-config
   (defface my:org-agenda-date-saturday
     '((t (:foreground "#7FBFFF" :bold t )))
@@ -3513,15 +3675,14 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
         (when face (cl-return face)))))
   (setq org-agenda-day-face-function
         'my:org-agenda-day-face-function)
-  ;; font-lock の適用
+  ;; font-lock の適用. loop減らせないかなぁ….
   (defun my:org-agenda-finalize-font-lock ()
     "Custom: apply custom font-lock"
     (save-excursion
       (goto-char (point-min))
       (while (re-search-forward "Univ:" nil t)
-        (add-text-properties
-         (match-beginning 0) (point-at-eol)
-         '(face my:org-agenda-calendar-Univ)))
+        (add-text-properties (match-beginning 0) (point-at-eol)
+                             '(face my:org-agenda-calendar-Univ)))
       (goto-char (point-min))
       (while (re-search-forward "Schedule:" nil t)
         (add-text-properties (match-beginning 0) (point-at-eol)
@@ -3539,21 +3700,14 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
         (add-text-properties (match-beginning 0) (point-at-eol)
                              '(face my:org-agenda-calendar-twitter)))
       (goto-char (point-min))
-      (while (re-search-forward "誕生日:" nil t)
+      (while (re-search-forward "祝日:\\|休日:\\|誕生日:" nil t)
         (add-text-properties (match-beginning 0) (point-at-eol)
                              '(face org-agenda-date-weekend)))
-      (goto-char (point-min))
-      (while (re-search-forward "祝日:" nil t)
-        (add-text-properties (match-beginning 0) (point-at-eol)
-                             '(face org-agenda-date-weekend)))
-      (goto-char (point-min))
-      (while (re-search-forward "休日:" nil t)
-        (add-text-properties (match-beginning 0) (point-at-eol)
-                             '(face org-agenda-date-weekend)))))
+      ))
   ;;
   (add-hook 'org-agenda-finalize-hook
             #'my:org-agenda-finalize-font-lock)
-
+  ;;
   (setq org-agenda-span 'day
         org-agenda-format-date "%Y/%m/%d (%a)"
         org-agenda-start-on-weekday 0
@@ -3583,145 +3737,125 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
             ))
           )
         )
-  ;; 使用するファイル
   (dolist (file
-           '("Archive.org"
+           '(;; "Archive.org"   <-- 🤔
+             ;; Calendar
              "Holidays.org"
-             "Memo.org"
              "Schedule.org"
              "GFD.org"
              "Univ.org"
              "DebianJP.org"
+             ;; INBOX
+             "INBOX.org"
+             ;; misc
              "twitter.org"
+             ;; Project
              "redmine_GFD.org"
-             "redmine_FluidSoc.org"
+             ;; "redmine_FluidSoc.org"
              ))
     (add-to-list 'org-agenda-files (expand-file-name file my:d:org)))
-  (add-to-list 'org-agenda-files (locate-user-emacs-file "README.org"))
-  ;; (if (file-directory-p
-  ;;      (expand-file-name "Public/" (getenv "HOME")))
-  ;;     (dolist (file
-  ;;              (directory-files-recursively
-  ;;               (expand-file-name "Public/" (getenv "HOME")) "org$"))
-  ;;       (add-to-list 'org-agenda-files file)))
-  (if (file-directory-p
-       (expand-file-name "journal/" my:d:org))
-      (dolist (file
-               (directory-files-recursively
-                (expand-file-name "journal/" my:d:org) "org$"))
-        (add-to-list 'org-agenda-files file)))
-  )
-   #+end_src
-** Org-roam
-   :PROPERTIES:
-   :CUSTOM_ID: orgbbaf7c91
-   :END:
-** Org-journal: 日記
-   :PROPERTIES:
-   :CUSTOM_ID: org456c87fa
-   :END:
-   機能が豊富なのだが, イマイチ使いこなせていない.
-   #+begin_src emacs-lisp :tangle init.el
-(leaf org-journal
-  :if (and (file-directory-p my:d:org)
-           (>= emacs-major-version 25))
-  ;; :commands my:org-journal-new-entry
-  :commands org-journal-new-entry
-  ;; :bind ((:org-journal-mode-map
-  ;;         ("C-c C-c" . my:org-journal-entry-save-and-exit)))
-  :ensure t
-  :init
-  ;; (defun my:org-journal-new-entry (prefix &optional time)
-  ;;   "Add new journal entry on new elscreen"
-  ;;   (interactive "P")
-  ;;   (elscreen-create)
-  ;;   (org-journal-new-entry nil time))
+  (add-to-list 'org-agenda-files
+               (locate-user-emacs-file "README.org"))
+  (add-to-list 'org-agenda-files
+               (expand-file-name "Public/web.org" (getenv "HOME")))
+  ;; (add-to-list 'org-agenda-files
+  ;;              (expand-file-name "Public/404.org" (getenv "HOME")))
+  ;; org-wiki
+  (dolist (file
+           (directory-files-recursively
+            (expand-file-name "Public/cc-env" (getenv "HOME")) "org$"))
+    (add-to-list 'org-agenda-files file))
+  ;; github repos.
+  (dolist (file
+           (directory-files-recursively
+            (expand-file-name "Public/software" (getenv "HOME")) "org$"))
+    (add-to-list 'org-agenda-files file))
   ;;
-  ;; (defun my:org-journal-entry-save-and-exit ()
-  ;;   "Save journal entry and close elscreen buffer"
-  ;;   (interactive)
-  ;;   (save-buffer)
-  ;;   (elscreen-kill))
-  :hook
-  ((org-journal-mode-hook
-    . (lambda()
-        (setq-local truncate-lines t))))
-  :custom
-  `((org-journal-file-type                 . 'yearly)
-    (org-journal-dir                       . ,(expand-file-name "journal" my:d:org))
-    (org-journal-file-format               . "%Y.org")
-    (org-journal-cache-file
-     . ,(expand-file-name "org-journal.cache" my:d:tmp))
-    (org-journal-date-format               . "%x (%a)")
-    (org-journal-time-format               . "<%Y-%m-%d %R> ")
-    (org-journal-time-prefix               . "** MEMO ")
-    (org-journal-enable-agenda-integration . t)
-    (org-journal-find-file                 . 'find-file)
-    (org-journal-carryover-delete-empty-journal . 'ask)
-    (org-journal-start-on-weekday          . 0) ;; sunday
-    )
-  :config
-  (eval-and-compile 'browse-url)
-  (with-eval-after-load 'org-journal
-    (global-set-key (kbd "C-c C-j") 'browse-url-at-point))
-  )
+)
    #+end_src
-** Org-capture: メモ取り
+** Org-roam と Org-agenda
    :PROPERTIES:
-   :CUSTOM_ID: orgbe835a6b
+   :CUSTOM_ID: orgb9dc2ae0
    :END:
-   キーバインドは以前 changelog memo をやっていた時の癖で =C-x m= をメモにしている.
-   #+begin_src emacs-lisp :tangle init.el
-(leaf org-capture
-  :if (file-directory-p my:d:org)
-  :commands org-capture
-  :pl-setq
-  (my:org:calendar1 my:org:calendar2)   ;; 名前がイケてないっ!
+   org-roam で db に query 投げて,
+   =org-agenda-files= を更新するように.
+   元ネタ: [[https://d12frosted.io/posts/2021-01-16-task-management-with-roam-vol5.html][Task management with org-roam Vol. 5: Dynamic and fast agenda]]
+   #+begin_src emacs-lisp
+(leaf vulpea
+  :if (and (file-directory-p my:d:org)
+           (and (executable-find "rg")
+                (executable-find "sqlite3")))
+  :after org-agenda
+  :el-get  d12frosted/vulpea
+  :advice
+  (:before org-agenda
+           my:vulpea-agenda-files-update)
+  :hook
+  ((org-roam-db-autosync-mode . vulpea-db-autosync-enable)
+   (find-file-hook            . vulpea-project-update-tag)
+   (before-save-hook          . vulpea-project-update-tag))
   :config
-  (defun my:org-journal-add-date-entry-capture ()
-    (org-journal-new-entry t)
-    (goto-char (point-max))
-    )
-  (setq org-default-notes-file (expand-file-name "Memo.org" my:d:org))
-  (setq org-capture-templates
-        `(
-          ("t" "TODO" plain
-           (function my:org-journal-add-date-entry-capture)
-           "** TODO %(format-time-string org-journal-time-format)%^{title} %^g\n  %?\n  %a"
-           :prepend nil
-           :unnarrowed nil
-           :kill-buffer t
-           )
-          ("m" "メモを追加" plain
-           (function my:org-journal-add-date-entry-capture)
-           "** MEMO %(format-time-string org-journal-time-format)%?"
-           :prepend nil
-           :unnarrowed nil
-           :kill-buffer t
-           )
-          ("a" "少し長めの記事を追加する" plain
-           (function my:org-journal-add-date-entry-capture)
-           "** ARTICLE %(format-time-string org-journal-time-format)%? "
-           :prepend nil
-           :unnarrowed nil
-           :kill-buffer t
-           )
-          ("s" "個人予定表スケジュールを追加" plain
-           (file ,(expand-file-name "Schedule.org" my:d:org))
-           "* %^{prompt}\n  :PROPERTIES:\n  :calendar-id: %(format \"%s\" my:org:calendar1)\n  :END:\n  :org-gcal:\n%?\n%i\n  :END:"
-           :prepend nil
-           :unnarrowed nil
-           :kill-buffer t
-           )
-          ("u" "仕事予定表スケジュールを追加" plain
-           (file ,(expand-file-name "Univ.org" my:d:org))
-           "* %^{prompt}\n  :PROPERTIES:\n  :calendar-id: %(format \"%s\" my:org:calendar2)\n  :END:\n  :org-gcal:\n%?\n%i\n  :END:"
-           :prepend nil
-           :unnarrowed nil
-           :kill-buffer t
-           )
-          )
-        )
+  (defun vulpea-project-p ()
+    "Return non-nil if current buffer has any todo entry.
+
+TODO entries marked as done are ignored, meaning the this
+function returns nil if current buffer contains only completed
+tasks."
+    (seq-find                                 ; (3)
+     (lambda (type)
+       (eq type 'todo))
+     (org-element-map                         ; (2)
+         (org-element-parse-buffer 'headline) ; (1)
+         'headline
+       (lambda (h)
+         (org-element-property :todo-type h)))))
+
+  (defun vulpea-project-update-tag ()
+    "Update PROJECT tag in the current buffer."
+    (when (and (not (active-minibuffer-window))
+               (vulpea-buffer-p))
+      (save-excursion
+        (goto-char (point-min))
+        (let* ((tags (vulpea-buffer-tags-get))
+               (original-tags tags))
+          (if (vulpea-project-p)
+              (setq tags (cons "project" tags))
+            (setq tags (remove "project" tags)))
+
+          ;; cleanup duplicates
+          (setq tags (seq-uniq tags))
+
+          ;; update tags if changed
+          (when (or (seq-difference tags original-tags)
+                    (seq-difference original-tags tags))
+            (apply #'vulpea-buffer-tags-set tags))))))
+
+  (defun vulpea-buffer-p ()
+    "Return non-nil if the currently visited buffer is a note."
+    (and buffer-file-name
+         (string-prefix-p
+          (expand-file-name (file-name-as-directory org-roam-directory))
+          (file-name-directory buffer-file-name))))
+
+  (defun vulpea-project-files ()
+    "Return a list of note files containing 'project' tag." ;
+    (seq-uniq
+     (seq-map
+      #'car
+      (org-roam-db-query
+       [:select [nodes:file]
+                :from tags
+                :left-join nodes
+                :on (= tags:node-id nodes:id)
+                :where (like tag (quote "%\"project\"%"))]))))
+
+  (defun my:vulpea-agenda-files-update (&rest _)
+    "Update/Add the value of `org-agenda-files'."
+    (if (vulpea-project-files)
+        (progn
+          (dolist (file (vulpea-project-files))
+            (add-to-list 'org-agenda-files file))
+          (setq org-agenada-files (delete-dups org-agenda-files)))))
   )
    #+end_src
 ** OrgとGoogle カレンダーの連携: =org-gcal=
@@ -3734,7 +3868,8 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    #+begin_src emacs-lisp :tangle init.el
 (leaf org-gcal
   :if (and my:d:password-store
-           (file-directory-p my:d:org))
+           (and (file-directory-p my:d:org)
+                (executable-find "curl")))
   :ensure t
   :commands (org-gcal-fetch org-gcal-sync)
   :preface
@@ -3745,7 +3880,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   (leaf org-generic-id
     :custom
     `((org-generic-id-locations-file
-       . ,(expand-file-name "org-generic-id-locations"  my:d:share))
+       . ,(expand-file-name "org-generic-id-locations"  my:d:tmp))
       )
     )
   (leaf request
@@ -3754,17 +3889,17 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     (setq request-storage-directory (expand-file-name "request" my:d:tmp))
     (unless (file-directory-p request-storage-directory)
       (make-directory request-storage-directory))
-    :config
-    (setq request-storage-directory (expand-file-name "request" my:d:tmp))
+    :custom
+    `((request-storage-directory . ,(expand-file-name "request" my:d:tmp)))
     )
   (leaf persist
     :config
     (setq persist--directory-location (expand-file-name "persist" my:d:tmp)))
   :custom
-  `((org-gcal-dir          . ,(expand-file-name
-                               "org-gcal" my:d:tmp))
-    (org-gcal-token-file   . ,(expand-file-name
-                               "org-gcal/.org-gcal-token" my:d:tmp))
+  `((org-gcal-dir
+     . ,(expand-file-name "org-gcal" my:d:tmp))
+    (org-gcal-token-file
+     . ,(expand-file-name "org-gcal/.org-gcal-token" my:d:tmp))
     (org-gcal-down-days    . 180)  ;; 未来 180 日
     (org-gcal-up-days      .  30)  ;; 過去 30 日
     (org-gcal-auto-archive . t)
@@ -3778,7 +3913,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   (org-gcal-client-id
    org-gcal-client-secret
    org-gcal-file-alist)
-  :hook (org-capture-after-finalize-hook  . org-gcal-fetch)
+  ;; :hook (org-capture-after-finalize-hook  . org-gcal-fetch)
   )
    #+end_src
 ** OrgとRedmine の連携: =orgmine=
@@ -3843,20 +3978,6 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     )
   )
    #+end_src
-** OrgとTrelloの連携: =org-trello=
-   :PROPERTIES:
-   :CUSTOM_ID: org0ea55d7d
-   :END:
-   ToDo管理に Trello を使い始めたので, 設定
-   #+BEGIN_SRC emacs-lisp
-;; (leaf org-trello
-;;   :if (and my:d:password-store
-;;            (file-directory-p my:d:org))
-;;   :ensure t
-;;   :custom
-;;   `((org-trello-files . '(,(expand-file-name "Trello.org" my:d:org))))
-;;   )
-   #+END_SRC
 ** Org-Wiki
    :PROPERTIES:
    :CUSTOM_ID: org5f8d1640
@@ -4080,7 +4201,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   :commands my:org-wiki-publish
   :custom
   `((org-publish-timestamp-directory
-     . ,(expand-file-name "org-timestamps.el" my:d:tmp)))
+     . ,(expand-file-name "org-timestamps/" my:d:tmp)))
   :config
   (defun my:org-wiki-publish ()
     (interactive)
@@ -4089,6 +4210,22 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
                  t))
   )
     #+end_src
+** Org-ref: 文献参照, 引用など
+   :PROPERTIES:
+   :CUSTOM_ID: org801f7dd3
+   :END:
+   #+begin_src emacs-lisp
+(leaf org-ref
+  :if (file-directory-p my:d:nextcloud)
+  :disabled t
+  :ensure t
+  :custom
+  `((org-ref-bibliography-notes   . ,(expand-file-name "INBOX.org" my:d:org))
+    (org-ref-default-bibliography . ,(expand-file-name "references.bib" my:d:nextcloud))
+    (org-ref-pdf-directory        . ,(expand-file-name "Papers" my:d:nextcloud))
+    )
+  )
+   #+end_src
 * Outline Magic
   :PROPERTIES:
   :CUSTOM_ID: org912b87a3
@@ -4390,7 +4527,6 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     (progn
       (make-directory (expand-file-name "auctex/auto" my:d:tmp) t)
       (make-directory (expand-file-name "auctex/style" my:d:tmp) t)))
-  (leaf biblio :ensure t)
   (leaf reftex
     :custom
     ((reftex-plug-into-AUCTeX               . t)
@@ -4399,7 +4535,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
      ;; (reftex-ref-style-default-list . '("Cleverref"))
      )
     )
-  (leaf company-reftex :ensure t)
+  ;; (leaf company-reftex :ensure t)
   ;; (leaf company-auctex :ensure t)
   (leaf auctex-latexmk
     :el-get tom-tan/auctex-latexmk
@@ -4471,12 +4607,75 @@ $dvipdf = "dvipdfmx %O -o %D %S";
 $dvips = 'dvips %O -z -f %S | convbkmk -u > %D';
 $ps2pdf = 'ps2pdfwr %O %S %D';
 $pdf_mode = 3;
-$pdf_previewer = 'xdg-open';
-# $pdf_previewer = 'fwdevince %S %D';
+# $pdf_previewer = 'xdg-open';
+$pdf_previewer = 'fwdevince %S %D';
 $pdf_update_method = 1;
 $cleanup_mode = 2;
 $clean_ext = "snm nav vrb synctex.gz spl bbl blg run.xml pgf-plot.table pgf-plot.gnuplot"
   #+end_src
+** 文献参照
+   :PROPERTIES:
+   :CUSTOM_ID: org070567c3
+   :END:
+   試行錯誤中...
+*** bibtex-completion
+    :PROPERTIES:
+    :CUSTOM_ID: org9d970700
+    :END:
+    #+begin_src emacs-lisp
+(leaf bibtex-completion
+  :if (and (and (executable-find "uplatex")
+                (executable-find "latexmk"))
+           (file-directory-p my:d:org))
+  :ensure t
+  :custom
+  `((bibtex-completion-pdf-symbol   . "")
+    (bibtex-completion-notes-symbol . "")
+    (bibtex-completion-bibliography
+     . ,(expand-file-name "references.bib" my:d:nextcloud))
+    (bibtex-completion-library-path
+     . ,(expand-file-name "Zotero" my:d:nextcloud))
+    (bibtex-completion-notes-path
+     . ,(expand-file-name "INBOX.org" my:d:org))
+    ;; Debian 11 から /usr/bin/open が alternatives で提供される様になった
+    ;; 実態は xdg-open だが、macOS と条件分岐しなくて非常に楽に.
+    (bibtex-completion-pdf-open-function
+     . ,(lambda (fpath)
+          (call-process "open" nil 0 nil fpath)))
+    )
+  )
+    #+end_src
+*** consult-bibtex
+    :PROPERTIES:
+    :CUSTOM_ID: orgab568a64
+    :END:
+    #+begin_src emacs-lisp
+(leaf consult-bibtex
+  :if (file-directory-p my:d:org)
+  :el-get  mohkale/consult-bibtex
+  )
+    #+end_src
+*** org-ref
+    :PROPERTIES:
+    :CUSTOM_ID: orge3334680
+    :END:
+    #+begin_src emacs-lisp
+(leaf org-ref
+  :if (file-directory-p my:d:org)
+  :ensure t
+  :custom
+  `( ;; same as bibtex-completion
+    (org-ref-default-bibliography
+     . ,(expand-file-name "references.bib" my:d:nextcloud))
+    (org-ref-bibliography-nots
+     . ,(expand-file-name "INBOX.org" my:d:org))
+    (org-ref-pdf-directory
+     . ,(expand-file-name "Zotero" my:d:nextcloud))
+    )
+  :hook
+  (org-ref-clean-bibtex-entry-hook . org-ref-replace-nonascii)
+  )
+    #+end_src
 * Autoconf
   :PROPERTIES:
   :CUSTOM_ID: org898b9a45
@@ -4622,6 +4821,7 @@ $clean_ext = "snm nav vrb synctex.gz spl bbl blg run.xml pgf-plot.table pgf-plot
   (leaf textile-mode :ensure t)
   (leaf lua-mode :ensure t)
   (leaf debian-el)
+  (leaf dpkg-dev-el)
   (leaf sh-mode
     :custom ((system-uses-terminfo . nil))
     )
@@ -4982,6 +5182,14 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
   :CUSTOM_ID: orgd89ceb4b
   :END:
   #+begin_src emacs-lisp :tangle init.el
+(leaf debian-el
+  :custom
+  `((debian-bug-download-directory . "~/Downloads"))
+  )
+(leaf rg
+  :if (executable-find "rg")
+  :ensure t
+  )
 ;;(leaf emacs
 ;;  :preface
 ;;  (defun my-advice/window-width (fn &rest args)

@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2021-09-09 11:58:18
+#+date: 2021-09-11 22:40:41
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -125,6 +125,7 @@ init.el: README.org
 (push '(scroll-bar-mode      . nil) default-frame-alist)
 (push '(blink-cursor-mode    . nil) default-frame-alist)
 (push '(column-number-mode   . nil) default-frame-alist)
+(setq load-prefer-newer noninteractive)
 (setq frame-inhibit-implied-resize t)
 (setq site-run-file nil)
 ;; (Setq window-divider-default-right-width 3)
@@ -310,7 +311,7 @@ init.el: README.org
            (file-directory-p my:d:password-store))
   :init
   (setq leaf-default-plstore
-        (plstore-open
+     (plstore-open
          (expand-file-name "plstore.plist" my:d:password-store)))
   (add-to-list 'vc-directory-exclusion-list
                (expand-file-name my:d:password-store))
@@ -2916,8 +2917,8 @@ video/*; xdg-open %s;
  'wl-highlight-message-date-header-contents
  '((t (:foreground "#5CF19E" :bold t :italic nil :weight bold ))))
     #+end_src
-    以下, 元々定義されているfaceの設定⇒[[#org7e722d0e][doom-theme]] のカスタムテーマに移動
-    #+begin_src emacs-lisp :tangle no
+    以下, 元々定義されているfaceの設定⇒[[#org7e722d0e][ +doom-theme]] のカスタムテーマに移動+
+    #+begin_src emacs-lisp :tangle init-wl.el
 ;; (my:wl-set-face 'wl-highlight-folder-closed-face
 ;;                 '((t (:foreground "#4cff4c" :bold nil :italic nil :weight normal ))))
 ;; (my:wl-set-face 'wl-highlight-folder-few-face
@@ -2972,7 +2973,6 @@ video/*; xdg-open %s;
 ;;                 '((t (:foreground "#F6F3E8" :bold nil :italic nil :weight normal ))))
 ;; (my:wl-set-face 'wl-highlight-summary-important-flag-face
 ;;                 '((t (:foreground "#ffff4c" :bold nil :italic nil :weight normal ))))
-;;
 ;; (my:wl-set-face 'wl-highlight-folder-killed-face
 ;;                 '((t (:foreground ,my:h:black :5Dbold nil :italic nil ))))
 ;; (my:wl-set-face 'wl-highlight-folder-many-face
@@ -3313,7 +3313,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :bind (("C-x n s" . org-narrow-to-subtree)
          ("C-x n w" . widen)
          ("C-c a"   . org-agenda)
-         ("C-x m"   . org-capture)
+         ;; ("C-x m"   . org-capture)
          ;; ("C-x M"   . org-journal-new-entry)
          )
   :advice
@@ -3502,42 +3502,32 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    :CUSTOM_ID: orgbe835a6b
    :END:
    キーバインドは以前 changelog memo をやっていた時の癖で =C-x m= をメモにしている.
-   #+begin_src emacs-lisp :tangle init.el
+   → capture は org-roam に丸投げすることにした.
+   #+begin_src emacs-lisp :tangle no
 (leaf org-capture
   :if (file-directory-p my:d:org)
   :commands org-capture
-  :pl-setq
-  (my:org:calendar1 my:org:calendar2)   ;; 名前がイケてないっ!
+  ;; :pl-setq
+  ;; (my:org:calendar1 my:org:calendar2)   ;; 名前がイケてないっ!
   :init (leaf doct :ensure t) ;; capture template を上手く書く拡張
   :config
   (setq org-default-notes-file (expand-file-name "INBOX.org" my:d:org))
   (setq org-capture-templates
-        (doct '(("Org-roam journal"
+        (doct '(;;
+                ("Org-roam Memo"
                  :keys "m"
-                 :function org-roam-dailies-capture-today
+                 :type plain
+                 :template "* MEMO <%<%Y-%m-%d %H:%M>> %^{title}\n  %?"
+                 :target
+                 :prepend nil
+                 :unnarrowed nil
+                 :kill-buffer t
+                 ;; :function org-roam-dailies-capture-today
                  )
-                ;; ("TODO"
-                ;;  :keys "t"
-                ;;  :type plain
-                ;;  :function my:org-journal-add-date-entry-capture
-                ;;  :template "** TODO %(format-time-string org-journal-time-format)%^{title} %^g\n  %?\n  %a"
-                ;;  :prepend nil
-                ;;  :unnarrowed nil
-                ;;  :kill-buffer t
-                ;;  )
-                ;; ("MEMO"
-                ;;  :keys "m"
-                ;;  :type plain
-                ;;  :function my:org-journal-add-date-entry-capture
-                ;;  :template "** MEMO %(format-time-string org-journal-time-format)%^{title} %^g\n   #+\n   %?"
-                ;;  :prepend nil
-                ;;  :unnarrowed nil
-                ;;  :kill-buffer t
-                ;;  )
                 ("Schedule: 個人スケジュール"
                  :keys "s"
                  :type plain
-                 :file (lambda ()(expand-file-name "Schedule.org" my:d:org))
+                 :file (lambda() (expand-file-name "Schedule.org" my:d:org))
                  :template "* %^{prompt}\n  :PROPERTIES:\n  :calendar-id: %(format \"%s\" my:org:calendar1)\n  :END:\n  :org-gcal:\n%?\n%i\n  :END:"
                  :prepend nil
                  :unnarrowed nil
@@ -3546,7 +3536,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
                 ("Univ. Schedule: 大学関連"
                  :keys "u"
                  :type plain
-                 :file (lambda () (expand-file-name "Univ.org" my:d:org))
+                 :file (lambda() (expand-file-name "Univ.org" my:d:org))
                  :template "* %^{prompt}\n  :PROPERTIES:\n  :calendar-id: %(format \"%s\" my:org:calendar2)\n  :END:\n  :org-gcal:\n%?\n%i\n  :END:"
                  :prepend nil
                  :unnarrowed nil
@@ -3565,6 +3555,8 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   :if (and (file-directory-p my:d:org)
            (and (executable-find "rg")
                 (executable-find "sqlite3")))
+  :pl-setq
+  (my:org:calendar1 my:org:calendar2)   ;; 名前がイケてないっ!
   :bind
   (("C-c n a" . org-roam-alias-add)
    ("C-c n f" . org-roam-node-find)
@@ -3572,7 +3564,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    ("C-c n o" . org-id-get-create)
    ("C-c n t" . org-roam-tag-add)
    ("C-c n l" . org-roam-buffer-toggle)
-   ;; ("C-x M"   . org-roam-dailies-capture-today) ← call from org-capture
+   ("C-x m"   . org-roam-dailies-capture-today)
    )
   :ensure t
   :init (setq org-roam-v2-ack t)
@@ -3590,14 +3582,28 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     (org-roam-dailies-capture-templates
      . '(
          ("m" "memo" entry "* MEMO <%<%Y-%m-%d %H:%M>> %^{title}\n  %?"
-          :if-new (file+head "%<%Y-%m-%d>.org"
+          :target (file+head "%<%Y-%m-%d>.org"
                              "#+title: %<%Y年%m月%d日(%a)>")
           :prepend nil
+          :kill-buffer t
           )
          ("t" "ToDo" entry "* ToDo <%<%Y-%m-%d %H:%M>> %^{title}\n  %?"
-          :if-new (file+head "%<%Y-%m-%d>.org"
+          :target (file+head "%<%Y-%m-%d>.org"
                              "#+title: %<%Y年%m月%d日(%a)>")
           :prepend nil
+          :kill-buffer t
+          )
+         ("s" "Schedule: 個人スケジュール" entry
+          "* %^{title}\n  :PROPERTIES:\n  :calendar-id: %(format \"%s\" my:org:calendar1)\n  :END:\n  :org-gcal:\n%?\n%i\n  :END:"
+          :target (file ,(expand-file-name "Schedule.org" my:d:org))
+          :prepend t   ;; prepend nil としたいが, 末尾まで行ってくれないので諦める.
+          :kill-buffer t
+          )
+         ("u" "Univ: 大学関連 スケジュール" entry
+          "* %^{title}\n  :PROPERTIES:\n  :calendar-id: %(format \"%s\" my:org:calendar2)\n  :END:\n  :org-gcal:\n%?\n%i\n  :END:"
+          :target (file ,(expand-file-name "Univ.org" my:d:org))
+          :prepend t   ;; prepend nil としたいが, 末尾まで行ってくれないので諦める.
+          :kill-buffer t
           )
          ))
      )
@@ -3705,6 +3711,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
                              '(face org-agenda-date-weekend)))
       ))
   ;;
+  ;;
   (add-hook 'org-agenda-finalize-hook
             #'my:org-agenda-finalize-font-lock)
   ;;
@@ -3756,20 +3763,20 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     (add-to-list 'org-agenda-files (expand-file-name file my:d:org)))
   (add-to-list 'org-agenda-files
                (locate-user-emacs-file "README.org"))
-  (add-to-list 'org-agenda-files
-               (expand-file-name "Public/web.org" (getenv "HOME")))
+  ;; (add-to-list 'org-agenda-files
+  ;;             (expand-file-name "Public/web.org" (getenv "HOME")))
   ;; (add-to-list 'org-agenda-files
   ;;              (expand-file-name "Public/404.org" (getenv "HOME")))
   ;; org-wiki
-  (dolist (file
-           (directory-files-recursively
-            (expand-file-name "Public/cc-env" (getenv "HOME")) "org$"))
-    (add-to-list 'org-agenda-files file))
+  ;; (dolist (file
+  ;;          (directory-files-recursively
+  ;;           (expand-file-name "Public/cc-env" (getenv "HOME")) "org$"))
+  ;;   (add-to-list 'org-agenda-files file))
   ;; github repos.
-  (dolist (file
-           (directory-files-recursively
-            (expand-file-name "Public/software" (getenv "HOME")) "org$"))
-    (add-to-list 'org-agenda-files file))
+  ;; (dolist (file
+  ;;          (directory-files-recursively
+  ;;           (expand-file-name "Public/software" (getenv "HOME")) "org$"))
+  ;;   (add-to-list 'org-agenda-files file))
   ;;
 )
    #+end_src
@@ -4809,6 +4816,10 @@ $clean_ext = "snm nav vrb synctex.gz spl bbl blg run.xml pgf-plot.table pgf-plot
      :modes (text-mode markdown-mode gfm-mode wl-draft-mode))
     (add-to-list 'flycheck-checkers 'textlint)
     )
+  (leaf debian-el
+    :custom
+    `((debian-bug-download-directory . "~/Downloads"))
+    )
   (leaf rd-mode
     :mode "\\.rd$"
     :hook
@@ -4893,40 +4904,6 @@ $clean_ext = "snm nav vrb synctex.gz spl bbl blg run.xml pgf-plot.table pgf-plot
   :PROPERTIES:
   :CUSTOM_ID: orgbf458527
   :END:
-** xterm-color
-   :PROPERTIES:
-   :CUSTOM_ID: org4c769ff7
-   :END:
-   色を端末と揃える。
-   #+begin_src emacs-lisp :tangle init.el
-(leaf xterm-color
-  :disabled t
-  :ensure t
-  :custom
-  `((xterm-color-names
-     . '["#242424"    ; black
-         "#FF5252"    ; red
-         "#5CF19E"    ; green
-         "#FFD740"    ; yellow
-         "#4C4CFF"    ; blue
-         "#FF4CFF"    ; magenta
-         "#64FCDA"    ; cyan
-         "#B0BEC5"]   ; white
-     )
-    (xterm-color-names-bright
-     . '["#4f4f4f"    ; black
-         "#FF8A80"    ; red
-         "#7FFF7F"    ; green
-         "#FFE57F"    ; yellow
-         "#7F7FFF"    ; blue
-         "#FF7FFF"    ; magenta
-         "#A7FDEB"    ; cyan
-         "#FFFFFF"]   ; white
-     )
-    (xterm-color-use-bold-for-bright . t)
-    )
-  )
-   #+end_src
 ** SOMEDAY フォント [0/1]
    :PROPERTIES:
    :CUSTOM_ID: org356b9857
@@ -5048,54 +5025,11 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
 | 今日もいい天気ですね | お、     | 等幅になった👍 🍺|
 |----------------------+----------+------------------|
   #+END_EXAMPLE
-** Major, Minor モードの表示のカスタマイズ: =blackout=
+** modeline: =powerline=
    :PROPERTIES:
-   :CUSTOM_ID: org20d8ce5c
+   :CUSTOM_ID: orgf37b53c3
    :END:
-   基本個々のモードの設定でカスタマイズしているけれども．
-   #+begin_src emacs-lisp :tangle init.el
-(leaf *modeline-string
-  ;; ここでやるより, modeline の設定時に一括で変換した方が良い気もしてきた．
-  :blackout ((lisp-interaction-mode
-              (all-the-icons-icon-for-mode 'lisp-interaction-mode))
-             (emacs-lisp-mode
-              (all-the-icons-icon-for-mode 'emacs-lisp-mode))
-             (text-mode
-              (all-the-icons-icon-for-mode 'text-mode))
-             )
-  )
-   #+end_src
-** theme: =doom-theme=
-   :PROPERTIES:
-   :CUSTOM_ID: org7e722d0e
-   :END:
-   これまで弄っていた font-lock を
-   doom-theme をベースに移植中: [[https://github.com/uwabami/emacs-doom-darkpastel][uwabami/emacs-doom-darkpastel]]
-  #+begin_src emacs-lisp :tangle init.el
-(setq frame-background-mode (frame-parameter nil 'background-mode))
-(leaf *doom-themes
-  :init
-  (leaf doom-themes :ensure t)
-  (leaf emacs-doom-darkpastel
-    :el-get (emacs-doom-darkpastel
-             :type github
-             :pkgname "uwabami/emacs-doom-darkpastel"
-             :prepare (add-to-list 'custom-theme-load-path default-directory)
-             )
-    )
-  :custom
-  (doom-darkpastel-set-background . nil)
-  :config
-  (load-theme 'doom-darkpastel t)
-  (eaw-and-emoji-fullwidth)
-  )
-  #+end_src
-** modeline
-   :PROPERTIES:
-   :CUSTOM_ID: org51edfacc
-   :END:
-   powerline を使ってる
-   #+BEGIN_SRC emacs-lisp
+  #+BEGIN_SRC emacs-lisp
 (leaf powerline
   :ensure t
   :init
@@ -5160,32 +5094,195 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
                   (powerline-render rhs))))))
     )
   (my:powerline-theme)
-  ;; (powerline-revert)
   )
    #+END_SRC
-* 起動時間の出力
-  :PROPERTIES:
-  :CUSTOM_ID: orgca1f29da
-  :END:
-  [[http://memo.sugyan.com/entry/20120120/1327037494][起動時間を計測する 改訂版 - すぎゃーんメモ]]
-  #+begin_src emacs-lisp :tangle init.el
-(leaf *show-startup-time
+** theme: =modus-theme=
+   :PROPERTIES:
+   :CUSTOM_ID: orgce78777d
+   :END:
+   最近乗り換えた.
+   じたばたしているのは背景透過と Wanderlust の face の追加, かな?
+   #+begin_src emacs-lisp :tangle init.el
+(leaf modus-themes
+  :ensure t
+  :bind ("<f5>" . modus-themes-toggle)
+  :init
+  (modus-themes-load-themes)
+  :config
+  (modus-themes-load-vivendi)
+  :preface
+  (defun my:set-background (&optional frame)
+    "Unsets the background color for transparency"
+    (or frame
+        (setq frame (selected-frame)))
+    (if (display-graphic-p frame)
+        (progn
+          (set-frame-parameter nil 'alpha '(80  50))
+          (add-to-list 'default-frame-alist '(alpha 80 50)))
+      (set-face-background 'default "unspecified-bg" frame)))
+  ;; (my:modus-themes-custom-faces)
+  (defun my:modus-themes-custom-faces ()
+    (modus-themes-with-colors
+      (custom-set-faces
+       ;;
+       `(hl-line ((,class :background "#556b2f")))
+       `(mode-line-highlight ((,class :foreground "#aaaaaa" :background "#4C4C4C")))
+       ;;
+       ;; だいぶ弄ってるなぁ….
+       ;;
+       `(font-lock-preprocessor-face         ((,class :inherit modus-themes-bold
+                                                      ,@(modus-themes--syntax-extra
+                                                         red-intense red-intense
+                                                         red-intense red-intense))))
+       `(font-lock-string-face               ((,class ,@(modus-themes--syntax-string
+                                                         green-intense green-intense
+                                                         green-intense green-intense))))
+       `(font-lock-builtin-face              ((,class :inherit nil ;; modus-themes-bold
+                                                      ,@(modus-themes--syntax-extra
+                                                         blue-alt blue-alt-faint
+                                                         blue-alt blue-alt-faint))))
+       `(font-lock-constant-face             ((,class :inherit modus-themes-bold
+                                                      ,@(modus-themes--syntax-extra
+                                                         orange-intense orange-intense
+                                                         orange-intense orange-intense))))
+       `(font-lock-keyword-face              ((,class :inherit modus-themes-bold
+                                                      ,@(modus-themes--syntax-extra
+                                                         red-alt-other red-alt-other-faint
+                                                         red-alt-other red-alt-other-faint))))
+       `(font-lock-function-name-face        ((,class :inherit modus-themes-bold
+                                                      ,@(modus-themes--syntax-extra
+                                                         purple-intense purple-intense
+                                                         purple-intense purple-intense))))
+       `(font-lock-type-face                 ((,class :inherit modus-themes-bold
+                                                      ,@(modus-themes--syntax-foreground
+                                                         yellow-intense yellow-intense))))
+       `(font-lock-negation-char-face        ((,class :inherit modus-themes-bold
+                                                      ,@(modus-themes--syntax-foreground
+                                                         cyan cyan-faint))))
+       `(font-lock-regexp-grouping-backslash ((,class :inherit bold
+                                                      ,@(modus-themes--syntax-string
+                                                         fg-escape-char-backslash fg-escape-char-backslash
+                                                         fg-escape-char-backslash fg-escape-char-backslash
+                                                         ))))
+       `(font-lock-regexp-grouping-construct ((,class :inherit bold
+                                                      ,@(modus-themes--syntax-string
+                                                         fg-escape-char-construct fg-escape-char-construct
+                                                         fg-escape-char-construct fg-escape-char-construct
+                                                         ))))
+       ;;
+       `(org-agenda-date-weekend
+         ((,class :inherit 'default :foreground "#ff7f7f" :bold t)))
+       `(org-agenda-date
+         ((,class :inherit 'default :foreground "#ffffff" :bold t )))
+       `(org-agenda-date-today
+         ((,class :inherit 'default :foreground "#ffffff" :bold t :underline t)))
+       `(org-block-begin-line ((,class :background nil)))
+       `(org-block-end-line ((,class :background nil)))
+       ;; wanderlust
+       `(wl-highlight-folder-closed-face                  ((,class :foreground "#4cff4c")))
+       `(wl-highlight-folder-few-face                     ((,class :foreground "#ff4c4c")))
+       `(wl-highlight-folder-killed-face                  ((,class :foreground "#4f4f4f")))
+       `(wl-highlight-folder-many-face                    ((,class :foreground "#ff4cff")))
+       `(wl-highlight-folder-opened-face                  ((,class :foreground "#4cffff")))
+       `(wl-highlight-folder-path-face                    ((,class :underline t :bold t)))
+       `(wl-highlight-folder-unknown-face                 ((,class :foreground "#4cffff")))
+       `(wl-highlight-folder-unread-face                  ((,class :foreground "#4c4cff")))
+       `(wl-highlight-folder-zero-face                    ((,class :foreground "#f6f3e8")))
+       `(wl-highlight-message-citation-header             ((,class :foreground "#7fff7f")))
+       `(wl-highlight-message-cited-text-1                ((,class :foreground "#7fff7f")))
+       `(wl-highlight-message-cited-text-2                ((,class :foreground "#FFE57F")))
+       `(wl-highlight-message-cited-text-3                ((,class :foreground "#7f7fff")))
+       `(wl-highlight-message-cited-text-4                ((,class :foreground "#A7FDEB")))
+       `(wl-highlight-message-cited-text-5                ((,class :foreground "#ff7fff")))
+       `(wl-highlight-message-cited-text-6                ((,class :foreground "#ff7f7f")))
+       `(wl-highlight-message-cited-text-7                ((,class :foreground "#5CF19E")))
+       `(wl-highlight-message-cited-text-8                ((,class :foreground "#FFD740")))
+       `(wl-highlight-message-cited-text-9                ((,class :foreground "#4c4cff")))
+       `(wl-highlight-message-cited-text-10               ((,class :foreground "#4cffff")))
+       `(wl-highlight-message-header-contents             ((,class :foreground "#5CF19E")))
+       `(wl-highlight-message-headers                     ((,class :foreground "#64FCDA" :bold t)))
+       `(wl-highlight-message-important-header-contents   ((,class :foreground "#ff4cff" :bold t)))
+       `(wl-highlight-message-important-header-contents2  ((,class :foreground "#ff4cff" :bold t)))
+       `(wl-highlight-message-signature                   ((,class :foreground "#afafaf")))
+       `(wl-highlight-message-unimportant-header-contents ((,class :foreground "#afafaf")))
+       `(wl-highlight-summary-answered-face               ((,class :foreground "#4cff4c")))
+       `(wl-highlight-summary-deleted-face                ((,class :foreground "#4c4caa")))
+       `(wl-highlight-summary-disposed-face               ((,class :foreground "#7f7faa")))
+       `(wl-highlight-summary-flagged-face                ((,class :foreground "#FFE57F" :bold t)))
+       `(wl-highlight-summary-high-unread-face            ((,class :foreground "#ff4c4c")))
+       `(wl-highlight-summary-low-unread-face             ((,class :foreground "#ff4c4c")))
+       `(wl-highlight-summary-normal-face                 ((,class :foreground "#f6f3e8")))
+       `(wl-highlight-summary-refiled-face                ((,class :foreground "#7f7fff")))
+       `(wl-highlight-summary-spam-face                   ((,class :foreground "#ff4cff" :bold t)))
+       `(wl-highlight-summary-thread-top-face             ((,class :foreground "#f6f3e8")))
+       `(wl-highlight-summary-unread-face                 ((,class :foreground "#ff4c4c")))
+       ;; (wl-highlight-header-separator-face               :foreground "#f6f3e8")
+       ;; (wl-highlight-logo-face                           :foreground "#f6f3e8")
+       ;; (wl-highlight-summary-copied-face                 :foreground "#f6f3e8")
+       ;; (wl-highlight-summary-displaying-face             :foreground "#f6f3e8")
+       ;; (wl-highlight-summary-resend-face                 :foreground "#f6f3e8")
+       ;; (wl-highlight-summary-prefetch-face               :foreground "#f6f3e8")
+       ;; (wl-highlight-summary-target-face                 :foreground "#f6f3e8")
+       ;; (wl-highlight-summary-temp-face                   :foreground "#f6f3e8")
+       ;; (wl-highlight-summary-new-face                    :foreground "#f6f3e8")
+       ;; (wl-highlight-summary-killed-face                 :foreground "#f6f3e8")
+       ;; (wl-highlight-summary-low-read-face               :foreground "#f6f3e8")
+       ;; (wl-highlight-thread-indent-face                  :foreground "#f6f3e8")
+       ;; (wl-highlight-summary-forwarded-face              :foreground "#f6f3e8")
+       ;; (wl-highlight-summary-high-read-face              :foreground "#f6f3e8")
+       ;; (wl-message-header-narrowing-face                 :foreground "#f6f3e8")
+       ;; (wl-summary-persistent-mark-face                  :foreground "#f6f3e8")
+       ;;
+       )))
   :hook
-  (emacs-startup-hook
-   . (lambda ()
-       (message "init time: %.3f sec"
-                (float-time (time-subtract after-init-time before-init-time)))))
+  `((modus-themes-after-load-theme-hook
+     . (lambda ()
+         (my:modus-themes-custom-faces)
+         (my:set-background)
+         ))
+    (window-setup-hook . my:set-background)
+    (tty-setup-hook . my:set-background)
+    )
+  :custom
+  `(
+    (modus-themes-inhibit-reload . t)
+    (modus-themes-italic-constructs . nil)
+    (modus-themes-bold-constructs   . t)
+    (modus-themes-no-mixed-fonts    . t)
+    (modus-themes-headings . '((t . rainbow)))
+    (modus-themes-variable-pitch-ui . nil)
+    (modus-themes-variable-pitch-headings . nil)
+    (modus-themes-scale-headings . nil)
+    (modus-themes-mode-line . '(borderless))
+    (modus-themes-syntax . '(green-strings alt-syntax))
+    ;; ;; `faint', `yellow-comments', `green-strings', `alt-syntax'
+    (modus-themes-tabs-accented . t)
+    (modus-themes-completions . 'moderate)  ;; should be nil?
+    (modus-themes-mail-citations . nil) ;; → wanderlust で設定
+    (modus-themes-fringes . nil)
+    (modus-themes-lang-checkers . 'straight-underline)
+    (modus-themes-hl-line . '(accented))
+    (modus-themes-subtle-line-numbers . nil)
+    (modus-themes-paren-match . '(bold intense))
+    (modus-themes-success-deuteranopia . t)
+    (modus-themes-links . '(neutral-underline bold))
+    (modus-themes-region . '(bg-only no-extend))
+    (modus-themes-diffs . 'fg-only)
+    (modus-themes-prompts . '(intense bold))
+    (modus-themes-org-blocks . 'nil)
+    (modus-themes-org-agenda . '((t . nil)))
+    ;; (modus-themes-vivendi-color-overrides
+    ;;  . '(
+    ;;      (bg-hl-line-intense-accent . "#556b2f")
+    ;;      ))
+    )
   )
-  #+end_src
+   #+end_src
 * Debug&Test
   :PROPERTIES:
   :CUSTOM_ID: orgd89ceb4b
   :END:
   #+begin_src emacs-lisp :tangle init.el
-(leaf debian-el
-  :custom
-  `((debian-bug-download-directory . "~/Downloads"))
-  )
 (leaf rg
   :if (executable-find "rg")
   :ensure t
@@ -5234,14 +5331,19 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
   ((esup-insignificant-time . 0.01)
    (esup-depth              . 0)) ;; 🤔
   )
-(leaf org-bullets
-  :disabled t
-  :ensure t
-  :custom
-   (org-bullets-bullet-list . '(" " "◎ " "□" "・"))
+  #+end_src
+* 起動時間の出力
+  :PROPERTIES:
+  :CUSTOM_ID: orgca1f29da
+  :END:
+  [[http://memo.sugyan.com/entry/20120120/1327037494][起動時間を計測する 改訂版 - すぎゃーんメモ]]
+  #+begin_src emacs-lisp :tangle init.el
+(leaf *show-startup-time
   :hook
-  (org-mode-hook
-   . (lambda () (org-bullets-mode 1)))
+  (emacs-startup-hook
+   . (lambda ()
+       (message "init time: %.3f sec"
+                (float-time (time-subtract after-init-time before-init-time)))))
   )
   #+end_src
 * 最後に

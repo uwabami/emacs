@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2021-09-11 22:40:41
+#+date: 2021-09-12 09:51:48
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -1257,13 +1257,13 @@ init.el: README.org
   #+begin_src emacs-lisp :tangle init.el
 (leaf emacs-w3m
   :if (executable-find "w3m")
-  :el-get (emacs-w3m
-           :type github
-           :pkgname "emacs-w3m/emacs-w3m"
-           :build `(("autoconf")
-                    ("./configure" ,(format "--with-emacs=%s" el-get-emacs))
-                    ("make"))
-           :info "doc")
+  ;;:el-get (emacs-w3m
+  ;;         :type github
+  ;;         :pkgname "emacs-w3m/emacs-w3m"
+  ;;         :build `(("autoconf")
+  ;;                  ("./configure" ,(format "--with-emacs=%s" el-get-emacs))
+  ;;                  ("make"))
+  ;;         :info "doc")
   :load-path
   `(,(expand-file-name "emacs-w3m/shimbun" my:d:pkg:elget))
   )
@@ -5072,15 +5072,13 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
         (let* ((active (powerline-selected-window-active))
                (mode-line-buffer-id (if active 'mode-line-buffer-id 'mode-line-buffer-id-inactive))
                (mode-line (if active 'mode-line 'mode-line-inactive))
-               (face1 (if active 'mode-line-highlight 'powerline-inactive2))
-               ;; (face1 (if active 'powerline-active1 'powerline-inactive2))
-               ;; (face2 (if active 'powerline-active2 'powerline-inactive2))
-               ;; (face2 (if active 'mode-line-highlight 'powerline-inactive2))
+               (face0 (if active 'powerline-active0 'powerline-inactive0))
+               (face1 (if active 'powerline-active1 'powerline-inactive1))
+               (face2 (if active 'powerline-active2 'powerline-inactive2))
                (lhs (list (powerline-raw (substring skk-modeline-input-mode 2 -1) mode-line 'l)
                           (powerline-raw "%*" mode-line 'l)
                           (powerline-raw mode-line-mule-info mode-line 'l)
                           (powerline-raw (my:major-mode-icon major-mode) mode-line 'l)
-                          ;; (powerline-raw (all-the-icons-icon-for-mode major-mode) mode-line 'l)
                           (powerline-buffer-id mode-line-buffer-id 'l)
                           (powerline-raw " ")
                           ))
@@ -5090,7 +5088,7 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
                           (powerline-raw "%6p" mode-line 'r)
                           )))
           (concat (powerline-render lhs)
-                  (powerline-fill face1 (powerline-width rhs))
+                  (powerline-fill face2 (powerline-width rhs))
                   (powerline-render rhs))))))
     )
   (my:powerline-theme)
@@ -5102,6 +5100,7 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
    :END:
    最近乗り換えた.
    じたばたしているのは背景透過と Wanderlust の face の追加, かな?
+   あとはデフォルトの font-lock を(好みに合わせて)入れ替えたり.
    #+begin_src emacs-lisp :tangle init.el
 (leaf modus-themes
   :ensure t
@@ -5125,40 +5124,43 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
     (modus-themes-with-colors
       (custom-set-faces
        ;;
-       `(hl-line ((,class :background "#556b2f")))
-       `(mode-line-highlight ((,class :foreground "#aaaaaa" :background "#4C4C4C")))
+       ;; `(hl-line ((,class :background "#556b2f")))
        ;;
-       ;; だいぶ弄ってるなぁ….
-       ;;
-       `(font-lock-preprocessor-face         ((,class :inherit modus-themes-bold
-                                                      ,@(modus-themes--syntax-extra
-                                                         red-intense red-intense
-                                                         red-intense red-intense))))
-       `(font-lock-string-face               ((,class ,@(modus-themes--syntax-string
-                                                         green-intense green-intense
-                                                         green-intense green-intense))))
-       `(font-lock-builtin-face              ((,class :inherit nil ;; modus-themes-bold
-                                                      ,@(modus-themes--syntax-extra
-                                                         blue-alt blue-alt-faint
-                                                         blue-alt blue-alt-faint))))
-       `(font-lock-constant-face             ((,class :inherit modus-themes-bold
-                                                      ,@(modus-themes--syntax-extra
-                                                         orange-intense orange-intense
-                                                         orange-intense orange-intense))))
-       `(font-lock-keyword-face              ((,class :inherit modus-themes-bold
-                                                      ,@(modus-themes--syntax-extra
-                                                         red-alt-other red-alt-other-faint
-                                                         red-alt-other red-alt-other-faint))))
-       `(font-lock-function-name-face        ((,class :inherit modus-themes-bold
-                                                      ,@(modus-themes--syntax-extra
-                                                         purple-intense purple-intense
-                                                         purple-intense purple-intense))))
-       `(font-lock-type-face                 ((,class :inherit modus-themes-bold
-                                                      ,@(modus-themes--syntax-foreground
-                                                         yellow-intense yellow-intense))))
-       `(font-lock-negation-char-face        ((,class :inherit modus-themes-bold
-                                                      ,@(modus-themes--syntax-foreground
-                                                         cyan cyan-faint))))
+       ;; preprocessor → builtin
+       `(font-lock-builtin-face ((,class ,@(modus-themes--syntax-extra
+                                              blue-alt-other blue-alt-other-faint
+                                              blue-alt blue-alt-faint))))
+       ;; preprocessor:: red
+       `(font-lock-preprocessor-face ((,class :inherit modus-themes-bold
+                                         ,@(modus-themes--syntax-extra
+                                            red-alt red-alt-faint
+                                            red-intense red-faint))))
+       ;; constant → function
+       `(font-lock-function-name-face ((,class ,@(modus-themes--syntax-extra
+                                             blue-alt-other blue-alt-other-faint
+                                             magenta-alt-other magenta-alt-other-faint))))
+       ;; constant :: custom
+       `(font-lock-constant-face ((,class ,@(modus-themes--syntax-extra
+                                             orange-intense orange-intense
+                                             orange-intense orange-intense))))
+       ;; keyword → string
+       `(font-lock-string-face ((,class :inherit modus-themes-bold
+                                        ,@(modus-themes--syntax-extra
+                                           magenta-alt-other magenta-alt-other-faint
+                                           cyan cyan-faint))))
+       ;; keyword :: custom
+       `(font-lock-keyword-face ((,class :inherit modus-themes-bold
+                                         ,@(modus-themes--syntax-extra
+                                            red-alt-other red-alt-other-faint
+                                            red-alt-other red-alt-other-faint))))
+       ;; type → negation-char
+       `(font-lock-negation-char-face ((,class :inherit modus-themes-bold
+                                      ,@(modus-themes--syntax-foreground
+                                         cyan-alt-other cyan-alt-faint))))
+       ;; type :: custom
+       `(font-lock-type-face ((,class :inherit modus-themes-bold
+                                      ,@(modus-themes--syntax-foreground
+                                         yellow-intense yellow-faint))))
        `(font-lock-regexp-grouping-backslash ((,class :inherit bold
                                                       ,@(modus-themes--syntax-string
                                                          fg-escape-char-backslash fg-escape-char-backslash
@@ -5245,32 +5247,31 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
     )
   :custom
   `(
-    (modus-themes-inhibit-reload . t)
-    (modus-themes-italic-constructs . nil)
-    (modus-themes-bold-constructs   . t)
-    (modus-themes-no-mixed-fonts    . t)
-    (modus-themes-headings . '((t . rainbow)))
-    (modus-themes-variable-pitch-ui . nil)
+    (modus-themes-inhibit-reload          . t)
+    (modus-themes-success-deuteranopia    . nil) ;; default
+    (modus-themes-bold-constructs         . nil) ;; default
+    (modus-themes-italic-constructs       . nil) ;; default
+    (modus-themes-syntax                  . '(alt-syntax green-strings))
+    (modus-themes-no-mixed-fonts          . t)
+    (modus-themes-links                   . '(neutral-underline bold))
+    (modus-themes-prompts                 . '(intense bold))
+    (modus-themes-mode-line               . '(borderless accented))
+    (modus-themes-tabs-accented           . t)
+    (modus-themes-completions             . nil) ;; default
+    (modus-themes-mail-citations          . nil) ;; default
+    (modus-themes-fringes                 . nil) ;; default
+    (modus-themes-lang-checkers           . '(straight-underline intense))
+    (modus-themes-hl-line                 . '(accented intense)) ;; → custom
+    (modus-themes-subtle-line-numbers     . nil) ;; default
+    (modus-themes-paren-match             . '(bold intense))
+    (modus-themes-region                  . '(accented no-extend))
+    (modus-themes-diffs                   . nil) ;; default
+    (modus-themes-org-blocks              . nil) ;; default
+    (modus-themes-org-agenda              . '((t . nil)))
+    (modus-themes-headings                . '((t . rainbow)))
+    (modus-themes-scale-headings          . nil)
+    (modus-themes-variable-pitch-ui       . nil)
     (modus-themes-variable-pitch-headings . nil)
-    (modus-themes-scale-headings . nil)
-    (modus-themes-mode-line . '(borderless))
-    (modus-themes-syntax . '(green-strings alt-syntax))
-    ;; ;; `faint', `yellow-comments', `green-strings', `alt-syntax'
-    (modus-themes-tabs-accented . t)
-    (modus-themes-completions . 'moderate)  ;; should be nil?
-    (modus-themes-mail-citations . nil) ;; → wanderlust で設定
-    (modus-themes-fringes . nil)
-    (modus-themes-lang-checkers . 'straight-underline)
-    (modus-themes-hl-line . '(accented))
-    (modus-themes-subtle-line-numbers . nil)
-    (modus-themes-paren-match . '(bold intense))
-    (modus-themes-success-deuteranopia . t)
-    (modus-themes-links . '(neutral-underline bold))
-    (modus-themes-region . '(bg-only no-extend))
-    (modus-themes-diffs . 'fg-only)
-    (modus-themes-prompts . '(intense bold))
-    (modus-themes-org-blocks . 'nil)
-    (modus-themes-org-agenda . '((t . nil)))
     ;; (modus-themes-vivendi-color-overrides
     ;;  . '(
     ;;      (bg-hl-line-intense-accent . "#556b2f")

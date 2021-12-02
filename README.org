@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2021-09-12 09:51:48
+#+date: 2021-12-03 02:15:05
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -1024,6 +1024,7 @@ init.el: README.org
                                  "\\.*COMMIT_EDITMSG$"
                                  ".*-autoloads.el$"
                                  "^/home/uwabami/.emacs.d/pkg/\\.*"
+                                 "^/home/uwabami/.cache/\\.*"
                                  )))
   )
   #+end_src
@@ -1050,8 +1051,6 @@ init.el: README.org
   :after all-the-icons
   :require t
   :config
-  (add-to-list 'all-the-icons-mode-icon-alist
-               '(f90-mode all-the-icons-faicon "facebook")) ;; facebook!?
   (add-to-list 'all-the-icons-mode-icon-alist
                '(wl-folder-mode all-the-icons-faicon "folder-o" ))
   (add-to-list 'all-the-icons-mode-icon-alist
@@ -1882,19 +1881,6 @@ File.open(src, "r") {|f|
   ;;   (setq consult-preview-key (kbd "M-."))
   )
    #+end_src
-*** =consult-ghq=: ghq を consult で.
-    :PROPERTIES:
-    :CUSTOM_ID: org90f5d475
-    :END:
-    projectile かなんかを使う方が良さげだが, とりあえず.
-    #+begin_src emacs-lisp
-(leaf consult-ghq
-  :el-get uwabami/consult-ghq
-  :bind (("C-x f" . consult-ghq-open))
-  :custom
-  `((consult-ghq-short-list . t))
-  )
-    #+end_src
 ** =orderless=: 補完候補の選択
    :PROPERTIES:
    :CUSTOM_ID: orgc12df551
@@ -1907,13 +1893,15 @@ File.open(src, "r") {|f|
   :custom
   `((completion-styles . '(orderless))
     (orderless-matching-styles
-     . '(orderless-initialism
+     . '(orderless-prefixes
          orderless-flex
          orderless-regexp
+         orderless-initialism
          orderless-literal))
     )
   )
    #+end_src
+
 * 翻訳
   :PROPERTIES:
   :CUSTOM_ID: org779f9ba7
@@ -2206,41 +2194,40 @@ File.open(src, "r") {|f|
      #+end_src
      どのアプリケーションで開くか → =xdg-open= に丸投げ．
      #+begin_src emacs-lisp :tangle init-wl.el
-(defvar my-mime-preview-play-current-entity-appname "xdg-open"
-  "meadow なら fiber, mac なら open, linux なら xdg-open")
+;; (defvar my:mime-preview-play-current-entity-appname "xdg-open"
+;;   "meadow なら fiber, mac なら open, linux なら xdg-open")
+;; (cond
+;;  ((string-match "apple-darwin" system-configuration)
+;;   (setq my:mime-preview-play-current-entity-appname "open")
+;;   )
+;;  ((string-match "linux" system-configuration)
+;;   (setq my:mime-preview-play-current-entity-appname "xdg-open")
+;;   ))
 
-(cond
- ((string-match "apple-darwin" system-configuration)
-  (setq my-mime-preview-play-current-entity-appname "open")
-  )
- ((string-match "linux" system-configuration)
-  (setq my-mime-preview-play-current-entity-appname "xdg-open")
-  ))
-
-(unless (functionp #'mime-preview-play-current-entity-orig)
-  (fset #'mime-preview-play-current-entity-orig
-        (symbol-function #'mime-preview-play-current-entity)))
-(defun mime-preview-play-current-entity (&optional ignore-examples mode)
-  (interactive "P")
-  (if (and mode (not (equal mode "play")))
-      (mime-preview-play-current-entity-orig ignore-examples mode)
-    (let* ((entity (get-text-property (point) 'mime-view-entity))
-           (name (mime-entity-safe-filename entity))
-           (filename (expand-file-name (if (and name (not (string= name "")))
-                                           name
-                                         (make-temp-name "EMI"))
-                                       (make-temp-file "EMI" 'directory))))
-      (mime-write-entity-content entity filename)
-      (message "External method is starting...")
-      (let* ((process-name
-              (concat my-mime-preview-play-current-entity-appname " " filename))
-             (process
-              (start-process process-name
-                             mime-echo-buffer-name
-                             my-mime-preview-play-current-entity-appname
-                             filename)))
-        (set-alist 'mime-mailcap-method-filename-alist process filename)
-        (set-process-sentinel process 'mime-mailcap-method-sentinel)))))
+;; (unless (functionp #'mime-preview-play-current-entity-orig)
+;;   (fset #'mime-preview-play-current-entity-orig
+;;         (symbol-function #'mime-preview-play-current-entity)))
+;; (defun mime-preview-play-current-entity (&optional ignore-examples mode)
+;;   (interactive "P")
+;;   (if (and mode (not (equal mode "play")))
+;;       (mime-preview-play-current-entity-orig ignore-examples mode)
+;;     (let* ((entity (get-text-property (point) 'mime-view-entity))
+;;            (name (mime-entity-safe-filename entity))
+;;            (filename (expand-file-name (if (and name (not (string= name "")))
+;;                                            name
+;;                                          (make-temp-name "EMI"))
+;;                                        (make-temp-file "EMI" 'directory))))
+;;       (mime-write-entity-content entity filename)
+;;       (message "External method is starting...")
+;;       (let* ((process-name
+;;               (concat my:mime-preview-play-current-entity-appname " " filename))
+;;              (process
+;;               (start-process process-name
+;;                              mime-echo-buffer-name
+;;                              my:mime-preview-play-current-entity-appname
+;;                              filename)))
+;;         (set-alist 'mime-mailcap-method-filename-alist process filename)
+;;         (set-process-sentinel process 'mime-mailcap-method-sentinel)))))
 (setq mime-play-delete-file-immediately nil)
 (setq mime-view-mailcap-files '("~/.mailcap"))
      #+end_src
@@ -2917,7 +2904,7 @@ video/*; xdg-open %s;
  'wl-highlight-message-date-header-contents
  '((t (:foreground "#5CF19E" :bold t :italic nil :weight bold ))))
     #+end_src
-    以下, 元々定義されているfaceの設定⇒[[#org7e722d0e][ +doom-theme]] のカスタムテーマに移動+
+    以下, 元々定義されているfaceの設定
     #+begin_src emacs-lisp :tangle init-wl.el
 ;; (my:wl-set-face 'wl-highlight-folder-closed-face
 ;;                 '((t (:foreground "#4cff4c" :bold nil :italic nil :weight normal ))))
@@ -3295,6 +3282,110 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :hook (prog-mode-hook . rainbow-delimiters-mode)
   )
   #+end_src
+* VCSなど, ソースコード管理関係
+  :PROPERTIES:
+  :CUSTOM_ID: orgc6b67eb9
+  :END:
+  まあ, ほとんど Git 関連な訳ですが．
+** =project.el=
+   :PROPERTIES:
+   :CUSTOM_ID: org76c99d7f
+   :END:
+   Emacs 27.1 から built-in となった.
+   eglot でも使われているので, 設定しておく.
+   #+begin_src emacs-lisp
+(leaf project
+  :ensure t
+  :custom
+  `(
+    (project-list-file
+     . ,(expand-file-name "projects" my:d:tmp))
+    (project-switch-use-entire-map . t)
+    )
+  )
+   #+end_src
+   - [ ] ghq の list を追加できないかな?
+     できれば =--full-path= じゃない表示にしたい(my:shorten-file-path を噛ませたい).
+** =consult-ghq=: ghq を consult で.
+   :PROPERTIES:
+   :CUSTOM_ID: org90f5d475
+   :END:
+   =project.el= で ghq を使うようになったら不要かもしれないけど, とりあえず.
+   #+begin_src emacs-lisp
+(leaf consult-ghq
+  :el-get uwabami/consult-ghq
+  :bind (("C-x f" . consult-ghq-open))
+  :custom
+  `((consult-ghq-short-list . t))
+  )
+   #+end_src
+** git{attributes,config,ignore}-mode, git-commit
+   :PROPERTIES:
+   :CUSTOM_ID: org429f5b00
+   :END:
+   #+begin_src emacs-lisp :tangle init.el
+(leaf *git
+  :init
+  (leaf git-commit :ensure t)
+  (leaf gitattributes-mode :ensure t)
+  (leaf gitconfig-mode :ensure t)
+  (leaf gitignore-mode :ensure t)
+  )
+   #+end_src
+** magit:
+   :PROPERTIES:
+   :CUSTOM_ID: org59371622
+   :END:
+   magit は Emacs の Git Frontend.
+   結局の所 CUI でコマンド叩く事も多いけれど, これはこれで重宝している．
+   #+begin_src emacs-lisp :tangle init.el
+(leaf magit
+  :bind (("C-x g" . magit-status))
+  :ensure t
+  :init
+  (leaf transient
+    :custom
+    `((transient-history-file
+       . ,(expand-file-name "transient-history.el" my:d:tmp))
+      (transient-levels-file
+       . ,(expand-file-name "transient-levels.el" my:d:tmp))
+      (transient-values-file
+       . ,(expand-file-name "transient-values.el" my:d:tmp))
+      (transient-force-fixed-pitch . t))
+    )
+  :custom
+  `((magit-completing-read-function . 'magit-builtin-completing-read)
+    (magit-refs-show-commit-count   . 'all)
+    (magit-log-buffer-file-locked   . t)
+    (magit-revision-show-gravatars  . nil)
+    )
+  )
+   #+end_src
+** Forge
+   :PROPERTIES:
+   :CUSTOM_ID: org6727f452
+   :END:
+   Gitub/Gitlab と Magit の連携.
+   試しに入れてみたけれど, 今は無効化している.
+   #+begin_src emacs-lisp :tangle no
+(leaf forge
+  :disabled t
+  :after magit
+  )
+   #+end_src
+** Git Gutter+
+   :PROPERTIES:
+   :CUSTOM_ID: org994abf0f
+   :END:
+   飽きたら止めるかもしれない.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf git-gutter+
+  :ensure t
+  :blackout `((git-gutter+-mode
+               . ,(format "%s" (all-the-icons-octicon "git-merge"))))
+  :bind ("C-x G" . global-git-gutter+-mode)
+  )
+   #+end_src
 * Org-mode
   :PROPERTIES:
   :CUSTOM_ID: org7b7eccc9
@@ -3313,8 +3404,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :bind (("C-x n s" . org-narrow-to-subtree)
          ("C-x n w" . widen)
          ("C-c a"   . org-agenda)
-         ;; ("C-x m"   . org-capture)
-         ;; ("C-x M"   . org-journal-new-entry)
+         ("C-x m"   . org-capture)
+         ("C-x M"   . org-journal-new-entry)
          )
   :advice
   (:before org-calendar-holiday
@@ -3497,120 +3588,6 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    (org-src-preserve-indentation     . t))
   )
    #+end_src
-** Org-capture: メモ取り
-   :PROPERTIES:
-   :CUSTOM_ID: orgbe835a6b
-   :END:
-   キーバインドは以前 changelog memo をやっていた時の癖で =C-x m= をメモにしている.
-   → capture は org-roam に丸投げすることにした.
-   #+begin_src emacs-lisp :tangle no
-(leaf org-capture
-  :if (file-directory-p my:d:org)
-  :commands org-capture
-  ;; :pl-setq
-  ;; (my:org:calendar1 my:org:calendar2)   ;; 名前がイケてないっ!
-  :init (leaf doct :ensure t) ;; capture template を上手く書く拡張
-  :config
-  (setq org-default-notes-file (expand-file-name "INBOX.org" my:d:org))
-  (setq org-capture-templates
-        (doct '(;;
-                ("Org-roam Memo"
-                 :keys "m"
-                 :type plain
-                 :template "* MEMO <%<%Y-%m-%d %H:%M>> %^{title}\n  %?"
-                 :target
-                 :prepend nil
-                 :unnarrowed nil
-                 :kill-buffer t
-                 ;; :function org-roam-dailies-capture-today
-                 )
-                ("Schedule: 個人スケジュール"
-                 :keys "s"
-                 :type plain
-                 :file (lambda() (expand-file-name "Schedule.org" my:d:org))
-                 :template "* %^{prompt}\n  :PROPERTIES:\n  :calendar-id: %(format \"%s\" my:org:calendar1)\n  :END:\n  :org-gcal:\n%?\n%i\n  :END:"
-                 :prepend nil
-                 :unnarrowed nil
-                 :kill-buffer t
-                 )
-                ("Univ. Schedule: 大学関連"
-                 :keys "u"
-                 :type plain
-                 :file (lambda() (expand-file-name "Univ.org" my:d:org))
-                 :template "* %^{prompt}\n  :PROPERTIES:\n  :calendar-id: %(format \"%s\" my:org:calendar2)\n  :END:\n  :org-gcal:\n%?\n%i\n  :END:"
-                 :prepend nil
-                 :unnarrowed nil
-                 :kill-buffer t
-                 )
-                ))
-        )
-  )
-   #+end_src
-** Org-roam: リンク付きメモ
-   :PROPERTIES:
-   :CUSTOM_ID: orgbbaf7c91
-   :END:
-   #+begin_src emacs-lisp
-(leaf org-roam
-  :if (and (file-directory-p my:d:org)
-           (and (executable-find "rg")
-                (executable-find "sqlite3")))
-  :pl-setq
-  (my:org:calendar1 my:org:calendar2)   ;; 名前がイケてないっ!
-  :bind
-  (("C-c n a" . org-roam-alias-add)
-   ("C-c n f" . org-roam-node-find)
-   ("C-c n i" . org-roam-node-insert)
-   ("C-c n o" . org-id-get-create)
-   ("C-c n t" . org-roam-tag-add)
-   ("C-c n l" . org-roam-buffer-toggle)
-   ("C-x m"   . org-roam-dailies-capture-today)
-   )
-  :ensure t
-  :init (setq org-roam-v2-ack t)
-  :custom
-  `(;; (org-roam-v2-ack      . t)
-    (org-roam-db-location . ,(expand-file-name "org-roam.db" my:d:tmp))
-    (org-roam-directory   . ,(expand-file-name "roam" my:d:org))
-    (org-roam-mode-section-functions
-     . (list #'org-roam-backlinks-section
-             #'org-roam-reflinks-section
-            ;; #'org-roam-unlinked-references-section
-            ))
-    ;; (org-roam-db-update-on-save . t)
-    (org-roam-dailies-directory . "") ;; relative path→flatten!
-    (org-roam-dailies-capture-templates
-     . '(
-         ("m" "memo" entry "* MEMO <%<%Y-%m-%d %H:%M>> %^{title}\n  %?"
-          :target (file+head "%<%Y-%m-%d>.org"
-                             "#+title: %<%Y年%m月%d日(%a)>")
-          :prepend nil
-          :kill-buffer t
-          )
-         ("t" "ToDo" entry "* ToDo <%<%Y-%m-%d %H:%M>> %^{title}\n  %?"
-          :target (file+head "%<%Y-%m-%d>.org"
-                             "#+title: %<%Y年%m月%d日(%a)>")
-          :prepend nil
-          :kill-buffer t
-          )
-         ("s" "Schedule: 個人スケジュール" entry
-          "* %^{title}\n  :PROPERTIES:\n  :calendar-id: %(format \"%s\" my:org:calendar1)\n  :END:\n  :org-gcal:\n%?\n%i\n  :END:"
-          :target (file ,(expand-file-name "Schedule.org" my:d:org))
-          :prepend t   ;; prepend nil としたいが, 末尾まで行ってくれないので諦める.
-          :kill-buffer t
-          )
-         ("u" "Univ: 大学関連 スケジュール" entry
-          "* %^{title}\n  :PROPERTIES:\n  :calendar-id: %(format \"%s\" my:org:calendar2)\n  :END:\n  :org-gcal:\n%?\n%i\n  :END:"
-          :target (file ,(expand-file-name "Univ.org" my:d:org))
-          :prepend t   ;; prepend nil としたいが, 末尾まで行ってくれないので諦める.
-          :kill-buffer t
-          )
-         ))
-     )
-  :defer-config
-  (org-roam-db-autosync-enable)
-  )
-   #+end_src
 ** Org-agenda: スケジュール, TODO 表示
    :PROPERTIES:
    :CUSTOM_ID: org016dbf67
@@ -3763,6 +3740,12 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     (add-to-list 'org-agenda-files (expand-file-name file my:d:org)))
   (add-to-list 'org-agenda-files
                (locate-user-emacs-file "README.org"))
+  (if (file-directory-p
+       (expand-file-name "journal/" my:d:org))
+      (dolist (file
+               (directory-files-recursively
+                (expand-file-name "journal/" my:d:org) "org$"))
+        (add-to-list 'org-agenda-files file)))
   ;; (add-to-list 'org-agenda-files
   ;;             (expand-file-name "Public/web.org" (getenv "HOME")))
   ;; (add-to-list 'org-agenda-files
@@ -3780,89 +3763,112 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   ;;
 )
    #+end_src
-** Org-roam と Org-agenda
+** Org-journal: 日記
    :PROPERTIES:
-   :CUSTOM_ID: orgb9dc2ae0
+   :CUSTOM_ID: org456c87fa
    :END:
-   org-roam で db に query 投げて,
-   =org-agenda-files= を更新するように.
-   元ネタ: [[https://d12frosted.io/posts/2021-01-16-task-management-with-roam-vol5.html][Task management with org-roam Vol. 5: Dynamic and fast agenda]]
-   #+begin_src emacs-lisp
-(leaf vulpea
+   機能が豊富なのだが, イマイチ使いこなせていない.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf org-journal
   :if (and (file-directory-p my:d:org)
-           (and (executable-find "rg")
-                (executable-find "sqlite3")))
-  :after org-agenda
-  :el-get  d12frosted/vulpea
-  :advice
-  (:before org-agenda
-           my:vulpea-agenda-files-update)
+           (>= emacs-major-version 25))
+  ;; :commands my:org-journal-new-entry
+  :commands org-journal-new-entry
+  ;; :bind ((:org-journal-mode-map
+  ;;         ("C-c C-c" . my:org-journal-entry-save-and-exit)))
+  :ensure t
+  :init
+  ;; (defun my:org-journal-new-entry (prefix &optional time)
+  ;;   "Add new journal entry on new elscreen"
+  ;;   (interactive "P")
+  ;;   (elscreen-create)
+  ;;   (org-journal-new-entry nil time))
+  ;;
+  ;; (defun my:org-journal-entry-save-and-exit ()
+  ;;   "Save journal entry and close elscreen buffer"
+  ;;   (interactive)
+  ;;   (save-buffer)
+  ;;   (elscreen-kill))
   :hook
-  ((org-roam-db-autosync-mode . vulpea-db-autosync-enable)
-   (find-file-hook            . vulpea-project-update-tag)
-   (before-save-hook          . vulpea-project-update-tag))
+  ((org-journal-mode-hook
+    . (lambda()
+        (setq-local truncate-lines t))))
+  :custom
+  `((org-journal-file-type                 . 'yearly)
+    (org-journal-dir                       . ,(expand-file-name "journal" my:d:org))
+    (org-journal-file-format               . "%Y.org")
+    (org-journal-cache-file
+     . ,(expand-file-name "org-journal.cache" my:d:tmp))
+    (org-journal-date-format               . "%x (%a)")
+    (org-journal-time-format               . "<%Y-%m-%d %R> ")
+    (org-journal-time-prefix               . "** MEMO ")
+    (org-journal-enable-agenda-integration . t)
+    (org-journal-find-file                 . 'find-file)
+    (org-journal-carryover-delete-empty-journal . 'ask)
+    (org-journal-start-on-weekday          . 0) ;; sunday
+    )
   :config
-  (defun vulpea-project-p ()
-    "Return non-nil if current buffer has any todo entry.
-
-TODO entries marked as done are ignored, meaning the this
-function returns nil if current buffer contains only completed
-tasks."
-    (seq-find                                 ; (3)
-     (lambda (type)
-       (eq type 'todo))
-     (org-element-map                         ; (2)
-         (org-element-parse-buffer 'headline) ; (1)
-         'headline
-       (lambda (h)
-         (org-element-property :todo-type h)))))
-
-  (defun vulpea-project-update-tag ()
-    "Update PROJECT tag in the current buffer."
-    (when (and (not (active-minibuffer-window))
-               (vulpea-buffer-p))
-      (save-excursion
-        (goto-char (point-min))
-        (let* ((tags (vulpea-buffer-tags-get))
-               (original-tags tags))
-          (if (vulpea-project-p)
-              (setq tags (cons "project" tags))
-            (setq tags (remove "project" tags)))
-
-          ;; cleanup duplicates
-          (setq tags (seq-uniq tags))
-
-          ;; update tags if changed
-          (when (or (seq-difference tags original-tags)
-                    (seq-difference original-tags tags))
-            (apply #'vulpea-buffer-tags-set tags))))))
-
-  (defun vulpea-buffer-p ()
-    "Return non-nil if the currently visited buffer is a note."
-    (and buffer-file-name
-         (string-prefix-p
-          (expand-file-name (file-name-as-directory org-roam-directory))
-          (file-name-directory buffer-file-name))))
-
-  (defun vulpea-project-files ()
-    "Return a list of note files containing 'project' tag." ;
-    (seq-uniq
-     (seq-map
-      #'car
-      (org-roam-db-query
-       [:select [nodes:file]
-                :from tags
-                :left-join nodes
-                :on (= tags:node-id nodes:id)
-                :where (like tag (quote "%\"project\"%"))]))))
-
-  (defun my:vulpea-agenda-files-update (&rest _)
-    "Update/Add the value of `org-agenda-files'."
-    (if (vulpea-project-files)
-        (progn
-          (dolist (file (vulpea-project-files))
-            (add-to-list 'org-agenda-files file))
-          (setq org-agenada-files (delete-dups org-agenda-files)))))
+  (eval-and-compile 'browse-url)
+  (with-eval-after-load 'org-journal
+    (global-set-key (kbd "C-c C-j") 'browse-url-at-point))
+  )
+   #+end_src
+** Org-capture: メモ取り
+   :PROPERTIES:
+   :CUSTOM_ID: orgbe835a6b
+   :END:
+   キーバインドは以前 changelog memo をやっていた時の癖で =C-x m= をメモにしている.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf org-capture
+  :if (file-directory-p my:d:org)
+  :commands org-capture
+  :pl-setq
+  (my:org:calendar1 my:org:calendar2)   ;; 名前がイケてないっ!
+  :config
+  (defun my:org-journal-add-date-entry-capture ()
+    (org-journal-new-entry t)
+    (goto-char (point-max))
+    )
+  (setq org-default-notes-file (expand-file-name "Memo.org" my:d:org))
+  (setq org-capture-templates
+        `(
+          ("t" "TODO" plain
+           (function my:org-journal-add-date-entry-capture)
+           "** TODO %(format-time-string org-journal-time-format)%^{title} %^g\n  %?\n  %a"
+           :prepend nil
+           :unnarrowed nil
+           :kill-buffer t
+           )
+          ("m" "メモを追加" plain
+           (function my:org-journal-add-date-entry-capture)
+           "** MEMO %(format-time-string org-journal-time-format)%?"
+           :prepend nil
+           :unnarrowed nil
+           :kill-buffer t
+           )
+          ("a" "少し長めの記事を追加する" plain
+           (function my:org-journal-add-date-entry-capture)
+           "** ARTICLE %(format-time-string org-journal-time-format)%? "
+           :prepend nil
+           :unnarrowed nil
+           :kill-buffer t
+           )
+          ("s" "個人予定表スケジュールを追加" plain
+           (file ,(expand-file-name "Schedule.org" my:d:org))
+           "* %^{prompt}\n  :PROPERTIES:\n  :calendar-id: %(format \"%s\" my:org:calendar1)\n  :END:\n  :org-gcal:\n%?\n%i\n  :END:"
+           :prepend nil
+           :unnarrowed nil
+           :kill-buffer t
+           )
+          ("u" "仕事予定表スケジュールを追加" plain
+           (file ,(expand-file-name "Univ.org" my:d:org))
+           "* %^{prompt}\n  :PROPERTIES:\n  :calendar-id: %(format \"%s\" my:org:calendar2)\n  :END:\n  :org-gcal:\n%?\n%i\n  :END:"
+           :prepend nil
+           :unnarrowed nil
+           :kill-buffer t
+           )
+          )
+        )
   )
    #+end_src
 ** OrgとGoogle カレンダーの連携: =org-gcal=
@@ -4054,9 +4060,6 @@ tasks."
     最近は org を html に export して, それを処理する様にしています.
 
     exporter は [[https://uwabami.github.com/ox-jekyll][uwabami/ox-jekyll]] にあります.
-    :PROPERTIES:
-    :CUSTOM_ID: org10cd0de1
-    :END:
     #+begin_src emacs-lisp :tangle init.el
 (leaf ox-html
   :after ox
@@ -4154,6 +4157,7 @@ tasks."
     :custom
     `((org-beamer-frame-level . 2)
       (org-beamer-frame-default-options . "fragile,squeeze,c")
+      (org-latex-compiler . "latexmk -pvc")
       )
     :config
     ;; for Beamer
@@ -4169,6 +4173,17 @@ tasks."
   :custom
   `((org-latex-default-class . "my:uplatex")
     (org-latex-pdf-process   . '("latexmk -pvc %f"))
+    (org-latex-hyperref-template
+     .
+     "\\hypersetup{
+pdfauthor={%a},
+pdftitle={%t},
+pdfkeywords={%k},
+pdfsubject={%d},
+pdfcreator={%c},
+pdflang={%L},
+colorlinks,
+}")
     (org-latex-classes
      . '(("my:uplatex"
           "\\documentclass[a4j,uplatex]{jsarticle}
@@ -4261,77 +4276,6 @@ tasks."
     )
   )
   #+end_src
-* VCS
-  :PROPERTIES:
-  :CUSTOM_ID: orgc6b67eb9
-  :END:
-  まあ, ほとんど Git 関連な訳ですが．
-** git{attributes,config,ignore}-mode, git-commit
-   :PROPERTIES:
-   :CUSTOM_ID: org429f5b00
-   :END:
-   #+begin_src emacs-lisp :tangle init.el
-(leaf *git
-  :init
-  (leaf git-commit :ensure t)
-  (leaf gitattributes-mode :ensure t)
-  (leaf gitconfig-mode :ensure t)
-  (leaf gitignore-mode :ensure t)
-  )
-   #+end_src
-** magit:
-   :PROPERTIES:
-   :CUSTOM_ID: org59371622
-   :END:
-   magit は Emacs の Git Frontend.
-   結局の所 CUI でコマンド叩く事も多いけれど, これはこれで重宝している．
-   #+begin_src emacs-lisp :tangle init.el
-(leaf magit
-  :bind (("C-x g" . magit-status))
-  :ensure t
-  :init
-  (leaf transient
-    :custom
-    `((transient-history-file
-       . ,(expand-file-name "transient-history.el" my:d:tmp))
-      (transient-levels-file
-       . ,(expand-file-name "transient-levels.el" my:d:tmp))
-      (transient-values-file
-       . ,(expand-file-name "transient-values.el" my:d:tmp))
-      (transient-force-fixed-pitch . t))
-    )
-  :config
-  (setq magit-completing-read-function 'ido-completing-read
-        magit-refs-show-commit-count   'all
-        magit-log-buffer-file-locked   t
-        magit-revision-show-gravatars  nil
-        )
-  )
-   #+end_src
-** Forge
-   :PROPERTIES:
-   :CUSTOM_ID: org6727f452
-   :END:
-   Gitub/Gitlab と Magit の連携
-   #+begin_src emacs-lisp :tangle init.el
-(leaf forge
-  :disabled t
-  :after magit
-  )
-   #+end_src
-** Git Gutter+
-   :PROPERTIES:
-   :CUSTOM_ID: org994abf0f
-   :END:
-   飽きたら止めるかもしれないけれど.
-   #+begin_src emacs-lisp :tangle init.el
-(leaf git-gutter+
-  :ensure t
-  :blackout `((git-gutter+-mode
-               . ,(format "%s" (all-the-icons-octicon "git-merge"))))
-  :bind ("C-x G" . global-git-gutter+-mode)
-  )
-   #+end_src
 * 関数定義を辿る: =dump-jump=, =smart-jump=
   :PROPERTIES:
   :CUSTOM_ID: org710c040c
@@ -4357,77 +4301,6 @@ tasks."
   (smart-jump-setup-default-registers)
   )
   #+end_src
-* 言語毎の補完: =company-mode=
-  :PROPERTIES:
-  :CUSTOM_ID: org935a4dbf
-  :END:
-  まだうまく使いこなせていない．
-  - [[https://qiita.com/wktkshn/items/3ac46671d1c242a59f7e][company-dabbrevで日本語を補完しない]]
-  を有効にしてみたが, これで良いのかしら...?
-  #+begin_src emacs-lisp :tangle init.el
-(leaf company
-  :disabled t
-  :ensure t
-  :blackout t
-  :custom
-  ((company-require-match             . 'never)
-   (company-idle-delay                . 0)
-   (company-selection-wrap-around     . t)
-   (company-tooltip-align-annotations . t)
-   (company-minimum-prefix-length     . 4)
-   ;; disable some noisy default backends
-   (company-backends . '(company-files
-                         company-capf
-                         (company-dabbrev-code
-                          company-gtags
-                          company-etags
-                          company-keywords))))
-  :bind
-  (;; ("<tab>"    . company-indent-or-complete-common)
-   (:company-active-map
-    ("C-n"     . company-select-next)
-    ("C-p"     . company-select-previous)
-    ("C-s"     . company-filter-candidates)
-    ("C-<tab>" . company-complete-common-or-cycle)
-    ("<tab>"   . company-indent-or-complete-common)
-    )
-   (:company-search-map
-    ("C-p" . company-select-previous)
-    ("C-n" . company-select-next)))
-  :hook
-  `((after-init-hook      . global-company-mode)
-    (minibuffer-setup-hook . ,(lambda ()
-                                (company-mode -1)))
-    )
-  )
-;; (leaf company-statistics
-;;   :disabled t
-;;   :ensure t
-;;   :custom
-;;   `((company-statistics-size . 2000)
-;;     (company-statistics-file
-;;      . ,(expand-file-name "company-statistics-cache.el" my:d:tmp))
-;;     (company-transformers
-;;      . (company-sort-by-statistics company-sort-by-backed-importance)))
-;;   :config
-;;   (company-statistics-mode)
-;;   )
-  ;; :init
-  ;; (defun edit-category-table-for-company-dabbrev (&optional table)
-  ;;   (define-category ?s "word constituents for company-dabbrev" table)
-  ;;   (let ((i 0))
-  ;;     (while (< i 128)
-  ;;       (if (equal ?w (char-syntax i))
-  ;;           (modify-category-entry i ?s table)
-  ;;         (modify-category-entry i ?s table t))
-  ;;       (setq i (1+ i)))))
-  ;; (edit-category-table-for-company-dabbrev)
-  ;; ;; (add-hook 'TeX-mode-hook 'edit-category-table-for-company-dabbrev) ; 下の追記参照
-  ;; (setq company-dabbrev-char-regexp "\\cs")
-  #+end_src
-  - [X] [[https://github.com/TheBB/company-reftex][TheBB/company-reftex]]
-  - [X] [[https://github.com/vspinu/company-math][vspinu/company-math]]
-  - [X] [[https://github.com/alexeyr/company-auctex][alexeyr/company-auctex]]
 * SOMEDAY テンプレート補完: =yasnippet= [0/1]
   :PROPERTIES:
   :CUSTOM_ID: orgffdbe5ff
@@ -4459,62 +4332,6 @@ tasks."
     )
   #+end_src
   - [ ] 意図しない所で発火してテンプレートが挿入されてしまうので保留中
-* SOMEDAY =flymake=: on-the-fly check [0/1]
-  :PROPERTIES:
-  :CUSTOM_ID: orgd4b6f681
-  :END:
-  on-the-fly syntax checker.
-  同様の拡張には =flycheck= があるけれど,
-  =flycheck= はいろいろやりすぎてて私には合わない.
-  #+begin_src emacs-lisp :tangle init.el
-(leaf flymake
-  :ensure t
-  )
-  #+end_src
-  - [ ] 設定調整が必要
-* LSP: =lsp-mode=
-  :PROPERTIES:
-  :CUSTOM_ID: org44ddff4c
-  :END:
-  #+begin_src emacs-lisp :tangle init.el
-(leaf lsp-mode
-  :disabled t
-  :if (executable-find "fortls")
-  :ensure t
-  :custom
-  `((lsp-print-io             . nil)
-    (lsp-trace                . nil)
-    (lsp-print-performance    . nil)
-    (lsp-auto-guess-root      . t)
-    (lsp-document-sync-method . 'incremental)
-    (lsp-response-timeout     . 5)
-    (lsp-prefer-flymake       .'flymake)
-    (lsp-session-file         .,(expand-file-name "lsp-session-v1" my:d:tmp))
-   )
-  :init
-  (leaf lsp-ui
-    :ensure t
-    :custom
-    ((lsp-ui-doc-enable            . t)
-     (lsp-ui-doc-header            . t)
-     (lsp-ui-doc-include-signature . t)
-     (lsp-ui-doc-position          . 'at-point)
-     (lsp-ui-doc-max-width         . 150)
-     (lsp-ui-doc-max-height        . 30)
-     (lsp-ui-doc-use-childframe    . nil)
-     (lsp-ui-doc-use-webkit        . nil)
-     (lsp-ui-flycheck-enable       . nil)
-     (lsp-ui-peek-enable           . t)
-     (lsp-ui-peek-peek-height      . 20)
-     (lsp-ui-peek-list-width       . 50)
-     (lsp-ui-peek-fontify          . 'on-demand) ;; never, on-demand, or always
-     )
-    )
-  :hook
-  ((lsp-mode-hook . lsp-ui-mode)
-   (f90-mode-hook . lsp))
-  )
-  #+end_src
 * TeX: =AUCTeX=
   :PROPERTIES:
   :CUSTOM_ID: org88a3cb1b
@@ -4523,7 +4340,8 @@ tasks."
   - japanese-latex-mode において, 幾つかのコマンドが追加/上書きされているが,  あまり使うことの無いコマンドが表示されるのが嫌なのでそれらを削除．
   - コンパイルには[[http://personal.psu.edu/jcc8/software/latexmk/][Latexmk]]を使う
   と言った所.
-  [[http://personal.psu.edu/jcc8/software/latexmk/][Latexmk]]の設定には[[https://github.com/tom-tan/auctex-latexmk][auctex-latexmk]]を利用する．
+  …ただ, Beamerのクラスなんかだと勝手にdefault コマンドが LaTeX に変更されたりするので挙動がイマイチ良くわからん.
+  async で =latexmk -pvc= を走らせておいた方が気持が良い, 気がしている….
   #+begin_src emacs-lisp :tangle init.el
 (leaf auctex
   :if (and (executable-find "uplatex")
@@ -4535,40 +4353,50 @@ tasks."
       (make-directory (expand-file-name "auctex/auto" my:d:tmp) t)
       (make-directory (expand-file-name "auctex/style" my:d:tmp) t)))
   (leaf reftex
-    :custom
-    ((reftex-plug-into-AUCTeX               . t)
-     (reftex-cite-prompt-optional-args      . t)
-     (reftex-toc-split-windows-horizontally . t)
-     ;; (reftex-ref-style-default-list . '("Cleverref"))
-     )
+    :custom ((reftex-plug-into-AUCTeX               . t)
+             (reftex-cite-prompt-optional-args      . t)
+             (reftex-toc-split-windows-horizontally . t)
+             )
     )
-  ;; (leaf company-reftex :ensure t)
-  ;; (leaf company-auctex :ensure t)
   (leaf auctex-latexmk
     :el-get tom-tan/auctex-latexmk
-    :hook (LaTeX-mode-hook . auctex-latexmk-setup)
+    :custom
+    `((auctex-latexmk-inherit-TeX-PDF-mode . t))
     :config
-    (setq auctex-latexmk-inherit-TeX-PDF-mode nil
-          TeX-command-default "LaTeXMk"
-          japanese-LaTeX-command-default "LaTeX"
-          )
+    (setq TeX-command-output-list '(("LaTeXMk" ("pdf")))
+          TeX-command-default "LaTexMk"
+          japanese-LaTeX-command-default "LaTeX")
     )
   (load "auctex" t t)
   (load "preview-latex" t t)
   :hook
-  (LaTeX-mode-hook . (lambda()
+  (LaTeX-mode-hook . (lambda ()
                        (turn-on-reftex)
-                       (TeX-source-correlate-mode)
+                       (auctex-latexmk-setup)
+                       (setq-default TeX-command-default "LaTexMk"
+                                     japanese-LaTeX-command-default "LaTeX")
                        (TeX-PDF-mode)
+                       (TeX-source-correlate-mode)
                        (LaTeX-math-mode)
-                       ;; (company-auctex-init)
-                       (reftex-mode)
-                       (outline-minor-mode)))
+                       (outline-minor-mode)
+                       ))
   :custom
   `((TeX-auto-local
      . ,(expand-file-name "auctex/auto" my:d:tmp))
     (TeX-style-local
      . ,(expand-file-name "auctex/style" my:d:tmp))
+    (TeX-default-mode                  . 'japanese-latex-mode) ;; 🤔
+    (japanese-TeX-engine-default       . 'uptex)
+    (japanese-LaTeX-default-style      . "jlreq") ;; jsarticle? bxjsarticle?
+    (TeX-engine                        . 'uptex)
+    (TeX-PDF-from-DVI                  . "Dvipdfmx")
+    (TeX-view-program-selection        . '((output-dvi "xdvi")
+                                           (output-pdf "Okular")
+                                           (output-html "xdg-open")))
+    (LaTeX-figure-label                . "fig:")
+    (LaTeX-table-label                 . "tab:")
+    (LaTeX-section-label               . "sec:")
+    (TeX-command-default               . "LaTexMk")
     (TeX-parse-self                    . t)
     (TeX-auto-save                     . t)
     (TeX-auto-untabify                 . t)
@@ -4579,110 +4407,8 @@ tasks."
     (font-latex-script-display         . nil)
     (font-latex-fontify-sectioning     . 1.0)
     )
-  :config
-  (with-eval-after-load 'tex-jp
-    (progn
-      (dolist (command '("pTeX" "pLaTeX" "jTeX" "jLaTeX" "jBibTeX" "Mendex"
-                         "upMendex" "pBibTeX" "BibTeX" "Biber" "Ps2pdf" ))
-        (delq (assoc command TeX-command-list) TeX-command-list))
-      (setq TeX-command-output-list '(("LaTeXMk" ("pdf")))
-            TeX-view-program-selection '((output-dvi "xdvi")
-                                         (output-pdf "Evince")
-                                         (output-html "xdg-open")))))
   )
   #+end_src
-  =~/.latexmkrc= は以下の通り
-  #+begin_src perl :tangle no
-#!/usr/bin/env perl
-$kanji = defined $ENV{"LATEXENC"} ? "-kanji=$ENV{\"LATEXENC\"}" : "-kanji=utf8" ;
-$latex  = "platex -interaction=nonstopmode -src-specials -shell-escape --synctex=1 $kanji" ;
-$latex_silent = "platex -interaction=batchmode -src-specials -shell-escape --synctex=1 $kanji" ;
-$pdflatex = "ptex2pdf -e -l -ot '-shell-escape -synctex=1 $kanji'";
-$bibtex = "pbibtex $kanji";
-# disable makeindex/mendex
-$makeindex = "touch -m %D";
-# if ( $ENV{"LATEXENC"} == "jis" ){
-#     $makeindex = "mendex -J %O -c -r -o %D %S ";
-# } elsif ( $ENV{"LATEXENC"} == "euc" ){
-#     $makeindex = "mendex -E %O -c -r -o %D %S ";
-# } elsif ( $ENV{"LATEXENC"} == "sjis" ){
-#     $makeindex = "mendex -S %O -c -r -o %D %S";
-# } else {
-#     $makeindex = "mendex -U %O -c -r -o %D %S";
-# }
-$dvipdf = "dvipdfmx %O -o %D %S";
-$dvips = 'dvips %O -z -f %S | convbkmk -u > %D';
-$ps2pdf = 'ps2pdfwr %O %S %D';
-$pdf_mode = 3;
-# $pdf_previewer = 'xdg-open';
-$pdf_previewer = 'fwdevince %S %D';
-$pdf_update_method = 1;
-$cleanup_mode = 2;
-$clean_ext = "snm nav vrb synctex.gz spl bbl blg run.xml pgf-plot.table pgf-plot.gnuplot"
-  #+end_src
-** 文献参照
-   :PROPERTIES:
-   :CUSTOM_ID: org070567c3
-   :END:
-   試行錯誤中...
-*** bibtex-completion
-    :PROPERTIES:
-    :CUSTOM_ID: org9d970700
-    :END:
-    #+begin_src emacs-lisp
-(leaf bibtex-completion
-  :if (and (and (executable-find "uplatex")
-                (executable-find "latexmk"))
-           (file-directory-p my:d:org))
-  :ensure t
-  :custom
-  `((bibtex-completion-pdf-symbol   . "")
-    (bibtex-completion-notes-symbol . "")
-    (bibtex-completion-bibliography
-     . ,(expand-file-name "references.bib" my:d:nextcloud))
-    (bibtex-completion-library-path
-     . ,(expand-file-name "Zotero" my:d:nextcloud))
-    (bibtex-completion-notes-path
-     . ,(expand-file-name "INBOX.org" my:d:org))
-    ;; Debian 11 から /usr/bin/open が alternatives で提供される様になった
-    ;; 実態は xdg-open だが、macOS と条件分岐しなくて非常に楽に.
-    (bibtex-completion-pdf-open-function
-     . ,(lambda (fpath)
-          (call-process "open" nil 0 nil fpath)))
-    )
-  )
-    #+end_src
-*** consult-bibtex
-    :PROPERTIES:
-    :CUSTOM_ID: orgab568a64
-    :END:
-    #+begin_src emacs-lisp
-(leaf consult-bibtex
-  :if (file-directory-p my:d:org)
-  :el-get  mohkale/consult-bibtex
-  )
-    #+end_src
-*** org-ref
-    :PROPERTIES:
-    :CUSTOM_ID: orge3334680
-    :END:
-    #+begin_src emacs-lisp
-(leaf org-ref
-  :if (file-directory-p my:d:org)
-  :ensure t
-  :custom
-  `( ;; same as bibtex-completion
-    (org-ref-default-bibliography
-     . ,(expand-file-name "references.bib" my:d:nextcloud))
-    (org-ref-bibliography-nots
-     . ,(expand-file-name "INBOX.org" my:d:org))
-    (org-ref-pdf-directory
-     . ,(expand-file-name "Zotero" my:d:nextcloud))
-    )
-  :hook
-  (org-ref-clean-bibtex-entry-hook . org-ref-replace-nonascii)
-  )
-    #+end_src
 * Autoconf
   :PROPERTIES:
   :CUSTOM_ID: org898b9a45
@@ -4707,11 +4433,11 @@ $clean_ext = "snm nav vrb synctex.gz spl bbl blg run.xml pgf-plot.table pgf-plot
   :init
   (leaf f90-indent
     :custom
-    ((f90-do-indent               . 3) ;; 2? 4?
-     (f90-if-indent               . 3) ;; 2? 4?
-     (f90-type-indent             . 3) ;; 2? 4?
-     (f90-program-indent          . 3) ;; 2? 4?
-     (f90-continuation-indent     . 3) ;; 2? 4?
+    ((f90-do-indent               . 2) ;; 2? 4?
+     (f90-if-indent               . 2) ;; 2? 4?
+     (f90-type-indent             . 2) ;; 2? 4?
+     (f90-program-indent          . 2) ;; 2? 4?
+     (f90-continuation-indent     . 2) ;; 2? 4?
      (f90-directive-comment-re    . "!omp\\$" )
      (f90-indented-comment-re     . "!" )
      (f90-break-delimiters        . "[-+\\*/><=,% \t]")
@@ -4872,6 +4598,99 @@ $clean_ext = "snm nav vrb synctex.gz spl bbl blg run.xml pgf-plot.table pgf-plot
   :hook (ssh-config-mode . turn-on-font-lock)
   )
    #+end_src
+* 言語毎の補完: =company-mode=
+  :PROPERTIES:
+  :CUSTOM_ID: org935a4dbf
+  :END:
+  まだうまく使いこなせていない．
+  - [[https://qiita.com/wktkshn/items/3ac46671d1c242a59f7e][company-dabbrevで日本語を補完しない]]
+  を有効にしてみたが, これで良いのかしら...?
+  #+begin_src emacs-lisp :tangle init.el
+(leaf company
+  :ensure t
+  :blackout t
+  :custom
+  ((company-require-match             . 'never)
+   (company-minimum-prefix-length     . 4)
+   (company-idle-delay                . 0)
+   (company-selection-wrap-around     . t)
+   (company-tooltip-align-annotations . t)
+   (company-dabbrev-char-regexp       . "\\cs")
+   ;; disable some noisy default backends
+   (company-backends . '(company-files
+                         company-capf
+                         (company-dabbrev-code
+                          company-gtags
+                          company-etags
+                          company-keywords))))
+  :bind
+  (;; ("<tab>"    . company-indent-or-complete-common)
+   (:company-active-map
+    ("C-n"     . company-select-next)
+    ("C-p"     . company-select-previous)
+    ("C-s"     . company-filter-candidates)
+    ("C-<tab>" . company-complete-common-or-cycle)
+    ("<tab>"   . company-indent-or-complete-common)
+    )
+   (:company-search-map
+    ("C-p" . company-select-previous)
+    ("C-n" . company-select-next)))
+  :hook
+  `((after-init-hook       . global-company-mode)
+    (minibuffer-setup-hook . ,(lambda ()
+                                (company-mode -1)))
+    (TeX-mode-hook
+     . edit-category-table-for-company-dabbrev))
+  :init
+  (defun my:edit-category-table-for-company-dabbrev (&optional table)
+    (define-category ?s "word constituents for company-dabbrev" table)
+    (let ((i 0))
+      (while (< i 128)
+        (if (equal ?w (char-syntax i))
+            (modify-category-entry i ?s table)
+          (modify-category-entry i ?s table t))
+        (setq i (1+ i)))))
+  )
+(leaf company-flx
+  :ensure t
+  :after company
+  :config
+  (company-flx-mode +1)
+  )
+(leaf company-statistics
+  :disabled t
+  :ensure t
+  :custom
+  `((company-statistics-size . 2000)
+    (company-statistics-file
+     . ,(expand-file-name "company-statistics-cache.el" my:d:tmp))
+    (company-transformers
+     . (company-sort-by-statistics company-sort-by-backed-importance)))
+  :config
+  (company-statistics-mode)
+  )
+  #+end_src
+  - [X] [[https://github.com/TheBB/company-reftex][TheBB/company-reftex]]
+  - [X] [[https://github.com/vspinu/company-math][vspinu/company-math]]
+  - [X] [[https://github.com/alexeyr/company-auctex][alexeyr/company-auctex]]
+* LSP: =eglot=
+  :PROPERTIES:
+  :CUSTOM_ID: orge81b8e94
+  :END:
+  Language Protocol Server のクライアントとしては =lsp-mode,lsp-ui= もあるが,
+  [[https://github.com/joaotavora/eglot][eglot]]の方が依存が少なくて軽量なので好み.
+  #+begin_src emacs-lisp :tangle init.el
+(leaf eglot
+  :if (executable-find "fortls")
+  :ensure t
+  :hook
+  ((f90-mode-hook . eglot-ensure))
+  :config
+  (add-to-list 'eglot-server-programs
+               '(f90-mode . ("fortls" "--nthreads 1 ")))
+
+  )
+  #+end_src
 * SOMEDAY 日記: =tDiary= [0/1]
   :PROPERTIES:
   :CUSTOM_ID: org9992a617
@@ -4927,29 +4746,29 @@ $clean_ext = "snm nav vrb synctex.gz spl bbl blg run.xml pgf-plot.table pgf-plot
     ;; Japanese
     (set-fontset-font nil
                       'japanese-jisx0213.2004-1
-                      (font-spec :family "FSMRMP" :height 220))
+                      (font-spec :family "AGVRMP" :height 220))
     (set-fontset-font nil
                       'japanese-jisx0213-2
-                      (font-spec :family "FSMRMP" :height 220))
+                      (font-spec :family "AGVRMP" :height 220))
     (set-fontset-font nil
                       'katakana-jisx0201
-                      (font-spec :family "FSMRMP" :height 220))
+                      (font-spec :family "AGVRMP" :height 220))
     ;; Latin with pronounciation annotations
     (set-fontset-font nil
                       '(#x0080 . #x024F)
-                      (font-spec :family "FSMRMP" :height 220))
+                      (font-spec :family "AGVRMP" :height 220))
     ;; Math symbols
     (set-fontset-font nil
                       '(#x2200 . #x22FF)
-                      (font-spec :family "FSMRMP" :height 220))
+                      (font-spec :family "AGVRMP" :height 220))
     ;; Greek
     (set-fontset-font nil
                       '(#x0370 . #x03FF)
-                      (font-spec :family "FSMRMP" :height 220))
+                      (font-spec :family "AGVRMP" :height 220))
     ;; Some Icons
     (set-fontset-font nil
                       '(#xE0A0 . #xEEE0)
-                      (font-spec :family "FSMRMP" :height 220))
+                      (font-spec :family "AGVRMP" :height 220))
     ))
 ;;;###autoload
 (defun my:load-side-window-config ()
@@ -4957,40 +4776,40 @@ $clean_ext = "snm nav vrb synctex.gz spl bbl blg run.xml pgf-plot.table pgf-plot
   (interactive)
   (progn
     (set-face-attribute 'default nil
-                        :family "FSMRMP"
+                        :family "AGVRMP"
                         :height 180)
     (set-face-attribute 'fixed-pitch nil
-                        :family "FSMRMP"
+                        :family "AGVRMP"
                         :height 180)
     (set-face-attribute 'variable-pitch nil
-                        :family "FSMRMP"
+                        :family "AGVRMP"
                         :height 180)
     ;; Japanese
     (set-fontset-font nil
                       'japanese-jisx0213.2004-1
-                      (font-spec :family "FSMRMP" :height 180))
+                      (font-spec :family "AGVRMP" :height 180))
     (set-fontset-font nil
                       'japanese-jisx0213-2
-                      (font-spec :family "FSMRMP" :height 180))
+                      (font-spec :family "AGVRMP" :height 180))
     (set-fontset-font nil
                       'katakana-jisx0201
-                      (font-spec :family "FSMRMP" :height 180))
+                      (font-spec :family "AGVRMP" :height 180))
     ;; Latin with pronounciation annotations
     (set-fontset-font nil
                       '(#x0080 . #x024F)
-                      (font-spec :family "FSMRMP" :height 180))
+                      (font-spec :family "AGVRMP" :height 180))
     ;; Math symbols
     (set-fontset-font nil
                       '(#x2200 . #x22FF)
-                      (font-spec :family "FSMRMP" :height 180))
+                      (font-spec :family "AGVRMP" :height 180))
     ;; Greek
     (set-fontset-font nil
                       '(#x0370 . #x03FF)
-                      (font-spec :family "FSMRMP" :height 180))
+                      (font-spec :family "AGVRMP" :height 180))
     ;; Some Icons
     (set-fontset-font nil
                       '(#xE0A0 . #xEEE0)
-                      (font-spec :family "FSMRMP" :height 180))
+                      (font-spec :family "AGVRMP" :height 180))
     ))
 (leaf *gui
   :if window-system
@@ -5010,11 +4829,11 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
 |ABCDEFGHIJKL|
 |'";:-+=/\~`?|
 |∞≤≥∏∑∫|
-|×±≒≡⊆⊇|
-|αβγδεζ|
-|ηθικλμ|
-|ΑΒΓΔΕΖ|
-|ΗΘΙΚΛΜ|
+|×±≒≡⊆⊇|  ← GUI だと一部半角になる
+|αβγδεζ|  ← GUI だと半角になる
+|ηθικλμ|  ← GUI だと半角になる
+|ΑΒΓΔΕΖ|  ← GUI だと半角になる
+|ΗΘΙΚΛΜ|  ← GUI だと半角になる
 |日本語の美観|
 |あいうえおか|
 |アイウエオカ|
@@ -5044,7 +4863,7 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
       "skk-setup-modeline による modeline の更新を無効化"
     (setq skk-indicator-alist (skk-make-indicator-alist))
     (force-mode-line-update t))
-  ;;
+
   (defun my:major-mode-icon (mode)
     "Update file icon in mode-line, just display major-mode icon. not filename."
     (let* ((icon (all-the-icons-icon-for-mode mode)))
@@ -5078,7 +4897,7 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
                (lhs (list (powerline-raw (substring skk-modeline-input-mode 2 -1) mode-line 'l)
                           (powerline-raw "%*" mode-line 'l)
                           (powerline-raw mode-line-mule-info mode-line 'l)
-                          (powerline-raw (my:major-mode-icon major-mode) mode-line 'l)
+                          ;; (powerline-raw (my:major-mode-icon major-mode) mode-line 'l)
                           (powerline-buffer-id mode-line-buffer-id 'l)
                           (powerline-raw " ")
                           ))
@@ -5124,6 +4943,14 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
     (modus-themes-with-colors
       (custom-set-faces
        ;;
+       `(modus-themes-hl-line ((,class ,@(modus-themes--hl-line
+                                          bg-hl-line bg-hl-line-intense
+                                          ;; bg-hl-line-intense-accent
+                                          "#556b2f"
+                                          blue-nuanced-bg
+                                          bg-region blue-intense-bg
+                                          fg-alt cyan-intense)
+                                       :extend t)))
        ;; `(hl-line ((,class :background "#556b2f")))
        ;;
        ;; preprocessor → builtin
@@ -5171,76 +4998,87 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
                                                          fg-escape-char-construct fg-escape-char-construct
                                                          fg-escape-char-construct fg-escape-char-construct
                                                          ))))
-       ;;
+       ;; カスタマイズ済みなので上書き
        `(org-agenda-date-weekend
          ((,class :inherit 'default :foreground "#ff7f7f" :bold t)))
        `(org-agenda-date
          ((,class :inherit 'default :foreground "#ffffff" :bold t )))
        `(org-agenda-date-today
-         ((,class :inherit 'default :foreground "#ffffff" :bold t :underline t)))
+         ((,class :inherit 'default :foreground "#ffffff" :bold t :underline)))
+       ;; 不要
        `(org-block-begin-line ((,class :background nil)))
        `(org-block-end-line ((,class :background nil)))
+       ;; shell の lscolors に揃える.
+       `(dired-directory ((,class :foreground "#7f7fff" :bold t)))
+       ;;
        ;; wanderlust
-       `(wl-highlight-folder-closed-face                  ((,class :foreground "#4cff4c")))
-       `(wl-highlight-folder-few-face                     ((,class :foreground "#ff4c4c")))
-       `(wl-highlight-folder-killed-face                  ((,class :foreground "#4f4f4f")))
-       `(wl-highlight-folder-many-face                    ((,class :foreground "#ff4cff")))
-       `(wl-highlight-folder-opened-face                  ((,class :foreground "#4cffff")))
+       `(wl-highlight-folder-closed-face                  ((,class ,@(modus-themes--syntax-string green-alt-other green-alt-other green-alt-other green-alt-other ))))
+       `(wl-highlight-folder-few-face                     ((,class ,@(modus-themes--syntax-string red-alt-other red-alt-other red-alt-other red-alt-other ))))
+       `(wl-highlight-folder-killed-face                  ((,class ,@(modus-themes--syntax-string fg-alt fg-alt fg-alt fg-alt ))))
+       `(wl-highlight-folder-many-face                    ((,class ,@(modus-themes--syntax-string magenta magenta magenta magenta ))))
+       `(wl-highlight-folder-opened-face                  ((,class ,@(modus-themes--syntax-string cyan-alt-other cyan-alt-other cyan-alt-other cyan-alt-other ))))
        `(wl-highlight-folder-path-face                    ((,class :underline t :bold t)))
-       `(wl-highlight-folder-unknown-face                 ((,class :foreground "#4cffff")))
-       `(wl-highlight-folder-unread-face                  ((,class :foreground "#4c4cff")))
-       `(wl-highlight-folder-zero-face                    ((,class :foreground "#f6f3e8")))
-       `(wl-highlight-message-citation-header             ((,class :foreground "#7fff7f")))
-       `(wl-highlight-message-cited-text-1                ((,class :foreground "#7fff7f")))
-       `(wl-highlight-message-cited-text-2                ((,class :foreground "#FFE57F")))
-       `(wl-highlight-message-cited-text-3                ((,class :foreground "#7f7fff")))
-       `(wl-highlight-message-cited-text-4                ((,class :foreground "#A7FDEB")))
-       `(wl-highlight-message-cited-text-5                ((,class :foreground "#ff7fff")))
-       `(wl-highlight-message-cited-text-6                ((,class :foreground "#ff7f7f")))
-       `(wl-highlight-message-cited-text-7                ((,class :foreground "#5CF19E")))
-       `(wl-highlight-message-cited-text-8                ((,class :foreground "#FFD740")))
-       `(wl-highlight-message-cited-text-9                ((,class :foreground "#4c4cff")))
-       `(wl-highlight-message-cited-text-10               ((,class :foreground "#4cffff")))
-       `(wl-highlight-message-header-contents             ((,class :foreground "#5CF19E")))
-       `(wl-highlight-message-headers                     ((,class :foreground "#64FCDA" :bold t)))
-       `(wl-highlight-message-important-header-contents   ((,class :foreground "#ff4cff" :bold t)))
-       `(wl-highlight-message-important-header-contents2  ((,class :foreground "#ff4cff" :bold t)))
-       `(wl-highlight-message-signature                   ((,class :foreground "#afafaf")))
-       `(wl-highlight-message-unimportant-header-contents ((,class :foreground "#afafaf")))
-       `(wl-highlight-summary-answered-face               ((,class :foreground "#4cff4c")))
-       `(wl-highlight-summary-deleted-face                ((,class :foreground "#4c4caa")))
-       `(wl-highlight-summary-disposed-face               ((,class :foreground "#7f7faa")))
-       `(wl-highlight-summary-flagged-face                ((,class :foreground "#FFE57F" :bold t)))
-       `(wl-highlight-summary-high-unread-face            ((,class :foreground "#ff4c4c")))
-       `(wl-highlight-summary-low-unread-face             ((,class :foreground "#ff4c4c")))
-       `(wl-highlight-summary-normal-face                 ((,class :foreground "#f6f3e8")))
-       `(wl-highlight-summary-refiled-face                ((,class :foreground "#7f7fff")))
-       `(wl-highlight-summary-spam-face                   ((,class :foreground "#ff4cff" :bold t)))
-       `(wl-highlight-summary-thread-top-face             ((,class :foreground "#f6f3e8")))
-       `(wl-highlight-summary-unread-face                 ((,class :foreground "#ff4c4c")))
-       ;; (wl-highlight-header-separator-face               :foreground "#f6f3e8")
-       ;; (wl-highlight-logo-face                           :foreground "#f6f3e8")
-       ;; (wl-highlight-summary-copied-face                 :foreground "#f6f3e8")
-       ;; (wl-highlight-summary-displaying-face             :foreground "#f6f3e8")
-       ;; (wl-highlight-summary-resend-face                 :foreground "#f6f3e8")
-       ;; (wl-highlight-summary-prefetch-face               :foreground "#f6f3e8")
-       ;; (wl-highlight-summary-target-face                 :foreground "#f6f3e8")
-       ;; (wl-highlight-summary-temp-face                   :foreground "#f6f3e8")
-       ;; (wl-highlight-summary-new-face                    :foreground "#f6f3e8")
-       ;; (wl-highlight-summary-killed-face                 :foreground "#f6f3e8")
-       ;; (wl-highlight-summary-low-read-face               :foreground "#f6f3e8")
-       ;; (wl-highlight-thread-indent-face                  :foreground "#f6f3e8")
-       ;; (wl-highlight-summary-forwarded-face              :foreground "#f6f3e8")
-       ;; (wl-highlight-summary-high-read-face              :foreground "#f6f3e8")
-       ;; (wl-message-header-narrowing-face                 :foreground "#f6f3e8")
-       ;; (wl-summary-persistent-mark-face                  :foreground "#f6f3e8")
+       `(wl-highlight-folder-unknown-face                 ((,class ,@(modus-themes--syntax-string cyan-alt cyan-alt cyan-alt cyan-alt ))))
+       `(wl-highlight-folder-unread-face                  ((,class ,@(modus-themes--syntax-string blue-alt blue-alt blue-alt blue-alt ))))
+       `(wl-highlight-folder-zero-face                    ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
+       `(wl-highlight-message-citation-header             ((,class ,@(modus-themes--syntax-string green-active green-active green-active green-active))))
+       `(wl-highlight-message-cited-text-1                ((,class ,@(modus-themes--syntax-string green-intense green-intense green-intense green-intense))))
+       `(wl-highlight-message-cited-text-2                ((,class ,@(modus-themes--syntax-string yellow-intense yellow-intense yellow-intense yellow-intense))))
+       `(wl-highlight-message-cited-text-3                ((,class ,@(modus-themes--syntax-string blue-intense blue-intense blue-intense blue-intense))))
+       `(wl-highlight-message-cited-text-4                ((,class ,@(modus-themes--syntax-string cyan-intense cyan-intense cyan-intense cyan-intense))))
+       `(wl-highlight-message-cited-text-5                ((,class ,@(modus-themes--syntax-string purple-intense purple-intense purple-intense purple-intense))))
+       `(wl-highlight-message-cited-text-6                ((,class ,@(modus-themes--syntax-string red-intense red-intense red-intense red-intense))))
+       `(wl-highlight-message-cited-text-7                ((,class ,@(modus-themes--syntax-string green-intense green-intense green-intense green-intense))))
+       `(wl-highlight-message-cited-text-8                ((,class ,@(modus-themes--syntax-string yellow-intense yellow-intense yellow-intense yellow-intense))))
+       `(wl-highlight-message-cited-text-9                ((,class ,@(modus-themes--syntax-string blue-intense blue-intense blue-intense blue-intense))))
+       `(wl-highlight-message-cited-text-10               ((,class ,@(modus-themes--syntax-string cyan-intense cyan-intense cyan-intense cyan-intense))))
+       `(wl-highlight-message-header-contents             ((,class ,@(modus-themes--syntax-string purple-intense purple-intense purple-intense purple-intense))))
+       `(wl-highlight-message-headers                     ((,class ,@(modus-themes--syntax-string cyan-intense cyan-intense cyan-intense cyan-intense))))
+       `(wl-highlight-message-important-header-contents   ((,class ,@(modus-themes--syntax-string magenta-intense magenta-intense magenta-intense magenta-intense))))
+       `(wl-highlight-message-important-header-contents2  ((,class ,@(modus-themes--syntax-string magenta-intense magenta-intense magenta-intense magenta-intense))))
+       `(wl-highlight-message-signature                   ((,class ,@(modus-themes--syntax-string fg-dim fg-dim fg-dim fg-dim))))
+       `(wl-highlight-message-unimportant-header-contents ((,class ,@(modus-themes--syntax-string fg-dim fg-dim fg-dim fg-dim))))
+       `(wl-highlight-summary-answered-face               ((,class ,@(modus-themes--syntax-string green-intense green-intense green-intense green-intense))))
+       `(wl-highlight-summary-deleted-face                ((,class ,@(modus-themes--syntax-string blue-intense blue-intense blue-intense blue-intense))))
+       `(wl-highlight-summary-disposed-face               ((,class ,@(modus-themes--syntax-string fg-dim fg-dim fg-dim fg-dim))))
+       `(wl-highlight-summary-flagged-face                ((,class ,@(modus-themes--syntax-string yellow-intense yellow-intense yellow-intense yellow-intense))))
+       `(wl-highlight-summary-high-unread-face            ((,class ,@(modus-themes--syntax-string red-intense red-intense red-intense red-intense))))
+       `(wl-highlight-summary-low-unread-face             ((,class ,@(modus-themes--syntax-string red-intense red-intense red-intense red-intense))))
+       `(wl-highlight-summary-normal-face                 ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
+       `(wl-highlight-summary-refiled-face                ((,class ,@(modus-themes--syntax-string blue-alt blue-alt blue-alt blue-alt))))
+       `(wl-highlight-summary-spam-face                   ((,class ,@(modus-themes--syntax-string magenta-intense magenta-intense magenta-intense magenta-intense))))
+       `(wl-highlight-summary-thread-top-face             ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
+       `(wl-highlight-summary-unread-face                 ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
+       ;; `(wl-highlight-header-separator-face               ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
+       ;; `(wl-highlight-logo-face                           ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
+       ;; `(wl-highlight-summary-copied-face                 ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
+       `(wl-highlight-summary-displaying-face             ((,class :underline t :bold t)))
+       ;; `(wl-highlight-summary-resend-face                 ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
+       ;; `(wl-highlight-summary-prefetch-face               ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
+       ;; `(wl-highlight-summary-target-face                 ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
+       ;; `(wl-highlight-summary-temp-face                   ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
+       `(wl-highlight-summary-new-face                    ((,class ,@(modus-themes--syntax-string red-intense red-intense red-intense red-intense))))
+       ;; `(wl-highlight-summary-killed-face                 ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
+       ;; `(wl-highlight-summary-low-read-face               ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
+       ;; `(wl-highlight-thread-indent-face                  ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
+       ;; `(wl-highlight-summary-forwarded-face              ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
+       ;; `(wl-highlight-summary-high-read-face              ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
+       ;; `(wl-message-header-narrowing-face                 ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
+       ;; `(wl-summary-persistent-mark-face                  ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
        ;;
        )))
+  :advice
+  ((:after
+    modus-themes-load-vivendi
+    my:set-background)
+   (:after
+    modus-themes-load-operandi
+    (lambda () (set-face-background 'default "#FFFFFF" )))
+   )
   :hook
   `((modus-themes-after-load-theme-hook
      . (lambda ()
          (my:modus-themes-custom-faces)
-         (my:set-background)
          ))
     (window-setup-hook . my:set-background)
     (tty-setup-hook . my:set-background)
@@ -5261,7 +5099,7 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
     (modus-themes-mail-citations          . nil) ;; default
     (modus-themes-fringes                 . nil) ;; default
     (modus-themes-lang-checkers           . '(straight-underline intense))
-    (modus-themes-hl-line                 . '(accented intense)) ;; → custom
+    (modus-themes-hl-line                 . '(accented intense))
     (modus-themes-subtle-line-numbers     . nil) ;; default
     (modus-themes-paren-match             . '(bold intense))
     (modus-themes-region                  . '(accented no-extend))

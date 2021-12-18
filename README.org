@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2021-12-16 19:16:12
+#+date: 2021-12-18 13:19:57
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -4844,100 +4844,6 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
 | 今日もいい天気ですね | お、     | 等幅になった👍 🍺|
 |----------------------+----------+------------------|
   #+END_EXAMPLE
-** modeline: =moody=
-   :PROPERTIES:
-   :CUSTOM_ID: orgca564786
-   :END:
-   以前は powerline を使っていたけれど, [[https://github.com/tarsius/moody][moody]] に変更してみたり.
-   #+begin_src emacs-lisp
-(leaf moody
-  :ensure t
-  :init
-  (defun my:major-mode-icon (mode)
-    "Update file icon in mode-line, just display major-mode icon. not filename."
-    (let* ((icon (all-the-icons-icon-for-mode mode)))
-      (if (symbolp icon)
-          (all-the-icons-faicon "file-code-o"
-                                :face 'all-the-icons-dsilver
-                                :height 1.0)
-        icon)))
-  ;;
-  (defun my:modeline-ddskk ()
-    "skkが読み込まれていなくても状態を表示"
-    (cond
-     ((not (boundp 'skk-modeline-input-mode))
-      (setq skk-modeline-input-mode "--[--]:"))
-     (t skk-modeline-input-mode)))
-  ;;
-  (defun my:skk-setup-modeline ()
-      "skk-setup-modeline による modeline の更新を無効化"
-    (setq skk-indicator-alist (skk-make-indicator-alist))
-    (force-mode-line-update t))
-  ;;
-  (setq my:modeline-gui-rw-symbol ""
-        my:modeline-tty-rw-symbol ""
-        my:modeline-gui-ro-symbol ""
-        my:modeline-tty-ro-symbol ""
-        my:modeline-gui-mod-symbol ""
-        my:modeline-tty-mod-symbol ""
-        )
-  ;;
-  (defun my:modeline-status ()
-    "Return SKK indicator and buffer status"
-    (my:modeline-ddskk)
-    (format "%s %s (%s) "
-            ;; skk indicator
-            (substring skk-modeline-input-mode 2 -1)
-            ;; file status
-            (let ((read-only  buffer-read-only)
-                  (modified  (and buffer-file-name (buffer-modified-p))))
-              ;; Use status letters for TTY display
-              (cond
-               (modified (if (display-graphic-p)
-                             my:modeline-gui-mod-symbol
-                           my:modeline-tty-mod-symbol))
-               (read-only (if (display-graphic-p)
-                              my:modeline-gui-ro-symbol
-                            my:modeline-tty-ro-symbol))
-               (t (if (display-graphic-p)
-                      my:modeline-gui-rw-symbol
-                    my:modeline-tty-rw-symbol))))
-            ;; major mode icon
-            (my:major-mode-icon major-mode))
-    )
-  :advice
-  `((:override skk-setup-modeline my:skk-setup-modeline)
-    )
-  :config
-  ;;
-  (moody-replace-mode-line-buffer-identification)
-  (moody-replace-vc-mode)
-  (moody-replace-eldoc-minibuffer-message-function)
-  (moody-replace-element 'mode-line-frame-identification '(""))
-  (moody-replace-element 'mode-line-client '(""))
-  (moody-replace-element 'mode-line-remote '(""))
-  (moody-replace-element 'mode-line-position '(""))
-  ;; (moody-replace-element 'mode-line-misc-info '(""))
-  (moody-replace-element 'mode-line-modes '(""))
-  (moody-replace-element 'mode-line-modified
-                         '(:eval (my:modeline-status)))
-  (moody-replace-element 'mode-line-misc-info
-                         'mode-line-position)
-  )
-   #+end_src
-** minor mode の非表示: =minions=
-   :PROPERTIES:
-   :CUSTOM_ID: orgb9974e5f
-   :END:
-   #+begin_src emacs-lisp :tangle init.el
-(leaf minions-mode
-  :disabled t
-  :custom
-  `((minions-mode-line-lighter . "[+]"))
-  :config
-  (minions-mode)
-  )
-   #+end_src
 ** theme: =modus-theme=
    :PROPERTIES:
    :CUSTOM_ID: orgce78777d
@@ -5142,6 +5048,77 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
     )
   )
    #+end_src
+** modeline: =powerline=
+   :PROPERTIES:
+   :CUSTOM_ID: orgf37b53c3
+   :END:
+  #+BEGIN_SRC emacs-lisp
+(leaf powerline
+  :ensure t
+  :init
+  (defun my:major-mode-icon (mode)
+    "Update file icon in mode-line, just display major-mode icon. not filename."
+    (let* ((icon (all-the-icons-icon-for-mode mode)))
+      (if (symbolp icon)
+          (all-the-icons-faicon "file-code-o"
+                                :face 'all-the-icons-dsilver
+                                :height 1.0)
+        icon)))
+  ;;
+  (defun my:powerline-ddskk ()
+    "skkが読み込まれていなくても状態を表示"
+    (cond
+     ((not (boundp 'skk-modeline-input-mode))
+      (setq skk-modeline-input-mode "--[--]:"))
+     (t skk-modeline-input-mode)))
+  ;;
+  (defun my:skk-setup-modeline ()
+    "skk-setup-modeline による modeline の更新を無効化"
+    (setq skk-indicator-alist (skk-make-indicator-alist))
+    (force-mode-line-update t))
+
+  :advice (:override skk-setup-modeline my:skk-setup-modeline)
+  :custom
+  `((powerline-buffer-size-suffix  . nil)
+    (powerline-display-hud         . nil)
+    (powerline-display-buffer-size . nil)
+    (powerline-text-scale-factor   .  1)
+    )
+  :config
+  (defun my:powerline-theme ()
+    "Setup the default mode-line."
+    (interactive)
+    (my:powerline-ddskk)
+    (setq-default
+     mode-line-format
+     '("%e"
+       (:eval
+        (let* ((active (powerline-selected-window-active))
+               (mode-line-buffer-id (if active 'mode-line-buffer-id 'mode-line-buffer-id-inactive))
+               (mode-line (if active 'mode-line 'mode-line-inactive))
+               (face0 (if active 'powerline-active0 'powerline-inactive0))
+               (face1 (if active 'powerline-active1 'powerline-inactive1))
+               (face2 (if active 'powerline-active2 'powerline-inactive2))
+               (lhs (list (powerline-raw (substring skk-modeline-input-mode 2 -1) mode-line 'l)
+                          (powerline-raw "%*" mode-line 'l)
+                          (powerline-raw mode-line-mule-info mode-line 'l)
+                          (powerline-raw (my:major-mode-icon major-mode) mode-line 'l)
+                          (powerline-buffer-id mode-line-buffer-id 'l)
+                          (powerline-raw " ")
+                          ))
+               (rhs (list (powerline-raw global-mode-string face1 'r)
+                          (powerline-vc face1 'r)
+                          (powerline-raw mode-line-misc-info 'r)
+                          (powerline-raw " ")
+                          (powerline-raw "%6p" mode-line 'r)
+                          )))
+          (concat (powerline-render lhs)
+                  (powerline-fill face2 (powerline-width rhs))
+                  (powerline-render rhs))))))
+    )
+  (my:powerline-theme)
+  )
+   #+END_SRC
 * Debug&Test
   :PROPERTIES:
   :CUSTOM_ID: orgd89ceb4b

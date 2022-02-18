@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2021-12-18 13:19:57
+#+date: 2022-02-18 14:45:44
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -202,8 +202,8 @@ init.el: README.org
    #+begin_src emacs-lisp :tangle init.el
 ;; elpa/gnutls workaround
 (eval-and-compile
-  (when (version<=  emacs-version "26.2")
-    (setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3"))
+  (when (version<=  emacs-version "26.2")  ;; => for syntax hightlight
+    (customize-set-variable 'gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3"))
   (custom-set-variables
    '(package-archives '(("gnu"   . "https://elpa.gnu.org/packages/")
                         ("melpa" . "https://melpa.org/packages/")
@@ -794,15 +794,12 @@ init.el: README.org
 (leaf save-place
   :custom
   `((save-place . t)
-    (save-place-file
-     . ,(expand-file-name "emacs-places"  my:d:tmp))
+    (save-place-file . ,(expand-file-name "emacs-places"  my:d:tmp))
+    ;; add tramp-file-name-regexp
+    (save-place-ignore-files-regexp
+     . "\\(\\(?:COMMIT_EDITMSG\\|hg-editor-[[:alnum:]]+\\.txt\\|svn-commit\\.tmp\\|bzr_log\\.[[:alnum:]]+\\)$\\)\\|\\(\\`/[^/:]+:[^/:]*:\\)")
     )
-  :hook (emacs-startup-hook . save-place-mode)
-  :config
-  (setq save-place-ingore-files-regexp
-        (format "\\(%s\\)\\|\\(%s\\)"
-                save-place-ignore-files-regexp
-                tramp-file-name-regexp))
+  :hook (after-init-hook. save-place-mode)
   )
    #+end_src
 ** =time-stamp=: 保存時に timestamp を自動更新
@@ -892,7 +889,11 @@ init.el: README.org
    #+begin_src emacs-lisp :tangle init.el
 (leaf ps-mule
   :custom
-  ((ps-multibyte-buffer . 'non-latin-printer))
+  ((ps-multibyte-buffer . 'non-latin-printer)
+   (ps-font-size        . '(9 . 10))
+   (ps-header-font-size . '(10 . 12))
+   (ps-header-title-font-size . '(12 . 14))
+   )
   :config
   (defalias 'ps-mule-header-string-charset 'ignore)
   )
@@ -1079,13 +1080,13 @@ init.el: README.org
   )
    #+end_src
    - [ ] 最近, EAWは一文字幅強制の方が良いかなぁ, とか悩み中.
-** macOS対応
-   :PROPERTIES:
-   :CUSTOM_ID: orgcf967538
-   :END:
-   最近良く触る様になったので設定している。
-   +まあ, イマイチ慣れない訳ですけれど+
-   #+begin_src emacs-lisp :tangle init.el
+* macOS対応
+  :PROPERTIES:
+  :CUSTOM_ID: orgcf967538
+  :END:
+  最近良く触る様になったので設定している。
+  +まあ, イマイチ慣れない訳ですけれど+
+  #+begin_src emacs-lisp :tangle init.el
 (leaf *mac-encoding
   :if (eq system-type 'darwin)
   (leaf ucs-normalize
@@ -1100,15 +1101,19 @@ init.el: README.org
     (global-set-key [ns-drag-file] 'ns-find-file)
     )
   )
-   #+end_src
-** Windows(WSL2)対応
-   :PROPERTIES:
-   :CUSTOM_ID: org3416eeb2
-   :END:
-   #+begin_src emacs-lisp
+  #+end_src
+* Windows(WSL2)対応
+  :PROPERTIES:
+  :CUSTOM_ID: org3416eeb2
+  :END:
+  #+begin_src emacs-lisp
 (leaf *wsl2-path
   :if (getenv "WSL_DISTRO_NAME")
-  :preface
+  :defvar drvfs-alist windows-path-style-regexp
+  :init
+  (defvar drvfs-alist nil)
+  (defvar windows-path-style-regexp "\\`\\(.*/\\)?\\([a-zA-Z]:\\\\.*\\|[a-zA-Z]:/.*\\|\\\\\\\\.*\\|//.*\\)")
+  ;;
   (defun set-drvfs-alist ()
     (interactive)
     (setq drvfs-alist
@@ -1124,8 +1129,6 @@ init.el: README.org
                           (shell-command-to-string
                            "mount | grep -E ' type (9p|drvfs) ' | grep -v '^tools on /init type 9p' | sed -r 's/(.*) on (.*) type (9p|drvfs) .*/\\2\\|\\1/' | sed 's!\\\\!/!g'"))
                          "\n" t))))
-  ;;
-  (defconst windows-path-style-regexp "\\`\\(.*/\\)?\\([a-zA-Z]:\\\\.*\\|[a-zA-Z]:/.*\\|\\\\\\\\.*\\|//.*\\)")
   ;;
   (defun windows-path-convert-file-name (name)
     (setq name (replace-regexp-in-string windows-path-style-regexp "\\2" name t nil))
@@ -1163,7 +1166,7 @@ init.el: README.org
                       (cons windows-path-style-regexp
                             'windows-path-map-drive-hook-function)))))
   )
-   #+end_src
+  #+end_src
 * カレンダー設定
   :PROPERTIES:
   :CUSTOM_ID: org7d9d4027
@@ -1171,38 +1174,47 @@ init.el: README.org
    表示の更新と =japanese-holidays= による日本の休日の追加
    #+begin_src emacs-lisp :tangle init.el
 (leaf calendar
+  :init
+  (leaf japanese-holidays
+    :ensure t
+    :require t
+    :after calendar
+    :defvar japanese-holidays calendar-holidays
+    :custom
+    ((japanese-holiday-weekend         . '(0 6))
+     (japanese-holiday-weekend-marker
+      . '(holiday  ;; 日
+          nil      ;; 月
+          nil      ;; 火
+          nil      ;; 水
+          nil      ;; 木
+          nil      ;; 金
+          japanese-holiday-saturday))
+     )
+    :config
+    (defun my:japanese-holiday-show (&rest _args)
+      (let* ((date (calendar-cursor-to-date t))
+             (calendar-date-display-form '((format "%s年 %s月 %s日（%s）" year month day dayname)))
+             (date-string (calendar-date-string date))
+             (holiday-list (calendar-check-holidays date)))
+        (when holiday-list
+          (message "%s: %s" date-string (mapconcat #'identity holiday-list "; ")))))
+    (add-hook 'calendar-move-hook 'my:japanese-holiday-show)
+    (setq calendar-holidays ; 他の国の祝日も表示させたい場合は適当に調整
+          (append japanese-holidays holiday-local-holidays))
+    )
   :custom
-  (;; 祝日をカレンダーに表示
-   (mark-holidays-in-calendar . t)
-   ;; 月と曜日の表示調整
+  (;; 月と曜日の表示調整
    (calendar-month-name-array . ["01" "02" "03" "04" "05" "06"
                                  "07" "08" "09" "10" "11" "12" ])
    (calendar-day-name-array   . ["日" "月" "火" "水" "木" "金" "土"])
    (calendar-day-header-array . ["日" "月" "火" "水" "木" "金" "土"])
    ;; 日曜開始
-   (calendar-week-start-day   . 0))
-  :config
-  (with-eval-after-load 'calendar
-    (leaf japanese-holidays
-      :ensure t
-      :custom
-      ((japanese-holiday-weekend         . '(0 6))
-       (japanese-holiday-weekend-marker  . '(holiday  ;; 日
-                                             nil      ;; 月
-                                             nil      ;; 火
-                                             nil      ;; 水
-                                             nil      ;; 木
-                                             nil      ;; 金
-                                             japanese-holiday-saturday)))
-      :hook
-      ((calendar-today-visible-hook   . japanese-holiday-mark-weekend)
-       (calendar-today-invisible-hook . japanese-holiday-mark-weekend)
-       (calendar-today-visible-hook   . calendar-mark-today))
-      :config
-      (setq calendar-holidays (append japanese-holidays))
-      )
-    )
-  )
+   (calendar-week-start-day   . 0)
+   ;; 祝日をカレンダーに表示
+   (calendar-mark-holidays-flag . t)
+   )
+)
    #+end_src
 * キーバインドの設定
   :PROPERTIES:
@@ -1255,16 +1267,10 @@ init.el: README.org
   :END:
   #+begin_src emacs-lisp :tangle init.el
 (leaf emacs-w3m
-  :if (executable-find "w3m")
-  ;;:el-get (emacs-w3m
-  ;;         :type github
-  ;;         :pkgname "emacs-w3m/emacs-w3m"
-  ;;         :build `(("autoconf")
-  ;;                  ("./configure" ,(format "--with-emacs=%s" el-get-emacs))
-  ;;                  ("make"))
-  ;;         :info "doc")
-  :load-path
-  `(,(expand-file-name "emacs-w3m/shimbun" my:d:pkg:elget))
+  :if (and (executable-find "w3m")
+           (file-directory-p "/usr/share/emacs/site-lisp/w3m/"))
+  :custom
+  `((w3m-fill-column . 72))
   )
   #+end_src
 * SOMEDAY =eww=: 内蔵ブラウザ [0/3]
@@ -1424,32 +1430,17 @@ Emacs*useXIM: false
     #+end_src
     インジケータの表示のカスタマイズ
     #+begin_src emacs-lisp :tangle init-ddskk.el
-(setq skk-latin-mode-string "[_A]")
-(setq skk-hiragana-mode-string "[あ]")
-(setq skk-katakana-mode-string "[ア]")
-(setq skk-jisx0208-latin-mode-string "[Ａ]")
-(setq skk-jisx0201-mode-string "[_ｱ]")
-(setq skk-abbrev-mode-string "[aA]")
-(setq skk-indicator-use-cursor-color nil)
+;; (setq skk-latin-mode-string "[_A]")
+;; (setq skk-hiragana-mode-string "[あ]")
+;; (setq skk-katakana-mode-string "[ア]")
+;; (setq skk-jisx0208-latin-mode-string "[Ａ]")
+;; (setq skk-jisx0201-mode-string "[_ｱ]")
+;; (setq skk-abbrev-mode-string "[aA]")
+;; (setq skk-indicator-use-cursor-color nil)
     #+end_src
     インジケータを左端に表示
     #+begin_src emacs-lisp :tangle init-ddskk.el
 (setq skk-status-indicator 'left)
-    #+end_src
-    mode-line が動くのが許せないので, ちょっと修正
-    #+begin_src emacs-lisp :tangle init-ddskk.el
-(defadvice skk-make-indicator-alist
-    (after my:set-skk-default-indicator activate)
-  (dolist (elem
-           '((abbrev " [aA]" . "--[aA]:")
-             (latin " [_A]" . "--[_A]:")
-             (default " [--]" . "--[--]:"))
-           )
-    (setq ad-return-value
-          (append (cons elem nil)
-                  (delq (assoc (car elem) ad-return-value) ad-return-value)))))
-;;
-;;(setq skk-show-inline t)
     #+end_src
     カーソルには色をつけない
     #+begin_src emacs-lisp :tangle init-ddskk.el
@@ -1625,6 +1616,16 @@ File.open(src, "r") {|f|
   :if (and (executable-find "redpen")
            (file-directory-p "~/.config/redpen"))
   :ensure t
+  :defvar redpen-commands
+  :init
+  (defvar redpen-commands
+    '(
+      ;; for english command
+      "redpen -r json2 -c ~/.config/redpen/redpen-conf-en.xml %s 2>/dev/null"
+      ;; for japanese command
+      "redpen -r json2 -c ~/.config/redpen/redpen-conf-ja.xml %s 2>/dev/null"
+      ))
+  ;;redpen-paragraph-force-reading-whole t
   :bind
   (("C-c C-r" . redpen-paragraph))
   :hook
@@ -1638,15 +1639,6 @@ File.open(src, "r") {|f|
                 "redpen -r json2 -c ~/.config/redpen/redpen-conf-ja.xml -f latex %s 2>/dev/null"
                 )))
     ))
-  :init
-  (defvar redpen-commands
-    '(
-      ;; for english command
-      "redpen -r json2 -c ~/.config/redpen/redpen-conf-en.xml %s 2>/dev/null"
-      ;; for japanese command
-      "redpen -r json2 -c ~/.config/redpen/redpen-conf-ja.xml %s 2>/dev/null"
-      ))
-  ;;redpen-paragraph-force-reading-whole t
   )
    #+end_src
 ** =ispell=: spell checker
@@ -1836,7 +1828,8 @@ File.open(src, "r") {|f|
           ))
   :custom
   `((marginalia-annotators
-     . '(marginalia-annotators-light marginalia-annotators-heavy nil)))
+     . '(marginalia-annotators-light marginalia-annotators-heavy nil))
+    (marginalia-align . 'right))
   :hook
   (after-init-hook . marginalia-mode)
   )
@@ -1851,6 +1844,7 @@ File.open(src, "r") {|f|
 (leaf consult
   :ensure t
   :bind (("C-x C-r" . my:consult-recent-file))
+  :defvar recentf-list
   :custom
   `(;; 増やさないと preview 時に theme がロードされない模様.
     ;; とりあえず default の 10 倍にしている. 1 MB かな?
@@ -1946,6 +1940,7 @@ File.open(src, "r") {|f|
    #+begin_src emacs-lisp
 (leaf google-translate
   :ensure t
+  :defvar google-translate-backend-method
   :init
   (defvar google-translate-translation-directions-alist '(("en" . "ja") ("ja" . "en")))
   (leaf popup :ensure t)
@@ -2170,7 +2165,7 @@ File.open(src, "r") {|f|
      :PROPERTIES:
      :CUSTOM_ID: orgc4ec7a62
      :END:
-     HTML メールを表示するために eww を使う.
+     HTML メールを表示するために emacs-w3m を使う.
      mime-setup がロードされる前に記述する必要あり.
      #+begin_src emacs-lisp :tangle init-wl.el
 (leaf mime-setup
@@ -2203,7 +2198,7 @@ File.open(src, "r") {|f|
 ;;  ((string-match "linux" system-configuration)
 ;;   (setq my:mime-preview-play-current-entity-appname "xdg-open")
 ;;   ))
-
+;;
 ;; (unless (functionp #'mime-preview-play-current-entity-orig)
 ;;   (fset #'mime-preview-play-current-entity-orig
 ;;         (symbol-function #'mime-preview-play-current-entity)))
@@ -2245,8 +2240,8 @@ video/*; xdg-open %s;
      text/plain より html を優先 =(- -;)=
      #+begin_src emacs-lisp :tangle init-wl.el
 (setq mime-view-type-subtype-score-alist
-      '(((text . plain) . 1)
-        ((text . html)  . 0)
+      '(((text . plain) . 0)
+        ((text . html)  . 1)
         ))
      #+end_src
      音を鳴らすアレやコレの無効化
@@ -3386,6 +3381,231 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :bind ("C-x G" . global-git-gutter+-mode)
   )
    #+end_src
+* 関数定義を辿る: =xref=, =dump-jump=, =smart-jump=
+  :PROPERTIES:
+  :CUSTOM_ID: org710c040c
+  :END:
+  あまり上手く使えていない.
+** SOMEDAY xref
+   :PROPERTIES:
+   :CUSTOM_ID: org2dc692aa
+   :END:
+   built-in なのでちゃんと使いこなしたい.
+** smart-jump
+   :PROPERTIES:
+   :CUSTOM_ID: org06bacf3a
+   :END:
+   #+begin_src emacs-lisp :tangle init.el
+(leaf smart-jump
+  :ensure t
+  :defer-config
+  (smart-jump-setup-default-registers)
+  )
+   #+end_src
+** SOMEDAY dump-jump
+   :PROPERTIES:
+   :CUSTOM_ID: org8d68ec74
+   :END:
+   便利らしいが, なにも設定できていない
+   #+begin_src emacs-lisp :tangle init.el
+(leaf dumb-jump
+  :disabled t
+  :if (executable-find "rg")
+  :ensure t
+  :bind (("M-g o" . dumb-jump-go-other-window)
+         ("M-g j" . dumb-jump-go)
+         ("M-g i" . dumb-jump-go-prompt)
+         ("M-g x" . dumb-jump-go-prefer-external)
+         ("M-g z" . dumb-jump-go-prefer-external-other-window))
+  :custom '((dumb-jump-selector       . 'ido)
+            (dumb-jump-force-searcher . 'rg))
+  )
+   #+end_src
+* 補完: =company-mode=
+  :PROPERTIES:
+  :CUSTOM_ID: org935a4dbf
+  :END:
+  まだうまく使いこなせていない．
+  - [[https://qiita.com/wktkshn/items/3ac46671d1c242a59f7e][company-dabbrevで日本語を補完しない]]
+  を有効にしてみたが, これで良いのかしら...?
+  #+begin_src emacs-lisp :tangle init.el
+(leaf company
+  :ensure t
+  :blackout t
+  :preface
+  ;; 日本語文字の補完を抑制
+  (defun my:edit-category-table-for-company-dabbrev (&optional table)
+    (define-category ?s "word constituents for company-dabbrev" table)
+    (let ((i 0))
+      (while (< i 128)
+        (if (equal ?w (char-syntax i))
+            (modify-category-entry i ?s table)
+          (modify-category-entry i ?s table t))
+        (setq i (1+ i)))))
+  :custom
+  `((company-require-match             . 'never)
+    (company-minimum-prefix-length     . 4)
+    (company-idle-delay                . 0)
+    (company-show-numbers              . t)
+    (company-selection-wrap-around     . t)
+    (company-tooltip-align-annotations . t)
+    (company-dabbrev-char-regexp       . "\\cs")
+    (company-dabbrev-downcase          . nil)
+    (company-backends . '(company-dabbrev
+                          company-capf
+                          company-semantic
+                          company-files
+                          (company-dabbrev-code
+                           company-gtags
+                           company-etags
+                           company-keywords)))
+    )
+  :bind
+  ((:company-active-map
+    ("C-n"     . company-select-next)
+    ("C-p"     . company-select-previous)
+    ("C-s"     . company-filter-candidates)
+    ("C-<tab>" . company-complete-common-or-cycle)
+    ("<tab>"   . company-indent-or-complete-common)
+    )
+   (:company-search-map
+    ("C-p" . company-select-previous)
+    ("C-n" . company-select-next)))
+  :hook
+  `((after-init-hook       . global-company-mode)
+    (minibuffer-setup-hook . ,(lambda ()
+                                (company-mode -1)))
+    )
+  :config
+  ;; (my:edit-category-table-for-company-dabbrev)
+  ;; 二回呼べないのか…. うーん
+  ;;
+  ;; 同じbuffer内の内容を補完候補にする
+  (leaf company-same-mode-buffers
+    :el-get  zk-phi/company-same-mode-buffers
+    :after company
+    :commands company-same-mode-buffers-initialize
+    :config
+    (company-same-mode-buffers-initialize)
+    (push 'company-same-mode-buffers company-backends)
+    )
+  ;; fuzzy match
+  (leaf company-flx
+    :ensure t
+    :after company
+    :config
+    (company-flx-mode +1)
+    )
+  ;; 補完候補を統計情報に基き sort する
+  (leaf company-statistics
+    :ensure t
+    :custom
+    `((company-statistics-size . 2000)
+      (company-statistics-file
+       . ,(expand-file-name "company-statistics-cache.el" my:d:tmp))
+      (company-transformers
+       . (company-sort-by-statistics company-sort-by-backed-importance)))
+    :config
+    (company-statistics-mode)
+    )
+  ;; その他, 補完の backends
+  ;;; TeX
+  (leaf *company-backends-related-TeX
+    :if (and (executable-find "uplatex")
+             (executable-find "latexmk"))
+    :after company
+    :init
+    (leaf company-auctex :el-get  alexeyr/company-auctex)
+    (leaf company-reftex :ensure t)
+    (leaf company-math :ensure t)
+    ;;
+    (defun my:company-tex-setup ()
+      "enable some company backends"
+      (setq-local company-backends
+                  (append '((;; company-reftex
+                             company-reftex-labels
+                             company-reftex-citations
+                             ;; company-auctex
+                             company-auctex-macros
+                             company-auctex-symbols
+                             company-auctex-environments
+                             ;; company-math
+                             company-math-symbols-latex
+                             company-latex-commands))
+                          company-backends)))
+    :hook (TeX-mode-hook . my:company-tex-setup)
+    )
+  )
+  #+end_src
+* SOMEDAY テンプレート補完: =yasnippet=
+  :PROPERTIES:
+  :CUSTOM_ID: orgffdbe5ff
+  :END:
+  暴発することが多いので利用停止中. 便利そうではあるんだけれど….
+  #+begin_src emacs-lisp :tangle init.el
+  (leaf yasnippet
+    :ensure t
+    :blackout t
+    :disabled t
+    :init
+    (leaf yasnippet-snippets :ensure t)
+    ;; (unless (file-directory-p (expand-file-name "snippets" my:d:share))
+    ;;   (make-directory (expand-file-name "snippets" my:d:share)))
+    :custom
+    `((yas-indent-line  . 'fixed)
+      ;; (yas-snippet-dirs . '(,(expand-file-name "snippets" my:d:share))))
+      )
+    :bind ((:yas-keymap
+            ("C-<tab>" . nil)
+            ("<tab>"   . nil))  ; for company
+           (:yas-minor-mode-map
+            ("<tab>"   . nil)
+            ("C-<tab>" . nil)
+            ("C-c y e" . yas-expand)
+            ("C-c y i" . yas-insert-snippet)
+            ("C-c y n" . yas-new-snippet)
+            ("C-c y v" . yas-visit-snippet-file)
+            ("C-c y l" . yas-describe-tables)
+            ("C-c y g" . yas-reload-all)))
+    :hook (after-init-hook . yas-global-mode)
+    :config
+    (add-to-list 'company-backends 'company-yasnippet)
+    )
+  #+end_src
+* SOMEDAY 入力内容の on-the-fly check =flymake= [/]
+  :PROPERTIES:
+  :CUSTOM_ID: org7e4132ea
+  :END:
+  同様のツールに =flycheck= があり, こっちが後発でイロイロと設定済みだったりするのだけれど
+  煩すぎて結局沢山設定を書くハメになるし, =flymake= 自体は Emacs に built-in なので, こっちを使う.
+  #+begin_src emacs-lisp tangle :init.el
+(leaf flymake
+  :ensure t
+  :init
+  (leaf flymake-quickdef :ensure t)
+  )
+  #+end_src
+  - [ ] =project.el= と連携させたい.
+* LSP: =eglot=
+  :PROPERTIES:
+  :CUSTOM_ID: orge81b8e94
+  :END:
+  Language Protocol Server のクライアントとしては =lsp-mode= もあるけれども,
+  [[https://github.com/joaotavora/eglot][eglot]]の方が依存が少ない(もしくは built-in に依存している)かつ軽量なので好み.
+  #+begin_src emacs-lisp :tangle init.el
+(leaf eglot
+  :if (and (executable-find "fortls")
+           (executable-find "digestif"))
+  :ensure t
+  :hook
+  ((f90-mode-hook   . eglot-ensure)
+   (LaTeX-mode-hook . eglot-ensure))
+  :config
+  (add-to-list 'eglot-server-programs
+               '(f90-mode . ("fortls")))
+               ;; '(f90-mode . ("fortls" "--nthreads 1 "))
+  )
+  #+end_src
 * Org-mode
   :PROPERTIES:
   :CUSTOM_ID: org7b7eccc9
@@ -3422,16 +3642,17 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     (set (make-local-variable 'time-stamp-end)   "\$")
     )
   ;; GTD: TODO→...→DONE としたエントリを =Arhive.org= に移動
-  (defun my:org-archive-done-tasks ()
-    (interactive)
-    (org-map-entries 'org-archive-subtree "/DONE" 'file))
+  ;; (defun my:org-archive-done-tasks ()
+  ;;   (interactive)
+  ;;   (org-map-entries 'org-archive-subtree "/DONE" 'file))
   :hook
   `((org-mode-hook
      . ,(lambda ()
           (my:org-timestamp-hook)
           (leaf org-tempo :require t)))
-    (org-todo-statistics-hook       . my:org-archive-done-tasks)
-    (org-todo-after-statistics-hook . my:org-archive-done-tasks))
+    ;; (org-todo-statistics-hook       . my:org-archive-done-tasks)
+    ;; (org-todo-after-statistics-hook . my:org-archive-done-tasks)
+    )
   :custom
   `(;; Nextcloud に保存する
     (org-directory              . ,(expand-file-name my:d:org))
@@ -3441,6 +3662,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     (org-startup-folded         . t)
     ;; 折り返し無し
     (org-startup-truncated      . t)
+    ;; インデントする
+    (org-adapt-indentation      . t)
     ;; link handler → xdg-open 任せ
     (org-file-apps-defaults     . '((remote . emacs)
                                     (system . "xdg-open %s")
@@ -3475,8 +3698,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                                     ("IGNORE"     . ?i)
                                     ("PLANNED"    . ?p)
                                     ))
-    ;; DONE → Archive.org に移動
-    (org-archive-location       . "Archive.org::")
+    ;; Archive.org の位置指定
+    (org-archive-location       . ,(expand-file-name "Archive.org::" my:d:org))
     ;; modules → とりあえずクリアしておく
     (org-modules  . '())
     )
@@ -3693,8 +3916,8 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
             #'my:org-agenda-finalize-font-lock)
   ;;
   (setq org-agenda-span 'week
+        org-agenda-start-on-weekday nil
         org-agenda-format-date "%Y/%m/%d (%a)"
-        org-agenda-start-on-weekday 0
         org-agenda-weekend-days '(0)
         org-agenda-repeating-timestampo-show-all t
         org-agenda-day-face-function 'my:org-agenda-day-face-function
@@ -3711,7 +3934,6 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
                   ((org-agenda-prefix-format " %i %-22:c")))
             (todo "WAIT"
                   ((org-agenda-prefix-format " %i %-22:c")))
-
             (todo "SOMEDAY"
                   ((org-agenda-prefix-format " %i %-22:c")))
             ))
@@ -3770,25 +3992,18 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    機能が豊富なのだが, イマイチ使いこなせていない.
    #+begin_src emacs-lisp :tangle init.el
 (leaf org-journal
-  :if (and (file-directory-p my:d:org)
-           (>= emacs-major-version 25))
-  ;; :commands my:org-journal-new-entry
+  :if (file-directory-p my:d:org)
   :commands org-journal-new-entry
+  :advice '((:before org-journal-new-entry tab-bar-new-tab-to))
   ;; :bind ((:org-journal-mode-map
   ;;         ("C-c C-c" . my:org-journal-entry-save-and-exit)))
   :ensure t
   :init
-  ;; (defun my:org-journal-new-entry (prefix &optional time)
-  ;;   "Add new journal entry on new elscreen"
-  ;;   (interactive "P")
-  ;;   (elscreen-create)
-  ;;   (org-journal-new-entry nil time))
-  ;;
   ;; (defun my:org-journal-entry-save-and-exit ()
-  ;;   "Save journal entry and close elscreen buffer"
+  ;;   "Save journal entry and close tab"
   ;;   (interactive)
   ;;   (save-buffer)
-  ;;   (elscreen-kill))
+  ;;   (tab-close))
   :hook
   ((org-journal-mode-hook
     . (lambda()
@@ -3806,6 +4021,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     (org-journal-find-file                 . 'find-file)
     (org-journal-carryover-delete-empty-journal . 'ask)
     (org-journal-start-on-weekday          . 0) ;; sunday
+    ;; (org-jorunal-enable-agenda-integration . t)
     )
   :config
   (eval-and-compile 'browse-url)
@@ -3823,7 +4039,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   :if (file-directory-p my:d:org)
   :commands org-capture
   :pl-setq
-  (my:org:calendar1 my:org:calendar2)   ;; 名前がイケてないっ!
+  (my:org:calendar1 my:org:calendar2 my:org:calendar3)   ;; 名前がイケてないっ!
   :config
   (defun my:org-journal-add-date-entry-capture ()
     (org-journal-new-entry t)
@@ -3863,6 +4079,13 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
           ("u" "仕事予定表スケジュールを追加" plain
            (file ,(expand-file-name "Univ.org" my:d:org))
            "* %^{prompt}\n  :PROPERTIES:\n  :calendar-id: %(format \"%s\" my:org:calendar2)\n  :END:\n  :org-gcal:\n%?\n%i\n  :END:"
+           :prepend nil
+           :unnarrowed nil
+           :kill-buffer t
+           )
+          ("g" "GFDスケジュールを追加" plain
+           (file ,(expand-file-name "GFD.org" my:d:org))
+           "* %^{prompt}\n  :PROPERTIES:\n  :calendar-id: %(format \"%s\" my:org:calendar3)\n  :END:\n  :org-gcal:\n%?\n%i\n  :END:"
            :prepend nil
            :unnarrowed nil
            :kill-buffer t
@@ -3919,7 +4142,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     (org-gcal-notify-p     . nil)
     (org-gcal-remove-api-cancelled-evetnts . t)
     (org-gcal-remove-events-with-cancelled-todo . t)
-    ;;
+    (org-gcal-remove-api-cancelled-events  . t)
     (alert-log-messages    . t)
     (alert-default-style   .'libnotify))
   :pl-setq
@@ -4179,26 +4402,26 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
 pdfauthor={%a},
 pdftitle={%t},
 pdfkeywords={%k},
-pdfsubject={%d},
+pdfsubject={%s},
 pdfcreator={%c},
-pdflang={%L},
-colorlinks,
-}")
+pdflang={%l},
+colorlinks}
+")
     (org-latex-classes
      . '(("my:uplatex"
-          "\\documentclass[a4j,uplatex]{jsarticle}
+          "\\RequirePackage{plautopatch}\n\\documentclass[a4j,uplatex]{jsarticle}
             [NO-DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
           ("\\section\{%s\}" . "\\section*\{%s\}")
           ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
           ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
          ("my:jlreq"
-          "\\documentclass{jlreq}
+          "\\RequirePackage{plautopatch}\n\\documentclass{jlreq}
             [NO-DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
           ("\\section\{%s\}" . "\\section*\{%s\}")
           ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
           ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
          ("my:beamer"
-          "\\documentclass[dvipdfmx,presentation]{beamer}
+          "\\RequirePackage{plautopatch}\n\\documentclass[dvipdfmx,presentation]{beamer}
              [NO-DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
           ("\\section\{%s\}" . "\\section*\{%s\}")
           ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
@@ -4276,62 +4499,6 @@ colorlinks,
     )
   )
   #+end_src
-* 関数定義を辿る: =dump-jump=, =smart-jump=
-  :PROPERTIES:
-  :CUSTOM_ID: org710c040c
-  :END:
-  あまり上手く使えていない.
-  #+begin_src emacs-lisp :tangle init.el
-(leaf dumb-jump
-  :disabled t
-  :if (executable-find "rg")
-  :ensure t
-  :bind (("M-g o" . dumb-jump-go-other-window)
-         ("M-g j" . dumb-jump-go)
-         ("M-g i" . dumb-jump-go-prompt)
-         ("M-g x" . dumb-jump-go-prefer-external)
-         ("M-g z" . dumb-jump-go-prefer-external-other-window))
-  :custom '((dumb-jump-selector       . 'ido)
-            (dumb-jump-force-searcher . 'rg))
-  )
-(leaf smart-jump
-  :disabled t
-  :ensure t
-  :config
-  (smart-jump-setup-default-registers)
-  )
-  #+end_src
-* SOMEDAY テンプレート補完: =yasnippet= [0/1]
-  :PROPERTIES:
-  :CUSTOM_ID: orgffdbe5ff
-  :END:
-  #+begin_src emacs-lisp :tangle init.el
-  (leaf yasnippet
-    :ensure t
-    :blackout t
-    :disabled t
-    :custom
-    `((yas-indent-line  . 'fixed)
-      (yas-snippet-dirs . '(,(expand-file-name "snippets" my:d:share))))
-    :hook (after-init-hook . yas-global-mode)
-    :bind ((:yas-keymap
-            ("C-<tab>" . nil)
-            ("<tab>"   . nil))  ; for company
-           (:yas-minor-mode-map
-            ("<tab>"   . nil)
-            ("C-<tab>" . nil)
-            ("C-c y e" . yas-expand)
-            ("C-c y i" . yas-insert-snippet)
-            ("C-c y n" . yas-new-snippet)
-            ("C-c y v" . yas-visit-snippet-file)
-            ("C-c y l" . yas-describe-tables)
-            ("C-c y g" . yas-reload-all)))
-    :init
-    (leaf yasnippet-snippets :ensure t)
-    (leaf yatemplate :ensure t)
-    )
-  #+end_src
-  - [ ] 意図しない所で発火してテンプレートが挿入されてしまうので保留中
 * TeX: =AUCTeX=
   :PROPERTIES:
   :CUSTOM_ID: org88a3cb1b
@@ -4521,27 +4688,34 @@ colorlinks,
   :END:
   読み込むだけの mode の設定. 設定が増えたら別途まとめる。
   #+begin_src emacs-lisp :tangle init.el
+(leaf flycheck
+  :disabled t
+  :ensure t
+  ;; :custom
+  ;; `((flycheck-disabled-checkers . '(emacs-lisp-checkdoc))
+  ;;  )
+  :hook (prog-mode-hook . flycheck-mode)
+  :config
+  (setq-default flycheck-disabled-checkers '(emacs-lisp-checkdoc))
+  (leaf flycheck-inline
+    :ensure t
+    :hook (flycheck-mode-hook . flycheck-inline-mode))
+  (flycheck-define-checker
+      textlint
+    "A linter for prose."
+    :command ("textlint-wrapper.sh" source)
+    :error-patterns
+    ((warning line-start (file-name) ":" line ":" column ": "
+              (id (one-or-more (not (any " "))))
+              (message (one-or-more not-newline)
+                       (zero-or-more "\n" (any " ") (one-or-more not-newline)))
+              line-end))
+    :modes (text-mode markdown-mode gfm-mode wl-draft-mode))
+  (add-to-list 'flycheck-checkers 'textlint)
+  )
+
 (leaf *misc-mode
   :init
-  (leaf flycheck
-    :disabled t
-    :ensure t
-    :config
-    (flycheck-define-checker
-     textlint
-     "A linter for prose."
-     :command ("textlint" "--format" "unix"
-               ;; "--rule" "no-mix-dearu-desumasu" "--rule" "max-ten" "--rule" "spellcheck-tech-word"
-               source-inplace)
-     :error-patterns
-     ((warning line-start (file-name) ":" line ":" column ": "
-               (id (one-or-more (not (any " "))))
-               (message (one-or-more not-newline)
-                        (zero-or-more "\n" (any " ") (one-or-more not-newline)))
-               line-end))
-     :modes (text-mode markdown-mode gfm-mode wl-draft-mode))
-    (add-to-list 'flycheck-checkers 'textlint)
-    )
   (leaf debian-el
     :custom
     `((debian-bug-download-directory . "~/Downloads"))
@@ -4598,99 +4772,6 @@ colorlinks,
   :hook (ssh-config-mode . turn-on-font-lock)
   )
    #+end_src
-* 言語毎の補完: =company-mode=
-  :PROPERTIES:
-  :CUSTOM_ID: org935a4dbf
-  :END:
-  まだうまく使いこなせていない．
-  - [[https://qiita.com/wktkshn/items/3ac46671d1c242a59f7e][company-dabbrevで日本語を補完しない]]
-  を有効にしてみたが, これで良いのかしら...?
-  #+begin_src emacs-lisp :tangle init.el
-(leaf company
-  :ensure t
-  :blackout t
-  :custom
-  ((company-require-match             . 'never)
-   (company-minimum-prefix-length     . 4)
-   (company-idle-delay                . 0)
-   (company-selection-wrap-around     . t)
-   (company-tooltip-align-annotations . t)
-   (company-dabbrev-char-regexp       . "\\cs")
-   ;; disable some noisy default backends
-   (company-backends . '(company-files
-                         company-capf
-                         (company-dabbrev-code
-                          company-gtags
-                          company-etags
-                          company-keywords))))
-  :bind
-  (;; ("<tab>"    . company-indent-or-complete-common)
-   (:company-active-map
-    ("C-n"     . company-select-next)
-    ("C-p"     . company-select-previous)
-    ("C-s"     . company-filter-candidates)
-    ("C-<tab>" . company-complete-common-or-cycle)
-    ("<tab>"   . company-indent-or-complete-common)
-    )
-   (:company-search-map
-    ("C-p" . company-select-previous)
-    ("C-n" . company-select-next)))
-  :hook
-  `((after-init-hook       . global-company-mode)
-    (minibuffer-setup-hook . ,(lambda ()
-                                (company-mode -1)))
-    (TeX-mode-hook
-     . edit-category-table-for-company-dabbrev))
-  :init
-  (defun my:edit-category-table-for-company-dabbrev (&optional table)
-    (define-category ?s "word constituents for company-dabbrev" table)
-    (let ((i 0))
-      (while (< i 128)
-        (if (equal ?w (char-syntax i))
-            (modify-category-entry i ?s table)
-          (modify-category-entry i ?s table t))
-        (setq i (1+ i)))))
-  )
-(leaf company-flx
-  :ensure t
-  :after company
-  :config
-  (company-flx-mode +1)
-  )
-(leaf company-statistics
-  :disabled t
-  :ensure t
-  :custom
-  `((company-statistics-size . 2000)
-    (company-statistics-file
-     . ,(expand-file-name "company-statistics-cache.el" my:d:tmp))
-    (company-transformers
-     . (company-sort-by-statistics company-sort-by-backed-importance)))
-  :config
-  (company-statistics-mode)
-  )
-  #+end_src
-  - [X] [[https://github.com/TheBB/company-reftex][TheBB/company-reftex]]
-  - [X] [[https://github.com/vspinu/company-math][vspinu/company-math]]
-  - [X] [[https://github.com/alexeyr/company-auctex][alexeyr/company-auctex]]
-* LSP: =eglot=
-  :PROPERTIES:
-  :CUSTOM_ID: orge81b8e94
-  :END:
-  Language Protocol Server のクライアントとしては =lsp-mode,lsp-ui= もあるが,
-  [[https://github.com/joaotavora/eglot][eglot]]の方が依存が少なくて軽量なので好み.
-  #+begin_src emacs-lisp :tangle init.el
-(leaf eglot
-  :if (executable-find "fortls")
-  :ensure t
-  :hook
-  ((f90-mode-hook . eglot-ensure))
-  :config
-  (add-to-list 'eglot-server-programs
-               '(f90-mode . ("fortls" "--nthreads 1 ")))
-
-  )
-  #+end_src
 * SOMEDAY 日記: =tDiary= [0/1]
   :PROPERTIES:
   :CUSTOM_ID: org9992a617
@@ -4735,13 +4816,13 @@ colorlinks,
   (interactive)
   (progn
     (set-face-attribute 'default nil
-                        :family "FSMRMP"
+                        :family "AGVRMP"
                         :height 220)
     (set-face-attribute 'fixed-pitch nil
-                        :family "FSMRMP"
+                        :family "AGVRMP"
                         :height 220)
     (set-face-attribute 'variable-pitch nil
-                        :family "FSMRMP"
+                        :family "AGVRMP"
                         :height 220)
     ;; Japanese
     (set-fontset-font nil
@@ -4828,8 +4909,8 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
 |abcdefghijkl|
 |ABCDEFGHIJKL|
 |'";:-+=/\~`?|
-|∞≤≥∏∑∫|
-|×±≒≡⊆⊇|  ← GUI だと一部半角になる
+|∞≤≥∏∑∫|  ← GUI だと半角になる
+|×±≒≡⊆⊇|  ← GUI だと半角になる
 |αβγδεζ|  ← GUI だと半角になる
 |ηθικλμ|  ← GUI だと半角になる
 |ΑΒΓΔΕΖ|  ← GUI だと半角になる
@@ -4942,6 +5023,11 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
        ;; shell の lscolors に揃える.
        `(dired-directory ((,class :foreground "#7f7fff" :bold t)))
        ;;
+       ;; w3m
+       `(w3m-anchor          ((,class :inherit 'link)))
+       `(w3m-arrived-anchor  ((,class :inherit 'link-visited)))
+       `(w3m-error           ((,class :inherit 'error)))
+       ;;
        ;; wanderlust
        `(wl-highlight-folder-closed-face                  ((,class ,@(modus-themes--syntax-string green-alt-other green-alt-other green-alt-other green-alt-other ))))
        `(wl-highlight-folder-few-face                     ((,class ,@(modus-themes--syntax-string red-alt-other red-alt-other red-alt-other red-alt-other ))))
@@ -5037,7 +5123,7 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
     (modus-themes-diffs                   . nil) ;; default
     (modus-themes-org-blocks              . nil) ;; default
     (modus-themes-org-agenda              . '((t . nil)))
-    (modus-themes-headings                . '((t . rainbow)))
+    (modus-themes-headings                . '((t . (rainbow))))
     (modus-themes-scale-headings          . nil)
     (modus-themes-variable-pitch-ui       . nil)
     (modus-themes-variable-pitch-headings . nil)
@@ -5065,30 +5151,47 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
                                 :height 1.0)
         icon)))
   ;;
-  (defun my:powerline-ddskk ()
-    "skkが読み込まれていなくても状態を表示"
+  (defun my:skk-init-modeline-input-mode ()
+    "Custom skkが読み込まれていなくても skk-modeline-input-mode に値を設定"
     (cond
      ((not (boundp 'skk-modeline-input-mode))
-      (setq skk-modeline-input-mode "--[--]:"))
+      (setq skk-modeline-input-mode "--SKK"))
      (t skk-modeline-input-mode)))
+  ;;
+  (defun my:skk-modeline-input-mode ()
+    "Custom: powerline 用に skk の indicator を準備"
+    (cond
+     ((string-match "--SKK" skk-modeline-input-mode) "[--]")
+     ((string-match skk-hiragana-mode-string skk-modeline-input-mode) "[あ]")
+     ((string-match skk-katakana-mode-string skk-modeline-input-mode) "[ア]")
+     ((string-match skk-latin-mode-string skk-modeline-input-mode)    "[_A]")
+     ((string-match skk-jisx0208-latin-mode-string skk-modeline-input-mode) "[Ａ]")
+     ((string-match skk-jisx0201-mode-string skk-modeline-input-mode) "[_ｱ]")
+     ((string-match skk-abbrev-mode-string skk-modeline-input-mode)   "[aA]")
+     (t "[--]")
+     )
+    )
   ;;
   (defun my:skk-setup-modeline ()
     "skk-setup-modeline による modeline の更新を無効化"
     (setq skk-indicator-alist (skk-make-indicator-alist))
     (force-mode-line-update t))
-
+  ;;
   :advice (:override skk-setup-modeline my:skk-setup-modeline)
   :custom
-  `((powerline-buffer-size-suffix  . nil)
-    (powerline-display-hud         . nil)
-    (powerline-display-buffer-size . nil)
-    (powerline-text-scale-factor   .  1)
+  `((powerline-buffer-size-suffix    . nil)
+    (powerline-display-hud           . nil)
+    (powerline-display-buffer-size   . nil)
+    (powerline-text-scale-factor     .  1)
+    (powerline-default-separator     . 'utf-8)
+    (powerline-utf-8-separator-left  . #xe0b0)
+    (powerline-utf-8-separator-right . #xe0b2)
     )
   :config
   (defun my:powerline-theme ()
     "Setup the default mode-line."
     (interactive)
-    (my:powerline-ddskk)
+    (my:skk-init-modeline-input-mode)
     (setq-default
      mode-line-format
      '("%e"
@@ -5099,14 +5202,22 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
                (face0 (if active 'powerline-active0 'powerline-inactive0))
                (face1 (if active 'powerline-active1 'powerline-inactive1))
                (face2 (if active 'powerline-active2 'powerline-inactive2))
-               (lhs (list (powerline-raw (substring skk-modeline-input-mode 2 -1) mode-line 'l)
+               (separator-left (intern (format "powerline-%s-%s"
+                                               (powerline-current-separator)
+                                               (car powerline-default-separator-dir))))
+               (separator-right (intern (format "powerline-%s-%s"
+                                                (powerline-current-separator)
+                                                (cdr powerline-default-separator-dir))))
+               (lhs (list (powerline-raw (format "%s" (my:skk-modeline-input-mode)) mode-line 'l)
                           (powerline-raw "%*" mode-line 'l)
                           (powerline-raw mode-line-mule-info mode-line 'l)
                           (powerline-raw (my:major-mode-icon major-mode) mode-line 'l)
                           (powerline-buffer-id mode-line-buffer-id 'l)
                           (powerline-raw " ")
+                          ;; (funcall separator-left face0 face1)
                           ))
                (rhs (list (powerline-raw global-mode-string face1 'r)
+                          ;; (funcall separator-right face2 face1)
                           (powerline-vc face1 'r)
                           (powerline-raw mode-line-misc-info 'r)
                           (powerline-raw " ")
@@ -5124,6 +5235,18 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
   :CUSTOM_ID: orgd89ceb4b
   :END:
   #+begin_src emacs-lisp :tangle init.el
+(leaf which-key
+  :ensure t
+  :custom
+  `((which-key-show-early-on-C-h    . t)
+    (which-key-idle-delay           . 10000)
+    (which-key-idle-secondary-delay . 0.05)
+    (which-key-popup-type           . 'minibuffer)
+    )
+  :hook (after-init-hook . which-key-mode)
+  )
+;; (leaf tree-sitter :ensure t)
+;; (leaf tree-sitter-langs :ensure t)
 (leaf rg
   :if (executable-find "rg")
   :ensure t

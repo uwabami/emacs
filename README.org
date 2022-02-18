@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2022-02-18 14:45:44
+#+date: 2022-02-18 16:27:31
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -4371,28 +4371,10 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     :PROPERTIES:
     :CUSTOM_ID: org4d9c6533
     :END:
+    LaTeX 関連
     #+begin_src emacs-lisp :tangle init.el
 (leaf ox-latex
   :after ox
-  :preface
-  :init
-  (leaf ox-beamer
-    :custom
-    `((org-beamer-frame-level . 2)
-      (org-beamer-frame-default-options . "fragile,squeeze,c")
-      (org-latex-compiler . "latexmk -pvc")
-      )
-    :config
-    ;; for Beamer
-    (add-to-list 'org-export-options-alist
-                 '(:shortdate    "SHORTDATE"   nil nil))
-    (add-to-list 'org-export-options-alist
-                 '(:shorttitle   "SHORTTITLE"  nil nil))
-    (add-to-list 'org-export-options-alist
-                 '(:shortauthor  "SHORTAUTHOR" nil nil))
-    (add-to-list 'org-export-options-alist
-                 '(:institute    "INSTITUTE"   nil nil))
-    )
   :custom
   `((org-latex-default-class . "my:uplatex")
     (org-latex-pdf-process   . '("latexmk -pvc %f"))
@@ -4426,6 +4408,145 @@ colorlinks}
           ("\\section\{%s\}" . "\\section*\{%s\}")
           ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
           ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))))
+    )
+  )
+    #+end_src
+    Beamer 関連: =SHORT= 系を追加している
+    #+begin_src emacs-lisp :tangle init.el
+(leaf ox-beamer
+  :after ox-latex
+  :init
+  (add-to-list 'org-export-options-alist
+               '(:shortdate     "SHORT_DATE"       nil nil))
+  (add-to-list 'org-export-options-alist
+               '(:shorttitle    "SHORT_TITLE"      nil nil))
+  (add-to-list 'org-export-options-alist
+               '(:shortauthor   "SHORT_AUTHOR"     nil nil))
+  (add-to-list 'org-export-options-alist
+               '(:institute      "INSTITUTE"       nil nil))
+  (add-to-list 'org-export-options-alist
+               '(:shortinstitute "SHORT_INSTITUTE" nil nil))
+  (add-to-list 'org-latex-classes
+               '("my:beamer"
+                 "\\RequirePackage{plautopatch}\n\\documentclass[dvipdfmx,presentation]{beamer}
+             [NO-DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
+                 ("\\section\{%s\}" . "\\section*\{%s\}")
+                 ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
+                 ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}")))
+  ;; customize
+  (defun my:org-beamer-template (contents info)
+    "Custom: support shortdate, shorttile, shortauthor, institute for beamer export"
+    (let ((title (org-export-data (plist-get info :title) info))
+	      (subtitle (org-export-data (plist-get info :subtitle) info)))
+      (concat
+       ;; Time-stamp.
+       (and (plist-get info :time-stamp-file)
+	        (format-time-string "%% Created %Y-%m-%d %a %H:%M\n"))
+       ;; LaTeX compiler
+       (org-latex--insert-compiler info)
+       ;; Document class and packages.
+       (org-latex-make-preamble info)
+       ;; Insert themes.
+       (let ((format-theme
+	          (lambda (prop command)
+	            (let ((theme (plist-get info prop)))
+		          (when theme
+		            (concat command
+			                (if (not (string-match "\\[.*\\]" theme))
+			                    (format "{%s}\n" theme)
+			                  (format "%s{%s}\n"
+				                      (match-string 0 theme)
+				                      (org-trim
+				                       (replace-match "" nil nil theme))))))))))
+         (mapconcat (lambda (args) (apply format-theme args))
+		            '((:beamer-theme "\\usetheme")
+		              (:beamer-color-theme "\\usecolortheme")
+		              (:beamer-font-theme "\\usefonttheme")
+		              (:beamer-inner-theme "\\useinnertheme")
+		              (:beamer-outer-theme "\\useoutertheme"))
+		            ""))
+       ;; Possibly limit depth for headline numbering.
+       (let ((sec-num (plist-get info :section-numbers)))
+         (when (integerp sec-num)
+	       (format "\\setcounter{secnumdepth}{%d}\n" sec-num)))
+       ;; Author.
+       (let ((author (and (plist-get info :with-author)
+			              (let ((auth (plist-get info :author)))
+			                (and auth (org-export-data auth info)))))
+             (shortauthor (plist-get info :shortauthor))
+	         (email (and (plist-get info :with-email)
+		                 (org-export-data (plist-get info :email) info))))
+         (cond ((and author shortauthor) (format "\\author[%s]{%s}\n" shortauthor author))
+               ((and author shortauthor email (not (string= "" email)))
+                (format "\\author[%s]{%s\\thanks{%s}}\n" shortauthor author email))
+               ((and author email (not (string= "" email)))
+	            (format "\\author{%s\\thanks{%s}}\n" author email))
+	           ((or author email) (format "\\author{%s}\n" (or author email)))))
+       ;; Date.
+       (let ((date (and (plist-get info :with-date) (org-export-get-date info)))
+             (shortdate (plist-get info :shortdate)))
+         (cond ((and date shortdate)
+                (format "\\date[%s]{%s}\n" shortdate (org-export-data date info)))
+               (t (format "\\date{%s}\n" (org-export-data date info)))))
+       ;; Title
+       (let ((shorttitle (plist-get info :shorttitle)))
+         (cond ((and title shorttitle) (format "\\title[%s]{%s}\n" shorttitle title))
+               (t (format "\\title{%s}\n" title))))
+       ;; institute
+       (let ((institute (plist-get info :institute))
+             (shortinstitute (plist-get info :shortinstitute)))
+         (cond ((and institute shortinstitute)
+                (format "\\institute[%s]{%s}\n" shortinstitute institute))
+               ((or institute shortinstitute)
+                (format "\\institute{%s}\n" (or shortinstitute institute)))))
+       (when (org-string-nw-p subtitle)
+         (concat (format (plist-get info :beamer-subtitle-format) subtitle) "\n"))
+       ;; Beamer-header
+       (let ((beamer-header (plist-get info :beamer-header)))
+         (when beamer-header
+	       (format "%s\n" (plist-get info :beamer-header))))
+       ;; 9. Hyperref options.
+       (let ((template (plist-get info :latex-hyperref-template)))
+         (and (stringp template)
+	          (format-spec template (org-latex--format-spec info))))
+       ;; Document start.
+       "\\begin{document}\n\n"
+       ;; Title command.
+       (org-element-normalize-string
+        (cond ((not (plist-get info :with-title)) nil)
+	          ((string= "" title) nil)
+	          ((not (stringp org-latex-title-command)) nil)
+	          ((string-match "\\(?:[^%]\\|^\\)%s"
+			                 org-latex-title-command)
+	           (format org-latex-title-command title))
+	          (t org-latex-title-command)))
+       ;; Table of contents.
+       (let ((depth (plist-get info :with-toc)))
+         (when depth
+	       (concat
+	        (format "\\begin{frame}%s{%s}\n"
+		            (org-beamer--normalize-argument
+		             (plist-get info :beamer-outline-frame-options) 'option)
+		            (plist-get info :beamer-outline-frame-title))
+	        (when (wholenump depth)
+	          (format "\\setcounter{tocdepth}{%d}\n" depth))
+	        "\\tableofcontents\n"
+	        "\\end{frame}\n\n")))
+       ;; Document's body.
+       contents
+       ;; Creator.
+       (if (plist-get info :with-creator)
+	       (concat (plist-get info :creator) "\n")
+         "")
+       ;; Document end.
+       "\\end{document}")))
+  ;;
+  :advice ((:override org-beamer-template
+                      my:org-beamer-template))
+  :custom
+  `((org-beamer-frame-level . 2)
+    (org-beamer-frame-default-options . "fragile,squeeze,c")
+    (org-latex-compiler . "latexmk -pvc")
     )
   )
     #+end_src

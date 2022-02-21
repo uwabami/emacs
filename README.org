@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2022-02-18 16:27:31
+#+date: 2022-02-21 11:42:04
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -65,7 +65,29 @@ init.el: README.org
    :CUSTOM_ID: orgae182d4d
    :END:
    この辺は [[https://emacs-jp.github.io/tips/startup-optimization][Emacs の起動時間を""詰める""]] を参考に.
-   設定は =early-init.el= に移動した方が良いのかもしれないかな.
+*** =early-init.el=
+    :PROPERTIES:
+    :CUSTOM_ID: orgcb2bfa7b
+    :END:
+    Emacs >= 27 からの機能.
+    #+begin_src emacs-lisp :tangle early-init.el
+(setq gc-cons-threshold most-positive-fixnum)
+(setq package-enable-at-startup nil)
+(setq package-quickstart nil)
+(push '(vertical-scroll-bars . nil) default-frame-alist)
+(push '(menu-bar-lines       . nil) default-frame-alist)
+(push '(tool-bar-lines       . nil) default-frame-alist)
+(push '(scroll-bar-mode      . nil) default-frame-alist)
+(push '(blink-cursor-mode    . nil) default-frame-alist)
+(push '(column-number-mode   . nil) default-frame-alist)
+(setq load-prefer-newer noninteractive)
+(setq frame-inhibit-implied-resize t)
+(setq site-run-file nil)
+(setq file-name-handler-alist nil)
+(setq use-file-dialog nil)
+(provide 'early-init)
+;;; early-init.el ends here
+    #+end_src
 *** Emacs Profiler
     :PROPERTIES:
     :CUSTOM_ID: org373f7f70
@@ -100,7 +122,7 @@ init.el: README.org
 
     とはいえ, デフォルト値のままだと
     起動時に結構 garbage-collect が走って遅くなるので,
-    起動時は =most-positive-fixnum= にしておいて,
+    起動時と =early-init= では =most-positive-fixnum= にしておいて,
     起動後に =emacs-startup-hook= で default に戻すようにしてみた.
 
     ついでに =idle-timer= で入力が無い時に GC を走らせることに.
@@ -112,26 +134,6 @@ init.el: README.org
 (add-hook 'emacs-startup-hook
           (lambda ()
             (setq gc-cons-threshold my:default-gc-cons-threshold)))
-    #+end_src
-*** =early-init.el=
-    :PROPERTIES:
-    :CUSTOM_ID: orgcb2bfa7b
-    :END:
-    Emacs >= 27 からの機能だが, いまいち使い方がわからん.
-    #+begin_src emacs-lisp :tangle early-init.el
-(push '(vertical-scroll-bars . nil) default-frame-alist)
-(push '(menu-bar-lines       . nil) default-frame-alist)
-(push '(tool-bar-lines       . nil) default-frame-alist)
-(push '(scroll-bar-mode      . nil) default-frame-alist)
-(push '(blink-cursor-mode    . nil) default-frame-alist)
-(push '(column-number-mode   . nil) default-frame-alist)
-(setq load-prefer-newer noninteractive)
-(setq frame-inhibit-implied-resize t)
-(setq site-run-file nil)
-;; (Setq window-divider-default-right-width 3)
-(setq package-enable-at-startup nil)
-(provide 'early-init)
-;;; early-init.el ends here
     #+end_src
 ** ディレクトリ構成の修正
    :PROPERTIES:
@@ -978,36 +980,17 @@ init.el: README.org
 (leaf recentf
   :defun
   (recentf-save-list recentf-cleanup)
-  :preface
-  (leaf shut-up
-    :ensure t
-    :init
-    (defvar shut-up-ignore t))
-  ;;
-  (defun my:recentf-save-list-silence ()
-    "Shut up"
-    (interactive)
-    (let ((message-log-max nil))
-      (shut-up (recentf-save-list)))
-    (message ""))
-  ;;
-  (defun my:recentf-cleanup-silence ()
-    "Shut up"
-    (interactive)
-    (let ((message-log-max nil))
-      (shut-up (recentf-cleanup)))
-    (message ""))
-  ;;
   :init
   (leaf recentf-ext :ensure t)
   :hook
   ((after-init-hook . recentf-mode)
-   (focus-out-hook  . my:recentf-save-list-silence)
-   (focus-out-hook  . my:recentf-cleanup-silence))
+   ;; (focus-out-hook  . my:recentf-save-list-silence)
+   ;; (focus-out-hook  . my:recentf-cleanup-silence)
+   )
   :custom
   `((recentf-save-file       . ,(expand-file-name "recentf" my:d:tmp))
-    (recentf-max-saved-items . 2000)
-    (recentf-auto-cleanup    . 'never)
+    (recentf-max-saved-items . 500)
+    (recentf-auto-cleanup    . 'mode)
     (recentf-exclude         . '(".recentf"
                                  "^/tmp\\.*"
                                  "^/private\\.*"
@@ -1088,7 +1071,7 @@ init.el: README.org
   +まあ, イマイチ慣れない訳ですけれど+
   #+begin_src emacs-lisp :tangle init.el
 (leaf *mac-encoding
-  :if (eq system-type 'darwin)
+  :disabled (not (eq system-type 'darwin))
   (leaf ucs-normalize
     :require t
     :defvar (mac-pass-control-to-system ns-command-modifier ns-alternate-modifier)
@@ -1108,11 +1091,11 @@ init.el: README.org
   :END:
   #+begin_src emacs-lisp
 (leaf *wsl2-path
-  :if (getenv "WSL_DISTRO_NAME")
+  :disabled (not (getenv "WSL_DISTRO_NAME"))
   :defvar drvfs-alist windows-path-style-regexp
   :init
   (defvar drvfs-alist nil)
-  (defvar windows-path-style-regexp "\\`\\(.*/\\)?\\([a-zA-Z]:\\\\.*\\|[a-zA-Z]:/.*\\|\\\\\\\\.*\\|//.*\\)")
+  (defconst windows-path-style-regexp "\\`\\(.*/\\)?\\([a-zA-Z]:\\\\.*\\|[a-zA-Z]:/.*\\|\\\\\\\\.*\\|//.*\\)")
   ;;
   (defun set-drvfs-alist ()
     (interactive)
@@ -1261,19 +1244,40 @@ init.el: README.org
   (after-init-hook . migemo-init)
   )
   #+end_src
-* =emacs-w3m=:
+* =quick-preview=
   :PROPERTIES:
-  :CUSTOM_ID: org2d69d5ee
+  :CUSTOM_ID: org925f904f
   :END:
-  #+begin_src emacs-lisp :tangle init.el
-(leaf emacs-w3m
-  :if (and (executable-find "w3m")
-           (file-directory-p "/usr/share/emacs/site-lisp/w3m/"))
-  :custom
-  `((w3m-fill-column . 72))
+  GNOME sushi を使って簡易 preview
+  #+begin_src emacs-lisp
+(leaf quick-preview
+  :if (executable-find "/usr/bin/sushi")
+  :ensure t
+  :defvar quick-preview-method
+  :preface
+  (defun my:quick-preview--sushi (filename)
+    (if filename
+        (if (executable-find (symbol-name quick-preview-method))
+            (dbus-call-method
+             :session
+             "org.gnome.NautilusPreviewer"
+             "/org/gnome/NautilusPreviewer"
+             "org.gnome.NautilusPreviewer"
+             "ShowFile"
+             :string (concat (when (file-exists-p filename) "file://") filename)
+             ;; :int32 (string-to-number (frame-parameter nil 'window-id))
+             :int32 (string-to-number (if window-system (frame-parameter nil 'window-id) "0"))
+             :boolean t)
+          (error (concat "command not found :"
+                         (symbol-name quick-preview-method))))
+      (error "file not found")))
+  :advice (:override quick-preview--sushi
+                     my:quick-preview--sushi)
+  :bind
+  (("C-c q" . quick-preview-at-point))
   )
   #+end_src
-* SOMEDAY =eww=: 内蔵ブラウザ [0/3]
+* =eww=: 内蔵ブラウザ
   :PROPERTIES:
   :CUSTOM_ID: org35bd4bc4
   :END:
@@ -1285,19 +1289,6 @@ init.el: README.org
     (make-directory (expand-file-name "eww" my:d:tmp)))
   :init
   (leaf ace-link :ensure t)
-  (leaf addressbar
-    :el-get (addressbar
-             :type github
-             :pkgname "lurdan/emacs-addressbar")
-    :custom
-    `((addressbar-persistent-history-directory
-       . ,(expand-file-name my:d:tmp))
-      (addressbar-ignore-url-regexp
-       . "\\(://duckduckgo\\.com/\\|google\\.com/search\\)")
-      (addressbar-search-command-alist
-       .  '("g" . "https://google.com/search?&gws_rd=cr&complete=0&pws=0&tbs=li:1&q="))
-      (addressbar-display-url-max-length . 60)
-      ))
   (leaf shr
     :custom
     ((shr-use-colors    . nil)
@@ -1314,11 +1305,11 @@ init.el: README.org
           ("]"   . eww-next-url)
           ("["   . eww-previous-url)
           ("g"   . eww-top-url)
-          ("+"   . my:eww-increase-width)
-          ("-"   . my:eww-decrease-width)
           ("h"   . backward-char)
           ("j"   . next-line)
+          ("C-n" . next-line)
           ("k"   . previous-line)
+          ("C-p" . previous-line)
           ("l"   . forward-char)
           ("/"   . isearch-forward)
           ("?"   . isearch-backward)
@@ -1330,33 +1321,14 @@ init.el: README.org
   `((eww-bookmarks-directory
      . ,(expand-file-name "eww" my:d:tmp))
     (eww-search-prefix
-     . "https://www.google.com/search?&gws_rd=cr&complete=0&pws=0&tbs=li:1&q="))
+     . "https://www.google.com/search?&gws_rd=cr&complete=0&pws=0&tbs=li:1&q=")
+    )
+  ;; :advice (:around eww-colorize-region
+  ;;                  my:shr-colorize-region--disable)
   :config
   (ace-link-setup-default)
-  ;; :init
-  ;; ;;
-  ;; (defun eww-disable-images ()
-  ;;   "ewwで画像表示させない"
-  ;;   (interactive)
-  ;;   (setq-local shr-put-image-function 'shr-put-image-alt)
-  ;;   (eww-reload))
-  ;; ;;
-  ;; (defun eww-enable-images ()
-  ;;   "ewwで画像表示させる"
-  ;;   (interactive)
-  ;;   (setq-local shr-put-image-function 'shr-put-image)
-  ;;   (eww-reload))
-  ;; (defun shr-put-image-alt (spec alt &optional flags)
-  ;;   (insert alt))
-  ;; ;;
-  ;; ;;
-  ;; (defun eww-mode-hook--disable-image ()
-  ;;   (setq-local shr-put-image-function 'shr-put-image-alt))
-  ;; (add-hook 'eww-mode-hook 'eww-mode-hook--disable-image)
   )
    #+end_src
-   - [ ] 背景色の指定
-   - [ ] 幅の強制
 * 日本語入力: =ddskk=
   :PROPERTIES:
   :CUSTOM_ID: orgb83f65a0
@@ -2170,10 +2142,10 @@ File.open(src, "r") {|f|
      #+begin_src emacs-lisp :tangle init-wl.el
 (leaf mime-setup
   :preface
-  (leaf w3m-load)
-  (leaf mime-w3m :require t)
-  ;; (setq mime-view-text/html-previewer 'shr
-  ;;       mime-setup-enable-inline-html 'shr)
+  ;; (leaf w3m-load)
+  ;; (leaf mime-w3m :require t)
+  (setq mime-view-text/html-previewer 'shr
+        mime-setup-enable-inline-html 'shr)
   ;; (defvar my:shr-width 72)
   ;; (defun my:shr-insert-document (&rest them)
   ;;   (let ((shr-width my:shr-width)) (apply them)))
@@ -3445,13 +3417,13 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :custom
   `((company-require-match             . 'never)
     (company-minimum-prefix-length     . 4)
-    (company-idle-delay                . 0)
+    ;; (company-idle-delay                . 3)
     (company-show-numbers              . t)
     (company-selection-wrap-around     . t)
     (company-tooltip-align-annotations . t)
     (company-dabbrev-char-regexp       . "\\cs")
     (company-dabbrev-downcase          . nil)
-    (company-backends . '(company-dabbrev
+    (company-backends . '(;; company-dabbrev
                           company-capf
                           company-semantic
                           company-files
@@ -3467,74 +3439,103 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     ("C-s"     . company-filter-candidates)
     ("C-<tab>" . company-complete-common-or-cycle)
     ("<tab>"   . company-indent-or-complete-common)
+    ("M-n"     . nil)
+    ("M-p"     . nil)
     )
    (:company-search-map
     ("C-p" . company-select-previous)
-    ("C-n" . company-select-next)))
+    ("C-n" . company-select-next)
+    ("M-n"     . nil)
+    ("M-p"     . nil)
+    ))
   :hook
   `((after-init-hook       . global-company-mode)
-    (minibuffer-setup-hook . ,(lambda ()
-                                (company-mode -1)))
     )
   :config
-  ;; (my:edit-category-table-for-company-dabbrev)
-  ;; 二回呼べないのか…. うーん
+  (my:edit-category-table-for-company-dabbrev)
   ;;
-  ;; 同じbuffer内の内容を補完候補にする
-  (leaf company-same-mode-buffers
-    :el-get  zk-phi/company-same-mode-buffers
-    :after company
-    :commands company-same-mode-buffers-initialize
-    :config
-    (company-same-mode-buffers-initialize)
-    (push 'company-same-mode-buffers company-backends)
-    )
-  ;; fuzzy match
-  (leaf company-flx
-    :ensure t
-    :after company
-    :config
-    (company-flx-mode +1)
-    )
-  ;; 補完候補を統計情報に基き sort する
-  (leaf company-statistics
-    :ensure t
-    :custom
-    `((company-statistics-size . 2000)
-      (company-statistics-file
-       . ,(expand-file-name "company-statistics-cache.el" my:d:tmp))
-      (company-transformers
-       . (company-sort-by-statistics company-sort-by-backed-importance)))
-    :config
-    (company-statistics-mode)
-    )
-  ;; その他, 補完の backends
-  ;;; TeX
-  (leaf *company-backends-related-TeX
-    :if (and (executable-find "uplatex")
-             (executable-find "latexmk"))
-    :after company
-    :init
-    (leaf company-auctex :el-get  alexeyr/company-auctex)
-    (leaf company-reftex :ensure t)
-    (leaf company-math :ensure t)
-    ;;
-    (defun my:company-tex-setup ()
-      "enable some company backends"
-      (setq-local company-backends
-                  (append '((;; company-reftex
-                             company-reftex-labels
-                             company-reftex-citations
-                             ;; company-auctex
-                             company-auctex-macros
-                             company-auctex-symbols
-                             company-auctex-environments
-                             ;; company-math
-                             company-math-symbols-latex
-                             company-latex-commands))
-                          company-backends)))
-    :hook (TeX-mode-hook . my:company-tex-setup)
-    )
+  ;; ;; 同じbuffer内の内容を補完候補にする
+  ;; (leaf company-same-mode-buffers
+  ;;   :el-get  zk-phi/company-same-mode-buffers
+  ;;   :after company
+  ;;   :commands company-same-mode-buffers-initialize
+  ;;   :init
+  ;;   :config
+  ;;   (company-same-mode-buffers-initialize)
+  ;;   (push 'company-same-mode-buffers company-backends)
+  ;;   (defun company-same-mode-buffers-query-construct-any-followed-by (str)
+  ;;     (cons "\\(?:\\cs\\|\\s_\\)*?" (regexp-quote str)))
+  ;;   (defun company-same-mode-buffers-query-construct-any-word-followed-by (str)
+  ;;     (cons "\\cs*?" (regexp-quote str)))
+  ;;   (defun company-same-mode-buffers-query-to-regex (lst)
+  ;;     "Make a regex from a query (list of `query-construct-*' s)."
+  ;;     (concat "\\_<"
+  ;;             (mapconcat (lambda (pair) (concat (car pair) "\\(" (cdr pair) "\\)")) lst "")
+  ;;             "\\(?:\\s_\\|\\cs\\)*"))
+  ;;   (defun company-same-mode-buffers-update-cache (&optional buffer)
+  ;;     "Put all symbols in the buffer into `company-same-mode-buffers-cache'."
+  ;;     (with-current-buffer (or buffer (current-buffer))
+  ;;       (when (and company-same-mode-buffers-cache-is-dirty
+  ;;                  (derived-mode-p 'prog-mode))
+  ;;         (let ((tree (gethash major-mode company-same-mode-buffers-cache))
+  ;;               (symbols (company-same-mode-buffers-search-current-buffer
+  ;;                         (concat "\\(:?+\\cs\\|\\s_\\)\\{"
+  ;;                                 (number-to-string company-same-mode-buffers-minimum-word-length)
+  ;;                                 ","
+  ;;                                 (number-to-string company-same-mode-buffers-maximum-word-length)
+  ;;                                 "\\}"))))
+  ;;           (dolist (s symbols)
+  ;;             (setq tree (company-same-mode-buffers-tree-insert tree s)))
+  ;;           (puthash major-mode tree company-same-mode-buffers-cache)
+  ;;           (setq company-same-mode-buffers-cache-is-dirty nil)))))
+  ;;   )
+  ;; ;; fuzzy match
+  ;; (leaf company-flx
+  ;;   :ensure t
+  ;;   :after company
+  ;;   :config
+  ;;   (company-flx-mode +1)
+  ;;   )
+  ;; ;; 補完候補を統計情報に基き sort する
+  ;; (leaf company-statistics
+  ;;   :after company
+  ;;   :ensure t
+  ;;   :custom
+  ;;   `((company-statistics-size . 2000)
+  ;;     (company-statistics-file
+  ;;      . ,(expand-file-name "company-statistics-cache.el" my:d:tmp))
+  ;;     (company-transformers
+  ;;      . (company-sort-by-statistics company-sort-by-backed-importance)))
+  ;;   :defer-config
+  ;;   (company-statistics-mode)
+  ;;   )
+  ;; ;; その他, 補完の backends
+  ;; ;;; TeX
+  ;; (leaf *company-backends-related-TeX
+  ;;   :if (and (executable-find "uplatex")
+  ;;            (executable-find "latexmk"))
+  ;;   :after company
+  ;;   :init
+  ;;   (leaf company-auctex :el-get  alexeyr/company-auctex)
+  ;;   (leaf company-reftex :ensure t)
+  ;;   (leaf company-math :ensure t)
+  ;;   ;;
+  ;;   (defun my:company-tex-setup ()
+  ;;     "enable some company backends"
+  ;;     (setq-local company-backends
+  ;;                 (append '((;; company-reftex
+  ;;                            company-reftex-labels
+  ;;                            company-reftex-citations
+  ;;                            ;; company-auctex
+  ;;                            company-auctex-macros
+  ;;                            company-auctex-symbols
+  ;;                            company-auctex-environments
+  ;;                            ;; company-math
+  ;;                            company-math-symbols-latex
+  ;;                            company-latex-commands))
+  ;;                         company-backends)))
+  ;;   :hook (TeX-mode-hook . my:company-tex-setup)
+  ;;   )
   )
   #+end_src
 * SOMEDAY テンプレート補完: =yasnippet=
@@ -4417,11 +4418,11 @@ colorlinks}
   :after ox-latex
   :init
   (add-to-list 'org-export-options-alist
-               '(:shortdate     "SHORT_DATE"       nil nil))
+               '(:shortdate      "SHORT_DATE"      nil nil))
   (add-to-list 'org-export-options-alist
-               '(:shorttitle    "SHORT_TITLE"      nil nil))
+               '(:shorttitle     "SHORT_TITLE"     nil nil))
   (add-to-list 'org-export-options-alist
-               '(:shortauthor   "SHORT_AUTHOR"     nil nil))
+               '(:shortauthor    "SHORT_AUTHOR"    nil nil))
   (add-to-list 'org-export-options-alist
                '(:institute      "INSTITUTE"       nil nil))
   (add-to-list 'org-export-options-alist
@@ -4437,62 +4438,62 @@ colorlinks}
   (defun my:org-beamer-template (contents info)
     "Custom: support shortdate, shorttile, shortauthor, institute for beamer export"
     (let ((title (org-export-data (plist-get info :title) info))
-	      (subtitle (org-export-data (plist-get info :subtitle) info)))
+          (subtitle (org-export-data (plist-get info :subtitle) info)))
       (concat
        ;; Time-stamp.
        (and (plist-get info :time-stamp-file)
-	        (format-time-string "%% Created %Y-%m-%d %a %H:%M\n"))
+            (format-time-string "%% Created %Y-%m-%d %a %H:%M\n"))
        ;; LaTeX compiler
        (org-latex--insert-compiler info)
        ;; Document class and packages.
        (org-latex-make-preamble info)
        ;; Insert themes.
        (let ((format-theme
-	          (lambda (prop command)
-	            (let ((theme (plist-get info prop)))
-		          (when theme
-		            (concat command
-			                (if (not (string-match "\\[.*\\]" theme))
-			                    (format "{%s}\n" theme)
-			                  (format "%s{%s}\n"
-				                      (match-string 0 theme)
-				                      (org-trim
-				                       (replace-match "" nil nil theme))))))))))
+              (lambda (prop command)
+                (let ((theme (plist-get info prop)))
+                  (when theme
+                    (concat command
+                            (if (not (string-match "\\[.*\\]" theme))
+                                (format "{%s}\n" theme)
+                              (format "%s{%s}\n"
+                                      (match-string 0 theme)
+                                      (org-trim
+                                       (replace-match "" nil nil theme))))))))))
          (mapconcat (lambda (args) (apply format-theme args))
-		            '((:beamer-theme "\\usetheme")
-		              (:beamer-color-theme "\\usecolortheme")
-		              (:beamer-font-theme "\\usefonttheme")
-		              (:beamer-inner-theme "\\useinnertheme")
-		              (:beamer-outer-theme "\\useoutertheme"))
-		            ""))
+                    '((:beamer-theme "\\usetheme")
+                      (:beamer-color-theme "\\usecolortheme")
+                      (:beamer-font-theme "\\usefonttheme")
+                      (:beamer-inner-theme "\\useinnertheme")
+                      (:beamer-outer-theme "\\useoutertheme"))
+                    ""))
        ;; Possibly limit depth for headline numbering.
        (let ((sec-num (plist-get info :section-numbers)))
          (when (integerp sec-num)
-	       (format "\\setcounter{secnumdepth}{%d}\n" sec-num)))
-       ;; Author.
+           (format "\\setcounter{secnumdepth}{%d}\n" sec-num)))
+       ;; custom: Author support `shortauthor'
        (let ((author (and (plist-get info :with-author)
-			              (let ((auth (plist-get info :author)))
-			                (and auth (org-export-data auth info)))))
+                          (let ((auth (plist-get info :author)))
+                            (and auth (org-export-data auth info)))))
              (shortauthor (plist-get info :shortauthor))
-	         (email (and (plist-get info :with-email)
-		                 (org-export-data (plist-get info :email) info))))
+             (email (and (plist-get info :with-email)
+                         (org-export-data (plist-get info :email) info))))
          (cond ((and author shortauthor) (format "\\author[%s]{%s}\n" shortauthor author))
                ((and author shortauthor email (not (string= "" email)))
                 (format "\\author[%s]{%s\\thanks{%s}}\n" shortauthor author email))
                ((and author email (not (string= "" email)))
-	            (format "\\author{%s\\thanks{%s}}\n" author email))
-	           ((or author email) (format "\\author{%s}\n" (or author email)))))
-       ;; Date.
+                (format "\\author{%s\\thanks{%s}}\n" author email))
+               ((or author email) (format "\\author{%s}\n" (or author email)))))
+       ;; custom: Date support `shortdate'
        (let ((date (and (plist-get info :with-date) (org-export-get-date info)))
              (shortdate (plist-get info :shortdate)))
          (cond ((and date shortdate)
                 (format "\\date[%s]{%s}\n" shortdate (org-export-data date info)))
                (t (format "\\date{%s}\n" (org-export-data date info)))))
-       ;; Title
+       ;; custom: Title support `shorttitle'
        (let ((shorttitle (plist-get info :shorttitle)))
          (cond ((and title shorttitle) (format "\\title[%s]{%s}\n" shorttitle title))
                (t (format "\\title{%s}\n" title))))
-       ;; institute
+       ;; custom: support `institute', `shortinstitute'
        (let ((institute (plist-get info :institute))
              (shortinstitute (plist-get info :shortinstitute)))
          (cond ((and institute shortinstitute)
@@ -4504,39 +4505,39 @@ colorlinks}
        ;; Beamer-header
        (let ((beamer-header (plist-get info :beamer-header)))
          (when beamer-header
-	       (format "%s\n" (plist-get info :beamer-header))))
+           (format "%s\n" (plist-get info :beamer-header))))
        ;; 9. Hyperref options.
        (let ((template (plist-get info :latex-hyperref-template)))
          (and (stringp template)
-	          (format-spec template (org-latex--format-spec info))))
+              (format-spec template (org-latex--format-spec info))))
        ;; Document start.
        "\\begin{document}\n\n"
        ;; Title command.
        (org-element-normalize-string
         (cond ((not (plist-get info :with-title)) nil)
-	          ((string= "" title) nil)
-	          ((not (stringp org-latex-title-command)) nil)
-	          ((string-match "\\(?:[^%]\\|^\\)%s"
-			                 org-latex-title-command)
-	           (format org-latex-title-command title))
-	          (t org-latex-title-command)))
+              ((string= "" title) nil)
+              ((not (stringp org-latex-title-command)) nil)
+              ((string-match "\\(?:[^%]\\|^\\)%s"
+                             org-latex-title-command)
+               (format org-latex-title-command title))
+              (t org-latex-title-command)))
        ;; Table of contents.
        (let ((depth (plist-get info :with-toc)))
          (when depth
-	       (concat
-	        (format "\\begin{frame}%s{%s}\n"
-		            (org-beamer--normalize-argument
-		             (plist-get info :beamer-outline-frame-options) 'option)
-		            (plist-get info :beamer-outline-frame-title))
-	        (when (wholenump depth)
-	          (format "\\setcounter{tocdepth}{%d}\n" depth))
-	        "\\tableofcontents\n"
-	        "\\end{frame}\n\n")))
+           (concat
+            (format "\\begin{frame}%s{%s}\n"
+                    (org-beamer--normalize-argument
+                     (plist-get info :beamer-outline-frame-options) 'option)
+                    (plist-get info :beamer-outline-frame-title))
+            (when (wholenump depth)
+              (format "\\setcounter{tocdepth}{%d}\n" depth))
+            "\\tableofcontents\n"
+            "\\end{frame}\n\n")))
        ;; Document's body.
        contents
        ;; Creator.
        (if (plist-get info :with-creator)
-	       (concat (plist-get info :creator) "\n")
+           (concat (plist-get info :creator) "\n")
          "")
        ;; Document end.
        "\\end{document}")))
@@ -4549,12 +4550,6 @@ colorlinks}
     (org-latex-compiler . "latexmk -pvc")
     )
   )
-    #+end_src
-*** Jekyll
-    :PROPERTIES:
-    :CUSTOM_ID: org589a50cc
-    :END:
-    #+begin_src emacs-lisp :tangle init.el
     #+end_src
 *** Publish
     :PROPERTIES:
@@ -4807,34 +4802,8 @@ colorlinks}
   :PROPERTIES:
   :CUSTOM_ID: orga28ad005
   :END:
-  読み込むだけの mode の設定. 設定が増えたら別途まとめる。
+  ほぼ読み込むだけの mode の設定. 設定が増えたら別途まとめる。
   #+begin_src emacs-lisp :tangle init.el
-(leaf flycheck
-  :disabled t
-  :ensure t
-  ;; :custom
-  ;; `((flycheck-disabled-checkers . '(emacs-lisp-checkdoc))
-  ;;  )
-  :hook (prog-mode-hook . flycheck-mode)
-  :config
-  (setq-default flycheck-disabled-checkers '(emacs-lisp-checkdoc))
-  (leaf flycheck-inline
-    :ensure t
-    :hook (flycheck-mode-hook . flycheck-inline-mode))
-  (flycheck-define-checker
-      textlint
-    "A linter for prose."
-    :command ("textlint-wrapper.sh" source)
-    :error-patterns
-    ((warning line-start (file-name) ":" line ":" column ": "
-              (id (one-or-more (not (any " "))))
-              (message (one-or-more not-newline)
-                       (zero-or-more "\n" (any " ") (one-or-more not-newline)))
-              line-end))
-    :modes (text-mode markdown-mode gfm-mode wl-draft-mode))
-  (add-to-list 'flycheck-checkers 'textlint)
-  )
-
 (leaf *misc-mode
   :init
   (leaf debian-el
@@ -4852,12 +4821,11 @@ colorlinks}
   (leaf generic-x)
   (leaf textile-mode :ensure t)
   (leaf lua-mode :ensure t)
-  (leaf debian-el)
   (leaf dpkg-dev-el)
   (leaf sh-mode
     :custom ((system-uses-terminfo . nil))
     )
-  (leaf apt-sources-list :ensure t
+  (leaf apt-sources-list
     :custom
     ((apt-sources-list-suites
       . '("stable" "stable-backports"
@@ -4866,13 +4834,8 @@ colorlinks}
           "jessie" "jessie-backports"
           "stretch" "stretch-backports"
           "buster" "buster-backports"
-          "bullseye"
+          "bullseye" "bullseye-backports"
           "sid")))
-    )
-  (leaf woman
-    ;; :custom-face
-    ;; ((woman-bold   . '((t (:inherit font-lock-type-face :bold t))))
-    ;; (woman-italic . '((t (:inherit font-lock-keyword-face :underline t)))))
     )
   (leaf info-colors
     :ensure t
@@ -4906,8 +4869,6 @@ colorlinks}
   :defvar tdiary-passwd-file
   :pl-setq
   (tdiary-csrf-key tdiary-passwd-file)
-  ;; :init
-  ;; (setq tdiary-text-save-p t)
   :config
   (setq tdiary-text-directory (concat (getenv "HOME") "/Nextcloud/tdiary/")
         tdiary-diary-list '(("log" "https://uwabami.junkhub.org/log/"))
@@ -4916,8 +4877,6 @@ colorlinks}
         tdiary-http-timeout 100
         )
   (tdiary-passwd-file-load)
-  ;; (with-eval-after-load 'tdiary-mode
-  ;;   (setq tdiary-text-save-p t))
   )
   #+end_src
   - [ ] org2blog で tDiary を更新できないか妄想している
@@ -5262,6 +5221,15 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
   #+BEGIN_SRC emacs-lisp
 (leaf powerline
   :ensure t
+  :defvar
+  (skk-indicator-alist
+   skk-hiragana-mode-string
+   skk-katakana-mode-string
+   skk-latin-mode-string
+   skk-jisx0208-latin-mode-string
+   skk-jisx0201-mode-string
+   skk-abbrev-mode-string
+   )
   :init
   (defun my:major-mode-icon (mode)
     "Update file icon in mode-line, just display major-mode icon. not filename."

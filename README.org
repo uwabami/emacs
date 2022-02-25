@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2022-02-21 11:42:04
+#+date: 2022-02-25 19:20:49
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -83,7 +83,7 @@ init.el: README.org
 (setq load-prefer-newer noninteractive)
 (setq frame-inhibit-implied-resize t)
 (setq site-run-file nil)
-(setq file-name-handler-alist nil)
+;; (setq file-name-handler-alist nil)
 (setq use-file-dialog nil)
 (provide 'early-init)
 ;;; early-init.el ends here
@@ -127,13 +127,13 @@ init.el: README.org
 
     ついでに =idle-timer= で入力が無い時に GC を走らせることに.
     #+begin_src emacs-lisp :tangle init.el
-(defconst my:default-gc-cons-threshold gc-cons-threshold)
 (setq gc-cons-threshold most-positive-fixnum)
 ;; Run GC every 60 seconds if emacs is idle.
 (run-with-idle-timer 60.0 t #'garbage-collect)
 (add-hook 'emacs-startup-hook
           (lambda ()
-            (setq gc-cons-threshold my:default-gc-cons-threshold)))
+            ;; recover default value
+            (setq gc-cons-threshold 800000)))
     #+end_src
 ** ディレクトリ構成の修正
    :PROPERTIES:
@@ -842,6 +842,11 @@ init.el: README.org
    . (lambda ()
        (if (file-exists-p tramp-persistency-file-name)
            (delete-file tramp-persistency-file-name))))
+  :config
+  ;; (setq vc-ignore-dir-regexp
+  ;;       ((format "\\(%s\\)\\|\\(%s\\)"
+  ;;                vc-ignore-dir-regexp
+  ;;                tramp-file-name-regexp)))
   )
    #+end_src
 ** =browse-url=
@@ -890,14 +895,51 @@ init.el: README.org
    :END:
    #+begin_src emacs-lisp :tangle init.el
 (leaf ps-mule
+  :if (executable-find "lpr")
   :custom
-  ((ps-multibyte-buffer . 'non-latin-printer)
-   (ps-font-size        . '(9 . 10))
-   (ps-header-font-size . '(10 . 12))
+  ((ps-multibyte-buffer       . 'nil ) ;;non-latin-printer
+   (ps-printer-name           . "PDF")
+   (ps-paper-size             . 'a4)
+   ;; (ps-n-up-printing          .  2)
+   (ps-print-header           .  t)
+   (ps-print-footer           .  nil)
+   (ps-font-family            . 'Courier)
+   (ps-font-size              . '(9 . 10))
+   (ps-header-font-family     . 'Helvetica)
+   (ps-header-font-size       . '(10 . 12))
    (ps-header-title-font-size . '(12 . 14))
+   (ps-line-number            . nil)
+   ;; (ps-line-number-font   . "Times-Italic")
+   ;; (ps-line-number-font-size . 6)
+   ;; (ps-line-number-start   . 1)
+   ;; (ps-line-number-step    . 1)
    )
-  :config
+  :hook
   (defalias 'ps-mule-header-string-charset 'ignore)
+  :config
+  (setq ps-mule-font-info-database-default
+        '((iso-8859-1
+           (normal nil nil))
+          (katakana-jisx0201
+           (normal builtin "Ryumin-Light-Katakana")
+           (bold builtin "GothicBBB-Medium-Katakana"))
+          (latin-jisx0201
+           (normal builtin "Ryumin-Light-Hankaku")
+           (bold builtin "GothicBBB-Medium-Hankaku"))
+          (japanese-jisx0208
+           (normal builtin "Ryumin-Light-Ext-H")
+           (bold builtin "GothicBBB-Medium-Ext-H"))
+          (japanese-jisx0213-2
+           (normal builtin "Ryumin-Light-Ext-H")
+           (bold builtin "GothicBBB-Medium-Ext-H"))
+          (japanese-jisx0213.2004-1
+           (normal builtin "Ryumin-Light-2004-H")
+           (bold builtin "GothicBBB-Medium-H"))
+          (unicode-bmp
+           (normal builtin "Ryumin-Light-Ext-H")
+           (bold builtin "GothicBBB-Medium-Ext-H"))
+          )
+        )
   )
    #+end_src
 ** =tab-bar-mode=: Emacsの「tab」
@@ -1020,19 +1062,19 @@ init.el: README.org
   [[https://github.com/sebastiencs/icons-in-terminal][icons in terminal]]を修正した
   自作フォントのデータを読みに行くようにしてみました。
   #+begin_src emacs-lisp :tangle init.el
-(leaf all-the-icons
-  :ensure t
-  :init (leaf memoize :ensure t)
-  :require t
-  :custom
-  ((all-the-icons-scale-factor   . 0.9)
-   (all-the-icons-default-adjust . 0.0))
-  )
 (leaf all-the-icons-in-terminal
   :el-get (all-the-icons-in-terminal
            :type github
            :pkgname "uwabami/isfit-plus")
-  :after all-the-icons
+  :init
+  (leaf all-the-icons
+    :ensure t
+    :init (leaf memoize :ensure t)
+    ;;  :require t
+    :custom
+    ((all-the-icons-scale-factor   . 0.9)
+     (all-the-icons-default-adjust . 0.0))
+    )
   :require t
   :config
   (add-to-list 'all-the-icons-mode-icon-alist
@@ -1794,6 +1836,13 @@ File.open(src, "r") {|f|
    #+begin_src emacs-lisp :tangle init.el
 (leaf marginalia
   :ensure t
+  :init
+  ;; 補完でも icon 表示
+  (leaf all-the-icons-completion
+    :ensure t
+    :hook
+    (after-init-hook . all-the-icons-completion-mode)
+    )
   :bind (("M-A" . marginalia-cycle)
          (:minibuffer-local-map
           ("M-A" . marginalia-cycle)
@@ -1801,9 +1850,12 @@ File.open(src, "r") {|f|
   :custom
   `((marginalia-annotators
      . '(marginalia-annotators-light marginalia-annotators-heavy nil))
-    (marginalia-align . 'right))
+    (marginalia-align . 'right)
+    (marginalia-align-offset .  -2) ;; icon 分引いておく
+    )
   :hook
-  (after-init-hook . marginalia-mode)
+  ((after-init-hook . marginalia-mode)
+   (marginalia-mode-hook . all-the-icons-completion-marginalia-setup))
   )
    #+end_src
 ** =consult=: 便利コマンド集
@@ -1975,7 +2027,7 @@ File.open(src, "r") {|f|
   buffer を眺めるのは ibuffer が好み
   #+begin_src emacs-lisp :tangle init.el
 (leaf ibuffer
-  :after all-the-icons-in-terminal
+  ;; :after all-the-icons-in-terminal
   :defun (ibuffer-current-buffer)
   :defvar (ibuffer-formats)
   :preface
@@ -1997,28 +2049,28 @@ File.open(src, "r") {|f|
           ("C-x C-f" . my:ibuffer-find-file))
          )
   :config
-  (define-ibuffer-column icon (:name "  ")
-    (let ((icon
-           (if (and (buffer-file-name)
-                    (all-the-icons-auto-mode-match?))
-               (all-the-icons-icon-for-file
-                (file-name-nondirectory (buffer-file-name)))
-             (all-the-icons-icon-for-mode major-mode ))))
-      (if (symbolp icon)
-          (setq icon
-                (all-the-icons-faicon
-                 "file-o"
-                 :face 'all-the-icons-dsilver))
-        icon)))
+  ;; (define-ibuffer-column icon (:name "  ")
+  ;;   (let ((icon
+  ;;          (if (and (buffer-file-name)
+  ;;                   (all-the-icons-auto-mode-match?))
+  ;;              (all-the-icons-icon-for-file
+  ;;               (file-name-nondirectory (buffer-file-name)))
+  ;;            (all-the-icons-icon-for-mode major-mode ))))
+  ;;     (if (symbolp icon)
+  ;;         (setq icon
+  ;;               (all-the-icons-faicon
+  ;;                "file-o"
+  ;;                :face 'all-the-icons-dsilver))
+  ;;       icon)))
   ;;
-  (setq ibuffer-formats
-        `((mark modified read-only
-                " " (icon 2 2 :left :elide)
-                ,(propertize " " 'display `(space :align-to 8))
-                (name 18 18 :left :elide)
-                " " (size 9 -1 :right)
-                " " (mode 16 16 :left :elide) " " filename-and-process)
-          (mark " " (name 16 -1) " " filename)))
+  ;; (setq ibuffer-formats
+  ;;       `((mark modified read-only
+  ;;               " " (icon 2 2 :left :elide)
+  ;;               ,(propertize " " 'display `(space :align-to 8))
+  ;;               (name 18 18 :left :elide)
+  ;;               " " (size 9 -1 :right)
+  ;;               " " (mode 16 16 :left :elide) " " filename-and-process)
+  ;;         (mark " " (name 16 -1) " " filename)))
   )
   #+end_src
 * =wanderulst=: MUA の設定
@@ -2146,17 +2198,6 @@ File.open(src, "r") {|f|
   ;; (leaf mime-w3m :require t)
   (setq mime-view-text/html-previewer 'shr
         mime-setup-enable-inline-html 'shr)
-  ;; (defvar my:shr-width 72)
-  ;; (defun my:shr-insert-document (&rest them)
-  ;;   (let ((shr-width my:shr-width)) (apply them)))
-  ;; (defun my:mime-shr-preview-text/html (&rest args)
-  ;;   (advice-add 'shr-insert-document :around 'my:shr-insert-document)
-  ;;   (unwind-protect
-  ;;       (apply args)
-  ;;     (advice-remove 'shr-insert-document 'my:shr-insert-document)))
-  ;; :advice
-  ;; (:around mime-shr-preview-text/html
-  ;;          my:mime-shr-preview-text/html)
   )
      #+end_src
      どのアプリケーションで開くか → =xdg-open= に丸投げ．
@@ -2470,34 +2511,6 @@ video/*; xdg-open %s;
      #+begin_src emacs-lisp :tangle init-wl.el
 (setq wl-interactive-send t)
      #+end_src
-**** misc.
-     :PROPERTIES:
-     :CUSTOM_ID: org14b77860
-     :END:
-     大きいメッセージを送信時に分割しない
-     #+begin_src emacs-lisp   :tangle init-wl.el
-(setq mime-edit-split-message nil)
-     #+end_src
-     スレッドは常に閉じる
-     #+begin_src emacs-lisp   :tangle init-wl.el
-(setq wl-thread-insert-opened nil)
-     #+end_src
-     3 pain 表示 -> 使わない
-     #+begin_src emacs-lisp   :tangle init-wl.el
-(setq wl-stay-folder-window nil)
-     #+end_src
-     未読を優先的に読む
-     #+begin_src emacs-lisp   :tangle init-wl.el
-(setq wl-summary-move-order 'unread)
-     #+end_src
-     改ページ無視
-     #+begin_src emacs-lisp   :tangle init-wl.el
-(setq wl-break-pages nil)
-     #+end_src
-     icon を使わない → GUI でもメニュー表示してないし, 体感的には遅くなる
-     #+begin_src emacs-lisp   :tangle init-wl.el
-(setq wl-highlight-folder-with-icon nil)
-     #+end_src
 **** dispose, delete の設定
      :PROPERTIES:
      :CUSTOM_ID: org83490625
@@ -2532,6 +2545,38 @@ video/*; xdg-open %s;
      #+begin_src emacs-lisp   :tangle init-wl.el
 (setq wl-summary-mode-line-format "") ; "%f {%t}(%n/%u/%a)"
 (setq wl-message-mode-line-format "") ; "<< %f:%F>> [%m]"
+     #+end_src
+**** TODO misc.
+     :PROPERTIES:
+     :CUSTOM_ID: org14b77860
+     :END:
+     大きいメッセージを送信時に分割しない
+     #+begin_src emacs-lisp   :tangle init-wl.el
+(setq mime-edit-split-message nil)
+     #+end_src
+     スレッドは常に閉じる
+     #+begin_src emacs-lisp   :tangle init-wl.el
+(setq wl-thread-insert-opened nil)
+     #+end_src
+     3 pain 表示 -> 使わない
+     #+begin_src emacs-lisp   :tangle init-wl.el
+(setq wl-stay-folder-window nil)
+     #+end_src
+     未読を優先的に読む
+     #+begin_src emacs-lisp   :tangle init-wl.el
+(setq wl-summary-move-order 'unread)
+     #+end_src
+     改ページ無視
+     #+begin_src emacs-lisp   :tangle init-wl.el
+(setq wl-break-pages nil)
+     #+end_src
+     icon を使わない → GUI でもメニュー表示してないし, 体感的には遅くなる
+     #+begin_src emacs-lisp   :tangle init-wl.el
+(setq wl-highlight-folder-with-icon nil)
+     #+end_src
+     印刷 → ps-print-buffer に任せる←まだ保留. エラー吐きよる….
+     #+begin_src emacs-lisp :tangle init-wl.el
+(setq wl-print-buffer-function 'ps-print-buffer)
      #+end_src
 *** キーバインド関連
     :PROPERTIES:
@@ -3188,22 +3233,6 @@ Categories=GNOME;GTK;Office;Email;
 StartupNotify=false
 MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    #+end_src
-** メールからの予定の取り込み: =mhc=
-   :PROPERTIES:
-   :CUSTOM_ID: org215a97b9
-   :END:
-   #+begin_src emacs-lisp :tangle init.el
-(leaf mhc
-  :if (file-directory-p (concat (getenv "HOME") "/.config/mhc"))
-  :ensure t
-  :disabled t
-  :commands (mhc-import)
-  :init
-  (setq mhc-calendar-day-strings ["日" "月" "火" "水" "木" "金" "土"]
-        mhc-calendar-header-function 'mhc-calendar-make-header-ja
-        mhc-calendar-language 'japanese)
-  )
-   #+end_src
 * 閉じタグの入力補助: =smartparens=
   :PROPERTIES:
   :CUSTOM_ID: orgc0b8a536
@@ -3416,7 +3445,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         (setq i (1+ i)))))
   :custom
   `((company-require-match             . 'never)
-    (company-minimum-prefix-length     . 4)
+    (company-minimum-prefix-length     . 2)
     ;; (company-idle-delay                . 3)
     (company-show-numbers              . t)
     (company-selection-wrap-around     . t)
@@ -3600,12 +3629,18 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :ensure t
   :hook
   ((f90-mode-hook   . eglot-ensure)
-   (LaTeX-mode-hook . eglot-ensure))
+   (TeX-mode-hook   . eglot-ensure))
   :config
+  ;; (delete (assoc '(tex-mode context-mode texinfo-mode bibtex-mode)
+  ;;                eglot-server-programs) eglot-server-programs)
   (add-to-list 'eglot-server-programs
-               '(f90-mode . ("fortls")))
-               ;; '(f90-mode . ("fortls" "--nthreads 1 "))
+               '(f90-mode   . ("fortls")))
+  (add-to-list 'eglot-server-programs
+               '(latex-mode . ("digestif")))
   )
+  ;; '(f90-mode . ("fortls" "--nthreads 1 "))
+;;   (add-to-list 'eglot-server-programs
+;;               '(latex-mode . ("digestif")))
   #+end_src
 * Org-mode
   :PROPERTIES:
@@ -4620,7 +4655,8 @@ colorlinks}
   :CUSTOM_ID: org88a3cb1b
   :END:
   やっている事は
-  - japanese-latex-mode において, 幾つかのコマンドが追加/上書きされているが,  あまり使うことの無いコマンドが表示されるのが嫌なのでそれらを削除．
+  - japanese-latex-mode において, 幾つかのコマンドが追加/上書きされているものの,
+    あまり使うことの無いコマンドが表示されるのが嫌なのでそれらを削除．
   - コンパイルには[[http://personal.psu.edu/jcc8/software/latexmk/][Latexmk]]を使う
   と言った所.
   …ただ, Beamerのクラスなんかだと勝手にdefault コマンドが LaTeX に変更されたりするので挙動がイマイチ良くわからん.

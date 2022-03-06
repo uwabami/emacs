@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2022-02-25 19:20:49
+#+date: 2022-03-07 08:52:46
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -727,6 +727,10 @@ init.el: README.org
 (leaf eldoc
   :hook (emacs-lisp-mode-hook . turn-on-eldoc-mode)
   :blackout t
+  :custom
+  `((eldoc-echo-area-prefer-doc-buffer . nil)
+    (eldoc-print-after-edit            . t)
+    (eldoc-echo-area-use-multiline-p   . nil))
   :preface
   (defun my:shutup-eldoc-message (f &optional string)
     (unless (active-minibuffer-window)
@@ -836,17 +840,17 @@ init.el: README.org
   `((tramp-persistency-file-name
      . ,(expand-file-name "tramp" my:d:tmp))
     (tramp-completion-reread-directory-timeout . nil)
+    (remote-file-name-inhibit-cache . nil)
+    (vc-ignore-dir-regexp
+     . ,(format "\\(%s\\)\\|\\(%s\\)"
+                locate-dominating-stop-dir-regexp
+                tramp-file-name-regexp))
     )
   :hook
   (kill-emacs-hook
    . (lambda ()
        (if (file-exists-p tramp-persistency-file-name)
            (delete-file tramp-persistency-file-name))))
-  :config
-  ;; (setq vc-ignore-dir-regexp
-  ;;       ((format "\\(%s\\)\\|\\(%s\\)"
-  ;;                vc-ignore-dir-regexp
-  ;;                tramp-file-name-regexp)))
   )
    #+end_src
 ** =browse-url=
@@ -1655,44 +1659,28 @@ File.open(src, "r") {|f|
     ))
   )
    #+end_src
-** =ispell=: spell checker
+** =ispell=,=flyspell=: spell checker, on-the-fly spell checker
    :PROPERTIES:
    :CUSTOM_ID: org3737a28e
    :END:
    ispell はコマンドとして =aspell= を利用する.
    #+begin_src emacs-lisp :tangle init.el
-(leaf ispell
-  :if (file-executable-p "aspell")
+(leaf flyspell
+  :if (executable-find "aspell")
+  :blackout (flyspell-mode . "F")
   :custom
-  (ispell-program-name . "aspell")
-  :config
+  `((ispell-program-name   . "aspell")
+    (ispell-check-comments . nil)
+    (ispell-skip-html      . t)
+    (ispell-silently-savep . t)
+    )
+  :bind (:flyspell-mode-map
+         ("C-." . nil)
+         ("C-," . nil))
+  :defer-config
   (add-to-list 'ispell-skip-region-alist '("[^\000-\377]+"))
   )
    #+end_src
-** =flyspell=: on-the-fly spell checker [0/1]
-   :PROPERTIES:
-   :CUSTOM_ID: org820e6b6d
-   :END:
-   flyspell-mode は別途有効化しておいた方が良いのかもしれない
-   #+begin_src emacs-lisp :tangle init.el
-(leaf flyspell
-  :ensure t
-  :blackout (flyspell-mode . "F")
-  :defun
-  flyspell-emacs-popup-textual
-  :preface
-  (defun my:flyspell-popup-choose (orig event poss word)
-    (if (window-system)
-        (funcall orig event poss word)
-      (flyspell-emacs-popup-textual event poss word)))
-  :advice (:around flyspell-emacs-popup
-                   my:flyspell-popup-choose)
-  :hook
-  ;; flyspell-prog-mode との switch が欲しい
-  ((LaTeX-mode-hook . flyspell-mode))
-  )
-   #+end_src
-   - [ ] flyspell-prog-mode との switch が欲しい
 ** =lookup=: 電子辞書の検索
    :PROPERTIES:
    :CUSTOM_ID: org3002f57f
@@ -1873,6 +1861,7 @@ File.open(src, "r") {|f|
   `(;; 増やさないと preview 時に theme がロードされない模様.
     ;; とりあえず default の 10 倍にしている. 1 MB かな?
     (consult-preview-raw-size . 1024000)
+    (consult-async-refresh-delay . 0.2)
     (consult-preview-key  . ,(kbd "C-M-p"))
     (consult-narrow-key   . "<")
     )
@@ -1892,6 +1881,14 @@ File.open(src, "r") {|f|
                             :state (consult--file-preview)
                             :history 'file-name-history)))
         (find-file (assoc-default selected files)))))
+  ;;
+  ;; (consult-customize
+  ;;  consult-git-grep consult-grep
+  ;;  consult-bookmark consult-recent-file consult-xref
+  ;;  consult--source-recent-file
+  ;;  consult--source-project-recent-file
+  ;;  consult--source-bookmark
+  ;;  :preview-key (kbd "M-."))
   ;; :advice
   ;;   (:override register-preview
   ;;              consult-register-window)
@@ -3443,6 +3440,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
             (modify-category-entry i ?s table)
           (modify-category-entry i ?s table t))
         (setq i (1+ i)))))
+  :init
+  (setq-default company-selection-default nil)
   :custom
   `((company-require-match             . 'never)
     (company-minimum-prefix-length     . 2)
@@ -3609,11 +3608,12 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   同様のツールに =flycheck= があり, こっちが後発でイロイロと設定済みだったりするのだけれど
   煩すぎて結局沢山設定を書くハメになるし, =flymake= 自体は Emacs に built-in なので, こっちを使う.
   #+begin_src emacs-lisp tangle :init.el
-(leaf flymake
+(leaf flymake :ensure t)
+(leaf flymake-diagnostic-at-point
   :ensure t
-  :init
-  (leaf flymake-quickdef :ensure t)
-  )
+  :after flymake
+  :hook (flymake-mode-hook . flymake-diagnostic-at-point-mode))
+;; (leaf flymake-quickdef :ensure t)
   #+end_src
   - [ ] =project.el= と連携させたい.
 * LSP: =eglot=
@@ -3625,8 +3625,12 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   #+begin_src emacs-lisp :tangle init.el
 (leaf eglot
   :if (and (executable-find "fortls")
-           (executable-find "digestif"))
+           (executable-find "texlab")) ; digestif
   :ensure t
+  :bind
+  (:eglot-mode-map
+   ("C-c e f" . eglot-format)
+   ("C-c e n" . eglot-rename))
   :hook
   ((f90-mode-hook   . eglot-ensure)
    (TeX-mode-hook   . eglot-ensure))
@@ -3636,7 +3640,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (add-to-list 'eglot-server-programs
                '(f90-mode   . ("fortls")))
   (add-to-list 'eglot-server-programs
-               '(latex-mode . ("digestif")))
+               '(latex-mode . ("texlab"))); digestif"))) ;
   )
   ;; '(f90-mode . ("fortls" "--nthreads 1 "))
 ;;   (add-to-list 'eglot-server-programs
@@ -4061,8 +4065,8 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     )
   :config
   (eval-and-compile 'browse-url)
-  (with-eval-after-load 'org-journal
-    (global-set-key (kbd "C-c C-j") 'browse-url-at-point))
+  :defer-config
+  (global-set-key (kbd "C-c C-j") 'browse-url-at-point)
   )
    #+end_src
 ** Org-capture: メモ取り
@@ -4414,6 +4418,16 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   :custom
   `((org-latex-default-class . "my:uplatex")
     (org-latex-pdf-process   . '("latexmk -pvc %f"))
+    (org-latex-default-packages-alist
+     . '(;; ("utf8" "inputenc" t nil)
+         ;; ("prefernoncjk" "pxcjkcat" t nil)
+         ;; ("T1" "fontenc" t nil)
+         ("" "graphicx" t nil)
+         ("normalem" "ulem" t nil) ;; udline に変更すべきかな?
+         ("" "amsmath" t nil)
+         ("" "amssymb" t nil)
+         ("colorlinks" "hyperref" t nil)
+         ))
     (org-latex-hyperref-template
      .
      "\\hypersetup{
@@ -4422,25 +4436,18 @@ pdftitle={%t},
 pdfkeywords={%k},
 pdfsubject={%s},
 pdfcreator={%c},
-pdflang={%l},
-colorlinks}
+pdflang={%l}}
 ")
     (org-latex-classes
      . '(("my:uplatex"
-          "\\RequirePackage{plautopatch}\n\\documentclass[a4j,uplatex]{jsarticle}
-            [NO-DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
-          ("\\section\{%s\}" . "\\section*\{%s\}")
-          ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
-          ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
-         ("my:jlreq"
-          "\\RequirePackage{plautopatch}\n\\documentclass{jlreq}
-            [NO-DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
+          "\\RequirePackage{plautopatch}\n\\documentclass[a4j,uplatex,dvipdfmx]{jsarticle}\n\\plautopatchdisable{eso-pic}\n\\ifdefined\\endofdump\\else\\let\\endofdump\\relax\\fi
+            [DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
           ("\\section\{%s\}" . "\\section*\{%s\}")
           ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
           ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
          ("my:beamer"
-          "\\RequirePackage{plautopatch}\n\\documentclass[dvipdfmx,presentation]{beamer}
-             [NO-DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
+          "\\RequirePackage{plautopatch}\n\\documentclass[dvipdfmx,presentation]{beamer}\n\\plautopatchdisable{eso-pic}\n\\ifdefined\\endofdump\\else\\let\\endofdump\\relax\\fi
+             [DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
           ("\\section\{%s\}" . "\\section*\{%s\}")
           ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
           ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))))
@@ -4689,16 +4696,17 @@ colorlinks}
   (load "auctex" t t)
   (load "preview-latex" t t)
   :hook
-  (LaTeX-mode-hook . (lambda ()
-                       (turn-on-reftex)
-                       (auctex-latexmk-setup)
-                       (setq-default TeX-command-default "LaTexMk"
-                                     japanese-LaTeX-command-default "LaTeX")
-                       (TeX-PDF-mode)
-                       (TeX-source-correlate-mode)
-                       (LaTeX-math-mode)
-                       (outline-minor-mode)
-                       ))
+  `((LaTeX-mode-hook
+     . ,(lambda ()
+          (turn-on-reftex)
+          (auctex-latexmk-setup)
+          (setq-default TeX-command-default "LaTexMk"
+                        japanese-LaTeX-command-default "LaTeX")
+          (TeX-PDF-mode)
+          (TeX-source-correlate-mode)
+          (LaTeX-math-mode)
+          (outline-minor-mode)))
+    )
   :custom
   `((TeX-auto-local
      . ,(expand-file-name "auctex/auto" my:d:tmp))
@@ -4716,6 +4724,7 @@ colorlinks}
     (LaTeX-table-label                 . "tab:")
     (LaTeX-section-label               . "sec:")
     (TeX-command-default               . "LaTexMk")
+    (TeX-ispell-extend-skip-list       . t)
     (TeX-parse-self                    . t)
     (TeX-auto-save                     . t)
     (TeX-auto-untabify                 . t)

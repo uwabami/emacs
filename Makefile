@@ -11,8 +11,14 @@ all: $(ELC) init.elc
 $(EL): init.el
 init.el: README.org
 	@mkdir -p ~/.cache/emacs
-	@mkdir -p pkg/elpa
-	@mkdir -p pkg/el-get
+	@if [ ! -d ~/.cache/emacs/eln-cache ]; then \
+		echo ";; mkdir ~/.cache/emacs/eln-cache"; mkdir ~/.cache/emacs/eln-cache ;\
+	fi
+	@if [ ! -L eln-cache ]; then \
+		echo ";; ln -sf ~/.cache/emacs/eln-cache . "; ln -sf ~/.cache/emacs/eln-cache . ;\
+	fi
+	@mkdir -p elpa
+	@mkdir -p el-get
 	@mkdir -p share
 	$(EMACS) -Q -q --batch --eval \
 	   "(progn \
@@ -27,7 +33,9 @@ clean:
 	rm -fr auto-save-list *.el *.elc *~
 
 distclean: clean
-	rm -fr pkg
+	rm -fr elpa
+	rm -fr el-get
+	rm -f eln-cache
 
 skk-jisyo:
 	mkdir -p ~/.cache/emacs/skk-jisyo

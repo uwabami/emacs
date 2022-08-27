@@ -1,7 +1,9 @@
 *.el
 *.elc
 .org-id-locations
-pkg
+el-get
+eln-cache
+elpa
 tmp
 *~
 old

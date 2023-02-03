@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2022-10-10 17:15:58
+#+date: 2023-02-03 17:27:06
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -58,12 +58,16 @@ init.el: README.org
   出力される =init.el= 用のヘッダは以下の通り.
   =lexsical-binding= を有効にしておきます．
   #+begin_src emacs-lisp :tangle init.el
-;; -*- lexical-binding: nil -*-
-;; (require 'profiler)    ;; 必要に応じて有効化
-;; (profiler-start 'cpu)
+;; -*- lexical-binding: t -*-
+;; (eval-when-compile
+;;   (require 'profiler)
+;;   (profiler-start 'cpu)
+;;   )
   #+end_src
   #+begin_src emacs-lisp :tangle early-init.el
-;; -*- lexical-binding: nil -*-
+;; -*- lexical-binding: t -*-
+;; (require 'profiler)    ;; 必要に応じて有効化
+;; (profiler-start 'cpu)
   #+end_src
 * ディレクトリ構成の修正
   :PROPERTIES:
@@ -88,10 +92,10 @@ init.el: README.org
   上記ディレクトリ構成を設定ファイルで使用するために
   ディレクトリ配置を宣言しておきます。
   #+begin_src emacs-lisp :tangle init.el
-(when load-file-name
-  (setq user-emacs-directory
-        (expand-file-name (file-name-directory load-file-name))))
 (eval-and-compile
+  (when load-file-name
+    (setq user-emacs-directory
+          (expand-file-name (file-name-directory load-file-name))))
   (defconst my:d:share
     (expand-file-name "share/" user-emacs-directory))
   (defconst my:d:tmp
@@ -99,31 +103,64 @@ init.el: README.org
   (defconst my:d:org
     (expand-file-name "~/Nextcloud/org")))
   #+end_src
-* Byte-Compile 時の Common Lisp の読み込み, JIT(>= 28)
+* Byte-Compile 時の Common Lisp の読み込み
   :PROPERTIES:
   :CUSTOM_ID: org87c9febb
   :END:
   幾つかの関数で =Common-Lisp= 的挙動が期待されているので,
   =cl-lib= を読み込んでおきます．
   #+begin_src emacs-lisp :tangle init.el
-(eval-when-compile (require 'cl-lib nil t))
+(eval-when-compile
+  (require 'cl-lib nil t))
   #+end_src
   また, Emacs 27 以降は cl が読み込まれていると
   `Package cl is deprecated' が表示されるので, これを止めておきます.
   #+begin_src emacs-lisp :tangle init.el
 (eval-and-compile
-  (setq byte-compile-warnings '(not cl-functions obsolete free-vars))
+  (setq byte-compile-warnings '(not cl-functions free-vars docstrings unresolved))
   (if (and (fboundp 'native-comp-available-p)
            (native-comp-available-p))
       (setq native-comp-speed  2
-            native-comp-async-report-warnings-errors 'silent))
-  (setq debug-on-error  t))
+            native-comp-async-report-warnings-errors 'silent
+            native-compile-target-directory (expand-file-name "eln-cache" user-emacs-directory)
+            ))
+  (setq debug-on-error t))
   #+end_src
 * 起動の高速化
   :PROPERTIES:
   :CUSTOM_ID: orgae182d4d
   :END:
   この辺は [[https://emacs-jp.github.io/tips/startup-optimization][Emacs の起動時間を""詰める""]] を参考に.
+** =early-init.el=
+   :PROPERTIES:
+   :CUSTOM_ID: orgcb2bfa7b
+   :END:
+   Emacs >= 27 からの機能. 他にも設定しておいた方が良い事はあるかな?
+   #+begin_src emacs-lisp :tangle early-init.el
+(setq gc-cons-threshold most-positive-fixnum)
+(setq package-enable-at-startup nil
+      package-quickstart nil)
+;;
+(push '(vertical-scroll-bars . nil) default-frame-alist)
+(push '(menu-bar-lines       . nil) default-frame-alist)
+(push '(tool-bar-lines       . nil) default-frame-alist)
+(push '(scroll-bar-mode      . nil) default-frame-alist)
+(push '(blink-cursor-mode    . nil) default-frame-alist)
+(push '(column-number-mode   . nil) default-frame-alist)
+;;
+(setq load-prefer-newer noninteractive)
+;;
+(setq frame-inhibit-implied-resize t)
+;;
+(setq site-run-file nil)
+;; (setq file-name-handler-alist nil) ;; 🤔
+(setq use-file-dialog nil)
+;;
+;; (setq native-comp-speed 2
+;;       native-compile-target-directory (expand-file-name "eln-cache" user-emacs-directory))
+(provide 'early-init)
+;;; early-init.el ends here
+   #+end_src
 ** GC の設定
    :PROPERTIES:
    :CUSTOM_ID: org77e2f299
@@ -150,40 +187,6 @@ init.el: README.org
             ;; recover default value
             (setq gc-cons-threshold 800000)))
    #+end_src
-   #+begin_src emacs-lisp :tangle early-init.el
-(setq gc-cons-threshold most-positive-fixnum)
-   #+end_src
-** =early-init.el=
-   :PROPERTIES:
-   :CUSTOM_ID: orgcb2bfa7b
-   :END:
-   Emacs >= 27 からの機能. 他にも設定しておいた方が良い事はあるかな?
-   #+begin_src emacs-lisp :tangle early-init.el
-(setq package-enable-at-startup nil
-      package-quickstart nil)
-;;
-(push '(vertical-scroll-bars . nil) default-frame-alist)
-(push '(menu-bar-lines       . nil) default-frame-alist)
-(push '(tool-bar-lines       . nil) default-frame-alist)
-(push '(scroll-bar-mode      . nil) default-frame-alist)
-(push '(blink-cursor-mode    . nil) default-frame-alist)
-(push '(column-number-mode   . nil) default-frame-alist)
-;;
-(setq load-prefer-newer noninteractive)
-;;
-(setq frame-inhibit-implied-resize t)
-;;
-(setq site-run-file nil)
-;; (setq file-name-handler-alist nil) ;; 🤔
-(setq use-file-dialog nil)
-;;
-(when (featurep 'native-compile)
-  (setq native-comp-async-report-warnings-errors nil
-        native-comp-deferred-compilation t)
-  )
-(provide 'early-init)
-;;; early-init.el ends here
-   #+end_src
 ** Magic File Name を一時的に無効化
    :PROPERTIES:
    :CUSTOM_ID: orgb6dd6727
@@ -195,6 +198,64 @@ init.el: README.org
 (add-hook 'emacs-startup-hook
           (lambda ()
             (setq file-name-handler-alist my:saved-file-name-handler-alist)))
+   #+end_src
+* Package 関連: [[https://emacs-jp.github.io/packages/package-management/package-el][package.el]], [[https://github.com/conao3/leaf.el][leaf.el]], [[https://github.com/dimitri/el-get][el-get]]
+  :PROPERTIES:
+  :CUSTOM_ID: orgcf4176e7
+  :END:
+  [[https://github.com/conao3/leaf.el][leaf.el]]のおかげで,
+  無いと途方に暮れるパッケージ以外のインストールは無視できるようになります.
+** [[https://emacs-jp.github.io/packages/package-management/package-el][package.el]]
+   :PROPERTIES:
+   :CUSTOM_ID: orgc51eb87d
+   :END:
+   パッケージは基本的に =package.el= で導入するので, 先ずはその設定.
+   #+begin_src emacs-lisp :tangle init.el
+;; elpa/gnutls workaround
+(eval-and-compile
+;;  (when (version<=  emacs-version "26.2")  ;; => for syntax hightlight
+;;    (customize-set-variable 'gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3"))
+  (setq package-archives '(("gnu"    . "https://elpa.gnu.org/packages/")
+                           ("melpa"  . "https://melpa.org/packages/")
+                           ("org"    . "https://orgmode.org/elpa/")
+                           ("nongnu" . "https://elpa.nongnu.org/nongnu/"))
+        package-gnupghome-dir (expand-file-name ".gnupg" (getenv "HOME"))
+        package-quickstart t
+        package-quickstart-file (expand-file-name "package-quickstart.el" my:d:tmp)
+        )
+  (add-hook 'kill-emacs-hook 'package-quickstart-refresh)
+  (if (and (fboundp 'native-comp-available-p)
+           (native-comp-available-p))
+      (setq package-native-compile t))
+  (package-initialize)
+  (unless (package-installed-p 'leaf)
+    (package-refresh-contents)
+    (package-install 'leaf t))
+  )
+   #+end_src
+** [[https://github.com/conao3/leaf.el][leaf.el]]
+   :PROPERTIES:
+   :CUSTOM_ID: orgc2ededbf
+   :END:
+   個々のパッケージの設定には[[https://github.com/conao3/leaf.el][leaf.el]]を利用します.
+   自分で修正した版やオリジナル版を別の場所から持ってくる場合は
+   [[https://github.com/conao3/leaf.el][leaf.el]]から[[https://github.com/dimitri/el-get][el-get]]を呼び出します.
+   #+begin_src emacs-lisp :tangle init.el
+  (leaf leaf-keywords
+    :doc "Use leaf as a package manager"
+    :url "https://github.com/conao3/leaf.el"
+    :ensure t
+    :init
+    (leaf blackout :ensure t)
+    (leaf hydra :ensure t)
+    (leaf el-get
+      :ensure t
+      :custom
+      (el-get-git-shallow-clone . t)
+      )
+    :config
+    (leaf-keywords-init)
+    )
    #+end_src
 * 独自関数
   :PROPERTIES:
@@ -262,6 +323,7 @@ init.el: README.org
           (switch-to-buffer "*scratch*")))
     (cond ((= arg 0) (message "*scratch* is cleared up."))
           ((= arg 1) (message "another *scratch* is created")))))
+
 ;;;###autoload
 (defun my:buffer-name-list ()
   "buffer 一覧の取得"
@@ -288,6 +350,7 @@ init.el: README.org
    #+begin_src emacs-lisp :tangle init.el
 (defvar my:delete-trailing-whitespace-exclude-suffix
   (list "\\.rd$" "\\.md$" "\\.rbt$" "\\.rab$"))
+
 ;;;###autoload
 (defun my:delete-trailing-whitespace ()
   (interactive)
@@ -309,6 +372,7 @@ init.el: README.org
 
    代わりに =C-x @= を =C-M-= に解釈させるように設定しておく.
    #+begin_src emacs-lisp :tangle init.el
+;;;###autoload
 ; cargo cult adaptation of event-apply-control-modifier
 (defun my:event-apply-control-meta-modifiers (ignore-prompt)
   (vector
@@ -316,65 +380,6 @@ init.el: README.org
                                                'control 26 "C-")
                          'meta 27 "M-")))
 (define-key function-key-map (kbd "C-x @") 'my:event-apply-control-meta-modifiers)
-   #+end_src
-* Package 関連: [[https://emacs-jp.github.io/packages/package-management/package-el][package.el]], [[https://github.com/conao3/leaf.el][leaf.el]], [[https://github.com/dimitri/el-get][el-get]]
-  :PROPERTIES:
-  :CUSTOM_ID: orgcf4176e7
-  :END:
-  [[https://github.com/conao3/leaf.el][leaf.el]]のおかげで,
-  無いと途方に暮れるパッケージ以外のインストールは無視できるようになります.
-** [[https://emacs-jp.github.io/packages/package-management/package-el][package.el]]
-   :PROPERTIES:
-   :CUSTOM_ID: orgc51eb87d
-   :END:
-   パッケージは基本的に =package.el= で導入するので, 先ずはその設定.
-   #+begin_src emacs-lisp :tangle init.el
-;; elpa/gnutls workaround
-(eval-and-compile
-  (when (version<=  emacs-version "26.2")  ;; => for syntax hightlight
-    (customize-set-variable 'gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3"))
-  (setq package-archives '(("gnu"    . "https://elpa.gnu.org/packages/")
-                           ("melpa"  . "https://melpa.org/packages/")
-                           ("org"    . "https://orgmode.org/elpa/")
-                           ("nongnu" . "https://elpa.nongnu.org/nongnu/"))
-        package-gnupghome-dir (expand-file-name ".gnupg" (getenv "HOME"))
-        package-quickstart t)
-  (add-hook 'kill-emacs-hook 'package-quickstart-refresh)
-  (if (and (fboundp 'native-comp-available-p)
-           (native-comp-available-p))
-      (setq package-native-compile t)))
-(eval-when-compile
-  (unless (file-exists-p (expand-file-name "bootstrap-stamp" my:d:tmp))
-    (package-refresh-contents)
-    (with-temp-buffer
-      (write-file (expand-file-name "bootstrap-stamp" my:d:tmp)))
-    ))
-(eval-and-compile (package-initialize))
-   #+end_src
-** [[https://github.com/conao3/leaf.el][leaf.el]]
-   :PROPERTIES:
-   :CUSTOM_ID: orgc2ededbf
-   :END:
-   個々のパッケージの設定には[[https://github.com/conao3/leaf.el][leaf.el]]を利用します.
-   自分で修正した版やオリジナル版を別の場所から持ってくる場合は
-   [[https://github.com/conao3/leaf.el][leaf.el]]から[[https://github.com/dimitri/el-get][el-get]]を呼び出します.
-   #+begin_src emacs-lisp :tangle init.el
-(eval-and-compile
-  (unless (package-installed-p 'leaf)
-    (package-refresh-contents)
-    (package-install 'leaf t))
-  (leaf leaf-keywords
-    :ensure t
-    :init
-    (leaf blackout :ensure t)
-    (leaf el-get
-      :ensure t
-      :init (setq el-get-git-shallow-clone t)
-      )
-    :config
-    (leaf-keywords-init)
-    )
-  )
    #+end_src
 * =exec-path-from-shell=: 環境変数の読み込み
   :PROPERTIES:
@@ -423,35 +428,6 @@ init.el: README.org
                           (getenv "PASSWORD_STORE_DIR")) nil))
   )
   #+end_src
-* 認証関連: =plstore=, =password-store= など
-  :PROPERTIES:
-  :CUSTOM_ID: org1a8b35da
-  :END:
-  - =leaf-plstore= で =plstore= が使えるようになったので,
-    その設定をしておく.
-  - =auth-password-store= で auth-source として =password-store= を使う.
-  といった事をしている.
-  #+begin_src emacs-lisp :tangle init.el
-(leaf *authentication
-  :if (and (getenv "GPG_KEY_ID")
-           my:d:password-store)
-  :init
-  (setq leaf-default-plstore
-     (plstore-open
-         (expand-file-name "plstore.plist" my:d:password-store)))
-  (add-to-list 'vc-directory-exclusion-list
-               (expand-file-name my:d:password-store))
-  (leaf auth-source
-    :init
-    (setq auth-source-gpg-encrypt-to '(getenv "GPG_KEY_ID")))
-  (leaf password-store :ensure t)
-  (leaf auth-source-pass :ensure t)
-  (leaf plstore
-    :init
-    (setq plstore-secret-keys 'silent
-          plstore-encrypt-to  (getenv "GPG_KEY_ID")))
-  )
-  #+end_src
 * 言語の設定
   :PROPERTIES:
   :CUSTOM_ID: orgadf8c6bf
@@ -497,7 +473,9 @@ init.el: README.org
    #+begin_src emacs-lisp :tangle init.el
 (leaf locale-eaw-emoji
   :el-get uwabami/locale-eaw-emoji
-  :hook (emacs-startup-hook . eaw-and-emoji-fullwidth)
+  :hook
+  ;; (emacs-startup-hook . eaw-half-emoji-fullwidth)
+  (emacs-startup-hook . eaw-and-emoji-fullwidth)
   )
    #+end_src
    - [ ] 最近, EAWは一文字幅強制の方が良いかなぁ, とか悩み中.
@@ -877,7 +855,7 @@ init.el: README.org
 (leaf ps-mule
   :if (executable-find "lpr")
   :custom
-  ((ps-multibyte-buffer       . 'nil ) ;;non-latin-printer
+  ((ps-multibyte-buffer       . 'non-latin-printer)
    (ps-printer-name           . "PDF")
    (ps-paper-size             . 'a4)
    ;; (ps-n-up-printing          .  2)
@@ -897,29 +875,29 @@ init.el: README.org
   :hook
   (defalias 'ps-mule-header-string-charset 'ignore)
   :config
-  (setq ps-mule-font-info-database-default
-        '((iso-8859-1
-           (normal nil nil))
-          (katakana-jisx0201
-           (normal builtin "Ryumin-Light-Katakana")
-           (bold builtin "GothicBBB-Medium-Katakana"))
-          (latin-jisx0201
-           (normal builtin "Ryumin-Light-Hankaku")
-           (bold builtin "GothicBBB-Medium-Hankaku"))
-          (japanese-jisx0208
-           (normal builtin "Ryumin-Light-Ext-H")
-           (bold builtin "GothicBBB-Medium-Ext-H"))
-          (japanese-jisx0213-2
-           (normal builtin "Ryumin-Light-Ext-H")
-           (bold builtin "GothicBBB-Medium-Ext-H"))
-          (japanese-jisx0213.2004-1
-           (normal builtin "Ryumin-Light-2004-H")
-           (bold builtin "GothicBBB-Medium-H"))
-          (unicode-bmp
-           (normal builtin "Ryumin-Light-Ext-H")
-           (bold builtin "GothicBBB-Medium-Ext-H"))
-          )
-        )
+  ;; (setq ps-mule-font-info-database-default
+  ;;       '((iso-8859-1
+  ;;          (normal nil nil))
+  ;;         (katakana-jisx0201
+  ;;          (normal builtin "Ryumin-Light-Katakana")
+  ;;          (bold builtin "GothicBBB-Medium-Katakana"))
+  ;;         (latin-jisx0201
+  ;;          (normal builtin "Ryumin-Light-Hankaku")
+  ;;          (bold builtin "GothicBBB-Medium-Hankaku"))
+  ;;         (japanese-jisx0208
+  ;;          (normal builtin "Ryumin-Light-Ext-H")
+  ;;          (bold builtin "GothicBBB-Medium-Ext-H"))
+  ;;         (japanese-jisx0213-2
+  ;;          (normal builtin "Ryumin-Light-Ext-H")
+  ;;          (bold builtin "GothicBBB-Medium-Ext-H"))
+  ;;         (japanese-jisx0213.2004-1
+  ;;          (normal builtin "Ryumin-Light-2004-H")
+  ;;          (bold builtin "GothicBBB-Medium-H"))
+  ;;         (unicode-bmp
+  ;;          (normal builtin "Ryumin-Light-Ext-H")
+  ;;          (bold builtin "GothicBBB-Medium-Ext-H"))
+  ;;         )
+  ;;       )
   )
    #+end_src
 ** =tab-bar-mode=: Emacsの「tab」
@@ -975,6 +953,35 @@ init.el: README.org
   )
    #+end_src
   - [[https://masutaka.net/chalow/2011-09-28-1.html][ターミナルの zsh と Emacs を風のように駆け抜ける！]]
+* 認証関連: =plstore=, =password-store= など
+  :PROPERTIES:
+  :CUSTOM_ID: org1a8b35da
+  :END:
+  - =leaf-plstore= で =plstore= が使えるようになったので,
+    その設定をしておく.
+  - =auth-password-store= で auth-source として =password-store= を使う.
+  といった事をしている.
+  #+begin_src emacs-lisp :tangle init.el
+(leaf *authentication
+  :if (and (getenv "GPG_KEY_ID")
+           my:d:password-store)
+  :init
+  (setq leaf-default-plstore
+     (plstore-open
+         (expand-file-name "plstore.plist" my:d:password-store)))
+  (add-to-list 'vc-directory-exclusion-list
+               (expand-file-name my:d:password-store))
+  (leaf auth-source
+    :init
+    (setq auth-source-gpg-encrypt-to '(getenv "GPG_KEY_ID")))
+  (leaf password-store :ensure t)
+  (leaf auth-source-pass :ensure t)
+  (leaf plstore
+    :init
+    (setq plstore-secret-keys 'silent
+          plstore-encrypt-to  (getenv "GPG_KEY_ID")))
+  )
+  #+end_src
 * =all-the-icons-in-terminal=: ターミナルでもicon fontを使いたい。
   :PROPERTIES:
   :CUSTOM_ID: orgd903bf1d
@@ -1746,6 +1753,7 @@ File.open(src, "r") {|f|
    :END:
    #+begin_src emacs-lisp
 (leaf corfu
+  :disabled t
   :ensure t
   :init
   (leaf corfu-terminal
@@ -1754,20 +1762,20 @@ File.open(src, "r") {|f|
     )
   :bind
   (:corfu-map
-   ("TAB" . corfu-next)
-   ("<tab>" . corfu-next)
-   ("S-TAB" . corfu-previous)
+   ("TAB"       . corfu-next)
+   ("<tab>"     . corfu-next)
+   ("S-TAB"     . corfu-previous)
    ("<backtab>" . corfu-previous)
-   ("C-j" . corfu-next)
-   ("C-n" . corfu-next)
-   ("C-p" . corfu-previous)
-   ("C-k" . corfu-previous))
+   ("C-j"       . corfu-next)
+   ("C-n"       . corfu-next)
+   ("C-p"       . corfu-previous)
+   ("C-k"       . corfu-previous))
   :custom
   `((completion-cycle-threshold . 4)
-    (tab-always-indent        . 'complete)
-    (corfu-cycle              . t)    ;; Enable cycling for `corfu-next/previous'
-    (corfu-auto               . t)    ;; Enable auto completion
-    (corfu-preselect-first    . nil)  ;; Disable candidate preselection
+    (tab-always-indent          . 'complete)
+    (corfu-cycle                . t)       ;; Enable cycling for `corfu-next/previous'
+    (corfu-auto                 . t)       ;; Enable auto completion
+    (corfu-preselect-first      . nil)     ;; Disable candidate preselection
     ;; (corfu-separator          . ?\s)  ;; Orderless field separator
     ;; (corfu-quit-at-boundary   . nil)  ;; Never quit at completion boundary
     ;; (corfu-quit-no-match      . nil)  ;; Never quit, even if there is no match
@@ -1787,7 +1795,7 @@ File.open(src, "r") {|f|
    :CUSTOM_ID: org3b1ea0b6
    :END:
    #+begin_src emacs-lisp
-(leaf cape :ensure t)
+;; (leaf cape :ensure t)
   ;; ;; 補完候補を出すときの文脈を特定
 
   ;; (defvar my-capf-context nil)
@@ -2428,7 +2436,6 @@ video/*; xdg-open %s;
      :END:
      元ネタ [[http://d.hatena.ne.jp/khiker/20080206/wanderlust]]
      #+begin_src emacs-lisp  :tangle init-wl.el
-(setq wl-user-mail-address-regexp "^uwabami.*\\|^sasakyh.*")
 ;; 一覧表示での置き換え規則に追加
 (defun my:wl-summary-line-for-me ()
   (if (catch 'found
@@ -2726,9 +2733,9 @@ video/*; xdg-open %s;
 ;; (my:wl-set-face 'wl-highlight-summary-important-flag-face
 ;;                 '((t (:foreground "#ffff4c" :bold nil :italic nil :weight normal ))))
 ;; (my:wl-set-face 'wl-highlight-folder-killed-face
-;;                 '((t (:foreground ,my:h:black :5Dbold nil :italic nil ))))
+;;                 '((t (:foreground "#4c4c4c" :5Dbold nil :italic nil ))))
 ;; (my:wl-set-face 'wl-highlight-folder-many-face
-;;                 '((t (:foreground ,my:h:magenta :bold nil :italic nil ))))
+;;                 '((t (:foreground "#ff7fbf" :bold nil :italic nil ))))
 ;; (my:wl-set-face 'wl-highlight-folder-opened-face
 ;;                 '((t (:foreground "#4cffff" :bold nil :italic nil ))))
 ;; (my:wl-set-face 'wl-highlight-folder-path-face
@@ -2736,47 +2743,47 @@ video/*; xdg-open %s;
 ;; (my:wl-set-face 'wl-highlight-folder-unknown-face
 ;;                 '((t (:foreground "#4cffff" :bold nil :italic nil ))))
 ;; (my:wl-set-face 'wl-highlight-folder-unread-face
-;;                 '((t (:foreground ,my:n:blue :bold nil :italic nil ))))
+;;                 '((t (:foreground "#4c4cff" :bold nil :italic nil ))))
 ;; (my:wl-set-face 'wl-highlight-header-separator-face
 ;;                 '((t (:inherit highlight :bold t ))))
 ;; (my:wl-set-face 'wl-highlight-message-citation-header
-;;                 '((t (:foreground ,my:h:green :bold nil :italic nil ))))
+;;                 '((t (:foreground "#7fff7f" :bold nil :italic nil ))))
 ;; (my:wl-set-face 'wl-highlight-summary-copied-face
 ;;                 '((t (:foreground "#4CFFFF" :bold nil :italic nil ))))
 ;; (my:wl-set-face 'wl-highlight-summary-deleted-face
-;;                 '((t (:foreground ,my:h:black :bold nil :italic nil ))))
+;;                 '((t (:foreground "#4c4c4c" :bold nil :italic nil ))))
 ;; (my:wl-set-face 'wl-highlight-summary-displaying-face
 ;;                 '((t (:underline t :bold nil :italic nil ))))
 ;; (my:wl-set-face 'wl-highlight-summary-disposed-face
 ;;                 '((t (:foreground "#aaaaaa" :bold nil :italic nil ))))
 ;; (my:wl-set-face 'wl-highlight-summary-flagged-face
-;;                 '((t (:foreground ,my:h:yellow :bold nil :italic nil ))))
+;;                 '((t (:foreground "#ffff7f" :bold nil :italic nil ))))
 ;; (my:wl-set-face 'wl-highlight-summary-forwarded-face
-;;                 '((t (:foreground ,my:h:blue :bold nil :italic nil ))))
+;;                 '((t (:foreground "#7f7fff" :bold nil :italic nil ))))
 ;; (my:wl-set-face 'wl-highlight-summary-high-read-face
-;;                 '((t (:foreground ,my:h:green :bold nil :italic nil ))))
+;;                 '((t (:foreground "#7fff7f" :bold nil :italic nil ))))
 ;; (my:wl-set-face 'wl-highlight-summary-high-unread-face
-;;                 '((t (:foreground ,my:h:orange :bold nil :italic nil ))))
+;;                 '((t (:foreground "#ffb347" :bold nil :italic nil ))))
 ;; (my:wl-set-face 'wl-highlight-summary-important-face
 ;;                 '((t (:foreground "#ffff4c" :bold nil :italic nil ))))
 ;; (my:wl-set-face 'wl-highlight-summary-killed-face
-;;                 '((t (:foreground ,my:h:black :bold nil :italic nil ))))
+;;                 '((t (:foreground "#4c4c4c" :bold nil :italic nil ))))
 ;; (my:wl-set-face 'wl-highlight-summary-l:read-face
 ;;                 '((t (:foreground "#4CFF4C" :bold nil :italic nil ))))
 ;; (my:wl-set-face 'wl-highlight-summary-l:unread-face
-;;                 '((t (:foreground ,my:h:lightb :bold nil :italic nil ))))
+;;                 '((t (:foreground "#7fbfff" :bold nil :italic nil ))))
 ;; (my:wl-set-face 'wl-highlight-summary-new-face
 ;;                 '((t (:foreground "#ff4c4c" :bold nil :italic nil ))))
 ;; (my:wl-set-face 'wl-highlight-summary-normal-face
 ;;                 '((t (:foreground "#f6f3e8" :bold nil :italic nil ))))
 ;; (my:wl-set-face 'wl-highlight-summary-prefetch-face
-;;                 '((t (:foreground ,my:n:blue :bold nil :italic nil ))))
+;;                 '((t (:foreground "#4c4cee" :bold nil :italic nil ))))
 ;; (my:wl-set-face 'wl-highlight-summary-resend-face
-;;                 '((t (:foreground ,my:h:orange :bold nil :italic nil ))))
+;;                 '((t (:foreground "#ffb347" :bold nil :italic nil ))))
 ;; (my:wl-set-face 'wl-highlight-summary-target-face
 ;;                 '((t (:foreground "#4CFFFF" :bold nil :italic nil ))))
 ;; (my:wl-set-face 'wl-highlight-summary-temp-face
-;;                 '((t (:foreground ,my:n:violet :bold nil :italic nil ))))
+;;                 '((t (:foreground "##ee4cee" :bold nil :italic nil ))))
 ;; (my:wl-set-face 'wl-highlight-summary-unread-face
 ;;                 '((t (:foreground "#ff4c4c" :bold nil :italic nil ))))
 ;; (my:wl-set-face 'wl-highlight-thread-indent-face
@@ -2948,9 +2955,9 @@ fi
   (if (and (stringp mailto-url)
            (string-match "\\`mailto:" mailto-url))
       (progn
-        (eval-and-compile (require 'rfc2368))
+        (eval-and-compile (require 'rfc6068))
         (let* ((headers (mapcar (lambda (h) (cons (intern (car h)) (cdr h)))
-                                (rfc2368-parse-mailto-url mailto-url)))
+                                (rfc6068-parse-mailto-url mailto-url)))
                (good-headers (cl-remove-if (lambda (h) (member (car h) '(Body))) headers))
                (body (cdr (assoc 'Body headers))))
           (wl-draft good-headers nil nil body)))))
@@ -3056,7 +3063,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         google-translate-backend-method 'curl)
   )
    #+end_src
-
 * 校正, 辞書等
   :PROPERTIES:
   :CUSTOM_ID: org15a06190
@@ -3081,6 +3087,42 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
          ("C-," . nil))
   :defer-config
   (add-to-list 'ispell-skip-region-alist '("[^\000-\377]+"))
+  )
+   #+end_src
+** =flycheck=: on-the-fly linter
+   :PROPERTIES:
+   :CUSTOM_ID: org4e0bdd17
+   :END:
+   #+begin_src emacs-lisp
+(leaf flycheck
+  :ensure t
+  ;; :hook (prog-mode-hook . flycheck-mode)
+  :custom ((flycheck-display-errors-delay . 0.3))
+  :config
+  (leaf flycheck-popup-tip
+    :ensure t
+    :hook (flycheck-mode-hook . flycheck-popup-tip-mode))
+  ;; (leaf flycheck-inline
+  ;;   :ensure t
+  ;;   :hook (flycheck-mode-hook . flycheck-inline-mode))
+  ;;
+  (flycheck-define-checker textlint
+    "A linter for text."
+    :command ("textlint-wrapper.sh" source)
+    :error-patterns
+    ((warning line-start (file-name) ":" line ":" column ": "
+              (id (one-or-more (not (any " "))))
+              (message (one-or-more not-newline)
+                       (zero-or-more "\n" (any " ") (one-or-more not-newline)))
+              line-end))
+    :modes (text-mode markdown-mode gfm-mode org-mode wl-draft-mode draft-mode))
+  :hook
+  ((text-mode-hook     . flycheck-mode)
+   (markdown-mode-hook . flycheck-mode)
+   (gfm-mode-hook      . flycheck-mode)
+   (org-mode-hook      . flycheck-mode)
+   (wl-draft-mode-hook . flycheck-mode)
+   (draft-mode-hook    . flycheck-mode))
   )
    #+end_src
 ** =lookup=: 電子辞書の検索
@@ -3247,6 +3289,17 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
               (cl-delete "+" org-emphasis-alist :key 'car :test 'equal)))
   (require 'org-tempo nil 'noerror)
   )
+   #+end_src
+** org-sticky-header: 編集中のヘッダを表示しておく
+   :PROPERTIES:
+   :CUSTOM_ID: org53a32adb
+   :END:
+   #+begin_src emacs-lisp
+(leaf org-sticky-header
+  :disabled t
+  :ensure t
+  :hook
+  `(org-mode-hook . org-sticky-header-mode))
    #+end_src
 ** Org-Id
    :PROPERTIES:
@@ -3728,24 +3781,52 @@ tasks."
    request token 等の置き場所の変更
    実際の情報等は =password-store= を使って設定しておく.
    ついでに agenda 表示の際の色付けを設定．
-   #+begin_src emacs-lisp :tangle init.el
+   #+begin_src emacs-lisp
 (leaf org-gcal
   :if (and my:d:password-store
            (and (file-directory-p my:d:org)
                 (executable-find "curl")))
   :ensure t
-  :commands (org-gcal-fetch org-gcal-sync)
+  ;; :el-get (org-gcal
+  ;;          :type github
+  ;;          :pkgname "kidd/org-gcal.el")
+  :commands (org-gcal-fetch
+             org-gcal-sync
+             org-gcal-post-at-point
+             org-gcal-reload-client-id-secret)
+  :advice ((:before org-gcal-sync
+                    org-gcal-reload-client-id-secret)
+           (:before org-gcal-fetch
+                    org-gcal-reload-client-id-secret)
+           (:before org-gcal-post-at-point
+                    org-gcal-reload-client-id-secret))
   :preface
   (setq org-gcal-dir (expand-file-name "org-gcal" my:d:tmp))
   (unless (file-directory-p org-gcal-dir)
     (make-directory org-gcal-dir))
+  ;; (setq oauth2-auto-plstore (expand-file-name "oauth2-auto.plist" my:d:tmp))
+  ;; (setq oauth2-auto-plstore (expand-file-name "oauth2-auto.plist" my:d:password-store))
   :init
+  ;; (leaf oauth2-auto
+  ;;   :custom
+  ;;   `(oauth2-auto-plstore . ,(expand-file-name "/run/user/1000/uwabami-emacs-cache/oauth2-auto.plist"))
+  ;;   )
+  ;; (leaf aio :ensure t)
+  ;; (leaf alert :ensure t)
+  ;; (leaf dash :ensure t)
+  (leaf oauth2-auto
+    :el-get rhaps0dy/emacs-oauth2-auto
+    :custom
+    `(oauth2-auto-plstore . ,(expand-file-name "oauth2-auto.plist" my:d:tmp))
+    )
+  ;;
   (leaf org-generic-id
     :custom
     `((org-generic-id-locations-file
        . ,(expand-file-name "org-generic-id-locations"  my:d:tmp))
       )
     )
+  (leaf request-deferred :ensure t)
   (leaf request
     :ensure t
     :preface
@@ -3756,13 +3837,14 @@ tasks."
     `((request-storage-directory . ,(expand-file-name "request" my:d:tmp)))
     )
   (leaf persist
+    :ensure t
     :config
     (setq persist--directory-location (expand-file-name "persist" my:d:tmp)))
   :custom
   `((org-gcal-dir
      . ,(expand-file-name "org-gcal" my:d:tmp))
     (org-gcal-token-file
-     . ,(expand-file-name "org-gcal/.org-gcal-token" my:d:tmp))
+     . ,(expand-file-name "org-gcal/org-gcal-token" my:d:tmp))
     (org-gcal-down-days    . 180)  ;; 未来 180 日
     (org-gcal-up-days      .  30)  ;; 過去 30 日
     (org-gcal-auto-archive . t)
@@ -3776,7 +3858,6 @@ tasks."
   (org-gcal-client-id
    org-gcal-client-secret
    org-gcal-file-alist)
-  ;; :hook (org-capture-after-finalize-hook  . org-gcal-fetch)
   )
    #+end_src
 ** OrgとRedmine の連携: =orgmine=
@@ -3814,20 +3895,20 @@ tasks."
     ;; (defun my:orgmine-setup ()
     ;;   "Custom: use `org-file-properties' for backward compatibility."
     ;;   (let* ((server (cdr (assoc-string "om_server" org-file-properties t)))
-	;;          (config (cdr (assoc-string server orgmine-servers t))))
+    ;;          (config (cdr (assoc-string server orgmine-servers t))))
     ;;     (if config
-	;;         (set (make-local-variable 'orgmine-server) server))
+    ;;         (set (make-local-variable 'orgmine-server) server))
     ;;     (mapc (lambda (elem)
-	;;             (let* ((key (car elem))
-	;; 	               (symbol (intern (format "orgmine-%s" key)))
-	;; 	               (value (cdr elem)))
-	;;               (if (memq key orgmine-valid-variables)
-	;; 	              (progn
-	;; 	                (set (make-local-variable symbol) value)
-	;; 	                (if (eq key 'custom-fields)
-	;; 		                (orgmine-setup-custom-fields value)))
-	;; 	            (message "orgmine-setup: %s: skipped - invalid name" key))))
-	;;           config))
+    ;;             (let* ((key (car elem))
+    ;;                 (symbol (intern (format "orgmine-%s" key)))
+    ;;                 (value (cdr elem)))
+    ;;               (if (memq key orgmine-valid-variables)
+    ;;                (progn
+    ;;                  (set (make-local-variable symbol) value)
+    ;;                  (if (eq key 'custom-fields)
+    ;;                      (orgmine-setup-custom-fields value)))
+    ;;              (message "orgmine-setup: %s: skipped - invalid name" key))))
+    ;;           config))
     ;;   (orgmine-setup-tags)
     ;;   (run-hooks 'orgmine-setup-hook))
     ;; :advice
@@ -4016,6 +4097,18 @@ tasks."
 \\pgfplotsset{compat=newest}
 \\usepackage{tikz}
 \\usetikzlibrary{intersections,calc,arrows,arrows.meta,decorations.markings,fadings,decorations.pathreplacing,patterns}
+\\definecolor{cud_blue}{HTML}{005aff}
+\\definecolor{cud_green}{HTML}{03af7a}
+\\definecolor{cud_orange}{HTML}{f6aa00}
+\\definecolor{cud_red}{HTML}{ff4b00}
+\\definecolor{cud_yellow}{HTML}{fff100}
+\\definecolor{cud_cyan}{HTML}{4dc4ff}
+\\definecolor{cud_pink}{HTML}{ff8082}
+\\definecolor{cud_purple}{HTML}{990099}
+\\definecolor{cud_brown}{HTML}{804000}
+\\definecolor{cud_lightgrey}{HTML}{c8c8cb}
+\\definecolor{cud_grey}{HTML}{84919e}
+\\definecolor{blackblue}{HTML}{2C3E50}
 \\def\\pgfsysdriver{pgfsys-dvipdfmx.def}
 \[PACKAGES]
 \[DEFAULT-PACKAGES]")
@@ -4093,6 +4186,8 @@ pdflang={%l}}
                '(:institute      "INSTITUTE"       nil nil))
   (add-to-list 'org-export-options-alist
                '(:shortinstitute "SHORT_INSTITUTE" nil nil))
+  (add-to-list 'org-export-options-alist
+               '(:outlinetitle   "OUTLINE_TITLE" nil nil))
   ;; customize
   (defun my:org-beamer-template (contents info)
     "Custom: support shortdate, shorttile, shortauthor, institute for beamer export"
@@ -4187,7 +4282,11 @@ pdflang={%l}}
             (format "\\begin{frame}%s{%s}\n"
                     (org-beamer--normalize-argument
                      (plist-get info :beamer-outline-frame-options) 'option)
-                    (plist-get info :beamer-outline-frame-title))
+                    (cond ((plist-get info :outlinetitle)
+                           (plist-get info :outlinetitle))
+                          (t
+                           (plist-get info :beamer-outline-frame-title)))
+                    )
             (when (wholenump depth)
               (format "\\setcounter{tocdepth}{%d}\n" depth))
             "\\tableofcontents\n"
@@ -4379,6 +4478,7 @@ pdflang={%l}}
     (TeX-PDF-from-DVI                  . "Dvipdfmx")
     (TeX-view-program-selection        . '((output-dvi "xdvi")
                                            (output-pdf "Okular")
+                                           ;; (output-pdf "Evince")
                                            (output-html "xdg-open")))
     (LaTeX-figure-label                . "fig:")
     (LaTeX-table-label                 . "tab:")
@@ -4405,6 +4505,7 @@ pdflang={%l}}
   #+begin_src emacs-lisp :tangle init.el
 (leaf lua-mode :ensure t)
 (leaf ssh-config-mode :ensure t)
+(leaf fish-mode :ensure t :mode (("\\.fish'" . fish-mode)))
 ;; (leaf *misc-mode
 ;;   :init
 ;;   (leaf systemd :ensure t)
@@ -4501,40 +4602,40 @@ pdflang={%l}}
   (interactive)
   (progn
     (set-face-attribute 'default nil
-                        :family "AGVUDP"
-                        :height 180)
+                        :family "FSMRMP"
+                        :height 135)
     (set-face-attribute 'fixed-pitch nil
-                        :family "AGVUDP"
-                        :height 180)
+                        :family "FSMRMP"
+                        :height 135)
     (set-face-attribute 'variable-pitch nil
-                        :family "AGVUDP"
-                        :height 180)
+                        :family "FSMRMP"
+                        :height 135)
     ;; Japanese
     (set-fontset-font nil
                       'japanese-jisx0213.2004-1
-                      (font-spec :family "AGVUDP" :height 180))
+                      (font-spec :family "FSMRMP" :height 135))
     (set-fontset-font nil
                       'japanese-jisx0213-2
-                      (font-spec :family "AGVUDP" :height 180))
+                      (font-spec :family "FSMRMP" :height 135))
     (set-fontset-font nil
                       'katakana-jisx0201
-                      (font-spec :family "AGVUDP" :height 180))
+                      (font-spec :family "FSMRMP" :height 135))
     ;; Latin with pronounciation annotations
     (set-fontset-font nil
                       '(#x0080 . #x024F)
-                      (font-spec :family "AGVUDP" :height 180))
+                      (font-spec :family "FSMRMP" :height 135))
     ;; Math symbols
     (set-fontset-font nil
                       '(#x2200 . #x22FF)
-                      (font-spec :family "AGVUDP" :height 180))
+                      (font-spec :family "FSMRMP" :height 135))
     ;; Greek
     (set-fontset-font nil
                       '(#x0370 . #x03FF)
-                      (font-spec :family "AGVUDP" :height 180))
+                      (font-spec :family "FSMRMP" :height 135))
     ;; Some Icons
     (set-fontset-font nil
                       '(#xE0A0 . #xEEE0)
-                      (font-spec :family "AGVUDP" :height 180))
+                      (font-spec :family "FSMRMP" :height 135))
     ))
 (leaf *gui
   :if window-system
@@ -4573,211 +4674,129 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
    :PROPERTIES:
    :CUSTOM_ID: orgce78777d
    :END:
-   最近乗り換えた.
-   じたばたしているのは背景透過と Wanderlust の face の追加, かな?
-   あとはデフォルトの font-lock を(好みに合わせて)入れ替えたり.
+   デフォルトの font-lock を(好みに合わせて)入れ替えたり.
    #+begin_src emacs-lisp :tangle init.el
 (leaf modus-themes
   :ensure t
   :bind ("<f5>" . modus-themes-toggle)
+  :commands modus-themes-load-theme
   :preface
-  (defun my:set-background (&optional frame)
-    "Unsets the background color for transparency"
-    (or frame
-        (setq frame (selected-frame)))
-    (if (display-graphic-p frame)
-        (progn
-          (set-frame-parameter nil 'alpha '(80  50))
-          (add-to-list 'default-frame-alist '(alpha 80 50)))
-      (set-face-background 'default "unspecified-bg" frame)))
-  :advice
-  ((:after modus-themes-load-vivendi
-           my:set-background)
-   (:after modus-themes-load-operandi
-           (lambda ()
-             (set-face-background 'default "#FFFFFF" ))))
-  :hook
-  ((window-setup-hook . my:set-background)
-   (tty-setup-hook . my:set-background)
-   (modus-themes-after-load-theme-hook . my:modus-themes-custom-faces)
-   ;; (emacs-startup-hook . modus-themes-load-vivdendi)
-   )
-  ;; :hook
-  ;; `(;; (window-setup-hook . modus-themes-load-vivendi)
-  ;;   ;; (tty-setup-hook . modus-themes-load-vivendi)
-  ;;   )
-  :custom
-  `(
-    (modus-themes-inhibit-reload          . t)
-    (modus-themes-success-deuteranopia    . nil) ;; default
-    (modus-themes-bold-constructs         . nil) ;; default
-    (modus-themes-italic-constructs       . nil) ;; default
-    (modus-themes-syntax                  . '(alt-syntax green-strings))
-    (modus-themes-no-mixed-fonts          . t)
-    (modus-themes-links                   . '(neutral-underline bold))
-    (modus-themes-prompts                 . '(intense bold))
-    (modus-themes-mode-line               . '(borderless accented))
-    (modus-themes-tabs-accented           . t)
-    (modus-themes-completions             . nil) ;; default
-    (modus-themes-mail-citations          . nil) ;; default
-    (modus-themes-fringes                 . nil) ;; default
-    (modus-themes-lang-checkers           . '(straight-underline intense))
-    (modus-themes-hl-line                 . '(accented intense))
-    (modus-themes-subtle-line-numbers     . nil) ;; default
-    (modus-themes-paren-match             . '(bold intense))
-    (modus-themes-region                  . '(accented no-extend))
-    (modus-themes-diffs                   . nil) ;; default
-    (modus-themes-org-blocks              . nil) ;; default
-    (modus-themes-org-agenda              . '((t . nil)))
-    (modus-themes-headings                . '((t . (rainbow))))
-    (modus-themes-scale-headings          . nil)
-    (modus-themes-variable-pitch-ui       . nil)
-    (modus-themes-variable-pitch-headings . nil)
-    ;; (modus-themes-vivendi-color-overrides
-    ;;  . '(
-    ;;      (bg-hl-line-intense-accent . "#556b2f")
-    ;;      ))
-    )
-  :init
-  (modus-themes-load-themes)
-  :config
-  (eval-when-compile
-    (require 'modus-themes))
-  ;;
-  (defun my:modus-themes-custom-faces ()
+  (defun my:override-face-attribute()
+    "CUSTOM: Override face attribute"
     (modus-themes-with-colors
       (custom-set-faces
-       ;;
-       `(modus-themes-hl-line ((,class ,@(modus-themes--hl-line
-                                          bg-hl-line bg-hl-line-intense
-                                          ;; bg-hl-line-intense-accent
-                                          "#556b2f"
-                                          blue-nuanced-bg
-                                          bg-region blue-intense-bg
-                                          fg-alt cyan-intense)
-                                       :extend t)))
-       ;; `(hl-line ((,class :background "#556b2f")))
-       ;;
-       ;; preprocessor → builtin
-       `(font-lock-builtin-face ((,class ,@(modus-themes--syntax-extra
-                                              blue-alt-other blue-alt-other-faint
-                                              blue-alt blue-alt-faint))))
-       ;; preprocessor:: red
-       `(font-lock-preprocessor-face ((,class :inherit modus-themes-bold
-                                         ,@(modus-themes--syntax-extra
-                                            red-alt red-alt-faint
-                                            red-intense red-faint))))
-       ;; constant → function
-       `(font-lock-function-name-face ((,class ,@(modus-themes--syntax-extra
-                                             blue-alt-other blue-alt-other-faint
-                                             magenta-alt-other magenta-alt-other-faint))))
-       ;; constant :: custom
-       `(font-lock-constant-face ((,class ,@(modus-themes--syntax-extra
-                                             orange-intense orange-intense
-                                             orange-intense orange-intense))))
-       ;; keyword → string
-       `(font-lock-string-face ((,class :inherit modus-themes-bold
-                                        ,@(modus-themes--syntax-extra
-                                           magenta-alt-other magenta-alt-other-faint
-                                           cyan cyan-faint))))
-       ;; keyword :: custom
-       `(font-lock-keyword-face ((,class :inherit modus-themes-bold
-                                         ,@(modus-themes--syntax-extra
-                                            red-alt-other red-alt-other-faint
-                                            red-alt-other red-alt-other-faint))))
-       ;; type → negation-char
-       `(font-lock-negation-char-face ((,class :inherit modus-themes-bold
-                                      ,@(modus-themes--syntax-foreground
-                                         cyan-alt-other cyan-alt-faint))))
-       ;; type :: custom
-       `(font-lock-type-face ((,class :inherit modus-themes-bold
-                                      ,@(modus-themes--syntax-foreground
-                                         yellow-intense yellow-faint))))
-       `(font-lock-regexp-grouping-backslash ((,class :inherit bold
-                                                      ,@(modus-themes--syntax-string
-                                                         fg-escape-char-backslash fg-escape-char-backslash
-                                                         fg-escape-char-backslash fg-escape-char-backslash
-                                                         ))))
-       `(font-lock-regexp-grouping-construct ((,class :inherit bold
-                                                      ,@(modus-themes--syntax-string
-                                                         fg-escape-char-construct fg-escape-char-construct
-                                                         fg-escape-char-construct fg-escape-char-construct
-                                                         ))))
-       ;; カスタマイズ済みなので上書き
-       `(org-agenda-date-weekend
-         ((,class :inherit 'default :foreground "#ff7f7f" :bold t)))
-       `(org-agenda-date
-         ((,class :inherit 'default :foreground "#ffffff" :bold t )))
-       `(org-agenda-date-today
-         ((,class :inherit 'default :foreground "#ffffff" :bold t :underline)))
-       ;; 不要
-       `(org-block-begin-line ((,class :background nil)))
-       `(org-block-end-line ((,class :background nil)))
-       ;; shell の lscolors に揃える.
-       `(dired-directory ((,class :foreground "#7f7fff" :bold t)))
-       ;;
-       ;; w3m
-       `(w3m-anchor          ((,class :inherit 'link)))
-       `(w3m-arrived-anchor  ((,class :inherit 'link-visited)))
-       `(w3m-error           ((,class :inherit 'error)))
-       ;;
-       ;; wanderlust
-       `(wl-highlight-folder-closed-face                  ((,class ,@(modus-themes--syntax-string green-alt-other green-alt-other green-alt-other green-alt-other ))))
-       `(wl-highlight-folder-few-face                     ((,class ,@(modus-themes--syntax-string red-alt-other red-alt-other red-alt-other red-alt-other ))))
-       `(wl-highlight-folder-killed-face                  ((,class ,@(modus-themes--syntax-string fg-alt fg-alt fg-alt fg-alt ))))
-       `(wl-highlight-folder-many-face                    ((,class ,@(modus-themes--syntax-string magenta magenta magenta magenta ))))
-       `(wl-highlight-folder-opened-face                  ((,class ,@(modus-themes--syntax-string cyan-alt-other cyan-alt-other cyan-alt-other cyan-alt-other ))))
-       `(wl-highlight-folder-path-face                    ((,class :underline t :bold t)))
-       `(wl-highlight-folder-unknown-face                 ((,class ,@(modus-themes--syntax-string cyan-alt cyan-alt cyan-alt cyan-alt ))))
-       `(wl-highlight-folder-unread-face                  ((,class ,@(modus-themes--syntax-string blue-alt blue-alt blue-alt blue-alt ))))
-       `(wl-highlight-folder-zero-face                    ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
-       `(wl-highlight-message-citation-header             ((,class ,@(modus-themes--syntax-string green-active green-active green-active green-active))))
-       `(wl-highlight-message-cited-text-1                ((,class ,@(modus-themes--syntax-string green-intense green-intense green-intense green-intense))))
-       `(wl-highlight-message-cited-text-2                ((,class ,@(modus-themes--syntax-string yellow-intense yellow-intense yellow-intense yellow-intense))))
-       `(wl-highlight-message-cited-text-3                ((,class ,@(modus-themes--syntax-string blue-intense blue-intense blue-intense blue-intense))))
-       `(wl-highlight-message-cited-text-4                ((,class ,@(modus-themes--syntax-string cyan-intense cyan-intense cyan-intense cyan-intense))))
-       `(wl-highlight-message-cited-text-5                ((,class ,@(modus-themes--syntax-string purple-intense purple-intense purple-intense purple-intense))))
-       `(wl-highlight-message-cited-text-6                ((,class ,@(modus-themes--syntax-string red-intense red-intense red-intense red-intense))))
-       `(wl-highlight-message-cited-text-7                ((,class ,@(modus-themes--syntax-string green-intense green-intense green-intense green-intense))))
-       `(wl-highlight-message-cited-text-8                ((,class ,@(modus-themes--syntax-string yellow-intense yellow-intense yellow-intense yellow-intense))))
-       `(wl-highlight-message-cited-text-9                ((,class ,@(modus-themes--syntax-string blue-intense blue-intense blue-intense blue-intense))))
-       `(wl-highlight-message-cited-text-10               ((,class ,@(modus-themes--syntax-string cyan-intense cyan-intense cyan-intense cyan-intense))))
-       `(wl-highlight-message-header-contents             ((,class ,@(modus-themes--syntax-string purple-intense purple-intense purple-intense purple-intense))))
-       `(wl-highlight-message-headers                     ((,class ,@(modus-themes--syntax-string cyan-intense cyan-intense cyan-intense cyan-intense))))
-       `(wl-highlight-message-important-header-contents   ((,class ,@(modus-themes--syntax-string magenta-intense magenta-intense magenta-intense magenta-intense))))
-       `(wl-highlight-message-important-header-contents2  ((,class ,@(modus-themes--syntax-string magenta-intense magenta-intense magenta-intense magenta-intense))))
-       `(wl-highlight-message-signature                   ((,class ,@(modus-themes--syntax-string fg-dim fg-dim fg-dim fg-dim))))
-       `(wl-highlight-message-unimportant-header-contents ((,class ,@(modus-themes--syntax-string fg-dim fg-dim fg-dim fg-dim))))
-       `(wl-highlight-summary-answered-face               ((,class ,@(modus-themes--syntax-string green-intense green-intense green-intense green-intense))))
-       `(wl-highlight-summary-deleted-face                ((,class ,@(modus-themes--syntax-string blue-intense blue-intense blue-intense blue-intense))))
-       `(wl-highlight-summary-disposed-face               ((,class ,@(modus-themes--syntax-string fg-dim fg-dim fg-dim fg-dim))))
-       `(wl-highlight-summary-flagged-face                ((,class ,@(modus-themes--syntax-string yellow-intense yellow-intense yellow-intense yellow-intense))))
-       `(wl-highlight-summary-high-unread-face            ((,class ,@(modus-themes--syntax-string red-intense red-intense red-intense red-intense))))
-       `(wl-highlight-summary-low-unread-face             ((,class ,@(modus-themes--syntax-string red-intense red-intense red-intense red-intense))))
-       `(wl-highlight-summary-normal-face                 ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
-       `(wl-highlight-summary-refiled-face                ((,class ,@(modus-themes--syntax-string blue-alt blue-alt blue-alt blue-alt))))
-       `(wl-highlight-summary-spam-face                   ((,class ,@(modus-themes--syntax-string magenta-intense magenta-intense magenta-intense magenta-intense))))
-       `(wl-highlight-summary-thread-top-face             ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
-       `(wl-highlight-summary-unread-face                 ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
-       ;; `(wl-highlight-header-separator-face               ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
-       ;; `(wl-highlight-logo-face                           ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
-       ;; `(wl-highlight-summary-copied-face                 ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
-       `(wl-highlight-summary-displaying-face             ((,class :underline t :bold t)))
-       ;; `(wl-highlight-summary-resend-face                 ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
-       ;; `(wl-highlight-summary-prefetch-face               ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
-       ;; `(wl-highlight-summary-target-face                 ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
-       ;; `(wl-highlight-summary-temp-face                   ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
-       `(wl-highlight-summary-new-face                    ((,class ,@(modus-themes--syntax-string red-intense red-intense red-intense red-intense))))
-       ;; `(wl-highlight-summary-killed-face                 ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
-       ;; `(wl-highlight-summary-low-read-face               ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
-       ;; `(wl-highlight-thread-indent-face                  ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
-       ;; `(wl-highlight-summary-forwarded-face              ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
-       ;; `(wl-highlight-summary-high-read-face              ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
-       ;; `(wl-message-header-narrowing-face                 ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
-       ;; `(wl-summary-persistent-mark-face                  ((,class ,@(modus-themes--syntax-string fg-main fg-main fg-main fg-main))))
+       `(font-lock-comment-delimiter-face ((,c :inherit font-lock-comment-face :bold t)))
+       `(wl-highlight-folder-closed-face                  ((,c :foreground ,green-cooler )))
+       `(wl-highlight-folder-few-face                     ((,c :foreground ,red-cooler )))
+       `(wl-highlight-folder-killed-face                  ((,c :foreground ,fg-alt )))
+       `(wl-highlight-folder-many-face                    ((,c :foreground ,magenta )))
+       `(wl-highlight-folder-opened-face                  ((,c :foreground ,cyan-cooler )))
+       `(wl-highlight-folder-unknown-face                 ((,c :foreground ,cyan-warmer )))
+       `(wl-highlight-folder-unread-face                  ((,c :foreground ,blue-warmer )))
+       `(wl-highlight-folder-zero-face                    ((,c :foreground ,fg-main )))
+       `(wl-highlight-message-citation-header             ((,c :foreground ,green-warmer )))
+       `(wl-highlight-message-cited-text-1                ((,c :foreground ,green-intense )))
+       `(wl-highlight-message-cited-text-2                ((,c :foreground ,yellow-intense )))
+       `(wl-highlight-message-cited-text-3                ((,c :foreground ,blue-intense )))
+       `(wl-highlight-message-cited-text-4                ((,c :foreground ,cyan-intense )))
+       `(wl-highlight-message-cited-text-5                ((,c :foreground ,magenta-cooler )))
+       `(wl-highlight-message-cited-text-6                ((,c :foreground ,red-intense )))
+       `(wl-highlight-message-cited-text-7                ((,c :foreground ,green-intense )))
+       `(wl-highlight-message-cited-text-8                ((,c :foreground ,yellow-intense )))
+       `(wl-highlight-message-cited-text-9                ((,c :foreground ,blue-intense )))
+       `(wl-highlight-message-cited-text-10               ((,c :foreground ,cyan-intense )))
+       `(wl-highlight-message-header-contents             ((,c :foreground ,magenta-cooler )))
+       `(wl-highlight-message-headers                     ((,c :foreground ,cyan-intense )))
+       `(wl-highlight-message-important-header-contents   ((,c :foreground ,magenta-intense )))
+       `(wl-highlight-message-important-header-contents2  ((,c :foreground ,magenta-intense )))
+       `(wl-highlight-message-signature                   ((,c :foreground ,fg-dim )))
+       `(wl-highlight-message-unimportant-header-contents ((,c :foreground ,fg-dim )))
+       `(wl-highlight-summary-answered-face               ((,c :foreground ,green-intense )))
+       `(wl-highlight-summary-deleted-face                ((,c :foreground ,blue-intense )))
+       `(wl-highlight-summary-disposed-face               ((,c :foreground ,fg-dim )))
+       `(wl-highlight-summary-flagged-face                ((,c :foreground ,yellow-intense )))
+       `(wl-highlight-summary-high-unread-face            ((,c :foreground ,red-intense )))
+       `(wl-highlight-summary-low-unread-face             ((,c :foreground ,red-intense )))
+       `(wl-highlight-summary-normal-face                 ((,c :foreground ,fg-main )))
+       `(wl-highlight-summary-refiled-face                ((,c :foreground ,blue-warmer )))
+       `(wl-highlight-summary-spam-face                   ((,c :foreground ,magenta-intense )))
+       `(wl-highlight-summary-thread-top-face             ((,c :foreground ,fg-main )))
+       `(wl-highlight-summary-unread-face                 ((,c :foreground ,fg-main )))
+       `(wl-highlight-summary-new-face                    ((,c :foreground ,red-intense )))
+       `(wl-highlight-summary-displaying-face             ((,c :underline t :bold t)))
+       `(wl-highlight-folder-path-face                    ((,c :underline t :bold t)))
        )))
-  ;; load!
-  (modus-themes-load-vivendi)
+  :hook
+  `((modus-themes-after-load-theme-hook . my:override-face-attribute))
+  :custom
+  `(
+    (modus-themes-custom-auto-reload      . t)
+    (modus-themes-disable-other-themes    . t)
+    (modus-themes-bold-constructs         . nil)
+    (modus-themes-italic-constructs       . nil)
+    (modus-themes-mixed-fonts             . nil)
+    (modus-themes-prompts
+     . '(bold bold))
+    (modus-themes-completions
+     . '((matches   . (bold))
+         (selection . (bold underline))))
+    (modus-themes-org-blocks              . nil)
+    (modus-themes-headings                . '((t . (bold))))
+    (modus-themes-variable-pitch-ui       . nil)
+    (modus-vivendi-palette-overrides
+     . '(;;
+         ;;; Basic color override
+         (green-cooler "#bfff7f")
+         (green-faint "#4ceea5")
+         (yellow "#efef00")
+         (yellow-warmer "#ffb347")
+         (yellow-intense "#ffff7f")
+         ;;
+         (bg-yellow-intense "#556b2f")
+         ;;
+         (bg-main 'unspecified)
+         (comment fg-dim)
+         (bg-hl-line bg-yellow-intense)
+         ;;
+         ;;; Code remapping
+         ;;
+         (builtin blue-warmer)
+         (constant yellow-warmer)
+         (docstring green-faint)
+         (docmarkup green-faint)
+         (fnname magenta-cooler)
+         (keyword red-faint)
+         (preprocessor red-cooler)
+         (string cyan-cooler)
+         (type yellow-intense)
+         (variable blue)
+         ;;
+         (rx-construct blue-faint)
+         (rx-backslash green-cooler)
+         ;;
+         (fg-link cyan-warmer)
+         ;;
+         (err red-intense)
+         (warning magenta-intense)
+         (info cyan-intense)
+         ;;
+         ;; Org Agenda view
+         (date-common fg-main)
+         (date-weekday fg-main)
+         ;; headline
+         (fg-heading-0 cyan-intense)
+         (fg-heading-1 magenta-cooler)
+         (fg-heading-2 blue-cooler)
+         (fg-heading-3 yellow-warmer)
+         (fg-heading-4 green-faint)
+         (fg-heading-5 yellow-intense)
+         (fg-heading-6 red-cooler)
+         (fg-heading-7 magenta-warmer)
+         (fg-heading-8 fg-main)
+         ))
+    )
+  :init
+  (modus-themes-load-theme 'modus-vivendi)
   )
    #+end_src
 ** modeline: =powerline=
@@ -4868,7 +4887,7 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
                (lhs (list (powerline-raw (format "%s" (my:skk-modeline-input-mode)) mode-line 'l)
                           (powerline-raw "%*" mode-line 'l)
                           (powerline-raw mode-line-mule-info mode-line 'l)
-                          (powerline-raw (my:major-mode-icon major-mode) mode-line 'l)
+                          ;; (powerline-raw (my:major-mode-icon major-mode) mode-line 'l)
                           (powerline-buffer-id mode-line-buffer-id 'l)
                           (powerline-raw " ")
                           ;; (funcall separator-left face0 face1)
@@ -4942,11 +4961,18 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
 ;;   )
 ;;
 (leaf vterm
+;;   :el-get (vterm
+;;            :type github
+;;            :pkgname "akermu/emacs-libvterm")
   :ensure t
+  :custom
+  `((vterm-always-compile-module . t))
   :hook
   (vterm-mode-hook
    . (lambda () (setq-local global-hl-line-mode nil)))
   )
+(leaf nginx-mode :ensure t)
+(leaf apache-mode :ensure t)
 (leaf keg :ensure t)
 (leaf keg-mode :ensure t)
 (leaf esup
@@ -4991,7 +5017,17 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
   #+begin_src emacs-lisp :tangle init.el
 (provide 'init)
 ;; Local Variables:
-;; byte-compile-warnings: (not obsolete cl-functions)
+;; byte-compile-warnings: (not cl-functions free-vars docstrings unresolved)
+;; End:
+  #+end_src
+  #+begin_src emacs-lisp :tangle init-wl.el
+;; Local Variables:
+;; byte-compile-warnings: (not cl-functions free-vars docstrings unresolved)
+;; End:
+  #+end_src
+  #+begin_src emacs-lisp :tangle init-ddskk.el
+;; Local Variables:
+;; byte-compile-warnings: (not cl-functions free-vars docstrings unresolved)
 ;; End:
   #+end_src
 ** LICENSE

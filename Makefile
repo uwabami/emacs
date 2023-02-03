@@ -20,14 +20,13 @@ init.el: README.org
 	@mkdir -p elpa
 	@mkdir -p el-get
 	@mkdir -p share
-	$(EMACS) -Q -q --batch --eval \
+	$(EMACS) --batch --eval \
 	   "(progn \
 		  (require 'ob-tangle) \
 		  (org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\"))"
-	$(EMACS) -q -l init.el --batch --eval '(kill-emacs)'
+	$(EMACS) -l init.el --batch --eval '(kill-emacs)'
 %.elc: %.el
-	$(EMACS) -q -l init.el -batch -f batch-byte-compile $<
-#	@rm -f $<
+	$(EMACS) -l init.el -batch -f batch-byte-compile $<
 
 clean:
 	rm -fr auto-save-list *.el *.elc *~

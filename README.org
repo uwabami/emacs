@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2023-02-03 17:27:06
+#+date: 2023-03-15 00:31:42
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -220,10 +220,10 @@ init.el: README.org
                            ("org"    . "https://orgmode.org/elpa/")
                            ("nongnu" . "https://elpa.nongnu.org/nongnu/"))
         package-gnupghome-dir (expand-file-name ".gnupg" (getenv "HOME"))
-        package-quickstart t
-        package-quickstart-file (expand-file-name "package-quickstart.el" my:d:tmp)
+        package-quickstart nil
+        ;; package-quickstart-file (expand-file-name "package-quickstart.el" my:d:tmp)
         )
-  (add-hook 'kill-emacs-hook 'package-quickstart-refresh)
+  ;; (add-hook 'kill-emacs-hook 'package-quickstart-refresh)
   (if (and (fboundp 'native-comp-available-p)
            (native-comp-available-p))
       (setq package-native-compile t))
@@ -521,7 +521,7 @@ init.el: README.org
     ;; 編集
     (tab-width              . 4)    ;; tab 幅 4
     (indent-tabs-mode       . nil)  ;; tab ではインデントしない
-    (fill-column            . 72)   ;; RFC2822 風味
+    (fill-column            . 78)   ;; RFC5322 風味
     (truncate-lines         . nil)  ;; 折り返し無し
     (truncate-partial-width-windows . nil)
     (paragraph-start        . '"^\\([ 　・○<\t\n\f]\\|(?[0-9a-zA-Z]+)\\)")
@@ -815,7 +815,7 @@ init.el: README.org
    #+begin_src emacs-lisp :tangle init.el
 (leaf browse-url
   ;; :require t
-  :bind ("C-c C-j" . browse-url-at-point)
+  :bind* ("C-c C-j" . browse-url-at-point)
   :defer-config
   (cond ((executable-find "xdg-open")
          (setq browse-url-browser-function 'browse-url-xdg-open
@@ -980,276 +980,6 @@ init.el: README.org
     :init
     (setq plstore-secret-keys 'silent
           plstore-encrypt-to  (getenv "GPG_KEY_ID")))
-  )
-  #+end_src
-* =all-the-icons-in-terminal=: ターミナルでもicon fontを使いたい。
-  :PROPERTIES:
-  :CUSTOM_ID: orgd903bf1d
-  :END:
-  [[https://github.com/domtronn/all-the-icons.el][all-the-icons.el]]のデータを修正して,
-  [[https://github.com/sebastiencs/icons-in-terminal][icons in terminal]]を修正した
-  自作フォントのデータを読みに行くようにしてみました。
-  #+begin_src emacs-lisp :tangle init.el
-(leaf all-the-icons-in-terminal
-  :el-get (all-the-icons-in-terminal
-           :type github
-           :pkgname "uwabami/isfit-plus")
-  :require t
-  :init
-  (leaf all-the-icons :ensure t)
-  :defer-config
-  (add-to-list 'all-the-icons-mode-icon-alist
-               '(wl-folder-mode all-the-icons-faicon "folder-o" ))
-  (add-to-list 'all-the-icons-mode-icon-alist
-               '(wl-summary-mode all-the-icons-faicon "folder-open-o"))
-  (add-to-list 'all-the-icons-mode-icon-alist
-               '(wl-draft-mode all-the-icons-material "drafts"))
-  (add-to-list 'all-the-icons-mode-icon-alist
-               '(mime-view-mode all-the-icons-faicon "envelope-o"))
-  )
-  #+end_src
-* =recentf=: 最近使ったファイル履歴の保管
-  :PROPERTIES:
-  :CUSTOM_ID: org43970469
-  :END:
-  結局履歴を貯める設定をしている事になっている.
-  ディレクトリの履歴も取れるので recentf-ext を入れておく
-  #+begin_src emacs-lisp :tangle init.el
-(leaf recentf
-  :defun
-  (recentf-save-list recentf-cleanup)
-  :init
-  (leaf recentf-ext :ensure t)
-  :custom
-  `((recentf-save-file       . ,(expand-file-name "recentf" my:d:tmp))
-    (recentf-max-saved-items . 500)
-    (recentf-auto-cleanup    . 'mode)
-    (recentf-exclude         . '(".recentf"
-                                 "^/tmp\\.*"
-                                 "^/private\\.*"
-                                 "^/var/folders\\.*"
-                                 "/TAGS$"
-                                 "\\.*草稿\\.*"
-                                 "^#\\.*"
-                                 "^/home/uwabami/.mozilla/\\.*"
-                                 "^/home/uwabami/.emacs.d/tmp/\\.*"
-                                 "^/home/uwabami/.dotfiles/Emacs/tmp/\\.*"
-                                 "^/[^/:]+:"
-                                 "bookmarks"
-                                 "org-recent-headings.dat"
-                                 "^/mnt/c/\\.*"
-                                 "\\.*COMMIT_EDITMSG$"
-                                 ".*-autoloads.el$"
-                                 "^/home/uwabami/.emacs.d/pkg/\\.*"
-                                 "^/home/uwabami/.cache/\\.*"
-                                 )))
-  )
-  #+end_src
-* カレンダー設定
-  :PROPERTIES:
-  :CUSTOM_ID: org7d9d4027
-  :END:
-   表示の更新と =japanese-holidays= による日本の休日の追加
-   #+begin_src emacs-lisp :tangle init.el
-(leaf calendar
-  :custom
-  (;; 月と曜日の表示調整
-   (calendar-month-name-array . ["01" "02" "03" "04" "05" "06"
-                                 "07" "08" "09" "10" "11" "12" ])
-   (calendar-day-name-array   . ["日" "月" "火" "水" "木" "金" "土"])
-   (calendar-day-header-array . ["日" "月" "火" "水" "木" "金" "土"])
-   ;; 日曜開始
-   (calendar-week-start-day   . 0)
-   ;; 祝日をカレンダーに表示
-   (calendar-mark-holidays-flag . t)
-   )
-  :config
-  (leaf japanese-holidays
-    :ensure t
-    :require t
-    :after calendar
-    :custom
-    ((japanese-holiday-weekend         . '(0 6))
-     (japanese-holiday-weekend-marker
-      . '(holiday  ;; 日
-          nil      ;; 月
-          nil      ;; 火
-          nil      ;; 水
-          nil      ;; 木
-          nil      ;; 金
-          japanese-holiday-saturday))
-     )
-    :config
-    (setq calendar-holidays ; 他の国の祝日も表示させたい場合は適当に調整
-          (append japanese-holidays holiday-local-holidays))
-    ;;
-    (defun my:japanese-holiday-show (&rest _args)
-      (let* ((date (calendar-cursor-to-date t))
-             (calendar-date-display-form '((format "%s年 %s月 %s日（%s）" year month day dayname)))
-             (date-string (calendar-date-string date))
-             (holiday-list (calendar-check-holidays date)))
-        (when holiday-list
-          (message "%s: %s" date-string (mapconcat #'identity holiday-list "; ")))))
-    ;;
-    :hook
-    ((calendar-move-hook . my:japanese-holiday-show)
-     (calendar-today-visible-hook . japanese-holiday-mark-weekend)
-     (calendar-today-invisible-hook . japanese-holiday-mark-weekend)
-     (calendar-today-visible-hook . calendar-mark-today))
-    )
-  )
-   #+end_src
-* キーバインドの設定
-  :PROPERTIES:
-  :CUSTOM_ID: org8aa6f45e
-  :END:
-  既に手癖になってしまっているアレコレ．
-  特に =[home]= と =[end]= は無いと途方に暮れます．
-  #+begin_src emacs-lisp :tangle init.el
-(leaf-keys (("C-h"     . backward-delete-char)
-            ("C-c M-a" . align-regexp)
-            ("C-c ;"   . comment-region)
-            ("C-c M-;" . uncomment-region)
-            ("C-/"     . undo)
-            ("C-c M-r" . replace-regexp)
-            ("C-c r"   . replace-string)
-            ("<home>"  . beginning-of-buffer)
-            ("<end>"   . end-of-buffer)
-            ("C-c M-l" . toggle-truncate-lines)))
-  #+end_src
-* =migemo=: インクリメンタル検索
-  :PROPERTIES:
-  :CUSTOM_ID: org5d9ade19
-  :END:
-  無いと途方に暮れる．
-  #+begin_src emacs-lisp :tangle init.el
-(leaf migemo
-  :if (executable-find "cmigemo")
-  :ensure t
-  :custom
-  '((migemo-user-dictionary  . nil)
-    (migemo-regex-dictionary . nil)
-    (migemo-options          . '("-q" "--emacs"))
-    (migemo-command          . "cmigemo")
-    (migemo-coding-system    . 'utf-8-unix))
-  :init
-  (cond
-   ((and (eq system-type 'darwin)
-         (file-directory-p "/usr/local/share/migemo/utf-8/"))
-    (setq migemo-dictionary "/usr/local/share/migemo/utf-8/migemo-dict"))
-   (t
-    (setq migemo-dictionary "/usr/share/cmigemo/utf-8/migemo-dict")))
-  :hook
-  (emacs-startup-hook . migemo-init)
-  )
-  #+end_src
-* =eww=: 内蔵ブラウザ
-  :PROPERTIES:
-  :CUSTOM_ID: org35bd4bc4
-  :END:
-  リンクを簡単に辿る(Hit-a-Hint) のために =ace-link= も入れておく
-   #+begin_src emacs-lisp :tangle init.el
-(leaf eww
-  :preface
-  (unless (file-directory-p (expand-file-name "eww" my:d:tmp))
-    (make-directory (expand-file-name "eww" my:d:tmp)))
-  :init
-  (leaf ace-link :ensure t)
-  (leaf shr
-    :custom
-    ((shr-use-colors    . nil)
-     (shr-use-fonts     . nil)
-     (shr-image-animate . nil)
-     (shr-width         . 72))
-    )
-  :bind (("<f2>" . eww)
-         (:eww-mode-map
-          ("r"   . eww-reload)
-          ("o"   . eww)
-          ("&"   . eww-browse-with-external-browser)
-          ("b"   . eww-back-url)
-          ("]"   . eww-next-url)
-          ("["   . eww-previous-url)
-          ("g"   . eww-top-url)
-          ("h"   . backward-char)
-          ("j"   . next-line)
-          ("C-n" . next-line)
-          ("k"   . previous-line)
-          ("C-p" . previous-line)
-          ("l"   . forward-char)
-          ("/"   . isearch-forward)
-          ("?"   . isearch-backward)
-          ("n"   . isearch-next)
-          ("N"   . isearch-previous)
-          ("f"   . ace-link-eww))
-         )
-  :custom
-  `((eww-bookmarks-directory
-     . ,(expand-file-name "eww" my:d:tmp))
-    (eww-search-prefix
-     . "https://www.google.com/search?&gws_rd=cr&complete=0&pws=0&tbs=li:1&q=")
-    )
-  ;; :advice (:around eww-colorize-region
-  ;;                  my:shr-colorize-region--disable)
-  :config
-  (ace-link-setup-default)
-  )
-   #+end_src
-* =emacs-w3m=:
-  :PROPERTIES:
-  :CUSTOM_ID: org2d69d5ee
-  :END:
-  #+begin_src emacs-lisp :tangle init.el
-(leaf emacs-w3m
-  :if (and (executable-find "w3m")
-           (file-directory-p "/usr/share/emacs/site-lisp/w3m/"))
-  :preface
-  (defun my:w3m-open-current-page-in-firefox ()
-    "Open the current URL in Mozilla Firefox."
-    (interactive)
-    (browse-url-firefox w3m-current-url))
-
-  (defun my:w3m-open-link-or-image-in-firefox ()
-    "Open the current link or image in Firefox."
-    (interactive)
-    (browse-url-firefox (or (w3m-anchor)
-                            (w3m-image))))
-  :bind
-  ((:w3m-mode-map
-    ("f" . my:w3m-open-current-page-in-firefox)
-    ("F" . my:w3m-open-link-or-image-in-firefox))
-   )
-  :custom
-  `((w3m-fill-column . 72))
-  )
-  #+end_src
-* =ibuffer=: buffer の操作
-  :PROPERTIES:
-  :CUSTOM_ID: org5f756509
-  :END:
-  buffer を眺めるのは ibuffer が好み
-  #+begin_src emacs-lisp :tangle init.el
-(leaf ibuffer
-  :defun (ibuffer-current-buffer)
-  :defvar (ibuffer-formats)
-  :preface
-  (defun my:ibuffer-find-file ()
-    "Like `find-file', but default to the directory of the buffer at point."
-    (interactive)
-    (let ((default-directory
-            (let ((buf (ibuffer-current-buffer)))
-              (if (buffer-live-p buf)
-                  (with-current-buffer buf
-                    default-directory)
-                default-directory))))
-      (find-file default-directory)))
-  ;;
-  :bind (("C-x C-b" . ibuffer-other-window)
-         ("C-x b"   . ibuffer-other-window)
-         ("C-x M-b" . ibuffer)
-         (:ibuffer-mode-map
-          ("C-x C-f" . my:ibuffer-find-file))
-         )
   )
   #+end_src
 * 日本語入力: =ddskk=
@@ -1498,6 +1228,295 @@ File.open(src, "r") {|f|
                  (skk-mode-exit))))
 (setq skk-isearch-start-mode 'latin)
     #+end_src
+* =all-the-icons-in-terminal=: ターミナルでもicon fontを使いたい。
+  :PROPERTIES:
+  :CUSTOM_ID: orgd903bf1d
+  :END:
+  [[https://github.com/domtronn/all-the-icons.el][all-the-icons.el]]のデータを修正して,
+  [[https://github.com/sebastiencs/icons-in-terminal][icons in terminal]]を修正した
+  自作フォントのデータを読みに行くようにしてみました。
+  #+begin_src emacs-lisp :tangle init.el
+(leaf all-the-icons-in-terminal
+  :el-get (all-the-icons-in-terminal
+           :type github
+           :pkgname "uwabami/isfit-plus")
+  :require t
+  :init
+  (leaf all-the-icons
+    :ensure t
+    :custom `((all-the-icons-scale-factor . 0.8)
+              (all-the-icons-default-adjust . 0))
+    )
+  :defer-config
+  (add-to-list 'all-the-icons-mode-icon-alist
+               '(wl-folder-mode all-the-icons-faicon "folder-o" ))
+  (add-to-list 'all-the-icons-mode-icon-alist
+               '(wl-summary-mode all-the-icons-faicon "folder-open-o"))
+  (add-to-list 'all-the-icons-mode-icon-alist
+               '(wl-draft-mode all-the-icons-material "drafts"))
+  (add-to-list 'all-the-icons-mode-icon-alist
+               '(mime-view-mode all-the-icons-faicon "envelope-o"))
+  )
+  #+end_src
+* =recentf=: 最近使ったファイル履歴の保管
+  :PROPERTIES:
+  :CUSTOM_ID: org43970469
+  :END:
+  結局履歴を貯める設定をしている事になっている.
+  ディレクトリの履歴も取れるので recentf-ext を入れておく
+  #+begin_src emacs-lisp :tangle init.el
+(leaf recentf
+  :defun
+  (recentf-save-list recentf-cleanup)
+  :preface
+  (defun my:recentf-track-visited-file (_prev _curr)
+    (and buffer-file-name
+         (recentf-add-file buffer-file-name)))
+  :init
+  (leaf recentf-ext :ensure t)
+  :custom
+  `((recentf-save-file       . ,(expand-file-name "recentf" my:d:tmp))
+    (recentf-max-saved-items . 500)
+    (recentf-auto-cleanup    . 'mode)
+    (recentf-exclude         . '(".recentf"
+                                 "Nextcloud/org"
+                                 "^/tmp\\.*"
+                                 "^/private\\.*"
+                                 "^/var/folders\\.*"
+                                 "/TAGS$"
+                                 "\\.*草稿\\.*"
+                                 "^#\\.*"
+                                 "^/[^/:]+:"
+                                 "bookmarks"
+                                 "org-recent-headings.dat"
+                                 "^/mnt/c/\\.*"
+                                 "\\.*COMMIT_EDITMSG$"
+                                 ))
+    )
+  )
+;; テスト中
+(leaf switch-buffer-functions
+  :ensure t
+  :after recent
+  :preface
+  (defun my:recentf-track-visited-file (_prev _curr)
+    (and buffer-file-name
+         (recentf-add-file buffer-file-name)))
+  ;; :init
+  ;; (add-hook 'switch-buffer-functions
+  ;;           #'my:recentf-track-visited-file)
+  :hook
+  (switch-buffer-functions
+   . my:recentf-track-visited-file)
+  )
+  #+end_src
+* カレンダー設定
+  :PROPERTIES:
+  :CUSTOM_ID: org7d9d4027
+  :END:
+   表示の更新と =japanese-holidays= による日本の休日の追加
+   #+begin_src emacs-lisp :tangle init.el
+(leaf calendar
+  :custom
+  (;; 月と曜日の表示調整
+   (calendar-month-name-array . ["01" "02" "03" "04" "05" "06"
+                                 "07" "08" "09" "10" "11" "12" ])
+   (calendar-day-name-array   . ["日" "月" "火" "水" "木" "金" "土"])
+   (calendar-day-header-array . ["日" "月" "火" "水" "木" "金" "土"])
+   ;; 日曜開始
+   (calendar-week-start-day   . 0)
+   ;; 祝日をカレンダーに表示
+   (calendar-mark-holidays-flag . t)
+   )
+  :config
+  (leaf japanese-holidays
+    :ensure t
+    :require t
+    :after calendar
+    :custom
+    ((japanese-holiday-weekend         . '(0 6))
+     (japanese-holiday-weekend-marker
+      . '(holiday  ;; 日
+          nil      ;; 月
+          nil      ;; 火
+          nil      ;; 水
+          nil      ;; 木
+          nil      ;; 金
+          japanese-holiday-saturday))
+     )
+    :config
+    (setq calendar-holidays ; 他の国の祝日も表示させたい場合は適当に調整
+          (append japanese-holidays holiday-local-holidays))
+    ;;
+    (defun my:japanese-holiday-show (&rest _args)
+      (let* ((date (calendar-cursor-to-date t))
+             (calendar-date-display-form '((format "%s年 %s月 %s日（%s）" year month day dayname)))
+             (date-string (calendar-date-string date))
+             (holiday-list (calendar-check-holidays date)))
+        (when holiday-list
+          (message "%s: %s" date-string (mapconcat #'identity holiday-list "; ")))))
+    ;;
+    :hook
+    ((calendar-move-hook . my:japanese-holiday-show)
+     (calendar-today-visible-hook . japanese-holiday-mark-weekend)
+     (calendar-today-invisible-hook . japanese-holiday-mark-weekend)
+     (calendar-today-visible-hook . calendar-mark-today))
+    )
+  )
+   #+end_src
+* キーバインドの設定
+  :PROPERTIES:
+  :CUSTOM_ID: org8aa6f45e
+  :END:
+  既に手癖になってしまっているアレコレ．
+  特に =[home]= と =[end]= は無いと途方に暮れます．
+  #+begin_src emacs-lisp :tangle init.el
+(leaf-keys (("C-h"     . backward-delete-char)
+            ("C-c M-a" . align-regexp)
+            ("C-c ;"   . comment-region)
+            ("C-c M-;" . uncomment-region)
+            ("C-/"     . undo)
+            ("C-c M-r" . replace-regexp)
+            ("C-c r"   . replace-string)
+            ("<home>"  . beginning-of-buffer)
+            ("<end>"   . end-of-buffer)
+            ("C-c M-l" . toggle-truncate-lines)))
+  #+end_src
+* =migemo=: インクリメンタル検索
+  :PROPERTIES:
+  :CUSTOM_ID: org5d9ade19
+  :END:
+  無いと途方に暮れる．
+  #+begin_src emacs-lisp :tangle init.el
+(leaf migemo
+  :if (executable-find "cmigemo")
+  :ensure t
+  :custom
+  '((migemo-user-dictionary  . nil)
+    (migemo-regex-dictionary . nil)
+    (migemo-options          . '("-q" "--emacs"))
+    (migemo-command          . "cmigemo")
+    (migemo-coding-system    . 'utf-8-unix))
+  :init
+  (cond
+   ((and (eq system-type 'darwin)
+         (file-directory-p "/usr/local/share/migemo/utf-8/"))
+    (setq migemo-dictionary "/usr/local/share/migemo/utf-8/migemo-dict"))
+   (t
+    (setq migemo-dictionary "/usr/share/cmigemo/utf-8/migemo-dict")))
+  :hook
+  (emacs-startup-hook . migemo-init)
+  )
+  #+end_src
+* =eww=: 内蔵ブラウザ
+  :PROPERTIES:
+  :CUSTOM_ID: org35bd4bc4
+  :END:
+  リンクを簡単に辿る(Hit-a-Hint) のために =ace-link= も入れておく
+   #+begin_src emacs-lisp :tangle init.el
+(leaf eww
+  :preface
+  (unless (file-directory-p (expand-file-name "eww" my:d:tmp))
+    (make-directory (expand-file-name "eww" my:d:tmp)))
+  :init
+  (leaf ace-link :ensure t)
+  (leaf shr
+    :custom
+    ((shr-use-colors    . nil)
+     (shr-use-fonts     . nil)
+     (shr-image-animate . nil)
+     (shr-width         . 72))
+    )
+  :bind (("<f2>" . eww)
+         (:eww-mode-map
+          ("r"   . eww-reload)
+          ("o"   . eww)
+          ("&"   . eww-browse-with-external-browser)
+          ("b"   . eww-back-url)
+          ("]"   . eww-next-url)
+          ("["   . eww-previous-url)
+          ("g"   . eww-top-url)
+          ("h"   . backward-char)
+          ("j"   . next-line)
+          ("C-n" . next-line)
+          ("k"   . previous-line)
+          ("C-p" . previous-line)
+          ("l"   . forward-char)
+          ("/"   . isearch-forward)
+          ("?"   . isearch-backward)
+          ("n"   . isearch-next)
+          ("N"   . isearch-previous)
+          ("f"   . ace-link-eww))
+         )
+  :custom
+  `((eww-bookmarks-directory
+     . ,(expand-file-name "eww" my:d:tmp))
+    (eww-search-prefix
+     . "https://www.google.com/search?&gws_rd=cr&complete=0&pws=0&tbs=li:1&q=")
+    )
+  ;; :advice (:around eww-colorize-region
+  ;;                  my:shr-colorize-region--disable)
+  :config
+  (ace-link-setup-default)
+  )
+   #+end_src
+* =emacs-w3m=:
+  :PROPERTIES:
+  :CUSTOM_ID: org2d69d5ee
+  :END:
+  #+begin_src emacs-lisp :tangle init.el
+(leaf emacs-w3m
+  :if (and (executable-find "w3m")
+           (file-directory-p "/usr/share/emacs/site-lisp/w3m/"))
+  :preface
+  (defun my:w3m-open-current-page-in-firefox ()
+    "Open the current URL in Mozilla Firefox."
+    (interactive)
+    (browse-url-firefox w3m-current-url))
+
+  (defun my:w3m-open-link-or-image-in-firefox ()
+    "Open the current link or image in Firefox."
+    (interactive)
+    (browse-url-firefox (or (w3m-anchor)
+                            (w3m-image))))
+  :bind
+  ((:w3m-mode-map
+    ("f" . my:w3m-open-current-page-in-firefox)
+    ("F" . my:w3m-open-link-or-image-in-firefox))
+   )
+  :custom
+  `((w3m-fill-column . 72))
+  )
+  #+end_src
+* =ibuffer=: buffer の操作
+  :PROPERTIES:
+  :CUSTOM_ID: org5f756509
+  :END:
+  buffer を眺めるのは ibuffer が好み
+  #+begin_src emacs-lisp :tangle init.el
+(leaf ibuffer
+  :defun (ibuffer-current-buffer)
+  :defvar (ibuffer-formats)
+  :preface
+  (defun my:ibuffer-find-file ()
+    "Like `find-file', but default to the directory of the buffer at point."
+    (interactive)
+    (let ((default-directory
+            (let ((buf (ibuffer-current-buffer)))
+              (if (buffer-live-p buf)
+                  (with-current-buffer buf
+                    default-directory)
+                default-directory))))
+      (find-file default-directory)))
+  ;;
+  :bind (("C-x C-b" . ibuffer-other-window)
+         ("C-x b"   . ibuffer-other-window)
+         ("C-x M-b" . ibuffer)
+         (:ibuffer-mode-map
+          ("C-x C-f" . my:ibuffer-find-file))
+         )
+  )
+  #+end_src
 * Copy & Paste:
   :PROPERTIES:
   :CUSTOM_ID: org12fd2b4e
@@ -1696,13 +1715,13 @@ File.open(src, "r") {|f|
 (leaf consult
   :ensure t
   :bind (("C-x C-r" . my:consult-recent-file))
-  :defvar recentf-list
+  ;; :defvar recentf-list
   :custom
   `(;; 増やさないと preview 時に theme がロードされない模様.
     ;; とりあえず default の 10 倍にしている. 1 MB かな?
     (consult-preview-raw-size . 1024000)
     (consult-async-refresh-delay . 0.2)
-    (consult-preview-key  . ,(kbd "C-M-p"))
+    (consult-preview-key  . nil)
     (consult-narrow-key   . "<")
     )
   :config
@@ -3096,6 +3115,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    #+begin_src emacs-lisp
 (leaf flycheck
   :ensure t
+  :disabled t
   ;; :hook (prog-mode-hook . flycheck-mode)
   :custom ((flycheck-display-errors-delay . 0.3))
   :config
@@ -3213,15 +3233,14 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :bind (("C-x n s" . org-narrow-to-subtree)
          ("C-x n w" . widen)
          ("C-c a"   . org-agenda)
-         ;; ("C-x m"   . org-capture)
-         ;; ("C-x M"   . org-journal-new-entry)
+         ("C-x m"   . org-capture)
+         ("C-x M"   . org-journal-new-entry)
          )
   :advice
   (:before org-calendar-holiday
            (lambda () (require 'japanese-holidays nil 'noerror)))
-  :mode
   ;; 昔のメモ(howm)も org-mode で開く
-  (("\\.org\\'" "\\.howm\\'". org-mode))
+  :mode "\\.org\\'" "\\.howm\\'"
   ;; GTD: TODO→...→DONE としたエントリを =Arhive.org= に移動
   ;; - 一旦保留
   ;; (defun my:org-archive-done-tasks ()
@@ -3289,17 +3308,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
               (cl-delete "+" org-emphasis-alist :key 'car :test 'equal)))
   (require 'org-tempo nil 'noerror)
   )
-   #+end_src
-** org-sticky-header: 編集中のヘッダを表示しておく
-   :PROPERTIES:
-   :CUSTOM_ID: org53a32adb
-   :END:
-   #+begin_src emacs-lisp
-(leaf org-sticky-header
-  :disabled t
-  :ensure t
-  :hook
-  `(org-mode-hook . org-sticky-header-mode))
    #+end_src
 ** Org-Id
    :PROPERTIES:
@@ -3416,193 +3424,6 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   :if (file-exists-p "/usr/bin/uplatex")
   )
    #+end_src
-** Org-roam, Org-roam-dailies: リンク付きメモ
-   :PROPERTIES:
-   :CUSTOM_ID: orgbbaf7c91
-   :END:
-   メモ取りとしては org-capture と org-journal で充分なんだけれど,
-   Howm の様な書き散らかしメモと, それらを集約した長文を貯めたい時に便利そうなので使い始めた.
-   #+begin_src emacs-lisp
-(leaf org-roam
-  :if (and (file-directory-p my:d:org)
-           (and (executable-find "rg")
-                (executable-find "sqlite3")))
-  :ensure t
-  :init
-  (setq org-roam-v2-ack t)
-  :commands (org-roam-db-query)
-  :bind
-  (("C-c n a" . org-roam-alias-add)
-   ("C-c n f" . org-roam-node-find)
-   ("C-c n i" . org-roam-node-insert)
-   ("C-c n o" . org-id-get-create)
-   ("C-c n t" . org-roam-tag-add)
-   ("C-c n l" . org-roam-buffer-toggle)
-   (:org-mode-map
-    ("C-M-i"   . completion-at-point))
-   )
-  :custom
-  `((org-roam-db-location . ,(expand-file-name "org-roam.db" my:d:tmp))
-    (org-roam-directory   . ,(expand-file-name "roam" my:d:org))
-    ;; (org-roam-mode-section-functions
-    ;;  . (list #'org-roam-backlinks-section
-    ;;          #'org-roam-reflinks-section
-    ;;         ;; #'org-roam-unlinked-references-section
-    ;;         ))
-    ;; (org-roam-db-update-on-save . t)
-    )
-  :defer-config
-  (org-roam-db-autosync-enable)
-  )
-;;
-(leaf org-roam-dailies
-  :commands (org-roam-dailies--capture)
-  :preface
-  (defun my:org-roam-dailies-capture-without-templates ()
-    (interactive)
-    (org-roam-dailies--capture (current-time) nil "m"))
-  :pl-setq
-  (my:org:calendar1 my:org:calendar2 my:org:calendar3)   ;; 名前がイケてないっ!
-  :bind
-  `(("C-c n d" . org-roam-dailies-map)
-    ("C-x M"   . org-roam-dailies-capture-today)
-    ("C-x m"   . my:org-roam-dailies-capture-without-templates)
-   (:org-roam-dailies-map
-    ("Y" . org-roam-dailies-capture-yesterday)
-    ("T" . org-roam-dailies-capture-tomorrow))
-   )
-  :custom
-  `(
-    (org-roam-dailies-directory . "") ;; relative path→flatten!
-    (org-roam-dailies-capture-templates
-     . '(
-         ("m" "memo" entry "* MEMO <%<%Y-%m-%d %H:%M>> %^{title}\n  %?"
-          :target (file+head "%<%Y-%m-%d>.org"
-                             "#+title: %<%Y年%m月%d日(%a)>")
-          :prepend nil
-          :kill-buffer t
-          )
-         ("t" "ToDo" entry "* TODO <%<%Y-%m-%d %H:%M>> %^{title}\n  %?"
-          :target (file+head "%<%Y-%m-%d>.org"
-                             "#+title: %<%Y年%m月%d日(%a)>")
-          :prepend nil
-          :kill-buffer t
-          )
-         ("s" "Schedule: 個人スケジュール" entry
-          "* %^{title}\n  :PROPERTIES:\n  :calendar-id: %(format \"%s\" my:org:calendar1)\n  :org-gcal-managed: org\n  :END:\n  :org-gcal:\n%?\n%i\n  :END:"
-          :target (file ,(expand-file-name "Schedule.org" my:d:org))
-          :prepend t   ;; prepend nil としたいが, 末尾まで行ってくれないので諦める.
-          :kill-buffer t
-          )
-         ("u" "Univ: 大学関連 スケジュール" entry
-          "* %^{title}\n  :PROPERTIES:\n  :calendar-id: %(format \"%s\" my:org:calendar2)\n  :org-gcal-managed: org\n  :END:\n  :org-gcal:\n%?\n%i\n  :END:"
-          :target (file ,(expand-file-name "Univ.org" my:d:org))
-          :prepend t   ;; prepend nil としたいが, 末尾まで行ってくれないので諦める.
-          :kill-buffer t
-          )
-         ("g" "GFD 関連 スケジュール" entry
-          "* %^{title}\n  :PROPERTIES:\n  :calendar-id: %(format \"%s\" my:org:calendar3)\n  :org-gcal-managed: org\n  :END:\n  :org-gcal:\n%?\n%i\n  :END:"
-          :target (file ,(expand-file-name "GFD.org" my:d:org))
-          :prepend t   ;; prepend nil としたいが, 末尾まで行ってくれないので諦める.
-          :kill-buffer t
-          )
-         ))
-    )
-  )
-   #+end_src
-** =vulpea=: Org-roam, Agenda を繋ぐ
-   :PROPERTIES:
-   :CUSTOM_ID: org37d0b758
-   :END:
-   以下がとても参考になる.
-   - Task Management with org-roam Series
-     1. [[https://d12frosted.io/posts/2020-06-23-task-management-with-roam-vol1.html][Path to Roam]]
-     2. [[https://d12frosted.io/posts/2020-06-24-task-management-with-roam-vol2.html][Categories]]
-     3. [[https://d12frosted.io/posts/2020-06-25-task-management-with-roam-vol3.html][FILETAGS]]
-     4. [[https://d12frosted.io/posts/2020-07-07-task-management-with-roam-vol4.html][Automatic tagging]]
-     5. [[https://d12frosted.io/posts/2021-01-16-task-management-with-roam-vol5.html][Dynamic and fast agenda]]
-     6. [[https://d12frosted.io/posts/2021-01-24-task-management-with-roam-vol6.html][Select a person and view related tasks]]
-     7. [[https://d12frosted.io/posts/2021-05-21-task-management-with-roam-vol7.html][Capture]]
-   今のところ, 上記 5 番の  [[https://d12frosted.io/posts/2021-01-16-task-management-with-roam-vol5.html][Dynamic and fast agenda]] について設定している感じ.
-   #+begin_src emacs-lisp
-(leaf vulpea
-  :if (and (file-directory-p my:d:org)
-           (and (executable-find "rg")
-                (executable-find "sqlite3")))
-  :doc "https://d12frosted.io/posts/2021-01-16-task-management-with-roam-vol5.html"
-  :ensure t
-  :commands
-  (vulpea-buffer-prop-get
-   vulpea-buffer-tags-get
-   my:vulpea-project-p
-   my:vulpea-project-update-tag
-   my:vulpea-buffer-p
-   my:vulpea-project-files
-   my:vulpea-agenda-files-update
-   )
-  :preface
-  (defun my:vulpea-project-p ()
-    "Return non-nil if current buffer has any todo entry.
-
-TODO entries marked as done are ignored, meaning the this
-function returns nil if current buffer contains only completed
-tasks."
-    (org-element-map
-        (org-element-parse-buffer 'headline)
-        'headline
-      (lambda (h)
-        (eq (org-element-property :todo-type h)
-            'todo))
-      nil 'first-match))
-
-  (defun my:vulpea-project-update-tag ()
-    "Update PROJECT tag in the current buffer."
-    (when (and (not (active-minibuffer-window))
-               (my:vulpea-buffer-p))
-      (save-excursion
-        (goto-char (point-min))
-        (let* ((tags (vulpea-buffer-tags-get))
-               (original-tags tags))
-          (if (my:vulpea-project-p)
-              (setq tags (cons "project" tags))
-            (setq tags (remove "project" tags)))
-
-          ;; cleanup duplicates
-          (setq tags (seq-uniq tags))
-
-          ;; update tags if changed
-          (when (or (seq-difference tags original-tags)
-                    (seq-difference original-tags tags))
-            (apply #'vulpea-buffer-tags-set tags))))))
-
-  (defun my:vulpea-buffer-p ()
-    "Return non-nil if the currently visited buffer is a note."
-    (and buffer-file-name
-         (string-prefix-p
-          (expand-file-name (file-name-as-directory org-roam-directory))
-          (file-name-directory buffer-file-name))))
-
-  (defun my:vulpea-project-files ()
-    "Return a list of note files containing 'project' tag." ;
-    (seq-uniq
-     (seq-map
-      #'car
-      (org-roam-db-query
-       [:select [nodes:file]
-                :from tags
-                :left-join nodes
-                :on (= tags:node-id nodes:id)
-                :where (like tag (quote "%\"project\"%"))]))))
-
-  (defun my:vulpea-agenda-files-update (&rest _)
-    "Update the value of `org-agenda-files'."
-    (setq org-agenda-files (append my:org-agenda-files (my:vulpea-project-files))))
-  :hook
-  ((find-file-hook . my:vulpea-project-update-tag)
-   (before-save-hook . my:vulpea-project-update-tag)
-   (org-roam-db-autosync-mode . vulpea-db-autosync-enable))
-  )
-   #+end_src
 ** Org-agenda: スケジュール, TODO 表示
    :PROPERTIES:
    :CUSTOM_ID: org016dbf67
@@ -3615,24 +3436,10 @@ tasks."
    #+begin_src emacs-lisp :tangle init.el
 (leaf org-agenda
   :if (file-directory-p my:d:org)
-  :advice
-  ((:before org-agenda
-            my:vulpea-agenda-files-update)
-   (:before org-todo-list
-            my:vulpea-agenda-files-update)
-   )
   :defer-config
   (defface my:org-agenda-date-saturday
     '((t (:foreground "#7FBFFF" :bold t )))
     "Agenda 表示中の土曜日用のface"
-    :group 'org-agenda )
-  (defface my:org-agenda-date-today-saturday
-    '((t (:inherit my:org-agenda-date-saturday :underline t)))
-    "Agenda 表示中の今日かつ土曜日用のface"
-    :group 'org-agenda )
-  (defface my:org-agenda-date-today-weekend
-    '((t (:inherit org-agenda-date-weekend :underline t)))
-    "Agenda 表示中の今日かつ日・祝日用のface"
     :group 'org-agenda )
   ;; こっからは org-gcal で同期したカレンダーの色
   (defface my:org-agenda-calendar-Univ
@@ -3657,31 +3464,22 @@ tasks."
     :group 'org-agenda )
   ;; 更新用の関数 - とりあえず動いているので良しとするが,
   ;; リファクタリングしたい
-  (defun my:org-agenda-day-face-function (date)
-    "Compute DATE face for saturday, holidays."
-    (cl-dolist (file (org-agenda-files nil 'ifmode))
-      (cond
-       ((member (calendar-day-of-week date) '(0))
-        (if (org-agenda-todayp date)
-            (cl-return 'my:org-agenda-date-today-weekend))
-        (cl-return 'org-agenda-date-weekend))
-       ((member (calendar-day-of-week date) '(6))
-        (if (org-agenda-todayp date)
-            (cl-return 'my:org-agenda-date-today-saturday))
-        (cl-return 'my:org-agenda-date-saturday)))
-      (let ((face
-             (cl-dolist (entry (org-agenda-get-day-entries file date))
-               (let ((category (with-temp-buffer
-                                 (insert entry)
-                                 (org-get-category (point-min)))))
-                 (when (or (string= "祝日" category)
-                           (string= "休日" category))
-                   (if (org-agenda-todayp date)
-                       (cl-return 'my:org-agenda-date-today-weekend)
-                     (cl-return 'org-agenda-date-weekend)))))))
-        (when face (cl-return face)))))
   (setq org-agenda-day-face-function
-        'my:org-agenda-day-face-function)
+        (lambda (date)
+          (let ((face
+                 (cond
+                  ;; 日曜日か日本の祝日
+                  ((or (= (calendar-day-of-week date) 0)
+                       (let ((calendar-holidays japanese-holidays))
+                         (calendar-check-holidays date)))
+                   'org-agenda-date-weekend)
+                  ;; 土曜日
+                  ((= (calendar-day-of-week date) 6)
+                   'my:org-agenda-date-saturday)
+                  ;; 普通の日
+                  (t 'org-agenda-date))))
+            ;; 今日は色を反転
+            (if (org-agenda-today-p date) (list :inherit face :underline t) face))))
   ;; font-lock の適用. loop減らせないかなぁ….
   (defun my:org-agenda-finalize-font-lock ()
     "Custom: apply custom font-lock"
@@ -3707,7 +3505,7 @@ tasks."
         (add-text-properties (match-beginning 0) (point-at-eol)
                              '(face my:org-agenda-calendar-twitter)))
       (goto-char (point-min))
-      (while (re-search-forward "祝日:\\|休日:\\|誕生日:" nil t)
+      (while (re-search-forward "祝日:\\|Holidays:\\|誕生日:" nil t)
         (add-text-properties (match-beginning 0) (point-at-eol)
                              '(face org-agenda-date-weekend)))
       ))
@@ -3723,7 +3521,7 @@ tasks."
         org-agenda-inhibit-startup t
         org-agenda-ignore-drawer-properties '(effort appt)
         org-agenda-repeating-timestampo-show-all t
-        org-agenda-day-face-function 'my:org-agenda-day-face-function
+        ;; org-agenda-day-face-function 'my:org-agenda-day-face-function
         org-agenda-sorting-strategy '((agenda habit-down time-up timestamp-down priority-down category-keep)
                                       (todo timestamp-down priority-down category-keep)
                                       (tags priority-down category-keep)
@@ -3754,7 +3552,7 @@ tasks."
             ))
           )
         )
-  (defvar my:org-agenda-files nil)
+  ;; (defvar my:org-agenda-files nil)
   (dolist (file
            '(;; "Archive.org"   <-- 🤔
              ;; Calendar
@@ -3771,7 +3569,153 @@ tasks."
              "redmine_GFD.org"
              ;; "redmine_FluidSoc.org"
              ))
-    (add-to-list 'my:org-agenda-files (expand-file-name file my:d:org)))
+    (add-to-list 'org-agenda-files (expand-file-name file my:d:org)))
+  (if (file-directory-p
+       (expand-file-name "journal/" my:d:org))
+      (dolist (file
+               (directory-files-recursively
+                (expand-file-name "journal/" my:d:org) "org$"))
+        (add-to-list 'org-agenda-files file)))
+  )
+   #+end_src
+** Org-journal: 日記
+   :PROPERTIES:
+   :CUSTOM_ID: org456c87fa
+   :END:
+   機能が豊富なのだが, イマイチ使いこなせていない.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf org-journal
+  :if (file-directory-p my:d:org)
+  :commands org-journal-new-entry
+  :ensure t
+  :hook
+  ((org-journal-mode-hook
+    . (lambda()
+        (setq-local truncate-lines t))))
+  :custom
+  `((org-journal-file-type                 . 'yearly)
+    (org-journal-dir                       . ,(expand-file-name "journal" my:d:org))
+    (org-journal-file-format               . "%Y.org")
+    (org-journal-cache-file
+     . ,(expand-file-name "org-journal.cache" my:d:tmp))
+    (org-journal-date-format               . "%x (%a)")
+    (org-journal-time-format               . "<%Y-%m-%d %R> ")
+    (org-journal-time-prefix               . "** MEMO ")
+    (org-journal-enable-agenda-integration . t)
+    (org-journal-find-file                 . 'find-file)
+    (org-journal-carryover-delete-empty-journal . 'ask)
+    (org-journal-start-on-weekday          . 0) ;; sunday
+    )
+  :config
+  (eval-and-compile 'browse-url)
+  ;; (with-eval-after-load 'org-journal
+  ;;   (global-set-key (kbd "C-c C-j") 'browse-url-at-point))
+  )
+   #+end_src
+** Org-capture: メモ取り
+   :PROPERTIES:
+   :CUSTOM_ID: orgbe835a6b
+   :END:
+   キーバインドは以前 changelog memo をやっていた時の癖で =C-x m= をメモにしている.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf org-capture
+  :if (file-directory-p my:d:org)
+  :commands org-capture
+  :pl-setq
+  ;; 名前がイケてないっ!
+  (my:org:calendar1 my:org:calendar2 my:org:calendar3 my:org:calendar4)
+  :config
+  (defun my:org-journal-add-date-entry-capture ()
+    (org-journal-new-entry t)
+    (goto-char (point-max))
+    )
+  (setq org-default-notes-file (expand-file-name "Memo.org" my:d:org))
+  (setq org-capture-templates
+        `(
+          ("t" "TODO" plain
+           (function my:org-journal-add-date-entry-capture)
+           "** TODO %(format-time-string org-journal-time-format)%^{title} %^g\n  %?\n  %a"
+           :prepend nil
+           ;; :unnarrowed nil
+           :kill-buffer t
+           )
+          ("m" "メモを追加" plain
+           (function my:org-journal-add-date-entry-capture)
+           "** MEMO %(format-time-string org-journal-time-format)%?"
+           :prepend nil
+           ;; :unnarrowed nil
+           :kill-buffer t
+           )
+          ("a" "少し長めの記事を追加する" plain
+           (function my:org-journal-add-date-entry-capture)
+           "** ARTICLE %(format-time-string org-journal-time-format)%? "
+           :prepend nil
+           ;; :unnarrowed nil
+           :kill-buffer t
+           )
+          ("s" "個人予定表スケジュールを追加" plain
+           (file ,(expand-file-name "Schedule.org" my:d:org))
+           "* %^{prompt}\n  :PROPERTIES:\n  :calendar-id: %(format \"%s\" my:org:calendar1)\n  :org-gcal-managed: org\n  :END:\n  :org-gcal:\n%?\n%i\n  :END:"
+           :prepend nil
+           ;; :unnarrowed nil
+           :kill-buffer t
+           )
+          ("u" "仕事予定表スケジュールを追加" plain
+           (file ,(expand-file-name "Univ.org" my:d:org))
+           "* %^{prompt}\n  :PROPERTIES:\n  :calendar-id: %(format \"%s\" my:org:calendar2)\n  :org-gcal-managed: org\n  :END:\n  :org-gcal:\n%?\n%i\n  :END:"
+           :prepend nil
+           ;; :unnarrowed nil
+           :kill-buffer t
+           )
+          ("g" "GFD 関連 スケジュールを追加" plain
+           (file ,(expand-file-name "GFD.org" my:d:org))
+           "* %^{prompt}\n  :PROPERTIES:\n  :calendar-id: %(format \"%s\" my:org:calendar3)\n  :org-gcal-managed: org\n  :END:\n  :org-gcal:\n%?\n%i\n  :END:"
+           :prepend nil
+           ;; :unnarrowed nil
+           :kill-buffer t
+           )
+          ("h" "有給休暇・特別休暇を追加" plain
+           (file ,(expand-file-name "Holidays.org" my:d:org))
+           "* %^{prompt}\n  :PROPERTIES:\n  :calendar-id: %(format \"%s\" my:org:calendar4)\n  :org-gcal-managed: org\n  :END:\n  :org-gcal:\n%?\n%i\n  :END:"
+           :prepend nil
+           ;; :unnarrowed nil
+           :kill-buffer t
+           )
+          )
+        )
+  )
+   #+end_src
+** Org-roam: リンク付きメモ
+   :PROPERTIES:
+   :CUSTOM_ID: orgbbaf7c91
+   :END:
+   メモ取りとしては org-capture と org-journal で充分なんだけれど,
+   Howm の様な書き散らかしメモと, それらを集約した長文を貯めたい時に便利そうなので使い始めた.
+   #+begin_src emacs-lisp
+(leaf org-roam
+  :if (and (file-directory-p my:d:org)
+           (and (executable-find "rg")
+                (executable-find "sqlite3")))
+  :ensure t
+  :init
+  (setq org-roam-v2-ack t)
+  :commands (org-roam-db-query)
+  :bind
+  (("C-c n a" . org-roam-alias-add)
+   ("C-c n f" . org-roam-node-find)
+   ("C-c n i" . org-roam-node-insert)
+   ("C-c n o" . org-id-get-create)
+   ("C-c n t" . org-roam-tag-add)
+   ("C-c n l" . org-roam-buffer-toggle)
+   (:org-mode-map
+    ("C-M-i"   . completion-at-point))
+   )
+  :custom
+  `((org-roam-db-location . ,(expand-file-name "org-roam.db" my:d:tmp))
+    (org-roam-directory   . ,(expand-file-name "roam" my:d:org))
+    )
+  :defer-config
+  (org-roam-db-autosync-enable)
   )
    #+end_src
 ** OrgとGoogle カレンダーの連携: =org-gcal=
@@ -3786,10 +3730,10 @@ tasks."
   :if (and my:d:password-store
            (and (file-directory-p my:d:org)
                 (executable-find "curl")))
-  :ensure t
-  ;; :el-get (org-gcal
-  ;;          :type github
-  ;;          :pkgname "kidd/org-gcal.el")
+  ;; :ensure t
+  :el-get (org-gcal
+           :type github
+           :pkgname "kidd/org-gcal.el")
   :commands (org-gcal-fetch
              org-gcal-sync
              org-gcal-post-at-point
@@ -3811,11 +3755,12 @@ tasks."
   ;;   :custom
   ;;   `(oauth2-auto-plstore . ,(expand-file-name "/run/user/1000/uwabami-emacs-cache/oauth2-auto.plist"))
   ;;   )
-  ;; (leaf aio :ensure t)
-  ;; (leaf alert :ensure t)
-  ;; (leaf dash :ensure t)
+  (leaf aio :ensure t)
+  (leaf alert :ensure t)
+  (leaf dash :ensure t)
   (leaf oauth2-auto
-    :el-get rhaps0dy/emacs-oauth2-auto
+    ;; :el-get rhaps0dy/emacs-oauth2-auto
+    :el-get telotortium/emacs-oauth2-auto
     :custom
     `(oauth2-auto-plstore . ,(expand-file-name "oauth2-auto.plist" my:d:tmp))
     )
@@ -4505,7 +4450,18 @@ pdflang={%l}}
   #+begin_src emacs-lisp :tangle init.el
 (leaf lua-mode :ensure t)
 (leaf ssh-config-mode :ensure t)
-(leaf fish-mode :ensure t :mode (("\\.fish'" . fish-mode)))
+(leaf fish-mode :ensure t :mode "\\.fish\\'")
+(leaf rd-mode
+  :mode "\\.rd\\'"
+  :hook
+  (rd-mode-hook . rd-show-other-block-all))
+(leaf scss-mode
+  :ensure t
+  :init
+  (leaf css-mode :custom (css-indent-offset . 2))
+  :mode "\\.sass\\'" "\\.scss\\'")
+(leaf generic-x)
+(leaf systemd :ensure t)
 ;; (leaf *misc-mode
 ;;   :init
 ;;   (leaf systemd :ensure t)
@@ -4513,15 +4469,7 @@ pdflang={%l}}
 ;;     :custom
 ;;     `((debian-bug-download-directory . "~/Downloads"))
 ;;     )
-;;   (leaf rd-mode
-;;     :mode "\\.rd$"
-;;     :hook
-;;     (rd-mode-hook . rd-show-other-block-all))
-;;   (leaf yaml-mode
-;;     :ensure t
-;;     :mode "\\(\.yml\\|\.yaml\\)"
-;;     )
-;;   (leaf generic-x)
+(leaf yaml-mode :ensure t :mode "\\.yml\\'" "\\.yaml\\'")
 ;;   (leaf textile-mode :ensure t)
 ;;   (leaf dpkg-dev-el)
 ;;   (leaf sh-mode
@@ -4560,41 +4508,42 @@ pdflang={%l}}
   "load window-system specific settings"
   (interactive)
   (progn
+    (set-frame-parameter nil 'alpha 90)
     (set-face-attribute 'default nil
-                        :family "AGVUDP"
-                        :height 220)
+                        :family "FSMRMP"
+                        :height 105)
     (set-face-attribute 'fixed-pitch nil
-                        :family "AGVUDP"
-                        :height 220)
+                        :family "FSMRMP"
+                        :height 105)
     (set-face-attribute 'variable-pitch nil
-                        :family "AGVUDP"
-                        :height 220)
+                        :family "FSMRMP"
+                        :height 105)
     ;; Japanese
     (set-fontset-font nil
                       'japanese-jisx0213.2004-1
-                      (font-spec :family "AGVUDP" :height 220))
+                      (font-spec :family "FSMRMP" :height 105))
     (set-fontset-font nil
                       'japanese-jisx0213-2
-                      (font-spec :family "AGVUDP" :height 220))
+                      (font-spec :family "FSMRMP" :height 105))
     (set-fontset-font nil
                       'katakana-jisx0201
-                      (font-spec :family "AGVUDP" :height 220))
+                      (font-spec :family "FSMRMP" :height 105))
     ;; Latin with pronounciation annotations
     (set-fontset-font nil
                       '(#x0080 . #x024F)
-                      (font-spec :family "AGVUDP" :height 220))
+                      (font-spec :family "FSMRMP" :height 105))
     ;; Math symbols
     (set-fontset-font nil
-                      '(#x2200 . #x22FF)
-                      (font-spec :family "AGVUDP" :height 220))
+                      '(#x1050 . #x22FF)
+                      (font-spec :family "FSMRMP" :height 105))
     ;; Greek
     (set-fontset-font nil
                       '(#x0370 . #x03FF)
-                      (font-spec :family "AGVUDP" :height 220))
+                      (font-spec :family "FSMRMP" :height 105))
     ;; Some Icons
     (set-fontset-font nil
                       '(#xE0A0 . #xEEE0)
-                      (font-spec :family "AGVUDP" :height 220))
+                      (font-spec :family "FSMRMP" :height 105))
     ))
 ;;;###autoload
 (defun my:load-side-window-config ()
@@ -4640,7 +4589,7 @@ pdflang={%l}}
 (leaf *gui
   :if window-system
   :config
-  (set-frame-parameter nil 'alpha 90)
+  ;; (set-frame-parameter nil 'alpha 90)
   (setq use-default-font-for-symbols nil)
   (scroll-bar-mode -1)
 ;;  (my:load-window-config)
@@ -4648,18 +4597,20 @@ pdflang={%l}}
   #+end_src
   - [ ] FSMRMP のギリシャ文字が全角にならない. 要調整
   #+BEGIN_EXAMPLE
-幅の確認:
-Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確認用
+
+  幅の確認:
+  絵文字は全角, 他は半角で 2:1 になっているかの確認用.
+  GUI だと駄目だなぁ….
 
 |abcdefghijkl|
 |ABCDEFGHIJKL|
 |'";:-+=/\~`?|
-|∞≤≥∏∑∫|  ← GUI だと半角になる
-|×±≒≡⊆⊇|  ← GUI だと一部半角になる
-|αβγδεζ|  ← GUI だと半角になる
-|ηθικλμ|  ← GUI だと半角になる
-|ΑΒΓΔΕΖ|  ← GUI だと半角になる
-|ΗΘΙΚΛΜ|  ← GUI だと半角になる
+|∞≤≥∏∑∫|
+|×±≒≡⊆⊇|
+|αβγδεζ|
+|ηθικλμ|
+|ΑΒΓΔΕΖ|
+|ΗΘΙΚΛΜ|
 |日本語の美観|
 |あいうえおか|
 |アイウエオカ|
@@ -4747,7 +4698,7 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
      . '(;;
          ;;; Basic color override
          (green-cooler "#bfff7f")
-         (green-faint "#4ceea5")
+         (green-intense "#4ceea5")
          (yellow "#efef00")
          (yellow-warmer "#ffb347")
          (yellow-intense "#ffff7f")
@@ -4762,8 +4713,8 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
          ;;
          (builtin blue-warmer)
          (constant yellow-warmer)
-         (docstring green-faint)
-         (docmarkup green-faint)
+         (docstring green-intense)
+         (docmarkup green-intense)
          (fnname magenta-cooler)
          (keyword red-faint)
          (preprocessor red-cooler)
@@ -4781,7 +4732,11 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
          (info cyan-intense)
          ;;
          ;; Org Agenda view
-         (date-common fg-main)
+         ;; (date-common fg-alt)
+         ;; (date-deadline red-faint)
+         ;; (date-event fg-alt)
+         ;;
+         (date-common fg-alt)
          (date-weekday fg-main)
          ;; headline
          (fg-heading-0 cyan-intense)
@@ -4930,6 +4885,16 @@ Greek, Math, 絵文字は全角, 他は半角で 2:1 になっているかの確
   :if (executable-find "rg")
   :ensure t
   )
+;;
+;; (leaf mozc-temp
+;;   :init
+;;   (leaf mozc
+;;     :config
+;;     (setq default-input-method "japanese-mozc"))
+;;   :bind* ("C-j" . mozc-temp-convert)
+;;   :require t
+;;   )
+;; (global-set-key (kbd "C-j") #'mozc-temp-convert)
 ;;(leaf emacs
 ;;  :preface
 ;;  (defun my-advice/window-width (fn &rest args)

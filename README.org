@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2023-03-15 00:31:42
+#+date: 2023-04-06 13:50:02
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -1963,7 +1963,7 @@ File.open(src, "r") {|f|
              '(gb2312 . gbk))
 ;;
 (setq wl-mime-charset 'iso-2022-jp)
-;; (setq wl-mime-charset 'utf-8-uni)
+;; (setq wl-mime-charset 'utf-8-unix)
      #+end_src
 **** SEMI の追加設定
      :PROPERTIES:
@@ -1974,10 +1974,10 @@ File.open(src, "r") {|f|
      #+begin_src emacs-lisp :tangle init-wl.el
 (leaf mime-setup
   :preface
-  (leaf w3m-load)
-  (leaf mime-w3m :require t)
-;;  (setq mime-view-text/html-previewer 'shr
-;;        mime-setup-enable-inline-html 'shr)
+  ;; (leaf w3m-load)
+  ;; (leaf mime-w3m :require t)
+  (setq mime-view-text/html-previewer 'shr
+        mime-setup-enable-inline-html 'shr)
   )
      #+end_src
      どのアプリケーションで開くか → =xdg-open= に丸投げ．
@@ -2030,11 +2030,11 @@ video/*; xdg-open %s;
 (setq mime-situation-examples-file
       (concat my:d:tmp "mime-example"))
      #+end_src
-     text/plain より html を優先 =(- -;)=
+     text/plain を html より優先.
      #+begin_src emacs-lisp :tangle init-wl.el
 (setq mime-view-type-subtype-score-alist
-      '(((text . plain) . 0)
-        ((text . html)  . 1)
+      '(((text . plain) . 1)
+        ((text . html)  . 0)
         ))
      #+end_src
      音を鳴らすアレやコレの無効化
@@ -2847,7 +2847,8 @@ video/*; xdg-open %s;
      :END:
      偶に暴発している様な...? elscreen のせいかしら.
      #+begin_src emacs-lisp :tangle init-wl.el
-(setq wl-auto-save-drafts-interval 300)
+;; (setq wl-auto-save-drafts-interval 300)
+(setq wl-auto-save-drafts-interval nil)
      #+end_src
 **** メール本文の文字コード
      :PROPERTIES:
@@ -3738,12 +3739,12 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
              org-gcal-sync
              org-gcal-post-at-point
              org-gcal-reload-client-id-secret)
-  :advice ((:before org-gcal-sync
-                    org-gcal-reload-client-id-secret)
-           (:before org-gcal-fetch
-                    org-gcal-reload-client-id-secret)
-           (:before org-gcal-post-at-point
-                    org-gcal-reload-client-id-secret))
+  ;; :advice ((:before org-gcal-sync
+  ;;                   org-gcal-reload-client-id-secret)
+  ;;          (:before org-gcal-fetch
+  ;;                   org-gcal-reload-client-id-secret)
+  ;;          (:before org-gcal-post-at-point
+  ;;                   org-gcal-reload-client-id-secret))
   :preface
   (setq org-gcal-dir (expand-file-name "org-gcal" my:d:tmp))
   (unless (file-directory-p org-gcal-dir)
@@ -4511,39 +4512,39 @@ pdflang={%l}}
     (set-frame-parameter nil 'alpha 90)
     (set-face-attribute 'default nil
                         :family "FSMRMP"
-                        :height 105)
+                        :height 95)
     (set-face-attribute 'fixed-pitch nil
                         :family "FSMRMP"
-                        :height 105)
+                        :height 95)
     (set-face-attribute 'variable-pitch nil
                         :family "FSMRMP"
-                        :height 105)
+                        :height 95)
     ;; Japanese
     (set-fontset-font nil
                       'japanese-jisx0213.2004-1
-                      (font-spec :family "FSMRMP" :height 105))
+                      (font-spec :family "FSMRMP" :height 95))
     (set-fontset-font nil
                       'japanese-jisx0213-2
-                      (font-spec :family "FSMRMP" :height 105))
+                      (font-spec :family "FSMRMP" :height 95))
     (set-fontset-font nil
                       'katakana-jisx0201
-                      (font-spec :family "FSMRMP" :height 105))
+                      (font-spec :family "FSMRMP" :height 95))
     ;; Latin with pronounciation annotations
     (set-fontset-font nil
                       '(#x0080 . #x024F)
-                      (font-spec :family "FSMRMP" :height 105))
+                      (font-spec :family "FSMRMP" :height 95))
     ;; Math symbols
     (set-fontset-font nil
-                      '(#x1050 . #x22FF)
-                      (font-spec :family "FSMRMP" :height 105))
+                      '(#x950 . #x22FF)
+                      (font-spec :family "FSMRMP" :height 95))
     ;; Greek
     (set-fontset-font nil
                       '(#x0370 . #x03FF)
-                      (font-spec :family "FSMRMP" :height 105))
+                      (font-spec :family "FSMRMP" :height 95))
     ;; Some Icons
     (set-fontset-font nil
                       '(#xE0A0 . #xEEE0)
-                      (font-spec :family "FSMRMP" :height 105))
+                      (font-spec :family "FSMRMP" :height 95))
     ))
 ;;;###autoload
 (defun my:load-side-window-config ()

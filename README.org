@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2023-04-06 13:50:02
+#+date: 2023-04-30 21:25:35
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -1279,7 +1279,6 @@ File.open(src, "r") {|f|
     (recentf-max-saved-items . 500)
     (recentf-auto-cleanup    . 'mode)
     (recentf-exclude         . '(".recentf"
-                                 "Nextcloud/org"
                                  "^/tmp\\.*"
                                  "^/private\\.*"
                                  "^/var/folders\\.*"
@@ -1976,8 +1975,7 @@ File.open(src, "r") {|f|
   :preface
   ;; (leaf w3m-load)
   ;; (leaf mime-w3m :require t)
-  (setq mime-view-text/html-previewer 'shr
-        mime-setup-enable-inline-html 'shr)
+  (setq mime-view-text/html-previewer 'shr)
   )
      #+end_src
      どのアプリケーションで開くか → =xdg-open= に丸投げ．
@@ -3568,6 +3566,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
              "twitter.org"
              ;; Project
              "redmine_GFD.org"
+             "redmine_SSKLAB.org"
              ;; "redmine_FluidSoc.org"
              ))
     (add-to-list 'org-agenda-files (expand-file-name file my:d:org)))

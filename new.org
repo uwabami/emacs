@@ -1,0 +1,700 @@
+#+title: Emacs の設定
+# -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#+startup: overview
+#+options: auto-id:t H:6
+#+date: 2023-05-26 16:30:46
+* はじめに
+  :PROPERTIES:
+  :CUSTOM_ID: org66fa74cd
+  :END:
+  ここでは私の Emacs の設定についてまとめています．
+
+  #+html: <span class="inline-block">
+  #+html: <amp-img src="https://github.com/uwabami/emacs/actions/workflows/build.yml/badge.svg" width="104px" height="20px" layout="fixed" class="github_badge"></amp-img>
+  #+html: <amp-img src="https://img.shields.io/badge/License-GPLv3-blue.svg" width="92px" height="20px" layout="fixed"></amp-img>
+  #+html: <a href="https://github.com/uwabami/emacs"><span class="icon-github"><svg id="SVGRoot" width="20px" height="20px" version="1.1" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="m5.4144 12.761c0 0.0645-0.0742 0.11613-0.16774 0.11613-0.10645 0.01-0.18064-0.0419-0.18064-0.11613 0-0.0645 0.0742-0.11613 0.16774-0.11613 0.0968-0.01 0.18064 0.0419 0.18064 0.11613zm-1.0032-0.14516c-0.0226 0.0645 0.0419 0.13871 0.13871 0.15806 0.0839 0.0323 0.18064 0 0.2-0.0645 0.0194-0.0645-0.0419-0.13871-0.13871-0.16775-0.0839-0.0226-0.17742 0.01-0.2 0.0742zm1.4258-0.0548c-0.0935 0.0226-0.15806 0.0839-0.14838 0.15806 0.01 0.0645 0.0935 0.10645 0.19032 0.0839 0.0936-0.0226 0.15806-0.0839 0.14839-0.14838-0.01-0.0613-0.0968-0.10323-0.19033-0.0935zm2.1226-12.361c-4.4742 0-7.8968 3.3968-7.8968 7.871 0 3.5774 2.2516 6.6387 5.4677 7.7161 0.41291 0.0742 0.55807-0.18064 0.55807-0.39032 0-0.2-0.01-1.3032-0.01-1.9806 0 0-2.2581 0.48387-2.7323-0.96129 0 0-0.36774-0.93871-0.89677-1.1806 0 0-0.73871-0.50645 0.0516-0.49677 0 0 0.80323 0.0645 1.2452 0.83226 0.70645 1.2452 1.8903 0.88709 2.3516 0.67419 0.0742-0.51613 0.28387-0.87419 0.51613-1.0871-1.8032-0.2-3.6226-0.46129-3.6226-3.5645 0-0.8871 0.24516-1.3323 0.76129-1.9-0.0839-0.20968-0.35806-1.0742 0.0839-2.1903 0.6742-0.20967 2.2258 0.87097 2.2258 0.87097 0.64516-0.18064 1.3387-0.27419 2.0258-0.27419 0.68709 0 1.3806 0.0936 2.0258 0.27419 0 0 1.5516-1.0839 2.2258-0.87097 0.44193 1.1194 0.16774 1.9806 0.0839 2.1903 0.51613 0.57096 0.83226 1.0161 0.83226 1.9 0 3.1129-1.9 3.3613-3.7032 3.5645 0.29678 0.25484 0.54839 0.73871 0.54839 1.4968 0 1.0871-0.01 2.4322-0.01 2.6968 0 0.20968 0.14839 0.46452 0.55807 0.39032 3.2258-1.071 5.4129-4.1322 5.4129-7.7097 0-4.4742-3.629-7.871-8.1032-7.871zm-4.7613 11.126c-0.0419 0.0323-0.0323 0.10646 0.0226 0.16775 0.0516 0.0516 0.12581 0.0742 0.16775 0.0323 0.0419-0.0323 0.0323-0.10645-0.0226-0.16774-0.0516-0.0516-0.12581-0.0742-0.16775-0.0323zm-0.34838-0.26129c-0.0226 0.0419 0.01 0.0935 0.0742 0.12581 0.0516 0.0323 0.11613 0.0226 0.13871-0.0226 0.0226-0.0419-0.01-0.0935-0.0742-0.12581-0.0645-0.0194-0.11613-0.01-0.13871 0.0226zm1.0452 1.1484c-0.0516 0.0419-0.0323 0.13871 0.0419 0.2 0.0742 0.0742 0.16775 0.0839 0.20968 0.0323 0.0419-0.0419 0.0226-0.13871-0.0419-0.2-0.071-0.0742-0.16775-0.0839-0.20968-0.0323zm-0.36774-0.47419c-0.0516 0.0323-0.0516 0.11613 0 0.19032 0.0516 0.0742 0.13871 0.10645 0.18064 0.0742 0.0516-0.0419 0.0516-0.1258 0-0.2-0.0452-0.0742-0.12903-0.10645-0.18064-0.0645z" fill="currentColor" stroke-width=".032258"/></svg></span></a>
+  #+html: </span>
+
+  基本方針は以下の通り:
+** Debian パッケージがインストールされているならばそれを優先する
+   :PROPERTIES:
+   :CUSTOM_ID: org5eaa4818
+   :END:
+   :[[https://en.wikipedia.org/wiki/Eating_your_own_dog_food][Eating your own dog food - Wikipedia]]
+
+   Emacsに関連するDebianパッケージを幾つかメンテナンスしているので,
+   可能な限りDebianパッケージを使うことにしています．
+** [[https://github.com/conao3/leaf.el][leaf.el]]でEmacs のパッケージの導入と設定を行なう
+   :PROPERTIES:
+   :CUSTOM_ID: orgd2ba4ef2
+   :END:
+   設定には[[https://github.com/conao3/leaf.el][leaf.el]]を利用します．
+   VCS からインストールしたいパッケージが幾つかあるので,
+   それらについては[[https://github.com/dimitri/el-get][el-get]]を利用しています．
+** 設定は [[http://orgmode.org/][Org mode]] で書きたい
+   :PROPERTIES:
+   :CUSTOM_ID: org458d9cf4
+   :END:
+   以前こんなブログ記事を書きました→ [[http://uwabami.junkhub.org/log/20111213.html#p01][Emacsの設定ファイルをorgで書く]]
+
+   というわけで, 設定は [[http://orgmode.org/worg/org-contrib/babel/intro.html][Org Babel]] で書いています.
+   本ファイル(=README.org=) から,
+   Makefile 内の以下のスクリプトで =~/init.el= を生成し, byte-compile します.
+   #+begin_src makefile-gmake :tangle no
+EMACS   ?= emacs
+init.el: README.org
+    $(EMACS) -Q -q --batch --eval \
+       "(progn \
+          (require 'ob-tangle) \
+          (org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\"))"
+    $(EMACS) -q -l init.el --batch --eval '(kill-emacs)'
+%.elc: %.el
+    $(EMACS) -q -l init.el -batch -f batch-byte-compile $<
+   #+end_src
+* 設定ファイルのヘッダ
+  :PROPERTIES:
+  :CUSTOM_ID: org990b5166
+  :END:
+  出力される =init.el= 用のヘッダは以下の通り.
+  =lexsical-binding= を有効にしておきます．
+  #+begin_src emacs-lisp :tangle init.el
+;; -*- lexical-binding: t -*-
+;; (eval-when-compile
+;;   (require 'profiler)
+;;   (profiler-start 'cpu)
+;;   )
+  #+end_src
+  #+begin_src emacs-lisp :tangle early-init.el
+;; -*- lexical-binding: t -*-
+;; (require 'profiler)    ;; 必要に応じて有効化
+;; (profiler-start 'cpu)
+  #+end_src
+* ディレクトリ構成の修正
+  :PROPERTIES:
+  :CUSTOM_ID: org60bad8a3
+  :END:
+  分割した設定ファイル群やパッケージでinstallしたパッケージ
+  の置き場所は =user-emacs-directory= 以下にまとめられます.
+  +パッケージによって置き方はかなり野放図ですよねぇ.+
+  [[https://github.com/emacscollective/no-littering][no-littering]] あたりで整理した方が良いかなぁ.
+
+  ディレクトリ構成は以下のようにしました:
+  #+begin_example
+    ~/.emacs.d/
+     |-- Makefile    ←  byte-compile 用の rule
+     |-- README.org  ←  本ファイル．`org-babel-tangle' で init.el を生成
+     |-- el-get/     ←  el-get で導入したパッケージが置かれる場所
+     |-- eln-cache/  → ~/.cache/emacs/eln-cache への symlink(native compile 出力).
+     |-- elpa/       ←  package.el で導入したパッケージが置かれる場所
+     `-- share/      ←  (基本的に)参照するだけの資源置き場所
+    ~/.cache/emacs   ←  一次ファイルの置き場所
+  #+end_example
+  上記ディレクトリ構成を設定ファイルで使用するために
+  ディレクトリ配置を宣言しておきます。
+  #+begin_src emacs-lisp :tangle init.el
+(eval-and-compile
+  (when load-file-name
+    (setq user-emacs-directory
+          (expand-file-name (file-name-directory load-file-name))))
+  (defconst my:d:share
+    (expand-file-name "share/" user-emacs-directory))
+  (defconst my:d:tmp
+    (expand-file-name ".cache/emacs/" (getenv "HOME")))
+  (defconst my:d:org
+    (expand-file-name "~/Nextcloud/org")))
+  #+end_src
+* Byte-Compile 時の Common Lisp の読み込み
+  :PROPERTIES:
+  :CUSTOM_ID: org87c9febb
+  :END:
+  幾つかの関数で =Common-Lisp= 的挙動が期待されているので,
+  =cl-lib= を読み込んでおきます．
+  #+begin_src emacs-lisp :tangle init.el
+(eval-when-compile
+  (require 'cl-lib nil t))
+  #+end_src
+  また, Emacs 27 以降は cl が読み込まれていると
+  `Package cl is deprecated' が表示されるので, これを止めておきます.
+  #+begin_src emacs-lisp :tangle init.el
+(eval-and-compile
+  (setq byte-compile-warnings '(not cl-functions free-vars docstrings unresolved))
+  (if (and (fboundp 'native-comp-available-p)
+           (native-comp-available-p))
+      (setq native-comp-speed  2
+            native-comp-async-report-warnings-errors 'silent
+            native-compile-target-directory (expand-file-name "eln-cache" user-emacs-directory)
+            ))
+  (setq debug-on-error t))
+  #+end_src
+* 起動の高速化
+  :PROPERTIES:
+  :CUSTOM_ID: orgae182d4d
+  :END:
+  この辺は [[https://emacs-jp.github.io/tips/startup-optimization][Emacs の起動時間を""詰める""]] を参考に.
+** =early-init.el=
+   :PROPERTIES:
+   :CUSTOM_ID: orgcb2bfa7b
+   :END:
+   Emacs >= 27 からの機能. 他にも設定しておいた方が良い事はあるかな?
+   #+begin_src emacs-lisp :tangle early-init.el
+(setq gc-cons-threshold most-positive-fixnum)
+(setq package-enable-at-startup nil
+      package-quickstart nil)
+;;
+(push '(vertical-scroll-bars . nil) default-frame-alist)
+(push '(menu-bar-lines       . nil) default-frame-alist)
+(push '(tool-bar-lines       . nil) default-frame-alist)
+(push '(scroll-bar-mode      . nil) default-frame-alist)
+(push '(blink-cursor-mode    . nil) default-frame-alist)
+(push '(column-number-mode   . nil) default-frame-alist)
+;;
+(setq load-prefer-newer noninteractive)
+;;
+(setq frame-inhibit-implied-resize t)
+;;
+(setq site-run-file nil)
+;; (setq file-name-handler-alist nil) ;; 🤔
+(setq use-file-dialog nil)
+;;
+;; (setq native-comp-speed 2
+;;       native-compile-target-directory (expand-file-name "eln-cache" user-emacs-directory))
+(provide 'early-init)
+;;; early-init.el ends here
+   #+end_src
+** GC の設定
+   :PROPERTIES:
+   :CUSTOM_ID: org77e2f299
+   :END:
+   起動時に garbage collection を発生させない様にする.
+
+   メモリ喰いな拡張を入れている場合には,
+   安易に =gc-cons-threshold= を上げるのは考えものである.
+   「gc が走る→大きな領域を掃除するのでその間 emacs が止まる」
+   という事を頻繁に経験することになるだろう.
+
+   とはいえ, デフォルト値のままだと
+   起動時に結構 garbage-collect が走って遅くなるので,
+   起動時と =early-init= では =most-positive-fixnum= にしておいて,
+   起動後に =emacs-startup-hook= で default に戻すようにしてみた.
+
+   ついでに =idle-timer= で入力が無い時に GC を走らせることに.
+   #+begin_src emacs-lisp :tangle init.el
+(setq gc-cons-threshold most-positive-fixnum)
+;; Run GC every 60 seconds if emacs is idle.
+(run-with-idle-timer 60.0 t #'garbage-collect)
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            ;; recover default value
+            (setq gc-cons-threshold 800000)))
+   #+end_src
+** Magic File Name を一時的に無効化
+   :PROPERTIES:
+   :CUSTOM_ID: orgb6dd6727
+   :END:
+   これだけで 0.2秒縮まった. これは知見である.
+   #+begin_src emacs-lisp :tangle init.el
+(defconst my:saved-file-name-handler-alist file-name-handler-alist)
+(setq file-name-handler-alist nil)
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (setq file-name-handler-alist my:saved-file-name-handler-alist)))
+   #+end_src
+* Package 関連: [[https://emacs-jp.github.io/packages/package-management/package-el][package.el]], [[https://github.com/conao3/leaf.el][leaf.el]], [[https://github.com/dimitri/el-get][el-get]]
+  :PROPERTIES:
+  :CUSTOM_ID: orgcf4176e7
+  :END:
+  [[https://github.com/conao3/leaf.el][leaf.el]]のおかげで,
+  無いと途方に暮れるパッケージ以外のインストールは無視できるようになります.
+** [[https://emacs-jp.github.io/packages/package-management/package-el][package.el]]
+   :PROPERTIES:
+   :CUSTOM_ID: orgc51eb87d
+   :END:
+   パッケージは基本的に =package.el= で導入するので, 先ずはその設定.
+   #+begin_src emacs-lisp :tangle init.el
+;; elpa/gnutls workaround
+(eval-and-compile
+  (setq package-archives '(("gnu"    . "https://elpa.gnu.org/packages/")
+                           ("melpa"  . "https://melpa.org/packages/")
+                           ("org"    . "https://orgmode.org/elpa/")
+                           ("nongnu" . "https://elpa.nongnu.org/nongnu/"))
+        package-gnupghome-dir (expand-file-name ".gnupg" (getenv "HOME"))
+        package-quickstart nil
+        )
+  (if (and (fboundp 'native-comp-available-p)
+           (native-comp-available-p))
+      (setq package-native-compile t))
+  (package-initialize)
+  (unless (package-installed-p 'leaf)
+    (package-refresh-contents)
+    (package-install 'leaf t))
+  )
+   #+end_src
+** [[https://github.com/conao3/leaf.el][leaf.el]]
+   :PROPERTIES:
+   :CUSTOM_ID: orgc2ededbf
+   :END:
+   個々のパッケージの設定には[[https://github.com/conao3/leaf.el][leaf.el]]を利用します.
+   自分で修正した版やオリジナル版を別の場所から持ってくる場合は
+   [[https://github.com/conao3/leaf.el][leaf.el]]から[[https://github.com/dimitri/el-get][el-get]]を呼び出します.
+   #+begin_src emacs-lisp :tangle init.el
+  (leaf leaf-keywords
+    :doc "Use leaf as a package manager"
+    :url "https://github.com/conao3/leaf.el"
+    :ensure t
+    :init
+    (leaf blackout :ensure t)
+    (leaf hydra :ensure t)
+    (leaf el-get
+      :ensure t
+      :custom
+      (el-get-git-shallow-clone . t)
+      )
+    :config
+    (leaf-keywords-init)
+    )
+   #+end_src
+* 補完
+#+begin_src emacs-lisp
+  (leaf corfu
+    :ensure t
+    :init
+    (leaf corfu-terminal :ensure t)
+    :custom
+    `((corfu-cycle . t)
+      (corfu-auto  . t)
+      (corfu-quit-no-match . 'separator)
+      (corfu-quit-at-boundary . nil)
+      (corfu-scroll-margin . 2)
+      )
+      :hook (emacs-startup-hook
+	     . (lambda ()
+		 (corfu-terminal-mode +1)
+		 (global-corfu-mode)))
+      )
+#+end_src
+
+* テーマ, フォント, モードライン, などなど
+  :PROPERTIES:
+  :CUSTOM_ID: orgbf458527
+  :END:
+** SOMEDAY フォント [0/1]
+   :PROPERTIES:
+   :CUSTOM_ID: org356b9857
+   :END:
+   試行錯誤中. とはいえ, GUIで使う事は滅多に無いのでなかなか弄る機会が無い.
+  #+begin_src emacs-lisp :tangle init.el
+;;;###autoload
+(defun my:load-window-config ()
+  "load window-system specific settings"
+  (interactive)
+  (progn
+    (set-frame-parameter nil 'alpha 90)
+    (set-face-attribute 'default nil
+                        :family "FSMRMP"
+                        :height 95)
+    (set-face-attribute 'fixed-pitch nil
+                        :family "FSMRMP"
+                        :height 95)
+    (set-face-attribute 'variable-pitch nil
+                        :family "FSMRMP"
+                        :height 95)
+    ;; Japanese
+    (set-fontset-font nil
+                      'japanese-jisx0213.2004-1
+                      (font-spec :family "FSMRMP" :height 95))
+    (set-fontset-font nil
+                      'japanese-jisx0213-2
+                      (font-spec :family "FSMRMP" :height 95))
+    (set-fontset-font nil
+                      'katakana-jisx0201
+                      (font-spec :family "FSMRMP" :height 95))
+    ;; Latin with pronounciation annotations
+    (set-fontset-font nil
+                      '(#x0080 . #x024F)
+                      (font-spec :family "FSMRMP" :height 95))
+    ;; Math symbols
+    (set-fontset-font nil
+                      '(#x950 . #x22FF)
+                      (font-spec :family "FSMRMP" :height 95))
+    ;; Greek
+    (set-fontset-font nil
+                      '(#x0370 . #x03FF)
+                      (font-spec :family "FSMRMP" :height 95))
+    ;; Some Icons
+    (set-fontset-font nil
+                      '(#xE0A0 . #xEEE0)
+                      (font-spec :family "FSMRMP" :height 95))
+    ))
+;;;###autoload
+(defun my:load-side-window-config ()
+  "load window-system specific settings"
+  (interactive)
+  (progn
+    (set-face-attribute 'default nil
+                        :family "FSMRMP"
+                        :height 135)
+    (set-face-attribute 'fixed-pitch nil
+                        :family "FSMRMP"
+                        :height 135)
+    (set-face-attribute 'variable-pitch nil
+                        :family "FSMRMP"
+                        :height 135)
+    ;; Japanese
+    (set-fontset-font nil
+                      'japanese-jisx0213.2004-1
+                      (font-spec :family "FSMRMP" :height 135))
+    (set-fontset-font nil
+                      'japanese-jisx0213-2
+                      (font-spec :family "FSMRMP" :height 135))
+    (set-fontset-font nil
+                      'katakana-jisx0201
+                      (font-spec :family "FSMRMP" :height 135))
+    ;; Latin with pronounciation annotations
+    (set-fontset-font nil
+                      '(#x0080 . #x024F)
+                      (font-spec :family "FSMRMP" :height 135))
+    ;; Math symbols
+    (set-fontset-font nil
+                      '(#x2200 . #x22FF)
+                      (font-spec :family "FSMRMP" :height 135))
+    ;; Greek
+    (set-fontset-font nil
+                      '(#x0370 . #x03FF)
+                      (font-spec :family "FSMRMP" :height 135))
+    ;; Some Icons
+    (set-fontset-font nil
+                      '(#xE0A0 . #xEEE0)
+                      (font-spec :family "FSMRMP" :height 135))
+    ))
+(leaf *gui
+  :if window-system
+  :config
+  ;; (set-frame-parameter nil 'alpha 90)
+  (setq use-default-font-for-symbols nil)
+  (scroll-bar-mode -1)
+;;  (my:load-window-config)
+  )
+  #+end_src
+  - [ ] FSMRMP のギリシャ文字が全角にならない. 要調整
+  #+BEGIN_EXAMPLE
+
+  幅の確認:
+  絵文字は全角, 他は半角で 2:1 になっているかの確認用.
+  GUI だと駄目だなぁ….
+
+|abcdefghijkl|
+|ABCDEFGHIJKL|
+|'";:-+=/\~`?|
+|∞≤≥∏∑∫|
+|×±≒≡⊆⊇|
+|αβγδεζ|
+|ηθικλμ|
+|ΑΒΓΔΕΖ|
+|ΗΘΙΚΛΜ|
+|日本語の美観|
+|あいうえおか|
+|アイウエオカ|
+|ｱｲｳｴｵｶｷｸｹｺｻｼ|
+
+| hoge                 | hogeghoe | age              |
+|----------------------+----------+------------------|
+| 今日もいい天気ですね | お、     | 等幅になった👍 🍺|
+|----------------------+----------+------------------|
+  #+END_EXAMPLE
+** theme: =modus-theme=
+   :PROPERTIES:
+   :CUSTOM_ID: orgce78777d
+   :END:
+   デフォルトの font-lock を(好みに合わせて)入れ替えたり.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf modus-themes
+  :ensure t
+  :bind ("<f5>" . modus-themes-toggle)
+  :commands modus-themes-load-theme
+  :preface
+  (defun my:override-face-attribute()
+    "CUSTOM: Override face attribute"
+    (modus-themes-with-colors
+      (custom-set-faces
+       `(font-lock-comment-delimiter-face ((,c :inherit font-lock-comment-face :bold t)))
+       `(wl-highlight-folder-closed-face                  ((,c :foreground ,green-cooler )))
+       `(wl-highlight-folder-few-face                     ((,c :foreground ,red-cooler )))
+       `(wl-highlight-folder-killed-face                  ((,c :foreground ,fg-alt )))
+       `(wl-highlight-folder-many-face                    ((,c :foreground ,magenta )))
+       `(wl-highlight-folder-opened-face                  ((,c :foreground ,cyan-cooler )))
+       `(wl-highlight-folder-unknown-face                 ((,c :foreground ,cyan-warmer )))
+       `(wl-highlight-folder-unread-face                  ((,c :foreground ,blue-warmer )))
+       `(wl-highlight-folder-zero-face                    ((,c :foreground ,fg-main )))
+       `(wl-highlight-message-citation-header             ((,c :foreground ,green-warmer )))
+       `(wl-highlight-message-cited-text-1                ((,c :foreground ,green-intense )))
+       `(wl-highlight-message-cited-text-2                ((,c :foreground ,yellow-intense )))
+       `(wl-highlight-message-cited-text-3                ((,c :foreground ,blue-intense )))
+       `(wl-highlight-message-cited-text-4                ((,c :foreground ,cyan-intense )))
+       `(wl-highlight-message-cited-text-5                ((,c :foreground ,magenta-cooler )))
+       `(wl-highlight-message-cited-text-6                ((,c :foreground ,red-intense )))
+       `(wl-highlight-message-cited-text-7                ((,c :foreground ,green-intense )))
+       `(wl-highlight-message-cited-text-8                ((,c :foreground ,yellow-intense )))
+       `(wl-highlight-message-cited-text-9                ((,c :foreground ,blue-intense )))
+       `(wl-highlight-message-cited-text-10               ((,c :foreground ,cyan-intense )))
+       `(wl-highlight-message-header-contents             ((,c :foreground ,magenta-cooler )))
+       `(wl-highlight-message-headers                     ((,c :foreground ,cyan-intense )))
+       `(wl-highlight-message-important-header-contents   ((,c :foreground ,magenta-intense )))
+       `(wl-highlight-message-important-header-contents2  ((,c :foreground ,magenta-intense )))
+       `(wl-highlight-message-signature                   ((,c :foreground ,fg-dim )))
+       `(wl-highlight-message-unimportant-header-contents ((,c :foreground ,fg-dim )))
+       `(wl-highlight-summary-answered-face               ((,c :foreground ,green-intense )))
+       `(wl-highlight-summary-deleted-face                ((,c :foreground ,blue-intense )))
+       `(wl-highlight-summary-disposed-face               ((,c :foreground ,fg-dim )))
+       `(wl-highlight-summary-flagged-face                ((,c :foreground ,yellow-intense )))
+       `(wl-highlight-summary-high-unread-face            ((,c :foreground ,red-intense )))
+       `(wl-highlight-summary-low-unread-face             ((,c :foreground ,red-intense )))
+       `(wl-highlight-summary-normal-face                 ((,c :foreground ,fg-main )))
+       `(wl-highlight-summary-refiled-face                ((,c :foreground ,blue-warmer )))
+       `(wl-highlight-summary-spam-face                   ((,c :foreground ,magenta-intense )))
+       `(wl-highlight-summary-thread-top-face             ((,c :foreground ,fg-main )))
+       `(wl-highlight-summary-unread-face                 ((,c :foreground ,fg-main )))
+       `(wl-highlight-summary-new-face                    ((,c :foreground ,red-intense )))
+       `(wl-highlight-summary-displaying-face             ((,c :underline t :bold t)))
+       `(wl-highlight-folder-path-face                    ((,c :underline t :bold t)))
+       )))
+  :hook
+  `((modus-themes-after-load-theme-hook . my:override-face-attribute))
+  :custom
+  `(
+    (modus-themes-custom-auto-reload      . t)
+    (modus-themes-disable-other-themes    . t)
+    (modus-themes-bold-constructs         . nil)
+    (modus-themes-italic-constructs       . nil)
+    (modus-themes-mixed-fonts             . nil)
+    (modus-themes-prompts
+     . '(bold bold))
+    (modus-themes-completions
+     . '((matches   . (bold))
+         (selection . (bold underline))))
+    (modus-themes-org-blocks              . nil)
+    (modus-themes-headings                . '((t . (bold))))
+    (modus-themes-variable-pitch-ui       . nil)
+    (modus-vivendi-palette-overrides
+     . '(;;
+         ;;; Basic color override
+         (green-cooler "#bfff7f")
+         (green-intense "#4ceea5")
+         (yellow "#efef00")
+         (yellow-warmer "#ffb347")
+         (yellow-intense "#ffff7f")
+         ;;
+         (bg-yellow-intense "#556b2f")
+         ;;
+         (bg-main 'unspecified)
+         (comment fg-dim)
+         (bg-hl-line bg-yellow-intense)
+         ;;
+         ;;; Code remapping
+         ;;
+         (builtin blue-warmer)
+         (constant yellow-warmer)
+         (docstring green-intense)
+         (docmarkup green-intense)
+         (fnname magenta-cooler)
+         (keyword red-faint)
+         (preprocessor red-cooler)
+         (string cyan-cooler)
+         (type yellow-intense)
+         (variable blue)
+         ;;
+         (rx-construct blue-faint)
+         (rx-backslash green-cooler)
+         ;;
+         (fg-link cyan-warmer)
+         ;;
+         (err red-intense)
+         (warning magenta-intense)
+         (info cyan-intense)
+         ;;
+         ;; Org Agenda view
+         ;; (date-common fg-alt)
+         ;; (date-deadline red-faint)
+         ;; (date-event fg-alt)
+         ;;
+         (date-common fg-alt)
+         (date-weekday fg-main)
+         ;; headline
+         (fg-heading-0 cyan-intense)
+         (fg-heading-1 magenta-cooler)
+         (fg-heading-2 blue-cooler)
+         (fg-heading-3 yellow-warmer)
+         (fg-heading-4 green-faint)
+         (fg-heading-5 yellow-intense)
+         (fg-heading-6 red-cooler)
+         (fg-heading-7 magenta-warmer)
+         (fg-heading-8 fg-main)
+         ))
+    )
+  :init
+  (modus-themes-load-theme 'modus-vivendi)
+  )
+   #+end_src
+** modeline: =powerline=
+   :PROPERTIES:
+   :CUSTOM_ID: orgf37b53c3
+   :END:
+  #+BEGIN_SRC emacs-lisp
+    (leaf powerline
+      :ensure t
+      :disabled t
+      :defvar
+      (skk-indicator-alist
+       skk-hiragana-mode-string
+       skk-katakana-mode-string
+       skk-latin-mode-string
+       skk-jisx0208-latin-mode-string
+       skk-jisx0201-mode-string
+       skk-abbrev-mode-string
+       )
+      :init
+      ;; (defun my:major-mode-icon (mode)
+      ;;   "Update file icon in mode-line, just display major-mode icon. not filename."
+      ;;   (let* ((icon (all-the-icons-icon-for-mode mode)))
+      ;;     (if (symbolp icon)
+      ;;         (all-the-icons-faicon "file-code-o"
+      ;;                               :face 'all-the-icons-dsilver
+      ;;                               :height 1.0)
+      ;;       icon)))
+      ;;
+      (defun my:skk-init-modeline-input-mode ()
+	"Custom skkが読み込まれていなくても skk-modeline-input-mode に値を設定"
+	(cond
+	 ((not (boundp 'skk-modeline-input-mode))
+	  (setq skk-modeline-input-mode "--SKK"))
+	 (t skk-modeline-input-mode)))
+      ;;
+      (defun my:skk-modeline-input-mode ()
+	"Custom: powerline 用に skk の indicator を準備"
+	(cond
+	 ((string-match "--SKK" skk-modeline-input-mode) "[--]")
+	 ((string-match skk-hiragana-mode-string skk-modeline-input-mode) "[あ]")
+	 ((string-match skk-katakana-mode-string skk-modeline-input-mode) "[ア]")
+	 ((string-match skk-latin-mode-string skk-modeline-input-mode)    "[_A]")
+	 ((string-match skk-jisx0208-latin-mode-string skk-modeline-input-mode) "[Ａ]")
+	 ((string-match skk-jisx0201-mode-string skk-modeline-input-mode) "[_ｱ]")
+	 ((string-match skk-abbrev-mode-string skk-modeline-input-mode)   "[aA]")
+	 (t "[--]")
+	 )
+	)
+      ;;
+      (defun my:skk-setup-modeline ()
+	"skk-setup-modeline による modeline の更新を無効化"
+	(setq skk-indicator-alist (skk-make-indicator-alist))
+	(force-mode-line-update t))
+      ;;
+      :advice (:override skk-setup-modeline my:skk-setup-modeline)
+      :custom
+      `((powerline-buffer-size-suffix    . nil)
+	(powerline-display-hud           . nil)
+	(powerline-display-buffer-size   . nil)
+	(powerline-text-scale-factor     .  1)
+	(powerline-default-separator     . 'utf-8)
+	(powerline-utf-8-separator-left  . #xe0b0)
+	(powerline-utf-8-separator-right . #xe0b2)
+	)
+      :hook (emacs-startup-hook . my:powerline-theme)
+      :config
+    ;;;###autoload
+      (defun my:powerline-theme ()
+	"Setup the default mode-line."
+	(interactive)
+	(my:skk-init-modeline-input-mode)
+	(setq-default
+	 mode-line-format
+	 '("%e"
+	   (:eval
+	    (let* ((active (powerline-selected-window-active))
+		   (mode-line-buffer-id (if active 'mode-line-buffer-id 'mode-line-buffer-id-inactive))
+		   (mode-line (if active 'mode-line 'mode-line-inactive))
+		   (face0 (if active 'powerline-active0 'powerline-inactive0))
+		   (face1 (if active 'powerline-active1 'powerline-inactive1))
+		   (face2 (if active 'powerline-active2 'powerline-inactive2))
+		   (separator-left (intern (format "powerline-%s-%s"
+						   (powerline-current-separator)
+						   (car powerline-default-separator-dir))))
+		   (separator-right (intern (format "powerline-%s-%s"
+						    (powerline-current-separator)
+						    (cdr powerline-default-separator-dir))))
+		   (lhs (list (powerline-raw (format "%s" (my:skk-modeline-input-mode)) mode-line 'l)
+			      (powerline-raw "%*" mode-line 'l)
+			      (powerline-raw mode-line-mule-info mode-line 'l)
+			      ;; (powerline-raw (my:major-mode-icon major-mode) mode-line 'l)
+			      (powerline-buffer-id mode-line-buffer-id 'l)
+			      (powerline-raw " ")
+			      ;; (funcall separator-left face0 face1)
+			      ))
+		   (rhs (list (powerline-raw global-mode-string face1 'r)
+			      ;; (funcall separator-right face2 face1)
+			      (powerline-vc face1 'r)
+			      (powerline-raw mode-line-misc-info 'r)
+			      (powerline-raw " ")
+			      (powerline-raw "%6p" mode-line 'r)
+			      )))
+	      (concat (powerline-render lhs)
+		      (powerline-fill face2 (powerline-width rhs))
+		      (powerline-render rhs))))))
+	)
+      ;; (my:powerline-theme)
+      )
+   #+END_SRC
+* 最後に
+  :PROPERTIES:
+  :CUSTOM_ID: orgf87c4e84
+  :END:
+** profiler report
+   :PROPERTIES:
+   :CUSTOM_ID: org8d339cf7
+   :END:
+   必要に応じて
+  #+begin_src emacs-lisp :tangle init.el
+(setq debug-on-error nil)
+;; (profiler-report)
+;; (profiler-stop)
+  #+end_src
+** provide の設定
+   :PROPERTIES:
+   :CUSTOM_ID: org4c97a1e0
+   :END:
+  #+begin_src emacs-lisp :tangle init.el
+(provide 'init)
+;; Local Variables:
+;; byte-compile-warnings: (not cl-functions free-vars docstrings unresolved)
+;; End:
+  #+end_src
+  #+begin_src emacs-lisp :tangle init-wl.el
+;; Local Variables:
+;; byte-compile-warnings: (not cl-functions free-vars docstrings unresolved)
+;; End:
+  #+end_src
+  #+begin_src emacs-lisp :tangle init-ddskk.el
+;; Local Variables:
+;; byte-compile-warnings: (not cl-functions free-vars docstrings unresolved)
+;; End:
+  #+end_src
+** LICENSE
+   :PROPERTIES:
+   :CUSTOM_ID: orge8960401
+   :END:
+   幾つかの関数の元ネタとして Emacs 本体のコードを参照したので,
+   GPL-3 or later です．
+   #+begin_example
+Copyright (C) 2011--2017 Youhei SASAKI <uwabami@gfd-dennou.org>
+.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+.
+This package is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+.
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+   #+end_example

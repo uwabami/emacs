@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2023-08-05 17:25:55
+#+date: 2023-05-08 11:13:15
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -15,10 +15,7 @@
   #+html: <a href="https://github.com/uwabami/emacs"><span class="icon-github"><svg id="SVGRoot" width="20px" height="20px" version="1.1" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="m5.4144 12.761c0 0.0645-0.0742 0.11613-0.16774 0.11613-0.10645 0.01-0.18064-0.0419-0.18064-0.11613 0-0.0645 0.0742-0.11613 0.16774-0.11613 0.0968-0.01 0.18064 0.0419 0.18064 0.11613zm-1.0032-0.14516c-0.0226 0.0645 0.0419 0.13871 0.13871 0.15806 0.0839 0.0323 0.18064 0 0.2-0.0645 0.0194-0.0645-0.0419-0.13871-0.13871-0.16775-0.0839-0.0226-0.17742 0.01-0.2 0.0742zm1.4258-0.0548c-0.0935 0.0226-0.15806 0.0839-0.14838 0.15806 0.01 0.0645 0.0935 0.10645 0.19032 0.0839 0.0936-0.0226 0.15806-0.0839 0.14839-0.14838-0.01-0.0613-0.0968-0.10323-0.19033-0.0935zm2.1226-12.361c-4.4742 0-7.8968 3.3968-7.8968 7.871 0 3.5774 2.2516 6.6387 5.4677 7.7161 0.41291 0.0742 0.55807-0.18064 0.55807-0.39032 0-0.2-0.01-1.3032-0.01-1.9806 0 0-2.2581 0.48387-2.7323-0.96129 0 0-0.36774-0.93871-0.89677-1.1806 0 0-0.73871-0.50645 0.0516-0.49677 0 0 0.80323 0.0645 1.2452 0.83226 0.70645 1.2452 1.8903 0.88709 2.3516 0.67419 0.0742-0.51613 0.28387-0.87419 0.51613-1.0871-1.8032-0.2-3.6226-0.46129-3.6226-3.5645 0-0.8871 0.24516-1.3323 0.76129-1.9-0.0839-0.20968-0.35806-1.0742 0.0839-2.1903 0.6742-0.20967 2.2258 0.87097 2.2258 0.87097 0.64516-0.18064 1.3387-0.27419 2.0258-0.27419 0.68709 0 1.3806 0.0936 2.0258 0.27419 0 0 1.5516-1.0839 2.2258-0.87097 0.44193 1.1194 0.16774 1.9806 0.0839 2.1903 0.51613 0.57096 0.83226 1.0161 0.83226 1.9 0 3.1129-1.9 3.3613-3.7032 3.5645 0.29678 0.25484 0.54839 0.73871 0.54839 1.4968 0 1.0871-0.01 2.4322-0.01 2.6968 0 0.20968 0.14839 0.46452 0.55807 0.39032 3.2258-1.071 5.4129-4.1322 5.4129-7.7097 0-4.4742-3.629-7.871-8.1032-7.871zm-4.7613 11.126c-0.0419 0.0323-0.0323 0.10646 0.0226 0.16775 0.0516 0.0516 0.12581 0.0742 0.16775 0.0323 0.0419-0.0323 0.0323-0.10645-0.0226-0.16774-0.0516-0.0516-0.12581-0.0742-0.16775-0.0323zm-0.34838-0.26129c-0.0226 0.0419 0.01 0.0935 0.0742 0.12581 0.0516 0.0323 0.11613 0.0226 0.13871-0.0226 0.0226-0.0419-0.01-0.0935-0.0742-0.12581-0.0645-0.0194-0.11613-0.01-0.13871 0.0226zm1.0452 1.1484c-0.0516 0.0419-0.0323 0.13871 0.0419 0.2 0.0742 0.0742 0.16775 0.0839 0.20968 0.0323 0.0419-0.0419 0.0226-0.13871-0.0419-0.2-0.071-0.0742-0.16775-0.0839-0.20968-0.0323zm-0.36774-0.47419c-0.0516 0.0323-0.0516 0.11613 0 0.19032 0.0516 0.0742 0.13871 0.10645 0.18064 0.0742 0.0516-0.0419 0.0516-0.1258 0-0.2-0.0452-0.0742-0.12903-0.10645-0.18064-0.0645z" fill="currentColor" stroke-width=".032258"/></svg></span></a>
   #+html: </span>
 
-* 基本方針
-  :PROPERTIES:
-  :CUSTOM_ID: org9ed6e948
-  :END:
+  基本方針は以下の通り:
 ** Debian パッケージがインストールされているならばそれを優先する
    :PROPERTIES:
    :CUSTOM_ID: org5eaa4818
@@ -32,8 +29,8 @@
    :CUSTOM_ID: orgd2ba4ef2
    :END:
    設定には[[https://github.com/conao3/leaf.el][leaf.el]]を利用します．
-   VCS からインストールしたいパッケージは
-   [[https://github.com/conao3/leaf.el][leaf.el]] の =:vc= キーワードで =package-vc-install= を使います.
+   VCS からインストールしたいパッケージが幾つかあるので,
+   それらについては[[https://github.com/dimitri/el-get][el-get]]を利用しています．
 ** 設定は [[http://orgmode.org/][Org mode]] で書きたい
    :PROPERTIES:
    :CUSTOM_ID: org458d9cf4
@@ -44,23 +41,15 @@
    本ファイル(=README.org=) から,
    Makefile 内の以下のスクリプトで =~/init.el= を生成し, byte-compile します.
    #+begin_src makefile-gmake :tangle no
+EMACS   ?= emacs
 init.el: README.org
-	@mkdir -p ~/.cache/emacs
-	@if [ ! -d ~/.cache/emacs/eln-cache ]; then \
-		echo ";; mkdir ~/.cache/emacs/eln-cache"; mkdir ~/.cache/emacs/eln-cache ;\
-	fi
-	@if [ ! -L eln-cache ]; then \
-		echo ";; ln -sf ~/.cache/emacs/eln-cache . "; ln -sf ~/.cache/emacs/eln-cache . ;\
-	fi
-	@mkdir -p elpa
-	@mkdir -p share
-	$(EMACS) --batch --eval \
-	   "(progn \
-		  (require 'ob-tangle) \
-		  (org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\"))"
-	$(EMACS) -l init.el --batch --eval '(kill-emacs)'
+    $(EMACS) -Q -q --batch --eval \
+       "(progn \
+          (require 'ob-tangle) \
+          (org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\"))"
+    $(EMACS) -q -l init.el --batch --eval '(kill-emacs)'
 %.elc: %.el
-	$(EMACS) -l init.el -batch -f batch-byte-compile $<
+    $(EMACS) -q -l init.el -batch -f batch-byte-compile $<
    #+end_src
 * 設定ファイルのヘッダ
   :PROPERTIES:
@@ -94,7 +83,8 @@ init.el: README.org
     ~/.emacs.d/
      |-- Makefile    ←  byte-compile 用の rule
      |-- README.org  ←  本ファイル．`org-babel-tangle' で init.el を生成
-     |-- eln-cache/  → ~/.cache/emacs/eln-cache への symlink: native compile 出力
+     |-- el-get/     ←  el-get で導入したパッケージが置かれる場所
+     |-- eln-cache/  → ~/.cache/emacs/eln-cache への symlink(native compile 出力).
      |-- elpa/       ←  package.el で導入したパッケージが置かれる場所
      `-- share/      ←  (基本的に)参照するだけの資源置き場所
     ~/.cache/emacs   ←  一次ファイルの置き場所
@@ -127,8 +117,7 @@ init.el: README.org
   `Package cl is deprecated' が表示されるので, これを止めておきます.
   #+begin_src emacs-lisp :tangle init.el
 (eval-and-compile
-  (setq byte-compile-warnings t)
-  ;; (setq byte-compile-warnings '(not cl-functions free-vars docstrings unresolved))
+  (setq byte-compile-warnings '(not cl-functions free-vars docstrings unresolved))
   (if (and (fboundp 'native-comp-available-p)
            (native-comp-available-p))
       (setq native-comp-speed  2
@@ -210,7 +199,7 @@ init.el: README.org
           (lambda ()
             (setq file-name-handler-alist my:saved-file-name-handler-alist)))
    #+end_src
-* Package 関連: [[https://emacs-jp.github.io/packages/package-management/package-el][package.el]], [[https://github.com/conao3/leaf.el][leaf.el]]
+* Package 関連: [[https://emacs-jp.github.io/packages/package-management/package-el][package.el]], [[https://github.com/conao3/leaf.el][leaf.el]], [[https://github.com/dimitri/el-get][el-get]]
   :PROPERTIES:
   :CUSTOM_ID: orgcf4176e7
   :END:
@@ -229,8 +218,7 @@ init.el: README.org
   (setq package-archives '(("gnu"    . "https://elpa.gnu.org/packages/")
                            ("melpa"  . "https://melpa.org/packages/")
                            ("org"    . "https://orgmode.org/elpa/")
-                           ("nongnu" . "https://elpa.nongnu.org/nongnu/")
-                           )
+                           ("nongnu" . "https://elpa.nongnu.org/nongnu/"))
         package-gnupghome-dir (expand-file-name ".gnupg" (getenv "HOME"))
         package-quickstart nil
         ;; package-quickstart-file (expand-file-name "package-quickstart.el" my:d:tmp)
@@ -242,8 +230,7 @@ init.el: README.org
   (package-initialize)
   (unless (package-installed-p 'leaf)
     (package-refresh-contents)
-    (package-install 'leaf t)
-    )
+    (package-install 'leaf t))
   )
    #+end_src
 ** [[https://github.com/conao3/leaf.el][leaf.el]]
@@ -251,6 +238,8 @@ init.el: README.org
    :CUSTOM_ID: orgc2ededbf
    :END:
    個々のパッケージの設定には[[https://github.com/conao3/leaf.el][leaf.el]]を利用します.
+   自分で修正した版やオリジナル版を別の場所から持ってくる場合は
+   [[https://github.com/conao3/leaf.el][leaf.el]]から[[https://github.com/dimitri/el-get][el-get]]を呼び出します.
    #+begin_src emacs-lisp :tangle init.el
   (leaf leaf-keywords
     :doc "Use leaf as a package manager"
@@ -259,6 +248,11 @@ init.el: README.org
     :init
     (leaf blackout :ensure t)
     (leaf hydra :ensure t)
+    (leaf el-get
+      :ensure t
+      :custom
+      (el-get-git-shallow-clone . t)
+      )
     :config
     (leaf-keywords-init)
     )
@@ -478,10 +472,10 @@ init.el: README.org
    拙作の修正ロケールはこちら: [[https://github.com/uwabami/locale-eaw-emoji]]
    #+begin_src emacs-lisp :tangle init.el
 (leaf locale-eaw-emoji
-  :vc (:url "https://github.com/uwabami/locale-eaw-emoji")
+  :el-get uwabami/locale-eaw-emoji
   :hook
-  `((emacs-startup-hook . eaw-and-emoji-fullwidth))
   ;; (emacs-startup-hook . eaw-half-emoji-fullwidth)
+  (emacs-startup-hook . eaw-and-emoji-fullwidth)
   )
    #+end_src
    - [ ] 最近, EAWは一文字幅強制の方が良いかなぁ, とか悩み中.
@@ -686,7 +680,7 @@ init.el: README.org
    #+begin_src emacs-lisp :tangle init.el
 (leaf eldoc
   :hook (emacs-lisp-mode-hook . turn-on-eldoc-mode)
-  ;; :blackout t
+  :blackout t
   :custom
   `((eldoc-echo-area-prefer-doc-buffer . nil)
     (eldoc-print-after-edit            . t)
@@ -1234,6 +1228,36 @@ File.open(src, "r") {|f|
                  (skk-mode-exit))))
 (setq skk-isearch-start-mode 'latin)
     #+end_src
+* =all-the-icons-in-terminal=: ターミナルでもicon fontを使いたい。
+  :PROPERTIES:
+  :CUSTOM_ID: orgd903bf1d
+  :END:
+  [[https://github.com/domtronn/all-the-icons.el][all-the-icons.el]]のデータを修正して,
+  [[https://github.com/sebastiencs/icons-in-terminal][icons in terminal]]を修正した
+  自作フォントのデータを読みに行くようにしてみました。
+  #+begin_src emacs-lisp :tangle init.el
+(leaf all-the-icons-in-terminal
+  :el-get (all-the-icons-in-terminal
+           :type github
+           :pkgname "uwabami/isfit-plus")
+  :require t
+  :init
+  (leaf all-the-icons
+    :ensure t
+    :custom `((all-the-icons-scale-factor . 0.8)
+              (all-the-icons-default-adjust . 0))
+    )
+  :defer-config
+  (add-to-list 'all-the-icons-mode-icon-alist
+               '(wl-folder-mode all-the-icons-faicon "folder-o" ))
+  (add-to-list 'all-the-icons-mode-icon-alist
+               '(wl-summary-mode all-the-icons-faicon "folder-open-o"))
+  (add-to-list 'all-the-icons-mode-icon-alist
+               '(wl-draft-mode all-the-icons-material "drafts"))
+  (add-to-list 'all-the-icons-mode-icon-alist
+               '(mime-view-mode all-the-icons-faicon "envelope-o"))
+  )
+  #+end_src
 * =recentf=: 最近使ったファイル履歴の保管
   :PROPERTIES:
   :CUSTOM_ID: org43970469
@@ -1325,7 +1349,7 @@ File.open(src, "r") {|f|
     ;;
     (defun my:japanese-holiday-show (&rest _args)
       (let* ((date (calendar-cursor-to-date t))
-             ;; (calendar-date-display-form '((format "%s年 %s月 %s日（%s）" year month day dayname)))
+             (calendar-date-display-form '((format "%s年 %s月 %s日（%s）" year month day dayname)))
              (date-string (calendar-date-string date))
              (holiday-list (calendar-check-holidays date)))
         (when holiday-list
@@ -1660,11 +1684,11 @@ File.open(src, "r") {|f|
   :ensure t
   :init
   ;; 補完でも icon 表示
-  ;;(leaf all-the-icons-completion
-  ;;  :ensure t
-  ;;  :hook
-  ;;  (emacs-startup-hook . all-the-icons-completion-mode)
-  ;;  )
+  (leaf all-the-icons-completion
+    :ensure t
+    :hook
+    (emacs-startup-hook . all-the-icons-completion-mode)
+    )
   :bind (("M-A" . marginalia-cycle)
          (:minibuffer-local-map
           ("M-A" . marginalia-cycle)
@@ -1677,8 +1701,7 @@ File.open(src, "r") {|f|
     )
   :hook
   ((emacs-startup-hook . marginalia-mode)
-   ;;(marginalia-mode-hook . all-the-icons-completion-marginalia-setup)
-   )
+   (marginalia-mode-hook . all-the-icons-completion-marginalia-setup))
   )
    #+end_src
 ** =consult=: 便利コマンド集
@@ -1843,7 +1866,6 @@ File.open(src, "r") {|f|
   :commands (wl wl-other-frame wl-draft wl-user-agent wl-user-agent-compose wl-draft-send wl-draft-kill)
   :preface
   (defun my:wl-mode-line-buffer-identification (&optional id)
-    "ignore `id'"
     (force-mode-line-update t))
   (defconst my:d:wl-cache-directory
     (expand-file-name "wanderlust" "~/.cache"))
@@ -1855,6 +1877,9 @@ File.open(src, "r") {|f|
                      my:wl-mode-line-buffer-identification)
   :custom
   `((elmo-msgdb-directory     . my:d:wl-cache-directory)
+    (elmo-maildir-folder-path . my:d:wl-cache-directory)
+    (elmo-cache-directory     . my:d:wl-cache-directory)
+    (wl-score-files-directory . my:d:wl-cache-directory)
     (read-mail-command        . #'wl)
     (wl-init-file
      . ,(expand-file-name "init-wl" user-emacs-directory))
@@ -1881,11 +1906,23 @@ File.open(src, "r") {|f|
     :END:
      #+begin_src emacs-lisp :tangle init-wl.el
 (eval-when-compile
+  (require 'el-get)
   (require 'leaf-keywords)
   (require 'cp5022x)
   (require 'wl)
   (require 'mime-def)
   (leaf-keywords-init)
+  )
+(eval-and-compile
+  (leaf el-x
+    :el-get (el-x
+             :type github
+             :pkgname "sigma/el-x"
+             :build `(("make" ,(format "EMACSBIN=%s" el-get-emacs)))
+             :load-path "lisp"
+             )
+    :require t
+    )
   )
      #+end_src
 *** 依存/追加ライブラリのインストールと読み込み
@@ -1906,7 +1943,7 @@ File.open(src, "r") {|f|
 (leaf rail
   :init
   (unless (locate-library "rail")
-    (package-vc-install :url "https://github.com/uwabami/rail"))
+    (el-get-bundle uwabami/rail))
   (setq rail-emulate-genjis t)
   :require t
   )
@@ -2150,9 +2187,10 @@ video/*; xdg-open %s;
      :CUSTOM_ID: org6572a382
      :END:
      =~/.cache/wanderlust/= に集約している
-     local の Mail folder(MH) の位置
+     local の Mail folder の位置
      #+begin_src emacs-lisp :tangle init-wl.el
-(setq elmo-localdir-folder-path "~/.cache/wanderlust/local")
+(setq elmo-maildir-folder-path "~/.cache/wanderlust"
+      elmo-localdir-folder-path "~/.cache/wanderlust/local")
      #+end_src
      local フォルダの設定:
      =.lost+found= は =elmo-maildir-folder-path= からの相対パスになっていることに注意
@@ -2501,64 +2539,35 @@ video/*; xdg-open %s;
      :CUSTOM_ID: orgc0e5bbcf
      :END:
      元ネタは [[http://ikazuhiro.s206.xrea.com/article.php/20140920115345919][Re: wanderlust で GMail 風、新着レス順にソート]].
+     あんまり頑張る気がなかったので =el-x= にある =dflet= を使っている。
      #+begin_src emacs-lisp  :tangle init-wl.el
 (defun wl-summary-overview-entity-compare-by-reply-date (a b)
   "Compare message A and B by latest date of replies including thread."
-  (cl-letf (((symbol-function 'string-max2)
-             (lambda (x y) (cond ((string< x y) y) ;;>
-                                 ('t x))))
-            ((symbol-function 'elmo-entity-to-number)
-             (lambda (x) (elt (cddr x) 0)))
-
-            ((symbol-function 'thread-number-get-date)
-             (lambda (x) (timezone-make-date-sortable
-                          (elmo-msgdb-overview-entity-get-date
-                           (elmo-message-entity
-                            wl-summary-buffer-elmo-folder
-                            x)))))
-            ((symbol-function 'thread-get-family)
-             (lambda (x)
-               (cons x (wl-thread-entity-get-descendant
-                        (wl-thread-get-entity x)))))
-            ((symbol-function 'max-reply-date)
-             (lambda (x) (cond ((eq 'nil x)
-                                'nil)
-                               ((eq 'nil (cdr x))
-                                (thread-number-get-date (car x)))
-                               ('t
-                                (string-max2 (thread-number-get-date (car x))
-                                             (max-reply-date (cdr x)))))))
-            )
-    (string<  ;;>
+  (dflet ((string-max2 (x y) (cond ((string< x y) y)
+                                  ('t x)))
+         (elmo-entity-to-number (x)
+                                (elt (cddr x) 0))
+         (thread-number-get-date (x)
+                                 (timezone-make-date-sortable
+                                  (elmo-msgdb-overview-entity-get-date
+                                   (elmo-message-entity
+                                    wl-summary-buffer-elmo-folder
+                                    x))))
+         (thread-get-family (x)
+                            (cons x (wl-thread-entity-get-descendant
+                                     (wl-thread-get-entity x))))
+         (max-reply-date  (x)
+                          (cond ((eq 'nil x)
+                                 'nil)
+                                ((eq 'nil (cdr x))
+                                 (thread-number-get-date (car x)))
+                                ('t
+                                 (string-max2 (thread-number-get-date (car x))
+                                              (max-reply-date (cdr x))))))
+         )
+    (string<
      (max-reply-date (thread-get-family (elmo-entity-to-number a)))
      (max-reply-date (thread-get-family (elmo-entity-to-number b))))))
-;; (defun wl-summary-overview-entity-compare-by-reply-date (a b)
-;;   "Compare message A and B by latest date of replies including thread."
-;;   (flet ((string-max2 (x y) (cond ((string< x y) y) ;;>
-;;                                   ('t x)))
-;;          (elmo-entity-to-number (x)
-;;                                 (elt (cddr x) 0))
-;;          (thread-number-get-date (x)
-;;                                  (timezone-make-date-sortable
-;;                                   (elmo-msgdb-overview-entity-get-date
-;;                                    (elmo-message-entity
-;;                                     wl-summary-buffer-elmo-folder
-;;                                     x))))
-;;          (thread-get-family (x)
-;;                             (cons x (wl-thread-entity-get-descendant
-;;                                      (wl-thread-get-entity x))))
-;;          (max-reply-date  (x)
-;;                           (cond ((eq 'nil x)
-;;                                  'nil)
-;;                                 ((eq 'nil (cdr x))
-;;                                  (thread-number-get-date (car x)))
-;;                                 ('t
-;;                                  (string-max2 (thread-number-get-date (car x))
-;;                                               (max-reply-date (cdr x))))))
-;;          )
-;;         (string<  ;;>
-;;          (max-reply-date (thread-get-family (elmo-entity-to-number a)))
-;;          (max-reply-date (thread-get-family (elmo-entity-to-number b))))))
 (add-to-list 'wl-summary-sort-specs 'reply-date)
 (setq wl-summary-default-sort-spec 'reply-date)
      #+end_src
@@ -3098,37 +3107,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (add-to-list 'ispell-skip-region-alist '("[^\000-\377]+"))
   )
    #+end_src
-** =lookup=: 電子辞書の検索
-   :PROPERTIES:
-   :CUSTOM_ID: org3002f57f
-   :END:
-   EPWING化した辞書群を検索するために =lookup-el= ver. 1.4 系列を利用
-   #+begin_src emacs-lisp :tangle init.el
-(leaf lookup
-  :if (and (file-exists-p "/etc/emacs/site-start.d/50lookup-el.el")
-           (file-exists-p "/usr/local/share/dict/lookup-enabled"))
-  :commands (lookup lookup-region lookup-pattern)
-  :bind (("C-c w" . lookup-pattern)
-         ("C-c W" . lookup-word))
-  :custom
-  (lookup-search-agents
-   . '((ndeb "/usr/local/share/dict/eijiro" :alias "英辞郎")
-       (ndeb "/usr/local/share/dict/waeijiro" :alias "和英辞郎")
-       (ndeb "/usr/local/share/dict/rikagaku5" :alias "理化学辞典 第5版")
-       (ndeb "/usr/local/share/dict/koujien4" :alias "広辞苑 第4版")
-       (ndeb "/usr/local/share/dict/wadai5" :alias "研究社 和英大辞典 第5版")
-       ;; (ndeb "/usr/local/share/dict/eidai6" :alias "研究社 英和大辞典 第6版")
-       ;; (ndeb "/usr/local/share/dict/colloc" :alias "研究社 英和活用大辞典 ")
-       ))
-  )
-   #+end_src
-** =text-adjust=: 全角文字の撲滅
-   :PROPERTIES:
-   :CUSTOM_ID: org501da28b
-   :END:
-   #+begin_src emacs-lisp
-(leaf text-adjust :vc (:url "https://github.com/uwabami/text-adjust.el"))
-   #+end_src
 ** =flycheck=: on-the-fly linter
    :PROPERTIES:
    :CUSTOM_ID: org4e0bdd17
@@ -3165,6 +3143,37 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    (wl-draft-mode-hook . flycheck-mode)
    (draft-mode-hook    . flycheck-mode))
   )
+   #+end_src
+** =lookup=: 電子辞書の検索
+   :PROPERTIES:
+   :CUSTOM_ID: org3002f57f
+   :END:
+   EPWING化した辞書群を検索するために =lookup-el= ver. 1.4 系列を利用
+   #+begin_src emacs-lisp :tangle init.el
+(leaf lookup
+  :if (and (file-exists-p "/etc/emacs/site-start.d/50lookup-el.el")
+           (file-exists-p "/usr/local/share/dict/lookup-enabled"))
+  :commands (lookup lookup-region lookup-pattern)
+  :bind (("C-c w" . lookup-pattern)
+         ("C-c W" . lookup-word))
+  :custom
+  (lookup-search-agents
+   . '((ndeb "/usr/local/share/dict/eijiro" :alias "英辞郎")
+       (ndeb "/usr/local/share/dict/waeijiro" :alias "和英辞郎")
+       (ndeb "/usr/local/share/dict/rikagaku5" :alias "理化学辞典 第5版")
+       (ndeb "/usr/local/share/dict/koujien4" :alias "広辞苑 第4版")
+       (ndeb "/usr/local/share/dict/wadai5" :alias "研究社 和英大辞典 第5版")
+       ;; (ndeb "/usr/local/share/dict/eidai6" :alias "研究社 英和大辞典 第6版")
+       ;; (ndeb "/usr/local/share/dict/colloc" :alias "研究社 英和活用大辞典 ")
+       ))
+  )
+   #+end_src
+** =text-adjust=: 全角文字の撲滅
+   :PROPERTIES:
+   :CUSTOM_ID: org501da28b
+   :END:
+   #+begin_src emacs-lisp
+(leaf text-adjust :el-get uwabami/text-adjust.el)
    #+end_src
 * 閉じタグの入力補助: =smartparens=
   :PROPERTIES:
@@ -3219,7 +3228,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 ;; org-plus-contrib も使うかなぁ….
 (leaf org
   :ensure t
-  ;; :blackout `((org-mode . ,(all-the-icons-icon-for-mode 'org-mode)))
+  :blackout `((org-mode . ,(all-the-icons-icon-for-mode 'org-mode)))
   :bind (("C-x n s" . org-narrow-to-subtree)
          ("C-x n w" . widen)
          ("C-c a"   . org-agenda)
@@ -3386,7 +3395,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    :END:
    #+begin_src emacs-lisp :tangle init.el
 (leaf org-babel
-  ;; :blackout `((org-src-mode . ,(format " %s" (all-the-icons-octicon "code"))))
+  :blackout `((org-src-mode . ,(format " %s" (all-the-icons-octicon "code"))))
   :custom
   `(;; font-lock
    (org-src-fontify-natively         . t)
@@ -3476,27 +3485,27 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     (save-excursion
       (goto-char (point-min))
       (while (re-search-forward "Univ:" nil t)
-        (add-text-properties (match-beginning 0) (line-end-position)
+        (add-text-properties (match-beginning 0) (point-at-eol)
                              '(face my:org-agenda-calendar-Univ)))
       (goto-char (point-min))
       (while (re-search-forward "Schedule:" nil t)
-        (add-text-properties (match-beginning 0) (line-end-position)
+        (add-text-properties (match-beginning 0) (point-at-eol)
                              '(face my:org-agenda-calendar-Schedule)))
       (goto-char (point-min))
       (while (re-search-forward "DebianJP:" nil t)
-        (add-text-properties (match-beginning 0) (line-end-position)
+        (add-text-properties (match-beginning 0) (point-at-eol)
                              '(face my:org-agenda-calendar-DebianJP)))
       (goto-char (point-min))
       (while (re-search-forward "GFD:" nil t)
-        (add-text-properties (match-beginning 0) (line-end-position)
+        (add-text-properties (match-beginning 0) (point-at-eol)
                              '(face my:org-agenda-calendar-GFD)))
       (goto-char (point-min))
       (while (re-search-forward "twitter:" nil t)
-        (add-text-properties (match-beginning 0) (line-end-position)
+        (add-text-properties (match-beginning 0) (point-at-eol)
                              '(face my:org-agenda-calendar-twitter)))
       (goto-char (point-min))
       (while (re-search-forward "祝日:\\|Holidays:\\|誕生日:" nil t)
-        (add-text-properties (match-beginning 0) (line-end-position)
+        (add-text-properties (match-beginning 0) (point-at-eol)
                              '(face org-agenda-date-weekend)))
       ))
   ;;
@@ -3556,7 +3565,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
              ;; misc
              "twitter.org"
              ;; Project
-             "redmine_GFD.org"
+             ;; "redmine_GFD.org"
              "redmine_SSKLAB.org"
              ;; "redmine_FluidSoc.org"
              ))
@@ -3721,10 +3730,10 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   :if (and my:d:password-store
            (and (file-directory-p my:d:org)
                 (executable-find "curl")))
-  :ensure t
-  ;; :el-get (org-gcal
-  ;;          :type github
-  ;;          :pkgname "kidd/org-gcal.el")
+  ;; :ensure t
+  :el-get (org-gcal
+           :type github
+           :pkgname "kidd/org-gcal.el")
   :commands (org-gcal-fetch
              org-gcal-sync
              org-gcal-post-at-point
@@ -3742,19 +3751,19 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   ;; (setq oauth2-auto-plstore (expand-file-name "oauth2-auto.plist" my:d:tmp))
   ;; (setq oauth2-auto-plstore (expand-file-name "oauth2-auto.plist" my:d:password-store))
   :init
-  (leaf oauth2-auto
-    :custom
-    `(oauth2-auto-plstore . ,(expand-file-name "/run/user/1000/uwabami-emacs-cache/oauth2-auto.plist"))
-    )
+  ;; (leaf oauth2-auto
+  ;;   :custom
+  ;;   `(oauth2-auto-plstore . ,(expand-file-name "/run/user/1000/uwabami-emacs-cache/oauth2-auto.plist"))
+  ;;   )
   (leaf aio :ensure t)
   (leaf alert :ensure t)
   (leaf dash :ensure t)
-  ;; (leaf oauth2-auto
-  ;;   ;; :el-get rhaps0dy/emacs-oauth2-auto
-  ;;   :el-get telotortium/emacs-oauth2-auto
-  ;;   :custom
-  ;;   `(oauth2-auto-plstore . ,(expand-file-name "oauth2-auto.plist" my:d:tmp))
-  ;;   )
+  (leaf oauth2-auto
+    ;; :el-get rhaps0dy/emacs-oauth2-auto
+    :el-get telotortium/emacs-oauth2-auto
+    :custom
+    `(oauth2-auto-plstore . ,(expand-file-name "oauth2-auto.plist" my:d:tmp))
+    )
   ;;
   (leaf org-generic-id
     :custom
@@ -3770,9 +3779,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     (unless (file-directory-p request-storage-directory)
       (make-directory request-storage-directory))
     :custom
-    `((request-storage-directory . ,(expand-file-name "request" my:d:tmp))
-      ;; (request-backend . 'url-retrieve)
-      )
+    `((request-storage-directory . ,(expand-file-name "request" my:d:tmp)))
     )
   (leaf persist
     :ensure t
@@ -3820,8 +3827,8 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   ;;           (lambda ()
   ;;             (if (assoc "om_server" org-file-properties) (orgmine-mode))))
   (leaf orgmine
-    :vc (:url "https://github.com/kametoku/orgmine" )
     :commands (orgmine-mode)
+    :el-get kametoku/orgmine
     :init
     ;; (defun my:orgmine-default-todo-keyword ()
     ;;   "Custom: use `org-file-properties' for backward compatibility."
@@ -3854,9 +3861,9 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     ;;   (:override orgmine-setup my:orgmine-setup))
     :pl-setq orgmine-servers
     :config
-    (setq org-element-use-cache nil)
     (setq orgmine-note-block-begin "#+begin_src gfm"   ;; 要調整
-          orgmine-note-block-end   "#+end_src\n")
+          orgmine-note-block-end   "#+end_src\n"
+          orgmine-default-todo-keyword "新規")
     )
   )
    #+end_src
@@ -3866,8 +3873,8 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    :END:
    #+begin_src emacs-lisp :tangle init.el
 (leaf org-wiki
-  :vc (:url "https://github.com/uwabami/org-wiki")
   :if (file-directory-p "~/Public/cc-env")
+  :el-get uwabami/org-wiki
   :custom
   `((org-wiki-location-alist     . '("~/Public/cc-env"))
     (org-wiki-location           . "~/Public/cc-env")
@@ -3907,7 +3914,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
       (if (and (> (string-to-char (match-string 2)) #x2000)
                (> (string-to-char (match-string 3)) #x2000))
           (replace-match "\\1\\2\\3"))
-      (goto-char (line-beginning-position))))
+      (goto-char (point-at-bol))))
   :hook
   ;; ((org-export-before-processing-hook . my:remove-org-newlines-at-cjk-text))
   :custom
@@ -3935,8 +3942,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   :init
   (leaf ox-jekyll
     :if (file-directory-p "~/Public/cc-env")
-    :vc (:url "https://github.com/uwabami/ox-jekyll")
-    )
+    :el-get uwabami/ox-jekyll)
   (leaf s :ensure t)
   :custom
   ((org-html-table-align-individual-fields . nil)
@@ -4276,7 +4282,7 @@ pdflang={%l}}
   :if (and my:d:password-store
            (file-directory-p (concat (getenv "HOME") "/Nextcloud/tdiary")))
   :commands (tdiary-mode tdiary-replace tdiary-append)
-  :vc (:url "https://github.com/uwabami/tdiary-mode")
+  :el-get uwabami/tdiary-mode
   :defvar tdiary-passwd-file
   :pl-setq
   (tdiary-csrf-key tdiary-passwd-file)
@@ -4320,7 +4326,7 @@ pdflang={%l}}
    =project.el= で ghq を使うようになったら不要かもしれないけど, とりあえず.
    #+begin_src emacs-lisp
 (leaf consult-ghq
-  :vc (:url "https://github.com/uwabami/consult-ghq")
+  :el-get uwabami/consult-ghq
   :bind (("C-x f" . consult-ghq-open))
   :custom
   `((consult-ghq-short-list . t))
@@ -4383,7 +4389,7 @@ pdflang={%l}}
              )
     )
   (leaf auctex-latexmk
-    :vc (:url "https://github.com/tom-tan/auctex-latexmk")
+    :el-get tom-tan/auctex-latexmk
     :custom
     `((auctex-latexmk-inherit-TeX-PDF-mode . t))
     :config
@@ -4765,14 +4771,14 @@ pdflang={%l}}
    skk-abbrev-mode-string
    )
   :init
-  ;; (defun my:major-mode-icon (mode)
-  ;;   "Update file icon in mode-line, just display major-mode icon. not filename."
-  ;;   (let* ((icon (all-the-icons-icon-for-mode mode)))
-  ;;     (if (symbolp icon)
-  ;;         (all-the-icons-faicon "file-code-o"
-  ;;                               :face 'all-the-icons-dsilver
-  ;;                               :height 1.0)
-  ;;       icon)))
+  (defun my:major-mode-icon (mode)
+    "Update file icon in mode-line, just display major-mode icon. not filename."
+    (let* ((icon (all-the-icons-icon-for-mode mode)))
+      (if (symbolp icon)
+          (all-the-icons-faicon "file-code-o"
+                                :face 'all-the-icons-dsilver
+                                :height 1.0)
+        icon)))
   ;;
   (defun my:skk-init-modeline-input-mode ()
     "Custom skkが読み込まれていなくても skk-modeline-input-mode に値を設定"
@@ -4920,6 +4926,9 @@ pdflang={%l}}
 ;;   )
 ;;
 (leaf vterm
+;;   :el-get (vterm
+;;            :type github
+;;            :pkgname "akermu/emacs-libvterm")
   :ensure t
   :custom
   `((vterm-always-compile-module . t))

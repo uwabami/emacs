@@ -1,13 +1,14 @@
 # -*- mode: makefile -*-
 EMACS	?= emacs
-EL		= init-ddskk.el
+EL		= early-init.el
+EL		+= init-ddskk.el
 ifneq (,$(wildcard /etc/emacs/site-start.d/65wl-beta.el))
 EL		+= init-wl.el
 endif
-EL		+= early-init.el
 ELC		= $(EL:%.el=%.elc)
 
 all: $(ELC) init.elc
+# $(ELC): $(EL)
 $(EL): init.el
 init.el: README.org
 	@mkdir -p ~/.cache/emacs

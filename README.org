@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2023-08-05 17:25:55
+#+date: 2024-04-12 13:09:57
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -480,8 +480,8 @@ init.el: README.org
 (leaf locale-eaw-emoji
   :vc (:url "https://github.com/uwabami/locale-eaw-emoji")
   :hook
-  `((emacs-startup-hook . eaw-and-emoji-fullwidth))
-  ;; (emacs-startup-hook . eaw-half-emoji-fullwidth)
+  `(;;(emacs-startup-hook . eaw-and-emoji-fullwidth)
+    (emacs-startup-hook . eaw-half-emoji-fullwidth))
   )
    #+end_src
    - [ ] 最近, EAWは一文字幅強制の方が良いかなぁ, とか悩み中.
@@ -1189,25 +1189,25 @@ File.open(src, "r") {|f|
       (let ((code (cdr (assoc "euc" skk-coding-system-alist))))
         (set-process-coding-system skkserv-process
                                    'utf-8 code)))) skkserv-process)
-(setq skk-mode-hook
-      (lambda ()
-        (advice-add 'skk-open-server :override 'my:skk-open-server-decoding-utf-8)))
+;; (setq skk-mode-hook
+;;       (lambda ()
+;;         (advice-add 'skk-open-server :override 'my:skk-open-server-decoding-utf-8)))
 (cond
  ((getenv "SKKSERVER")
-  (setq skk-server-host (getenv "SKKSERVER")
-        skk-server-portnum "1178"
-        skk-large-jisyo nil)
-  (add-to-list 'skk-search-prog-list
-               '(skk-server-completion-search) t)
-  (add-to-list 'skk-search-prog-list
-               '(skk-comp-by-server-completion) t))
+  (progn
+    (setq skk-server-host (getenv "SKKSERVER")
+          skk-server-portnum "1178"
+          skk-large-jisyo nil)
+    (add-to-list 'skk-search-prog-list
+                 '(skk-server-completion-search) t)
+    (add-to-list 'skk-search-prog-list
+                 '(skk-comp-by-server-completion) t)))
  (t
   (setq skk-get-jisyo-directory (concat my:d:tmp "skk-jisyo")
-        skk-large-jisyo (concat skk-get-jisyo-directory "/SKK-JISYO.L"))
-  (when (file-exists-p "/usr/local/share/skkdic/SKK-JISYO.emoji.utf8")
-    (setq skk-extra-jisyo-file-list
-          (list '("/usr/local/share/skkdic/SKK-JISYO.emoji.utf8" . utf-8)))))
- )
+        skk-large-jisyo (concat skk-get-jisyo-directory "/SKK-JISYO.L"))))
+(when (file-exists-p "/usr/local/share/skkdic/SKK-JISYO.emoji.utf8")
+  (setq skk-extra-jisyo-file-list
+        (list '("/usr/local/share/skkdic/SKK-JISYO.emoji.utf8" . utf-8))))
     #+end_src
     辞書登録の際に送り仮名を削除
     #+begin_src emacs-lisp :tangle init-ddskk.el
@@ -3552,7 +3552,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
              "Univ.org"
              "DebianJP.org"
              ;; INBOX
-             "INBOX.org"
+             ;; "INBOX.org"
              ;; misc
              "twitter.org"
              ;; Project
@@ -3744,7 +3744,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   :init
   (leaf oauth2-auto
     :custom
-    `(oauth2-auto-plstore . ,(expand-file-name "/run/user/1000/uwabami-emacs-cache/oauth2-auto.plist"))
+    `(oauth2-auto-plstore . ,(expand-file-name "/run/user/1000/psd/uwabami-emacs-cache/oauth2-auto.plist"))
     )
   (leaf aio :ensure t)
   (leaf alert :ensure t)
@@ -4368,6 +4368,7 @@ pdflang={%l}}
   async で =latexmk -pvc= を走らせておいた方が気持が良い, 気がしている….
   #+begin_src emacs-lisp :tangle init.el
 (leaf auctex
+  :disabled t
   :if (and (executable-find "uplatex")
            (executable-find "latexmk"))
   :load-path "/usr/share/emacs/site-lisp/auctex"

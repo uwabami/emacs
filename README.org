@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2024-04-12 13:09:57
+#+date: 2024-04-14 00:15:10
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -735,14 +735,18 @@ init.el: README.org
   :custom
   ((whitespace-line-column      . 72)
    (whitespace-style
-    . '(face        ; faceを使う
+    . '(face        ; faceを使う. *-mark に必要
         trailing    ; 行末の空白を対象.
         tabs        ; tab
         spaces      ; space
+        empty       ; 前後の空行
+        space-mark  ; 可視化の際の置き換えを有効化
+        tab-mark    ; 可視化の際の置き換えを有効化
         ))
    (whitespace-display-mappings . '((space-mark ?\u3000 [?\□])
                                     (tab-mark ?\t [?\u00BB ?\t] [?\\ ?\t])))
    (whitespace-space-regexp     . "\\(\u3000+\\)")
+   (whitespace-trailing-regexp  . "\\([ \u00A0]+\\)$")
    (whitespace-global-modes     . '(not eww-mode
                                         term-mode
                                         eshell-mode
@@ -4671,6 +4675,11 @@ pdflang={%l}}
        `(wl-highlight-summary-new-face                    ((,c :foreground ,red-intense )))
        `(wl-highlight-summary-displaying-face             ((,c :underline t :bold t)))
        `(wl-highlight-folder-path-face                    ((,c :underline t :bold t)))
+       ;;
+       `(whitespace-trailing                              ((,c :foreground ,green-intense )))
+       `(whitespace-tab                                   ((,c :foreground ,green-intense )))
+       `(whitespace-space                                 ((,c :foreground ,blue-intense )))
+       `(whitespace-empty                                 ((,c :background ,magenta-intense )))
        )))
   :hook
   `((modus-themes-after-load-theme-hook . my:override-face-attribute))

@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2024-04-14 00:15:10
+#+date: 2024-04-15 12:11:01
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -1604,19 +1604,25 @@ File.open(src, "r") {|f|
                   completion-cycle-threshold nil
                   completion-styles '(basic))))
   ;;
-  ;; (defun my:vertico--recompute-candidates (original-fun &rest args)
-  ;;   ;; vertico--update-candidatesの最後の処理を置き換える
-  ;;   (let ((result (apply original-fun args)))
-  ;;     (when result
-  ;;       (unless (nth 3 result) ;;3=index
-  ;;         (setq vertico--lock-candidate nil)
-  ;;         (setf (nth 3 result) ;;3=index
-  ;;               (if (vertico--allow-prompt-selection-p)
-  ;;                   ;; require-matchじゃない場合は現在入力中の文字列を選択する
-  ;;                   -1
-  ;;                 ;; require-matchの場合は最初の候補を選択する
-  ;;                 0))))
-  ;;     result))
+  ;; @see https://misohena.jp/blog/2022-08-15-transition-ivy-to-vertico.html
+  ;; 候補更新時に最初の候補を選択しない -> (vertico-preselect . 'prompt)
+
+  ;; ただし require-matchがt(やそれに類するもの)で入力が空ではなくマッチする候
+  ;; 補がある場合は、その候補の先頭を選択する。
+  (defun my:vertico--recompute (orig-fun pt content &rest args)
+    (let ((result (apply orig-fun pt content args)))
+      (if (and (not (equal content ""))
+               ;; 入力が空の時は(require-matchであっても)defaultまたはnilを返
+               ;; すことになっている。
+               (> (alist-get 'vertico--total result) 0) ;; < for syntax
+               ;; completing-readの説明によれば
+               ;; nil,confirm,confirm-after-completion以外はtのように
+               ;; 振る舞うべき。
+               (not (memq minibuffer--require-match
+                          '(nil confirm confirm-after-completion))))
+          (setf (alist-get 'vertico--index result) 0))
+      result))
+  ;;
   ;;
   (defun my:filename-upto-parent ()
     "Move to parent directory like \"cd ..\" in find-file."
@@ -1635,8 +1641,8 @@ File.open(src, "r") {|f|
   :advice
   ((:before vertico--setup
             my:disable-selection)
-   ;; (:around vertico--recompute-candidates
-   ;;          my:vertico--recompute-candidates)
+   (:around vertico--recompute-candidates
+            my:vertico--recompute)
    )
   :bind
   (:vertico-map (("C-l" . my:filename-upto-parent)))
@@ -1644,8 +1650,9 @@ File.open(src, "r") {|f|
   `((vertico-current
      . '((t (:inherit hl-line :background unspecified)))))
   :custom
-  `((vertico-count . 9)
+  `((vertico-count . 8)
     (vertico-cycle . t)
+    (vertico-preselect . 'prompt)
     (vertico-multiline . '(("↓" 0 1 (face vertico-multiline))
                            ("…" 0 1 (face vertico-multiline))))
     )
@@ -4676,10 +4683,10 @@ pdflang={%l}}
        `(wl-highlight-summary-displaying-face             ((,c :underline t :bold t)))
        `(wl-highlight-folder-path-face                    ((,c :underline t :bold t)))
        ;;
-       `(whitespace-trailing                              ((,c :foreground ,green-intense )))
-       `(whitespace-tab                                   ((,c :foreground ,green-intense )))
-       `(whitespace-space                                 ((,c :foreground ,blue-intense )))
-       `(whitespace-empty                                 ((,c :background ,magenta-intense )))
+       `(whitespace-trailing                              ((,c :foreground ,magenta-intense )))
+       `(whitespace-tab                                   ((,c :foreground ,blue-intense :underline t)))
+       `(whitespace-space                                 ((,c :foreground ,green-intense :bold t)))
+       `(whitespace-empty                                 ((,c :background ,red-intense )))
        )))
   :hook
   `((modus-themes-after-load-theme-hook . my:override-face-attribute))

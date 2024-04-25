@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2024-04-25 21:31:02
+#+date: 2024-04-26 07:42:22
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -129,11 +129,20 @@ init.el: README.org
 (eval-and-compile
   (setq byte-compile-warnings t)
   ;; (setq byte-compile-warnings '(not cl-functions free-vars docstrings unresolved))
+  )
+  #+end_src
+* Native Compile の挙動の調整
+  :PROPERTIES:
+  :CUSTOM_ID: orga1aef09c
+  :END:
+  #+begin_src emacs-lisp :tangle init.el
+(eval-and-compile
   (if (and (fboundp 'native-comp-available-p)
            (native-comp-available-p))
       (setq native-comp-speed  2
-            native-comp-async-report-warnings-errors 'silent
+            native-comp-async-report-warnings-errors nil ;; 'silent
             native-compile-target-directory (expand-file-name "eln-cache" user-emacs-directory)
+            native-comp-jit-compilation-deny-list '(".*-\\(loaddefs\\|autoloads\\)\\.\\(el\\.gz\\|el\\)")
             ))
   (setq debug-on-error t))
   #+end_src
@@ -381,6 +390,7 @@ init.el: README.org
 ;;;###autoload
 ; cargo cult adaptation of event-apply-control-modifier
 (defun my:event-apply-control-meta-modifiers (ignore-prompt)
+  (ignore ignore-prompt)
   (vector
    (event-apply-modifier (event-apply-modifier (read-event)
                                                'control 26 "C-")
@@ -411,21 +421,22 @@ init.el: README.org
   #+begin_src emacs-lisp :tangle init.el
 (leaf exec-path-from-shell
   :ensure t
+  :custom
+  `((exec-path-from-shell-variables
+     . '("DEBEMAIL"
+         "DEBFULLNAME"
+         "GPG_AGENT_INFO"
+         "GPG_KEY_ID"
+         "PASSWORD_STORE_DIR"
+         "PATH"
+         "SHELL"
+         "SKKSERVER"
+         "TEXMFHOME"
+         "WSL_DISTRO_NAME"
+         "http_proxy"))
+    (exec-path-from-shell-arguments . nil))
   :config
-  (setq exec-path-from-shell-check-startup-files nil
-        exec-path-from-shell-arguments nil
-        exec-path-from-shell-variables '("DEBEMAIL"
-                                         "DEBFULLNAME"
-                                         "GPG_AGENT_INFO"
-                                         "GPG_KEY_ID"
-                                         "PASSWORD_STORE_DIR"
-                                         "PATH"
-                                         "SHELL"
-                                         "SKKSERVER"
-                                         "TEXMFHOME"
-                                         "WSL_DISTRO_NAME"
-                                         "http_proxy"))
-  (when (window-system) (exec-path-from-shell-initialize))
+  (exec-path-from-shell-initialize)
   (setq user-full-name    (concat (getenv "DEBFULLNAME"))
         user-mail-address (concat (getenv "DEBEMAIL")))
   (defconst my:d:password-store
@@ -1740,7 +1751,7 @@ Emacs*useXIM: false
              wl-draft-kill)
   :preface
   (defun my:wl-mode-line-buffer-identification (&optional id)
-    "ignore `id'"
+    (ignore id)
     (force-mode-line-update t))
   (defconst my:d:wl-cache-directory
     (expand-file-name "wanderlust" "~/.cache"))

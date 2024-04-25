@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2024-04-25 21:29:07
+#+date: 2024-04-25 21:31:02
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -558,6 +558,9 @@ init.el: README.org
     ;;
     (safe-local-variable-values
      . '((org-link-file-path-type . absolute)))
+    ;;
+    (native-comp-jit-compilation-deny-list
+     . '(".*-\\(loaddefs\\|autoloads\\)\\.\\(el\\.gz\\|el\\)"))
     )
   :config
   (when (boundp 'load-prefer-newer)

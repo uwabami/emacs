@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2024-04-15 12:11:01
+#+date: 2024-04-25 21:25:27
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -998,246 +998,123 @@ init.el: README.org
   :END:
   [[http://openlab.ring.gr.jp/skk/ddskk-ja.html][Daredevil SKK (DDSKK)]] をメインで使用中．無いと途方に暮れる．
   ちなみにGTKが有効になっていると =gtk-immodule= なんかと衝突するので
-  =~/.Xresources= で xim を無効にしておくと良い．
+  =~/.Xresources= で im を無効にしておくと良い．
   例えば以下の様に:
   #+begin_src conf :tangle no
 ! disable XIM
 Emacs*useXIM: false
   #+end_src
-** Emacs 本体側の設定(ddskk)
-   :PROPERTIES:
-   :CUSTOM_ID: orgeaefbd62
-   :END:
-   実際の設定は別ファイルで行なわれるため
-   ここでは設定ファイルの位置変更を変更している．
-   #+begin_src emacs-lisp :tangle init.el
-(defvar skk-user-directory (concat my:d:tmp "skk"))
-(unless (file-directory-p skk-user-directory)
-  (make-directory skk-user-directory))
-(unless (locate-library "skk")
-  (package-install 'ddskk t))
+  以前は別ファイルで行なっていた設定を customize にまとめた.
+  #+begin_src emacs-lisp :tangle init.el
 (leaf skk
   :commands skk-make-indicator-alist
   :bind (("C-x j"   . skk-mode)
          ("C-x C-j" . skk-mode)
-         ("C-\\"    . skk-mode))
+         ;; ("C-x C-j" . skk-auto-fill-mode)
+         ;; ("C-j"     . skk-mode)
+         ("C-\\"    . skk-mode)
+         )
+  :preface
+  (unless (file-directory-p (expand-file-name "skk" my:d:tmp))
+    (progn
+      (make-empty-file (expand-file-name "skk/keep" my:d:tmp) t)
+      (make-empty-file (expand-file-name "skk-jisyo/keep" my:d:tmp) t)))
+  ;; override - -;
+  (defvar skk-get-jisyo-directory (expand-file-name "skk-jisyo" my:d:tmp))
   :init
-  (setq skk-init-file (concat user-emacs-directory "init-ddskk")
-        default-input-method "japanese-skk" )
+  (setq default-input-method "japanese-skk")
+  :hook
+  (;; minibuffer では skk を無効化
+   (skk-mode-hook . (lambda ()
+                      (and (skk-in-minibuffer-p)
+                           (skk-mode-exit))))
+   )
+  :custom
+  `(;;
+    (skk-user-directory . ,(expand-file-name "skk" my:d:tmp))
+    ;; 設定ファイルは Customize にまとめる. → 別ファイルでの設定はしない
+    (skk-init-file . "")
+    (skk-byte-compile-init-file . nil)
+    ;; sticky shift  を ; に割り当て
+    (skk-sticky-key  . ";")
+    ;; 変換候補の表示数
+    (skk-henkan-number-to-display-candidates . 10)
+    ;; メニューを日本語にしない. どうせ menu は使わないし.
+    (skk-show-japanese-menu . nil)
+    ;; 半角ｶﾀｶﾅを入力可能に
+    (skk-use-jisx0201-input-method . t)
+    ;; インジケータのカスタマイズ
+    (skk-latin-mode-string          . "[_A]")
+    (skk-hiragana-mode-string       . "[あ]")
+    (skk-katakana-mode-string       . "[ア]")
+    (skk-jisx0208-latin-mode-string . "[Ａ]")
+    (skk-jisx0201-mode-string       . "[_ｱ]")
+    (skk-abbrev-mode-string         . "[aA]")
+    ;; カーソルに色は付けない
+    (skk-indicator-use-cursor-color . nil)
+    (skk-use-color-cursor           . nil)
+    ;; Enter で改行しない
+    (skk-egg-like-newline . t)
+    ;; 対応する括弧の自動入力
+    (skk-auto-insert-paren . t)
+    ;; 句読点変換ルールの追加
+    (skk-kuten-touten-alist . '((jp    . ("。" . "、"))
+                                (jp-en . ("。" . ", "))
+                                (en-jp . ("．" . "，"))
+                                (en    . (". " . ", "))
+                                (EN    . ("．" . "，"))
+                                ))
+    ;; 句読点変換ルール: default は ,.
+    (skk-kutouten-type . 'en)
+    ;; 送り仮名が厳密に正しい候補を優先
+    (skk-henkan-strict-okuri-precedence . t)
+    ;; 変換ルールの追加: 全角スペース入力ルールと日付入力無効化.
+    (skk-rom-kana-rule-list . '(("z " nil "　")
+                                ("@" nil "@")))
+    ;; 辞書サーバ
+    (skk-server-host . ,(or (getenv "SKKSERVER") nil))
+    (skk-aux-large-jisyo
+     . ,(or (if (file-readable-p "/usr/share/skk/SKK-JISYO.L") "/usr/share/skk/SKK-JISYO.L") nil))
+    ;; 冗長...?
+    (skk-large-jisyo
+     . ,(cond ((getenv "SKKSERVER") nil)
+              ((if (file-readable-p "/usr/share/skk/SKK-JISYO.L") "/usr/share/skk/SKK-JISYO.L"))
+              (t (expand-file-name "skk-jisyo/SKK-JISYO.L" my:d:tmp))))
+    ;; インクリメンタルサーチは migemo に任せる. hook も参照
+    (skk-isearch-mode-enable . nil)
+    (skk-isearch-start-mode  . 'latin)  ;; 不要?
+    ;; ja-dic は利用しない
+    (skk-inhibit-ja-dic-search . t)
+    ;; 辞書登録の際に送り仮名を削除
+    (skk-check-okurigana-on-touroku . 'auto)
+    ;; 漢字登録のミスをチェック
+    (skk-check-okurigana-on-touroku . t)
+    ;; 個人辞書の文字コード
+    (skk-jisyo-code . 'utf-8-unix)
+    )
+  :config
+  ;; 環境毎に辞書の設定が煩雑になっていて, どうしたモンかなぁ...
+  (unless (or (or (getenv "SKKSERVER")
+                  (file-readable-p "/usr/share/skk/SKK-JISYO.L"))
+              (file-exists-p (expand-file-name "SKK-JISYO.L" skk-get-jisyo-directory)))
+    (skk-get skk-get-jisyo-directory))
+  ;; この
+  (if (file-exists-p "/usr/share/skk/SKK-JISYO.JIS3_4")
+      (add-to-list 'skk-extra-jisyo-file-list
+                   (cons (expand-file-name "/usr/share/skk/SKK-JISYO.JIS3_4") 'euc-jisx0213) t))
+  (cond
+   ((file-exists-p "/usr/local/share/skkdic/SKK-JISYO.emoji.utf8")
+    (dolist (file
+             '("SKK-JISYO.chibutsu.utf8"
+               "SKK-JISYO.tanudic4.utf8"
+               "SKK-JISYO.matsucon.utf8"
+               "SKK-JISYO.emoji.utf8"))
+      (add-to-list 'skk-extra-jisyo-file-list
+                   (cons (expand-file-name file "/usr/local/share/skkdic/") 'utf-8) t )))
+   (t
+    (setq skk-extra-jisyo-file-list nil)))
   )
-   #+end_src
-** DDSKK 本体の設定
-   :PROPERTIES:
-   :CUSTOM_ID: org03d84f47
-   :END:
-*** 基本動作
-    :PROPERTIES:
-    :CUSTOM_ID: orgab495f21
-    :END:
-    byte-compile の為の読み込み
-#+begin_src emacs-lisp :tangle init-ddskk.el
-(eval-when-compile (require 'skk))
-#+end_src
-    sticky shift: [[http://homepage1.nifty.com/blankspace/emacs/sticky.html][sticky shift]] を参照のこと.
-    ddskk の 14.2 以降から同梱されるようになった(ありがたい)
-    #+begin_src emacs-lisp :tangle init-ddskk.el
-(setq skk-sticky-key ";")
-    #+end_src
-    変換候補の表示位置
-    #+begin_src emacs-lisp :tangle init-ddskk.el
-(setq skk-show-candidates-always-pop-to-buffer nil)
-    #+end_src
-    候補表示件数を2列に
-    #+begin_src emacs-lisp :tangle init-ddskk.el
-(setq skk-henkan-number-to-display-candidates 5)
-    #+end_src
-    日本語表示しない
-    #+begin_src emacs-lisp :tangle init-ddskk.el
-(setq skk-japanese-message-and-error nil)
-    #+end_src
-    メニューを日本語にしない -> toolbar 非表示だし.
-    #+begin_src emacs-lisp :tangle init-ddskk.el
-(setq skk-show-japanese-menu nil)
-    #+end_src
-    注釈の表示
-    #+begin_src emacs-lisp :tangle init-ddskk.el
-(setq skk-show-annotation nil)
-    #+end_src
-    インジケータの表示のカスタマイズ
-    #+begin_src emacs-lisp :tangle init-ddskk.el
-;; (setq skk-latin-mode-string "[_A]")
-;; (setq skk-hiragana-mode-string "[あ]")
-;; (setq skk-katakana-mode-string "[ア]")
-;; (setq skk-jisx0208-latin-mode-string "[Ａ]")
-;; (setq skk-jisx0201-mode-string "[_ｱ]")
-;; (setq skk-abbrev-mode-string "[aA]")
-;; (setq skk-indicator-use-cursor-color nil)
-    #+end_src
-    インジケータを左端に表示
-    #+begin_src emacs-lisp :tangle init-ddskk.el
-(setq skk-status-indicator 'left)
-    #+end_src
-    カーソルには色をつけない
-    #+begin_src emacs-lisp :tangle init-ddskk.el
-(setq skk-use-color-cursor nil)
-    #+end_src
-    キーバインド
-    #+begin_src emacs-lisp :tangle init-ddskk.el
-(global-set-key "\C-x\C-j" 'skk-mode)
-(global-set-key "\C-xj" 'skk-mode)
-(global-set-key "\C-j" 'skk-mode)
-(global-set-key "\C-\\" 'skk-mode)
-    #+end_src
-    半角カナを入力
-    #+begin_src emacs-lisp :tangle init-ddskk.el
-(setq skk-use-jisx0201-input-method t)
-    #+end_src
-    Enter で改行しない
-    #+begin_src emacs-lisp :tangle init-ddskk.el
-(setq skk-egg-like-newline t)
-    #+end_src
-    "「"を入力したら"」"も自動で挿入
-    #+begin_src emacs-lisp :tangle init-ddskk.el
-(setq skk-auto-insert-paren t)
-    #+end_src
-    句読点変換ルール
-    #+begin_src emacs-lisp :tangle init-ddskk.el
-(setq skk-kuten-touten-alist
-      '(
-        (jp    . ("。" . "、"))
-        (jp-en . ("。" . ", "))
-        (en-jp . ("．" . "，"))
-        (en    . (". " . ", "))
-        ))
-(setq-default skk-kutouten-type 'en)
-    #+end_src
-    全角記号の変換: @ での日付入力は使わない
-    #+begin_src emacs-lisp :tangle init-ddskk.el
-(setq skk-rom-kana-rule-list
-      (append skk-rom-kana-rule-list
-              '(("!" nil "!")
-                (":" nil ":")
-                (";" nil ";")
-                ("?" nil "?")
-                ("z " nil "　")
-                ("\\" nil "\\")
-                ("@" nil "@")
-                )))
-    #+end_src
-    送り仮名が厳密に正しい候補を優先
-    #+begin_src emacs-lisp :tangle init-ddskk.el
-(setq skk-henkan-strict-okuri-precedence t)
-    #+end_src
-    辞書の共有
-    #+begin_src emacs-lisp :tangle init-ddskk.el
-(setq skk-share-private-jisyo t)
-    #+end_src
-    変換候補を縦に表示
-    #+begin_src emacs-lisp :tangle init-ddskk.el
-;; (setq skk-show-inline 'vertical)
-(setq skk-show-inline nil)
-    #+end_src
-*** 辞書の設定
-    :PROPERTIES:
-    :CUSTOM_ID: orgb6cec722
-    :END:
-    追加している辞書の一覧は
-    - [[http://www.chibutsu.org/jisho/][地球物理辞書]]
-    - [[http://www.geocities.jp/living_with_plasma/tanudic.html][天文・天体物理用語の漢字変換用辞書]]
-    - はてなキーワード
-    - [[http://matsucon.net/material/dic/][2ちゃんねる顔文字辞書 MatsuCon]]
-    - [[http://matsucon.net/][MatsuCon]]
-    といった所.
-    はてなキーワードからの辞書の抽出は [[http://d.hatena.ne.jp/znz][znz]] さんの
-    - [[http://rubyist.g.hatena.ne.jp/znz/20060924/p1][「はてなダイアリーキーワードふりがなリスト」を SKK の辞書に変換]]
-    を参考に.
-    [[http://matsucon.net/][MatsuCon]] で公開されている顔文字に関しては
-    顔文字に ; や が含まれている場合に, 適宜quoteする必要があるので
-    以下のスクリプトで適当に変換.
-    #+begin_src ruby :tangle no
-#!/usr/bin/env ruby
-require 'nkf'
-src = ARGV[0]
-if ARGV.size < 1
-  puts "usage: ime2skk.rb ime_dictionary"
-  exit 0
-end
-File.open(src, "r") {|f|
-  f.each do |line|
-    line_euc = NKF.nkf("-S -e",line)
-    if line_euc =~ /^([^!]+?)\t(.+?)\t.+$/
-      entry = $1
-      content = $2
-      if content =~/;/
-        puts entry + " /(concat \"" + content.gsub(';','\\\\073') + "\")/"
-      elsif content =~/\//
-        puts entry + " /(concat \"" + content.gsub('/','\\\\057') + "\")/"
-      else
-        puts entry + " /" + content + "/"
-      end
-    end
-  end
-}
-    #+end_src
-    他にも quote する必要あるような気もするけれど, それは気がついた時に.
-
-    辞書サーバがそもそも UTF-8 を扱えれば良いのだけれども.
-    辞書サーバの指定は以下.
-    #+begin_src emacs-lisp :tangle init-ddskk.el
-;; ddskk <- yaskkserv2 のみ utf-8 で通信するための設定
-(defun my:skk-open-server-decoding-utf-8 ()
-  "辞書サーバと接続する。サーバープロセスを返す。 decoding coding-system が euc ではなく utf8 となる。"
-  (unless (skk-server-live-p)
-    (setq skkserv-process (skk-open-server-1))
-    (when (skk-server-live-p)
-      (let ((code (cdr (assoc "euc" skk-coding-system-alist))))
-        (set-process-coding-system skkserv-process
-                                   'utf-8 code)))) skkserv-process)
-;; (setq skk-mode-hook
-;;       (lambda ()
-;;         (advice-add 'skk-open-server :override 'my:skk-open-server-decoding-utf-8)))
-(cond
- ((getenv "SKKSERVER")
-  (progn
-    (setq skk-server-host (getenv "SKKSERVER")
-          skk-server-portnum "1178"
-          skk-large-jisyo nil)
-    (add-to-list 'skk-search-prog-list
-                 '(skk-server-completion-search) t)
-    (add-to-list 'skk-search-prog-list
-                 '(skk-comp-by-server-completion) t)))
- (t
-  (setq skk-get-jisyo-directory (concat my:d:tmp "skk-jisyo")
-        skk-large-jisyo (concat skk-get-jisyo-directory "/SKK-JISYO.L"))))
-(when (file-exists-p "/usr/local/share/skkdic/SKK-JISYO.emoji.utf8")
-  (setq skk-extra-jisyo-file-list
-        (list '("/usr/local/share/skkdic/SKK-JISYO.emoji.utf8" . utf-8))))
-    #+end_src
-    辞書登録の際に送り仮名を削除
-    #+begin_src emacs-lisp :tangle init-ddskk.el
-(setq skk-check-okurigana-on-touroku 'auto)
-    #+end_src
-    漢字登録のミスをチェックする
-    #+begin_src emacs-lisp :tangle init-ddskk.el
-(setq skk-check-okurigana-on-touroku t)
-    #+end_src
-    個人辞書の文字コード
-    #+BEGIN_SRC emacs-lisp :tangle init-ddskk.el
-(setq skk-jisyo-code 'utf-8-unix)
-    #+END_SRC
-*** インクリメンタルサーチ
-    :PROPERTIES:
-    :CUSTOM_ID: org0cbdad2e
-    :END:
-    minibuffer 内では強制的に skk off.
-    インクリメンタルサーチは migemo に任せることに．
-    #+begin_src emacs-lisp :tangle init-ddskk.el
-(add-hook 'skk-mode-hook
-          (lambda ()
-            (and (skk-in-minibuffer-p)
-                 (skk-mode-exit))))
-(setq skk-isearch-start-mode 'latin)
-    #+end_src
+  #+end_src
 * =recentf=: 最近使ったファイル履歴の保管
   :PROPERTIES:
   :CUSTOM_ID: org43970469
@@ -1851,7 +1728,13 @@ File.open(src, "r") {|f|
    #+begin_src emacs-lisp :tangle init.el
 (leaf wl
   :if (file-exists-p "/etc/emacs/site-start.d/65wl-beta.el")
-  :commands (wl wl-other-frame wl-draft wl-user-agent wl-user-agent-compose wl-draft-send wl-draft-kill)
+  :commands (wl
+             wl-other-frame
+             wl-draft
+             wl-user-agent
+             wl-user-agent-compose
+             wl-draft-send
+             wl-draft-kill)
   :preface
   (defun my:wl-mode-line-buffer-identification (&optional id)
     "ignore `id'"
@@ -1878,6 +1761,9 @@ File.open(src, "r") {|f|
     'wl-draft-send
     'wl-draft-kill
     'mail-send-hook)
+  :pl-setq (wl-address-file
+            wl-folders-file
+            elmo-passwd-alist-file-name)
   )
    #+end_src
    割と =/etc/emacs/site-start.d/65wl-beta.el= と重複している気がするが.
@@ -2173,19 +2059,19 @@ video/*; xdg-open %s;
      #+end_src
      folders の位置の変更
      #+begin_src emacs-lisp :tangle init-wl.el
-(setq wl-folders-file (concat my:d:password-store "/wl-folders.gpg"))
+;; (setq wl-folders-file "~/.mu(concat my:d:password-store "/wl-folders.gpg"))
      #+end_src
      Drafts, Trash の置き場所
      #+begin_src emacs-lisp :tangle init-wl.el
-(setq wl-draft-folder "+Drafts")
-(setq wl-trash-folder "+Trash")
+(setq wl-draft-folder "+drafts")
+(setq wl-trash-folder "+drash")
 (setq elmo-lost+found-folder "+lost+found")
 (setq wl-temporary-file-directory "~/Downloads/")
      #+end_src
      アドレス帳
      #+begin_src emacs-lisp :tangle init-wl.el
 (setq wl-use-petname t)
-(setq wl-address-file  "~/.mua/Address")
+;; (setq wl-address-file  "~/.mua/Address")
      #+end_src
      LDAP サーバからアドレスを引くことも可能.
      以前は GCALDaemon を使って local に ldap サーバを上げていたのだけれども,
@@ -2199,7 +2085,7 @@ video/*; xdg-open %s;
      #+end_src
      パスワードの保存先
      #+begin_src emacs-lisp :tangle init-wl.el
-(setq elmo-passwd-alist-file-name (concat my:d:password-store "/wl-passwd.gpg"))
+;; (setq elmo-passwd-alist-file-name (concat my:d:password-store "/wl-passwd.gpg"))
      #+end_src
 **** フォルダ編集時に backup を作成しない.
      :PROPERTIES:

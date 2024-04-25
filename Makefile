@@ -1,7 +1,7 @@
 # -*- mode: makefile -*-
 EMACS	?= emacs
 EL		= early-init.el
-EL		+= init-ddskk.el
+# EL		+= init-ddskk.el
 ifneq (,$(wildcard /etc/emacs/site-start.d/65wl-beta.el))
 EL		+= init-wl.el
 endif
@@ -19,7 +19,6 @@ init.el: README.org
 		echo ";; ln -sf ~/.cache/emacs/eln-cache . "; ln -sf ~/.cache/emacs/eln-cache . ;\
 	fi
 	@mkdir -p elpa
-	@mkdir -p el-get
 	@mkdir -p share
 	$(EMACS) --batch --eval \
 	   "(progn \
@@ -34,10 +33,11 @@ clean:
 
 distclean: clean
 	rm -fr elpa
-	rm -fr el-get
 	rm -f eln-cache
 
 skk-jisyo:
 	mkdir -p ~/.cache/emacs/skk-jisyo
-	wget "https://github.com/skk-dev/dict/raw/master/SKK-JISYO.L" \
-		-O ~/.cache/emacs/skk-jisyo/SKK-JISYO.L
+	wget "https://raw.githubusercontent.com/uasi/skk-emoji-jisyo/master/SKK-JISYO.emoji.utf8" \
+		-O ~/.cache/emacs/skk-jisyo/SKK-JISYO.emoji.utf8
+	wget "https://raw.githubusercontent.com/ymrl/SKK-JISYO.emoji-ja/master/SKK-JISYO.emoji-ja.utf8" \
+		-O ~/.cache/emacs/skk-jisyo/SKK-JISYO.emoji-ja.utf8

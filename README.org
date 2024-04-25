@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2024-04-25 21:25:27
+#+date: 2024-04-25 21:29:07
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -729,8 +729,8 @@ init.el: README.org
    背景も変えようかなぁ...
    #+begin_src emacs-lisp :tangle init.el
 (leaf whitespace
-  :blackout ((global-whitespace-mode . "")
-             (whitespace-mode        . ""))
+  ;; :blackout ((global-whitespace-mode . "")
+  ;;            (whitespace-mode        . ""))
   :hook (emacs-startup-hook . global-whitespace-mode)
   :custom
   ((whitespace-line-column      . 72)
@@ -2981,7 +2981,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    #+begin_src emacs-lisp :tangle init.el
 (leaf flyspell
   :if (executable-find "aspell")
-  :blackout (flyspell-mode . "F")
+  ;; :blackout (flyspell-mode . "F")
   :custom
   `((ispell-program-name   . "aspell")
     (ispell-check-comments . nil)
@@ -3071,7 +3071,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 (leaf smartparens
   :disabled t
   :ensure t
-  :blackout t
+  ;; :blackout t
   :defun (sp-pair)
   :hook (emacs-startup-hook . smartparens-global-mode)
   :config
@@ -3090,7 +3090,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   #+begin_src emacs-lisp :tangle init.el
 (leaf rainbow-mode
   :ensure t
-  :blackout `((rainbow-mode . ,(format " %s" "\x1F308")))
+  ;; :blackout `((rainbow-mode . ,(format " %s" "\x1F308")))
   )
   #+end_src
 * Org-mode

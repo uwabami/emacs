@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2024-04-26 07:42:22
+#+date: 2024-04-26 17:47:41
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -813,10 +813,9 @@ init.el: README.org
    #+begin_src emacs-lisp :tangle init.el
 (leaf tramp
   :preface
-  (setq tramp-persistency-file-name (expand-file-name "tramp" my:d:tmp))
+  (defvar tramp-persistency-file-name (expand-file-name "tramp" my:d:tmp))
   :custom
-  `((tramp-persistency-file-name
-     . ,(expand-file-name "tramp" my:d:tmp))
+  `((tramp-persistency-file-name . ,(expand-file-name "tramp" my:d:tmp))
     (tramp-completion-reread-directory-timeout . nil)
     (remote-file-name-inhibit-cache . nil)
     (vc-ignore-dir-regexp
@@ -825,10 +824,9 @@ init.el: README.org
                 tramp-file-name-regexp))
     )
   :hook
-  (kill-emacs-hook
-   . (lambda ()
-       (if (file-exists-p tramp-persistency-file-name)
-           (delete-file tramp-persistency-file-name))))
+  (kill-emacs-hook . (lambda ()
+                       (if (file-exists-p tramp-persistency-file-name)
+                           (delete-file tramp-persistency-file-name))))
   )
    #+end_src
 ** =browse-url=
@@ -1001,9 +999,10 @@ init.el: README.org
   (leaf password-store :ensure t)
   (leaf auth-source-pass :ensure t)
   (leaf plstore
-    :init
-    (setq plstore-secret-keys 'silent
-          plstore-encrypt-to  (getenv "GPG_KEY_ID")))
+    :custom
+    `((plstore-secret-keys . 'silent)
+      (plstore-encrypt-to  . ,(getenv "GPG_KEY_ID")))
+    )
   )
   #+end_src
 * 日本語入力: =ddskk=
@@ -1035,6 +1034,7 @@ Emacs*useXIM: false
       (make-empty-file (expand-file-name "skk-jisyo/keep" my:d:tmp) t)))
   ;; override - -;
   (defvar skk-get-jisyo-directory (expand-file-name "skk-jisyo" my:d:tmp))
+  (defvar skk-extra-jisyo-file-list nil)
   :init
   (setq default-input-method "japanese-skk")
   :hook
@@ -1185,53 +1185,63 @@ Emacs*useXIM: false
   :CUSTOM_ID: org7d9d4027
   :END:
    表示の更新と =japanese-holidays= による日本の休日の追加
-   #+begin_src emacs-lisp :tangle init.el
+** カレンダー本体の設定
+   :PROPERTIES:
+   :CUSTOM_ID: org6ac86c8d
+   :END:
+    #+begin_src emacs-lisp :tangle init.el
 (leaf calendar
+  :defvar calendar-holidays japanese-holidays
   :custom
-  (;; 月と曜日の表示調整
-   (calendar-month-name-array . ["01" "02" "03" "04" "05" "06"
-                                 "07" "08" "09" "10" "11" "12" ])
-   (calendar-day-name-array   . ["日" "月" "火" "水" "木" "金" "土"])
-   (calendar-day-header-array . ["日" "月" "火" "水" "木" "金" "土"])
-   ;; 日曜開始
-   (calendar-week-start-day   . 0)
-   ;; 祝日をカレンダーに表示
-   (calendar-mark-holidays-flag . t)
-   )
-  :config
-  (leaf japanese-holidays
-    :ensure t
-    :require t
-    :after calendar
-    :custom
-    ((japanese-holiday-weekend         . '(0 6))
-     (japanese-holiday-weekend-marker
-      . '(holiday  ;; 日
-          nil      ;; 月
-          nil      ;; 火
-          nil      ;; 水
-          nil      ;; 木
-          nil      ;; 金
-          japanese-holiday-saturday))
-     )
-    :config
-    (setq calendar-holidays ; 他の国の祝日も表示させたい場合は適当に調整
-          (append japanese-holidays holiday-local-holidays))
-    ;;
-    (defun my:japanese-holiday-show (&rest _args)
-      (let* ((date (calendar-cursor-to-date t))
-             ;; (calendar-date-display-form '((format "%s年 %s月 %s日（%s）" year month day dayname)))
-             (date-string (calendar-date-string date))
-             (holiday-list (calendar-check-holidays date)))
-        (when holiday-list
-          (message "%s: %s" date-string (mapconcat #'identity holiday-list "; ")))))
-    ;;
-    :hook
-    ((calendar-move-hook . my:japanese-holiday-show)
-     (calendar-today-visible-hook . japanese-holiday-mark-weekend)
-     (calendar-today-invisible-hook . japanese-holiday-mark-weekend)
-     (calendar-today-visible-hook . calendar-mark-today))
+  `(;; 月と曜日の表示調整
+    (calendar-month-name-array   . ["01" "02" "03" "04" "05" "06"
+                                    "07" "08" "09" "10" "11" "12" ])
+    (calendar-day-name-array     . ["日" "月" "火" "水" "木" "金" "土"])
+    (calendar-day-header-array   . ["日" "月" "火" "水" "木" "金" "土"])
+    ;; 日曜開始
+    (calendar-week-start-day     . 0)
+    ;; 祝日をカレンダーに表示
+    (calendar-mark-holidays-flag . t)
     )
+  :config
+  (with-eval-after-load 'japanese-holidays
+    (setq calendar-holidays (append japanese-holidays holiday-local-holidays)))
+  )
+    #+end_src
+** 日本の休日の追加: =japanese-holidays=
+   :PROPERTIES:
+   :CUSTOM_ID: org60295429
+   :END:
+   #+begin_src emacs-lisp :tangle init.el
+(leaf japanese-holidays
+  :ensure t
+  :after calendar
+  :require t
+  :custom
+  `((japanese-holiday-weekend         . '(0 6))
+    (japanese-holiday-weekend-marker
+     . '(holiday  ;; 日
+         nil      ;; 月
+         nil      ;; 火
+         nil      ;; 水
+         nil      ;; 木
+         nil      ;; 金
+         japanese-holiday-saturday))
+    )
+  :config
+  ;; autoload
+  (defun my:japanese-holiday-show (&rest _args)
+    (let* ((date (calendar-cursor-to-date t))
+           ;; (calendar-date-display-form '((format "%s年 %s月 %s日（%s）" year month day dayname)))
+           (date-string (calendar-date-string date))
+           (holiday-list (calendar-check-holidays date)))
+      (when holiday-list
+        (message "%s: %s" date-string (mapconcat #'identity holiday-list "; ")))))
+  :hook
+  ((calendar-move-hook            . my:japanese-holiday-show)
+   (calendar-today-visible-hook   . japanese-holiday-mark-weekend)
+   (calendar-today-invisible-hook . japanese-holiday-mark-weekend)
+   (calendar-today-visible-hook   . calendar-mark-today))
   )
    #+end_src
 * キーバインドの設定
@@ -1262,18 +1272,16 @@ Emacs*useXIM: false
   :if (executable-find "cmigemo")
   :ensure t
   :custom
-  '((migemo-user-dictionary  . nil)
+  `((migemo-user-dictionary  . nil)
     (migemo-regex-dictionary . nil)
     (migemo-options          . '("-q" "--emacs"))
     (migemo-command          . "cmigemo")
-    (migemo-coding-system    . 'utf-8-unix))
-  :init
-  (cond
-   ((and (eq system-type 'darwin)
-         (file-directory-p "/usr/local/share/migemo/utf-8/"))
-    (setq migemo-dictionary "/usr/local/share/migemo/utf-8/migemo-dict"))
-   (t
-    (setq migemo-dictionary "/usr/share/cmigemo/utf-8/migemo-dict")))
+    (migemo-coding-system    . 'utf-8-unix)
+    (migemo-dictionary
+     .  ,(or (if (file-exists-p "/usr/local/share/migemo/utf-8/migemo-dict")
+                 "/usr/local/share/migemo/utf-8/migemo-dict")
+             "/usr/share/cmigemo/utf-8/migemo-dict"))
+    )
   :hook
   (emacs-startup-hook . migemo-init)
   )
@@ -1319,8 +1327,7 @@ Emacs*useXIM: false
           ("f"   . ace-link-eww))
          )
   :custom
-  `((eww-bookmarks-directory
-     . ,(expand-file-name "eww" my:d:tmp))
+  `((eww-bookmarks-directory . ,(expand-file-name "eww" my:d:tmp))
     (eww-search-prefix
      . "https://www.google.com/search?&gws_rd=cr&complete=0&pws=0&tbs=li:1&q=")
     )
@@ -1330,34 +1337,6 @@ Emacs*useXIM: false
   (ace-link-setup-default)
   )
    #+end_src
-* =emacs-w3m=:
-  :PROPERTIES:
-  :CUSTOM_ID: org2d69d5ee
-  :END:
-  #+begin_src emacs-lisp :tangle init.el
-(leaf emacs-w3m
-  :if (and (executable-find "w3m")
-           (file-directory-p "/usr/share/emacs/site-lisp/w3m/"))
-  :preface
-  (defun my:w3m-open-current-page-in-firefox ()
-    "Open the current URL in Mozilla Firefox."
-    (interactive)
-    (browse-url-firefox w3m-current-url))
-
-  (defun my:w3m-open-link-or-image-in-firefox ()
-    "Open the current link or image in Firefox."
-    (interactive)
-    (browse-url-firefox (or (w3m-anchor)
-                            (w3m-image))))
-  :bind
-  ((:w3m-mode-map
-    ("f" . my:w3m-open-current-page-in-firefox)
-    ("F" . my:w3m-open-link-or-image-in-firefox))
-   )
-  :custom
-  `((w3m-fill-column . 72))
-  )
-  #+end_src
 * =ibuffer=: buffer の操作
   :PROPERTIES:
   :CUSTOM_ID: org5f756509
@@ -1606,6 +1585,7 @@ Emacs*useXIM: false
   (defun my:consult-recent-file ()
     "Find recent using `completing-read' with shorten filename"
     (interactive)
+    (eval-when-compile (require 'recentf))
     (recentf-mode +1)
     (let ((files (mapcar (lambda (f)
                            (cons (my:shorten-file-path f (- (window-width) 2)) f))
@@ -1742,6 +1722,9 @@ Emacs*useXIM: false
    #+begin_src emacs-lisp :tangle init.el
 (leaf wl
   :if (file-exists-p "/etc/emacs/site-start.d/65wl-beta.el")
+  :defvar (wl-address-file
+          wl-folders-file
+          elmo-passwd-alist-file-name)
   :commands (wl
              wl-other-frame
              wl-draft
@@ -3126,7 +3109,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (set (make-local-variable 'time-stamp-start) "#\\+date: ")
   (set (make-local-variable 'time-stamp-end)   "\$")
   )
-;;; 設定
 ;; org-plus-contrib も使うかなぁ….
 (leaf org
   :ensure t
@@ -3137,9 +3119,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
          ("C-x m"   . org-capture)
          ("C-x M"   . org-journal-new-entry)
          )
-  :advice
-  (:before org-calendar-holiday
-           (lambda () (require 'japanese-holidays nil 'noerror)))
   ;; 昔のメモ(howm)も org-mode で開く
   :mode "\\.org\\'" "\\.howm\\'"
   ;; GTD: TODO→...→DONE としたエントリを =Arhive.org= に移動
@@ -3201,12 +3180,14 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     (org-archive-location       . ,(expand-file-name "Archive.org::" my:d:org))
     ;; modules → とりあえずクリアしておく
     (org-modules  . '())
+    ;; element-cache は使わない...うまく使えると良いんだけれど.
+    (org-element-use-cache . nil)
     )
   :defer-config
   ;; +打ち消し+ の font-lock の変更 →これはテーマに任せるべき?
-  (setq org-emphasis-alist
-        (cons '("+" '(:strike-through t :foreground "#999999"))
-              (cl-delete "+" org-emphasis-alist :key 'car :test 'equal)))
+  ;; (setq org-emphasis-alist
+  ;;       (cons '("+" '(:strike-through t :foreground "#999999"))
+  ;;             (cl-delete "+" org-emphasis-alist :key 'car :test 'equal)))
   (require 'org-tempo nil 'noerror)
   )
    #+end_src
@@ -3369,14 +3350,14 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
         (lambda (date)
           (let ((face
                  (cond
+                  ;; 土曜日
+                  ((= (calendar-day-of-week date) 6)
+                   'my:org-agenda-date-saturday)
                   ;; 日曜日か日本の祝日
                   ((or (= (calendar-day-of-week date) 0)
                        (let ((calendar-holidays japanese-holidays))
                          (calendar-check-holidays date)))
                    'org-agenda-date-weekend)
-                  ;; 土曜日
-                  ((= (calendar-day-of-week date) 6)
-                   'my:org-agenda-date-saturday)
                   ;; 普通の日
                   (t 'org-agenda-date))))
             ;; 今日は色を反転
@@ -3455,7 +3436,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
         )
   ;; (defvar my:org-agenda-files nil)
   (dolist (file
-           '(;; Archive.org   <-- 🤔
+           '(;; Archive.org   ← 🤔
              ;; Calendar
              "Holidays.org"
              "Schedule.org"
@@ -3585,39 +3566,6 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
            )
           )
         )
-  )
-   #+end_src
-** Org-roam: リンク付きメモ
-   :PROPERTIES:
-   :CUSTOM_ID: orgbbaf7c91
-   :END:
-   メモ取りとしては org-capture と org-journal で充分なんだけれど,
-   Howm の様な書き散らかしメモと, それらを集約した長文を貯めたい時に便利そうなので使い始めた.
-   #+begin_src emacs-lisp
-(leaf org-roam
-  :if (and (file-directory-p my:d:org)
-           (and (executable-find "rg")
-                (executable-find "sqlite3")))
-  :ensure t
-  :init
-  (setq org-roam-v2-ack t)
-  :commands (org-roam-db-query)
-  :bind
-  (("C-c n a" . org-roam-alias-add)
-   ("C-c n f" . org-roam-node-find)
-   ("C-c n i" . org-roam-node-insert)
-   ("C-c n o" . org-id-get-create)
-   ("C-c n t" . org-roam-tag-add)
-   ("C-c n l" . org-roam-buffer-toggle)
-   (:org-mode-map
-    ("C-M-i"   . completion-at-point))
-   )
-  :custom
-  `((org-roam-db-location . ,(expand-file-name "org-roam.db" my:d:tmp))
-    (org-roam-directory   . ,(expand-file-name "roam" my:d:org))
-    )
-  :defer-config
-  (org-roam-db-autosync-enable)
   )
    #+end_src
 ** OrgとGoogle カレンダーの連携: =org-gcal=
@@ -3765,7 +3713,6 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     ;;   (:override orgmine-setup my:orgmine-setup))
     :pl-setq orgmine-servers
     :config
-    (setq org-element-use-cache nil)
     (setq orgmine-note-block-begin "#+begin_src gfm"   ;; 要調整
           orgmine-note-block-end   "#+end_src\n")
     )
@@ -3864,6 +3811,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   ;;
   (defun my:org-wiki-jekyll-finalized1 (contents backend info)
     "Replace some URL"
+    (ignore info)
     (when (org-export-derived-backend-p backend 'jekyll)
       (require 's)
       (s-replace
@@ -3874,6 +3822,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   ;;
   (defun my:org-wiki-jekyll-finalized2 (contents backend info)
     "Replace some URL"
+    (ignore info)
     (when (org-export-derived-backend-p backend 'jekyll)
       (require 's)
       (s-replace
@@ -3884,6 +3833,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   ;;
   (defun my:org-wiki-jekyll-finalized3 (contents backend info)
     "Replace some URL"
+    (ignore info)
     (when (org-export-derived-backend-p backend 'jekyll)
       (replace-regexp-in-string
        " id=\"outline-container-org.+\" class=\"outline-.+\""
@@ -3891,6 +3841,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   ;;
   (defun my:org-wiki-jekyll-finalized4 (contents backend info)
     "Replace some URL"
+    (ignore info)
     (when (org-export-derived-backend-p backend 'jekyll)
       (replace-regexp-in-string
        "<a id=\"org.+?\"></a>"
@@ -3898,6 +3849,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   ;;
   (defun my:org-wiki-jekyll-finalized5 (contents backend info)
     "Replace some URL"
+    (ignore info)
     (when (org-export-derived-backend-p backend 'jekyll)
       (replace-regexp-in-string
        "<pre class=\"example\" id=\".+?\">"
@@ -3905,6 +3857,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   ;;
   (defun my:org-wiki-jekyll-finalized6 (contents backend info)
     "Replace some URL"
+    (ignore info)
     (when (org-export-derived-backend-p backend 'jekyll)
       (replace-regexp-in-string
        "<figure id=\".+?\">"
@@ -4894,11 +4847,6 @@ pdflang={%l}}
 ;; End:
   #+end_src
   #+begin_src emacs-lisp :tangle init-wl.el
-;; Local Variables:
-;; byte-compile-warnings: (not cl-functions free-vars docstrings unresolved)
-;; End:
-  #+end_src
-  #+begin_src emacs-lisp :tangle init-ddskk.el
 ;; Local Variables:
 ;; byte-compile-warnings: (not cl-functions free-vars docstrings unresolved)
 ;; End:

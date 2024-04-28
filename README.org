@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2024-04-26 17:47:41
+#+date: 2024-04-28 13:51:57
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -3318,7 +3318,8 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    #+begin_src emacs-lisp :tangle init.el
 (leaf org-agenda
   :if (file-directory-p my:d:org)
-  :defer-config
+  :preface
+  ;; face は theme にまわすべき, かな？
   (defface my:org-agenda-date-saturday
     '((t (:foreground "#7FBFFF" :bold t )))
     "Agenda 表示中の土曜日用のface"
@@ -3340,28 +3341,11 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     '((t (:foreground "#BF7FFF")))
     "Agenda 表示中, DebianJP.org の表示 face"
     :group 'org-agenda )
-  (defface my:org-agenda-calendar-twitter
-    '((t (:foreground "#CCCCCC")))
-    "Agenda 表示中, Twitter log の表示 face"
-    :group 'org-agenda )
-  ;; 更新用の関数 - とりあえず動いているので良しとするが,
-  ;; リファクタリングしたい
-  (setq org-agenda-day-face-function
-        (lambda (date)
-          (let ((face
-                 (cond
-                  ;; 土曜日
-                  ((= (calendar-day-of-week date) 6)
-                   'my:org-agenda-date-saturday)
-                  ;; 日曜日か日本の祝日
-                  ((or (= (calendar-day-of-week date) 0)
-                       (let ((calendar-holidays japanese-holidays))
-                         (calendar-check-holidays date)))
-                   'org-agenda-date-weekend)
-                  ;; 普通の日
-                  (t 'org-agenda-date))))
-            ;; 今日は色を反転
-            (if (org-agenda-today-p date) (list :inherit face :underline t) face))))
+  ;; (defface my:org-agenda-calendar-twitter
+  ;;   '((t (:foreground "#CCCCCC")))
+  ;;   "Agenda 表示中, Twitter log の表示 face"
+  ;;   :group 'org-agenda )
+  ;;
   ;; font-lock の適用. loop減らせないかなぁ….
   (defun my:org-agenda-finalize-font-lock ()
     "Custom: apply custom font-lock"
@@ -3391,75 +3375,89 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
         (add-text-properties (match-beginning 0) (line-end-position)
                              '(face org-agenda-date-weekend)))
       ))
-  ;;
-  ;;
-  (add-hook 'org-agenda-finalize-hook
-            #'my:org-agenda-finalize-font-lock)
-  ;;
-  (setq org-agenda-span 'week
-        org-agenda-start-on-weekday nil
-        org-agenda-format-date "%Y/%m/%d (%a)"
-        org-agenda-weekend-days '(0)
-        org-agenda-inhibit-startup t
-        org-agenda-ignore-drawer-properties '(effort appt)
-        org-agenda-repeating-timestampo-show-all t
-        ;; org-agenda-day-face-function 'my:org-agenda-day-face-function
-        org-agenda-sorting-strategy '((agenda habit-down time-up timestamp-down priority-down category-keep)
-                                      (todo timestamp-down priority-down category-keep)
-                                      (tags priority-down category-keep)
-                                      (search category-keep))
-        org-agenda-custom-commands
-        '(
-          ("n" "agenda and all TODO list"
-           (
-            (agenda ""
-                    ((org-agenda-ndays 1)
-                     (org-agenda-entry-types '(:timestamp :sexp))))
-            (todo "TODO"
-                  ((org-agenda-prefix-format " %i %-22:c"))
-                  )
-            (todo "新規|着手|進行中|確認"
-                  ((org-agenda-prefix-format " %i %-22:c"))
-                  )
-            (todo "WAIT"
-                  ((org-agenda-prefix-format " %i %-22:c"))
-                  )
-            (todo "SOMEDAY"
-                  ((org-agenda-prefix-format " %i %-22:c"))
-                  )
-            ))
-          ("N" "All memo entry"
-           (;;
-            (todo "MEMO")
-            ))
-          )
-        )
-  ;; (defvar my:org-agenda-files nil)
-  (dolist (file
-           '(;; Archive.org   ← 🤔
-             ;; Calendar
-             "Holidays.org"
-             "Schedule.org"
-             "GFD.org"
-             "Univ.org"
-             "DebianJP.org"
-             ;; INBOX
-             ;; "INBOX.org"
-             ;; misc
-             "twitter.org"
-             ;; Project
-             "redmine_GFD.org"
-             "redmine_SSKLAB.org"
-             ;; "redmine_FluidSoc.org"
-             ))
-    (add-to-list 'org-agenda-files (expand-file-name file my:d:org)))
-  (if (file-directory-p
-       (expand-file-name "journal/" my:d:org))
-      (dolist (file
-               (directory-files-recursively
-                (expand-file-name "journal/" my:d:org) "org$"))
-        (add-to-list 'org-agenda-files file)))
-  )
+  :custom
+  `((org-agenda-day-face-function
+     . (lambda (date)
+         (let ((face
+                (cond
+                 ;; 日曜日か日本の祝日
+                 ((or (= (calendar-day-of-week date) 0)
+                      (let ((calendar-holidays japanese-holidays))
+                        (calendar-check-holidays date)))
+                  'org-agenda-date-weekend)
+                 ;; 土曜日
+                 ((= (calendar-day-of-week date) 6)
+                  'my:org-agenda-date-saturday)
+                 ;; 普通の日
+                 (t 'org-agenda-date))))
+           ;; 今日は色を反転
+           (if (org-agenda-today-p date) (list :inherit face :underline t) face))))
+    (org-agenda-span . 'week)
+    (org-agenda-start-on-weekday . nil)
+    (org-agenda-format-date . "%Y/%m/%d (%a)")
+    (org-agenda-weekend-days . '(0))
+    (org-agenda-inhibit-startup . t)
+    (org-agenda-ignore-drawer-properties . '(effort appt))
+    (org-agenda-repeating-timestampo-show-all . t)
+    (org-agenda-sorting-strategy . '((agenda habit-down time-up timestamp-down priority-down category-keep)
+                                     (todo timestamp-down priority-down category-keep)
+                                     (tags priority-down category-keep)
+                                     (search category-keep)))
+    (org-agenda-custom-commands . '(("n" "agenda and all TODO list"
+                                     (
+                                      (agenda ""
+                                              ((org-agenda-ndays 1)
+                                               (org-agenda-entry-types '(:timestamp :sexp))))
+                                      (todo "TODO"
+                                            ((org-agenda-prefix-format " %i %-22:c"))
+                                            )
+                                      (todo "新規|着手|進行中|確認"
+                                            ((org-agenda-prefix-format " %i %-22:c"))
+                                            )
+                                      (todo "WAIT"
+                                            ((org-agenda-prefix-format " %i %-22:c"))
+                                            )
+                                      (todo "SOMEDAY"
+                                            ((org-agenda-prefix-format " %i %-22:c"))
+                                            )
+                                      ))
+                                    ("N" "All memo entry"
+                                     (;;
+                                      (todo "MEMO")
+                                      ))
+                                    )
+                                )
+    )
+    :hook ((org-agenda-finalize-hook
+            . my:org-agenda-finalize-font-lock))
+    :defer-config
+    ;; (defvar my:org-agenda-files nil)
+    (dolist (file
+             '(;; Archive.org   ← 🤔
+               ;; Calendar
+               "Holidays.org"
+               "Schedule.org"
+               "GFD.org"
+               "Univ.org"
+               "DebianJP.org"
+               ;; INBOX
+               ;; "INBOX.org"
+               ;; misc
+               "twitter.org"
+               ;; Project
+               "redmine_GFD.org"
+               "redmine_SSKLAB.org"
+               ;; "redmine_FluidSoc.org"
+               ))
+      (add-to-list 'org-agenda-files (expand-file-name file my:d:org)))
+    ;;
+    (if (file-directory-p
+         (expand-file-name "journal/" my:d:org))
+        (dolist (file
+                 (directory-files-recursively
+                  (expand-file-name "journal/" my:d:org) "org$"))
+          (add-to-list 'org-agenda-files file)))
+    )
    #+end_src
 ** Org-journal: 日記
    :PROPERTIES:

@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2024-04-28 13:51:57
+#+date: 2024-04-30 09:15:25
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -140,9 +140,9 @@ init.el: README.org
   (if (and (fboundp 'native-comp-available-p)
            (native-comp-available-p))
       (setq native-comp-speed  2
-            native-comp-async-report-warnings-errors nil ;; 'silent
+            native-comp-async-report-warnings-errors 'silent
             native-compile-target-directory (expand-file-name "eln-cache" user-emacs-directory)
-            native-comp-jit-compilation-deny-list '(".*-\\(loaddefs\\|autoloads\\)\\.\\(el\\.gz\\|el\\)")
+            ;; native-comp-jit-compilation-deny-list '(".*-\\(loaddefs\\|autoloads\\)\\.\\(el\\.gz\\|el\\)")
             ))
   (setq debug-on-error t))
   #+end_src
@@ -480,7 +480,7 @@ init.el: README.org
   (set-coding-system-priority 'utf-8 'euc-jp 'iso-2022-jp 'cp932)
   )
    #+end_src
-** SOMEDAY East Asian Ambiguos 対応 [0/1]
+** East Asian Ambiguos 対応 [0/1]
    :PROPERTIES:
    :CUSTOM_ID: orgd3ca00ac
    :END:
@@ -492,10 +492,127 @@ init.el: README.org
   :vc (:url "https://github.com/uwabami/locale-eaw-emoji")
   :hook
   `(;;(emacs-startup-hook . eaw-and-emoji-fullwidth)
-    (emacs-startup-hook . eaw-half-emoji-fullwidth))
+    ;; (emacs-startup-hook . eaw-half-emoji-fullwidth)
+    (emacs-startup-hook . eaw-halfwidth)
+   )
   )
    #+end_src
    - [ ] 最近, EAWは一文字幅強制の方が良いかなぁ, とか悩み中.
+** フォント
+  :PROPERTIES:
+  :CUSTOM_ID: org356b9857
+  :END:
+  試行錯誤中. とはいえ, GUIで使う事は滅多に無いのでなかなか弄る機会が無い.
+*** Xresouces の設定
+   :PROPERTIES:
+   :CUSTOM_ID: org100ad374
+   :END:
+   以下を追加しておく.
+   #+begin_src conf
+! disable XIM
+Emacs*useXIM: false
+! enable antialias
+Emacs.FontBackend: xft
+! revese video
+Emacs.reverseVideo: true
+   #+end_src
+*** フォント設定
+    :PROPERTIES:
+    :CUSTOM_ID: orgce6102b3
+    :END:
+   なかなかうまくいかないなぁ….
+   :PROPERTIES:
+   :CUSTOM_ID: org199c5479
+   :END:
+ #+begin_src emacs-lisp :tangle init.el
+(leaf *gui
+  :if window-system
+  :custom
+  `(;; (use-default-font-for-symbols . nil)
+    (scalable-fonts-allowed       . nil)
+    (buffer-face-mode-face        . 'fixed-pitch)
+   )
+  :init
+  (setq use-default-font-for-symbols nil)
+  (set-frame-parameter nil 'alpha 90)
+  (set-frame-parameter nil 'fullscreen 'maximized)
+  (set-face-attribute 'default nil
+                      :family "UDEV Gothic NF"
+                      :height 135)
+  ;; ≒ が全角幅なので…
+  (set-fontset-font nil #x2252 (font-spec :family "PlemolJP Console NF"))
+  ;; emoji の幅が合わない⇒ Twitter Color Emoji は monospace?
+  (set-fontset-font nil '(#x1F004 . #x1FFFD) (font-spec :family "Twitter Color Emoji"))
+  ;;
+  ;; Variable pitch が嫌いです.
+  (dolist (face
+           '(fixed-pitch
+             fixed-pitch-serif
+             variable-pitch
+             variable-pitch-text
+             help-for-help-header)
+             )
+    ;; まだありそう...
+    (set-face-attribute face nil :family 'unspecified :height 'unspecified :inherit 'default))
+  :hook
+  (minibuffer-setup-hook . (lambda()
+                             (buffer-face-set 'fixed-pitch)))
+)
+ #+end_src
+ #+BEGIN_EXAMPLE
+ 幅の確認: 絵文字は全角, 他は半角で 2:1 になっているかの確認用.
+
+|abcdefghijkl|
+|ABCDEFGHIJKL|
+|'";:-+=/\~`?|
+|∞≤≥∏∑∫×±≒≡⊆⊇|
+|αβγδεζηθικλμ|
+|ΑΒΓΔΕΖΗΘΙΚΛΜ|
+|日本語の美観|
+|あいうえおか|
+|アイウエオカ|
+|ｱｲｳｴｵｶｷｸｹｺｻｼ|
+
+| hoge                 | hogeghoe | age              |
+|----------------------+----------+------------------|
+| 今日もいい天気ですね | お、     | 等幅になった👍 🍺|
+|----------------------+----------+------------------|
+ #+END_EXAMPLE
+*** アイコンフォント: =nerd-icons=
+   :PROPERTIES:
+   :CUSTOM_ID: orgd903bf1d
+   :END:
+   以前は all-the-icons を利用していた.
+   - Nerd Fonts の ver.2 まではアイコンが
+     PUA をはみ出していて異体字の表示に支障があったのだけれど
+     ver.3 からこれが解消された
+   - ターミナルでの利用の際に複数フォントはシンドい.
+   ということで [[https://github.com/rainstormstudio/nerd-icons.el][nerd-icons]] に乗り換えた.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf nerd-icons
+  :ensure t
+  :defvar nerd-icons-mode-icon-alist
+  :commands (nerd-icons-codicon nerd-icons-faicon)
+  :custom
+  `((nerd-icons-font-family    . "UDEV Gothic NF")
+    ;; (nerd-icons-scale-factor   . 0.8)
+    ;; (nerd-icons-default-adjust . 0)
+    )
+  :defer-config
+  (add-to-list 'nerd-icons-mode-icon-alist
+               '(wl-folder-mode nerd-icons-mdicon "nf-md-folder" ))
+  (add-to-list 'nerd-icons-mode-icon-alist
+               '(wl-summary-mode nerd-icons-mdicon "nf-md-folder_open"))
+  (add-to-list 'nerd-icons-mode-icon-alist
+               '(wl-draft-mode nerd-icons-mdicon "nf-md-email_edit"))
+  (add-to-list 'nerd-icons-mode-icon-alist
+               '(mime-view-mode nerd-icons-mdicon "nf-md-email_open"))
+  )
+(leaf nerd-icons-dired
+  :ensure t
+  :hook
+  (dired-mode . nerd-icons-dired-mode))
+   #+end_src
 * 主にEmacs本体, および同梱されている拡張に関する設定
   :PROPERTIES:
   :CUSTOM_ID: org1927da44
@@ -1328,8 +1445,7 @@ Emacs*useXIM: false
          )
   :custom
   `((eww-bookmarks-directory . ,(expand-file-name "eww" my:d:tmp))
-    (eww-search-prefix
-     . "https://www.google.com/search?&gws_rd=cr&complete=0&pws=0&tbs=li:1&q=")
+    (eww-search-prefix . "https://www.google.com/search?&gws_rd=cr&complete=0&pws=0&tbs=li:1&q=")
     )
   ;; :advice (:around eww-colorize-region
   ;;                  my:shr-colorize-region--disable)
@@ -1541,11 +1657,11 @@ Emacs*useXIM: false
   :ensure t
   :init
   ;; 補完でも icon 表示
-  ;;(leaf all-the-icons-completion
-  ;;  :ensure t
-  ;;  :hook
-  ;;  (emacs-startup-hook . all-the-icons-completion-mode)
-  ;;  )
+  (leaf nerd-icons-completion
+   :ensure t
+   :hook
+   (emacs-startup-hook . nerd-icons-completion-mode)
+   )
   :bind (("M-A" . marginalia-cycle)
          (:minibuffer-local-map
           ("M-A" . marginalia-cycle)
@@ -1558,7 +1674,7 @@ Emacs*useXIM: false
     )
   :hook
   ((emacs-startup-hook . marginalia-mode)
-   ;;(marginalia-mode-hook . all-the-icons-completion-marginalia-setup)
+   (marginalia-mode-hook . nerd-icons-completion-marginalia-setup)
    )
   )
    #+end_src
@@ -1630,7 +1746,6 @@ Emacs*useXIM: false
    :END:
    #+begin_src emacs-lisp
 (leaf corfu
-  :disabled t
   :ensure t
   :init
   (leaf corfu-terminal
@@ -1652,7 +1767,7 @@ Emacs*useXIM: false
     (tab-always-indent          . 'complete)
     (corfu-cycle                . t)       ;; Enable cycling for `corfu-next/previous'
     (corfu-auto                 . t)       ;; Enable auto completion
-    (corfu-preselect-first      . nil)     ;; Disable candidate preselection
+    (corfu-preselect            . 'prompt)
     ;; (corfu-separator          . ?\s)  ;; Orderless field separator
     ;; (corfu-quit-at-boundary   . nil)  ;; Never quit at completion boundary
     ;; (corfu-quit-no-match      . nil)  ;; Never quit, even if there is no match
@@ -1666,6 +1781,60 @@ Emacs*useXIM: false
              (corfu-terminal-mode +1)
              (global-corfu-mode)))
   )
+   #+end_src
+** =kind-icon=: corfu で補完候補にアイコン表示
+   :PROPERTIES:
+   :CUSTOM_ID: org80404324
+   :END:
+   svg-lib でのアイコン表示ではなく nerd-icons を利用するように.
+   #+begin_src emacs-lisp
+(leaf kind-icon
+  :ensure t
+  :after corfu-terminal
+  :custom
+  `((kind-icon-default-face . 'corfu-default)
+    (kind-icon-use-icons    . nil)
+    (kind-icon-mapping
+     . `(
+         (array          ,(nerd-icons-codicon "nf-cod-symbol_array")       :face font-lock-type-face)
+         (boolean        ,(nerd-icons-codicon "nf-cod-symbol_boolean")     :face font-lock-builtin-face)
+         (class          ,(nerd-icons-codicon "nf-cod-symbol_class")       :face font-lock-type-face)
+         (color          ,(nerd-icons-codicon "nf-cod-symbol_color")       :face success)
+         (command        ,(nerd-icons-codicon "nf-cod-terminal")           :face default)
+         (constant       ,(nerd-icons-codicon "nf-cod-symbol_constant")    :face font-lock-constant-face)
+         (constructor    ,(nerd-icons-codicon "nf-cod-triangle_right")     :face font-lock-function-name-face)
+         (enummember     ,(nerd-icons-codicon "nf-cod-symbol_enum_member") :face font-lock-builtin-face)
+         (enum-member    ,(nerd-icons-codicon "nf-cod-symbol_enum_member") :face font-lock-builtin-face)
+         (enum           ,(nerd-icons-codicon "nf-cod-symbol_enum")        :face font-lock-builtin-face)
+         (event          ,(nerd-icons-codicon "nf-cod-symbol_event")       :face font-lock-warning-face)
+         (field          ,(nerd-icons-codicon "nf-cod-symbol_field")       :face font-lock-variable-name-face)
+         (file           ,(nerd-icons-codicon "nf-cod-symbol_file")        :face font-lock-string-face)
+         (folder         ,(nerd-icons-codicon "nf-cod-folder")             :face font-lock-doc-face)
+         (interface      ,(nerd-icons-codicon "nf-cod-symbol_interface")   :face font-lock-type-face)
+         (keyword        ,(nerd-icons-codicon "nf-cod-symbol_keyword")     :face font-lock-keyword-face)
+         (macro          ,(nerd-icons-codicon "nf-cod-symbol_misc")        :face font-lock-keyword-face)
+         (magic          ,(nerd-icons-codicon "nf-cod-wand")               :face font-lock-builtin-face)
+         (method         ,(nerd-icons-codicon "nf-cod-symbol_method")      :face font-lock-function-name-face)
+         (function       ,(nerd-icons-codicon "nf-cod-symbol_method")      :face font-lock-function-name-face)
+         (module         ,(nerd-icons-codicon "nf-cod-file_submodule")     :face font-lock-preprocessor-face)
+         (numeric        ,(nerd-icons-codicon "nf-cod-symbol_numeric")     :face font-lock-builtin-face)
+         (operator       ,(nerd-icons-codicon "nf-cod-symbol_operator")    :face font-lock-comment-delimiter-face)
+         (param          ,(nerd-icons-codicon "nf-cod-symbol_parameter")   :face default)
+         (property       ,(nerd-icons-codicon "nf-cod-symbol_property")    :face font-lock-variable-name-face)
+         (reference      ,(nerd-icons-codicon "nf-cod-references")         :face font-lock-variable-name-face)
+         (snippet        ,(nerd-icons-codicon "nf-cod-symbol_snippet")     :face font-lock-string-face)
+         (string         ,(nerd-icons-codicon "nf-cod-symbol_string")      :face font-lock-string-face)
+         (struct         ,(nerd-icons-codicon "nf-cod-symbol_structure")   :face font-lock-variable-name-face)
+         (text           ,(nerd-icons-codicon "nf-cod-text_size")          :face font-lock-doc-face)
+         (typeparameter  ,(nerd-icons-codicon "nf-cod-list_unordered")     :face font-lock-type-face)
+         (type-parameter ,(nerd-icons-codicon "nf-cod-list_unordered")     :face font-lock-type-face)
+         (unit           ,(nerd-icons-codicon "nf-cod-symbol_ruler")       :face font-lock-constant-face)
+         (value          ,(nerd-icons-codicon "nf-cod-symbol_field")       :face font-lock-builtin-face)
+         (variable       ,(nerd-icons-codicon "nf-cod-symbol_variable")    :face font-lock-variable-name-face)
+         (t              ,(nerd-icons-codicon "nf-cod-code")               :face font-lock-warning-face)))
+    )
+  :config
+  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
    #+end_src
 ** =cape=: 補完 backend
    :PROPERTIES:
@@ -1713,18 +1882,83 @@ Emacs*useXIM: false
   :END:
   MUA として Wanderlust を使っている
   - [[https://wanderlust.github.io/wl-docs/wl-ja.html][Wanderlust – Yet Another Message Interface On Emacsen –]]
+** TODO rail [/]
+   :PROPERTIES:
+   :CUSTOM_ID: org587385af
+   :END:
+   SEMI や FLIM などの UA の表示に [[http://uwabami.github.com/rail/][rail]] を使っている.
+   ちなみに rail を有効にすると, 以下の様に User-Agent が表示される
+   #+html: <div class="col-7 px2 mx-auto">
+   #+html: <amp-img layout="responsive" width=640 height=400 src="https://uwabami.github.io/software/rail/wanderlust_with_or_without_rail.webp" alt="rail preview"></amp-img>
+   #+html: </div>
+
+   - [ ] autoload を使うように改善すること.
+
+   #+begin_src emacs-lisp :tangle init-wl.el
+(leaf rail
+  :init
+  (unless (locate-library "rail")
+    (package-vc-install :url "https://github.com/uwabami/rail"))
+  (setq rail-emulate-genjis t)
+  :require t
+  )
+   #+end_src
+** SEMIの設定
+   :PROPERTIES:
+   :CUSTOM_ID: org88726f1b
+   :END:
+   Wanderlust が本文の表示に使う SEMI の設定など
+   #+begin_src emacs-lisp :tangle init.el
+(leaf semi
+  :init
+  (leaf mime-view
+    :custom
+      `(
+        ;; HTMLメールの表示に eww を使う
+        (mime-view-text/html-previewer . 'shr)
+        ;; 添付ファイルは run-mailcap で ← ちゃんと動いていない気が.
+        (mime-view-mailcap-files . '("~/.mailcap"))
+        ;; MIME の例の保存先の変更
+        (mime-situation-examples-file
+         . , (expand-file-name "mime-example" my:d:tmp))
+        ;; text/plain を html より優先.
+        (mime-view-type-subtype-score-alist . '(((text . plain) . 1)
+                                                ((text . html)  . 0)))
+        ))
+  (leaf mime-play
+    :custom
+    `(
+      ;; 添付ファイルを即座に削除しない ← xdg-open で開く様に
+      (mime-play-delete-file-immediately . nil)
+      ;; 音を鳴らすアレやコレの無効化...?
+      (mime-play-find-every-situations . nil)
+      )
+    )
+  )
+   #+end_src
+     =~/.mailcap= 自体は以下
+     #+begin_src conf :tangle no
+applications/*; xdg-open %s;
+image/*; xdg-open %s;
+video/*; xdg-open %s;
+     #+end_src
 ** Emacs 本体側の設定(wanderlust)
    :PROPERTIES:
    :CUSTOM_ID: org47a9ca66
    :END:
+
+   - ISO-2022-JP を CP50220 として扱う.
+     [[http://d.hatena.ne.jp/kiwanami/20091103/1257243524][Wanderlustと文字コード]] も参照のこと.
+
    Emacs 本体での設定は以下の通り. Wanderlust 自体の設定は別ファイルで行なわれる．
    ここでは =wl-init-file= を指定することで, 設定ファイルを明示している．
    #+begin_src emacs-lisp :tangle init.el
 (leaf wl
   :if (file-exists-p "/etc/emacs/site-start.d/65wl-beta.el")
   :defvar (wl-address-file
-          wl-folders-file
-          elmo-passwd-alist-file-name)
+           wl-folders-file
+           elmo-passwd-alist-file-name
+           wl-info-file ) ;; → pl-setq
   :commands (wl
              wl-other-frame
              wl-draft
@@ -1745,12 +1979,17 @@ Emacs*useXIM: false
   :advice (:override wl-mode-line-buffer-identification
                      my:wl-mode-line-buffer-identification)
   :custom
-  `((elmo-msgdb-directory     . my:d:wl-cache-directory)
-    (read-mail-command        . #'wl)
-    (wl-init-file
-     . ,(expand-file-name "init-wl" user-emacs-directory))
-    (wl-demo                  . nil)
+  `((elmo-msgdb-directory . my:d:wl-cache-directory)
+    (read-mail-command    . #'wl)
+    (wl-init-file         . ,(expand-file-name "init-wl" user-emacs-directory))
+    (wl-demo              . nil)
+    (wl-mime-charset      . 'iso-2022-jp)
+    ;; From に応じて送受信サーバを切り替えるために. → hook も参照
+    (wl-template-visible-select . t)
     )
+  :bind ((:wl-draft-mode-map
+          ("C-c C-n" . wl-template-select))
+         )
   :init
   (define-mail-user-agent
     'wl-user-agent
@@ -1758,9 +1997,28 @@ Emacs*useXIM: false
     'wl-draft-send
     'wl-draft-kill
     'mail-send-hook)
+  :config
+  ;; 個人情報の読み込み
+  (load wl-info-file)
+  ;; 🤔
+  (remove-hook 'wl-draft-send-hook 'wl-draft-config-exec)
   :pl-setq (wl-address-file
             wl-folders-file
-            elmo-passwd-alist-file-name)
+            elmo-passwd-alist-file-name
+            wl-info-file)
+  :hook
+  `((wl-init-hook . (lambda()
+                      (add-to-list 'mime-charset-coding-system-alist
+                                   '(iso-2022-jp . cp50220))
+                      ;; fxxkin outlook
+                      (add-to-list 'mime-charset-coding-system-alist
+                                   '(gb2312 . gbk))))
+    ;; From に応じて wl-from, wl-envelope-from,
+    ;; smtp サーバを送信時に変更.
+    (wl-draft-send-hook . (lambda()
+                            (set (make-local-variable 'wl-from)
+                                 (std11-fetch-field "From"))))
+    )
   )
    #+end_src
    割と =/etc/emacs/site-start.d/65wl-beta.el= と重複している気がするが.
@@ -1776,9 +2034,9 @@ Emacs*useXIM: false
      #+begin_src emacs-lisp :tangle init-wl.el
 (eval-when-compile
   (require 'leaf-keywords)
-  (require 'cp5022x)
+  ;; (require 'cp5022x)
   (require 'wl)
-  (require 'mime-def)
+  ;; (require 'mime-def)
   (leaf-keywords-init)
   )
      #+end_src
@@ -1786,41 +2044,6 @@ Emacs*useXIM: false
     :PROPERTIES:
     :CUSTOM_ID: org9638e017
     :END:
-**** rail
-     :PROPERTIES:
-     :CUSTOM_ID: org587385af
-     :END:
-     SEMI や FLIM などの UA の表示に [[http://uwabami.github.com/rail/][rail]] を使っている.
-     ちなみに rail を有効にすると, 以下の様に User-Agent が表示される
-     #+html: <div class="col-7 px2 mx-auto">
-     #+html: <amp-img layout="responsive" width=640 height=400 src="https://uwabami.github.io/software/rail/wanderlust_with_or_without_rail.webp" alt="rail preview"></amp-img>
-     #+html: </div>
-
-     #+begin_src emacs-lisp :tangle init-wl.el
-(leaf rail
-  :init
-  (unless (locate-library "rail")
-    (package-vc-install :url "https://github.com/uwabami/rail"))
-  (setq rail-emulate-genjis t)
-  :require t
-  )
-     #+end_src
-**** cp5022x を使う
-     :PROPERTIES:
-     :CUSTOM_ID: orga4113e25
-     :END:
-     ISO-2022-JP を CP50220 として扱う.
-     [[http://d.hatena.ne.jp/kiwanami/20091103/1257243524][Wanderlustと文字コード]] も参照のこと.
-     #+begin_src emacs-lisp :tangle init-wl.el
-(add-to-list 'mime-charset-coding-system-alist
-             '(iso-2022-jp . cp50220))
-;; fxxkin outlook
-(add-to-list 'mime-charset-coding-system-alist
-             '(gb2312 . gbk))
-;;
-(setq wl-mime-charset 'iso-2022-jp)
-;; (setq wl-mime-charset 'utf-8-unix)
-     #+end_src
 **** SEMI の追加設定
      :PROPERTIES:
      :CUSTOM_ID: orgc4ec7a62
@@ -1828,15 +2051,14 @@ Emacs*useXIM: false
      HTML メールを表示するために emacs-w3m を使う.
      mime-setup がロードされる前に記述する必要あり.
      #+begin_src emacs-lisp :tangle init-wl.el
-(leaf mime-setup
-  :preface
-  ;; (leaf w3m-load)
-  ;; (leaf mime-w3m :require t)
-  (setq mime-view-text/html-previewer 'shr)
-  )
+;; (leaf mime-setup
+;;   :preface
+;;   ;; (leaf w3m-load)
+;;   ;; (leaf mime-w3m :require t)
+;;   )
      #+end_src
      どのアプリケーションで開くか → =xdg-open= に丸投げ．
-     #+begin_src emacs-lisp :tangle init-wl.el
+     #+begin_src emacs-lisp :tangle no
 ;; (defvar my:mime-preview-play-current-entity-appname "xdg-open"
 ;;   "meadow なら fiber, mac なら open, linux なら xdg-open")
 ;; (cond
@@ -1871,31 +2093,25 @@ Emacs*useXIM: false
 ;;                              filename)))
 ;;         (set-alist 'mime-mailcap-method-filename-alist process filename)
 ;;         (set-process-sentinel process 'mime-mailcap-method-sentinel)))))
-(setq mime-play-delete-file-immediately nil)
-(setq mime-view-mailcap-files '("~/.mailcap"))
-     #+end_src
-     =~/.mailcap= 自体は以下
-     #+begin_src conf :tangle no
-applications/*; xdg-open %s;
-image/*; xdg-open %s;
-video/*; xdg-open %s;
+;; (setq mime-play-delete-file-immediately nil)
+;; (setq mime-view-mailcap-files '("~/.mailcap"))
      #+end_src
      MIME の例の保存先の変更
      #+begin_src emacs-lisp :tangle init-wl.el
-(setq mime-situation-examples-file
-      (concat my:d:tmp "mime-example"))
+;; (setq mime-situation-examples-file
+;;       (concat my:d:tmp "mime-example"))
      #+end_src
      text/plain を html より優先.
      #+begin_src emacs-lisp :tangle init-wl.el
-(setq mime-view-type-subtype-score-alist
-      '(((text . plain) . 1)
-        ((text . html)  . 0)
-        ))
+;;(setq mime-view-type-subtype-score-alist
+;;      '(((text . plain) . 1)
+;;        ((text . html)  . 0)
+;;        ))
      #+end_src
      音を鳴らすアレやコレの無効化
      #+begin_src emacs-lisp :tangle init-wl.el
-(setq mime-play-find-every-situations nil
-      process-connection-type nil)
+;; (setq mime-play-find-every-situations nil
+;;       process-connection-type nil)
      #+end_src
 *** 個人情報の設定
     :PROPERTIES:
@@ -1903,7 +2119,7 @@ video/*; xdg-open %s;
     :END:
     具体的な設定内容は以下のファイルに置いている
     #+begin_src emacs-lisp :tangle init-wl.el
-(load (concat my:d:password-store "/wl-info.gpg"))
+;; (load (concat my:d:password-store "/wl-info.gpg"))
     #+end_src
     設定している内容は以下の通り
 **** 自身のメールアドレスと購読メーリングリストの設定
@@ -2000,23 +2216,23 @@ video/*; xdg-open %s;
      ついでに template の切り替えに関して幾つか設定.
      #+begin_src emacs-lisp :tangle init-wl.el
 ;; template 切り替え時に 内容を表示
-(setq wl-template-visible-select t)
+;; (setq wl-template-visible-select t)
      #+end_src
      =draft-mode= で =C-c C-n= をするとテンプレートを切り替え
      #+begin_src emacs-lisp  :tangle init-wl.el
-(define-key wl-draft-mode-map "\C-c\C-n" 'wl-template-select)
+;; (define-key wl-draft-mode-map "\C-c\C-n" 'wl-template-select)
      #+end_src
      from に応じて wl-from, wl-envelope-from,
      送信 smtp サーバを変更する送信時に変更
      #+begin_src emacs-lisp  :tangle init-wl.el
-(add-hook 'wl-draft-send-hook
-          (lambda ()
-            (set (make-local-variable 'wl-from)
-                 (std11-fetch-field "From"))))
+;; (add-hook 'wl-draft-send-hook
+;;           (lambda ()
+;;             (set (make-local-variable 'wl-from)
+;;                  (std11-fetch-field "From"))))
      #+end_src
      送信時に自動的に wl-draft-config-alist を適用...しない?
      #+begin_src emacs-lisp  :tangle init-wl.el
-(remove-hook 'wl-draft-send-hook 'wl-draft-config-exec)
+;; (remove-hook 'wl-draft-send-hook 'wl-draft-config-exec)
      #+end_src
 *** 基本設定
     :PROPERTIES:
@@ -3377,6 +3593,10 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
       ))
   :custom
   `((org-agenda-day-face-function
+     ;; ---
+     ;; 「org-modeのアジェンダで土曜日と日本の祝日を色づけする」
+     ;; https://misohena.jp/blog/2021-08-29-colorize-saturday-and-japanese-holidays-in-org-agenda.html
+     ;; ちょっと順番を変えて(「祝日, 日曜」を赤にしたいので)先に「日曜か日本の祝日」をチェックしている
      . (lambda (date)
          (let ((face
                 (cond
@@ -3399,10 +3619,12 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     (org-agenda-inhibit-startup . t)
     (org-agenda-ignore-drawer-properties . '(effort appt))
     (org-agenda-repeating-timestampo-show-all . t)
+    ;;
     (org-agenda-sorting-strategy . '((agenda habit-down time-up timestamp-down priority-down category-keep)
                                      (todo timestamp-down priority-down category-keep)
                                      (tags priority-down category-keep)
                                      (search category-keep)))
+    ;; あんまり使っていないので止めるかも.
     (org-agenda-custom-commands . '(("n" "agenda and all TODO list"
                                      (
                                       (agenda ""
@@ -3502,9 +3724,9 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
 (leaf org-capture
   :if (file-directory-p my:d:org)
   :commands org-capture
-  :pl-setq
-  ;; 名前がイケてないっ!
-  (my:org:calendar1 my:org:calendar2 my:org:calendar3 my:org:calendar4)
+    ;; 名前がイケてないっ!
+  :defvar (my:org:calendar1 my:org:calendar2 my:org:calendar3 my:org:calendar4)
+  :pl-setq (my:org:calendar1 my:org:calendar2 my:org:calendar3 my:org:calendar4)
   :config
   (defun my:org-journal-add-date-entry-capture ()
     (org-journal-new-entry t)
@@ -3578,6 +3800,10 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   :if (and my:d:password-store
            (and (file-directory-p my:d:org)
                 (executable-find "curl")))
+  :defvar
+  (org-gcal-client-id org-gcal-client-secret org-gcal-file-alist)
+  :pl-setq
+  (org-gcal-client-id org-gcal-client-secret org-gcal-file-alist)
   :ensure t
   ;; :el-get (org-gcal
   ;;          :type github
@@ -3649,10 +3875,6 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     (org-gcal-remove-api-cancelled-events  . t)
     (alert-log-messages    . t)
     (alert-default-style   .'libnotify))
-  :pl-setq
-  (org-gcal-client-id
-   org-gcal-client-secret
-   org-gcal-file-alist)
   )
    #+end_src
 ** OrgとRedmine の連携: =orgmine=
@@ -4350,134 +4572,10 @@ pdflang={%l}}
 ;;     (Info-selection #'info-colors-fontify-node))
 ;;   )
   #+end_src
-* テーマ, フォント, モードライン, などなど
+* テーマとモードライン
   :PROPERTIES:
   :CUSTOM_ID: orgbf458527
   :END:
-** SOMEDAY フォント [0/1]
-   :PROPERTIES:
-   :CUSTOM_ID: org356b9857
-   :END:
-   試行錯誤中. とはいえ, GUIで使う事は滅多に無いのでなかなか弄る機会が無い.
-  #+begin_src emacs-lisp :tangle init.el
-;;;###autoload
-(defun my:load-window-config ()
-  "load window-system specific settings"
-  (interactive)
-  (progn
-    (set-frame-parameter nil 'alpha 90)
-    (set-face-attribute 'default nil
-                        :family "FSMRMP"
-                        :height 95)
-    (set-face-attribute 'fixed-pitch nil
-                        :family "FSMRMP"
-                        :height 95)
-    (set-face-attribute 'variable-pitch nil
-                        :family "FSMRMP"
-                        :height 95)
-    ;; Japanese
-    (set-fontset-font nil
-                      'japanese-jisx0213.2004-1
-                      (font-spec :family "FSMRMP" :height 95))
-    (set-fontset-font nil
-                      'japanese-jisx0213-2
-                      (font-spec :family "FSMRMP" :height 95))
-    (set-fontset-font nil
-                      'katakana-jisx0201
-                      (font-spec :family "FSMRMP" :height 95))
-    ;; Latin with pronounciation annotations
-    (set-fontset-font nil
-                      '(#x0080 . #x024F)
-                      (font-spec :family "FSMRMP" :height 95))
-    ;; Math symbols
-    (set-fontset-font nil
-                      '(#x950 . #x22FF)
-                      (font-spec :family "FSMRMP" :height 95))
-    ;; Greek
-    (set-fontset-font nil
-                      '(#x0370 . #x03FF)
-                      (font-spec :family "FSMRMP" :height 95))
-    ;; Some Icons
-    (set-fontset-font nil
-                      '(#xE0A0 . #xEEE0)
-                      (font-spec :family "FSMRMP" :height 95))
-    ))
-;;;###autoload
-(defun my:load-side-window-config ()
-  "load window-system specific settings"
-  (interactive)
-  (progn
-    (set-face-attribute 'default nil
-                        :family "FSMRMP"
-                        :height 135)
-    (set-face-attribute 'fixed-pitch nil
-                        :family "FSMRMP"
-                        :height 135)
-    (set-face-attribute 'variable-pitch nil
-                        :family "FSMRMP"
-                        :height 135)
-    ;; Japanese
-    (set-fontset-font nil
-                      'japanese-jisx0213.2004-1
-                      (font-spec :family "FSMRMP" :height 135))
-    (set-fontset-font nil
-                      'japanese-jisx0213-2
-                      (font-spec :family "FSMRMP" :height 135))
-    (set-fontset-font nil
-                      'katakana-jisx0201
-                      (font-spec :family "FSMRMP" :height 135))
-    ;; Latin with pronounciation annotations
-    (set-fontset-font nil
-                      '(#x0080 . #x024F)
-                      (font-spec :family "FSMRMP" :height 135))
-    ;; Math symbols
-    (set-fontset-font nil
-                      '(#x2200 . #x22FF)
-                      (font-spec :family "FSMRMP" :height 135))
-    ;; Greek
-    (set-fontset-font nil
-                      '(#x0370 . #x03FF)
-                      (font-spec :family "FSMRMP" :height 135))
-    ;; Some Icons
-    (set-fontset-font nil
-                      '(#xE0A0 . #xEEE0)
-                      (font-spec :family "FSMRMP" :height 135))
-    ))
-(leaf *gui
-  :if window-system
-  :config
-  ;; (set-frame-parameter nil 'alpha 90)
-  (setq use-default-font-for-symbols nil)
-  (scroll-bar-mode -1)
-;;  (my:load-window-config)
-  )
-  #+end_src
-  - [ ] FSMRMP のギリシャ文字が全角にならない. 要調整
-  #+BEGIN_EXAMPLE
-
-  幅の確認:
-  絵文字は全角, 他は半角で 2:1 になっているかの確認用.
-  GUI だと駄目だなぁ….
-
-|abcdefghijkl|
-|ABCDEFGHIJKL|
-|'";:-+=/\~`?|
-|∞≤≥∏∑∫|
-|×±≒≡⊆⊇|
-|αβγδεζ|
-|ηθικλμ|
-|ΑΒΓΔΕΖ|
-|ΗΘΙΚΛΜ|
-|日本語の美観|
-|あいうえおか|
-|アイウエオカ|
-|ｱｲｳｴｵｶｷｸｹｺｻｼ|
-
-| hoge                 | hogeghoe | age              |
-|----------------------+----------+------------------|
-| 今日もいい天気ですね | お、     | 等幅になった👍 🍺|
-|----------------------+----------+------------------|
-  #+END_EXAMPLE
 ** theme: =modus-theme=
    :PROPERTIES:
    :CUSTOM_ID: orgce78777d

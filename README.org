@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2024-04-30 09:15:25
+#+date: 2024-05-17 19:31:09
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -44,6 +44,11 @@
    本ファイル(=README.org=) から,
    Makefile 内の以下のスクリプトで =~/init.el= を生成し, byte-compile します.
    #+begin_src makefile-gmake :tangle no
+EMACS		?= emacs
+EMACS_VER	?= $(shell $(EMACS) --version | head -1 | cut -f 3 --d \ )
+NATIVE_COMP	?= $(shell if [ `echo "$(EMACS_VER) >= 28.1" | bc` -eq 1 ] ; then echo yes ; fi)
+
+all: init.elc
 init.el: README.org
 	@mkdir -p ~/.cache/emacs
 	@if [ ! -d ~/.cache/emacs/eln-cache ]; then \
@@ -52,15 +57,25 @@ init.el: README.org
 	@if [ ! -L eln-cache ]; then \
 		echo ";; ln -sf ~/.cache/emacs/eln-cache . "; ln -sf ~/.cache/emacs/eln-cache . ;\
 	fi
+	@if [ ! -d ~/.cache/emacs/tree-sitter ]; then \
+		echo ";; mkdir ~/.cache/emacs/tree-sitter"; mkdir ~/.cache/emacs/tree-sitter ;\
+	fi
+	@if [ ! -L tree-sitter ]; then \
+		echo ";; ln -sf ~/.cache/emacs/tree-sitter . "; ln -sf ~/.cache/emacs/tree-sitter . ;\
+	fi
 	@mkdir -p elpa
-	@mkdir -p share
 	$(EMACS) --batch --eval \
 	   "(progn \
 		  (require 'ob-tangle) \
 		  (org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\"))"
 	$(EMACS) -l init.el --batch --eval '(kill-emacs)'
 %.elc: %.el
+	@if [ x"$(NATIVE_COMP)" = x"yes" ] ; then \
+		echo "$(EMACS) -l early-init.el -l init.el -batch -f batch-native-compile $<" ;\
+		$(EMACS) -l early-init.el -l init.el -batch -f batch-native-compile $< ;\
+	fi
 	$(EMACS) -l init.el -batch -f batch-byte-compile $<
+
    #+end_src
 * 設定ファイルのヘッダ
   :PROPERTIES:
@@ -70,17 +85,13 @@ init.el: README.org
   =lexsical-binding= を有効にしておきます．
   #+begin_src emacs-lisp :tangle init.el
 ;; -*- lexical-binding: t -*-
-;; (eval-when-compile
-;;   (require 'profiler)
-;;   (profiler-start 'cpu)
-;;   )
-  #+end_src
-  #+begin_src emacs-lisp :tangle early-init.el
-;; -*- lexical-binding: t -*-
-;; (require 'profiler)    ;; 必要に応じて有効化
+;; (require 'profiler)
 ;; (profiler-start 'cpu)
   #+end_src
-* ディレクトリ構成の修正
+  #+begin_src emacs-lisp :tangle (when (boundp 'early-init-file) "early-init.el")
+;; -*- lexical-binding: t -*-
+  #+end_src
+* TODO ディレクトリ構成の修正
   :PROPERTIES:
   :CUSTOM_ID: org60bad8a3
   :END:
@@ -96,9 +107,12 @@ init.el: README.org
      |-- README.org  ←  本ファイル．`org-babel-tangle' で init.el を生成
      |-- eln-cache/  → ~/.cache/emacs/eln-cache への symlink: native compile 出力
      |-- elpa/       ←  package.el で導入したパッケージが置かれる場所
-     `-- share/      ←  (基本的に)参照するだけの資源置き場所
+     |-- share/      ←  (基本的に)参照するだけの資源置き場所
+     `'-- tree-sitter ← ~/.cache/emacs/tree-sitter への symlink: treesit-auto のインストール先
     ~/.cache/emacs   ←  一次ファイルの置き場所
   #+end_example
+  - [ ] treesit のインストール先がハードコードされている. これを変えたいなぁ...
+
   上記ディレクトリ構成を設定ファイルで使用するために
   ディレクトリ配置を宣言しておきます。
   #+begin_src emacs-lisp :tangle init.el
@@ -110,6 +124,8 @@ init.el: README.org
     (expand-file-name "share/" user-emacs-directory))
   (defconst my:d:tmp
     (expand-file-name ".cache/emacs/" (getenv "HOME")))
+  (defconst my:d:cache
+    (expand-file-name ".cache/" (getenv "HOME")))
   (defconst my:d:org
     (expand-file-name "~/Nextcloud/org")))
   #+end_src
@@ -125,62 +141,42 @@ init.el: README.org
   #+end_src
   また, Emacs 27 以降は cl が読み込まれていると
   `Package cl is deprecated' が表示されるので, これを止めておきます.
+  他にも幾つかの警告を無効化しておきます.
+  特に, 意図的に =setq= を優先して使っているので,
+  debug 時以外は =free-vars= と =unresolved= も無効化しておかないと騒々しいですよね.
   #+begin_src emacs-lisp :tangle init.el
 (eval-and-compile
   (setq byte-compile-warnings t)
-  ;; (setq byte-compile-warnings '(not cl-functions free-vars docstrings unresolved))
+  (setq byte-compile-warnings '(not cl-functions free-vars docstrings unresolved))
   )
   #+end_src
-* Native Compile の挙動の調整
-  :PROPERTIES:
-  :CUSTOM_ID: orga1aef09c
-  :END:
+  native compile: 気になった時に動かしています.
+  Makefile から叩いて処理できると良いんですけどね…
   #+begin_src emacs-lisp :tangle init.el
-(eval-and-compile
-  (if (and (fboundp 'native-comp-available-p)
-           (native-comp-available-p))
-      (setq native-comp-speed  2
-            native-comp-async-report-warnings-errors 'silent
-            native-compile-target-directory (expand-file-name "eln-cache" user-emacs-directory)
-            ;; native-comp-jit-compilation-deny-list '(".*-\\(loaddefs\\|autoloads\\)\\.\\(el\\.gz\\|el\\)")
-            ))
-  (setq debug-on-error t))
+;;;###autoload
+(defun my:native-compile-async-all ()
+  (interactive)
+  (native-compile-async "~/.emacs.d/init.el")
+  (native-compile-async "~/.emacs.d/early-init.el")
+  ;; (native-compile-async "~/.emacs.d/init-wl.el")
+  (native-compile-async "~/.emacs.d/elpa" 'recursively))
   #+end_src
 * 起動の高速化
   :PROPERTIES:
   :CUSTOM_ID: orgae182d4d
   :END:
   この辺は [[https://emacs-jp.github.io/tips/startup-optimization][Emacs の起動時間を""詰める""]] を参考に.
-** =early-init.el=
+** Package初期化処理
    :PROPERTIES:
-   :CUSTOM_ID: orgcb2bfa7b
+   :CUSTOM_ID: orgd896c3a2
+   :ID:       351f7fc8-be80-46b3-86ac-d9bae80d3445
    :END:
-   Emacs >= 27 からの機能. 他にも設定しておいた方が良い事はあるかな?
-   #+begin_src emacs-lisp :tangle early-init.el
-(setq gc-cons-threshold most-positive-fixnum)
-(setq package-enable-at-startup nil
-      package-quickstart nil)
-;;
-(push '(vertical-scroll-bars . nil) default-frame-alist)
-(push '(menu-bar-lines       . nil) default-frame-alist)
-(push '(tool-bar-lines       . nil) default-frame-alist)
-(push '(scroll-bar-mode      . nil) default-frame-alist)
-(push '(blink-cursor-mode    . nil) default-frame-alist)
-(push '(column-number-mode   . nil) default-frame-alist)
-;;
-(setq load-prefer-newer noninteractive)
-;;
-(setq frame-inhibit-implied-resize t)
-;;
-(setq site-run-file nil)
-;; (setq file-name-handler-alist nil) ;; 🤔
-(setq use-file-dialog nil)
-;;
-;; (setq native-comp-speed 2
-;;       native-compile-target-directory (expand-file-name "eln-cache" user-emacs-directory))
-(provide 'early-init)
-;;; early-init.el ends here
-   #+end_src
+   #+begin_src emacs-lisp :tangle (if (boundp 'early-init-file) "early-init.el" "init.el")
+(when (or (featurep 'esup-child)
+          (fboundp 'profile-dotemacs)
+          noninteractive)
+  (setq package-enable-at-startup nil))
+    #+end_src
 ** GC の設定
    :PROPERTIES:
    :CUSTOM_ID: org77e2f299
@@ -194,30 +190,169 @@ init.el: README.org
 
    とはいえ, デフォルト値のままだと
    起動時に結構 garbage-collect が走って遅くなるので,
-   起動時と =early-init= では =most-positive-fixnum= にしておいて,
+   起動時には =most-positive-fixnum= にしておいて,
    起動後に =emacs-startup-hook= で default に戻すようにしてみた.
 
-   ついでに =idle-timer= で入力が無い時に GC を走らせることに.
-   #+begin_src emacs-lisp :tangle init.el
-(setq gc-cons-threshold most-positive-fixnum)
+   ついでに =idle-timer= で入力が無い時に GC を走らせることにする
+*** GC threshold の最大化
+    :PROPERTIES:
+    :CUSTOM_ID: org3977c5ee
+    :ID:       9bb833b8-16ba-493a-8616-7da7a810bee4
+    :END:
+    #+begin_src emacs-lisp :tangle (if (boundp 'early-init-file) "early-init.el" "init.el")
+(setq gc-cons-threshold most-positive-fixnum
+      garbage-collection-messages nil)
+    #+end_src
+*** 起動後に GC Threshold を既定値に
+    :PROPERTIES:
+    :CUSTOM_ID: org9584246f
+    :END:
+    #+begin_src emacs-lisp :tangle init.el
+(setq garbage-collection-messages nil)
 ;; Run GC every 60 seconds if emacs is idle.
 (run-with-idle-timer 60.0 t #'garbage-collect)
 (add-hook 'emacs-startup-hook
           (lambda ()
-            ;; recover default value
             (setq gc-cons-threshold 800000)))
-   #+end_src
+    #+end_src
 ** Magic File Name を一時的に無効化
    :PROPERTIES:
    :CUSTOM_ID: orgb6dd6727
    :END:
    これだけで 0.2秒縮まった. これは知見である.
-   #+begin_src emacs-lisp :tangle init.el
-(defconst my:saved-file-name-handler-alist file-name-handler-alist)
+
+   起動時には一旦空にしておいて,
+   起動後に(諸々読み込まれて)更新された =file-name-handler= と合わせて復元する.
+*** Magic File Name を無効化
+    :PROPERTIES:
+    :CUSTOM_ID: org812e4b3a
+    :ID:       da35a6a1-6164-410a-976a-e9335dd4444c
+    :END:
+    #+begin_src emacs-lisp :tangle (if (boundp 'early-init-file) "early-init.el" "init.el")
+(defvar my:saved-file-name-handler-alist file-name-handler-alist)
 (setq file-name-handler-alist nil)
+    #+end_src
+*** 起動後の Magic File Name の復元
+    :PROPERTIES:
+     :CUSTOM_ID: org42900264
+     :END:
+    起動後に =emacs-startup-hook= にて,
+    パッケージの読み込みで追加された値と save しておいた値を合わせる様に.
+     #+begin_src emacs-lisp :tangle init.el
 (add-hook 'emacs-startup-hook
           (lambda ()
-            (setq file-name-handler-alist my:saved-file-name-handler-alist)))
+            (setq file-name-handler-alist
+                  (append file-name-handler-alist my:saved-file-name-handler-alist))))
+    #+end_src
+** =early-init.el=
+   :PROPERTIES:
+   :CUSTOM_ID: orgcb2bfa7b
+   :ID:       d5e8fa0e-8fd3-4db0-bc20-f6a8c83d191b
+   :END:
+   Emacs >= 27 からの機能. 他にも設定しておいた方が良い事はあるかな?
+
+   - =package.el= の初期化処理: [[id:351f7fc8-be80-46b3-86ac-d9bae80d3445][Package初期化処理]]
+   - GC の調整: [[id:9bb833b8-16ba-493a-8616-7da7a810bee4][GC threshold の最大化]]
+   - Magic File Name に関して: [[id:da35a6a1-6164-410a-976a-e9335dd4444c][Magic File Name を無効化]]
+
+   見た目: tabbar, toolbar, menubar などの非表示, beep の無効化
+   #+begin_src emacs-lisp :tangle (if (boundp 'early-init-file) "early-init.el" "init.el")
+;; (advice-add 'x-apply-session-resources :override 'ignore)
+;; (setq inhibit-x-resources t)
+(push '(fullscreen . maximized) default-frame-alist)
+(push '(menu-bar-lines       . nil) default-frame-alist)
+(push '(tool-bar-lines       . nil) default-frame-alist)
+(push '(vertical-scroll-bars . nil) default-frame-alist)
+(push '(scroll-bar-mode      . nil) default-frame-alist)
+(push '(blink-cursor-mode    . nil) default-frame-alist)
+(push '(column-number-mode   . nil) default-frame-alist)
+(setq ring-bell-function 'ignore)
+(setq use-file-dialog nil)
+(setq use-short-answers t)
+   #+end_src
+
+   スタートアップメッセージの抑制
+   #+begin_src emacs-lisp :tangle (if (boundp 'early-init-file) "early-init.el" "init.el")
+(setq inhibit-startup-screen t)
+(setq frame-inhibit-implied-resize t)
+   #+end_src
+
+   自動生成ファイルを無効化
+   #+begin_src emacs-lisp :tangle (if (boundp 'early-init-file) "early-init.el" "init.el")
+(setq make-backup-files nil)
+(setq auto-save-default nil)
+(setq auto-save-list-file-prefix nil)
+(setq create-lockfiles nil)
+   #+end_src
+
+   外部プロセスからの読取サイズの最大値.
+   #+begin_src emacs-lisp :tangle (if (boundp 'early-init-file) "early-init.el" "init.el")
+(setq read-process-output-max (* 3 1024 1024)) ;; 3mb
+   #+end_src
+   lsp-mode なんかだと「[[https://emacs-lsp.github.io/lsp-mode/page/performance/][some of the language server responses are in 800k - 3M range.]]」とあるのだけれど,
+   「[[https://github.com/emacs-lsp/lsp-mode/discussions/3561][read-process-output-max vs system pipe capacity · emacs-lsp/lsp-mode · Discussion #3561]]」とあって,
+   どうすれば良いのか良くわからない.
+   副作用(?)は感じていないので, とりあえず 3M にしている.
+
+   Native Compile に関連する設定(Emacs 29 以降)
+   #+begin_src emacs-lisp :tangle (when (fboundp 'native-compile-async) "early-init.el")
+(setq package-native-compile t
+      native-compile-target-directory (expand-file-name "eln-cache" user-emacs-directory)
+      native-comp-jit-compilation-deny-list '(".*-\\(loaddefs\\|autoloads\\)\\.\\(el\\.gz\\|el\\)"))
+   #+end_src
+
+   以下はここで設定するのが良いのかいまいちわかっていないあれこれ.
+   #+begin_src emacs-lisp :tangle (if (boundp 'early-init-file) "early-init.el" "init.el")
+(setq history-delete-duplicates t)
+(setq vc-follow-symlinks t)
+(setq load-prefer-newer noninteractive)
+(setq site-run-file nil)
+(provide 'early-init)
+;;; early-init.el ends here
+   #+end_src
+** 起動時間の計測
+   :PROPERTIES:
+   :CUSTOM_ID: org0242b000
+   :END:
+   [[https://zenn.dev/takeokunn/articles/56010618502ccc][Emacsを世界最速級で起動する方法]] より
+   #+begin_src emacs-lisp :tangle init.el
+(defconst my:before-load-init-time (current-time))
+
+;;;###autoload
+(defun my:load-init-time ()
+  "Loading time of user init files including time for `after-init-hook'."
+  (let ((time1 (float-time
+                (time-subtract after-init-time my:before-load-init-time)))
+        (time2 (float-time
+                (time-subtract (current-time) my:before-load-init-time))))
+    (message (concat "Loading init files: %.0f [msec], "
+                     "of which %.f [msec] for `after-init-hook'.")
+             (* 1000 time1) (* 1000 (- time2 time1)))))
+(add-hook 'after-init-hook #'my:load-init-time t)
+
+(defvar my:tick-previous-time my:before-load-init-time)
+
+;;;###autoload
+(defun my:tick-init-time (msg)
+  "Tick boot sequence at loading MSG."
+  (when my:loading-profile-p
+    (let ((ctime (current-time)))
+      (message "---- %5.2f[ms] %s"
+               (* 1000 (float-time
+                        (time-subtract ctime my:tick-previous-time)))
+               msg)
+      (setq my:tick-previous-time ctime))))
+
+(defun my:emacs-init-time ()
+  "Emacs booting time in msec."
+  (interactive)
+  (message "Emacs booting time: %.0f [msec] = `emacs-init-time'."
+           (* 1000
+              (float-time (time-subtract
+                           after-init-time
+                           before-init-time)))))
+
+(add-hook 'after-init-hook #'my:emacs-init-time)
    #+end_src
 * Package 関連: [[https://emacs-jp.github.io/packages/package-management/package-el][package.el]], [[https://github.com/conao3/leaf.el][leaf.el]]
   :PROPERTIES:
@@ -231,27 +366,22 @@ init.el: README.org
    :END:
    パッケージは基本的に =package.el= で導入するので, 先ずはその設定.
    #+begin_src emacs-lisp :tangle init.el
-;; elpa/gnutls workaround
-(eval-and-compile
-;;  (when (version<=  emacs-version "26.2")  ;; => for syntax hightlight
-;;    (customize-set-variable 'gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3"))
-  (setq package-archives '(("gnu"    . "https://elpa.gnu.org/packages/")
-                           ("melpa"  . "https://melpa.org/packages/")
-                           ("org"    . "https://orgmode.org/elpa/")
-                           ("nongnu" . "https://elpa.nongnu.org/nongnu/")
-                           )
-        package-gnupghome-dir (expand-file-name ".gnupg" (getenv "HOME"))
-        package-quickstart nil
-        ;; package-quickstart-file (expand-file-name "package-quickstart.el" my:d:tmp)
+(setq package-archives '(("gnu"    . "https://elpa.gnu.org/packages/")
+                         ("melpa"  . "https://melpa.org/packages/")
+                         ("org"    . "https://orgmode.org/elpa/")
+                         ("nongnu" . "https://elpa.nongnu.org/nongnu/")
+                         )
+      package-gnupghome-dir (expand-file-name ".gnupg" (getenv "HOME"))
+      )
+(eval-when-compile
+  (when noninteractive
+    (progn
+      (package-initialize)
+      (unless (package-installed-p 'leaf)
+        (package-refresh-contents)
+        (package-install 'leaf t)
         )
-  ;; (add-hook 'kill-emacs-hook 'package-quickstart-refresh)
-  (if (and (fboundp 'native-comp-available-p)
-           (native-comp-available-p))
-      (setq package-native-compile t))
-  (package-initialize)
-  (unless (package-installed-p 'leaf)
-    (package-refresh-contents)
-    (package-install 'leaf t)
+      )
     )
   )
    #+end_src
@@ -260,17 +390,16 @@ init.el: README.org
    :CUSTOM_ID: orgc2ededbf
    :END:
    個々のパッケージの設定には[[https://github.com/conao3/leaf.el][leaf.el]]を利用します.
+   以前は el-get も利用していましたが,
+   =:vc= キーワードで =package-vc-install= を呼び出せるので, こっちを使うようになりました.
    #+begin_src emacs-lisp :tangle init.el
-  (leaf leaf-keywords
-    :doc "Use leaf as a package manager"
-    :url "https://github.com/conao3/leaf.el"
-    :ensure t
-    :init
-    (leaf blackout :ensure t)
-    (leaf hydra :ensure t)
-    :config
-    (leaf-keywords-init)
-    )
+(leaf leaf-keywords
+  :doc "Use leaf as a package manager"
+  :url "https://github.com/conao3/leaf.el"
+  :ensure t
+  :config
+  (leaf-keywords-init)
+  )
    #+end_src
 * 独自関数
   :PROPERTIES:
@@ -354,7 +483,7 @@ init.el: README.org
             (unless (member "*scratch*" (my:buffer-name-list))
               (my:make-scratch 1))))
    #+end_src
-** 行末の無駄な空白/改行を削除する
+** TODO 行末の無駄な空白/改行を削除する
    :PROPERTIES:
    :CUSTOM_ID: org1effd724
    :END:
@@ -362,6 +491,7 @@ init.el: README.org
 
    ただし, RD や Markdown だと空白行に意味があったりするので,
    必要に応じて拡張子で判断して外している．
+   → =whitespace-mode= でやった方が良いかな...🤔
    #+begin_src emacs-lisp :tangle init.el
 (defvar my:delete-trailing-whitespace-exclude-suffix
   (list "\\.rd$" "\\.md$" "\\.rbt$" "\\.rab$"))
@@ -401,8 +531,11 @@ init.el: README.org
   :PROPERTIES:
   :CUSTOM_ID: org9abae8f2
   :END:
-  shell(zsh)で設定した =PATH= などの環境変数をEmacsに引き継ぐために
+  ターミナルでEmacsを起動する場合は不要だけれど,
+  GUI でスタートアップした際に
+  shell(zsh)で設定した =PATH= などの環境変数がEmacsに渡らない場合があるので,
   [[https://github.com/purcell/exec-path-from-shell][purcell/exec-path-from-shell]] を使います.
+
   今の所
   - =DEBEMAIL=
   - =DEBFULLNAME=
@@ -415,34 +548,35 @@ init.el: README.org
   - =TEXMFHOME=
   - =WSL_DISTRO_NAME=
   - =http_proxy=
-  を読み込んでいます(多いな...).
-
-  +ターミナルでEmacsを起動する場合は不要なんだよなぁ+.
+  を読み込んでいます(ちょっと多い...😅).
   #+begin_src emacs-lisp :tangle init.el
-(leaf exec-path-from-shell
-  :ensure t
-  :custom
-  `((exec-path-from-shell-variables
-     . '("DEBEMAIL"
-         "DEBFULLNAME"
-         "GPG_AGENT_INFO"
-         "GPG_KEY_ID"
-         "PASSWORD_STORE_DIR"
-         "PATH"
-         "SHELL"
-         "SKKSERVER"
-         "TEXMFHOME"
-         "WSL_DISTRO_NAME"
-         "http_proxy"))
-    (exec-path-from-shell-arguments . nil))
+(leaf *set-environment-variable
+  (leaf exec-path-from-shell
+    :if window-system
+    :ensure t
+    :config
+    (setq exec-path-from-shell-variables '("DEBEMAIL"
+                                           "DEBFULLNAME"
+                                           "GPG_AGENT_INFO"
+                                           "GPG_KEY_ID"
+                                           "PASSWORD_STORE_DIR"
+                                           "PATH"
+                                           "SHELL"
+                                           "SKKSERVER"
+                                           "TEXMFHOME"
+                                           "WSL_DISTRO_NAME"
+                                           "http_proxy")
+          exec-path-from-shell-arguments nil)
+    (exec-path-from-shell-initialize)
+    )
   :config
-  (exec-path-from-shell-initialize)
   (setq user-full-name    (concat (getenv "DEBFULLNAME"))
         user-mail-address (concat (getenv "DEBEMAIL")))
   (defconst my:d:password-store
     (if (getenv "PASSWORD_STORE_DIR")
         (expand-file-name (concat "Emacs/" (system-name))
-                          (getenv "PASSWORD_STORE_DIR")) nil))
+                          (getenv "PASSWORD_STORE_DIR"))
+      nil))
   )
   #+end_src
 * 言語の設定
@@ -460,7 +594,7 @@ init.el: README.org
 (set-default 'buffer-file-coding-system 'utf-8)
   #+end_src
   なお, m17n.org の消滅によって上記設定に関する情報の参照元が消えた。
-  適切な参照元はどこだろう...?
+  適切な参照元はどこだろう?
 ** cp5022x.el
    :PROPERTIES:
    :CUSTOM_ID: org58d8e6f8
@@ -480,24 +614,22 @@ init.el: README.org
   (set-coding-system-priority 'utf-8 'euc-jp 'iso-2022-jp 'cp932)
   )
    #+end_src
-** East Asian Ambiguos 対応 [0/1]
+** TODO East Asian Ambiguos 対応 [0/1]
    :PROPERTIES:
    :CUSTOM_ID: orgd3ca00ac
    :END:
-   East Asian Ambiguosを2文字幅にして, ついでに
-   CJK 以外の East Asian Ambiguosと絵文字も2文字幅にするようにしています。
+   [[https://khiker.hatenablog.jp/entry/20110327/emacs_cjkamb][Emacs23(以降) と 曖昧幅文字(East asian ambiguous)]] あたりも参考に.
+
    拙作の修正ロケールはこちら: [[https://github.com/uwabami/locale-eaw-emoji]]
+   → 最近は WezTerm を使っているので, 全て halfwidth にしました.
+   (環境が, いわゆる set-language-environment "Japanese" と判定されると, EAW は 2文字幅に設定されてしまいます).
    #+begin_src emacs-lisp :tangle init.el
 (leaf locale-eaw-emoji
   :vc (:url "https://github.com/uwabami/locale-eaw-emoji")
-  :hook
-  `(;;(emacs-startup-hook . eaw-and-emoji-fullwidth)
-    ;; (emacs-startup-hook . eaw-half-emoji-fullwidth)
-    (emacs-startup-hook . eaw-halfwidth)
-   )
+  :hook (emacs-startup-hook . eaw-halfwidth)
   )
    #+end_src
-   - [ ] 最近, EAWは一文字幅強制の方が良いかなぁ, とか悩み中.
+   - [ ] リテラシーの低い人からのメールで丸囲み数字が良く表われてシンドい(見切れる). 適宜マッピングできないモンだろうか….
 ** フォント
   :PROPERTIES:
   :CUSTOM_ID: org356b9857
@@ -527,38 +659,19 @@ Emacs.reverseVideo: true
  #+begin_src emacs-lisp :tangle init.el
 (leaf *gui
   :if window-system
-  :custom
-  `(;; (use-default-font-for-symbols . nil)
-    (scalable-fonts-allowed       . nil)
-    (buffer-face-mode-face        . 'fixed-pitch)
-   )
-  :init
-  (setq use-default-font-for-symbols nil)
+  :config
+  (setq scalable-fonts-allowed nil
+        buffer-face-mode-face 'fixed-pitch
+        use-default-font-for-symbols nil)
   (set-frame-parameter nil 'alpha 90)
-  (set-frame-parameter nil 'fullscreen 'maximized)
   (set-face-attribute 'default nil
-                      :family "UDEV Gothic NF"
+                      :family "PlemolJP Console NF"
                       :height 135)
-  ;; ≒ が全角幅なので…
-  (set-fontset-font nil #x2252 (font-spec :family "PlemolJP Console NF"))
-  ;; emoji の幅が合わない⇒ Twitter Color Emoji は monospace?
-  (set-fontset-font nil '(#x1F004 . #x1FFFD) (font-spec :family "Twitter Color Emoji"))
-  ;;
-  ;; Variable pitch が嫌いです.
-  (dolist (face
-           '(fixed-pitch
-             fixed-pitch-serif
-             variable-pitch
-             variable-pitch-text
-             help-for-help-header)
-             )
-    ;; まだありそう...
-    (set-face-attribute face nil :family 'unspecified :height 'unspecified :inherit 'default))
-  :hook
-  (minibuffer-setup-hook . (lambda()
-                             (buffer-face-set 'fixed-pitch)))
+  ;; 高さは合わないが幅はなんとなる揃う様になった, 様な？
+  (set-fontset-font nil '(#x1F004 . #x1FFFD) (font-spec :family "Noto Color Emoji" :size 24))
 )
  #+end_src
+ 表示のテスト
  #+BEGIN_EXAMPLE
  幅の確認: 絵文字は全角, 他は半角で 2:1 になっているかの確認用.
 
@@ -575,17 +688,15 @@ Emacs.reverseVideo: true
 
 | hoge                 | hogeghoe | age              |
 |----------------------+----------+------------------|
-| 今日もいい天気ですね | お、     | 等幅になった👍 🍺|
+| 今日もいい天気ですね | お、     | 等幅なった👍 🍺🤔|
 |----------------------+----------+------------------|
  #+END_EXAMPLE
 *** アイコンフォント: =nerd-icons=
    :PROPERTIES:
    :CUSTOM_ID: orgd903bf1d
    :END:
-   以前は all-the-icons を利用していた.
-   - Nerd Fonts の ver.2 まではアイコンが
-     PUA をはみ出していて異体字の表示に支障があったのだけれど
-     ver.3 からこれが解消された
+   以前は all-the-icons を利用していたけれども
+   - Nerd Fonts の ver.2 まではアイコンが PUA をはみ出していて異体字の表示に支障があったから → ver.3 からこれが解消された
    - ターミナルでの利用の際に複数フォントはシンドい.
    ということで [[https://github.com/rainstormstudio/nerd-icons.el][nerd-icons]] に乗り換えた.
    #+begin_src emacs-lisp :tangle init.el
@@ -593,11 +704,7 @@ Emacs.reverseVideo: true
   :ensure t
   :defvar nerd-icons-mode-icon-alist
   :commands (nerd-icons-codicon nerd-icons-faicon)
-  :custom
-  `((nerd-icons-font-family    . "UDEV Gothic NF")
-    ;; (nerd-icons-scale-factor   . 0.8)
-    ;; (nerd-icons-default-adjust . 0)
-    )
+  (setq nerd-icons-family "PlemolJP Console NF")
   :defer-config
   (add-to-list 'nerd-icons-mode-icon-alist
                '(wl-folder-mode nerd-icons-mdicon "nf-md-folder" ))
@@ -611,7 +718,8 @@ Emacs.reverseVideo: true
 (leaf nerd-icons-dired
   :ensure t
   :hook
-  (dired-mode . nerd-icons-dired-mode))
+  (dired-mode . nerd-icons-dired-mode)
+  )
    #+end_src
 * 主にEmacs本体, および同梱されている拡張に関する設定
   :PROPERTIES:
@@ -626,189 +734,191 @@ Emacs.reverseVideo: true
 (leaf cus-edit
   :preface
   (setq custom-file (expand-file-name "custom.el" my:d:tmp))
-  :custom
-  `((custom-file . ,(expand-file-name "custom.el" my:d:tmp)))
   :hook
   `((kill-emacs-hook . (lambda ()
                          (if (file-exists-p custom-file)
                              (delete-file custom-file)))))
   )
    #+end_src
-** =customize= で設定していたアレコレ
+** 雑多な設定など: 標準関数
    :PROPERTIES:
-   :CUSTOM_ID: orgaee31636
+   :CUSTOM_ID: org2a427bfe
    :END:
-   =custom.el= にある設定は極力こちらに移すようにしている.
+   Emacs の C ソースコードで定義されてる関数に関する設定や
+   =custom.el= にあった雑多な設定.
    - 大抵の場合ターミナル内で =-nw= として起動するし,
      メニューは触ったことないので使わないので,
      フレーム, ツールバー等を非表示にする．
    - =.elc= と =.el= の timestamp を比較し, 新しい方を読み込む
     (=load-prefer-newer= は Emacs >= 24.4 から).
    - yes or no を y or n に
-   他にもイロイロと. 設定が増えてきたら分ける.
+   他にもイロイロと. 設定が増えてきたり複雑になったら分ける.
    #+begin_src emacs-lisp :tangle init.el
-(leaf cus-start
-  :custom
-  `(
-    ;; 表示
-    (ring-bell-function     . 'ignore)   ; ベル無効化
-    ;; 編集
-    (tab-width              . 4)    ;; tab 幅 4
-    (indent-tabs-mode       . nil)  ;; tab ではインデントしない
-    (fill-column            . 78)   ;; RFC5322 風味
-    (truncate-lines         . nil)  ;; 折り返し無し
-    (truncate-partial-width-windows . nil)
-    (paragraph-start        . '"^\\([ 　・○<\t\n\f]\\|(?[0-9a-zA-Z]+)\\)")
-    (auto-fill-mode         . nil)
-    (next-line-add-newlines . nil)  ;; バッファ終端で newline を入れない
-    (read-file-name-completion-ignore-case . t)  ; 大文字小文字区別無し
-    (save-abbrevs           . 'silent)
-    ;; backup
-    (auto-save-list-file-prefix . ,(expand-file-name ".saves-" my:d:tmp))
-    (auto-save-default       . t)
-    (auto-save-timeout       . 15)
-    (auto-save-interval      . 60)
-    (make-backup-files       . t)
-    (backup-by-copying       . t)  ;; symlink は使わない
-    (backup-directory-alist  . '(("." . ,my:d:tmp)))
-    (auto-save-file-name-transforms . '((".*" ,my:d:tmp t)))
-    (version-control         . nil)
-    (kept-new-versions       . 2)
-    (kept-old-versions       . 2)
-    (delete-old-versions     . t)
-    (delete-auto-save-files  . t)
-    ;; undo/redo - 数字に根拠無し
-    (undo-limit              . 200000)
-    (undo-strong-limit       . 260000)
-    (history-length          . t)  ;; 無制限(の筈)
-    ;; (save-silently           . t)
-    (use-short-answers       . t)
-    ;;
-    (safe-local-variable-values
-     . '((org-link-file-path-type . absolute)))
-    ;;
-    (native-comp-jit-compilation-deny-list
-     . '(".*-\\(loaddefs\\|autoloads\\)\\.\\(el\\.gz\\|el\\)"))
+(leaf startup
+  :config
+  (setq initial-scratch-message nil          ;; scratch buffer は空っぽで.
+        inhibit-startup-echo-area-message t  ;; minibuffer も静かに.
+        ;;;
+        ;; 昔設定していたアレコレは以下の様にマトめられていた.
+        ;; alias: inhibit-splash-screen → inhibit-startup-screen
+        ;; alias: inhibit-startup-message → inhibit-startup-screen
+        ;; inhibt-startup-screen は early-init.el へ
+        ;;;
+        ;; 自動保存
+        auto-save-list-file-prefix (concat my:d:tmp "saves-")
+
+        )
+  )
+(leaf simple
+  :config
+  (setq next-line-add-newlines nil ;; バッファ終端で newline を入れない
+        line-number-mode nil       ;; modeline に行番号は表示しない
+        )
+  )
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(leaf minibuffer
+  :config
+  (setq read-file-name-completion-ignore-case t ;; 大文字小文字区別無し
+        )
+  )
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(leaf files
+  :config
+  (setq save-abbrevs 'silent ;; 略語は静かに保存しておく
+        ;; 自動保存の保存先
+        auto-save-file-name-transforms `((".*" ,my:d:tmp  t))
+        ;; backup で symlink は使わない
+        backup-by-copying t
+        ;; backup ファイルの保存先
+        backup-directory-alist  `((".*" . ,my:d:tmp))
+        ;; backup ファイルの世代管理
+        version-control t
+        ;; 何世代残すか?
+        kept-new-versions 5
+        kept-old-versions 5
+        delete-old-versions t
+        )
+  )
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; 変更履歴の保存
+(leaf savehist
+  :config
+  (setq savehist-file (expand-file-name "history" my:d:tmp)
+        )
+  )
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(leaf saveplace
+  ;; 前回の修正位置の保存
+  :config
+  (setq save-place-file (expand-file-name "emacs-places"  my:d:tmp)
+        save-place-ignore-files-regexp
+        "\\(\\(?:COMMIT_EDITMSG\\|hg-editor-[[:alnum:]]+\\.txt\\|svn-commit\\.tmp\\|bzr_log\\.[[:alnum:]]+\\)$\\)\\|\\(\\`/[^/:]+:[^/:]*:\\)"
+        )
+  )
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(leaf uniquify
+  :config
+  ;; file path の表示
+  (setq uniquify-buffer-name-style 'post-forward-angle-brackets
+        uniquify-min-dir-content 1
+        )
+  )
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(leaf *built-in*
+  :bind* ("C-c C-j" . browse-url-at-point)
+  :preface
+  ;; 必要なのか？ :init で良くない？
+  (defvar tramp-persistency-file-name (expand-file-name "tramp" my:d:tmp))
+  :init
+  (leaf server :commands (server-running-p))
+  ;;
+  (if (file-directory-p "~/Sources/Git/salsa.debian.org/rlb/deb-emacs/src")
+      (setq find-function-C-source-directory "~/Sources/Git/salsa.debian.org/rlb/deb-emacs/src"))
+  (setq auto-save-interval 60     ;; 60秒毎に一時保存
+        delete-auto-save-files t  ;;
+        safe-local-variable-values '((org-link-file-path-type . absolute))
+   ;;; 編集関連
+        ;; tab 幅 4
+        tab-width 4
+        ;; RFC5322 風味
+        fill-column 78
+        ;; 折り返し無し
+        truncate-lines nil
+        truncate-partial-width-windows nil
+        auto-save-default 15
+        ;; 無制限(の筈)
+        history-length t
+        use-short-answers t
+        load-prefer-newer t
+        ;; 対応する括弧を強調表示: 不等号でも反応しちゃうのが玉に瑕.
+        show-paren-style 'mixed
+        ;; ファイルが変更されたら再読み込み
+        auto-revert-interval 0.1
+        ;; ファイル内の timestamp の更新
+        time-stamp-active t
+        time-stamp-line-limit 10
+        time-stamp-start "$Lastupdate: 2"
+        time-stamp-end "\\$"
+        time-stamp-format "%Y-%02m-%02d %02H:%02M:%02S"
+        ;; remote file の編集 - tramp
+        tramp-persistency-file-name (expand-file-name "tramp" my:d:tmp)
+        tramp-completion-reread-directory-timeout nil
+        remote-file-name-inhibit-cache nil
+        vc-ignore-dir-regexp (format "\\(%s\\)\\|\\(%s\\)"
+                                     locate-dominating-stop-dir-regexp
+                                     tramp-file-name-regexp)
+        ;; ファイル保存先を ~/.emacs.d 以下にブチ撒ける諸々の整理
+        url-configuration-directory (expand-file-name "url" my:d:tmp)
+        nsm-settings-file (expand-file-name "nsm.data" my:d:tmp)
+        bookmark-default-file (expand-file-name "bookmarks" my:d:tmp)
+        eshell-directory-name (expand-file-name "eshell" my:d:tmp)
+        )
+  :hook
+  `(;; hl-line: 現在行のハイライト
+    (emacs-startup-hook . global-hl-line-mode)
+    ;; simple:
+    (emacs-startup-hook . (lambda ()
+                            ;; tab ではインデントしない
+                            (setq-default indent-tabs-mode nil
+                                          auto-fill-mode nil)))
+    ;; transinet-mark: 選択リージョンに色付け
+    (emacs-startup-hook . transient-mark-mode)
+    ;; 対応する括弧を強調表示
+    (emacs-startup-hook . show-paren-mode)
+    ;; 変更履歴の保存
+    (emacs-startup-hook . savehist-mode)
+    ;; 3日変更の無かった buffer を自動的に閉じる
+    (emacs-startup-hook . midnight-mode)
+    ;; 前回の修正位置の保存
+    (emacs-startup-hook . save-place-mode)
+    ;; server 起動
+    (emacs-startup-hook . (lambda ()
+                            (unless (server-running-p)
+                              (server-start))))
+    ;; ファイルが変更されたら再読み込み
+    (find-file-hook . global-auto-revert-mode)
+    ;; timestamp の更新
+    (before-save-hook . time-stamp)
+    ;; tramp の一時ファイルは削除
+    (kill-emacs-hook . (lambda ()
+                         (if (file-exists-p tramp-persistency-file-name)
+                             (delete-file tramp-persistency-file-name))))
     )
   :config
-  (when (boundp 'load-prefer-newer)
-    (setq load-prefer-newer t))
-  ;; yes or no を y or n に
   (when (< emacs-major-version 28) ;; >
     (fset 'yes-or-no-p 'y-or-n-p))
-  )
-  #+end_src
-** =startup=: 起動は静かに
-   :PROPERTIES:
-   :CUSTOM_ID: org9eac26e0
-   :END:
-  #+begin_src emacs-lisp :tangle init.el
-(leaf startup
-  :custom
-  ((inhibit-startup-screen            . t)
-   (inhibit-startup-message           . t)
-   (inhibit-startup-echo-area-message . t)
-   (initial-scratch-message           . nil)
-   )
-  )
-  #+end_src
-** =hl-mode=: 現在行のハイライト
-   :PROPERTIES:
-   :CUSTOM_ID: org58ba514c
-   :END:
-  #+begin_src emacs-lisp :tangle init.el
-(leaf hl-line
-  :hook
-  (emacs-startup-hook . global-hl-line-mode)
-  )
-  #+end_src
-** 選択リージョンに色付け
-   :PROPERTIES:
-   :CUSTOM_ID: orgd5c20561
-   :END:
-  #+begin_src emacs-lisp :tangle init.el
-(leaf simple
-  :hook
-  (emacs-startup-hook . transient-mark-mode)
-  )
-  #+end_src
-** =show-paren-mode=: 対応する括弧を強調表示
-   :PROPERTIES:
-   :CUSTOM_ID: org281c29f0
-   :END:
-  #+begin_src emacs-lisp :tangle init.el
-(leaf paren
-  :custom
-  ((show-paren-style  . 'mixed))
-  :hook
-  (emacs-startup-hook . show-paren-mode)
-  )
-  #+end_src
-** =linum-mode= : 行番号表示
-   :PROPERTIES:
-   :CUSTOM_ID: orgdd3a7c08
-   :END:
-   必要に応じて有効にするので, 基本使わない.
-   通常はモードラインに行番号や桁番号を表示しないようする.
-   ついでに =linum-mode= を有効にした場合の桁表示を 5 桁に.
-  #+begin_src emacs-lisp :tangle init.el
-(leaf line-number-mode
-  :custom
-  ((linum-format     . "%5d ")
-   (line-number-mode . nil))
-  )
-  #+end_src
-** =autorevert=: ファイルが変更されたら再読み込み
-   :PROPERTIES:
-   :CUSTOM_ID: org41afd6b6
-   :END:
-  #+begin_src emacs-lisp :tangle init.el
-(leaf autorevert
-  :custom
-  ((auto-revert-interval . 0.1))
-  :hook
-  (find-file-hook . global-auto-revert-mode)
-  )
-  #+end_src
-** =savehist=: 変更履歴を保存
-   :PROPERTIES:
-   :CUSTOM_ID: org246148ce
-   :END:
-  #+begin_src emacs-lisp :tangle init.el
-(leaf savehist
-  :custom
-  `((savehist-file
-     . ,(expand-file-name "history" my:d:tmp)))
-  :hook
-  ((emacs-startup-hook . savehist-mode))
-  )
-  #+end_src
-** ファイル, デイレクトリ整理
-   :PROPERTIES:
-   :CUSTOM_ID: org35f3de20
-   :END:
-   =~/.emacs.d/= 以下にファイルが転がるのがなんか嫌なので,
-   気がつく度に設定している.
-   #+begin_src emacs-lisp :tangle init.el
-(leaf *change-default-file-location
-  :custom
-  `(;; url
-    (url-configuration-directory
-     . ,(expand-file-name "url" my:d:tmp))
-    ;; nsm
-    (nsm-settings-file
-     . ,(expand-file-name "nsm.data" my:d:tmp))
-    ;; bookmark
-    (bookmark-default-file
-     . ,(expand-file-name "bookmarks" my:d:tmp))
-    ;; eshell
-    (eshell-directory-name
-     . ,(expand-file-name "eshell" my:d:tmp))
-    )
+  :defer-config
+  (cond ((executable-find "xdg-open")
+         (setq browse-url-browser-function 'browse-url-xdg-open
+               browse-url-secondary-browser-function 'browse-url-xdg-open))
+        ((eq system-type 'darwin)
+         (setq browse-url-browser-function 'browse-url-default-macosx-browser
+               browse-url-secondary-browser-function 'browse-url-default-macosx-browser))
+        (t
+         (setq browse-url-browser-function 'eww-browse-url)
+         ))
   )
    #+end_src
-   他にもイロイロありそう．
-   =bookmark= はちゃんと使いこなしたい所ではあるが．
 ** =eldoc=: emacs-lisp document
    :PROPERTIES:
    :CUSTOM_ID: org6a5a84f9
@@ -816,41 +926,19 @@ Emacs.reverseVideo: true
    minibuffer では eldoc にお黙り頂く。
    #+begin_src emacs-lisp :tangle init.el
 (leaf eldoc
-  :hook (emacs-lisp-mode-hook . turn-on-eldoc-mode)
-  ;; :blackout t
-  :custom
-  `((eldoc-echo-area-prefer-doc-buffer . nil)
-    (eldoc-print-after-edit            . t)
-    (eldoc-echo-area-use-multiline-p   . nil))
   :preface
+;;;###autoload
   (defun my:shutup-eldoc-message (f &optional string)
     (unless (active-minibuffer-window)
       (funcall f string)))
   :advice
-  (:around eldoc-message
-           my:shutup-eldoc-message)
-  )
-   #+end_src
-** =midnight=: 一定期間使用しなかった buffer を自動削除
-   :PROPERTIES:
-   :CUSTOM_ID: org2157dacb
-   :END:
-   #+begin_src emacs-lisp :tangle init.el
-(leaf midnight
-  :custom
-  ((clean-buffer-list-delay-general . 1))
+  (:around eldoc-message my:shutup-eldoc-message)
+  :init
+  (setq eldoc-echo-area-prefer-doc-buffer nil
+        eldoc-print-after-edit t
+        eldoc-echo-area-use-multiline-p nil)
   :hook
-  (emacs-startup-hook . midnight-mode))
-   #+end_src
-** =uniquify=: モードラインのファイル名にディレクトリも表示する
-   :PROPERTIES:
-   :CUSTOM_ID: org9a0cf611
-   :END:
-   #+begin_src emacs-lisp :tangle init.el
-(leaf uniquify
-  :custom
-  ((uniquify-buffer-name-style . 'post-forward-angle-brackets)
-   (uniquify-min-dir-content   . 1))
+  ((emacs-lisp-mode-hook . turn-on-eldoc-mode))
   )
    #+end_src
 ** =whitespace=: 空白の強調表示
@@ -860,157 +948,55 @@ Emacs.reverseVideo: true
    背景も変えようかなぁ...
    #+begin_src emacs-lisp :tangle init.el
 (leaf whitespace
-  ;; :blackout ((global-whitespace-mode . "")
-  ;;            (whitespace-mode        . ""))
-  :hook (emacs-startup-hook . global-whitespace-mode)
-  :custom
-  ((whitespace-line-column      . 72)
-   (whitespace-style
-    . '(face        ; faceを使う. *-mark に必要
-        trailing    ; 行末の空白を対象.
-        tabs        ; tab
-        spaces      ; space
-        empty       ; 前後の空行
-        space-mark  ; 可視化の際の置き換えを有効化
-        tab-mark    ; 可視化の際の置き換えを有効化
-        ))
-   (whitespace-display-mappings . '((space-mark ?\u3000 [?\□])
-                                    (tab-mark ?\t [?\u00BB ?\t] [?\\ ?\t])))
-   (whitespace-space-regexp     . "\\(\u3000+\\)")
-   (whitespace-trailing-regexp  . "\\([ \u00A0]+\\)$")
-   (whitespace-global-modes     . '(not eww-mode
-                                        term-mode
-                                        eshell-mode
-                                        org-agenda-mode
-                                        calendar-mode))
-   )
-  )
-   #+end_src
-** =saveplace=: 前回の修正位置を記憶する.
-   :PROPERTIES:
-   :CUSTOM_ID: org285d3b12
-   :END:
-   記憶の保存先を =~/.emacs.d/tmp/emacs-places= に変更.
-   #+begin_src emacs-lisp :tangle init.el
-(leaf save-place
-  :custom
-  `((save-place . t)
-    (save-place-file . ,(expand-file-name "emacs-places"  my:d:tmp))
-    ;; add tramp-file-name-regexp
-    (save-place-ignore-files-regexp
-     . "\\(\\(?:COMMIT_EDITMSG\\|hg-editor-[[:alnum:]]+\\.txt\\|svn-commit\\.tmp\\|bzr_log\\.[[:alnum:]]+\\)$\\)\\|\\(\\`/[^/:]+:[^/:]*:\\)")
-    )
-  :hook (emacs-startup-hook . save-place-mode)
-  )
-   #+end_src
-** =time-stamp=: 保存時に timestamp を自動更新
-   :PROPERTIES:
-   :CUSTOM_ID: orgd064b693
-   :END:
-   デフォルトではいろいろと衝突したので
-   更新文字列を変更し,  =＄Lastupdate: 2= (＄は半角) があったら
-   timestamp を更新する様にした．
-   #+begin_src emacs-lisp :tangle init.el
-(leaf time-stamp
-  :hook (before-save-hook . time-stamp)
-  :custom
-  ((time-stamp-active     . t)
-   (time-stamp-line-limit . 10)
-   (time-stamp-start      . "$Lastupdate: 2")
-   (time-stamp-end        . "\\$")
-   (time-stamp-format     . "%Y-%02m-%02d %02H:%02M:%02S")
-   )
-  )
-   #+end_src
-   モード独自の設定(例えば Org とか)に関しては別途．
-** =tramp=: ssh 越しにファイルを編集
-   :PROPERTIES:
-   :CUSTOM_ID: org04853162
-   :END:
-   #+begin_src emacs-lisp :tangle init.el
-(leaf tramp
-  :preface
-  (defvar tramp-persistency-file-name (expand-file-name "tramp" my:d:tmp))
-  :custom
-  `((tramp-persistency-file-name . ,(expand-file-name "tramp" my:d:tmp))
-    (tramp-completion-reread-directory-timeout . nil)
-    (remote-file-name-inhibit-cache . nil)
-    (vc-ignore-dir-regexp
-     . ,(format "\\(%s\\)\\|\\(%s\\)"
-                locate-dominating-stop-dir-regexp
-                tramp-file-name-regexp))
-    )
-  :hook
-  (kill-emacs-hook . (lambda ()
-                       (if (file-exists-p tramp-persistency-file-name)
-                           (delete-file tramp-persistency-file-name))))
-  )
-   #+end_src
-** =browse-url=
-   :PROPERTIES:
-   :CUSTOM_ID: org456d3821
-   :END:
-   ブラウザ呼び出しは =xdg-open/open= に丸投げ.
-   #+begin_src emacs-lisp :tangle init.el
-(leaf browse-url
-  ;; :require t
-  :bind* ("C-c C-j" . browse-url-at-point)
-  :defer-config
-  (cond ((executable-find "xdg-open")
-         (setq browse-url-browser-function 'browse-url-xdg-open
-               browse-url-secondary-browser-function 'browse-url-xdg-open))
-        ((eq system-type 'darwin)
-         (setq browse-url-browser-function 'browse-url-default-macosx-browser
-               browse-url-secondary-browser-function 'browse-url-default-macosx-browser))
-        (t
-         ;; (setq browse-url-browser-function 'w3m-browse-url)
-         (setq browse-url-browser-function 'eww-browse-url)
-         ))
-  )
-   #+end_src
-** =server=: Emacs server
-   :PROPERTIES:
-   :CUSTOM_ID: org931fd3cc
-   :END:
-   #+begin_src emacs-lisp :tangle init.el
-(leaf server
-  :commands (server-running-p)
   :init
-  (defun my:new-client-frame ()
-    "Create new GUI emacsclient"
-    (interactive)
-    (make-frame-on-display (getenv "DISPLAY")))
-  :hook
-  (emacs-startup-hook . (lambda ()
-                          (unless (server-running-p)
-                            (server-start))))
+  (setq whitespace-line-column 72
+        whitespace-style '(face        ; faceを使う. *-mark に必要
+                           trailing    ; 行末の空白を対象.
+                           tabs        ; tab
+                           spaces      ; space
+                           empty       ; 前後の空行
+                           space-mark  ; 可視化の際の置き換えを有効化
+                           tab-mark    ; 可視化の際の置き換えを有効化
+                           )
+        whitespace-display-mappings '((space-mark ?\u3000 [?\□])
+                                      (tab-mark ?\t [?\u00BB ?\t] [?\\ ?\t]))
+        whitespace-space-regexp "\\(\u3000+\\)"
+        whitespace-trailing-regexp  "\\([ \u00A0]+\\)$"
+        whitespace-global-modes '(not eww-mode
+                                      term-mode
+                                      eshell-mode
+                                      org-agenda-mode
+                                      calendar-mode))
+  :hook (emacs-startup-hook . global-whitespace-mode)
   )
    #+end_src
-** buffer の印刷
+** TODO buffer の印刷
    :PROPERTIES:
    :CUSTOM_ID: orgdd48e2df
    :END:
+   - [ ] 任意のフォントにできんのか?
+
    #+begin_src emacs-lisp :tangle init.el
 (leaf ps-mule
   :if (executable-find "lpr")
-  :custom
-  ((ps-multibyte-buffer       . 'non-latin-printer)
-   (ps-printer-name           . "PDF")
-   (ps-paper-size             . 'a4)
-   ;; (ps-n-up-printing          .  2)
-   (ps-print-header           .  t)
-   (ps-print-footer           .  nil)
-   (ps-font-family            . 'Courier)
-   (ps-font-size              . '(9 . 10))
-   (ps-header-font-family     . 'Helvetica)
-   (ps-header-font-size       . '(10 . 12))
-   (ps-header-title-font-size . '(12 . 14))
-   (ps-line-number            . nil)
-   ;; (ps-line-number-font   . "Times-Italic")
-   ;; (ps-line-number-font-size . 6)
-   ;; (ps-line-number-start   . 1)
-   ;; (ps-line-number-step    . 1)
-   )
+  :init
+  (setq ps-multibyte-buffer       'non-latin-printer
+        ps-printer-name           "PDF"
+        ps-paper-size             'a4
+        ;; (ps-n-up-printing        .  2)
+        ps-print-header            t
+        ps-print-footer            nil
+        ps-font-family            'Courier
+        ps-font-size              '(9 . 10)
+        ps-header-font-family     'Helvetica
+        ps-header-font-size       '(10 . 12)
+        ps-header-title-font-size '(12 . 14)
+        ps-line-number            nil
+        ;; (ps-line-number-font "Times-Italic")
+        ;; (ps-line-number-font-size 6)
+        ;; (ps-line-number-start   1)
+        ;; (ps-line-number-step    1)
+        )
   :hook
   (defalias 'ps-mule-header-string-charset 'ignore)
   :config
@@ -1039,7 +1025,7 @@ Emacs.reverseVideo: true
   ;;       )
   )
    #+end_src
-** =tab-bar-mode=: Emacsの「tab」
+** =tab-bar-mode=: Emacsの「TAB」
    :PROPERTIES:
    :CUSTOM_ID: orgcc9538d1
    :END:
@@ -1074,24 +1060,32 @@ Emacs.reverseVideo: true
                    tab-name tab-bar-tab-name-truncated-max nil nil
                    ellipsis)
                   'help-echo tab-name))))
-  :custom
-  ((tab-bar-close-button-show      . nil)
-   (tab-bar-close-last-tab-choice  . nil)
-   (tab-bar-close-tab-select       . 'left)
-   (tab-bar-history-mode           . nil)
-   (tab-bar-new-tab-choice         . "*scratch*")
-   (tab-bar-new-button-show        . nil)
-   (tab-bar-tab-name-function      . 'my:tab-bar-tab-name-truncated)
-   (tab-bar-tab-name-truncated-max . 12)
-   (tab-bar-separator              . "|")
-   )
+  :init
+  (setq tab-bar-close-button-show      nil
+        tab-bar-close-last-tab-choice  nil
+        tab-bar-close-tab-select       'left
+        tab-bar-history-mode           nil
+        tab-bar-new-tab-choice         "*scratch*"
+        tab-bar-format                 '(tab-bar-format-tabs)
+        tab-bar-tab-name-function      'my:tab-bar-tab-name-truncated
+        tab-bar-tab-name-truncated-max 12
+        tab-bar-separator              "|"
+        )
   :hook
   (emacs-startup-hook . tab-bar-mode)
-;;   :config
-;;   (tab-bar-mode +1)
   )
    #+end_src
   - [[https://masutaka.net/chalow/2011-09-28-1.html][ターミナルの zsh と Emacs を風のように駆け抜ける！]]
+** =vc=: バージョン管理
+   :PROPERTIES:
+   :CUSTOM_ID: org64c49495
+   :END:
+   #+begin_src emacs-lisp :tangle init.el
+(leaf vc
+  :config
+  (setq vc-handled-backends '(Git))
+  )
+   #+end_src
 * 認証関連: =plstore=, =password-store= など
   :PROPERTIES:
   :CUSTOM_ID: org1a8b35da
@@ -1104,22 +1098,22 @@ Emacs.reverseVideo: true
 (leaf *authentication
   :if (and (getenv "GPG_KEY_ID")
            my:d:password-store)
-  :init
-  (setq leaf-default-plstore
-     (plstore-open
-         (expand-file-name "plstore.plist" my:d:password-store)))
-  (add-to-list 'vc-directory-exclusion-list
-               (expand-file-name my:d:password-store))
   (leaf auth-source
     :init
     (setq auth-source-gpg-encrypt-to '(getenv "GPG_KEY_ID")))
   (leaf password-store :ensure t)
   (leaf auth-source-pass :ensure t)
   (leaf plstore
-    :custom
-    `((plstore-secret-keys . 'silent)
-      (plstore-encrypt-to  . ,(getenv "GPG_KEY_ID")))
+    :init
+    (setq plstore-secret-keys 'silent
+          plstore-encrypt-to  (getenv "GPG_KEY_ID"))
     )
+  :config
+  (setq leaf-default-plstore
+     (plstore-open
+         (expand-file-name "plstore.plist" my:d:password-store)))
+  (add-to-list 'vc-directory-exclusion-list
+               (expand-file-name my:d:password-store))
   )
   #+end_src
 * 日本語入力: =ddskk=
@@ -1137,7 +1131,8 @@ Emacs*useXIM: false
   以前は別ファイルで行なっていた設定を customize にまとめた.
   #+begin_src emacs-lisp :tangle init.el
 (leaf skk
-  :commands skk-make-indicator-alist
+  :commands (skk-make-indicator-alist
+             skk-mode-exit)
   :bind (("C-x j"   . skk-mode)
          ("C-x C-j" . skk-mode)
          ;; ("C-x C-j" . skk-auto-fill-mode)
@@ -1154,82 +1149,80 @@ Emacs*useXIM: false
   (defvar skk-extra-jisyo-file-list nil)
   :init
   (setq default-input-method "japanese-skk")
+  (setq skk-user-directory (expand-file-name "skk" my:d:tmp)
+        ;; 設定ファイルは Customize にまとめる. → 別ファイルでの設定はしない
+        skk-init-file ""
+        ;; init ファイルは空なのでコンパイルしない
+        skk-byte-compile-init-file nil
+        ;; sticky shift  を ; に割り当て
+        skk-sticky-key ";"
+        ;; 変換候補の表示数
+        skk-henkan-number-to-display-candidates 10
+        ;; メニューを日本語にしない. どうせ menu は使わないし
+        skk-show-japanese-menu nil
+        ;; 半角ｶﾀｶﾅを入力可能に
+        skk-use-jisx0201-input-method t
+        ;; インジケータのカスタマイズ
+        skk-latin-mode-string          "[_A]"
+        skk-hiragana-mode-string       "[あ]"
+        skk-katakana-mode-string       "[ア]"
+        skk-jisx0208-latin-mode-string "[Ａ]"
+        skk-jisx0201-mode-string       "[_ｱ]"
+        skk-abbrev-mode-string         "[aA]"
+        ;; カーソルに色は付けない
+        skk-use-color-cursor nil
+        skk-indicator-use-cursor-color nil
+        ;; Enter で改行しない
+        skk-egg-like-newline t
+        ;; 対応する括弧の自動入力
+        skk-auto-insert-paren t
+        ;; 句読点変換ルールの追加
+        skk-kuten-touten-alist '((jp    . ("。" . "、"))
+                                 (jp-en . ("。" . ", "))
+                                 (en-jp . ("．" . "，"))
+                                 (en    . (". " . ", "))
+                                 (EN    . ("．" . "，"))
+                                 )
+        ;; 句読点変換ルール: default は ,.
+        skk-kutouten-type 'en
+        ;; 送り仮名が厳密に正しい候補を優先
+        skk-henkan-strict-okuri-precedence t
+        ;; 変換ルールの追加: 全角スペース入力ルールと日付入力無効化.
+        skk-rom-kana-rule-list '(("z " nil "　")
+                                 ("@" nil "@"))
+        ;; 辞書サーバ
+        skk-server-host (or (getenv "SKKSERVER") nil)
+        skk-aux-large-jisyo (or (if (file-readable-p "/usr/share/skk/SKK-JISYO.L") "/usr/share/skk/SKK-JISYO.L") nil)
+        ;; 冗長...?
+        skk-large-jisyo (cond ((getenv "SKKSERVER") nil)
+                              ((if (file-readable-p "/usr/share/skk/SKK-JISYO.L") "/usr/share/skk/SKK-JISYO.L"))
+                              (t (expand-file-name "skk-jisyo/SKK-JISYO.L" my:d:tmp)))
+        ;; インクリメンタルサーチは migemo に任せる. hook も参照
+        skk-isearch-mode-enable nil
+        ;; 不要?
+        skk-isearch-start-mode  'latin
+        ;; ja-dic は利用しない
+        skk-inhibit-ja-dic-search t
+        ;; 辞書登録の際に送り仮名を削除
+        skk-check-okurigana-on-touroku 'auto
+        ;; 漢字登録のミスをチェック
+        skk-check-okurigana-on-touroku t
+        ;; 個人辞書の文字コード
+        skk-jisyo-code 'utf-8-unix
+        )
   :hook
   (;; minibuffer では skk を無効化
    (skk-mode-hook . (lambda ()
                       (and (skk-in-minibuffer-p)
                            (skk-mode-exit))))
    )
-  :custom
-  `(;;
-    (skk-user-directory . ,(expand-file-name "skk" my:d:tmp))
-    ;; 設定ファイルは Customize にまとめる. → 別ファイルでの設定はしない
-    (skk-init-file . "")
-    (skk-byte-compile-init-file . nil)
-    ;; sticky shift  を ; に割り当て
-    (skk-sticky-key  . ";")
-    ;; 変換候補の表示数
-    (skk-henkan-number-to-display-candidates . 10)
-    ;; メニューを日本語にしない. どうせ menu は使わないし.
-    (skk-show-japanese-menu . nil)
-    ;; 半角ｶﾀｶﾅを入力可能に
-    (skk-use-jisx0201-input-method . t)
-    ;; インジケータのカスタマイズ
-    (skk-latin-mode-string          . "[_A]")
-    (skk-hiragana-mode-string       . "[あ]")
-    (skk-katakana-mode-string       . "[ア]")
-    (skk-jisx0208-latin-mode-string . "[Ａ]")
-    (skk-jisx0201-mode-string       . "[_ｱ]")
-    (skk-abbrev-mode-string         . "[aA]")
-    ;; カーソルに色は付けない
-    (skk-indicator-use-cursor-color . nil)
-    (skk-use-color-cursor           . nil)
-    ;; Enter で改行しない
-    (skk-egg-like-newline . t)
-    ;; 対応する括弧の自動入力
-    (skk-auto-insert-paren . t)
-    ;; 句読点変換ルールの追加
-    (skk-kuten-touten-alist . '((jp    . ("。" . "、"))
-                                (jp-en . ("。" . ", "))
-                                (en-jp . ("．" . "，"))
-                                (en    . (". " . ", "))
-                                (EN    . ("．" . "，"))
-                                ))
-    ;; 句読点変換ルール: default は ,.
-    (skk-kutouten-type . 'en)
-    ;; 送り仮名が厳密に正しい候補を優先
-    (skk-henkan-strict-okuri-precedence . t)
-    ;; 変換ルールの追加: 全角スペース入力ルールと日付入力無効化.
-    (skk-rom-kana-rule-list . '(("z " nil "　")
-                                ("@" nil "@")))
-    ;; 辞書サーバ
-    (skk-server-host . ,(or (getenv "SKKSERVER") nil))
-    (skk-aux-large-jisyo
-     . ,(or (if (file-readable-p "/usr/share/skk/SKK-JISYO.L") "/usr/share/skk/SKK-JISYO.L") nil))
-    ;; 冗長...?
-    (skk-large-jisyo
-     . ,(cond ((getenv "SKKSERVER") nil)
-              ((if (file-readable-p "/usr/share/skk/SKK-JISYO.L") "/usr/share/skk/SKK-JISYO.L"))
-              (t (expand-file-name "skk-jisyo/SKK-JISYO.L" my:d:tmp))))
-    ;; インクリメンタルサーチは migemo に任せる. hook も参照
-    (skk-isearch-mode-enable . nil)
-    (skk-isearch-start-mode  . 'latin)  ;; 不要?
-    ;; ja-dic は利用しない
-    (skk-inhibit-ja-dic-search . t)
-    ;; 辞書登録の際に送り仮名を削除
-    (skk-check-okurigana-on-touroku . 'auto)
-    ;; 漢字登録のミスをチェック
-    (skk-check-okurigana-on-touroku . t)
-    ;; 個人辞書の文字コード
-    (skk-jisyo-code . 'utf-8-unix)
-    )
   :config
   ;; 環境毎に辞書の設定が煩雑になっていて, どうしたモンかなぁ...
   (unless (or (or (getenv "SKKSERVER")
                   (file-readable-p "/usr/share/skk/SKK-JISYO.L"))
               (file-exists-p (expand-file-name "SKK-JISYO.L" skk-get-jisyo-directory)))
     (skk-get skk-get-jisyo-directory))
-  ;; この
+  ;; 丸数字の変換などの辞書を追加
   (if (file-exists-p "/usr/share/skk/SKK-JISYO.JIS3_4")
       (add-to-list 'skk-extra-jisyo-file-list
                    (cons (expand-file-name "/usr/share/skk/SKK-JISYO.JIS3_4") 'euc-jisx0213) t))
@@ -1262,24 +1255,24 @@ Emacs*useXIM: false
          (recentf-add-file buffer-file-name)))
   :init
   (leaf recentf-ext :ensure t)
-  :custom
-  `((recentf-save-file       . ,(expand-file-name "recentf" my:d:tmp))
-    (recentf-max-saved-items . 500)
-    (recentf-auto-cleanup    . 'mode)
-    (recentf-exclude         . '(".recentf"
-                                 "^/tmp\\.*"
-                                 "^/private\\.*"
-                                 "^/var/folders\\.*"
-                                 "/TAGS$"
-                                 "\\.*草稿\\.*"
-                                 "^#\\.*"
-                                 "^/[^/:]+:"
-                                 "bookmarks"
-                                 "org-recent-headings.dat"
-                                 "^/mnt/c/\\.*"
-                                 "\\.*COMMIT_EDITMSG$"
-                                 ))
-    )
+  :config
+  (setq recentf-save-file       (expand-file-name "recentf" my:d:tmp)
+        recentf-max-saved-items 500
+        recentf-auto-cleanup    'mode
+        recentf-exclude         '(".recentf"
+                                  "^/tmp\\.*"
+                                  "^/private\\.*"
+                                  "^/var/folders\\.*"
+                                  "/TAGS$"
+                                  "\\.*草稿\\.*"
+                                  "^#\\.*"
+                                  "^/[^/:]+:"
+                                  "bookmarks"
+                                  "org-recent-headings.dat"
+                                  "^/mnt/c/\\.*"
+                                  "\\.*COMMIT_EDITMSG$"
+                                  )
+        )
   )
 ;; テスト中
 (leaf switch-buffer-functions
@@ -1293,8 +1286,7 @@ Emacs*useXIM: false
   ;; (add-hook 'switch-buffer-functions
   ;;           #'my:recentf-track-visited-file)
   :hook
-  (switch-buffer-functions
-   . my:recentf-track-visited-file)
+  (switch-buffer-functions . my:recentf-track-visited-file)
   )
   #+end_src
 * カレンダー設定
@@ -1309,17 +1301,18 @@ Emacs*useXIM: false
     #+begin_src emacs-lisp :tangle init.el
 (leaf calendar
   :defvar calendar-holidays japanese-holidays
-  :custom
-  `(;; 月と曜日の表示調整
-    (calendar-month-name-array   . ["01" "02" "03" "04" "05" "06"
-                                    "07" "08" "09" "10" "11" "12" ])
-    (calendar-day-name-array     . ["日" "月" "火" "水" "木" "金" "土"])
-    (calendar-day-header-array   . ["日" "月" "火" "水" "木" "金" "土"])
-    ;; 日曜開始
-    (calendar-week-start-day     . 0)
-    ;; 祝日をカレンダーに表示
-    (calendar-mark-holidays-flag . t)
-    )
+  :init
+  (setq
+   ;; 月と曜日の表示調整
+   calendar-month-name-array   ["01" "02" "03" "04" "05" "06"
+                                "07" "08" "09" "10" "11" "12" ]
+   calendar-day-name-array     ["日" "月" "火" "水" "木" "金" "土"]
+   calendar-day-header-array   ["日" "月" "火" "水" "木" "金" "土"]
+   ;; 日曜開始
+   calendar-week-start-day     0
+   ;; 祝日をカレンダーに表示
+   calendar-mark-holidays-flag t
+   )
   :config
   (with-eval-after-load 'japanese-holidays
     (setq calendar-holidays (append japanese-holidays holiday-local-holidays)))
@@ -1334,19 +1327,18 @@ Emacs*useXIM: false
   :ensure t
   :after calendar
   :require t
-  :custom
-  `((japanese-holiday-weekend         . '(0 6))
-    (japanese-holiday-weekend-marker
-     . '(holiday  ;; 日
-         nil      ;; 月
-         nil      ;; 火
-         nil      ;; 水
-         nil      ;; 木
-         nil      ;; 金
-         japanese-holiday-saturday))
-    )
+  :init
+  (setq japanese-holiday-weekend        '(0 6)
+        japanese-holiday-weekend-marker '(holiday  ;; 日
+                                          nil      ;; 月
+                                          nil      ;; 火
+                                          nil      ;; 水
+                                          nil      ;; 木
+                                          nil      ;; 金
+                                          japanese-holiday-saturday)
+        )
   :config
-  ;; autoload
+;;;###autoload
   (defun my:japanese-holiday-show (&rest _args)
     (let* ((date (calendar-cursor-to-date t))
            ;; (calendar-date-display-form '((format "%s年 %s月 %s日（%s）" year month day dayname)))
@@ -1388,17 +1380,16 @@ Emacs*useXIM: false
 (leaf migemo
   :if (executable-find "cmigemo")
   :ensure t
-  :custom
-  `((migemo-user-dictionary  . nil)
-    (migemo-regex-dictionary . nil)
-    (migemo-options          . '("-q" "--emacs"))
-    (migemo-command          . "cmigemo")
-    (migemo-coding-system    . 'utf-8-unix)
-    (migemo-dictionary
-     .  ,(or (if (file-exists-p "/usr/local/share/migemo/utf-8/migemo-dict")
-                 "/usr/local/share/migemo/utf-8/migemo-dict")
-             "/usr/share/cmigemo/utf-8/migemo-dict"))
-    )
+  :init
+  (setq migemo-user-dictionary  nil
+        migemo-regex-dictionary nil
+        migemo-options          '("-q" "--emacs")
+        migemo-command          "cmigemo"
+        migemo-coding-system    'utf-8-unix
+        migemo-dictionary       (or (if (file-exists-p "/usr/local/share/migemo/utf-8/migemo-dict")
+                                        "/usr/local/share/migemo/utf-8/migemo-dict")
+                                    "/usr/share/cmigemo/utf-8/migemo-dict")
+        )
   :hook
   (emacs-startup-hook . migemo-init)
   )
@@ -1416,12 +1407,17 @@ Emacs*useXIM: false
   :init
   (leaf ace-link :ensure t)
   (leaf shr
-    :custom
-    ((shr-use-colors    . nil)
-     (shr-use-fonts     . nil)
-     (shr-image-animate . nil)
-     (shr-width         . 72))
+    :init
+    (setq shr-use-colors    nil
+          shr-use-fonts     nil
+          shr-image-animate nil
+          shr-width         72
+          )
     )
+  ;;
+  (setq eww-bookmarks-directory (expand-file-name "eww" my:d:tmp)
+        eww-search-prefix "https://www.google.com/search?&gws_rd=cr&complete=0&pws=0&tbs=li:1&q="
+        )
   :bind (("<f2>" . eww)
          (:eww-mode-map
           ("r"   . eww-reload)
@@ -1443,12 +1439,6 @@ Emacs*useXIM: false
           ("N"   . isearch-previous)
           ("f"   . ace-link-eww))
          )
-  :custom
-  `((eww-bookmarks-directory . ,(expand-file-name "eww" my:d:tmp))
-    (eww-search-prefix . "https://www.google.com/search?&gws_rd=cr&complete=0&pws=0&tbs=li:1&q=")
-    )
-  ;; :advice (:around eww-colorize-region
-  ;;                  my:shr-colorize-region--disable)
   :config
   (ace-link-setup-default)
   )
@@ -1524,358 +1514,6 @@ Emacs*useXIM: false
         interprogram-paste-function 'my:copy-from-osx)
   )
    #+end_src
-* 補完: =vertico=, =marginalia=, =consult=, =corfu=
-  :PROPERTIES:
-  :CUSTOM_ID: org5fd7347f
-  :END:
-  最近話題になりだしたので, ちょっと使い始めてみた.
-** helm, ivy の無効化
-   :PROPERTIES:
-   :CUSTOM_ID: orgff7e02fd
-   :END:
-   依存する拡張がまだまだ多いので, 一度インストールして邪魔しないようにしておくことに.
-   #+begin_src emacs-lisp
-(leaf helm :defer-config (helm-mode -1))
-(leaf ivy :defer-config (ivy-mode -1))
-   #+end_src
-** 無視する拡張子の追加設定
-   :PROPERTIES:
-   :CUSTOM_ID: orgbf52614c
-   :END:
-  とりあえず, 無視するファイルの拡張子を指定しておく.
-  #+begin_src emacs-lisp :tangle init.el
-(leaf *completion
-  :init
-  ;; 補完で無視する拡張子の追加．そのうち増える．
-  (cl-loop for ext in
-           '(;; TeX
-             ".dvi"
-             ".fdb_latexmk"
-             ".fls"
-             ".ilg"
-             ".jqz"
-             ".nav"
-             ".out"
-             ".snm"
-             ".synctex\\.gz"
-             ".vrb"
-             ;; fortran >= 90
-             ".mod"
-             ;; zsh
-             ".zwc"
-             ;; libtool
-             ".in"
-             ".libs/"
-             ;; fxxkin Apple
-             ".DS_Store"
-             "._DS_Store"
-             ;; "org-id-locations"
-             )
-           do (add-to-list 'completion-ignored-extensions ext))
-  )
-  #+end_src
-** =vertico=: 本体
-   :PROPERTIES:
-   :CUSTOM_ID: org8362fd9f
-   :END:
-   [[https://scrapbox.io/emacs/find-file%E3%81%A7Helm%E3%81%BF%E3%81%9F%E3%81%84%E3%81%ABC-l%E3%81%A7%E3%83%87%E3%82%A3%E3%83%AC%E3%82%AF%E3%83%88%E3%83%AA%E3%82%92%E9%81%A1%E3%82%8B][find-fileでHelmみたいにC-lでディレクトリを遡る - emacs]]
-   より, =C-l= で一つ上の階層へ上がれる様にしたり.
-   #+begin_src emacs-lisp :tangle init.el
-(leaf vertico
-  :ensure t
-  :preface
-  (defun my:disable-selection ()
-    (when (eq minibuffer-completion-table #'org-tags-completion-function)
-      (setq-local vertico-map minibuffer-local-completion-map
-                  completion-cycle-threshold nil
-                  completion-styles '(basic))))
-  ;;
-  ;; @see https://misohena.jp/blog/2022-08-15-transition-ivy-to-vertico.html
-  ;; 候補更新時に最初の候補を選択しない -> (vertico-preselect . 'prompt)
-
-  ;; ただし require-matchがt(やそれに類するもの)で入力が空ではなくマッチする候
-  ;; 補がある場合は、その候補の先頭を選択する。
-  (defun my:vertico--recompute (orig-fun pt content &rest args)
-    (let ((result (apply orig-fun pt content args)))
-      (if (and (not (equal content ""))
-               ;; 入力が空の時は(require-matchであっても)defaultまたはnilを返
-               ;; すことになっている。
-               (> (alist-get 'vertico--total result) 0) ;; < for syntax
-               ;; completing-readの説明によれば
-               ;; nil,confirm,confirm-after-completion以外はtのように
-               ;; 振る舞うべき。
-               (not (memq minibuffer--require-match
-                          '(nil confirm confirm-after-completion))))
-          (setf (alist-get 'vertico--index result) 0))
-      result))
-  ;;
-  ;;
-  (defun my:filename-upto-parent ()
-    "Move to parent directory like \"cd ..\" in find-file."
-    (interactive)
-    (let ((sep (eval-when-compile (regexp-opt '("/" "\\")))))
-      (save-excursion
-        (left-char 1)
-        (when (looking-at-p sep)
-          (delete-char 1)))
-      (save-match-data
-        (when (search-backward-regexp sep nil t)
-          (right-char 1)
-          (filter-buffer-substring (point)
-                                   (save-excursion (end-of-line) (point))
-                                   #'delete)))))
-  :advice
-  ((:before vertico--setup
-            my:disable-selection)
-   (:around vertico--recompute-candidates
-            my:vertico--recompute)
-   )
-  :bind
-  (:vertico-map (("C-l" . my:filename-upto-parent)))
-  :custom-face
-  `((vertico-current
-     . '((t (:inherit hl-line :background unspecified)))))
-  :custom
-  `((vertico-count . 8)
-    (vertico-cycle . t)
-    (vertico-preselect . 'prompt)
-    (vertico-multiline . '(("↓" 0 1 (face vertico-multiline))
-                           ("…" 0 1 (face vertico-multiline))))
-    )
-  :config
-  :hook (emacs-startup-hook . vertico-mode)
-  )
-  #+end_src
-** =marginalia=: リッチな注釈(Enable richer annotations)
-   :PROPERTIES:
-   :CUSTOM_ID: orge9265e4d
-   :END:
-   行揃えが微妙. あと, ファイル名を省略表示できないのかな?
-   ⇒ [[https://github.com/minad/marginalia/issues/70][Better truncation method for file names #70]]
-   #+begin_src emacs-lisp :tangle init.el
-(leaf marginalia
-  :ensure t
-  :init
-  ;; 補完でも icon 表示
-  (leaf nerd-icons-completion
-   :ensure t
-   :hook
-   (emacs-startup-hook . nerd-icons-completion-mode)
-   )
-  :bind (("M-A" . marginalia-cycle)
-         (:minibuffer-local-map
-          ("M-A" . marginalia-cycle)
-          ))
-  :custom
-  `((marginalia-annotators
-     . '(marginalia-annotators-light marginalia-annotators-heavy nil))
-    (marginalia-align . 'right)
-    (marginalia-align-offset .  -2) ;; icon 分引いておく
-    )
-  :hook
-  ((emacs-startup-hook . marginalia-mode)
-   (marginalia-mode-hook . nerd-icons-completion-marginalia-setup)
-   )
-  )
-   #+end_src
-** =consult=: 便利コマンド集
-   :PROPERTIES:
-   :CUSTOM_ID: orged5e5627
-   :END:
-   とりあえず recetnf が使えないと途方に暮れるので
-   =consult-recent-file= のカスタマイズのみ.
-   #+begin_src emacs-lisp :tangle init.el
-(leaf consult
-  :ensure t
-  :bind (("C-x C-r" . my:consult-recent-file))
-  ;; :defvar recentf-list
-  :custom
-  `(;; 増やさないと preview 時に theme がロードされない模様.
-    ;; とりあえず default の 10 倍にしている. 1 MB かな?
-    (consult-preview-raw-size . 1024000)
-    (consult-async-refresh-delay . 0.2)
-    (consult-preview-key  . nil)
-    (consult-narrow-key   . "<")
-    )
-  :config
-  (defun my:consult-recent-file ()
-    "Find recent using `completing-read' with shorten filename"
-    (interactive)
-    (eval-when-compile (require 'recentf))
-    (recentf-mode +1)
-    (let ((files (mapcar (lambda (f)
-                           (cons (my:shorten-file-path f (- (window-width) 2)) f))
-                         recentf-list)))
-      (let ((selected
-             (consult--read (mapcar #'car files)
-                            :prompt "Find recent file: "
-                            :sort nil
-                            :require-match t
-                            :category 'file
-                            :state (consult--file-preview)
-                            :history 'file-name-history)))
-        (find-file (assoc-default selected files)))))
-  )
-   #+end_src
-** =orderless=: 補完候補の選択
-   :PROPERTIES:
-   :CUSTOM_ID: orgc12df551
-   :END:
-   イロイロと凝れそうだけど, とりあえずはデフォルトのままで.
-   #+begin_src emacs-lisp :tangle init.el
-(leaf orderless
-  :ensure t
-  :custom
-  `((completion-styles . '(orderless))
-    (orderless-matching-styles
-     . '(orderless-prefixes
-         orderless-flex
-         orderless-regexp
-         orderless-initialism
-         orderless-literal))
-    )
-  )
-   #+end_src
-** =corfu=: on the fly completions
-   :PROPERTIES:
-   :CUSTOM_ID: org37d21658
-   :END:
-   =company= より使い勝手が良い, 気がする.
-   :PROPERTIES:
-   :CUSTOM_ID: orgb72396fd
-   :END:
-   #+begin_src emacs-lisp
-(leaf corfu
-  :ensure t
-  :init
-  (leaf corfu-terminal
-    :ensure t
-    :custom (corfu-terminal-disable-on-gui . nil)
-    )
-  :bind
-  (:corfu-map
-   ("TAB"       . corfu-next)
-   ("<tab>"     . corfu-next)
-   ("S-TAB"     . corfu-previous)
-   ("<backtab>" . corfu-previous)
-   ("C-j"       . corfu-next)
-   ("C-n"       . corfu-next)
-   ("C-p"       . corfu-previous)
-   ("C-k"       . corfu-previous))
-  :custom
-  `((completion-cycle-threshold . 4)
-    (tab-always-indent          . 'complete)
-    (corfu-cycle                . t)       ;; Enable cycling for `corfu-next/previous'
-    (corfu-auto                 . t)       ;; Enable auto completion
-    (corfu-preselect            . 'prompt)
-    ;; (corfu-separator          . ?\s)  ;; Orderless field separator
-    ;; (corfu-quit-at-boundary   . nil)  ;; Never quit at completion boundary
-    ;; (corfu-quit-no-match      . nil)  ;; Never quit, even if there is no match
-    ;; (corfu-preview-current    . nil)  ;; Disable current candidate preview
-    ;; (corfu-on-exact-match     . nil)  ;; Configure handling of exact matches
-    ;; (corfu-echo-documentation . nil)  ;; Disable documentation in the echo area
-    ;; (corfu-scroll-margin      . 5)    ;; Use scroll margin
-    )
-  :hook (emacs-startup-hook
-         . (lambda ()
-             (corfu-terminal-mode +1)
-             (global-corfu-mode)))
-  )
-   #+end_src
-** =kind-icon=: corfu で補完候補にアイコン表示
-   :PROPERTIES:
-   :CUSTOM_ID: org80404324
-   :END:
-   svg-lib でのアイコン表示ではなく nerd-icons を利用するように.
-   #+begin_src emacs-lisp
-(leaf kind-icon
-  :ensure t
-  :after corfu-terminal
-  :custom
-  `((kind-icon-default-face . 'corfu-default)
-    (kind-icon-use-icons    . nil)
-    (kind-icon-mapping
-     . `(
-         (array          ,(nerd-icons-codicon "nf-cod-symbol_array")       :face font-lock-type-face)
-         (boolean        ,(nerd-icons-codicon "nf-cod-symbol_boolean")     :face font-lock-builtin-face)
-         (class          ,(nerd-icons-codicon "nf-cod-symbol_class")       :face font-lock-type-face)
-         (color          ,(nerd-icons-codicon "nf-cod-symbol_color")       :face success)
-         (command        ,(nerd-icons-codicon "nf-cod-terminal")           :face default)
-         (constant       ,(nerd-icons-codicon "nf-cod-symbol_constant")    :face font-lock-constant-face)
-         (constructor    ,(nerd-icons-codicon "nf-cod-triangle_right")     :face font-lock-function-name-face)
-         (enummember     ,(nerd-icons-codicon "nf-cod-symbol_enum_member") :face font-lock-builtin-face)
-         (enum-member    ,(nerd-icons-codicon "nf-cod-symbol_enum_member") :face font-lock-builtin-face)
-         (enum           ,(nerd-icons-codicon "nf-cod-symbol_enum")        :face font-lock-builtin-face)
-         (event          ,(nerd-icons-codicon "nf-cod-symbol_event")       :face font-lock-warning-face)
-         (field          ,(nerd-icons-codicon "nf-cod-symbol_field")       :face font-lock-variable-name-face)
-         (file           ,(nerd-icons-codicon "nf-cod-symbol_file")        :face font-lock-string-face)
-         (folder         ,(nerd-icons-codicon "nf-cod-folder")             :face font-lock-doc-face)
-         (interface      ,(nerd-icons-codicon "nf-cod-symbol_interface")   :face font-lock-type-face)
-         (keyword        ,(nerd-icons-codicon "nf-cod-symbol_keyword")     :face font-lock-keyword-face)
-         (macro          ,(nerd-icons-codicon "nf-cod-symbol_misc")        :face font-lock-keyword-face)
-         (magic          ,(nerd-icons-codicon "nf-cod-wand")               :face font-lock-builtin-face)
-         (method         ,(nerd-icons-codicon "nf-cod-symbol_method")      :face font-lock-function-name-face)
-         (function       ,(nerd-icons-codicon "nf-cod-symbol_method")      :face font-lock-function-name-face)
-         (module         ,(nerd-icons-codicon "nf-cod-file_submodule")     :face font-lock-preprocessor-face)
-         (numeric        ,(nerd-icons-codicon "nf-cod-symbol_numeric")     :face font-lock-builtin-face)
-         (operator       ,(nerd-icons-codicon "nf-cod-symbol_operator")    :face font-lock-comment-delimiter-face)
-         (param          ,(nerd-icons-codicon "nf-cod-symbol_parameter")   :face default)
-         (property       ,(nerd-icons-codicon "nf-cod-symbol_property")    :face font-lock-variable-name-face)
-         (reference      ,(nerd-icons-codicon "nf-cod-references")         :face font-lock-variable-name-face)
-         (snippet        ,(nerd-icons-codicon "nf-cod-symbol_snippet")     :face font-lock-string-face)
-         (string         ,(nerd-icons-codicon "nf-cod-symbol_string")      :face font-lock-string-face)
-         (struct         ,(nerd-icons-codicon "nf-cod-symbol_structure")   :face font-lock-variable-name-face)
-         (text           ,(nerd-icons-codicon "nf-cod-text_size")          :face font-lock-doc-face)
-         (typeparameter  ,(nerd-icons-codicon "nf-cod-list_unordered")     :face font-lock-type-face)
-         (type-parameter ,(nerd-icons-codicon "nf-cod-list_unordered")     :face font-lock-type-face)
-         (unit           ,(nerd-icons-codicon "nf-cod-symbol_ruler")       :face font-lock-constant-face)
-         (value          ,(nerd-icons-codicon "nf-cod-symbol_field")       :face font-lock-builtin-face)
-         (variable       ,(nerd-icons-codicon "nf-cod-symbol_variable")    :face font-lock-variable-name-face)
-         (t              ,(nerd-icons-codicon "nf-cod-code")               :face font-lock-warning-face)))
-    )
-  :config
-  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
-   #+end_src
-** =cape=: 補完 backend
-   :PROPERTIES:
-   :CUSTOM_ID: org3b1ea0b6
-   :END:
-   #+begin_src emacs-lisp
-;; (leaf cape :ensure t)
-  ;; ;; 補完候補を出すときの文脈を特定
-
-  ;; (defvar my-capf-context nil)
-
-  ;; (defun my-capf--corfu--auto-complete (old-fun &rest args)
-  ;;   ;; my-capf-context = 'in-corfu--auto-complete にして補完候補を出す。
-  ;;   (let ((my-capf-context 'in-corfu--auto-complete))
-  ;;     (apply old-fun args)))
-  ;; (advice-add 'corfu--auto-complete :around #'my-capf--corfu--auto-complete)
-
-  ;; ;; 追加の補完関数
-
-  ;; (defun my-capf-additional ()
-  ;;   (pcase my-capf-context
-  ;;     ('in-corfu--auto-complete
-  ;;      ;; 自動補完の場合は確度の高い候補しか出さない。
-  ;;      nil)
-  ;;     (_
-  ;;      ;; 手動補完の場合は積極的にいろんな候補を出す。
-  ;;      (my-capf-manual))))
-  ;; (add-hook 'completion-at-point-functions #'my-capf-additional 100)
-
-  ;; ;; 手動補完時の補完関数
-
-  ;; (defvar my-capf-manual nil)
-  ;; (defun my-capf-manual ()
-  ;;   ;; capeパッケージの読み込みを遅延させる。
-  ;;   (unless my-capf-manual
-  ;;     (setq my-capf-manual
-  ;;           ;; いろんな補完候補を合成する。
-  ;;           (cape-super-capf
-  ;;            #'cape-file #'cape-dabbrev #'cape-abbrev #'cape-line)))
-  ;;     (funcall my-capf-manual))
-   #+end_src
 * MUA の設定: =wanderulst=
   :PROPERTIES:
   :CUSTOM_ID: org2c2abb9b
@@ -1887,78 +1525,31 @@ Emacs*useXIM: false
    :CUSTOM_ID: org587385af
    :END:
    SEMI や FLIM などの UA の表示に [[http://uwabami.github.com/rail/][rail]] を使っている.
+
    ちなみに rail を有効にすると, 以下の様に User-Agent が表示される
    #+html: <div class="col-7 px2 mx-auto">
    #+html: <amp-img layout="responsive" width=640 height=400 src="https://uwabami.github.io/software/rail/wanderlust_with_or_without_rail.webp" alt="rail preview"></amp-img>
    #+html: </div>
 
-   - [ ] autoload を使うように改善すること.
+   - [ ] autoload を使う様に改善すること.
 
-   #+begin_src emacs-lisp :tangle init-wl.el
+   #+begin_src emacs-lisp :tangle init.el
 (leaf rail
+  ;; :vc (:url "https://github.com/uwabami/rail")
   :init
-  (unless (locate-library "rail")
-    (package-vc-install :url "https://github.com/uwabami/rail"))
   (setq rail-emulate-genjis t)
   :require t
   )
    #+end_src
-** SEMIの設定
-   :PROPERTIES:
-   :CUSTOM_ID: org88726f1b
-   :END:
-   Wanderlust が本文の表示に使う SEMI の設定など
-   #+begin_src emacs-lisp :tangle init.el
-(leaf semi
-  :init
-  (leaf mime-view
-    :custom
-      `(
-        ;; HTMLメールの表示に eww を使う
-        (mime-view-text/html-previewer . 'shr)
-        ;; 添付ファイルは run-mailcap で ← ちゃんと動いていない気が.
-        (mime-view-mailcap-files . '("~/.mailcap"))
-        ;; MIME の例の保存先の変更
-        (mime-situation-examples-file
-         . , (expand-file-name "mime-example" my:d:tmp))
-        ;; text/plain を html より優先.
-        (mime-view-type-subtype-score-alist . '(((text . plain) . 1)
-                                                ((text . html)  . 0)))
-        ))
-  (leaf mime-play
-    :custom
-    `(
-      ;; 添付ファイルを即座に削除しない ← xdg-open で開く様に
-      (mime-play-delete-file-immediately . nil)
-      ;; 音を鳴らすアレやコレの無効化...?
-      (mime-play-find-every-situations . nil)
-      )
-    )
-  )
-   #+end_src
-     =~/.mailcap= 自体は以下
-     #+begin_src conf :tangle no
-applications/*; xdg-open %s;
-image/*; xdg-open %s;
-video/*; xdg-open %s;
-     #+end_src
 ** Emacs 本体側の設定(wanderlust)
    :PROPERTIES:
    :CUSTOM_ID: org47a9ca66
    :END:
-
-   - ISO-2022-JP を CP50220 として扱う.
-     [[http://d.hatena.ne.jp/kiwanami/20091103/1257243524][Wanderlustと文字コード]] も参照のこと.
-
    Emacs 本体での設定は以下の通り. Wanderlust 自体の設定は別ファイルで行なわれる．
    ここでは =wl-init-file= を指定することで, 設定ファイルを明示している．
    #+begin_src emacs-lisp :tangle init.el
 (leaf wl
   :if (file-exists-p "/etc/emacs/site-start.d/65wl-beta.el")
-  :defvar (wl-address-file
-           wl-folders-file
-           elmo-passwd-alist-file-name
-           wl-info-file ) ;; → pl-setq
   :commands (wl
              wl-other-frame
              wl-draft
@@ -1966,31 +1557,30 @@ video/*; xdg-open %s;
              wl-user-agent-compose
              wl-draft-send
              wl-draft-kill)
-  :preface
-  (defun my:wl-mode-line-buffer-identification (&optional id)
-    (ignore id)
-    (force-mode-line-update t))
-  (defconst my:d:wl-cache-directory
-    (expand-file-name "wanderlust" "~/.cache"))
-  (unless (file-directory-p
-           (expand-file-name "local/Trash" my:d:wl-cache-directory))
-    (make-directory
-     (expand-file-name "local/Trash" my:d:wl-cache-directory) t))
-  :advice (:override wl-mode-line-buffer-identification
-                     my:wl-mode-line-buffer-identification)
-  :custom
-  `((elmo-msgdb-directory . my:d:wl-cache-directory)
-    (read-mail-command    . #'wl)
-    (wl-init-file         . ,(expand-file-name "init-wl" user-emacs-directory))
-    (wl-demo              . nil)
-    (wl-mime-charset      . 'iso-2022-jp)
-    ;; From に応じて送受信サーバを切り替えるために. → hook も参照
-    (wl-template-visible-select . t)
-    )
   :bind ((:wl-draft-mode-map
           ("C-c C-n" . wl-template-select))
          )
+  :preface
+  ;;
+  (defconst my:d:wl-cache-directory
+    (expand-file-name "wl" "~/.cache"))
+  (unless (file-directory-p
+           (expand-file-name "local/trash" my:d:wl-cache-directory))
+    (make-directory
+     (expand-file-name "local/trash" my:d:wl-cache-directory) t))
+  ;;
+  (defun my:wl-mode-line-buffer-identification (&optional id)
+    "ignore `id'"
+    (ignore id) (force-mode-line-update t))
+  :advice (:override wl-mode-line-buffer-identification
+                     my:wl-mode-line-buffer-identification)
   :init
+  (setq elmo-msgdb-directory my:d:wl-cache-directory
+        elmo-localdir-folder-path (expand-file-name "local" my:d:wl-cache-directory)
+        read-mail-command #'wl
+        wl-init-file (expand-file-name "init-wl" user-emacs-directory)
+        wl-mime-charset 'iso-2022-jp
+        wl-demo  nil)
   (define-mail-user-agent
     'wl-user-agent
     'wl-user-agent-compose
@@ -1998,14 +1588,8 @@ video/*; xdg-open %s;
     'wl-draft-kill
     'mail-send-hook)
   :config
-  ;; 個人情報の読み込み
   (load wl-info-file)
-  ;; 🤔
   (remove-hook 'wl-draft-send-hook 'wl-draft-config-exec)
-  :pl-setq (wl-address-file
-            wl-folders-file
-            elmo-passwd-alist-file-name
-            wl-info-file)
   :hook
   `((wl-init-hook . (lambda()
                       (add-to-list 'mime-charset-coding-system-alist
@@ -2019,6 +1603,10 @@ video/*; xdg-open %s;
                             (set (make-local-variable 'wl-from)
                                  (std11-fetch-field "From"))))
     )
+  :pl-setq (wl-address-file
+            wl-folders-file
+            elmo-passwd-alist-file-name
+            wl-info-file)
   )
    #+end_src
    割と =/etc/emacs/site-start.d/65wl-beta.el= と重複している気がするが.
@@ -2034,9 +1622,9 @@ video/*; xdg-open %s;
      #+begin_src emacs-lisp :tangle init-wl.el
 (eval-when-compile
   (require 'leaf-keywords)
-  ;; (require 'cp5022x)
+  (require 'cp5022x)
   (require 'wl)
-  ;; (require 'mime-def)
+  (require 'mime-def)
   (leaf-keywords-init)
   )
      #+end_src
@@ -2044,21 +1632,36 @@ video/*; xdg-open %s;
     :PROPERTIES:
     :CUSTOM_ID: org9638e017
     :END:
+**** cp5022x を使う
+     :PROPERTIES:
+     :CUSTOM_ID: orga4113e25
+     :END:
+     ISO-2022-JP を CP50220 として扱う.
+     [[http://d.hatena.ne.jp/kiwanami/20091103/1257243524][Wanderlustと文字コード]] も参照のこと.
+     #+begin_src emacs-lisp :tangle init-wl.el
+;; (add-to-list 'mime-charset-coding-system-alist
+;;              '(iso-2022-jp . cp50220))
+;; fxxkin outlook
+;; (add-to-list 'mime-charset-coding-system-alist
+;;              '(gb2312 . gbk))
+;;
+;; (setq wl-mime-charset 'iso-2022-jp)
+;; (setq wl-mime-charset 'utf-8-unix)
+     #+end_src
 **** SEMI の追加設定
      :PROPERTIES:
      :CUSTOM_ID: orgc4ec7a62
      :END:
-     HTML メールを表示するために emacs-w3m を使う.
+     HTML メールを表示するために eww を使う.
      mime-setup がロードされる前に記述する必要あり.
      #+begin_src emacs-lisp :tangle init-wl.el
-;; (leaf mime-setup
-;;   :preface
-;;   ;; (leaf w3m-load)
-;;   ;; (leaf mime-w3m :require t)
-;;   )
+(leaf mime-setup
+  :preface
+  (setq mime-view-text/html-previewer 'shr)
+  )
      #+end_src
      どのアプリケーションで開くか → =xdg-open= に丸投げ．
-     #+begin_src emacs-lisp :tangle no
+     #+begin_src emacs-lisp :tangle init-wl.el
 ;; (defvar my:mime-preview-play-current-entity-appname "xdg-open"
 ;;   "meadow なら fiber, mac なら open, linux なら xdg-open")
 ;; (cond
@@ -2093,34 +1696,38 @@ video/*; xdg-open %s;
 ;;                              filename)))
 ;;         (set-alist 'mime-mailcap-method-filename-alist process filename)
 ;;         (set-process-sentinel process 'mime-mailcap-method-sentinel)))))
-;; (setq mime-play-delete-file-immediately nil)
-;; (setq mime-view-mailcap-files '("~/.mailcap"))
+(setq mime-play-delete-file-immediately nil)
+(setq mime-view-mailcap-files '("~/.mailcap"))
+     #+end_src
+     =~/.mailcap= 自体は以下
+     #+begin_src conf :tangle no
+applications/*; xdg-open %s;
+image/*; xdg-open %s;
+video/*; xdg-open %s;
      #+end_src
      MIME の例の保存先の変更
      #+begin_src emacs-lisp :tangle init-wl.el
-;; (setq mime-situation-examples-file
-;;       (concat my:d:tmp "mime-example"))
+(setq mime-situation-examples-file
+      (expand-file-name "mime-example" my:d:tmp))
      #+end_src
      text/plain を html より優先.
      #+begin_src emacs-lisp :tangle init-wl.el
-;;(setq mime-view-type-subtype-score-alist
-;;      '(((text . plain) . 1)
-;;        ((text . html)  . 0)
-;;        ))
+(setq mime-view-type-subtype-score-alist
+      '(((text . plain) . 1)
+        ((text . html)  . 0)
+        ))
      #+end_src
      音を鳴らすアレやコレの無効化
      #+begin_src emacs-lisp :tangle init-wl.el
-;; (setq mime-play-find-every-situations nil
-;;       process-connection-type nil)
+(setq mime-play-find-every-situations nil
+      process-connection-type nil)
      #+end_src
 *** 個人情報の設定
     :PROPERTIES:
     :CUSTOM_ID: org6dae78eb
     :END:
-    具体的な設定内容は以下のファイルに置いている
-    #+begin_src emacs-lisp :tangle init-wl.el
-;; (load (concat my:d:password-store "/wl-info.gpg"))
-    #+end_src
+    具体的な設定内容は =wl-info-file= に書いている
+
     設定している内容は以下の通り
 **** 自身のメールアドレスと購読メーリングリストの設定
      :PROPERTIES:
@@ -2216,7 +1823,7 @@ video/*; xdg-open %s;
      ついでに template の切り替えに関して幾つか設定.
      #+begin_src emacs-lisp :tangle init-wl.el
 ;; template 切り替え時に 内容を表示
-;; (setq wl-template-visible-select t)
+(setq wl-template-visible-select t)
      #+end_src
      =draft-mode= で =C-c C-n= をするとテンプレートを切り替え
      #+begin_src emacs-lisp  :tangle init-wl.el
@@ -2259,15 +1866,15 @@ video/*; xdg-open %s;
      :PROPERTIES:
      :CUSTOM_ID: org6572a382
      :END:
-     =~/.cache/wanderlust/= に集約している
+     =~/.cache/wl/= に集約している
      local の Mail folder(MH) の位置
      #+begin_src emacs-lisp :tangle init-wl.el
-(setq elmo-localdir-folder-path "~/.cache/wanderlust/local")
+;; (setq elmo-localdir-folder-path "~/.cache/wl/local")
      #+end_src
      local フォルダの設定:
-     =.lost+found= は =elmo-maildir-folder-path= からの相対パスになっていることに注意
+     =.lost+found= は =elmo-localdir-folder-path= からの相対パスになっていることに注意
      #+begin_src emacs-lisp :tangle init-wl.el
-(setq elmo-lost+found-folder ".lost+found")
+(setq elmo-lost+found-folder "+lost+found")
 (setq wl-queue-folder "+queue")
      #+end_src
      folders の位置の変更
@@ -2277,8 +1884,7 @@ video/*; xdg-open %s;
      Drafts, Trash の置き場所
      #+begin_src emacs-lisp :tangle init-wl.el
 (setq wl-draft-folder "+drafts")
-(setq wl-trash-folder "+drash")
-(setq elmo-lost+found-folder "+lost+found")
+(setq wl-trash-folder "+trash")
 (setq wl-temporary-file-directory "~/Downloads/")
      #+end_src
      アドレス帳
@@ -2765,37 +2371,29 @@ video/*; xdg-open %s;
     デフォルトより細かく指定するために幾つかの face 定義を追加.
     #+begin_src emacs-lisp :tangle init-wl.el
 (setq wl-highlight-message-header-alist
-      '(("Subject[ \t]*:"
-         . wl-highlight-message-subject-header-contents)
-        ("From[ \t]*:"
-         . wl-highlight-message-from-header-contents)
-        ("Date[ \t]*:"
-         . wl-highlight-message-date-header-contents)
-        ("\\(.*To\\|Cc\\|Newsgroups\\)[ \t]*:"
-         . wl-highlight-message-important-header-contents)
-        ("\\(User-Agent\\|X-Mailer\\|X-Newsreader\\)[ \t]*:"
-         . wl-highlight-message-unimportant-header-contents)
+      '(("Subject[ \t]*:" . wl-highlight-message-subject-header-contents)
+        ("From[ \t]*:" . wl-highlight-message-from-header-contents)
+        ("Date[ \t]*:" . wl-highlight-message-date-header-contents)
+        ("\\(.*To\\|Cc\\|Newsgroups\\)[ \t]*:" . wl-highlight-message-important-header-contents)
+        ("\\(User-Agent\\|X-Mailer\\|X-Newsreader\\)[ \t]*:" . wl-highlight-message-unimportant-header-contents)
         ))
-;; face の色付け
-(defun my:wl-set-face (face spec)
-  (make-face face)
-  (cond ((fboundp 'face-spec-set)
-         (face-spec-set face spec))
-        (t
-         (wl-declare-face face spec))))
-;;
-(my:wl-set-face
- 'wl-highlight-message-subject-header-contents
- '((t (:foreground "#FF5252" :bold t :italic nil :weight bold ))))
-(my:wl-set-face
- 'wl-highlight-message-from-header-contents
- '((t (:foreground "#FFD740" :bold t :italic nil :weight bold ))))
-(my:wl-set-face
- 'wl-highlight-message-date-header-contents
- '((t (:foreground "#5CF19E" :bold t :italic nil :weight bold ))))
+;; use modus-vivendi color pallete
+(face-spec-set `wl-highlight-message-subject-header-contents     `((t (:foreground "#ff7f9f" :bold t ))))  ; red-cooler
+(face-spec-set `wl-highlight-message-from-header-contents        `((t (:foreground "#fec43f" :bold t ))))  ; yellow-warmer
+(face-spec-set `wl-highlight-message-date-header-contents        `((t (:foreground "#88ca9f" :bold t ))))  ; green-faint
+(face-spec-set `wl-highlight-message-important-header-contents   `((t (:foreground "#ff66ff" ))))          ; magenta-intence
+(face-spec-set `wl-highlight-message-unimportant-header-contents `((t (:foreground "#9f9f9f" ))))          ; fg-dim
     #+end_src
     以下, 元々定義されているfaceの設定
-    #+begin_src emacs-lisp :tangle init-wl.el
+    #+begin_src emacs-lisp :tangle no
+;; ;; face の色付け
+;; ;;;###autoload
+;; (defun my:wl-set-face (face spec)
+;;   (make-face face)
+;;   (cond ((fboundp 'face-spec-set)
+;;          (face-spec-set face spec))
+;;         (t
+;;          (wl-declare-face face spec))))
 ;; (my:wl-set-face 'wl-highlight-folder-closed-face
 ;;                 '((t (:foreground "#4cff4c" :bold nil :italic nil :weight normal ))))
 ;; (my:wl-set-face 'wl-highlight-folder-few-face
@@ -3122,6 +2720,369 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :ensure t
   )
    #+end_src
+* 補完: =vertico=, =marginalia=, =consult=, =corfu=
+  :PROPERTIES:
+  :CUSTOM_ID: org5fd7347f
+  :END:
+  最近話題になりだしたので, ちょっと使い始めてみた.
+** helm, ivy の無効化
+   :PROPERTIES:
+   :CUSTOM_ID: orgff7e02fd
+   :END:
+   依存する拡張がまだまだ多いので, 一度インストールして邪魔しないようにしておくことに.
+   #+begin_src emacs-lisp
+(leaf helm :defer-config (helm-mode -1))
+(leaf ivy :defer-config (ivy-mode -1))
+   #+end_src
+** 無視する拡張子の追加設定
+   :PROPERTIES:
+   :CUSTOM_ID: orgbf52614c
+   :END:
+  とりあえず, 無視するファイルの拡張子を指定しておく.
+  #+begin_src emacs-lisp :tangle init.el
+(leaf *completion
+  :init
+  ;; 補完で無視する拡張子の追加．そのうち増える．
+  (cl-loop for ext in
+           '(;; TeX
+             ".dvi"
+             ".fdb_latexmk"
+             ".fls"
+             ".ilg"
+             ".jqz"
+             ".nav"
+             ".out"
+             ".snm"
+             ".synctex\\.gz"
+             ".vrb"
+             ;; fortran >= 90
+             ".mod"
+             ;; zsh
+             ".zwc"
+             ;; libtool
+             ".in"
+             ".libs/"
+             ;; fxxkin Apple
+             ".DS_Store"
+             "._DS_Store"
+             ;; "org-id-locations"
+             )
+           do (add-to-list 'completion-ignored-extensions ext))
+  )
+  #+end_src
+** =vertico=: 本体
+   :PROPERTIES:
+   :CUSTOM_ID: org8362fd9f
+   :END:
+   [[https://scrapbox.io/emacs/find-file%E3%81%A7Helm%E3%81%BF%E3%81%9F%E3%81%84%E3%81%ABC-l%E3%81%A7%E3%83%87%E3%82%A3%E3%83%AC%E3%82%AF%E3%83%88%E3%83%AA%E3%82%92%E9%81%A1%E3%82%8B][find-fileでHelmみたいにC-lでディレクトリを遡る - emacs]]
+   より, =C-l= で一つ上の階層へ上がれる様にしたり.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf vertico
+  :ensure t
+  :preface
+  (defun my:disable-selection ()
+    (when (eq minibuffer-completion-table #'org-tags-completion-function)
+      (setq-local vertico-map minibuffer-local-completion-map
+                  completion-cycle-threshold nil
+                  completion-styles '(basic))))
+  ;;
+  ;; @see https://misohena.jp/blog/2022-08-15-transition-ivy-to-vertico.html
+  ;; 候補更新時に最初の候補を選択しない -> (vertico-preselect . 'prompt)
+
+  ;; ただし require-matchがt(やそれに類するもの)で入力が空ではなくマッチする候
+  ;; 補がある場合は、その候補の先頭を選択する。
+  (defun my:vertico--recompute (orig-fun pt content &rest args)
+    (let ((result (apply orig-fun pt content args)))
+      (if (and (not (equal content ""))
+               ;; 入力が空の時は(require-matchであっても)defaultまたはnilを返
+               ;; すことになっている。
+               (> (alist-get 'vertico--total result) 0) ;; < for syntax
+               ;; completing-readの説明によれば
+               ;; nil,confirm,confirm-after-completion以外はtのように
+               ;; 振る舞うべき。
+               (not (memq minibuffer--require-match
+                          '(nil confirm confirm-after-completion))))
+          (setf (alist-get 'vertico--index result) 0))
+      result))
+  ;;
+  ;;
+  (defun my:filename-upto-parent ()
+    "Move to parent directory like \"cd ..\" in find-file."
+    (interactive)
+    (let ((sep (eval-when-compile (regexp-opt '("/" "\\")))))
+      (save-excursion
+        (left-char 1)
+        (when (looking-at-p sep)
+          (delete-char 1)))
+      (save-match-data
+        (when (search-backward-regexp sep nil t)
+          (right-char 1)
+          (filter-buffer-substring (point)
+                                   (save-excursion (end-of-line) (point))
+                                   #'delete)))))
+  :advice
+  ((:before vertico--setup
+            my:disable-selection)
+   (:around vertico--recompute-candidates
+            my:vertico--recompute)
+   )
+  :bind
+  (:vertico-map (("C-l" . my:filename-upto-parent)))
+;;  :custom-face
+;;  `((vertico-current
+;;     . '((t (:inherit hl-line :background unspecified)))))
+  :init
+  (setq vertico-count 8
+        vertico-cycle t
+        vertico-preselect 'prompt
+        vertico-multiline '(("↓" 0 1 (face vertico-multiline))
+                            ("…" 0 1 (face vertico-multiline)))
+        )
+  ;; :config
+  :hook (emacs-startup-hook . vertico-mode)
+  )
+  #+end_src
+** =marginalia=: リッチな注釈(Enable richer annotations)
+   :PROPERTIES:
+   :CUSTOM_ID: orge9265e4d
+   :END:
+   行揃えが微妙. あと, ファイル名を省略表示できないのかな?
+   ⇒ [[https://github.com/minad/marginalia/issues/70][Better truncation method for file names #70]]
+   #+begin_src emacs-lisp :tangle init.el
+(leaf marginalia
+  :ensure t
+  :init
+  ;; 補完でも icon 表示
+  (leaf nerd-icons-completion
+   :ensure t
+   :hook
+   (emacs-startup-hook . nerd-icons-completion-mode)
+   )
+  :bind (("M-A" . marginalia-cycle)
+         (:minibuffer-local-map
+          ("M-A" . marginalia-cycle)
+          ))
+  :init
+  (setq marginalia-annotators    '(marginalia-annotators-light
+                                   marginalia-annotators-heavy
+                                   nil)
+        marginalia-align         'right
+        marginalia-align-offset  -2 ;; icon 分引いておく
+        )
+  :hook
+  ((emacs-startup-hook . marginalia-mode)
+   (marginalia-mode-hook . nerd-icons-completion-marginalia-setup)
+   )
+  )
+   #+end_src
+** =consult=: 便利コマンド集
+   :PROPERTIES:
+   :CUSTOM_ID: orged5e5627
+   :END:
+   とりあえず recetnf が使えないと途方に暮れるので
+   =consult-recent-file= のカスタマイズのみ.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf consult
+  :ensure t
+  :bind (("C-x C-r" . my:consult-recent-file))
+  ;; :defvar recentf-list
+  :init
+  (setq consult-narrow-key          "<"
+        consult-async-refresh-delay 0.2
+        consult-preview-key         nil
+        ;; 増やさないと preview 時に theme がロードされない模様.
+        ;; とりあえず default の 10 倍にしている. 1 MB かな?
+        consult-preview-raw-size 1024000
+        )
+  :config
+  (defun my:consult-recent-file ()
+    "Find recent using `completing-read' with shorten filename"
+    (interactive)
+    (eval-when-compile (require 'recentf))
+    (recentf-mode +1)
+    (let ((files (mapcar (lambda (f)
+                           (cons (my:shorten-file-path f (- (window-width) 2)) f))
+                         recentf-list)))
+      (let ((selected
+             (consult--read (mapcar #'car files)
+                            :prompt "Find recent file: "
+                            :sort nil
+                            :require-match t
+                            :category 'file
+                            :state (consult--file-preview)
+                            :history 'file-name-history)))
+        (find-file (assoc-default selected files)))))
+  )
+   #+end_src
+** =orderless=: 補完候補の選択
+   :PROPERTIES:
+   :CUSTOM_ID: orgc12df551
+   :END:
+   イロイロと凝れそうだけど, とりあえずはデフォルトのままで.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf orderless
+  :ensure t
+  :init
+  (setq completion-styles '(orderless)
+        orderless-matching-styles '(orderless-prefixes
+                                    orderless-flex
+                                    orderless-regexp
+                                    orderless-initialism
+                                    orderless-literal)
+        )
+  )
+   #+end_src
+** =corfu=: on the fly completions
+   :PROPERTIES:
+   :CUSTOM_ID: org37d21658
+   :END:
+   =company= より使い勝手が良い, 気がする.
+   :PROPERTIES:
+   :CUSTOM_ID: orgb72396fd
+   :END:
+   #+begin_src emacs-lisp
+(leaf corfu
+  :ensure t
+  :preface
+  (defvar-keymap my:corfu-auto-map
+    :doc "Keymap used when popup is shown automatically."
+    "C-g" #'corfu-quit
+    )
+  (defvar my:corfu-in-auto-complete nil)
+;;;###autoload
+(defun my:corfu--auto-complete-deferred:around (oldfun &rest args)
+  ;; 自動補完時に呼び出される
+  (let ((my:corfu-in-auto-complete t))
+    ;; 元の関数を呼び出す. 補完候補があるなら setup が呼ばれる
+    (apply oldfun args)))
+;;;###autoload
+(defun my:corfu--setup:around (oldfun &rest args)
+  (if my:corfu-in-auto-complete
+      ;; 自動補完の時
+      (progn
+        (setf (alist-get 'tab-line-format corfu--buffer-parameters) "   C-M-i:補完"
+              ;; 最初の候補を選ばない
+              corfu-preselect 'prompt)
+        (let (;; キー割り当てを極力無くす
+              (corfu-map my:corfu-auto-map))
+          (apply oldfun args)))
+    ;; 手動補完の時
+    (setf (alist-get 'tab-line-format corfu--buffer-parameters) nil
+          ;; 最初の候補を選ぶ
+          corfu-preselect 'first)
+    (apply oldfun args)))
+  :advice ((:around corfu--auto-complete-deferred
+                    my:corfu--auto-complete-deferred:around)
+           (:around corfu--setup
+                    my:corfu--setup:around))
+  :init
+  (leaf corfu-terminal
+    :ensure t
+    :init (setq corfu-terminal-disable-on-gui nil)
+    )
+  :bind
+  (:corfu-map
+   ("TAB"       . corfu-next)
+   ("<tab>"     . corfu-next)
+   ("S-TAB"     . corfu-previous)
+   ("<backtab>" . corfu-previous)
+   ("C-j"       . corfu-next)
+   ("C-n"       . corfu-next)
+   ("C-p"       . corfu-previous)
+   ("C-k"       . corfu-previous)
+   ("C-g"       . corfu-quit)
+   )
+  :hook (emacs-startup-hook . (lambda ()
+                                (corfu-terminal-mode +1)
+                                (global-corfu-mode)))
+  :config
+  (setq completion-cycle-threshold 4
+        tab-always-indent          'complete
+        ;; Enable cycling for `corfu-next/previous'
+        corfu-cycle                t
+        ;; Enable auto completion
+        corfu-auto                 t
+        corfu-preselect            'prompt
+        ;; (corfu-separator          . ?\s)  ;; Orderless field separator
+        ;; (corfu-quit-at-boundary   . nil)  ;; Never quit at completion boundary
+        ;; (corfu-quit-no-match      . nil)  ;; Never quit, even if there is no match
+        ;; (corfu-preview-current    . nil)  ;; Disable current candidate preview
+        ;; (corfu-on-exact-match     . nil)  ;; Configure handling of exact matches
+        ;; (corfu-echo-documentation . nil)  ;; Disable documentation in the echo area
+        ;; (corfu-scroll-margin      . 5)    ;; Use scroll margin
+    )
+  )
+   #+end_src
+** =kind-icon=: corfu で補完候補にアイコン表示
+   :PROPERTIES:
+   :CUSTOM_ID: org80404324
+   :END:
+   svg-lib でのアイコン表示ではなく nerd-icons を利用するように.
+   #+begin_src emacs-lisp
+(leaf kind-icon
+  :ensure t
+  :after corfu-terminal
+  :init
+  (setq kind-icon-default-face 'corfu-default
+        kind-icon-use-icons    nil
+        kind-icon-mapping      `(
+                                 (array          ,(nerd-icons-codicon "nf-cod-symbol_array")       :face font-lock-type-face)
+                                 (boolean        ,(nerd-icons-codicon "nf-cod-symbol_boolean")     :face font-lock-builtin-face)
+                                 (class          ,(nerd-icons-codicon "nf-cod-symbol_class")       :face font-lock-type-face)
+                                 (color          ,(nerd-icons-codicon "nf-cod-symbol_color")       :face success)
+                                 (command        ,(nerd-icons-codicon "nf-cod-terminal")           :face default)
+                                 (constant       ,(nerd-icons-codicon "nf-cod-symbol_constant")    :face font-lock-constant-face)
+                                 (constructor    ,(nerd-icons-codicon "nf-cod-triangle_right")     :face font-lock-function-name-face)
+                                 (enummember     ,(nerd-icons-codicon "nf-cod-symbol_enum_member") :face font-lock-builtin-face)
+                                 (enum-member    ,(nerd-icons-codicon "nf-cod-symbol_enum_member") :face font-lock-builtin-face)
+                                 (enum           ,(nerd-icons-codicon "nf-cod-symbol_enum")        :face font-lock-builtin-face)
+                                 (event          ,(nerd-icons-codicon "nf-cod-symbol_event")       :face font-lock-warning-face)
+                                 (field          ,(nerd-icons-codicon "nf-cod-symbol_field")       :face font-lock-variable-name-face)
+                                 (file           ,(nerd-icons-codicon "nf-cod-symbol_file")        :face font-lock-string-face)
+                                 (folder         ,(nerd-icons-codicon "nf-cod-folder")             :face font-lock-doc-face)
+                                 (interface      ,(nerd-icons-codicon "nf-cod-symbol_interface")   :face font-lock-type-face)
+                                 (keyword        ,(nerd-icons-codicon "nf-cod-symbol_keyword")     :face font-lock-keyword-face)
+                                 (macro          ,(nerd-icons-codicon "nf-cod-symbol_misc")        :face font-lock-keyword-face)
+                                 (magic          ,(nerd-icons-codicon "nf-cod-wand")               :face font-lock-builtin-face)
+                                 (method         ,(nerd-icons-codicon "nf-cod-symbol_method")      :face font-lock-function-name-face)
+                                 (function       ,(nerd-icons-codicon "nf-cod-symbol_method")      :face font-lock-function-name-face)
+                                 (module         ,(nerd-icons-codicon "nf-cod-file_submodule")     :face font-lock-preprocessor-face)
+                                 (numeric        ,(nerd-icons-codicon "nf-cod-symbol_numeric")     :face font-lock-builtin-face)
+                                 (operator       ,(nerd-icons-codicon "nf-cod-symbol_operator")    :face font-lock-comment-delimiter-face)
+                                 (param          ,(nerd-icons-codicon "nf-cod-symbol_parameter")   :face default)
+                                 (property       ,(nerd-icons-codicon "nf-cod-symbol_property")    :face font-lock-variable-name-face)
+                                 (reference      ,(nerd-icons-codicon "nf-cod-references")         :face font-lock-variable-name-face)
+                                 (snippet        ,(nerd-icons-codicon "nf-cod-symbol_snippet")     :face font-lock-string-face)
+                                 (string         ,(nerd-icons-codicon "nf-cod-symbol_string")      :face font-lock-string-face)
+                                 (struct         ,(nerd-icons-codicon "nf-cod-symbol_structure")   :face font-lock-variable-name-face)
+                                 (text           ,(nerd-icons-codicon "nf-cod-text_size")          :face font-lock-doc-face)
+                                 (typeparameter  ,(nerd-icons-codicon "nf-cod-list_unordered")     :face font-lock-type-face)
+                                 (type-parameter ,(nerd-icons-codicon "nf-cod-list_unordered")     :face font-lock-type-face)
+                                 (unit           ,(nerd-icons-codicon "nf-cod-symbol_ruler")       :face font-lock-constant-face)
+                                 (value          ,(nerd-icons-codicon "nf-cod-symbol_field")       :face font-lock-builtin-face)
+                                 (variable       ,(nerd-icons-codicon "nf-cod-symbol_variable")    :face font-lock-variable-name-face)
+                                 (t              ,(nerd-icons-codicon "nf-cod-code")               :face font-lock-warning-face))
+        )
+  :config
+  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
+  )
+   #+end_src
+** =cape=: 補完 backend
+   :PROPERTIES:
+   :CUSTOM_ID: org3b1ea0b6
+   :END:
+   #+begin_src emacs-lisp
+(leaf cape
+  :ensure t
+  :config
+  (setq cape-dabbrev-check-other-buffers nil)
+  (add-to-list 'completion-at-point-functions 'cape-keyword)
+  (add-to-list 'completion-at-point-functions 'cape-dabbrev)
+  (add-to-list 'completion-at-point-functions 'cape-file)
+  (add-to-list 'completion-at-point-functions 'cape-tex)
+  (add-to-list 'completion-at-point-functions 'cape-emoji)
+  )
+   #+end_src
 * 翻訳
   :PROPERTIES:
   :CUSTOM_ID: org779f9ba7
@@ -3194,13 +3155,12 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    #+begin_src emacs-lisp :tangle init.el
 (leaf flyspell
   :if (executable-find "aspell")
-  ;; :blackout (flyspell-mode . "F")
-  :custom
-  `((ispell-program-name   . "aspell")
-    (ispell-check-comments . nil)
-    (ispell-skip-html      . t)
-    (ispell-silently-savep . t)
-    )
+  :init
+  (setq ispell-program-name   "aspell"
+        ispell-check-comments nil
+        ispell-skip-html      t
+        ispell-silently-savep t
+        )
   :bind (:flyspell-mode-map
          ("C-." . nil)
          ("C-," . nil))
@@ -3220,16 +3180,16 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :commands (lookup lookup-region lookup-pattern)
   :bind (("C-c w" . lookup-pattern)
          ("C-c W" . lookup-word))
-  :custom
-  (lookup-search-agents
-   . '((ndeb "/usr/local/share/dict/eijiro" :alias "英辞郎")
-       (ndeb "/usr/local/share/dict/waeijiro" :alias "和英辞郎")
-       (ndeb "/usr/local/share/dict/rikagaku5" :alias "理化学辞典 第5版")
-       (ndeb "/usr/local/share/dict/koujien4" :alias "広辞苑 第4版")
-       (ndeb "/usr/local/share/dict/wadai5" :alias "研究社 和英大辞典 第5版")
-       ;; (ndeb "/usr/local/share/dict/eidai6" :alias "研究社 英和大辞典 第6版")
-       ;; (ndeb "/usr/local/share/dict/colloc" :alias "研究社 英和活用大辞典 ")
-       ))
+  :init
+  (setq lookup-search-agents '((ndeb "/usr/local/share/dict/eijiro" :alias "英辞郎")
+                               (ndeb "/usr/local/share/dict/waeijiro" :alias "和英辞郎")
+                               (ndeb "/usr/local/share/dict/rikagaku5" :alias "理化学辞典 第5版")
+                               (ndeb "/usr/local/share/dict/koujien4" :alias "広辞苑 第4版")
+                               (ndeb "/usr/local/share/dict/wadai5" :alias "研究社 和英大辞典 第5版")
+                               ;; (ndeb "/usr/local/share/dict/eidai6" :alias "研究社 英和大辞典 第6版")
+                               ;; (ndeb "/usr/local/share/dict/colloc" :alias "研究社 英和活用大辞典 ")
+                               )
+        )
   )
    #+end_src
 ** =text-adjust=: 全角文字の撲滅
@@ -3243,6 +3203,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    :PROPERTIES:
    :CUSTOM_ID: org4e0bdd17
    :END:
+   意図せず動作するので一旦停止.
    #+begin_src emacs-lisp
 (leaf flycheck
   :ensure t
@@ -3276,34 +3237,150 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    (draft-mode-hook    . flycheck-mode))
   )
    #+end_src
-* 閉じタグの入力補助: =smartparens=
+* プログラミング関連
   :PROPERTIES:
-  :CUSTOM_ID: orgc0b8a536
+  :CUSTOM_ID: org31fb6f15
   :END:
-  #+begin_src emacs-lisp :tangle init.el
-(leaf smartparens
-  :disabled t
+** Language Server による補完: =eglot=
+   :PROPERTIES:
+   :CUSTOM_ID: org1d7a5ece
+   :END:
+   Emacs 29から 本体に同梱されることになったので =eglot= を利用することに.
+   サーバの呼び出し自体は言語毎に hook で設定する.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf eglot
   :ensure t
-  ;; :blackout t
-  :defun (sp-pair)
-  :hook (emacs-startup-hook . smartparens-global-mode)
+  :bind (("M-t" . xref-find-definitions)
+         ("M-r" . xref-find-references))
+  :init
+;;;###autoload
+(defun my:eglot-capf()
+  (setq-local completion-at-point-functions
+              (list (cape-super-capf
+                     #'eglot-completion-at-point)
+                    #'cape-keyword
+                    #'cape-dabbrev
+                    #'cape-file)
+              ))
+  :hook
+  ((eglot-managed-mode-hook . my:eglot-capf))
   :config
-  (require 'smartparens-config)
-  (sp-pair "=" "=" :actions '(wrap))
-  (sp-pair "+" "+" :actions '(wrap))
-  (sp-pair "<" ">" :actions '(wrap))
-  (sp-pair "$" "$" :actions '(wrap))
+  ;; digestif は日本語TeXとイマイチ相性が悪い(上手く使い熟せていない...).
+  (delete (assoc '(tex-mode context-mode texinfo-mode bibtex-mode)
+                 eglot-server-programs)
+          eglot-server-programs)
+  (add-to-list 'eglot-server-programs
+             '((latex-mode tex-mode context-mode texinfo-mode bibtex-mode) . ("texlab")))
   )
-  #+end_src
-* カラーコードに色付け: =rainbow-mode=
-  :PROPERTIES:
-  :CUSTOM_ID: org1f0e431b
-  :END:
-  =#RRGGBB= のカラーコードに勝手に色が付く．CSS の編集中なんかで地味に便利．
-  #+begin_src emacs-lisp :tangle init.el
-(leaf rainbow-mode
+   #+end_src
+** flaymake
+   :PROPERTIES:
+   :CUSTOM_ID: org82f6778a
+   :END:
+   #+begin_src emacs-lisp :tangle init.el
+(leaf flymake
   :ensure t
-  ;; :blackout `((rainbow-mode . ,(format " %s" "\x1F308")))
+  :init
+  (leaf flymake-diagnostic-at-point
+    :ensure t
+    :commands flymake-diagnostic-at-point-mode)
+  :bind (:flymake-mode-map
+         ("C-c C-p" . flymake-goto-prev-error)
+         ("C-c C-n" . flymake-goto-next-error)
+         )
+  :hook (flymake-mode-hook . flymake-diagnostic-at-point-mode)
+  :config
+  (remove-hook 'flymake-diagnostic-functions 'flymake-proc-legacy-flymake)
+  )
+   #+end_src
+* TeX: =AUCTeX=
+  :PROPERTIES:
+  :CUSTOM_ID: org88a3cb1b
+  :END:
+  やっている事は
+  - japanese-latex-mode において, 幾つかのコマンドが追加/上書きされているものの,
+    あまり使うことの無いコマンドが表示されるのが嫌なのでそれらを削除．
+  - コンパイルには[[http://personal.psu.edu/jcc8/software/latexmk/][Latexmk]]を使う
+  と言った所.
+  …ただ, Beamerのクラスなんかだと勝手にdefault コマンドが LaTeX に変更されたりするので挙動がイマイチ良くわからん.
+  async で =latexmk -pvc= を走らせておいた方が気持が良い, 気がしている.
+  #+begin_src emacs-lisp :tangle init.el
+(leaf tex-site
+  :if (and (executable-find "uplatex")
+           (executable-find "latexmk"))
+  :ensure auctex
+  :preface
+  (unless (file-directory-p (expand-file-name "auctex/auto" my:d:tmp))
+    (progn
+      (make-directory (expand-file-name "auctex/auto" my:d:tmp) t)
+      (make-directory (expand-file-name "auctex/style" my:d:tmp) t)))
+  ;;
+  :mode ("\\.tex\\'" . japanese-latex-mode) ;; → tex-jp で提供
+  ;;
+  :init
+  (leaf auctex-latexmk
+    :ensure t
+    :hook
+    ((LaTeX-mode-hook . auctex-latexmk-setup))
+    )
+  (leaf tex-jp
+    :commands japanese-latex-mode
+    :hook
+    `((LaTeX-mode-hook . (lambda()
+                           (turn-on-reftex)
+                           (TeX-source-correlate-mode)
+                           (TeX-PDF-mode)
+                           (LaTeX-math-mode)
+                           (outline-minor-mode)
+                           (setq TeX-command-default "LatexMk"
+                                 japanese-LaTeX-command-default "LatexMk")
+                           ))
+      (LaTeX-mode-hook . (lambda()
+                           (add-hook 'TeX-after-compilation-finished-functions
+                                     #'TeX-revert-document-buffer)))
+      (LaTeX-mode-hook . eglot-ensure)
+      )
+    )
+  :config
+  ;; reftex
+  (setq reftex-plug-into-AUCTeX t
+        reftex-cite-prompt-optional-args t
+        )
+  ;; tex-site
+  (setq TeX-default-mode 'japanese-latex-mode ;; 🤔
+        TeX-force-default-mode t
+        TeX-parse-self t
+        TeX-auto-save t
+        TeX-auto-local (expand-file-name "auctex/auto" my:d:tmp)
+        TeX-style-local (expand-file-name "auctex/style" my:d:tmp)
+        TeX-auto-untabify t
+        TeX-engine 'uptex
+        TeX-view-program-selection  '((output-dvi "xdvi")
+                                      (output-pdf "Okular")
+                                      ;; (output-pdf "Evince")
+                                      (output-html "xdg-open"))
+        TeX-source-correlate-method 'synctex
+        TeX-source-correlate-start-server t
+        TeX-source-correlate-mode t
+        ;; TeX-command-default "LatexMk"
+        TeX-ispell-extend-skip-list t
+        TeX-command-output-list '(("LatexMk" ("pdf")))
+        TeX-electric-sub-and-superscript t
+        )
+  ;; tex-jp
+  (setq japanese-TeX-engine-default 'uptex
+        japanese-LaTeX-default-style "jlreq" ;; jsarticle? bxjsarticle?
+        ;; japanese-LaTeX-command-default "LatexMk"
+        )
+  ;; latex.el
+  (setq LaTeX-figure-label "fig:"
+        LaTeX-table-label "tab:"
+        LaTeX-section-label "sec:")
+  ;; font-latex
+  (setq font-latex-fontify-script nil
+        font-latex-script-display nil
+        font-latex-fontify-sectioning  1.0
+        )
   )
   #+end_src
 * Org-mode
@@ -3325,10 +3402,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (set (make-local-variable 'time-stamp-start) "#\\+date: ")
   (set (make-local-variable 'time-stamp-end)   "\$")
   )
-;; org-plus-contrib も使うかなぁ….
 (leaf org
   :ensure t
-  ;; :blackout `((org-mode . ,(all-the-icons-icon-for-mode 'org-mode)))
   :bind (("C-x n s" . org-narrow-to-subtree)
          ("C-x n w" . widen)
          ("C-c a"   . org-agenda)
@@ -3347,63 +3422,65 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     ;; (org-todo-statistics-hook       . my:org-archive-done-tasks)
     ;; (org-todo-after-statistics-hook . my:org-archive-done-tasks)
     )
-  :custom
-  `(;; Nextcloud に保存する
-    (org-directory              . ,(expand-file-name my:d:org))
-    ;; return でリンクを辿る
-    (org-return-follows-link    . t)
-    ;; 見出しを畳んで表示
-    (org-startup-folded         . t)
-    ;; 折り返し無し
-    (org-startup-truncated      . t)
-    ;; インデントする
-    (org-adapt-indentation      . t)
-    ;; link handler → xdg-open 任せ
-    (org-file-apps-defaults     . '((remote . emacs)
-                                    (system . "xdg-open %s")
-                                    (t      . "xdg-open %s")))
-    (org-file-apps-defaults-gnu . '((remote . emacs)
-                                    (system . "xdg-open %s")
-                                    (t      . "xdg-open %s")))
-    (org-file-apps              . '((auto-mode . emacs)
-                                    ("\\.mm\\'" . default)
-                                    ("\\.x?html?\\'" . "xdg-open %s")
-                                    ("\\.pdf\\'" . "xdg-open %s")))
-    ;; GTD: 状態の追加
-    (org-todo-keywords          . '((sequence "TODO(t)" "WAIT(w)" "SOMEDAY(s)" "|" "DONE(d)" "CANCEL(c)")
-                                    (type "ARTICLE(a)" "|" "DONE(d)")
-                                    (type "MEMO(m)" "|" "DONE(d)")))
-    (org-todo-keyword-faces     . '(("TODO"    . org-todo)
-                                    ("WAIT"    . org-todo)
-                                    ("ARTICLE" . (:foreground "#7fbfff" :weight bold))
-                                    ("MEMO"    . (:foreground "#7fbfff" :weight bold))
-                                    ("SOMEDAY" . (:foreground "#7fff7f" :weight bold))))
-    ;; GTD: タグの追加
-    (org-tag-alist              . '(("OFFICE"     . ?o)
-                                    ("HOME"       . ?h)
-                                    ("MAIL"       . ?m)
-                                    ("WORK"       . ?w)
-                                    ("Debian"     . ?d)
-                                    ("Computer"   . ?c)
-                                    ("Book"       . ?b)
-                                    ("Emacs"      . ?e)
-                                    ("TeX"        . ?t)
-                                    ("Ruby"       . ?r)
-                                    ("IGNORE"     . ?i)
-                                    ("PLANNED"    . ?p)
-                                    ))
-    ;; Archive.org の位置指定
-    (org-archive-location       . ,(expand-file-name "Archive.org::" my:d:org))
-    ;; modules → とりあえずクリアしておく
-    (org-modules  . '())
-    ;; element-cache は使わない...うまく使えると良いんだけれど.
-    (org-element-use-cache . nil)
-    )
+  :init
+  ;; Nextcloud に保存する
+  (setq org-directory (expand-file-name my:d:org)
+        ;; return でリンクを辿る
+        org-return-follows-link    t
+        ;; 見出しを畳んで表示
+        org-startup-folded         t
+        ;; 折り返し無し
+        org-startup-truncated      t
+        ;; インデントする
+        org-adapt-indentation      t
+        ;; link handler → xdg-open 任せ
+        org-file-apps-defaults     '((remote . emacs)
+                                     (system . "xdg-open %s")
+                                     (t      . "xdg-open %s"))
+        org-file-apps-defaults-gnu '((remote . emacs)
+                                     (system . "xdg-open %s")
+                                     (t      . "xdg-open %s"))
+        org-file-apps              '((auto-mode . emacs)
+                                     ("\\.mm\\'" . default)
+                                     ("\\.x?html?\\'" . "xdg-open %s")
+                                     ("\\.pdf\\'" . "xdg-open %s"))
+        ;; GTD: 状態の追加
+        org-todo-keywords          '((sequence "TODO(t)" "WAIT(w)" "SOMEDAY(s)" "|" "DONE(d)" "CANCEL(c)")
+                                     (type "ARTICLE(a)" "|" "DONE(d)")
+                                     (type "MEMO(m)" "|" "DONE(d)"))
+        org-todo-keyword-faces     '(("TODO"    . org-todo)
+                                     ("WAIT"    . org-todo)
+                                     ("ARTICLE" . (:foreground "#7fbfff" :weight bold))
+                                     ("MEMO"    . (:foreground "#7fbfff" :weight bold))
+                                     ("SOMEDAY" . (:foreground "#7fff7f" :weight bold)))
+        ;; GTD: タグの追加
+        org-tag-alist              '(("OFFICE"     . ?o)
+                                     ("HOME"       . ?h)
+                                     ("MAIL"       . ?m)
+                                     ("WORK"       . ?w)
+                                     ("Debian"     . ?d)
+                                     ("Computer"   . ?c)
+                                     ("Book"       . ?b)
+                                     ("Emacs"      . ?e)
+                                     ("TeX"        . ?t)
+                                     ("Ruby"       . ?r)
+                                     ("IGNORE"     . ?i)
+                                     ("PLANNED"    . ?p)
+                                     )
+        ;; Archive.org の位置指定
+        org-archive-location       (expand-file-name "Archive.org::" my:d:org)
+        ;; modules → とりあえずクリアしておく
+        org-modules  '()
+        ;; element-cache は使わない...うまく使えると良いんだけれど.
+        ;; org-element-use-cache nil
+        ;; org-agenda で設定するべきかなぁ...
+        org-agenda-inhibit-startup  t
+        )
   :defer-config
   ;; +打ち消し+ の font-lock の変更 →これはテーマに任せるべき?
-  ;; (setq org-emphasis-alist
-  ;;       (cons '("+" '(:strike-through t :foreground "#999999"))
-  ;;             (cl-delete "+" org-emphasis-alist :key 'car :test 'equal)))
+  (setq org-emphasis-alist
+        (cons '("+" '(:strike-through t :foreground "#999999"))
+              (cl-delete "+" org-emphasis-alist :key 'car :test 'equal)))
   (require 'org-tempo nil 'noerror)
   )
    #+end_src
@@ -3413,79 +3490,76 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    :END:
    #+begin_src emacs-lisp :tangle init.el
 (leaf org-id
-  :commands
-  (my:org-id-add-custom-id
-   my:org-id-get-custom-id
-   my:org-custom-id-get
-   my:org-id-add-to-headlines-in-file
-   my:org-id-delete-all-id-in-file
-   )
+  :commands (my:org-id-add-custom-id
+             my:org-id-get-custom-id
+             my:org-custom-id-get
+             my:org-id-add-to-headlines-in-file
+             my:org-id-delete-all-id-in-file)
   :init
   (leaf org-macs :commands org-with-point-at)
-  :custom
-  `((org-id-locations-file
-     . ,(expand-file-name "org-id-locations" my:d:tmp))
-    (org-id-link-to-org-use-id . 'create-if-interactive-and-no-custom-id)
-    )
+  ;;
+  :hook (before-save-hook . (lambda ()
+                              (when (and (eq major-mode 'org-mode)
+                                         (eq buffer-read-only nil))
+                                (my:org-id-add-to-headlines-in-file))))
   :config
-  (defun my:org-id-add-custom-id ()
-    "Add \"CUSTOM_ID\" to the current tree if not assigned yet."
-    (interactive)
-    (my:org-custom-id-get nil t))
+  (setq org-id-locations-file (expand-file-name "org-id-locations" my:d:tmp)
+        org-id-link-to-org-use-id 'create-if-interactive-and-no-custom-id
+        )
+;;;###autoload
+(defun my:org-id-add-custom-id ()
+  "Add \"CUSTOM_ID\" to the current tree if not assigned yet."
+  (interactive)
+  (my:org-custom-id-get nil t))
+;;;###autoload
+(defun my:org-id-get-custom-id ()
+  "Return a part of UUID with an \"org\" prefix.
+g. \"org3ca6ef0c\"."
+  (let* ((id (org-id-new "")))
+    (when (org-uuidgen-p id)
+      (downcase (concat "org"  (substring (org-id-new "") 0 8))))))
+;;;###autoload
+(defun my:org-custom-id-get (&optional pom create)
+  "Get the CUSTOM_ID property of the entry at point-or-marker POM.
+e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
+  (interactive)
+  (eval-when-compile (require 'org-macs))
+  (org-with-point-at pom
+    (let ((id (org-entry-get nil "CUSTOM_ID")))
+      (cond
+       ((and id (stringp id) (string-match "\\S-" id))
+        id)
+       (create
+        (setq id (my:org-id-get-custom-id))
+        (unless id
+          (error "Invalid ID"))
+        (org-entry-put pom "CUSTOM_ID" id)
+        (message "--- CUSTOM_ID assigned: %s" id)
+        (org-id-add-location id (buffer-file-name (buffer-base-buffer)))
+        id)))))
+;;;###autoload
+(defun my:org-id-delete-all-id-in-file ()
+  (interactive)
+  (goto-char 1)
+  (while (not (eq (point) (point-max)))
+    (org-next-visible-heading 1)
+    (let ((id (org-entry-get (point) "ID")))
+      (when id
+        (message "ID: %s" id)
+        (org-delete-property "ID"))))
+  (message "--- done."))
+;;;###autoload
+(defun my:org-id-add-to-headlines-in-file ()
+  "Add CUSTOM_ID properties to all headlines in the current file.
+e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
+  (interactive)
+  (save-excursion
+    (widen)
+    (goto-char (point-min))
+    (when (re-search-forward "^#\\+options:.*auto-id:t" (point-max) t)
+      (org-map-entries
+       (lambda () (my:org-custom-id-get (point) 'create))))))
   ;;
-  (defun my:org-id-get-custom-id ()
-    "Return a part of UUID with an \"org\" prefix.
-e.g. \"org3ca6ef0c\"."
-    (let* ((id (org-id-new "")))
-      (when (org-uuidgen-p id)
-        (downcase (concat "org"  (substring (org-id-new "") 0 8))))))
-  ;;
-  (defun my:org-custom-id-get (&optional pom create)
-    "Get the CUSTOM_ID property of the entry at point-or-marker POM.
-See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
-    (interactive)
-    (eval-when-compile (require 'org-macs))
-    (org-with-point-at pom
-      (let ((id (org-entry-get nil "CUSTOM_ID")))
-        (cond
-         ((and id (stringp id) (string-match "\\S-" id))
-          id)
-         (create
-          (setq id (my:org-id-get-custom-id))
-          (unless id
-            (error "Invalid ID"))
-          (org-entry-put pom "CUSTOM_ID" id)
-          (message "--- CUSTOM_ID assigned: %s" id)
-          (org-id-add-location id (buffer-file-name (buffer-base-buffer)))
-          id)))))
-  ;;
-  (defun my:org-id-delete-all-id-in-file ()
-    (interactive)
-    (goto-char 1)
-    (while (not (eq (point) (point-max)))
-      (org-next-visible-heading 1)
-      (let ((id (org-entry-get (point) "ID")))
-        (when id
-          (message "ID: %s" id)
-          (org-delete-property "ID"))))
-    (message "--- done."))
-  ;;
-  (defun my:org-id-add-to-headlines-in-file ()
-    "Add CUSTOM_ID properties to all headlines in the current file.
-See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
-    (interactive)
-    (save-excursion
-      (widen)
-      (goto-char (point-min))
-      (when (re-search-forward "^#\\+options:.*auto-id:t" (point-max) t)
-        (org-map-entries
-         (lambda () (my:org-custom-id-get (point) 'create))))))
-  ;;
-  :hook (before-save-hook
-         . (lambda ()
-             (when (and (eq major-mode 'org-mode)
-                        (eq buffer-read-only nil))
-               (my:org-id-add-to-headlines-in-file))))
   )
    #+end_src
 ** Babel
@@ -3493,33 +3567,29 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    :CUSTOM_ID: org99399f3b
    :END:
    #+begin_src emacs-lisp :tangle init.el
-(leaf org-babel
-  ;; :blackout `((org-src-mode . ,(format " %s" (all-the-icons-octicon "code"))))
-  :custom
-  `(;; font-lock
-   (org-src-fontify-natively         . t)
-   ;; TAB の挙動
-   (org-src-tab-acts-natively        . t)
-   ;; インデント
-   (org-edit-src-content-indentation . 0)
-   ;; インデントを残す
-   (org-src-preserve-indentation     . t)
-   ;; load languages
-   (org-babel-load-languages
-    . '((emacs-lisp . t)
-        (ditaa . ,(file-exists-p "/usr/local/lib/jditaa.jar"))
-        (latex . ,(file-exists-p "/usr/bin/uplatex"))
+(leaf org-src
+  :config
+  (setq org-src-fontify-natively         t ;; font-lock
+        ;; TAB の挙動
+        org-src-tab-acts-natively        t
+        ;; インデント
+        org-edit-src-content-indentation 0
+        ;; インデントを残す
+        org-src-preserve-indentation     t
+        ;; load languages
         )
-    )
-   )
+  )
+(leaf org-babel
+  :config
+  (setq org-babel-load-languages '((emacs-lisp . t)))
+  (if (file-exists-p "/usr/local/lib/jditaa.jar")
+      (add-to-list 'org-babel-load-languages '(ditaa . t)))
+  (if (executable-find "uplatex")
+      (add-to-list 'org-babel-load-languages '(latex . t)))
   )
 (leaf ob-ditaa
-  :if (file-exists-p "/usr/local/lib/jditaa.jar")
-  :custom
-  ((org-ditaa-jar-path . "/usr/local/lib/jditaa.jar"))
-  )
-(leaf ob-latex
-  :if (file-exists-p "/usr/bin/uplatex")
+  :init
+  (setq org-ditaa-jar-path "/usr/local/lib/jditaa.jar")
   )
    #+end_src
 ** Org-agenda: スケジュール, TODO 表示
@@ -3562,124 +3632,124 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   ;;   "Agenda 表示中, Twitter log の表示 face"
   ;;   :group 'org-agenda )
   ;;
+
   ;; font-lock の適用. loop減らせないかなぁ….
-  (defun my:org-agenda-finalize-font-lock ()
-    "Custom: apply custom font-lock"
-    (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward "Univ:" nil t)
-        (add-text-properties (match-beginning 0) (line-end-position)
-                             '(face my:org-agenda-calendar-Univ)))
-      (goto-char (point-min))
-      (while (re-search-forward "Schedule:" nil t)
-        (add-text-properties (match-beginning 0) (line-end-position)
-                             '(face my:org-agenda-calendar-Schedule)))
-      (goto-char (point-min))
-      (while (re-search-forward "DebianJP:" nil t)
-        (add-text-properties (match-beginning 0) (line-end-position)
-                             '(face my:org-agenda-calendar-DebianJP)))
-      (goto-char (point-min))
-      (while (re-search-forward "GFD:" nil t)
-        (add-text-properties (match-beginning 0) (line-end-position)
-                             '(face my:org-agenda-calendar-GFD)))
-      (goto-char (point-min))
-      (while (re-search-forward "twitter:" nil t)
-        (add-text-properties (match-beginning 0) (line-end-position)
-                             '(face my:org-agenda-calendar-twitter)))
-      (goto-char (point-min))
-      (while (re-search-forward "祝日:\\|Holidays:\\|誕生日:" nil t)
-        (add-text-properties (match-beginning 0) (line-end-position)
-                             '(face org-agenda-date-weekend)))
-      ))
-  :custom
-  `((org-agenda-day-face-function
-     ;; ---
-     ;; 「org-modeのアジェンダで土曜日と日本の祝日を色づけする」
-     ;; https://misohena.jp/blog/2021-08-29-colorize-saturday-and-japanese-holidays-in-org-agenda.html
-     ;; ちょっと順番を変えて(「祝日, 日曜」を赤にしたいので)先に「日曜か日本の祝日」をチェックしている
-     . (lambda (date)
-         (let ((face
-                (cond
-                 ;; 日曜日か日本の祝日
-                 ((or (= (calendar-day-of-week date) 0)
-                      (let ((calendar-holidays japanese-holidays))
-                        (calendar-check-holidays date)))
-                  'org-agenda-date-weekend)
-                 ;; 土曜日
-                 ((= (calendar-day-of-week date) 6)
-                  'my:org-agenda-date-saturday)
-                 ;; 普通の日
-                 (t 'org-agenda-date))))
-           ;; 今日は色を反転
-           (if (org-agenda-today-p date) (list :inherit face :underline t) face))))
-    (org-agenda-span . 'week)
-    (org-agenda-start-on-weekday . nil)
-    (org-agenda-format-date . "%Y/%m/%d (%a)")
-    (org-agenda-weekend-days . '(0))
-    (org-agenda-inhibit-startup . t)
-    (org-agenda-ignore-drawer-properties . '(effort appt))
-    (org-agenda-repeating-timestampo-show-all . t)
-    ;;
-    (org-agenda-sorting-strategy . '((agenda habit-down time-up timestamp-down priority-down category-keep)
-                                     (todo timestamp-down priority-down category-keep)
-                                     (tags priority-down category-keep)
-                                     (search category-keep)))
-    ;; あんまり使っていないので止めるかも.
-    (org-agenda-custom-commands . '(("n" "agenda and all TODO list"
-                                     (
-                                      (agenda ""
-                                              ((org-agenda-ndays 1)
-                                               (org-agenda-entry-types '(:timestamp :sexp))))
-                                      (todo "TODO"
-                                            ((org-agenda-prefix-format " %i %-22:c"))
-                                            )
-                                      (todo "新規|着手|進行中|確認"
-                                            ((org-agenda-prefix-format " %i %-22:c"))
-                                            )
-                                      (todo "WAIT"
-                                            ((org-agenda-prefix-format " %i %-22:c"))
-                                            )
-                                      (todo "SOMEDAY"
-                                            ((org-agenda-prefix-format " %i %-22:c"))
-                                            )
-                                      ))
-                                    ("N" "All memo entry"
-                                     (;;
-                                      (todo "MEMO")
-                                      ))
-                                    )
-                                )
-    )
-    :hook ((org-agenda-finalize-hook
-            . my:org-agenda-finalize-font-lock))
-    :defer-config
-    ;; (defvar my:org-agenda-files nil)
-    (dolist (file
-             '(;; Archive.org   ← 🤔
-               ;; Calendar
-               "Holidays.org"
-               "Schedule.org"
-               "GFD.org"
-               "Univ.org"
-               "DebianJP.org"
-               ;; INBOX
-               ;; "INBOX.org"
-               ;; misc
-               "twitter.org"
-               ;; Project
-               "redmine_GFD.org"
-               "redmine_SSKLAB.org"
-               ;; "redmine_FluidSoc.org"
-               ))
-      (add-to-list 'org-agenda-files (expand-file-name file my:d:org)))
-    ;;
-    (if (file-directory-p
-         (expand-file-name "journal/" my:d:org))
-        (dolist (file
-                 (directory-files-recursively
-                  (expand-file-name "journal/" my:d:org) "org$"))
-          (add-to-list 'org-agenda-files file)))
-    )
+;;;###autoload
+(defun my:org-agenda-finalize-font-lock ()
+  "Custom: apply custom font-lock"
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward "Univ:" nil t)
+      (add-text-properties (match-beginning 0) (line-end-position)
+                           '(face my:org-agenda-calendar-Univ)))
+    (goto-char (point-min))
+    (while (re-search-forward "Schedule:" nil t)
+      (add-text-properties (match-beginning 0) (line-end-position)
+                           '(face my:org-agenda-calendar-Schedule)))
+    (goto-char (point-min))
+    (while (re-search-forward "DebianJP:" nil t)
+      (add-text-properties (match-beginning 0) (line-end-position)
+                           '(face my:org-agenda-calendar-DebianJP)))
+    (goto-char (point-min))
+    (while (re-search-forward "GFD:" nil t)
+      (add-text-properties (match-beginning 0) (line-end-position)
+                           '(face my:org-agenda-calendar-GFD)))
+    (goto-char (point-min))
+    (while (re-search-forward "twitter:" nil t)
+      (add-text-properties (match-beginning 0) (line-end-position)
+                           '(face my:org-agenda-calendar-twitter)))
+    (goto-char (point-min))
+    (while (re-search-forward "祝日:\\|Holidays:\\|誕生日:" nil t)
+      (add-text-properties (match-beginning 0) (line-end-position)
+                           '(face org-agenda-date-weekend)))
+    ))
+  :hook ((org-agenda-finalize-hook . my:org-agenda-finalize-font-lock))
+  :config
+  (setq org-agenda-day-face-function
+        ;; ---
+        ;; 「org-modeのアジェンダで土曜日と日本の祝日を色づけする」
+        ;; https://misohena.jp/blog/2021-08-29-colorize-saturday-and-japanese-holidays-in-org-agenda.html
+        ;; ちょっと順番を変えて(「祝日, 日曜」を赤にしたいので)先に「日曜か日本の祝日」をチェックしている
+        ;; ---
+        (lambda (date)
+          (let ((face
+                 (cond
+                  ;; 日曜日か日本の祝日
+                  ((or (= (calendar-day-of-week date) 0)
+                       (let ((calendar-holidays japanese-holidays))
+                         (calendar-check-holidays date)))
+                   'org-agenda-date-weekend)
+                  ;; 土曜日
+                  ((= (calendar-day-of-week date) 6)
+                   'my:org-agenda-date-saturday)
+                  ;; 普通の日
+                  (t 'org-agenda-date))))
+            ;; 今日は色を反転
+            (if (org-agenda-today-p date) (list :inherit face :underline t) face)))
+        ;;
+        org-agenda-span 'week
+        org-agenda-start-on-weekday nil ;; today!
+        org-agenda-format-date "%Y/%m/%d (%a)"
+        org-agenda-weekend-days '(0)    ;; sunday.
+        org-agenda-ignore-properties '(effort appt)
+        ;; org-agenda-repeating-timestampo-show-all t ;; 🤔
+        org-agenda-sorting-strategy '((agenda habit-down time-up timestamp-down priority-down category-keep)
+                                      (todo timestamp-down priority-down category-keep)
+                                      (tags priority-down category-keep)
+                                      (search category-keep))
+        ;; あんまり使っていないので止めるかも.
+        org-agenda-custom-commands  '(("n" "agenda and all TODO list"
+                                       (
+                                        (agenda ""
+                                                ((org-agenda-ndays 1)
+                                                 (org-agenda-entry-types '(:timestamp :sexp))))
+                                        (todo "TODO"
+                                              ((org-agenda-prefix-format " %i %-22:c"))
+                                              )
+                                        (todo "新規|着手|進行中|確認"
+                                              ((org-agenda-prefix-format " %i %-22:c"))
+                                              )
+                                        (todo "WAIT"
+                                              ((org-agenda-prefix-format " %i %-22:c"))
+                                              )
+                                        (todo "SOMEDAY"
+                                              ((org-agenda-prefix-format " %i %-22:c"))
+                                              )
+                                        ))
+                                      ("N" "All memo entry"
+                                       (;;
+                                        (todo "MEMO")
+                                        ))
+                                      )
+        )
+  :defer-config
+  ;; (defvar my:org-agenda-files nil)
+  (dolist (file
+           '(;; Archive.org   ← 🤔
+             ;; Calendar
+             "Holidays.org"
+             "Schedule.org"
+             "GFD.org"
+             "Univ.org"
+             "DebianJP.org"
+             ;; INBOX
+             ;; "INBOX.org"
+             ;; misc
+             "twitter.org"
+             ;; Project
+             "redmine_GFD.org"
+             "redmine_SSKLAB.org"
+             ;; "redmine_FluidSoc.org"
+             ))
+    (add-to-list 'org-agenda-files (expand-file-name file my:d:org)))
+  ;;
+  (if (file-directory-p
+       (expand-file-name "journal/" my:d:org))
+      (dolist (file
+               (directory-files-recursively
+                (expand-file-name "journal/" my:d:org) "org$"))
+        (add-to-list 'org-agenda-files file)))
+  )
    #+end_src
 ** Org-journal: 日記
    :PROPERTIES:
@@ -3692,27 +3762,23 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   :commands org-journal-new-entry
   :ensure t
   :hook
-  ((org-journal-mode-hook
-    . (lambda()
-        (setq-local truncate-lines t))))
-  :custom
-  `((org-journal-file-type                 . 'yearly)
-    (org-journal-dir                       . ,(expand-file-name "journal" my:d:org))
-    (org-journal-file-format               . "%Y.org")
-    (org-journal-cache-file
-     . ,(expand-file-name "org-journal.cache" my:d:tmp))
-    (org-journal-date-format               . "%x (%a)")
-    (org-journal-time-format               . "<%Y-%m-%d %R> ")
-    (org-journal-time-prefix               . "** MEMO ")
-    (org-journal-enable-agenda-integration . t)
-    (org-journal-find-file                 . 'find-file)
-    (org-journal-carryover-delete-empty-journal . 'ask)
-    (org-journal-start-on-weekday          . 0) ;; sunday
-    )
+  ((org-journal-mode-hook . (lambda()
+                              (setq-local truncate-lines t))))
+  :init
+  (setq org-journal-file-type                 'yearly
+        org-journal-dir                       (expand-file-name "journal" my:d:org)
+        org-journal-file-format               "%Y.org"
+        org-journal-cache-file                (expand-file-name "org-journal.cache" my:d:tmp)
+        org-journal-date-format               "%x (%a)"
+        org-journal-time-format               "<%Y-%m-%d %R> "
+        org-journal-time-prefix               "** MEMO "
+        org-journal-enable-agenda-integration t
+        org-journal-find-file                 'find-file
+        org-journal-carryover-delete-empty-journal 'ask
+        org-journal-start-on-weekday          0
+        )
   :config
-  (eval-and-compile 'browse-url)
-  ;; (with-eval-after-load 'org-journal
-  ;;   (global-set-key (kbd "C-c C-j") 'browse-url-at-point))
+  (global-set-key (kbd "C-c C-j") 'browse-url-at-point) ;; 🤔？
   )
    #+end_src
 ** Org-capture: メモ取り
@@ -3800,10 +3866,10 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   :if (and my:d:password-store
            (and (file-directory-p my:d:org)
                 (executable-find "curl")))
-  :defvar
-  (org-gcal-client-id org-gcal-client-secret org-gcal-file-alist)
   :pl-setq
-  (org-gcal-client-id org-gcal-client-secret org-gcal-file-alist)
+  (org-gcal-client-id
+   org-gcal-client-secret
+   org-gcal-file-alist)
   :ensure t
   ;; :el-get (org-gcal
   ;;          :type github
@@ -3826,8 +3892,9 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   ;; (setq oauth2-auto-plstore (expand-file-name "oauth2-auto.plist" my:d:password-store))
   :init
   (leaf oauth2-auto
-    :custom
-    `(oauth2-auto-plstore . ,(expand-file-name "/run/user/1000/psd/uwabami-emacs-cache/oauth2-auto.plist"))
+    :init
+    ;; 🤔？
+    (setq oauth2-auto-plstore (expand-file-name "/run/user/1000/psd/uwabami-emacs-cache/oauth2-auto.plist"))
     )
   (leaf aio :ensure t)
   (leaf alert :ensure t)
@@ -3840,10 +3907,8 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   ;;   )
   ;;
   (leaf org-generic-id
-    :custom
-    `((org-generic-id-locations-file
-       . ,(expand-file-name "org-generic-id-locations"  my:d:tmp))
-      )
+    :init
+    (setq org-generic-id-locations-file (expand-file-name "org-generic-id-locations"  my:d:tmp))
     )
   (leaf request-deferred :ensure t)
   (leaf request
@@ -3852,29 +3917,27 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     (setq request-storage-directory (expand-file-name "request" my:d:tmp))
     (unless (file-directory-p request-storage-directory)
       (make-directory request-storage-directory))
-    :custom
-    `((request-storage-directory . ,(expand-file-name "request" my:d:tmp))
-      ;; (request-backend . 'url-retrieve)
-      )
+    :init
+    (setq request-storage-directory (expand-file-name "request" my:d:tmp))
     )
   (leaf persist
     :ensure t
-    :config
-    (setq persist--directory-location (expand-file-name "persist" my:d:tmp)))
-  :custom
-  `((org-gcal-dir
-     . ,(expand-file-name "org-gcal" my:d:tmp))
-    (org-gcal-token-file
-     . ,(expand-file-name "org-gcal/org-gcal-token" my:d:tmp))
-    (org-gcal-down-days    . 180)  ;; 未来 180 日
-    (org-gcal-up-days      .  30)  ;; 過去 30 日
-    (org-gcal-auto-archive . t)
-    (org-gcal-notify-p     . nil)
-    (org-gcal-remove-api-cancelled-evetnts . t)
-    (org-gcal-remove-events-with-cancelled-todo . t)
-    (org-gcal-remove-api-cancelled-events  . t)
-    (alert-log-messages    . t)
-    (alert-default-style   .'libnotify))
+    :init
+    (setq persist--directory-location (expand-file-name "persist" my:d:tmp))
+    )
+  ;;
+  (setq org-gcal-dir (expand-file-name "org-gcal" my:d:tmp)
+        org-gcal-token-file (expand-file-name "org-gcal/org-gcal-token" my:d:tmp)
+        org-gcal-down-days    180  ;; 未来 180 日
+        org-gcal-up-days       30  ;; 過去 30 日
+        org-gcal-auto-archive t
+        org-gcal-notify-p     nil
+        org-gcal-remove-api-cancelled-evetnts t
+        org-gcal-remove-events-with-cancelled-todo t
+        org-gcal-remove-api-cancelled-events  t
+        alert-log-messages    t
+        alert-default-style   'libnotify
+        )
   )
    #+end_src
 ** OrgとRedmine の連携: =orgmine=
@@ -3944,24 +4007,24 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    :END:
    #+begin_src emacs-lisp :tangle init.el
 (leaf org-wiki
-  :vc (:url "https://github.com/uwabami/org-wiki")
   :if (file-directory-p "~/Public/cc-env")
-  :custom
-  `((org-wiki-location-alist     . '("~/Public/cc-env"))
-    (org-wiki-location           . "~/Public/cc-env")
-    (org-wiki-publish-relative   . t)
-    (org-wiki-publish-root       . "{{site.url}}/cc-env")
-    (org-wiki-completing-backend . 'completing-read)
-    (org-wiki-template
-     . ,(concat "#+TITLE: %n\n"
-                "#+date: 20\n"
-                "#+LAYOUT: default\n"
-                "#+PREMALINK: /cc-env/%n.html\n"
-                "#+options: auto-id:nil\n"
-                "#+REF: cc-env/%n\n"
-                "Related [[wiki:index][Index]] [[~/Public/cc-env/index.org::#orge0707863][Debian]]\n"
-                "* %n\n"
-                )))
+  :vc (:url "https://github.com/uwabami/org-wiki")
+  :init
+  (setq org-wiki-location-alist     '("~/Public/cc-env")
+        org-wiki-location           "~/Public/cc-env"
+        org-wiki-publish-relative   t
+        org-wiki-publish-root       "{{site.url}}/cc-env"
+        org-wiki-completing-backend 'completing-read
+        org-wiki-template (concat "#+TITLE: %n\n"
+                                  "#+date: 20\n"
+                                  "#+LAYOUT: default\n"
+                                  "#+PREMALINK: /cc-env/%n.html\n"
+                                  "#+options: auto-id:nil\n"
+                                  "#+REF: cc-env/%n\n"
+                                  "Related [[wiki:index][Index]] [[~/Public/cc-env/index.org::#orge0707863][Debian]]\n"
+                                  "* %n\n"
+                                  )
+        )
   )
    #+end_src
 ** Org-Export
@@ -3982,29 +4045,31 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     (interactive)
     (goto-char (point-min))
     (while (re-search-forward "^\\([^|#*\n].+\\)\\(.\\)\n *\\(.\\)" nil t)
+      ;; < <
       (if (and (> (string-to-char (match-string 2)) #x2000)
                (> (string-to-char (match-string 3)) #x2000))
           (replace-match "\\1\\2\\3"))
       (goto-char (line-beginning-position))))
-  :hook
-  ;; ((org-export-before-processing-hook . my:remove-org-newlines-at-cjk-text))
-  :custom
-  ((org-export-backends             . '(;; remove somve built-in
-                                        ;; html
-                                        jekyll
-                                        latex
-                                        beamer))
-   (org-export-with-toc             . nil)
-   (org-export-with-section-numbers . nil))
+  :init
+  (setq org-export-backends             '(;; remove somve built-in
+                                          ;; html
+                                          jekyll
+                                          latex
+                                          beamer)
+        org-export-with-toc             nil
+        org-export-with-section-numbers nil
+        )
   )
     #+end_src
-*** Jekyll, HTML
+*** TODO Jekyll, HTML
     :PROPERTIES:
     :CUSTOM_ID: orgd48f8f82
     :END:
     Web サイトは Jekyll で作成しています.
     以前は org file を直接 jekyll で処理していましたが,
     最近は org を html に export して, それを処理する様にしています.
+
+    - [ ] finalized の呼び出しがダサいので整理すること!
 
     exporter は [[https://uwabami.github.com/ox-jekyll][uwabami/ox-jekyll]] にあります.
     #+begin_src emacs-lisp :tangle init.el
@@ -4016,17 +4081,15 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     :vc (:url "https://github.com/uwabami/ox-jekyll")
     )
   (leaf s :ensure t)
-  :custom
-  ((org-html-table-align-individual-fields . nil)
-   (org-html-table-default-attributes      . nil)
-   (org-html-html5-fancy                   . t)
-   (org-html-doctype                       . "html5")
-   ;; (org-html-container-element             . "div")
-   (org-html-inline-image-rules
-    . '(("file"  . "\\.\\(jpeg\\|jpg\\|png\\|gif\\|webp\\|svg\\)\\'")
-        ("http"  . "\\.\\(jpeg\\|jpg\\|png\\|gif\\|webp\\|svg\\)\\'")
-        ("https" . "\\.\\(jpeg\\|jpg\\|png\\|gif\\|webp\\|svg\\)\\'")))
-   )
+  ;;
+  (setq org-html-table-align-individual-fields nil
+        org-html-table-default-attributes      nil
+        org-html-html5-fancy                   t
+        org-html-doctype                       "html5"
+        org-html-inline-image-rules           '(("file"  . "\\.\\(jpeg\\|jpg\\|png\\|gif\\|webp\\|svg\\)\\'")
+                                                ("http"  . "\\.\\(jpeg\\|jpg\\|png\\|gif\\|webp\\|svg\\)\\'")
+                                                ("https" . "\\.\\(jpeg\\|jpg\\|png\\|gif\\|webp\\|svg\\)\\'"))
+        )
   :config
   ;;
   (defun my:org-wiki-jekyll-finalized1 (contents backend info)
@@ -4082,20 +4145,13 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
       (replace-regexp-in-string
        "<figure id=\".+?\">"
        "<figure>" contents)))
-
-  ;;
-  (add-to-list 'org-export-filter-body-functions
-               'my:org-wiki-jekyll-finalized1)
-  (add-to-list 'org-export-filter-body-functions
-               'my:org-wiki-jekyll-finalized2)
-  (add-to-list 'org-export-filter-body-functions
-               'my:org-wiki-jekyll-finalized3)
-  (add-to-list 'org-export-filter-body-functions
-               'my:org-wiki-jekyll-finalized4)
-  (add-to-list 'org-export-filter-body-functions
-               'my:org-wiki-jekyll-finalized5)
-  (add-to-list 'org-export-filter-body-functions
-               'my:org-wiki-jekyll-finalized6)
+  ;; 整理しないと...
+  (add-to-list 'org-export-filter-body-functions 'my:org-wiki-jekyll-finalized1)
+  (add-to-list 'org-export-filter-body-functions 'my:org-wiki-jekyll-finalized2)
+  (add-to-list 'org-export-filter-body-functions 'my:org-wiki-jekyll-finalized3)
+  (add-to-list 'org-export-filter-body-functions 'my:org-wiki-jekyll-finalized4)
+  (add-to-list 'org-export-filter-body-functions 'my:org-wiki-jekyll-finalized5)
+  (add-to-list 'org-export-filter-body-functions 'my:org-wiki-jekyll-finalized6)
   )
     #+end_src
 *** LaTeX, Beamer
@@ -4108,12 +4164,35 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   :after ox
   :init
   (leaf oc-natbib :after ox :require t)
-  :custom
-  `((org-latex-default-class . "my:uplatex")
-    (org-latex-pdf-process   . '("latexmk -r ~/.latexmkrc -pdfdvi -recorder -output-directory='%o' %f"))
-    (org-latex-compiler . "latexmk")
-    (org-latex-listings . 'minted)
-    (org-format-latex-header . "\\documentclass[dvipdfmx]{standalone}
+  ;;
+  (setq org-latex-default-class "my:uplatex"
+        org-latex-pdf-process   '("latexmk -r ~/.latexmkrc -pdfdvi -recorder -output-directory='%o' %f")
+        org-latex-compiler      "latexmk"
+        org-latex-listings      'minted
+        org-latex-minted-options '(("frame" "lines")
+                                   ("framesep=2mm")
+                                   ("linenos=true")
+                                   ("baselinestretch=1.2")
+                                   ("breaklines"))
+        org-latex-default-packages-alist  '(("utf8" "inputenc" t nil)
+                                            ;; ("prefernoncjk" "pxcjkcat" t nil)
+                                            ("T1" "fontenc" t nil)
+                                            ("" "graphicx" t nil)
+                                            ("normalem" "ulem" t nil) ;; udline に変更すべきかな?
+                                            ("" "amsmath" t nil)
+                                            ("" "amssymb" t nil)
+                                            ("" "physics" t nil)
+                                            ;; ("" "siunitx" t nil)
+                                            ("" "hyperref" t nil)
+                                            ("" "multirow" t nil)
+                                            ("" "ltablex" t nil)
+                                            ("" "wrapfig" t nil)
+                                            ("" "silence" t nil)
+                                            ("" "arydshln" t nil)
+                                            )
+        )
+  ;;
+  (setq org-format-latex-header "\\documentclass[dvipdfmx]{standalone}
 \\usepackage[usenames]{color}
 \\usepackage{pgfplots}
 \\usepgfplotslibrary{fillbetween,patchplots}
@@ -4135,34 +4214,7 @@ See https://writequit.org/articles/emacs-org-mode-generate-ids.html"
 \\def\\pgfsysdriver{pgfsys-dvipdfmx.def}
 \[PACKAGES]
 \[DEFAULT-PACKAGES]")
-    (org-latex-minted-options
-     . '(("frame" "lines")
-         ("framesep=2mm")
-         ("linenos=true")
-         ("baselinestretch=1.2")
-         ("breaklines")
-         ))
-    ;; (org-latex-default-table-environment . "tabularx")
-    (org-latex-default-packages-alist
-     . '(("utf8" "inputenc" t nil)
-         ;; ("prefernoncjk" "pxcjkcat" t nil)
-         ("T1" "fontenc" t nil)
-         ("" "graphicx" t nil)
-         ("normalem" "ulem" t nil) ;; udline に変更すべきかな?
-         ("" "amsmath" t nil)
-         ("" "amssymb" t nil)
-         ("" "physics" t nil)
-         ;; ("" "siunitx" t nil)
-         ("" "hyperref" t nil)
-         ("" "multirow" t nil)
-         ("" "ltablex" t nil)
-         ("" "wrapfig" t nil)
-         ("" "silence" t nil)
-         ("" "arydshln" t nil)
-         ))
-    (org-latex-hyperref-template
-     .
-     "\\hypersetup{
+  (setq org-latex-hyperref-template "\\hypersetup{
 pdfauthor={%a},
 pdftitle={%t},
 pdfkeywords={%k},
@@ -4170,28 +4222,26 @@ pdfsubject={%s},
 pdfcreator={%c},
 pdflang={%l}}
 ")
-    (org-latex-classes
-     . '(("my:uplatex"
-          "\\RequirePackage{plautopatch}\n\\documentclass[a4paper,uplatex,dvipdfmx]{jsarticle}\n\\plautopatchdisable{eso-pic}\n\\ifdefined\\endofdump\\else\\let\\endofdump\\relax\\fi
+  (setq org-latex-classes '(("my:uplatex"
+                             "\\RequirePackage{plautopatch}\n\\documentclass[a4paper,uplatex,dvipdfmx]{jsarticle}\n\\plautopatchdisable{eso-pic}\n\\ifdefined\\endofdump\\else\\let\\endofdump\\relax\\fi
             [DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
-          ("\\section\{%s\}" . "\\section*\{%s\}")
-          ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
-          ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
-         ("my:beamer"
-          "\\RequirePackage{plautopatch}\n\\documentclass[dvipdfmx,c,presentation]{beamer}\n\\plautopatchdisable{eso-pic}\n\\ifdefined\\endofdump\\else\\let\\endofdump\\relax\\fi
+                             ("\\section\{%s\}" . "\\section*\{%s\}")
+                             ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
+                             ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
+                            ("my:beamer"
+                             "\\RequirePackage{plautopatch}\n\\documentclass[dvipdfmx,c,presentation]{beamer}\n\\plautopatchdisable{eso-pic}\n\\ifdefined\\endofdump\\else\\let\\endofdump\\relax\\fi
             [DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
-          ("\\section\{%s\}" . "\\section*\{%s\}")
-          ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
-          ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
-         ("my:beamer169"
-          "\\RequirePackage{plautopatch}\n\\documentclass[dvipdfmx,c,presentation,aspectratio=169]{beamer}\n\\plautopatchdisable{eso-pic}\n\\ifdefined\\endofdump\\else\\let\\endofdump\\relax\\fi
+                             ("\\section\{%s\}" . "\\section*\{%s\}")
+                             ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
+                             ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
+                            ("my:beamer169"
+                             "\\RequirePackage{plautopatch}\n\\documentclass[dvipdfmx,c,presentation,aspectratio=169]{beamer}\n\\plautopatchdisable{eso-pic}\n\\ifdefined\\endofdump\\else\\let\\endofdump\\relax\\fi
             [DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
-          ("\\section\{%s\}" . "\\section*\{%s\}")
-          ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
-          ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
-         )
-     )
-    )
+                             ("\\section\{%s\}" . "\\section*\{%s\}")
+                             ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
+                             ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
+                            )
+        )
   )
     #+end_src
     Beamer 関連: =SHORT= 系を追加している
@@ -4199,6 +4249,10 @@ pdflang={%l}}
 (leaf ox-beamer
   :after ox-latex
   :init
+  (setq org-beamer-frame-level 2
+        org-beamer-frame-default-options "fragile"
+    )
+  ;;
   (add-to-list 'org-export-options-alist
                '(:shortdate      "SHORT_DATE"      nil nil))
   (add-to-list 'org-export-options-alist
@@ -4325,10 +4379,6 @@ pdflang={%l}}
   ;;
   :advice ((:override org-beamer-template
                       my:org-beamer-template))
-  :custom
-  `((org-beamer-frame-level . 2)
-    (org-beamer-frame-default-options . "fragile")
-    )
   )
     #+end_src
 *** Publish
@@ -4340,9 +4390,8 @@ pdflang={%l}}
   :if (file-directory-p "~/Public/cc-env")
   :after (ox-jekyll org-wiki)
   :commands my:org-wiki-publish
-  :custom
-  `((org-publish-timestamp-directory
-     . ,(expand-file-name "org-timestamps/" my:d:tmp)))
+  :init
+  (setq org-publish-timestamp-directory (expand-file-name "org-timestamps/" my:d:tmp))
   :config
   (defun my:org-wiki-publish ()
     (interactive)
@@ -4355,26 +4404,25 @@ pdflang={%l}}
   :PROPERTIES:
   :CUSTOM_ID: org9992a617
   :END:
+  - [ ] org2blog で tDiary を更新できないか妄想している
   #+begin_src emacs-lisp :tangle init.el
 (leaf tdiary-mode
   :if (and my:d:password-store
            (file-directory-p (concat (getenv "HOME") "/Nextcloud/tdiary")))
-  :commands (tdiary-mode tdiary-replace tdiary-append)
+  :commands (tdiary-mode tdiary-replace tdiary-append tdiary-passwd-file-load)
+  :defvar (tdiary-csrf-key tdiary-passwd-file tdiary-passd-file)
+  :pl-setq (tdiary-csrf-key tdiary-passwd-file)
   :vc (:url "https://github.com/uwabami/tdiary-mode")
-  :defvar tdiary-passwd-file
-  :pl-setq
-  (tdiary-csrf-key tdiary-passwd-file)
   :config
   (setq tdiary-text-directory (concat (getenv "HOME") "/Nextcloud/tdiary/")
         tdiary-diary-list '(("log" "https://uwabami.junkhub.org/log/"))
         tdiary-style-mode 'org-mode
         tdiary-text-suffix ".org"
-        tdiary-http-timeout 100
-        )
+        tdiary-http-timeout 100)
   (tdiary-passwd-file-load)
   )
   #+end_src
-  - [ ] org2blog で tDiary を更新できないか妄想している
+
 * VCSなど, ソースコード管理関係
   :PROPERTIES:
   :CUSTOM_ID: orgc6b67eb9
@@ -4389,10 +4437,9 @@ pdflang={%l}}
    #+begin_src emacs-lisp
 (leaf project
   :ensure t
-  :custom
-  `((project-list-file . ,(expand-file-name "projects" my:d:tmp))
-    (project-switch-use-entire-map . t)
-    )
+  :init
+  (setq project-list-file (expand-file-name "projects" my:d:tmp)
+        project-switch-use-entire-map t)
   )
    #+end_src
    - [ ] ghq の list を追加できないかな?
@@ -4406,8 +4453,8 @@ pdflang={%l}}
 (leaf consult-ghq
   :vc (:url "https://github.com/uwabami/consult-ghq")
   :bind (("C-x f" . consult-ghq-open))
-  :custom
-  `((consult-ghq-short-list . t))
+  :init
+  (setq consult-ghq-short-list t)
   )
    #+end_src
 ** magit:
@@ -4422,104 +4469,27 @@ pdflang={%l}}
   :ensure t
   :init
   (leaf transient
-    :custom
-    `((transient-history-file
-       . ,(expand-file-name "transient-history.el" my:d:tmp))
-      (transient-levels-file
-       . ,(expand-file-name "transient-levels.el" my:d:tmp))
-      (transient-values-file
-       . ,(expand-file-name "transient-values.el" my:d:tmp))
-      (transient-force-fixed-pitch . t))
+    :init
+    (setq transient-history-file (expand-file-name "transient-history.el" my:d:tmp)
+          transient-levels-file (expand-file-name "transient-levels.el" my:d:tmp)
+          transient-values-file (expand-file-name "transient-values.el" my:d:tmp)
+          transient-force-fixed-pitch t
+          )
     )
-  :custom
-  `((magit-completing-read-function . 'magit-builtin-completing-read)
-    (magit-refs-show-commit-count   . 'all)
-    (magit-log-buffer-file-locked   . t)
-    (magit-revision-show-gravatars  . nil)
-    )
+  ;;
+  (setq magit-completing-read-function 'magit-builtin-completing-read
+        magit-refs-show-commit-count   'all
+        magit-log-buffer-file-locked   t
+        magit-revision-show-gravatars  nil
+        )
   )
    #+end_src
-* TeX: =AUCTeX=
+* Ruby
   :PROPERTIES:
-  :CUSTOM_ID: org88a3cb1b
+  :CUSTOM_ID: org74c8f39c
   :END:
-  やっている事は
-  - japanese-latex-mode において, 幾つかのコマンドが追加/上書きされているものの,
-    あまり使うことの無いコマンドが表示されるのが嫌なのでそれらを削除．
-  - コンパイルには[[http://personal.psu.edu/jcc8/software/latexmk/][Latexmk]]を使う
-  と言った所.
-  …ただ, Beamerのクラスなんかだと勝手にdefault コマンドが LaTeX に変更されたりするので挙動がイマイチ良くわからん.
-  async で =latexmk -pvc= を走らせておいた方が気持が良い, 気がしている….
   #+begin_src emacs-lisp :tangle init.el
-(leaf auctex
-  :disabled t
-  :if (and (executable-find "uplatex")
-           (executable-find "latexmk"))
-  :load-path "/usr/share/emacs/site-lisp/auctex"
-  :init
-  (unless (file-directory-p (expand-file-name "auctex/auto" my:d:tmp))
-    (progn
-      (make-directory (expand-file-name "auctex/auto" my:d:tmp) t)
-      (make-directory (expand-file-name "auctex/style" my:d:tmp) t)))
-  (leaf reftex
-    :custom ((reftex-plug-into-AUCTeX               . t)
-             (reftex-cite-prompt-optional-args      . t)
-             (reftex-toc-split-windows-horizontally . t)
-             )
-    )
-  (leaf auctex-latexmk
-    :vc (:url "https://github.com/tom-tan/auctex-latexmk")
-    :custom
-    `((auctex-latexmk-inherit-TeX-PDF-mode . t))
-    :config
-    (setq TeX-command-output-list '(("LaTeXMk" ("pdf")))
-          TeX-command-default "LaTexMk"
-          japanese-LaTeX-command-default "LaTeX")
-    )
-  (load "auctex" t t)
-  (load "preview-latex" t t)
-  :hook
-  `((LaTeX-mode-hook
-     . ,(lambda ()
-          (turn-on-reftex)
-          (auctex-latexmk-setup)
-          (setq-default TeX-command-default "LaTexMk"
-                        japanese-LaTeX-command-default "LaTeX")
-          (TeX-PDF-mode)
-          (TeX-source-correlate-mode)
-          (LaTeX-math-mode)
-          (outline-minor-mode)))
-    )
-  :custom
-  `((TeX-auto-local
-     . ,(expand-file-name "auctex/auto" my:d:tmp))
-    (TeX-style-local
-     . ,(expand-file-name "auctex/style" my:d:tmp))
-    (TeX-default-mode                  . 'japanese-latex-mode) ;; 🤔
-    (japanese-TeX-engine-default       . 'uptex)
-    (japanese-LaTeX-default-style      . "jlreq") ;; jsarticle? bxjsarticle?
-    (TeX-engine                        . 'uptex)
-    (TeX-PDF-from-DVI                  . "Dvipdfmx")
-    (TeX-view-program-selection        . '((output-dvi "xdvi")
-                                           (output-pdf "Okular")
-                                           ;; (output-pdf "Evince")
-                                           (output-html "xdg-open")))
-    (LaTeX-figure-label                . "fig:")
-    (LaTeX-table-label                 . "tab:")
-    (LaTeX-section-label               . "sec:")
-    (TeX-command-default               . "LaTexMk")
-    (TeX-ispell-extend-skip-list       . t)
-    (TeX-parse-self                    . t)
-    (TeX-auto-save                     . t)
-    (TeX-auto-untabify                 . t)
-    (TeX-source-correlate-mode         . t)
-    (TeX-source-correlate-start-server . t)
-    (TeX-source-correlate-method       . 'synctex)
-    (font-latex-fontify-script         . nil)
-    (font-latex-script-display         . nil)
-    (font-latex-fontify-sectioning     . 1.0)
-    )
-  )
+(leaf ruby-mode :ensure t)
   #+end_src
 * その他のモード設定
   :PROPERTIES:
@@ -4537,7 +4507,9 @@ pdflang={%l}}
 (leaf scss-mode
   :ensure t
   :init
-  (leaf css-mode :custom (css-indent-offset . 2))
+  (leaf css-mode
+    :init
+    (setq css-indent-offset 2))
   :mode "\\.sass\\'" "\\.scss\\'")
 (leaf generic-x)
 (leaf systemd :ensure t)
@@ -4572,6 +4544,14 @@ pdflang={%l}}
 ;;     (Info-selection #'info-colors-fontify-node))
 ;;   )
   #+end_src
+* カラーコードに色付け: =rainbow-mode=
+  :PROPERTIES:
+  :CUSTOM_ID: org1f0e431b
+  :END:
+  =#RRGGBB= のカラーコードに勝手に色が付く．CSS の編集中なんかで地味に便利．
+  #+begin_src emacs-lisp :tangle init.el
+(leaf rainbow-mode :ensure t :hook (emacs-startup-hook . rainbow-mode))
+  #+end_src
 * テーマとモードライン
   :PROPERTIES:
   :CUSTOM_ID: orgbf458527
@@ -4586,12 +4566,85 @@ pdflang={%l}}
   :ensure t
   :bind ("<f5>" . modus-themes-toggle)
   :commands modus-themes-load-theme
-  :preface
-  (defun my:override-face-attribute()
-    "CUSTOM: Override face attribute"
+  :hook
+  `((emacs-startup-hook . (lambda()
+                            (modus-themes-load-theme 'modus-vivendi)))
+    (modus-themes-after-load-theme-hook . my:modus-themes-custom-faces)
+    )
+  :init
+  (setq modus-themes-custom-auto-reload t
+        modus-themes-disable-other-themes t
+        modus-themes-bold-constructs nil
+        modus-themes-italic-constructs nil
+        modus-themes-mixed-fonts nil
+        modus-themes-prompts '(bold bold)
+        modus-themes-completions '((matches   . (bold))
+                                   (selection . (bold underline)))
+        modus-themes-headings '((t . (bold)))
+        modus-themes-variable-pitch-ui nil
+        modus-vivendi-palette-overrides
+        '(;;
+          ;; Basic color override
+          (green-cooler "#bfff7f")
+          (green-intense "#4ceea5")
+          (yellow "#efef00")
+          (yellow-warmer "#ffb347")
+          (yellow-intense "#ffff7f")
+          ;;
+          (bg-yellow-intense "#556b2f")
+          ;;
+          (bg-main 'unspecified)
+          (comment fg-dim)
+          (bg-hl-line bg-yellow-intense)
+          ;;
+          ;; Code remapping
+          ;;
+          (builtin blue-warmer)
+          (constant yellow-warmer)
+          (docstring green-intense)
+          (docmarkup green-intense)
+          (fnname magenta-cooler)
+          (keyword red-faint)
+          (preprocessor red-cooler)
+          (string cyan-cooler)
+          (type yellow-intense)
+          (variable blue)
+          ;;
+          (rx-construct blue-faint)
+          (rx-backslash green-cooler)
+          ;;
+          (fg-link cyan-warmer)
+          ;;
+          (err red-intense)
+          (warning magenta-intense)
+          (info cyan-intense)
+          ;;
+          ;; Org Agenda view
+          ;; (date-common fg-alt)
+          ;; (date-deadline red-faint)
+          ;; (date-event fg-alt)
+          ;;
+          (date-common fg-alt)
+          (date-weekday fg-main)
+          ;; headline
+          (fg-heading-0 cyan-intense)
+          (fg-heading-1 magenta-cooler)
+          (fg-heading-2 blue-cooler)
+          (fg-heading-3 yellow-warmer)
+          (fg-heading-4 green-faint)
+          (fg-heading-5 yellow-intense)
+          (fg-heading-6 red-cooler)
+          (fg-heading-7 magenta-warmer)
+          (fg-heading-8 fg-main)
+          )
+        )
+  :config
+  (defun my:modus-themes-custom-faces (&rest _)
     (modus-themes-with-colors
       (custom-set-faces
-       `(font-lock-comment-delimiter-face ((,c :inherit font-lock-comment-face :bold t)))
+       ;; vertico
+       `(vertico-current                                  ((,c :inherit hl-line :background unspecified )))
+       ;; wanderlust
        `(wl-highlight-folder-closed-face                  ((,c :foreground ,green-cooler )))
        `(wl-highlight-folder-few-face                     ((,c :foreground ,red-cooler )))
        `(wl-highlight-folder-killed-face                  ((,c :foreground ,fg-alt )))
@@ -4613,10 +4666,8 @@ pdflang={%l}}
        `(wl-highlight-message-cited-text-10               ((,c :foreground ,cyan-intense )))
        `(wl-highlight-message-header-contents             ((,c :foreground ,magenta-cooler )))
        `(wl-highlight-message-headers                     ((,c :foreground ,cyan-intense )))
-       `(wl-highlight-message-important-header-contents   ((,c :foreground ,magenta-intense )))
        `(wl-highlight-message-important-header-contents2  ((,c :foreground ,magenta-intense )))
        `(wl-highlight-message-signature                   ((,c :foreground ,fg-dim )))
-       `(wl-highlight-message-unimportant-header-contents ((,c :foreground ,fg-dim )))
        `(wl-highlight-summary-answered-face               ((,c :foreground ,green-intense )))
        `(wl-highlight-summary-deleted-face                ((,c :foreground ,blue-intense )))
        `(wl-highlight-summary-disposed-face               ((,c :foreground ,fg-dim )))
@@ -4631,87 +4682,12 @@ pdflang={%l}}
        `(wl-highlight-summary-new-face                    ((,c :foreground ,red-intense )))
        `(wl-highlight-summary-displaying-face             ((,c :underline t :bold t)))
        `(wl-highlight-folder-path-face                    ((,c :underline t :bold t)))
-       ;;
+       ;; whitespace-mode
        `(whitespace-trailing                              ((,c :foreground ,magenta-intense )))
        `(whitespace-tab                                   ((,c :foreground ,blue-intense :underline t)))
        `(whitespace-space                                 ((,c :foreground ,green-intense :bold t)))
        `(whitespace-empty                                 ((,c :background ,red-intense )))
        )))
-  :hook
-  `((modus-themes-after-load-theme-hook . my:override-face-attribute))
-  :custom
-  `(
-    (modus-themes-custom-auto-reload      . t)
-    (modus-themes-disable-other-themes    . t)
-    (modus-themes-bold-constructs         . nil)
-    (modus-themes-italic-constructs       . nil)
-    (modus-themes-mixed-fonts             . nil)
-    (modus-themes-prompts
-     . '(bold bold))
-    (modus-themes-completions
-     . '((matches   . (bold))
-         (selection . (bold underline))))
-    (modus-themes-org-blocks              . nil)
-    (modus-themes-headings                . '((t . (bold))))
-    (modus-themes-variable-pitch-ui       . nil)
-    (modus-vivendi-palette-overrides
-     . '(;;
-         ;;; Basic color override
-         (green-cooler "#bfff7f")
-         (green-intense "#4ceea5")
-         (yellow "#efef00")
-         (yellow-warmer "#ffb347")
-         (yellow-intense "#ffff7f")
-         ;;
-         (bg-yellow-intense "#556b2f")
-         ;;
-         (bg-main 'unspecified)
-         (comment fg-dim)
-         (bg-hl-line bg-yellow-intense)
-         ;;
-         ;;; Code remapping
-         ;;
-         (builtin blue-warmer)
-         (constant yellow-warmer)
-         (docstring green-intense)
-         (docmarkup green-intense)
-         (fnname magenta-cooler)
-         (keyword red-faint)
-         (preprocessor red-cooler)
-         (string cyan-cooler)
-         (type yellow-intense)
-         (variable blue)
-         ;;
-         (rx-construct blue-faint)
-         (rx-backslash green-cooler)
-         ;;
-         (fg-link cyan-warmer)
-         ;;
-         (err red-intense)
-         (warning magenta-intense)
-         (info cyan-intense)
-         ;;
-         ;; Org Agenda view
-         ;; (date-common fg-alt)
-         ;; (date-deadline red-faint)
-         ;; (date-event fg-alt)
-         ;;
-         (date-common fg-alt)
-         (date-weekday fg-main)
-         ;; headline
-         (fg-heading-0 cyan-intense)
-         (fg-heading-1 magenta-cooler)
-         (fg-heading-2 blue-cooler)
-         (fg-heading-3 yellow-warmer)
-         (fg-heading-4 green-faint)
-         (fg-heading-5 yellow-intense)
-         (fg-heading-6 red-cooler)
-         (fg-heading-7 magenta-warmer)
-         (fg-heading-8 fg-main)
-         ))
-    )
-  :init
-  (modus-themes-load-theme 'modus-vivendi)
   )
    #+end_src
 ** modeline: =powerline=
@@ -4729,6 +4705,7 @@ pdflang={%l}}
    skk-jisx0208-latin-mode-string
    skk-jisx0201-mode-string
    skk-abbrev-mode-string
+   skk-modeline-input-mode
    )
   :init
   ;; (defun my:major-mode-icon (mode)
@@ -4767,15 +4744,15 @@ pdflang={%l}}
     (force-mode-line-update t))
   ;;
   :advice (:override skk-setup-modeline my:skk-setup-modeline)
-  :custom
-  `((powerline-buffer-size-suffix    . nil)
-    (powerline-display-hud           . nil)
-    (powerline-display-buffer-size   . nil)
-    (powerline-text-scale-factor     .  1)
-    (powerline-default-separator     . 'utf-8)
-    (powerline-utf-8-separator-left  . #xe0b0)
-    (powerline-utf-8-separator-right . #xe0b2)
-    )
+  :init
+  (setq powerline-buffer-size-suffix    nil
+        powerline-display-hud           nil
+        powerline-display-buffer-size   nil
+        powerline-text-scale-factor      1
+        powerline-default-separator     'utf-8
+        powerline-utf-8-separator-left  #xe0b0
+        powerline-utf-8-separator-right #xe0b2
+        )
   :hook (emacs-startup-hook . my:powerline-theme)
   :config
 ;;;###autoload
@@ -4826,17 +4803,37 @@ pdflang={%l}}
   :CUSTOM_ID: orgd89ceb4b
   :END:
   #+begin_src emacs-lisp :tangle init.el
+(leaf treesit
+  :config
+  (setq treesit-font-lock-level 4)
+  )
+(leaf treesit-auto
+  :ensure t
+  :init
+  (setq treesit-auto-install 'prompt)
+  :config
+  (treesit-auto-add-to-auto-mode-alist 'all)
+  :hook
+  (emacs-startup-hook . global-treesit-auto-mode)
+  )
+(leaf enh-ruby-mode
+  ;; :ensure t
+  :disabled t
+  :advice
+  ((:override ruby-mode enh-ruby-mode))
+  )
+
 (defun my:debug-on-quit-if-scratch (&rest _args)
   (setq debug-on-quit (string= (buffer-name) "*scratch*")))
 (add-hook 'window-selection-change-functions 'my:debug-on-quit-if-scratch)
 (leaf which-key
   :ensure t
-  :custom
-  `((which-key-show-early-on-C-h    . t)
-    (which-key-idle-delay           . 10000)
-    (which-key-idle-secondary-delay . 0.05)
-    (which-key-popup-type           . 'minibuffer)
-    )
+  :init
+  (setq which-key-show-early-on-C-h t
+        which-key-idle-delay 10000
+        which-key-idle-secondary-delay 0.05
+        which-key-popup-type 'minibuffer
+        )
   :hook (emacs-startup-hook . which-key-mode)
   )
 ;; (leaf tree-sitter :ensure t)
@@ -4887,8 +4884,8 @@ pdflang={%l}}
 ;;
 (leaf vterm
   :ensure t
-  :custom
-  `((vterm-always-compile-module . t))
+  :init
+  (setq vterm-always-compile-module t)
   :hook
   (vterm-mode-hook
    . (lambda () (setq-local global-hl-line-mode nil)))
@@ -4899,23 +4896,10 @@ pdflang={%l}}
 (leaf keg-mode :ensure t)
 (leaf esup
   :ensure t
-  :custom
-  ((esup-insignificant-time . 0.01)
-   (esup-depth              . 0)) ;; 🤔
-  )
-  #+end_src
-* 起動時間の出力
-  :PROPERTIES:
-  :CUSTOM_ID: orgca1f29da
-  :END:
-  [[http://memo.sugyan.com/entry/20120120/1327037494][起動時間を計測する 改訂版 - すぎゃーんメモ]]
-  #+begin_src emacs-lisp :tangle init.el
-(leaf *show-startup-time
-  :hook
-  (emacs-startup-hook
-   . (lambda ()
-       (message "init time: %.3f sec"
-                (float-time (time-subtract after-init-time before-init-time)))))
+  :init
+  (setq esup-insignificant-time 0.01
+        esup-depth 0 ;; 🤔
+        )
   )
   #+end_src
 * 最後に
@@ -4928,7 +4912,7 @@ pdflang={%l}}
    :END:
    必要に応じて
   #+begin_src emacs-lisp :tangle init.el
-(setq debug-on-error nil)
+(setq debug-on-error t)
 ;; (profiler-report)
 ;; (profiler-stop)
   #+end_src

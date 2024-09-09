@@ -51,7 +51,7 @@ ifneq ($(NATIVE_COMP),yes)
 endif
 
 clean:
-	rm -fr auto-save-list *.el *.elc *~ .bootstrap
+	rm -fr auto-save-list *.el *.elc *~ 
 
 distclean: clean
 	rm -fr elpa

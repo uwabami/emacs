@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2024-05-17 19:31:09
+#+date: 2025-01-24 23:54:04
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -91,7 +91,7 @@ init.el: README.org
   #+begin_src emacs-lisp :tangle (when (boundp 'early-init-file) "early-init.el")
 ;; -*- lexical-binding: t -*-
   #+end_src
-* TODO ディレクトリ構成の修正
+* TODO ディレクトリ構成の修正 [0/1]
   :PROPERTIES:
   :CUSTOM_ID: org60bad8a3
   :END:
@@ -108,26 +108,31 @@ init.el: README.org
      |-- eln-cache/  → ~/.cache/emacs/eln-cache への symlink: native compile 出力
      |-- elpa/       ←  package.el で導入したパッケージが置かれる場所
      |-- share/      ←  (基本的に)参照するだけの資源置き場所
-     `'-- tree-sitter ← ~/.cache/emacs/tree-sitter への symlink: treesit-auto のインストール先
+         `-- tree-sitter ← ~/.cache/emacs/tree-sitter への symlink: treesit-auto のインストール先
     ~/.cache/emacs   ←  一次ファイルの置き場所
   #+end_example
+  - [ ] ~/.emacs.d/eln-cache を変更できないか?
   - [ ] treesit のインストール先がハードコードされている. これを変えたいなぁ...
 
   上記ディレクトリ構成を設定ファイルで使用するために
-  ディレクトリ配置を宣言しておきます。
+  ディレクトリ配置を宣言しておきます.
+  ついでに, =share/elisp= 以下のディレクトリを load-path に追加しておきます.
   #+begin_src emacs-lisp :tangle init.el
 (eval-and-compile
   (when load-file-name
     (setq user-emacs-directory
           (expand-file-name (file-name-directory load-file-name))))
-  (defconst my:d:share
-    (expand-file-name "share/" user-emacs-directory))
-  (defconst my:d:tmp
-    (expand-file-name ".cache/emacs/" (getenv "HOME")))
-  (defconst my:d:cache
-    (expand-file-name ".cache/" (getenv "HOME")))
-  (defconst my:d:org
-    (expand-file-name "~/Nextcloud/org")))
+  (defconst my:d:share (expand-file-name "share/" user-emacs-directory))
+  (defconst my:d:tmp (expand-file-name ".cache/emacs" (getenv "HOME")))
+  (defconst my:d:org (expand-file-name "Nextcloud/org" (getenv "HOME")))
+  )
+;;
+(dolist (dir (let ((dir (expand-file-name "elisp" my:d:share)))
+               (list dir (format "%s%d" dir emacs-major-version))))
+  (when (and (stringp dir) (file-directory-p dir))
+    (let ((default-directory dir))
+      (add-to-list 'load-path default-directory)
+      (normal-top-level-add-subdirs-to-load-path))))
   #+end_src
 * Byte-Compile 時の Common Lisp の読み込み
   :PROPERTIES:
@@ -158,7 +163,7 @@ init.el: README.org
   (interactive)
   (native-compile-async "~/.emacs.d/init.el")
   (native-compile-async "~/.emacs.d/early-init.el")
-  ;; (native-compile-async "~/.emacs.d/init-wl.el")
+  (native-compile-async "~/.emacs.d/share/elisp/" 'recursively)
   (native-compile-async "~/.emacs.d/elpa" 'recursively))
   #+end_src
 * 起動の高速化
@@ -666,9 +671,9 @@ Emacs.reverseVideo: true
   (set-frame-parameter nil 'alpha 90)
   (set-face-attribute 'default nil
                       :family "PlemolJP Console NF"
-                      :height 135)
+                      :height 175)
   ;; 高さは合わないが幅はなんとなる揃う様になった, 様な？
-  (set-fontset-font nil '(#x1F004 . #x1FFFD) (font-spec :family "Noto Color Emoji" :size 24))
+  (set-fontset-font nil '(#x1F004 . #x1FFFD) (font-spec :family "Noto Color Emoji" :size 19))
 )
  #+end_src
  表示のテスト
@@ -762,11 +767,8 @@ Emacs.reverseVideo: true
         ;; 昔設定していたアレコレは以下の様にマトめられていた.
         ;; alias: inhibit-splash-screen → inhibit-startup-screen
         ;; alias: inhibit-startup-message → inhibit-startup-screen
-        ;; inhibt-startup-screen は early-init.el へ
-        ;;;
-        ;; 自動保存
-        auto-save-list-file-prefix (concat my:d:tmp "saves-")
-
+        ;; inhibt-startup-screen は early-init.el で設定済.
+        ;; inhibit-startup-screen t
         )
   )
 (leaf simple
@@ -785,19 +787,25 @@ Emacs.reverseVideo: true
 (leaf files
   :config
   (setq save-abbrevs 'silent ;; 略語は静かに保存しておく
-        ;; 自動保存の保存先
-        auto-save-file-name-transforms `((".*" ,my:d:tmp  t))
-        ;; backup で symlink は使わない
-        backup-by-copying t
+        ;; 自動保存の無効化
+        auto-save-default nil
+        make-backup-files nil
+        auto-save-list-file-prefix nil
+        create-lockfiles nil
+        ;; ;; auto-save されるファイルの位置の変更
+        ;; auto-save-file-name-transforms `((".*" ,my:d:tmp  t))
+        ;; ;; backup で symlink は使わない
+        ;; backup-by-copying t
         ;; backup ファイルの保存先
-        backup-directory-alist  `((".*" . ,my:d:tmp))
-        ;; backup ファイルの世代管理
-        version-control t
-        ;; 何世代残すか?
-        kept-new-versions 5
-        kept-old-versions 5
-        delete-old-versions t
+        ;; backup-directory-alist  `((".*" . ,my:d:tmp))
+        ;; ;; backup ファイルの世代管理
+        ;; version-control t
+        ;; kept-new-versions 5
+        ;; kept-old-versions 5
+        ;; delete-old-versions t
+        auto-save-visited-interval 30
         )
+  :hook (emacs-startup-hook . auto-save-visited-mode)
   )
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 変更履歴の保存
@@ -845,7 +853,7 @@ Emacs.reverseVideo: true
         ;; 折り返し無し
         truncate-lines nil
         truncate-partial-width-windows nil
-        auto-save-default 15
+        ;; auto-save-default 15
         ;; 無制限(の筈)
         history-length t
         use-short-answers t
@@ -958,7 +966,7 @@ Emacs.reverseVideo: true
                            space-mark  ; 可視化の際の置き換えを有効化
                            tab-mark    ; 可視化の際の置き換えを有効化
                            )
-        whitespace-display-mappings '((space-mark ?\u3000 [?\□])
+        whitespace-display-mappings '(;; (space-mark ?\u3000 [?\□])
                                       (tab-mark ?\t [?\u00BB ?\t] [?\\ ?\t]))
         whitespace-space-regexp "\\(\u3000+\\)"
         whitespace-trailing-regexp  "\\([ \u00A0]+\\)$"
@@ -1147,6 +1155,17 @@ Emacs*useXIM: false
   ;; override - -;
   (defvar skk-get-jisyo-directory (expand-file-name "skk-jisyo" my:d:tmp))
   (defvar skk-extra-jisyo-file-list nil)
+  ;;
+  ;;(defun my:skk-open-server-decoding-utf-8 ()
+  ;;  "辞書サーバと接続する。サーバープロセスを返す。 decoding coding-system が euc ではなく utf8 となる。"
+  ;;  (unless (skk-server-live-p)
+  ;;    (setq skkserv-process (skk-open-server-1))
+  ;;    (when (skk-server-live-p)
+  ;;      (let ((code (cdr (assoc "euc" skk-coding-system-alist))))
+  ;;        (set-process-coding-system skkserv-process 'utf-8 code))))
+  ;;  skkserv-process)
+  ;; :advice (:override skk-open-server
+  ;;                    my:skk-open-server-decoding-utf-8)
   :init
   (setq default-input-method "japanese-skk")
   (setq skk-user-directory (expand-file-name "skk" my:d:tmp)
@@ -1269,7 +1288,6 @@ Emacs*useXIM: false
                                   "^/[^/:]+:"
                                   "bookmarks"
                                   "org-recent-headings.dat"
-                                  "^/mnt/c/\\.*"
                                   "\\.*COMMIT_EDITMSG$"
                                   )
         )
@@ -1480,14 +1498,37 @@ Emacs*useXIM: false
    :PROPERTIES:
    :CUSTOM_ID: org1689d1f5
    :END:
-   clipboard と PRIMARY の同期には =gpaste= を使っている．
    #+begin_src emacs-lisp :tangle init.el
 (leaf xclip
   :if (and (executable-find "xclip")
-           (eq system-type 'gnu/linux))
+           (eq system-type 'gnu/linux)
+           (not (file-directory-p "/mnt/c"))
+           )
   :ensure t
   :hook (emacs-startup-hook
          . (lambda () (xclip-mode +1)))
+  )
+   #+end_src
+** WSLでは =win32yank.exe= を利用
+   :PROPERTIES:
+   :CUSTOM_ID: orgb182b45f
+   :END:
+   #+begin_src emacs-lisp :tangle init.el
+(leaf *win32yank
+  :if (and (file-directory-p "/mnt/c")
+           (executable-find "win32yank.exe"))
+  :init
+  (defun my:win32yank-copy (text)
+    (interactive "r")
+    (with-temp-buffer
+      (insert text)
+      (shell-command-on-region (point-min) (point-max) "win32yank.exe -i" t)))
+
+  (defun my:win32yank-paste ()
+    (shell-command-to-string "win32yank.exe -o --lf"))
+
+  (setq interprogram-cut-function 'my:win32yank-copy)
+  (setq interprogram-paste-function 'my:win32yank-paste)
   )
    #+end_src
 ** macOS では =pbcopy/pbpaste= を利用.
@@ -1563,7 +1604,7 @@ Emacs*useXIM: false
   :preface
   ;;
   (defconst my:d:wl-cache-directory
-    (expand-file-name "wl" "~/.cache"))
+    (expand-file-name "~/.cache/wl"))
   (unless (file-directory-p
            (expand-file-name "local/trash" my:d:wl-cache-directory))
     (make-directory
@@ -1652,13 +1693,18 @@ Emacs*useXIM: false
      :PROPERTIES:
      :CUSTOM_ID: orgc4ec7a62
      :END:
+     #+begin_src emacs-lisp :tangle init-wl.el
+(eval-and-compile
+  (require 'mime-w3m))
+(setq w3m-fill-column 72)
+     #+end_src
      HTML メールを表示するために eww を使う.
      mime-setup がロードされる前に記述する必要あり.
      #+begin_src emacs-lisp :tangle init-wl.el
-(leaf mime-setup
-  :preface
-  (setq mime-view-text/html-previewer 'shr)
-  )
+;; (leaf mime-setup
+;;   :preface
+;;   (setq mime-view-text/html-previewer 'shr)
+;;   )
      #+end_src
      どのアプリケーションで開くか → =xdg-open= に丸投げ．
      #+begin_src emacs-lisp :tangle init-wl.el
@@ -2185,6 +2231,29 @@ video/*; xdg-open %s;
   (mime-set-field-decoder
    'To nil 'eword-decode-and-unfold-unstructured-field-body))
      #+end_src
+**** 日本語添付ファイルの処理
+     :PROPERTIES:
+     :CUSTOM_ID: orgb972bff6
+     :END:
+     #+begin_src emacs-lisp :tangle init-wl.el
+(leaf mime
+  :config
+  '(defadvice mime-entity-filename
+       (after eword-decode-for-broken-MUA activate)
+     "Decode eworded file name for *BROKEN* MUA."
+     (when (stringp ad-return-value)
+       (setq ad-return-value (eword-decode-string ad-return-value t))))
+  )
+;;
+(use-package std11
+  :config
+  '(defadvice std11-wrap-as-quoted-string (before encode-string activate)
+     "Encode a string."
+     (use-package eword-encode
+       (ad-set-arg 0 (or (eword-encode-string (ad-get-arg 0)) "" ))
+       )
+     ))
+     #+end_src
 **** Subject が変わってもスレッドを切らない
      :PROPERTIES:
      :CUSTOM_ID: org8e1a38e8
@@ -2517,22 +2586,29 @@ video/*; xdg-open %s;
     指定された唯一人または唯一つの投稿先に返信.
     また, =X-ML-Name:= と =Reply-To:= がついているなら =Reply-To:= 宛に返信
     #+begin_src emacs-lisp  :tangle init-wl.el
-(setq wl-draft-reply-without-argument-list
-      '((("X-ML-Name" "Reply-To") . (("Reply-To") nil nil))
-        ("X-ML-Name" . (("To" "Cc") nil nil))
-        ("Followup-To" . (nil nil ("Followup-To")))
-        ("Newsgroups" . (nil nil ("Newsgroups")))
-        ("Reply-To" . (("Reply-To") nil nil))
-        ("Mail-Reply-To" . (("Mail-Reply-To") nil nil))
-        ("From" . (("From") nil nil))))
+;; (setq wl-draft-reply-without-argument-list
+;;       '(
+;;         (("X-ML-Name" "Reply-To") . (("Reply-To") nil nil))
+;;         ("X-ML-Name" . (("To" "Cc") nil nil))
+;;         ("Followup-To" . (nil nil ("Followup-To")))
+;;         ("Newsgroups" . (nil nil ("Newsgroups")))
+;;         ("Reply-To" . (("Reply-To") nil nil))
+;;         ("Mail-Reply-To" . (("Mail-Reply-To") nil nil))
+;;         ("From" . (("From") nil nil)))
+;;       )
     #+end_src
     =C-u a= (with-argument)であれば関係する全ての人・投稿先に返信
     #+begin_src emacs-lisp  :tangle init-wl.el
-(setq wl-draft-reply-with-argument-list
-      '(("Followup-To" . (("From") nil ("Followup-To")))
-        ("Newsgroups" . (("From") nil ("Newsgroups")))
-        ("Mail-Followup-To" . (("Mail-Followup-To") nil ("Newsgroups")))
-        ("From" . (("From") ("To" "Cc") ("Newsgroups")))))
+;; (setq wl-draft-reply-with-argument-list
+;;       '(
+;;         (("X-ML-Name" "Reply-To") . (("Reply-To") nil nil))
+;;         ("X-ML-Name" . (("To" "Cc") nil nil))
+;;         ("Followup-To" . (nil nil ("Followup-To")))
+;;         ("Newsgroups" . (nil nil ("Newsgroups")))
+;;         ("Reply-To" . (("Reply-To") nil nil))
+;;         ("Mail-Reply-To" . (("Mail-Reply-To") nil nil))
+;;         ("From" . (("From") nil nil)))
+;;       )
     #+end_src
     サマリ表示には petname を使うが, 引用には使わない
     #+begin_src emacs-lisp  :tangle init-wl.el
@@ -2667,6 +2743,7 @@ fi
    ついでに =mailto= のリンクを emacsclient で扱うために,
    以下の関数を定義しておく
    #+begin_src emacs-lisp :tangle init.el
+;;;###autoload
 (defun my:mailto-compose-mail (mailto-url)
   "Custom: handling mailto: link"
   (if (and (stringp mailto-url)
@@ -2914,6 +2991,23 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         (find-file (assoc-default selected files)))))
   )
    #+end_src
+** =cape=: 補完 backend
+   :PROPERTIES:
+   :CUSTOM_ID: org3b1ea0b6
+   :END:
+   #+begin_src emacs-lisp :tangle init.el
+(leaf cape
+  :disabled t
+  :ensure t
+  :config
+  (setq cape-dabbrev-check-other-buffers nil)
+  (add-to-list 'completion-at-point-functions 'cape-keyword)
+  (add-to-list 'completion-at-point-functions 'cape-dabbrev)
+  (add-to-list 'completion-at-point-functions 'cape-file)
+  (add-to-list 'completion-at-point-functions 'cape-tex)
+  (add-to-list 'completion-at-point-functions 'cape-emoji)
+  )
+   #+end_src
 ** =orderless=: 補完候補の選択
    :PROPERTIES:
    :CUSTOM_ID: orgc12df551
@@ -2930,87 +3024,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                                     orderless-initialism
                                     orderless-literal)
         )
-  )
-   #+end_src
-** =corfu=: on the fly completions
-   :PROPERTIES:
-   :CUSTOM_ID: org37d21658
-   :END:
-   =company= より使い勝手が良い, 気がする.
-   :PROPERTIES:
-   :CUSTOM_ID: orgb72396fd
-   :END:
-   #+begin_src emacs-lisp
-(leaf corfu
-  :ensure t
-  :preface
-  (defvar-keymap my:corfu-auto-map
-    :doc "Keymap used when popup is shown automatically."
-    "C-g" #'corfu-quit
-    )
-  (defvar my:corfu-in-auto-complete nil)
-;;;###autoload
-(defun my:corfu--auto-complete-deferred:around (oldfun &rest args)
-  ;; 自動補完時に呼び出される
-  (let ((my:corfu-in-auto-complete t))
-    ;; 元の関数を呼び出す. 補完候補があるなら setup が呼ばれる
-    (apply oldfun args)))
-;;;###autoload
-(defun my:corfu--setup:around (oldfun &rest args)
-  (if my:corfu-in-auto-complete
-      ;; 自動補完の時
-      (progn
-        (setf (alist-get 'tab-line-format corfu--buffer-parameters) "   C-M-i:補完"
-              ;; 最初の候補を選ばない
-              corfu-preselect 'prompt)
-        (let (;; キー割り当てを極力無くす
-              (corfu-map my:corfu-auto-map))
-          (apply oldfun args)))
-    ;; 手動補完の時
-    (setf (alist-get 'tab-line-format corfu--buffer-parameters) nil
-          ;; 最初の候補を選ぶ
-          corfu-preselect 'first)
-    (apply oldfun args)))
-  :advice ((:around corfu--auto-complete-deferred
-                    my:corfu--auto-complete-deferred:around)
-           (:around corfu--setup
-                    my:corfu--setup:around))
-  :init
-  (leaf corfu-terminal
-    :ensure t
-    :init (setq corfu-terminal-disable-on-gui nil)
-    )
-  :bind
-  (:corfu-map
-   ("TAB"       . corfu-next)
-   ("<tab>"     . corfu-next)
-   ("S-TAB"     . corfu-previous)
-   ("<backtab>" . corfu-previous)
-   ("C-j"       . corfu-next)
-   ("C-n"       . corfu-next)
-   ("C-p"       . corfu-previous)
-   ("C-k"       . corfu-previous)
-   ("C-g"       . corfu-quit)
-   )
-  :hook (emacs-startup-hook . (lambda ()
-                                (corfu-terminal-mode +1)
-                                (global-corfu-mode)))
-  :config
-  (setq completion-cycle-threshold 4
-        tab-always-indent          'complete
-        ;; Enable cycling for `corfu-next/previous'
-        corfu-cycle                t
-        ;; Enable auto completion
-        corfu-auto                 t
-        corfu-preselect            'prompt
-        ;; (corfu-separator          . ?\s)  ;; Orderless field separator
-        ;; (corfu-quit-at-boundary   . nil)  ;; Never quit at completion boundary
-        ;; (corfu-quit-no-match      . nil)  ;; Never quit, even if there is no match
-        ;; (corfu-preview-current    . nil)  ;; Disable current candidate preview
-        ;; (corfu-on-exact-match     . nil)  ;; Configure handling of exact matches
-        ;; (corfu-echo-documentation . nil)  ;; Disable documentation in the echo area
-        ;; (corfu-scroll-margin      . 5)    ;; Use scroll margin
-    )
   )
    #+end_src
 ** =kind-icon=: corfu で補完候補にアイコン表示
@@ -3067,20 +3080,82 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
   )
    #+end_src
-** =cape=: 補完 backend
+** =corfu=: on the fly completions
    :PROPERTIES:
-   :CUSTOM_ID: org3b1ea0b6
+   :CUSTOM_ID: org37d21658
    :END:
-   #+begin_src emacs-lisp
-(leaf cape
+   =company= より使い勝手が良い, 気がする.
+   :PROPERTIES:
+   :CUSTOM_ID: orgb72396fd
+   :END:
+   [[https://misohena.jp/blog/2024-02-15-separate-notification-and-selection-with-corfu-auto.html][Corfuの自動補完で候補の存在を伝える事と候補を選べるようにする事を分離する]] を参考に.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf corfu
+  :disabled t
   :ensure t
+  :preface
+  (defvar-keymap my:corfu-auto-map
+    :doc "Keymap used when popup is shown automatically."
+    "C-g" #'corfu-quit
+    )
+  (defvar my:corfu-in-auto-complete nil)
+;;;###autoload
+(defun my:corfu--auto-complete-deferred:around (oldfun &rest args)
+  ;; 自動補完時に呼び出される
+  (let ((my:corfu-in-auto-complete t))
+    ;; 元の関数を呼び出す. 補完候補があるなら setup が呼ばれる
+    (apply oldfun args)))
+;;;###autoload
+(defun my:corfu--setup:around (oldfun &rest args)
+  (if my:corfu-in-auto-complete
+      ;; 自動補完の時
+      (progn
+        (setf ;; (alist-get 'alpha corfu--frame-parameters) 90
+              (alist-get 'tab-line-format corfu--buffer-parameters) "   C-M-i:補完"
+              ;; 最初の候補を選ばない
+              corfu-preselect 'prompt)
+        (let (;; キー割り当てを極力無くす
+              (corfu-map my:corfu-auto-map))
+          (apply oldfun args)))
+    ;; 手動補完の時
+    (setf ;; (alist-get 'alpha corfu--frame-parameters) 100
+          (alist-get 'tab-line-format corfu--buffer-parameters) nil
+          ;; 最初の候補を選ぶ
+          corfu-preselect 'first)
+    (apply oldfun args)))
+  :advice ((:around corfu--auto-complete-deferred
+                    my:corfu--auto-complete-deferred:around)
+           (:around corfu--setup
+                    my:corfu--setup:around)
+           )
+  :init
+  (leaf corfu-terminal
+    :ensure t
+    :config
+    (setq corfu-terminal-disable-on-gui nil)
+    )
+  :bind
+  (:corfu-map
+   ("TAB"       . corfu-next)
+   ("<tab>"     . corfu-next)
+   ("S-TAB"     . corfu-previous)
+   ("<backtab>" . corfu-previous)
+   ("C-j"       . corfu-next)
+   ("C-n"       . corfu-next)
+   ("C-p"       . corfu-previous)
+   ("C-k"       . corfu-previous)
+   ("C-g"       . corfu-quit)
+   )
+  :hook (emacs-startup-hook . (lambda ()
+                                (corfu-terminal-mode +1)
+                                (global-corfu-mode)))
   :config
-  (setq cape-dabbrev-check-other-buffers nil)
-  (add-to-list 'completion-at-point-functions 'cape-keyword)
-  (add-to-list 'completion-at-point-functions 'cape-dabbrev)
-  (add-to-list 'completion-at-point-functions 'cape-file)
-  (add-to-list 'completion-at-point-functions 'cape-tex)
-  (add-to-list 'completion-at-point-functions 'cape-emoji)
+  (setq completion-cycle-threshold 4
+        tab-always-indent          'complete
+        corfu-cycle                t
+        corfu-auto                 t
+        corfu-preselect            'prompt
+    )
   )
    #+end_src
 * 翻訳
@@ -3199,44 +3274,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    #+begin_src emacs-lisp
 (leaf text-adjust :vc (:url "https://github.com/uwabami/text-adjust.el"))
    #+end_src
-** =flycheck=: on-the-fly linter
-   :PROPERTIES:
-   :CUSTOM_ID: org4e0bdd17
-   :END:
-   意図せず動作するので一旦停止.
-   #+begin_src emacs-lisp
-(leaf flycheck
-  :ensure t
-  :disabled t
-  ;; :hook (prog-mode-hook . flycheck-mode)
-  :custom ((flycheck-display-errors-delay . 0.3))
-  :config
-  (leaf flycheck-popup-tip
-    :ensure t
-    :hook (flycheck-mode-hook . flycheck-popup-tip-mode))
-  ;; (leaf flycheck-inline
-  ;;   :ensure t
-  ;;   :hook (flycheck-mode-hook . flycheck-inline-mode))
-  ;;
-  (flycheck-define-checker textlint
-    "A linter for text."
-    :command ("textlint-wrapper.sh" source)
-    :error-patterns
-    ((warning line-start (file-name) ":" line ":" column ": "
-              (id (one-or-more (not (any " "))))
-              (message (one-or-more not-newline)
-                       (zero-or-more "\n" (any " ") (one-or-more not-newline)))
-              line-end))
-    :modes (text-mode markdown-mode gfm-mode org-mode wl-draft-mode draft-mode))
-  :hook
-  ((text-mode-hook     . flycheck-mode)
-   (markdown-mode-hook . flycheck-mode)
-   (gfm-mode-hook      . flycheck-mode)
-   (org-mode-hook      . flycheck-mode)
-   (wl-draft-mode-hook . flycheck-mode)
-   (draft-mode-hook    . flycheck-mode))
-  )
-   #+end_src
+
 * プログラミング関連
   :PROPERTIES:
   :CUSTOM_ID: org31fb6f15
@@ -3252,18 +3290,18 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :ensure t
   :bind (("M-t" . xref-find-definitions)
          ("M-r" . xref-find-references))
-  :init
+;;  :init
 ;;;###autoload
-(defun my:eglot-capf()
-  (setq-local completion-at-point-functions
-              (list (cape-super-capf
-                     #'eglot-completion-at-point)
-                    #'cape-keyword
-                    #'cape-dabbrev
-                    #'cape-file)
-              ))
-  :hook
-  ((eglot-managed-mode-hook . my:eglot-capf))
+;; (defun my:eglot-capf()
+;;   (setq-local completion-at-point-functions
+;;               (list (cape-super-capf
+;;                      #'eglot-completion-at-point)
+;;                     #'cape-keyword
+;;                     #'cape-dabbrev
+;;                     #'cape-file)
+;;               ))
+;;  :hook
+;;  ((eglot-managed-mode-hook . my:eglot-capf))
   :config
   ;; digestif は日本語TeXとイマイチ相性が悪い(上手く使い熟せていない...).
   (delete (assoc '(tex-mode context-mode texinfo-mode bibtex-mode)
@@ -3280,17 +3318,15 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
    #+begin_src emacs-lisp :tangle init.el
 (leaf flymake
   :ensure t
-  :init
-  (leaf flymake-diagnostic-at-point
-    :ensure t
-    :commands flymake-diagnostic-at-point-mode)
   :bind (:flymake-mode-map
          ("C-c C-p" . flymake-goto-prev-error)
          ("C-c C-n" . flymake-goto-next-error)
          )
+  )
+(leaf flymake-diagnostic-at-point
+  :ensure t
+  :after flymake
   :hook (flymake-mode-hook . flymake-diagnostic-at-point-mode)
-  :config
-  (remove-hook 'flymake-diagnostic-functions 'flymake-proc-legacy-flymake)
   )
    #+end_src
 * TeX: =AUCTeX=
@@ -3356,7 +3392,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         TeX-auto-untabify t
         TeX-engine 'uptex
         TeX-view-program-selection  '((output-dvi "xdvi")
-                                      (output-pdf "Okular")
+                                      ;; (output-pdf "Okular")
+                                      (output-pdf "Atril")
                                       ;; (output-pdf "Evince")
                                       (output-html "xdg-open"))
         TeX-source-correlate-method 'synctex
@@ -3388,41 +3425,44 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :CUSTOM_ID: org7b7eccc9
   :END:
   =org-mode= が無いと生きていけない体になりました
-** 基本設定: =org=
+** 基本設定
    :PROPERTIES:
    :CUSTOM_ID: orgb143e870
    :END:
    目新しい設定はしていない, と思う．
    #+begin_src emacs-lisp :tangle init.el
-;;; timestamp 更新文字列の変更:
-;;  org-mode では ＃+date: をひっかける用に(＃は小文字)．
-;;;###autoload
-(defun my:org-timestamp-hook ()
-  "Change `time-stamp-start' in org-mode"
-  (set (make-local-variable 'time-stamp-start) "#\\+date: ")
-  (set (make-local-variable 'time-stamp-end)   "\$")
-  )
 (leaf org
   :ensure t
+  ;; 昔のメモ(howm)も org-mode で開く
+  :mode "\\.org\\'" "\\.howm\\'"
   :bind (("C-x n s" . org-narrow-to-subtree)
          ("C-x n w" . widen)
          ("C-c a"   . org-agenda)
          ("C-x m"   . org-capture)
-         ("C-x M"   . org-journal-new-entry)
          )
-  ;; 昔のメモ(howm)も org-mode で開く
-  :mode "\\.org\\'" "\\.howm\\'"
+  :preface
+;;;###autoload
+(defun my:org-timestamp-hook ()
+  "`timestamp-start Change'の変更. org-mode では #+date: をひっかける"
+  (set (make-local-variable 'time-stamp-start) "#\\+date: ")
+  (set (make-local-variable 'time-stamp-end)   "\$")
+  )
   ;; GTD: TODO→...→DONE としたエントリを =Arhive.org= に移動
   ;; - 一旦保留
   ;; (defun my:org-archive-done-tasks ()
   ;;   (interactive)
   ;;   (org-map-entries 'org-archive-subtree "/DONE" 'file))
   :hook
-  `((org-mode-hook . my:org-timestamp-hook)
+  `((org-mode-hook . (lambda ()
+                       (my:org-timestamp-hook)
+                       (org-tempo-setup)))
+    (org-tab-before-tab-emulation-hook . org-tempo-complete-tag)
     ;; (org-todo-statistics-hook       . my:org-archive-done-tasks)
     ;; (org-todo-after-statistics-hook . my:org-archive-done-tasks)
     )
   :init
+  (leaf org-tempo :commands (org-tempo-setup org-tempo-complete-tag))
+  :config
   ;; Nextcloud に保存する
   (setq org-directory (expand-file-name my:d:org)
         ;; return でリンクを辿る
@@ -3446,6 +3486,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                                      ("\\.pdf\\'" . "xdg-open %s"))
         ;; GTD: 状態の追加
         org-todo-keywords          '((sequence "TODO(t)" "WAIT(w)" "SOMEDAY(s)" "|" "DONE(d)" "CANCEL(c)")
+                                     (sequence "新規" "進行中" "解決" "フィードバック" "貸し出し可能" "貸し出し中" "|" "終了" "却下" "廃棄")
                                      (type "ARTICLE(a)" "|" "DONE(d)")
                                      (type "MEMO(m)" "|" "DONE(d)"))
         org-todo-keyword-faces     '(("TODO"    . org-todo)
@@ -3472,40 +3513,56 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         ;; modules → とりあえずクリアしておく
         org-modules  '()
         ;; element-cache は使わない...うまく使えると良いんだけれど.
-        ;; org-element-use-cache nil
+        org-element-use-cache nil
         ;; org-agenda で設定するべきかなぁ...
         org-agenda-inhibit-startup  t
-        )
-  :defer-config
-  ;; +打ち消し+ の font-lock の変更 →これはテーマに任せるべき?
-  (setq org-emphasis-alist
+        ;;
+        org-emphasis-alist
         (cons '("+" '(:strike-through t :foreground "#999999"))
-              (cl-delete "+" org-emphasis-alist :key 'car :test 'equal)))
-  (require 'org-tempo nil 'noerror)
+              (cl-delete "+" org-emphasis-alist :key 'car :test 'equal))
+        )
+  )
+   #+end_src
+** Org-Babel
+   :PROPERTIES:
+   :CUSTOM_ID: org99399f3b
+   :END:
+   #+begin_src emacs-lisp :tangle init.el
+(leaf org-src
+  :config
+  (setq org-src-fontify-natively         t ;; font-lock
+        ;; TAB の挙動
+        org-src-tab-acts-natively        t
+        ;; インデント
+        org-edit-src-content-indentation 0
+        ;; インデントを残す
+        org-src-preserve-indentation     t
+        ;; load languages
+        )
+  )
+(leaf org-babel
+  :config
+  (setq org-babel-load-languages '((emacs-lisp . t)))
+  (if (file-exists-p "/usr/share/ditaa/ditaa.jar")
+      (add-to-list 'org-babel-load-languages '(ditaa . t)))
+  (if (executable-find "uplatex")
+      (add-to-list 'org-babel-load-languages '(latex . t)))
+  )
+(leaf ob-ditaa
+  :init
+  (setq org-ditaa-jar-path "/usr/share/ditaa/ditaa.jar")
   )
    #+end_src
 ** Org-Id
    :PROPERTIES:
-   :CUSTOM_ID: org67465ee0
+   :CUSTOM_ID: org99f3c6e6
    :END:
    #+begin_src emacs-lisp :tangle init.el
 (leaf org-id
-  :commands (my:org-id-add-custom-id
-             my:org-id-get-custom-id
-             my:org-custom-id-get
-             my:org-id-add-to-headlines-in-file
-             my:org-id-delete-all-id-in-file)
+  :bind
+  (("C-c n o" . org-id-get-create))
   :init
   (leaf org-macs :commands org-with-point-at)
-  ;;
-  :hook (before-save-hook . (lambda ()
-                              (when (and (eq major-mode 'org-mode)
-                                         (eq buffer-read-only nil))
-                                (my:org-id-add-to-headlines-in-file))))
-  :config
-  (setq org-id-locations-file (expand-file-name "org-id-locations" my:d:tmp)
-        org-id-link-to-org-use-id 'create-if-interactive-and-no-custom-id
-        )
 ;;;###autoload
 (defun my:org-id-add-custom-id ()
   "Add \"CUSTOM_ID\" to the current tree if not assigned yet."
@@ -3560,202 +3617,20 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
       (org-map-entries
        (lambda () (my:org-custom-id-get (point) 'create))))))
   ;;
-  )
-   #+end_src
-** Babel
-   :PROPERTIES:
-   :CUSTOM_ID: org99399f3b
-   :END:
-   #+begin_src emacs-lisp :tangle init.el
-(leaf org-src
+  :hook (before-save-hook . (lambda ()
+                              (when (and (eq major-mode 'org-mode)
+                                         (eq buffer-read-only nil))
+                                (my:org-id-add-to-headlines-in-file))))
   :config
-  (setq org-src-fontify-natively         t ;; font-lock
-        ;; TAB の挙動
-        org-src-tab-acts-natively        t
-        ;; インデント
-        org-edit-src-content-indentation 0
-        ;; インデントを残す
-        org-src-preserve-indentation     t
-        ;; load languages
-        )
-  )
-(leaf org-babel
-  :config
-  (setq org-babel-load-languages '((emacs-lisp . t)))
-  (if (file-exists-p "/usr/local/lib/jditaa.jar")
-      (add-to-list 'org-babel-load-languages '(ditaa . t)))
-  (if (executable-find "uplatex")
-      (add-to-list 'org-babel-load-languages '(latex . t)))
-  )
-(leaf ob-ditaa
-  :init
-  (setq org-ditaa-jar-path "/usr/local/lib/jditaa.jar")
-  )
-   #+end_src
-** Org-agenda: スケジュール, TODO 表示
-   :PROPERTIES:
-   :CUSTOM_ID: org016dbf67
-   :END:
-   GTD 用の設定．後述の =org-gcal= と =orgmine= で取得したデータも表示している．
-   ついでに
-   - 土曜日をの face を追加.
-   - 祝日, 休日を日曜と同じfaceにする.
-   なんて事もやっている．元ネタは [[https://julien.danjou.info/blog/2010/org-mode-and-holidays][Org-mode and holidays]].
-   #+begin_src emacs-lisp :tangle init.el
-(leaf org-agenda
-  :if (file-directory-p my:d:org)
-  :preface
-  ;; face は theme にまわすべき, かな？
-  (defface my:org-agenda-date-saturday
-    '((t (:foreground "#7FBFFF" :bold t )))
-    "Agenda 表示中の土曜日用のface"
-    :group 'org-agenda )
-  ;; こっからは org-gcal で同期したカレンダーの色
-  (defface my:org-agenda-calendar-Univ
-    '((t (:foreground "#7FFF7F")))
-    "Agenda 表示中, Univ.org の表示 face"
-    :group 'org-agenda )
-  (defface my:org-agenda-calendar-Schedule
-    '((t (:foreground "#7FFFFF")))
-    "Agenda 表示中, Schedule.org の表示 face"
-    :group 'org-agenda )
-  (defface my:org-agenda-calendar-GFD
-    '((t (:foreground "#FFFF7F")))
-    "Agenda 表示中, GFD.org の表示 face"
-    :group 'org-agenda )
-  (defface my:org-agenda-calendar-DebianJP
-    '((t (:foreground "#BF7FFF")))
-    "Agenda 表示中, DebianJP.org の表示 face"
-    :group 'org-agenda )
-  ;; (defface my:org-agenda-calendar-twitter
-  ;;   '((t (:foreground "#CCCCCC")))
-  ;;   "Agenda 表示中, Twitter log の表示 face"
-  ;;   :group 'org-agenda )
-  ;;
-
-  ;; font-lock の適用. loop減らせないかなぁ….
-;;;###autoload
-(defun my:org-agenda-finalize-font-lock ()
-  "Custom: apply custom font-lock"
-  (save-excursion
-    (goto-char (point-min))
-    (while (re-search-forward "Univ:" nil t)
-      (add-text-properties (match-beginning 0) (line-end-position)
-                           '(face my:org-agenda-calendar-Univ)))
-    (goto-char (point-min))
-    (while (re-search-forward "Schedule:" nil t)
-      (add-text-properties (match-beginning 0) (line-end-position)
-                           '(face my:org-agenda-calendar-Schedule)))
-    (goto-char (point-min))
-    (while (re-search-forward "DebianJP:" nil t)
-      (add-text-properties (match-beginning 0) (line-end-position)
-                           '(face my:org-agenda-calendar-DebianJP)))
-    (goto-char (point-min))
-    (while (re-search-forward "GFD:" nil t)
-      (add-text-properties (match-beginning 0) (line-end-position)
-                           '(face my:org-agenda-calendar-GFD)))
-    (goto-char (point-min))
-    (while (re-search-forward "twitter:" nil t)
-      (add-text-properties (match-beginning 0) (line-end-position)
-                           '(face my:org-agenda-calendar-twitter)))
-    (goto-char (point-min))
-    (while (re-search-forward "祝日:\\|Holidays:\\|誕生日:" nil t)
-      (add-text-properties (match-beginning 0) (line-end-position)
-                           '(face org-agenda-date-weekend)))
-    ))
-  :hook ((org-agenda-finalize-hook . my:org-agenda-finalize-font-lock))
-  :config
-  (setq org-agenda-day-face-function
-        ;; ---
-        ;; 「org-modeのアジェンダで土曜日と日本の祝日を色づけする」
-        ;; https://misohena.jp/blog/2021-08-29-colorize-saturday-and-japanese-holidays-in-org-agenda.html
-        ;; ちょっと順番を変えて(「祝日, 日曜」を赤にしたいので)先に「日曜か日本の祝日」をチェックしている
-        ;; ---
-        (lambda (date)
-          (let ((face
-                 (cond
-                  ;; 日曜日か日本の祝日
-                  ((or (= (calendar-day-of-week date) 0)
-                       (let ((calendar-holidays japanese-holidays))
-                         (calendar-check-holidays date)))
-                   'org-agenda-date-weekend)
-                  ;; 土曜日
-                  ((= (calendar-day-of-week date) 6)
-                   'my:org-agenda-date-saturday)
-                  ;; 普通の日
-                  (t 'org-agenda-date))))
-            ;; 今日は色を反転
-            (if (org-agenda-today-p date) (list :inherit face :underline t) face)))
-        ;;
-        org-agenda-span 'week
-        org-agenda-start-on-weekday nil ;; today!
-        org-agenda-format-date "%Y/%m/%d (%a)"
-        org-agenda-weekend-days '(0)    ;; sunday.
-        org-agenda-ignore-properties '(effort appt)
-        ;; org-agenda-repeating-timestampo-show-all t ;; 🤔
-        org-agenda-sorting-strategy '((agenda habit-down time-up timestamp-down priority-down category-keep)
-                                      (todo timestamp-down priority-down category-keep)
-                                      (tags priority-down category-keep)
-                                      (search category-keep))
-        ;; あんまり使っていないので止めるかも.
-        org-agenda-custom-commands  '(("n" "agenda and all TODO list"
-                                       (
-                                        (agenda ""
-                                                ((org-agenda-ndays 1)
-                                                 (org-agenda-entry-types '(:timestamp :sexp))))
-                                        (todo "TODO"
-                                              ((org-agenda-prefix-format " %i %-22:c"))
-                                              )
-                                        (todo "新規|着手|進行中|確認"
-                                              ((org-agenda-prefix-format " %i %-22:c"))
-                                              )
-                                        (todo "WAIT"
-                                              ((org-agenda-prefix-format " %i %-22:c"))
-                                              )
-                                        (todo "SOMEDAY"
-                                              ((org-agenda-prefix-format " %i %-22:c"))
-                                              )
-                                        ))
-                                      ("N" "All memo entry"
-                                       (;;
-                                        (todo "MEMO")
-                                        ))
-                                      )
-        )
-  :defer-config
-  ;; (defvar my:org-agenda-files nil)
-  (dolist (file
-           '(;; Archive.org   ← 🤔
-             ;; Calendar
-             "Holidays.org"
-             "Schedule.org"
-             "GFD.org"
-             "Univ.org"
-             "DebianJP.org"
-             ;; INBOX
-             ;; "INBOX.org"
-             ;; misc
-             "twitter.org"
-             ;; Project
-             "redmine_GFD.org"
-             "redmine_SSKLAB.org"
-             ;; "redmine_FluidSoc.org"
-             ))
-    (add-to-list 'org-agenda-files (expand-file-name file my:d:org)))
-  ;;
-  (if (file-directory-p
-       (expand-file-name "journal/" my:d:org))
-      (dolist (file
-               (directory-files-recursively
-                (expand-file-name "journal/" my:d:org) "org$"))
-        (add-to-list 'org-agenda-files file)))
+  (setq org-id-locations-file (expand-file-name "org-id-locations" my:d:tmp)
+        org-id-link-to-org-use-id 'create-if-interactive-and-no-custom-id)
   )
    #+end_src
 ** Org-journal: 日記
    :PROPERTIES:
    :CUSTOM_ID: org456c87fa
    :END:
-   機能が豊富なのだが, イマイチ使いこなせていない.
+   orgで日記. org-roam のメモにする前のエントリもどんどん書き込んでいたり.
    #+begin_src emacs-lisp :tangle init.el
 (leaf org-journal
   :if (file-directory-p my:d:org)
@@ -3774,11 +3649,45 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
         org-journal-time-prefix               "** MEMO "
         org-journal-enable-agenda-integration t
         org-journal-find-file                 'find-file
-        org-journal-carryover-delete-empty-journal 'ask
+        ;; org-journal-carryover-items           "TODO=\"TODO\""
+        org-journal-carryover-delete-empty-journal 'always
         org-journal-start-on-weekday          0
         )
   :config
   (global-set-key (kbd "C-c C-j") 'browse-url-at-point) ;; 🤔？
+  )
+   #+end_src
+** TODO Org-roam: リンク付きメモ [0/2]
+   :PROPERTIES:
+   :CUSTOM_ID: orgbbaf7c91
+   :END:
+   まだ今一使い熟せていない
+   - [ ] メモ取りの時にイチイチタイトル打つの面倒じゃね?
+   - [ ] メモが分散すると Agenda View で困りそうなんだけれど
+   どうするのが良いかなぁ.
+
+   現状は org-gcal 用の template を追加してある(org-captureを使うのを止めた).
+   #+begin_src emacs-lisp
+(leaf org-roam
+  :if (and (file-directory-p my:d:org)
+           (executable-find "rg")
+           (executable-find "sqlite3"))
+  :ensure t
+  :commands (org-roam-db-query)
+  :init
+  (setq org-roam-v2-ack t
+        org-roam-db-location (expand-file-name "org-roam.db" my:d:tmp)
+        org-roam-directory   (expand-file-name "roam" my:d:org))
+  ;;
+  :bind
+  (("C-c n a" . org-roam-alias-add)
+   ("C-c n f" . org-roam-node-find)
+   ("C-c n i" . org-roam-node-insert)
+   ("C-c n t" . org-roam-tag-add)
+   ("C-c n l" . org-roam-buffer-toggle)
+   )
+  :defer-config
+  (org-roam-db-autosync-enable)
   )
    #+end_src
 ** Org-capture: メモ取り
@@ -3790,7 +3699,6 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
 (leaf org-capture
   :if (file-directory-p my:d:org)
   :commands org-capture
-    ;; 名前がイケてないっ!
   :defvar (my:org:calendar1 my:org:calendar2 my:org:calendar3 my:org:calendar4)
   :pl-setq (my:org:calendar1 my:org:calendar2 my:org:calendar3 my:org:calendar4)
   :config
@@ -3798,7 +3706,7 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     (org-journal-new-entry t)
     (goto-char (point-max))
     )
-  (setq org-default-notes-file (expand-file-name "Memo.org" my:d:org))
+  (setq org-default-notes-file (expand-file-name "INBOX.org" my:d:org))
   (setq org-capture-templates
         `(
           ("t" "TODO" plain
@@ -3854,6 +3762,152 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
         )
   )
    #+end_src
+** Org-agenda: スケジュール, TODO 表示
+   :PROPERTIES:
+   :CUSTOM_ID: org016dbf67
+   :END:
+   GTD 用の設定．後述の =org-gcal= と =orgmine= で取得したデータも表示している．
+   ついでに
+   - 土曜日をの face を追加.
+   - 祝日, 休日を日曜と同じfaceにする.
+   なんて事もやっている．元ネタは [[https://julien.danjou.info/blog/2010/org-mode-and-holidays][Org-mode and holidays]].
+   #+begin_src emacs-lisp :tangle init.el
+(leaf org-agenda
+  :if (file-directory-p my:d:org)
+  :preface
+  ;; face は theme にまわすべき, かな？
+  (defface my:org-agenda-date-saturday '((t (:foreground "#7FBFFF" :bold t )))
+    "Agenda 表示中の土曜日用のface"
+    :group 'org-agenda )
+  ;; こっからは org-gcal で同期したカレンダーの色
+  (defface my:org-agenda-calendar-Univ '((t (:foreground "#7FFF7F")))
+    "Agenda 表示中, Univ.org の表示 face"
+    :group 'org-agenda )
+  (defface my:org-agenda-calendar-Schedule '((t (:foreground "#7FFFFF")))
+    "Agenda 表示中, Schedule.org の表示 face"
+    :group 'org-agenda )
+  (defface my:org-agenda-calendar-GFD '((t (:foreground "#FFFF7F")))
+    "Agenda 表示中, GFD.org の表示 face"
+    :group 'org-agenda )
+  (defface my:org-agenda-calendar-DebianJP '((t (:foreground "#BF7FFF")))
+    "Agenda 表示中, DebianJP.org の表示 face"
+    :group 'org-agenda )
+  ;; (defface my:org-agenda-calendar-SNS '((t (:foreground "#CCCCCC")))
+  ;;   "Agenda 表示中, Mastodon log の表示 face"
+  ;;   :group 'org-agenda )
+
+  ;; font-lock の適用. loop減らせないかなぁ….
+;;;###autoload
+  (defun my:org-agenda-finalize-font-lock ()
+    "Custom: apply custom font-lock"
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward "Univ:" nil t)
+        (add-text-properties (match-beginning 0) (line-end-position)
+                             '(face my:org-agenda-calendar-Univ)))
+      (goto-char (point-min))
+      (while (re-search-forward "Schedule:" nil t)
+        (add-text-properties (match-beginning 0) (line-end-position)
+                             '(face my:org-agenda-calendar-Schedule)))
+      (goto-char (point-min))
+      (while (re-search-forward "DebianJP:" nil t)
+        (add-text-properties (match-beginning 0) (line-end-position)
+                             '(face my:org-agenda-calendar-DebianJP)))
+      (goto-char (point-min))
+      (while (re-search-forward "GFD:" nil t)
+        (add-text-properties (match-beginning 0) (line-end-position)
+                             '(face my:org-agenda-calendar-GFD)))
+      ;;    (goto-char (point-min))
+      ;;    (while (re-search-forward "twitter:" nil t)
+      ;;      (add-text-properties (match-beginning 0) (line-end-position)
+      ;;                           '(face my:org-agenda-calendar-twitter)))
+      (goto-char (point-min))
+      (while (re-search-forward "祝日\\|休日\\|Holidays\\|誕生日" nil t)
+        (add-text-properties (match-beginning 0) (line-end-position)
+                             '(face org-agenda-date-weekend)))
+      ))
+  :hook (org-agenda-finalize-hook . (lambda ()
+                                      (my:org-agenda-finalize-font-lock)
+                                      ;; カーソルを先頭行に
+                                      (goto-char (point-min)))
+                                  )
+  :init
+  (leaf org-super-agenda
+    :ensure t
+    :config
+    :hook (org-agenda-mode-hook . org-super-agenda-mode)
+    )
+  ;;
+  :config
+  (setq org-agenda-day-face-function
+        ;; ---
+        ;; 「org-modeのアジェンダで土曜日と日本の祝日を色づけする」
+        ;; https://misohena.jp/blog/2021-08-29-colorize-saturday-and-japanese-holidays-in-org-agenda.html
+        ;; ちょっと順番を変えて(「祝日, 日曜」を赤にしたいので)先に「日曜か日本の祝日」をチェックしている
+        ;; ---
+        (lambda (date)
+          (let ((face
+                 (cond
+                  ;; 日曜日か日本の祝日
+                  ((or (= (calendar-day-of-week date) 0)
+                       (let ((calendar-holidays japanese-holidays))
+                         (calendar-check-holidays date)))
+                   'org-agenda-date-weekend)
+                  ;; 土曜日
+                  ((= (calendar-day-of-week date) 6)
+                   'my:org-agenda-date-saturday)
+                  ;; 普通の日
+                  (t 'org-agenda-date))))
+            ;; 今日は色を反転
+            (if (org-agenda-today-p date) (list :inherit face :underline t) face)))
+        ;;
+        org-agenda-span 'week
+        org-agenda-start-on-weekday nil ;; today!
+        org-agenda-format-date "%Y/%m/%d (%a)"
+        org-agenda-weekend-days '(0)    ;; sunday.
+        org-agenda-ignore-properties '(effort appt)
+        ;; org-agenda-repeating-timestampo-show-all t ;; 🤔
+        org-agenda-sorting-strategy '((agenda habit-down time-up timestamp-down priority-down category-keep)
+                                      (todo category-keep timestamp-down priority-down)
+                                      (tags category-keep priority-down)
+                                      (search category-keep))
+        org-agenda-custom-commands  '(("n" "agenda and all TODO list"
+                                       ((agenda ""
+                                                ((org-agenda-ndays 1)
+                                                 (org-agenda-entry-types '(:timestamp :sexp))))
+                                       (todo "TODO")
+                                       (todo "新規|着手|進行中|確認"
+                                             ((org-super-agenda-groups '((:auto-property "om_project"))))
+                                             )
+                                       (todo "WAIT|SOMEDAY")
+                                       ;; (todo "MEMO|ARTICLE")
+                                        )
+                                       nil ;;
+                                       )
+                                      ("w" todo "TODO")
+                                      )
+        )
+  :defer-config
+  (setq org-agenda-files (list (concat my:d:org "/journal")))
+  (dolist (file
+           '(;; Archive.org   ← 🤔
+             ;;; Calendar
+             "DebianJP.org"
+             "GFD.org"
+             "Holidays.org"
+             "Schedule.org"
+             "Univ.org"
+             ;;; Project
+             "redmine_GFD.org"
+             "redmine_SSKLAB.org"
+             ;; "redmine_FluidSoc.org"
+             ;;; misc
+             "Anniversary.org"
+             ;; "twitter.org"
+             ))
+    (add-to-list 'org-agenda-files (expand-file-name file my:d:org)))
+  )
+   #+end_src
 ** OrgとGoogle カレンダーの連携: =org-gcal=
    :PROPERTIES:
    :CUSTOM_ID: org6a1d2f0c
@@ -3871,41 +3925,20 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    org-gcal-client-secret
    org-gcal-file-alist)
   :ensure t
-  ;; :el-get (org-gcal
-  ;;          :type github
-  ;;          :pkgname "kidd/org-gcal.el")
   :commands (org-gcal-fetch
              org-gcal-sync
              org-gcal-post-at-point
              org-gcal-reload-client-id-secret)
-  ;; :advice ((:before org-gcal-sync
-  ;;                   org-gcal-reload-client-id-secret)
-  ;;          (:before org-gcal-fetch
-  ;;                   org-gcal-reload-client-id-secret)
-  ;;          (:before org-gcal-post-at-point
-  ;;                   org-gcal-reload-client-id-secret))
   :preface
   (setq org-gcal-dir (expand-file-name "org-gcal" my:d:tmp))
   (unless (file-directory-p org-gcal-dir)
     (make-directory org-gcal-dir))
-  ;; (setq oauth2-auto-plstore (expand-file-name "oauth2-auto.plist" my:d:tmp))
-  ;; (setq oauth2-auto-plstore (expand-file-name "oauth2-auto.plist" my:d:password-store))
   :init
   (leaf oauth2-auto
-    :init
-    ;; 🤔？
+    ;; 🤔
+    :config
     (setq oauth2-auto-plstore (expand-file-name "/run/user/1000/psd/uwabami-emacs-cache/oauth2-auto.plist"))
     )
-  (leaf aio :ensure t)
-  (leaf alert :ensure t)
-  (leaf dash :ensure t)
-  ;; (leaf oauth2-auto
-  ;;   ;; :el-get rhaps0dy/emacs-oauth2-auto
-  ;;   :el-get telotortium/emacs-oauth2-auto
-  ;;   :custom
-  ;;   `(oauth2-auto-plstore . ,(expand-file-name "oauth2-auto.plist" my:d:tmp))
-  ;;   )
-  ;;
   (leaf org-generic-id
     :init
     (setq org-generic-id-locations-file (expand-file-name "org-generic-id-locations"  my:d:tmp))
@@ -3917,26 +3950,28 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     (setq request-storage-directory (expand-file-name "request" my:d:tmp))
     (unless (file-directory-p request-storage-directory)
       (make-directory request-storage-directory))
-    :init
-    (setq request-storage-directory (expand-file-name "request" my:d:tmp))
+    ;; :config
+    ;; (setq request-storage-directory (expand-file-name "request" my:d:tmp))
     )
   (leaf persist
     :ensure t
-    :init
+    :preface
     (setq persist--directory-location (expand-file-name "persist" my:d:tmp))
+    (unless (file-directory-p persist--directory-location)
+      (make-directory persist--directory-location))
     )
   ;;
   (setq org-gcal-dir (expand-file-name "org-gcal" my:d:tmp)
         org-gcal-token-file (expand-file-name "org-gcal/org-gcal-token" my:d:tmp)
-        org-gcal-down-days    180  ;; 未来 180 日
-        org-gcal-up-days       30  ;; 過去 30 日
+        org-gcal-down-days 180  ;; 未来 180 日
+        org-gcal-up-days 30  ;; 過去 30 日
         org-gcal-auto-archive t
-        org-gcal-notify-p     nil
+        org-gcal-notify-p nil
         org-gcal-remove-api-cancelled-evetnts t
         org-gcal-remove-events-with-cancelled-todo t
         org-gcal-remove-api-cancelled-events  t
-        alert-log-messages    t
-        alert-default-style   'libnotify
+        alert-log-messages t
+        alert-default-style 'libnotify
         )
   )
    #+end_src
@@ -4516,13 +4551,14 @@ pdflang={%l}}
 ;; (leaf *misc-mode
 ;;   :init
 ;;   (leaf systemd :ensure t)
-;;   (leaf debian-el
-;;     :custom
-;;     `((debian-bug-download-directory . "~/Downloads"))
-;;     )
+(leaf debian-el
+  :ensure t
+  :init
+  (setq debian-bug-download-directory "~/Downloads")
+  )
 (leaf yaml-mode :ensure t :mode "\\.yml\\'" "\\.yaml\\'")
 ;;   (leaf textile-mode :ensure t)
-;;   (leaf dpkg-dev-el)
+(leaf dpkg-dev-el :ensure t)
 ;;   (leaf sh-mode
 ;;     :custom ((system-uses-terminfo . nil))
 ;;     )
@@ -4591,11 +4627,11 @@ pdflang={%l}}
           (yellow-warmer "#ffb347")
           (yellow-intense "#ffff7f")
           ;;
-          (bg-yellow-intense "#556b2f")
+          ;; (bg-yellow-intense "#556b2f")
           ;;
           (bg-main 'unspecified)
           (comment fg-dim)
-          (bg-hl-line bg-yellow-intense)
+          ;; (bg-hl-line "#556b2f")
           ;;
           ;; Code remapping
           ;;
@@ -4626,6 +4662,7 @@ pdflang={%l}}
           ;;
           (date-common fg-alt)
           (date-weekday fg-main)
+          (date-weekend red-faint)
           ;; headline
           (fg-heading-0 cyan-intense)
           (fg-heading-1 magenta-cooler)
@@ -4912,7 +4949,7 @@ pdflang={%l}}
    :END:
    必要に応じて
   #+begin_src emacs-lisp :tangle init.el
-(setq debug-on-error t)
+(setq debug-on-error nil)
 ;; (profiler-report)
 ;; (profiler-stop)
   #+end_src

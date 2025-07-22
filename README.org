@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2025-01-24 23:54:04
+#+date: 2025-07-22 12:27:33
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -163,7 +163,7 @@ init.el: README.org
   (interactive)
   (native-compile-async "~/.emacs.d/init.el")
   (native-compile-async "~/.emacs.d/early-init.el")
-  (native-compile-async "~/.emacs.d/share/elisp/" 'recursively)
+  ;; (native-compile-async "~/.emacs.d/share/elisp/" 'recursively)
   (native-compile-async "~/.emacs.d/elpa" 'recursively))
   #+end_src
 * 起動の高速化
@@ -845,7 +845,7 @@ Emacs.reverseVideo: true
   (setq auto-save-interval 60     ;; 60秒毎に一時保存
         delete-auto-save-files t  ;;
         safe-local-variable-values '((org-link-file-path-type . absolute))
-   ;;; 編集関連
+        ;;; 編集関連
         ;; tab 幅 4
         tab-width 4
         ;; RFC5322 風味
@@ -915,8 +915,23 @@ Emacs.reverseVideo: true
   :config
   (when (< emacs-major-version 28) ;; >
     (fset 'yes-or-no-p 'y-or-n-p))
-  :defer-config
-  (cond ((executable-find "xdg-open")
+  )
+   #+end_src
+** =browse-url=
+   :PROPERTIES:
+   :CUSTOM_ID: org31c3c060
+   :END:
+   #+begin_src emacs-lisp :tangle init.el
+(leaf browse-url
+  :config
+  (cond ((getenv "WSL_DISTRO_NAME")
+         (let ((cmd-exe "/mnt/c/Windows/System32/cmd.exe")
+               (cmd-args '("/c" "start")))
+           (when (file-exists-p cmd-exe)
+             (setq browse-url-generic-program  cmd-exe
+                   browse-url-generic-args     cmd-args
+                   browse-url-browser-function 'browse-url-generic))))
+        ((executable-find "xdg-open")
          (setq browse-url-browser-function 'browse-url-xdg-open
                browse-url-secondary-browser-function 'browse-url-xdg-open))
         ((eq system-type 'darwin)
@@ -925,7 +940,7 @@ Emacs.reverseVideo: true
         (t
          (setq browse-url-browser-function 'eww-browse-url)
          ))
-  )
+)
    #+end_src
 ** =eldoc=: emacs-lisp document
    :PROPERTIES:
@@ -3307,8 +3322,10 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (delete (assoc '(tex-mode context-mode texinfo-mode bibtex-mode)
                  eglot-server-programs)
           eglot-server-programs)
+;;   (add-to-list 'eglot-server-programs
+;;              '((latex-mode tex-mode context-mode texinfo-mode bibtex-mode) . ("texlab")))
   (add-to-list 'eglot-server-programs
-             '((latex-mode tex-mode context-mode texinfo-mode bibtex-mode) . ("texlab")))
+             '((latex-mode tex-mode texinfo-mode bibtex-mode) . ("texlab")))
   )
    #+end_src
 ** flaymake
@@ -3329,97 +3346,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :hook (flymake-mode-hook . flymake-diagnostic-at-point-mode)
   )
    #+end_src
-* TeX: =AUCTeX=
-  :PROPERTIES:
-  :CUSTOM_ID: org88a3cb1b
-  :END:
-  やっている事は
-  - japanese-latex-mode において, 幾つかのコマンドが追加/上書きされているものの,
-    あまり使うことの無いコマンドが表示されるのが嫌なのでそれらを削除．
-  - コンパイルには[[http://personal.psu.edu/jcc8/software/latexmk/][Latexmk]]を使う
-  と言った所.
-  …ただ, Beamerのクラスなんかだと勝手にdefault コマンドが LaTeX に変更されたりするので挙動がイマイチ良くわからん.
-  async で =latexmk -pvc= を走らせておいた方が気持が良い, 気がしている.
-  #+begin_src emacs-lisp :tangle init.el
-(leaf tex-site
-  :if (and (executable-find "uplatex")
-           (executable-find "latexmk"))
-  :ensure auctex
-  :preface
-  (unless (file-directory-p (expand-file-name "auctex/auto" my:d:tmp))
-    (progn
-      (make-directory (expand-file-name "auctex/auto" my:d:tmp) t)
-      (make-directory (expand-file-name "auctex/style" my:d:tmp) t)))
-  ;;
-  :mode ("\\.tex\\'" . japanese-latex-mode) ;; → tex-jp で提供
-  ;;
-  :init
-  (leaf auctex-latexmk
-    :ensure t
-    :hook
-    ((LaTeX-mode-hook . auctex-latexmk-setup))
-    )
-  (leaf tex-jp
-    :commands japanese-latex-mode
-    :hook
-    `((LaTeX-mode-hook . (lambda()
-                           (turn-on-reftex)
-                           (TeX-source-correlate-mode)
-                           (TeX-PDF-mode)
-                           (LaTeX-math-mode)
-                           (outline-minor-mode)
-                           (setq TeX-command-default "LatexMk"
-                                 japanese-LaTeX-command-default "LatexMk")
-                           ))
-      (LaTeX-mode-hook . (lambda()
-                           (add-hook 'TeX-after-compilation-finished-functions
-                                     #'TeX-revert-document-buffer)))
-      (LaTeX-mode-hook . eglot-ensure)
-      )
-    )
-  :config
-  ;; reftex
-  (setq reftex-plug-into-AUCTeX t
-        reftex-cite-prompt-optional-args t
-        )
-  ;; tex-site
-  (setq TeX-default-mode 'japanese-latex-mode ;; 🤔
-        TeX-force-default-mode t
-        TeX-parse-self t
-        TeX-auto-save t
-        TeX-auto-local (expand-file-name "auctex/auto" my:d:tmp)
-        TeX-style-local (expand-file-name "auctex/style" my:d:tmp)
-        TeX-auto-untabify t
-        TeX-engine 'uptex
-        TeX-view-program-selection  '((output-dvi "xdvi")
-                                      ;; (output-pdf "Okular")
-                                      (output-pdf "Atril")
-                                      ;; (output-pdf "Evince")
-                                      (output-html "xdg-open"))
-        TeX-source-correlate-method 'synctex
-        TeX-source-correlate-start-server t
-        TeX-source-correlate-mode t
-        ;; TeX-command-default "LatexMk"
-        TeX-ispell-extend-skip-list t
-        TeX-command-output-list '(("LatexMk" ("pdf")))
-        TeX-electric-sub-and-superscript t
-        )
-  ;; tex-jp
-  (setq japanese-TeX-engine-default 'uptex
-        japanese-LaTeX-default-style "jlreq" ;; jsarticle? bxjsarticle?
-        ;; japanese-LaTeX-command-default "LatexMk"
-        )
-  ;; latex.el
-  (setq LaTeX-figure-label "fig:"
-        LaTeX-table-label "tab:"
-        LaTeX-section-label "sec:")
-  ;; font-latex
-  (setq font-latex-fontify-script nil
-        font-latex-script-display nil
-        font-latex-fontify-sectioning  1.0
-        )
-  )
-  #+end_src
 * Org-mode
   :PROPERTIES:
   :CUSTOM_ID: org7b7eccc9
@@ -3523,10 +3449,11 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         )
   )
    #+end_src
-** Org-Babel
+** TODO Org-Babel
    :PROPERTIES:
    :CUSTOM_ID: org99399f3b
    :END:
+   - [ ] ox-latex → ob-latex の順で呼ばないとエラーになる様な?
    #+begin_src emacs-lisp :tangle init.el
 (leaf org-src
   :config
@@ -3540,18 +3467,18 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         ;; load languages
         )
   )
-(leaf org-babel
-  :config
-  (setq org-babel-load-languages '((emacs-lisp . t)))
-  (if (file-exists-p "/usr/share/ditaa/ditaa.jar")
-      (add-to-list 'org-babel-load-languages '(ditaa . t)))
-  (if (executable-find "uplatex")
-      (add-to-list 'org-babel-load-languages '(latex . t)))
-  )
-(leaf ob-ditaa
-  :init
-  (setq org-ditaa-jar-path "/usr/share/ditaa/ditaa.jar")
-  )
+;; (leaf org-babel
+;;   :config
+;;   (setq org-babel-load-languages '((emacs-lisp . t)))
+;;   ;; (if (file-exists-p "/usr/share/ditaa/ditaa.jar")
+;;   ;;     (add-to-list 'org-babel-load-languages '(ditaa . t)))
+;;   ;; (if (executable-find "uplatex")
+;;   ;;     (add-to-list 'org-babel-load-languages '(latex . t)))
+;;   )
+;; (leaf ob-ditaa
+;;   :init
+;;   (setq org-ditaa-jar-path "/usr/share/ditaa/ditaa.jar")
+;;   )
    #+end_src
 ** Org-Id
    :PROPERTIES:
@@ -4435,6 +4362,92 @@ pdflang={%l}}
                  t))
   )
     #+end_src
+* TeX: =AUCTeX=
+  :PROPERTIES:
+  :CUSTOM_ID: org88a3cb1b
+  :END:
+  やっている事は
+  - japanese-latex-mode において, 幾つかのコマンドが追加/上書きされているものの,
+    あまり使うことの無いコマンドが表示されるのが嫌なのでそれらを削除．
+  - コンパイルには[[http://personal.psu.edu/jcc8/software/latexmk/][Latexmk]]を使う
+  と言った所.
+  …ただ, Beamerのクラスなんかだと勝手にdefault コマンドが LaTeX に変更されたりするので挙動がイマイチ良くわからん.
+  async で =latexmk -pvc= を走らせておいた方が気持が良い, 気がしている.
+  #+begin_src emacs-lisp :tangle init.el
+(leaf tex-site
+  :if (and (executable-find "uplatex")
+           (executable-find "latexmk"))
+  ;; :ensure auctex
+  :preface
+  (unless (file-directory-p (expand-file-name "auctex/auto" my:d:tmp))
+    (progn
+      (make-directory (expand-file-name "auctex/auto" my:d:tmp) t)
+      (make-directory (expand-file-name "auctex/style" my:d:tmp) t)))
+  ;;
+  :mode ("\\.tex\\'" . japanese-latex-mode) ;; → tex-jp で提供
+  ;;
+  :init
+  (leaf tex-jp
+    :commands japanese-latex-mode
+    :hook
+    `((LaTeX-mode-hook . (lambda()
+                           (turn-on-reftex)
+                           (TeX-source-correlate-mode)
+                           (TeX-PDF-mode)
+                           (LaTeX-math-mode)
+                           (outline-minor-mode)
+                           (setq TeX-command-default "LatexMk"
+                                 japanese-LaTeX-command-default "LatexMk")
+                           ))
+      (LaTeX-mode-hook . (lambda()
+                           (add-hook 'TeX-after-compilation-finished-functions
+                                     #'TeX-revert-document-buffer)))
+      (LaTeX-mode-hook . eglot-ensure)
+      )
+    )
+  :config
+  ;; reftex
+  (setq reftex-plug-into-AUCTeX t
+        reftex-cite-prompt-optional-args t
+        )
+  ;; tex-site
+  (setq TeX-default-mode 'japanese-latex-mode ;; 🤔
+        TeX-force-default-mode t
+        TeX-parse-self t
+        TeX-auto-save t
+        TeX-auto-local (expand-file-name "auctex/auto" my:d:tmp)
+        TeX-style-local (expand-file-name "auctex/style" my:d:tmp)
+        TeX-auto-untabify t
+        TeX-engine 'uptex
+        TeX-view-program-selection  '((output-dvi "xdvi")
+                                      ;; (output-pdf "Okular")
+                                      (output-pdf "Atril")
+                                      ;; (output-pdf "Evince")
+                                      (output-html "xdg-open"))
+        TeX-source-correlate-method 'synctex
+        TeX-source-correlate-start-server t
+        TeX-source-correlate-mode t
+        ;; TeX-command-default "LatexMk"
+        TeX-ispell-extend-skip-list t
+        TeX-command-output-list '(("LatexMk" ("pdf")))
+        TeX-electric-sub-and-superscript t
+        )
+  ;; tex-jp
+  (setq japanese-TeX-engine-default 'uptex
+        japanese-LaTeX-default-style "jlreq" ;; jsarticle? bxjsarticle?
+        ;; japanese-LaTeX-command-default "LatexMk"
+        )
+  ;; latex.el
+  (setq LaTeX-figure-label "fig:"
+        LaTeX-table-label "tab:"
+        LaTeX-section-label "sec:")
+  ;; font-latex
+  (setq font-latex-fontify-script nil
+        font-latex-script-display nil
+        font-latex-fontify-sectioning  1.0
+        )
+  )
+  #+end_src
 * SOMEDAY 日記: =tDiary= [0/1]
   :PROPERTIES:
   :CUSTOM_ID: org9992a617
@@ -4840,6 +4853,12 @@ pdflang={%l}}
   :CUSTOM_ID: orgd89ceb4b
   :END:
   #+begin_src emacs-lisp :tangle init.el
+(leaf chezmoi
+  :ensure t
+  :if (executable-find "chezmoi")
+  :bind (("C-c C f" . chezmoi-find)
+         ("C-c C s" . chezmoi-write))
+  )
 (leaf treesit
   :config
   (setq treesit-font-lock-level 4)

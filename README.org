@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2025-07-22 12:27:33
+#+date: 2025-07-22 14:17:44
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -303,7 +303,7 @@ init.el: README.org
    #+begin_src emacs-lisp :tangle (when (fboundp 'native-compile-async) "early-init.el")
 (setq package-native-compile t
       native-compile-target-directory (expand-file-name "eln-cache" user-emacs-directory)
-      native-comp-jit-compilation-deny-list '(".*-\\(loaddefs\\|autoloads\\)\\.\\(el\\.gz\\|el\\)"))
+      native-comp-jit-compilation-deny-list '("\\(.*org-element.*\\|.*-loaddefs\\|.*-autoloads\\)\\.\\(el\\.gz\\|el\\)"))
    #+end_src
 
    以下はここで設定するのが良いのかいまいちわかっていないあれこれ.
@@ -925,12 +925,14 @@ Emacs.reverseVideo: true
 (leaf browse-url
   :config
   (cond ((getenv "WSL_DISTRO_NAME")
-         (let ((cmd-exe "/mnt/c/Windows/System32/cmd.exe")
-               (cmd-args '("/c" "start")))
-           (when (file-exists-p cmd-exe)
-             (setq browse-url-generic-program  cmd-exe
-                   browse-url-generic-args     cmd-args
-                   browse-url-browser-function 'browse-url-generic))))
+         (defun my:browse-url-wsl-host-browser (url &rest _args)
+           "Browse URL with WSL host web browser."
+           (prog1 (message "Open %s" url)
+             (shell-command-to-string
+              (mapconcat #'shell-quote-argument
+                         (list "/mnt/c/Windows/System32/cmd.exe" "/c" "start" url)
+                         " "))))
+         (setq browse-url-browser-function #'my:browse-url-wsl-host-browser))
         ((executable-find "xdg-open")
          (setq browse-url-browser-function 'browse-url-xdg-open
                browse-url-secondary-browser-function 'browse-url-xdg-open))

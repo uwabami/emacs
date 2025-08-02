@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2025-07-24 17:49:47
+#+date: 2025-07-30 18:38:10
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -127,12 +127,12 @@ init.el: README.org
   (defconst my:d:org (expand-file-name "Nextcloud/org" (getenv "HOME")))
   )
 ;;
-(dolist (dir (let ((dir (expand-file-name "elisp" my:d:share)))
-               (list dir (format "%s%d" dir emacs-major-version))))
-  (when (and (stringp dir) (file-directory-p dir))
-    (let ((default-directory dir))
-      (add-to-list 'load-path default-directory)
-      (normal-top-level-add-subdirs-to-load-path))))
+;; (dolist (dir (let ((dir (expand-file-name "elisp" my:d:share)))
+;;                (list dir (format "%s%d" dir emacs-major-version))))
+;;   (when (and (stringp dir) (file-directory-p dir))
+;;     (let ((default-directory dir))
+;;       (add-to-list 'load-path default-directory)
+;;       (normal-top-level-add-subdirs-to-load-path))))
   #+end_src
 * Byte-Compile 時の Common Lisp の読み込み
   :PROPERTIES:
@@ -671,9 +671,10 @@ Emacs.reverseVideo: true
   (set-frame-parameter nil 'alpha 90)
   (set-face-attribute 'default nil
                       :family "PlemolJP Console NF"
-                      :height 175)
+                      :height 125)
   ;; 高さは合わないが幅はなんとなる揃う様になった, 様な？
-  (set-fontset-font nil '(#x1F004 . #x1FFFD) (font-spec :family "Noto Color Emoji" :size 19))
+  ;; - GUI ではフォントの高さか幅を指定した方が幸せになれそう. 文字毎にサイズが違うのが問題かも.
+  (set-fontset-font nil '(#x1F004 . #x1FFFD) (font-spec :family "Noto Color Emoji" :size 15))
 )
  #+end_src
  表示のテスト
@@ -3844,7 +3845,7 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   (leaf oauth2-auto
     ;; 🤔
     :config
-    (setq oauth2-auto-plstore (expand-file-name "/run/user/1000/psd/uwabami-emacs-cache/oauth2-auto.plist"))
+    (setq oauth2-auto-plstore (expand-file-name "oauth2-auto.plist" my:d:tmp))
     )
   (leaf org-generic-id
     :init
@@ -5272,6 +5273,10 @@ pdflang={%l}}
   (setq esup-insignificant-time 0.01
         esup-depth 0 ;; 🤔
         )
+  )
+(leaf atomic-chrome
+  :ensure t
+  :hook (emacs-startup-hook . atomic-chrome-start-server)
   )
   #+end_src
 * 最後に

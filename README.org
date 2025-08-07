@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2025-08-06 11:48:42
+#+date: 2025-08-07 19:30:38
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -2232,23 +2232,43 @@ video/*; xdg-open %s;
      :CUSTOM_ID: orgb972bff6
      :END:
      #+begin_src emacs-lisp :tangle init-wl.el
-(leaf mime
+(leaf eword-decode
+  :doc "クォートされた文字列もデコードするようにする"
+  :commands eword-decode-string
   :config
-  '(defadvice mime-entity-filename
-       (after eword-decode-for-broken-MUA activate)
-     "Decode eworded file name for *BROKEN* MUA."
-     (when (stringp ad-return-value)
-       (setq ad-return-value (eword-decode-string ad-return-value t))))
+  (mime-set-field-decoder
+   'From nil 'eword-decode-and-unfold-unstructured-field-body)
+  (mime-set-field-decoder
+   'CC nil 'eword-decode-and-unfold-unstructured-field-body)
+  (mime-set-field-decoder
+   'To nil 'eword-decode-and-unfold-unstructured-field-body)
+  )
+;;;
+(leaf mime
+  :doc "日本語の添付ファイル名を正しく表示する"
+  :preface
+;;;###autoload
+  (defun my:mime-entity-filename (orig-value)
+    "Decode eworded file name for *BROKEN* MUA."
+    (when (stringp orig-value)
+      (eword-decode-string orig-value t)))
+  :advice
+  (:filter-return mime-entity-filename
+                  my:mime-entity-filename)
   )
 ;;
-(use-package std11
-  :config
-  '(defadvice std11-wrap-as-quoted-string (before encode-string activate)
-     "Encode a string."
-     (use-package eword-encode
-       (ad-set-arg 0 (or (eword-encode-string (ad-get-arg 0)) "" ))
-       )
-     ))
+(leaf std11
+  :preface
+  (leaf eword-encode :commands eword-encode-string)
+;;;###autoload
+  (defun std11-wrap-as-quoted-string-advice (string)
+    "Encode a string before wrapping as RFC 822 quoted-string."
+    (or (eword-encode-string string) ""))
+  :advice
+  ((:filter-args std11-wrap-as-quoted-string
+                 std11-wrap-as-quoted-string-advice)
+   )
+  )
      #+end_src
 **** Subject が変わってもスレッドを切らない
      :PROPERTIES:
@@ -4826,6 +4846,13 @@ pdflang={%l}}
   :CUSTOM_ID: orgd89ceb4b
   :END:
   #+begin_src emacs-lisp :tangle init.el
+(leaf copilot
+  :vc (:url "https://github.com/copilot-emacs/copilot.el")
+  :init
+  (leaf editorconfig :ensure t)
+  (leaf s :ensure t)
+  (leaf dash :ensure t)
+  )
 (leaf chezmoi
   :ensure t
   :if (executable-find "chezmoi")

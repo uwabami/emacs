@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2025-08-07 19:30:38
+#+date: 2025-08-09 13:09:01
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -2202,39 +2202,18 @@ video/*; xdg-open %s;
       (append wl-summary-line-format-spec-alist
               '((?@ (wl-summary-line-attached)))))
      #+end_src
-**** クォートされた文字列もデコードする
-     :PROPERTIES:
-     :CUSTOM_ID: org9b1eb3e9
-     :END:
-     昔はあれこれ設定してたけど, 今は良いのかな?
-     とりあえず, デコードする長さを default の 1000 から二桁増やしておく.
-     #+begin_src emacs-lisp  :tangle init-wl.el
-(setq mime-field-decoding-max-size 100000)
-;; (setq mime-header-lexical-analyzer
-;;       '(
-;;         eword-analyze-quoted-string
-;;         eword-analyze-domain-literal
-;;         eword-analyze-comment
-;;         eword-analyze-spaces
-;;         eword-analyze-special
-;;         eword-analyze-encoded-word
-;;         eword-analyze-atom))
-(with-eval-after-load 'eword-decode
-  (mime-set-field-decoder
-   'From nil 'eword-decode-and-unfold-unstructured-field-body)
-  (mime-set-field-decoder
-   'CC nil 'eword-decode-and-unfold-unstructured-field-body)
-  (mime-set-field-decoder
-   'To nil 'eword-decode-and-unfold-unstructured-field-body))
-     #+end_src
 **** 日本語添付ファイルの処理
      :PROPERTIES:
      :CUSTOM_ID: orgb972bff6
      :END:
-     #+begin_src emacs-lisp :tangle init-wl.el
+     #+begin_src emacs-lisp  :tangle init-wl.el
+;;; とりあえず, デコードする長さを default の 1000 から二桁増やしておく.
+(setq mime-field-decoding-max-size 100000)
 (leaf eword-decode
-  :doc "クォートされた文字列もデコードするようにする"
-  :commands eword-decode-string
+  ;; 日本語ファイル名の添付ファイルを処理するための advice で使うために
+  ;; 以下を autoload 扱いにする
+  :commands (eword-decode-string
+             eword-encode-string)
   :config
   (mime-set-field-decoder
    'From nil 'eword-decode-and-unfold-unstructured-field-body)
@@ -2243,31 +2222,31 @@ video/*; xdg-open %s;
   (mime-set-field-decoder
    'To nil 'eword-decode-and-unfold-unstructured-field-body)
   )
-;;;
 (leaf mime
-  :doc "日本語の添付ファイル名を正しく表示する"
   :preface
 ;;;###autoload
-  (defun my:mime-entity-filename (orig-value)
-    "Decode eworded file name for *BROKEN* MUA."
-    (when (stringp orig-value)
-      (eword-decode-string orig-value t)))
+  (defun my:decode-mime-filename-around (orig-fun &rest args)
+    "Decode the filename returned by the original function if it's a string."
+    (let ((return-value (apply orig-fun args)))
+      (if (stringp return-value)
+          (progn
+            (eword-decode-string return-value t))
+      return-value)))
   :advice
-  (:filter-return mime-entity-filename
-                  my:mime-entity-filename)
+  (:around mime-entity-filename
+           my:decode-mime-filename-around)
   )
-;;
 (leaf std11
   :preface
-  (leaf eword-encode :commands eword-encode-string)
 ;;;###autoload
-  (defun std11-wrap-as-quoted-string-advice (string)
-    "Encode a string before wrapping as RFC 822 quoted-string."
-    (or (eword-encode-string string) ""))
+  (defun my:encode-string-filter-args (args)
+    "Encode the first argument in a list of ARGS."
+    (let* ((original-string (car args))
+           (encoded-string (or (eword-encode-string original-string) "")))
+      (cons encoded-string (cdr args))))
   :advice
-  ((:filter-args std11-wrap-as-quoted-string
-                 std11-wrap-as-quoted-string-advice)
-   )
+  (:filter-args encode-string
+                my:encode-string-filter-args)
   )
      #+end_src
 **** Subject が変わってもスレッドを切らない
@@ -2670,17 +2649,16 @@ video/*; xdg-open %s;
      #+begin_src emacs-lisp  :tangle init-wl.el
 (leaf c-sig
   :commands insert-signature-eref
+  :init
+  (setq sig-alist-file (expand-file-name "signature.alist" my:d:share))
   :config
   (eval-when-compile (require 'wl))
   (setq sig-insert-end t
         sig-save-to-sig-name-alist nil
         message-signature-file nil)
   )
+;; bind で設定できないなぁ...
 (define-key wl-draft-mode-map "\C-c\t" 'insert-signature-eref)
-(add-hook 'wl-draft-mode-hook
-          (lambda ()
-            (define-key (current-local-map) "\C-c\C-w"
-              'insert-signature-eref)))
      #+end_src
 *** GPG 署名
     :PROPERTIES:
@@ -4853,6 +4831,7 @@ pdflang={%l}}
   (leaf s :ensure t)
   (leaf dash :ensure t)
   )
+(leaf apparmor-mode :ensure t)
 (leaf chezmoi
   :ensure t
   :if (executable-find "chezmoi")

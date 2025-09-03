@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2025-08-25 17:28:54
+#+date: 2025-09-03 17:11:31
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -383,7 +383,10 @@ init.el: README.org
     (progn
       (package-initialize)
       (unless (package-installed-p 'leaf)
-        (use-package leaf :ensure t))
+        (package-refresh-contents)
+        (package-install 'leaf t)
+        ;; (use-package leaf :ensure t)
+        )
       )
     )
   )

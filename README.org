@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2025-09-03 17:11:31
+#+date: 2025-10-18 22:12:31
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -46,9 +46,29 @@
    #+begin_src makefile-gmake :tangle no
 EMACS		?= emacs
 EMACS_VER	?= $(shell $(EMACS) --version | head -1 | cut -f 3 --d \ )
+EARLY_INIT	?= $(shell if [ `echo "$(EMACS_VER) >= 27" | bc` -eq 1 ] ; then echo yes; fi)
 NATIVE_COMP	?= $(shell if [ `echo "$(EMACS_VER) >= 28.1" | bc` -eq 1 ] ; then echo yes ; fi)
+EL		=
+ifeq ($(EARLY_INIT),yes)
+EL		+= early-init.el
+LOAD		?= -l early-init.el -l init.el
+else
+LOAD		?= -l init.el
+endif
 
-all: init.elc
+## check wl-beta debian package
+ifneq (,$(wildcard /etc/emacs/site-start.d/65wl-beta.el))
+EL		+= init-wl.el
+endif
+
+ifeq ($(NATIVE_COMP),yes)
+all: $(EL)
+else
+ELC		= $(EL:%.el=%.elc)
+all: $(ELC) init.elc
+endif
+
+$(EL): init.el
 init.el: README.org
 	@mkdir -p ~/.cache/emacs
 	@if [ ! -d ~/.cache/emacs/eln-cache ]; then \
@@ -69,13 +89,11 @@ init.el: README.org
 		  (require 'ob-tangle) \
 		  (org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\"))"
 	$(EMACS) -l init.el --batch --eval '(kill-emacs)'
-%.elc: %.el
-	@if [ x"$(NATIVE_COMP)" = x"yes" ] ; then \
-		echo "$(EMACS) -l early-init.el -l init.el -batch -f batch-native-compile $<" ;\
-		$(EMACS) -l early-init.el -l init.el -batch -f batch-native-compile $< ;\
-	fi
-	$(EMACS) -l init.el -batch -f batch-byte-compile $<
 
+ifneq ($(NATIVE_COMP),yes)
+%.elc: %.el
+	$(EMACS) $(LOAD) -batch -f batch-byte-compile $<
+endif
    #+end_src
 * 設定ファイルのヘッダ
   :PROPERTIES:
@@ -809,9 +827,9 @@ Emacs.reverseVideo: true
         ;; kept-new-versions 5
         ;; kept-old-versions 5
         ;; delete-old-versions t
-        auto-save-visited-interval 30
+        ;; auto-save-visited-interval 30
         )
-  :hook (emacs-startup-hook . auto-save-visited-mode)
+  ;; :hook (emacs-startup-hook . auto-save-visited-mode)
   )
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 変更履歴の保存
@@ -848,7 +866,8 @@ Emacs.reverseVideo: true
   ;;
   (if (file-directory-p "~/Sources/Git/salsa.debian.org/rlb/deb-emacs/src")
       (setq find-function-C-source-directory "~/Sources/Git/salsa.debian.org/rlb/deb-emacs/src"))
-  (setq auto-save-interval 60     ;; 60秒毎に一時保存
+  (setq ;; auto-save-interval 60     ;; 60秒毎に一時保存
+        auto-save-interval 0     ;; 60秒毎に一時保存
         delete-auto-save-files t  ;;
         safe-local-variable-values '((org-link-file-path-type . absolute))
         ;;; 編集関連
@@ -2382,6 +2401,7 @@ video/*; xdg-open %s;
         "Subject"
         "Reply-To"
         "Auto-Submitted"            ;; Git commit/Cron notify
+        "X-GitLab-Project-Path"     ;; salsa gitlab notification
         ))
      #+end_src
 *** メッセージ表示
@@ -4252,15 +4272,21 @@ pdflang={%l}}
                             ("my:beamer"
                              "\\RequirePackage{plautopatch}\n\\documentclass[dvipdfmx,c,presentation]{beamer}\n\\plautopatchdisable{eso-pic}\n\\ifdefined\\endofdump\\else\\let\\endofdump\\relax\\fi
             [DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
-                             ("\\section\{%s\}" . "\\section*\{%s\}")
-                             ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
-                             ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
+                             ("\\section\{%s\}" . "%% %s")
+                             ("\\subsection\{%s\}" . "%% %s")
+                             ("\\subsubsection\{%s\}" . "%% %s"))
                             ("my:beamer169"
                              "\\RequirePackage{plautopatch}\n\\documentclass[dvipdfmx,c,presentation,aspectratio=169]{beamer}\n\\plautopatchdisable{eso-pic}\n\\ifdefined\\endofdump\\else\\let\\endofdump\\relax\\fi
             [DEFAULT-PACKAGES] [NO-PACKAGES] [EXTRA]"
-                             ("\\section\{%s\}" . "\\section*\{%s\}")
-                             ("\\subsection\{%s\}" . "\\subsection*\{%s\}")
-                             ("\\subsubsection\{%s\}" . "\\subsubsection*\{%s\}"))
+                             ("\\section\{%s\}" . "%% %s")
+                             ("\\subsection\{%s\}" . "%% %s")
+                             ("\\subsubsection\{%s\}" .  "%% %s"))
+                            ("my:lualatex:beamer"
+                             "\\documentclass[dvipdfmx,c,presentation,aspectratio=169]{beamer}
+            [DEFAULT-PACKAGES] [NO-PACKAGES] [NO-EXTRA]"
+                             ("\\section\{%s\}" . "%% %s")
+                             ("\\subsection\{%s\}" . "%% %s")
+                             ("\\subsubsection\{%s\}" .  "%% %s"))
                             )
         )
   )
@@ -4829,12 +4855,13 @@ pdflang={%l}}
   :END:
   #+begin_src emacs-lisp :tangle init.el
 (leaf copilot
-  :vc (:url "https://github.com/copilot-emacs/copilot.el")
+  :vc (:url "https://github.com/copilot-emacs/copilot.el" :rev :newest :branch "main")
   :init
   (leaf editorconfig :ensure t)
   (leaf s :ensure t)
   (leaf dash :ensure t)
   )
+(leaf copilot-chat :ensure t)
 (leaf apparmor-mode :ensure t)
 (leaf chezmoi
   :ensure t

@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2025-10-18 22:12:31
+#+date: 2026-01-06 14:01:27
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -70,29 +70,29 @@ endif
 
 $(EL): init.el
 init.el: README.org
-	@mkdir -p ~/.cache/emacs
-	@if [ ! -d ~/.cache/emacs/eln-cache ]; then \
-		echo ";; mkdir ~/.cache/emacs/eln-cache"; mkdir ~/.cache/emacs/eln-cache ;\
-	fi
-	@if [ ! -L eln-cache ]; then \
-		echo ";; ln -sf ~/.cache/emacs/eln-cache . "; ln -sf ~/.cache/emacs/eln-cache . ;\
-	fi
-	@if [ ! -d ~/.cache/emacs/tree-sitter ]; then \
-		echo ";; mkdir ~/.cache/emacs/tree-sitter"; mkdir ~/.cache/emacs/tree-sitter ;\
-	fi
-	@if [ ! -L tree-sitter ]; then \
-		echo ";; ln -sf ~/.cache/emacs/tree-sitter . "; ln -sf ~/.cache/emacs/tree-sitter . ;\
-	fi
-	@mkdir -p elpa
-	$(EMACS) --batch --eval \
-	   "(progn \
-		  (require 'ob-tangle) \
-		  (org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\"))"
-	$(EMACS) -l init.el --batch --eval '(kill-emacs)'
+    @mkdir -p ~/.cache/emacs
+    @if [ ! -d ~/.cache/emacs/eln-cache ]; then \
+        echo ";; mkdir ~/.cache/emacs/eln-cache"; mkdir ~/.cache/emacs/eln-cache ;\
+    fi
+    @if [ ! -L eln-cache ]; then \
+        echo ";; ln -sf ~/.cache/emacs/eln-cache . "; ln -sf ~/.cache/emacs/eln-cache . ;\
+    fi
+    @if [ ! -d ~/.cache/emacs/tree-sitter ]; then \
+        echo ";; mkdir ~/.cache/emacs/tree-sitter"; mkdir ~/.cache/emacs/tree-sitter ;\
+    fi
+    @if [ ! -L tree-sitter ]; then \
+        echo ";; ln -sf ~/.cache/emacs/tree-sitter . "; ln -sf ~/.cache/emacs/tree-sitter . ;\
+    fi
+    @mkdir -p elpa
+    $(EMACS) --batch --eval \
+       "(progn \
+          (require 'ob-tangle) \
+          (org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\"))"
+    $(EMACS) -l init.el --batch --eval '(kill-emacs)'
 
 ifneq ($(NATIVE_COMP),yes)
 %.elc: %.el
-	$(EMACS) $(LOAD) -batch -f batch-byte-compile $<
+    $(EMACS) $(LOAD) -batch -f batch-byte-compile $<
 endif
    #+end_src
 * 設定ファイルのヘッダ
@@ -116,7 +116,9 @@ endif
   分割した設定ファイル群やパッケージでinstallしたパッケージ
   の置き場所は =user-emacs-directory= 以下にまとめられます.
   +パッケージによって置き方はかなり野放図ですよねぇ.+
-  [[https://github.com/emacscollective/no-littering][no-littering]] あたりで整理した方が良いかなぁ.
+  - [ ] [[https://github.com/emacscollective/no-littering][no-littering]] あたりで整理した方が良いかなぁ.
+    - ~/.emacs.d/eln-cache を変更できないか?
+    - treesit のインストール先がハードコードされている. これを変えたいなぁ...
 
   ディレクトリ構成は以下のようにしました:
   #+begin_example
@@ -129,8 +131,6 @@ endif
          `-- tree-sitter ← ~/.cache/emacs/tree-sitter への symlink: treesit-auto のインストール先
     ~/.cache/emacs   ←  一次ファイルの置き場所
   #+end_example
-  - [ ] ~/.emacs.d/eln-cache を変更できないか?
-  - [ ] treesit のインストール先がハードコードされている. これを変えたいなぁ...
 
   上記ディレクトリ構成を設定ファイルで使用するために
   ディレクトリ配置を宣言しておきます.
@@ -139,11 +139,10 @@ endif
 (eval-and-compile
   (when load-file-name
     (setq user-emacs-directory
-          (expand-file-name (file-name-directory load-file-name))))
-  (defconst my:d:share (expand-file-name "share/" user-emacs-directory))
-  (defconst my:d:tmp (expand-file-name ".cache/emacs" (getenv "HOME")))
-  (defconst my:d:org (expand-file-name "Nextcloud/org" (getenv "HOME")))
-  )
+          (expand-file-name (file-name-directory load-file-name)))))
+(defconst my:d:share (expand-file-name "share/" user-emacs-directory))
+(defconst my:d:tmp (expand-file-name "~/.cache/emacs"))
+(defconst my:d:org (expand-file-name "~/Nextcloud/org"))
 ;;
 ;; (dolist (dir (let ((dir (expand-file-name "elisp" my:d:share)))
 ;;                (list dir (format "%s%d" dir emacs-major-version))))
@@ -170,7 +169,7 @@ endif
   #+begin_src emacs-lisp :tangle init.el
 (eval-and-compile
   (setq byte-compile-warnings t)
-  (setq byte-compile-warnings '(not cl-functions free-vars docstrings unresolved))
+  ;; (setq byte-compile-warnings '(not cl-functions free-vars docstrings unresolved))
   )
   #+end_src
   native compile: 気になった時に動かしています.
@@ -188,7 +187,7 @@ endif
   :PROPERTIES:
   :CUSTOM_ID: orgae182d4d
   :END:
-  この辺は [[https://emacs-jp.github.io/tips/startup-optimization][Emacs の起動時間を""詰める""]] を参考に.
+  この辺は [[https://emacs-jp.github.io/tips/startup-optimization][Emacs の起動時間を"詰める"]] を参考に.
 ** Package初期化処理
    :PROPERTIES:
    :CUSTOM_ID: orgd896c3a2
@@ -217,7 +216,7 @@ endif
    起動後に =emacs-startup-hook= で default に戻すようにしてみた.
 
    ついでに =idle-timer= で入力が無い時に GC を走らせることにする
-*** GC threshold の最大化
+*** 起動時の GC threshold の最大化
     :PROPERTIES:
     :CUSTOM_ID: org3977c5ee
     :ID:       9bb833b8-16ba-493a-8616-7da7a810bee4
@@ -226,7 +225,7 @@ endif
 (setq gc-cons-threshold most-positive-fixnum
       garbage-collection-messages nil)
     #+end_src
-*** 起動後に GC Threshold を既定値に
+*** 起動後に GC Threshold を既定値に戻す
     :PROPERTIES:
     :CUSTOM_ID: org9584246f
     :END:
@@ -234,6 +233,7 @@ endif
 (setq garbage-collection-messages nil)
 ;; Run GC every 60 seconds if emacs is idle.
 (run-with-idle-timer 60.0 t #'garbage-collect)
+;; 起動後に初期値に戻す.
 (add-hook 'emacs-startup-hook
           (lambda ()
             (setq gc-cons-threshold 800000)))
@@ -260,7 +260,7 @@ endif
      :CUSTOM_ID: org42900264
      :END:
     起動後に =emacs-startup-hook= にて,
-    パッケージの読み込みで追加された値と save しておいた値を合わせる様に.
+    パッケージの読み込みで追加された値と save しておいた値を合わせて復元
      #+begin_src emacs-lisp :tangle init.el
 (add-hook 'emacs-startup-hook
           (lambda ()
@@ -278,7 +278,7 @@ endif
    - GC の調整: [[id:9bb833b8-16ba-493a-8616-7da7a810bee4][GC threshold の最大化]]
    - Magic File Name に関して: [[id:da35a6a1-6164-410a-976a-e9335dd4444c][Magic File Name を無効化]]
 
-   見た目: tabbar, toolbar, menubar などの非表示, beep の無効化
+   見た目: tabbar, toolbar, menubar などの非表示, beep の無効化など
    #+begin_src emacs-lisp :tangle (if (boundp 'early-init-file) "early-init.el" "init.el")
 ;; (advice-add 'x-apply-session-resources :override 'ignore)
 ;; (setq inhibit-x-resources t)
@@ -293,37 +293,29 @@ endif
 (setq use-file-dialog nil)
 (setq use-short-answers t)
    #+end_src
-
    スタートアップメッセージの抑制
+   昔設定していたアレコレは以下の様にマトめられていた
+   alias: =inhibit-splash-screen= → =inhibit-startup-screen=
+   alias: =inhibit-startup-message= → =inhibit-startup-screen=
    #+begin_src emacs-lisp :tangle (if (boundp 'early-init-file) "early-init.el" "init.el")
 (setq inhibit-startup-screen t)
 (setq frame-inhibit-implied-resize t)
    #+end_src
-
-   自動生成ファイルを無効化
+   起動時の自動生成ファイルを無効化
    #+begin_src emacs-lisp :tangle (if (boundp 'early-init-file) "early-init.el" "init.el")
+;; バックアップファイル(foo.txt~など)は生成しない
 (setq make-backup-files nil)
+;; 排他制御ロックファイル(.#foo.txtなど)は生成しない
+(setq create-lockfiles nil)
 (setq auto-save-default nil)
 (setq auto-save-list-file-prefix nil)
-(setq create-lockfiles nil)
    #+end_src
-
-   外部プロセスからの読取サイズの最大値.
-   #+begin_src emacs-lisp :tangle (if (boundp 'early-init-file) "early-init.el" "init.el")
-(setq read-process-output-max (* 3 1024 1024)) ;; 3mb
-   #+end_src
-   lsp-mode なんかだと「[[https://emacs-lsp.github.io/lsp-mode/page/performance/][some of the language server responses are in 800k - 3M range.]]」とあるのだけれど,
-   「[[https://github.com/emacs-lsp/lsp-mode/discussions/3561][read-process-output-max vs system pipe capacity · emacs-lsp/lsp-mode · Discussion #3561]]」とあって,
-   どうすれば良いのか良くわからない.
-   副作用(?)は感じていないので, とりあえず 3M にしている.
-
    Native Compile に関連する設定(Emacs 29 以降)
    #+begin_src emacs-lisp :tangle (when (fboundp 'native-compile-async) "early-init.el")
 (setq package-native-compile t
       native-compile-target-directory (expand-file-name "eln-cache" user-emacs-directory)
       native-comp-jit-compilation-deny-list '("\\(.*org-element.*\\|.*-loaddefs\\|.*-autoloads\\)\\.\\(el\\.gz\\|el\\)"))
    #+end_src
-
    以下はここで設定するのが良いのかいまいちわかっていないあれこれ.
    #+begin_src emacs-lisp :tangle (if (boundp 'early-init-file) "early-init.el" "init.el")
 (setq history-delete-duplicates t)
@@ -403,7 +395,6 @@ endif
       (unless (package-installed-p 'leaf)
         (package-refresh-contents)
         (package-install 'leaf t)
-        ;; (use-package leaf :ensure t)
         )
       )
     )
@@ -418,18 +409,15 @@ endif
    =:vc= キーワードで =package-vc-install= を呼び出せるので, こっちを使うようになりました.
    #+begin_src emacs-lisp :tangle init.el
 (leaf leaf-keywords
-  :doc "Use leaf as a package manager"
-  :url "https://github.com/conao3/leaf.el"
   :ensure t
   :init
   (leaf blackout :ensure t)
   :config
   (leaf-keywords-init)
   )
-(leaf leaf-convert
-  :doc "Convert many format to leaf format"
-  :ensure t)
+(leaf leaf-convert :ensure t)
    #+end_src
+   - [ ] =package-vc-install= でインストールした諸々って, package-upgrade 後に delete 対象になる?
 * 独自関数
   :PROPERTIES:
   :CUSTOM_ID: org34ff2306
@@ -511,30 +499,6 @@ endif
             (unless (member "*scratch*" (my:buffer-name-list))
               (my:make-scratch 1))))
    #+end_src
-** TODO 行末の無駄な空白/改行を削除する
-   :PROPERTIES:
-   :CUSTOM_ID: org1effd724
-   :END:
-   @see [[http://d.hatena.ne.jp/tototoshi/20101202/1291289625][無駄な行末の空白を削除する(Emacs Advent Calendar jp:2010)]]
-
-   ただし, RD や Markdown だと空白行に意味があったりするので,
-   必要に応じて拡張子で判断して外している．
-   → =whitespace-mode= でやった方が良いかな...🤔
-   #+begin_src emacs-lisp :tangle init.el
-(defvar my:delete-trailing-whitespace-exclude-suffix
-  (list "\\.rd$" "\\.md$" "\\.rbt$" "\\.rab$"))
-
-;;;###autoload
-(defun my:delete-trailing-whitespace ()
-  (interactive)
-  (eval-when-compile (require 'cl-lib nil t))
-  (cond
-   ((equal nil
-           (cl-loop for pattern in my:delete-trailing-whitespace-exclude-suffix
-                    thereis (string-match pattern buffer-file-name)))
-    (delete-trailing-whitespace))))
-(add-hook 'before-save-hook 'my:delete-trailing-whitespace)
-   #+end_src
 ** ターミナルで =C-M-= を打つために
    :PROPERTIES:
    :CUSTOM_ID: org194b826d
@@ -555,6 +519,17 @@ endif
                          'meta 27 "M-")))
 (define-key function-key-map (kbd "C-x @") 'my:event-apply-control-meta-modifiers)
    #+end_src
+** カーソルのある位置の face を調べる関数
+   :PROPERTIES:
+   :CUSTOM_ID: org92585125
+   :END:
+   わりと良く使う. 地味に便利
+   #+BEGIN_SRC emacs-lisp
+;;;###autoload
+(defun my:describe-face-at-point ()
+  (interactive)
+  (message "%s" (get-char-property (point) 'face)))
+   #+END_SRC
 * =exec-path-from-shell=: 環境変数の読み込み
   :PROPERTIES:
   :CUSTOM_ID: org9abae8f2
@@ -575,39 +550,32 @@ endif
   - =SKKSERVER=
   - =TEXMFHOME=
   - =WSL_DISTRO_NAME=
-  - =http_proxy=
   を読み込んでいます(ちょっと多い...😅).
   #+begin_src emacs-lisp :tangle init.el
-(leaf *set-environment-variable
-  (leaf exec-path-from-shell
-    :if window-system
-    :ensure t
-    :config
-    (setq exec-path-from-shell-variables '("DEBEMAIL"
-                                           "DEBFULLNAME"
-                                           "GPG_AGENT_INFO"
-                                           "GPG_KEY_ID"
-                                           "PASSWORD_STORE_DIR"
-                                           "PATH"
-                                           "SHELL"
-                                           "SKKSERVER"
-                                           "TEXMFHOME"
-                                           "WSL_DISTRO_NAME"
-                                           "http_proxy")
-          exec-path-from-shell-arguments nil)
-    (exec-path-from-shell-initialize)
-    )
+(leaf exec-path-from-shell
+  :if window-system
+  :ensure t
   :config
-  (setq user-full-name    (concat (getenv "DEBFULLNAME"))
-        user-mail-address (concat (getenv "DEBEMAIL")))
-  (defconst my:d:password-store
-    (if (getenv "PASSWORD_STORE_DIR")
-        (expand-file-name (concat "Emacs/" (system-name))
-                          (getenv "PASSWORD_STORE_DIR"))
-      nil))
+  (setq exec-path-from-shell-variables '("DEBEMAIL"
+                                         "DEBFULLNAME"
+                                         "GPG_AGENT_INFO"
+                                         "GPG_KEY_ID"
+                                         "PASSWORD_STORE_DIR"
+                                         "PATH"
+                                         "SHELL"
+                                         "SKKSERVER"
+                                         "TEXMFHOME"
+                                         "WSL_DISTRO_NAME")
+        exec-path-from-shell-arguments nil)
+  (exec-path-from-shell-initialize)
   )
+(defconst my:d:password-store
+  (if (getenv "PASSWORD_STORE_DIR")
+      (expand-file-name (concat "Emacs/" (system-name))
+                        (getenv "PASSWORD_STORE_DIR"))
+    nil))
   #+end_src
-* 言語の設定
+* 言語の設定(含, フォント設定などなど)
   :PROPERTIES:
   :CUSTOM_ID: orgadf8c6bf
   :END:
@@ -649,21 +617,40 @@ endif
    [[https://khiker.hatenablog.jp/entry/20110327/emacs_cjkamb][Emacs23(以降) と 曖昧幅文字(East asian ambiguous)]] あたりも参考に.
 
    拙作の修正ロケールはこちら: [[https://github.com/uwabami/locale-eaw-emoji]]
-   → 最近は WezTerm を使っているので, 全て halfwidth にしました.
+   → 最近は foot を使っているので, 全て halfwidth にしました.
    (環境が, いわゆる set-language-environment "Japanese" と判定されると, EAW は 2文字幅に設定されてしまいます).
    #+begin_src emacs-lisp :tangle init.el
-(leaf locale-eaw-emoji
-  :vc (:url "https://github.com/uwabami/locale-eaw-emoji")
-  :hook (emacs-startup-hook . eaw-halfwidth)
+;; (leaf locale-eaw-emoji
+;;   :vc (:url "https://github.com/uwabami/locale-eaw-emoji")
+;;   :hook (emacs-startup-hook . (lambda ()
+;;                                 (eaw-halfwidth)
+;;                                 (global-auto-composition-mode 0)
+;;                                 ))
+;;   )
+;; (leaf glyphless-display-mode
+;;   ;; :init (setq glyphless-char-display 'zero-width)
+;;   :hook (emacs-startup-hook . glyphless-display-mode)
+;;   )
+(leaf eaw-console
+  :commands eaw-init
+  :vc (:url "https://github.com/hamano/locale-eaw" :lisp-dir "dist")
+  :hook (emacs-startup-hook . (lambda ()
+                                ;; (load-library "eaw-console")
+                                ;; (load "eaw-console" nil t)
+                                (eaw-init)
+                                (global-auto-composition-mode 0)
+                                ))
   )
    #+end_src
-   - [ ] リテラシーの低い人からのメールで丸囲み数字が良く表われてシンドい(見切れる). 適宜マッピングできないモンだろうか….
+   - [ ] リテラシーの低い人からのメールで丸囲み数字が良く表われてシンドい(見切れる).
+     - 適宜マッピングする?
+     - もしくは1文字幅でも見易いフォントを使う. 現状は IBM Plex 関連?
 ** フォント
   :PROPERTIES:
   :CUSTOM_ID: org356b9857
   :END:
   試行錯誤中. とはいえ, GUIで使う事は滅多に無いのでなかなか弄る機会が無い.
-*** Xresouces の設定
+*** TODO Xresouces の設定
    :PROPERTIES:
    :CUSTOM_ID: org100ad374
    :END:
@@ -676,6 +663,7 @@ Emacs.FontBackend: xft
 ! revese video
 Emacs.reverseVideo: true
    #+end_src
+   - [ ] Wayland になったらどうなるだろうか?
 *** フォント設定
     :PROPERTIES:
     :CUSTOM_ID: orgce6102b3
@@ -690,14 +678,16 @@ Emacs.reverseVideo: true
   :config
   (setq scalable-fonts-allowed nil
         buffer-face-mode-face 'fixed-pitch
-        use-default-font-for-symbols nil)
-  (set-frame-parameter nil 'alpha 90)
+        use-default-font-for-symbols t)
+  (add-to-list 'default-frame-alist '(reverse . t))
+  (set-frame-parameter nil 'alpha 95)
   (set-face-attribute 'default nil
-                      :family "PlemolJP Console NF"
-                      :height 125)
+                      :family "EAW CONSOLE"
+                      :height 135)
   ;; 高さは合わないが幅はなんとなる揃う様になった, 様な？
   ;; - GUI ではフォントの高さか幅を指定した方が幸せになれそう. 文字毎にサイズが違うのが問題かも.
-  (set-fontset-font nil '(#x1F004 . #x1FFFD) (font-spec :family "Noto Color Emoji" :size 15))
+  ;; (set-fontset-font nil '(#x1F004 . #x1FFFD) (font-spec :family "Noto Color Emoji" :height 130))
+  (set-fontset-font nil '(#x1F004 . #x1FFFD) (font-spec :family "EAW CONSOLE" :height 130))
 )
  #+end_src
  表示のテスト
@@ -725,7 +715,7 @@ Emacs.reverseVideo: true
    :CUSTOM_ID: orgd903bf1d
    :END:
    以前は all-the-icons を利用していたけれども
-   - Nerd Fonts の ver.2 まではアイコンが PUA をはみ出していて異体字の表示に支障があったから → ver.3 からこれが解消された
+   - Nerd Fonts の ver.2 まではアイコンが PUA をはみ出していて異体字の表示に支障があった → ver.3 からこれが解消された
    - ターミナルでの利用の際に複数フォントはシンドい.
    ということで [[https://github.com/rainstormstudio/nerd-icons.el][nerd-icons]] に乗り換えた.
    #+begin_src emacs-lisp :tangle init.el
@@ -733,7 +723,7 @@ Emacs.reverseVideo: true
   :ensure t
   :defvar nerd-icons-mode-icon-alist
   :commands (nerd-icons-codicon nerd-icons-faicon)
-  (setq nerd-icons-family "PlemolJP Console NF")
+  (setq nerd-icons-family "EAW CONSOLE")
   :defer-config
   (add-to-list 'nerd-icons-mode-icon-alist
                '(wl-folder-mode nerd-icons-mdicon "nf-md-folder" ))
@@ -754,14 +744,15 @@ Emacs.reverseVideo: true
   :PROPERTIES:
   :CUSTOM_ID: org1927da44
   :END:
-** 終了時に =custom.el= を消す
+** TODO 終了時に =custom.el= を消す [0/1]
    :PROPERTIES:
    :CUSTOM_ID: orgd140a191
    :END:
    設定ファイルに極力移す.
    #+begin_src emacs-lisp :tangle init.el
 (leaf cus-edit
-  :preface
+  :tag "builtin"
+  :init
   (setq custom-file (expand-file-name "custom.el" my:d:tmp))
   :hook
   `((kill-emacs-hook . (lambda ()
@@ -769,143 +760,103 @@ Emacs.reverseVideo: true
                              (delete-file custom-file)))))
   )
    #+end_src
-** 雑多な設定など: 標準関数
+   - [ ] 終了時に =custom.el= の内容を確認する様にした方が良いかな?
+** customize で行なっている雑多な設定など
    :PROPERTIES:
    :CUSTOM_ID: org2a427bfe
    :END:
-   Emacs の C ソースコードで定義されてる関数に関する設定や
-   =custom.el= にあった雑多な設定.
+   Emacs 本体に同梱されている関数などの雑多な設定.
    - 大抵の場合ターミナル内で =-nw= として起動するし,
      メニューは触ったことないので使わないので,
      フレーム, ツールバー等を非表示にする．
-   - =.elc= と =.el= の timestamp を比較し, 新しい方を読み込む
-    (=load-prefer-newer= は Emacs >= 24.4 から).
+   - =.elc= と =.el= の timestamp を比較し, 新しい方を読み込む.
    - yes or no を y or n に
-   他にもイロイロと. 設定が増えてきたり複雑になったら分ける.
+   他にもイロイロと. 設定が増えてきたり複雑になったら分ける(かも).
    #+begin_src emacs-lisp :tangle init.el
-(leaf startup
-  :config
-  (setq initial-scratch-message nil          ;; scratch buffer は空っぽで.
-        inhibit-startup-echo-area-message t  ;; minibuffer も静かに.
-        ;;;
-        ;; 昔設定していたアレコレは以下の様にマトめられていた.
-        ;; alias: inhibit-splash-screen → inhibit-startup-screen
-        ;; alias: inhibit-startup-message → inhibit-startup-screen
-        ;; inhibt-startup-screen は early-init.el で設定済.
-        ;; inhibit-startup-screen t
-        )
-  )
-(leaf simple
-  :config
-  (setq next-line-add-newlines nil ;; バッファ終端で newline を入れない
-        line-number-mode nil       ;; modeline に行番号は表示しない
-        )
-  )
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(leaf minibuffer
-  :config
-  (setq read-file-name-completion-ignore-case t ;; 大文字小文字区別無し
-        )
-  )
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(leaf files
-  :config
-  (setq save-abbrevs 'silent ;; 略語は静かに保存しておく
-        ;; 自動保存の無効化
-        auto-save-default nil
-        make-backup-files nil
-        auto-save-list-file-prefix nil
-        create-lockfiles nil
-        ;; ;; auto-save されるファイルの位置の変更
-        ;; auto-save-file-name-transforms `((".*" ,my:d:tmp  t))
-        ;; ;; backup で symlink は使わない
-        ;; backup-by-copying t
-        ;; backup ファイルの保存先
-        ;; backup-directory-alist  `((".*" . ,my:d:tmp))
-        ;; ;; backup ファイルの世代管理
-        ;; version-control t
-        ;; kept-new-versions 5
-        ;; kept-old-versions 5
-        ;; delete-old-versions t
-        ;; auto-save-visited-interval 30
-        )
-  ;; :hook (emacs-startup-hook . auto-save-visited-mode)
-  )
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 変更履歴の保存
-(leaf savehist
-  :config
-  (setq savehist-file (expand-file-name "history" my:d:tmp)
-        )
-  )
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(leaf saveplace
-  ;; 前回の修正位置の保存
-  :config
-  (setq save-place-file (expand-file-name "emacs-places"  my:d:tmp)
-        save-place-ignore-files-regexp
-        "\\(\\(?:COMMIT_EDITMSG\\|hg-editor-[[:alnum:]]+\\.txt\\|svn-commit\\.tmp\\|bzr_log\\.[[:alnum:]]+\\)$\\)\\|\\(\\`/[^/:]+:[^/:]*:\\)"
-        )
-  )
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(leaf uniquify
-  :config
-  ;; file path の表示
-  (setq uniquify-buffer-name-style 'post-forward-angle-brackets
-        uniquify-min-dir-content 1
-        )
-  )
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(leaf *built-in*
-  :bind* ("C-c C-j" . browse-url-at-point)
-  :preface
-  ;; 必要なのか？ :init で良くない？
-  (defvar tramp-persistency-file-name (expand-file-name "tramp" my:d:tmp))
+(leaf cus-start
+  :tag "builtin"
+  ;; < for show-paren syntax highlight
+  :emacs> "28"
   :init
   (leaf server :commands (server-running-p))
-  ;;
   (if (file-directory-p "~/Sources/Git/salsa.debian.org/rlb/deb-emacs/src")
-      (setq find-function-C-source-directory "~/Sources/Git/salsa.debian.org/rlb/deb-emacs/src"))
-  (setq ;; auto-save-interval 60     ;; 60秒毎に一時保存
-        auto-save-interval 0     ;; 60秒毎に一時保存
-        delete-auto-save-files t  ;;
-        safe-local-variable-values '((org-link-file-path-type . absolute))
-        ;;; 編集関連
-        ;; tab 幅 4
-        tab-width 4
-        ;; RFC5322 風味
-        fill-column 78
-        ;; 折り返し無し
-        truncate-lines nil
-        truncate-partial-width-windows nil
-        ;; auto-save-default 15
-        ;; 無制限(の筈)
-        history-length t
-        use-short-answers t
-        load-prefer-newer t
-        ;; 対応する括弧を強調表示: 不等号でも反応しちゃうのが玉に瑕.
-        show-paren-style 'mixed
-        ;; ファイルが変更されたら再読み込み
-        auto-revert-interval 0.1
-        ;; ファイル内の timestamp の更新
-        time-stamp-active t
-        time-stamp-line-limit 10
-        time-stamp-start "$Lastupdate: 2"
-        time-stamp-end "\\$"
-        time-stamp-format "%Y-%02m-%02d %02H:%02M:%02S"
-        ;; remote file の編集 - tramp
-        tramp-persistency-file-name (expand-file-name "tramp" my:d:tmp)
-        tramp-completion-reread-directory-timeout nil
-        remote-file-name-inhibit-cache nil
-        vc-ignore-dir-regexp (format "\\(%s\\)\\|\\(%s\\)"
-                                     locate-dominating-stop-dir-regexp
-                                     tramp-file-name-regexp)
-        ;; ファイル保存先を ~/.emacs.d 以下にブチ撒ける諸々の整理
-        url-configuration-directory (expand-file-name "url" my:d:tmp)
-        nsm-settings-file (expand-file-name "nsm.data" my:d:tmp)
-        bookmark-default-file (expand-file-name "bookmarks" my:d:tmp)
-        eshell-directory-name (expand-file-name "eshell" my:d:tmp)
-        )
+      (setq find-function-C-source-directory
+              "~/Sources/Git/salsa.debian.org/rlb/deb-emacs/src"))
+
+  (setq ;; setq か customize-set-variable か setop か, という話はあるものの.
+   ;; 環境変数的なあれこれ -------------------------------------------------
+   ;; 名前とメールアドレス
+   user-full-name (concat (getenv "DEBFULLNAME"))
+   user-mail-address (concat (getenv "DEBEMAIL"))
+   ;; el と elc は新しい方を読み込む
+   load-prefer-newer t
+   ;; y-or-n-p と同じじゃないの?
+   use-short-answers t
+   ;; local network は常に信頼
+   nsm-trust-local-network t
+   ;; ファイル保存先を ~/.emacs.d 以下にブチ撒ける諸々の整理
+   url-configuration-directory (expand-file-name "url" my:d:tmp)
+   bookmark-default-file (expand-file-name "bookmarks" my:d:tmp)
+   eshell-directory-name (expand-file-name "eshell" my:d:tmp)
+   ;; 表示関連 -------------------------------------------------------------
+   ;; scratch buffer は空っぽで
+   initial-scratch-message nil
+   ;; minibuffer も静かに
+   inhibit-startup-echo-area-message t
+   ;; 対応する括弧を強調表示: 不等号でも反応しちゃうのが玉に瑕
+   show-paren-style 'mixed
+   ;; modeline に行番号は表示しない
+   line-number-mode nil
+   ;; minibuffer は case insensitive
+   read-file-name-completion-ignore-case t
+   ;; 編集関連 -------------------------------------------------------------
+   ;; バッファ終端で newline を入れない
+   next-line-add-newlines nil
+   ;; tab 幅 8 ← org-element が tab幅 8 に強制してくる
+   tab-width  8
+   ;; RFC5322 風味
+   fill-column  78
+   ;; 折り返し無し
+   truncate-lines  nil
+   truncate-partial-width-windows nil
+   ;; SVG を編集可能にする: Custom で可能?
+   auto-mode-alist (delete
+                    '("\\.svgz?\\'" . image-mode) auto-mode-alist)
+   ;; org-mode で有効にするローカル変数の追加 ← org-mode でやるべきでは?
+   safe-local-variable-values '((org-link-file-path-type . absolute))
+   ;; 保存, 履歴関連 -------------------------------------------------------
+   ;; バックアップファイル(foo.txt~など)は生成しない
+   ;; (setq make-backup-files nil) ;; → early-init で設定済
+   ;; 排他制御ロックファイル(.#foo.txtなど)は生成しない
+   ;; (setq create-lockfiles nil) ;; → early-init で設定済
+   ;; 履歴: 無制限(の筈)
+   history-length t
+   ;; ファイルが変更されたら再読み込み
+   auto-revert-interval  0.1
+   ;; 一次保存の無効化(default は60秒毎に一時保存)
+   ;; auto-save-default nil ;; → early-init で設定済
+   ;; auto-save-list-file-prefix nil ;; → early-init で設定済
+   auto-save-interval 0
+   delete-auto-save-files t
+   ;; 自動保存の無効化
+   ;; auto-save-file-name-transforms `((".*" ,my:d:tmp  t))
+   ;; ;; backup で symlink は使わない
+   ;; backup-by-copying t
+   ;; backup ファイルの保存先
+   ;; backup-directory-alist  `((".*" . ,my:d:tmp))
+   ;; ;; backup ファイルの世代管理
+   ;; version-control t
+   ;; kept-new-versions 5
+   ;; kept-old-versions 5
+   ;; delete-old-versions t
+   ;; auto-save-visited-interval 30
+   ;;
+   ;; 略語は静かに保存
+   save-abbrevs 'silently
+   )
+  :config
+  ;; use-short-answers t で良いのでは?
+  (defalias 'yes-or-no-p 'y-or-n-p)
   :hook
   `(;; hl-line: 現在行のハイライト
     (emacs-startup-hook . global-hl-line-mode)
@@ -914,32 +865,99 @@ Emacs.reverseVideo: true
                             ;; tab ではインデントしない
                             (setq-default indent-tabs-mode nil
                                           auto-fill-mode nil)))
+    ;; SVG を表示ではなく XML 編集するために.
+    (emacs-startup-hook . (lambda ()
+                            (auto-image-file-mode 0)))
     ;; transinet-mark: 選択リージョンに色付け
     (emacs-startup-hook . transient-mark-mode)
     ;; 対応する括弧を強調表示
     (emacs-startup-hook . show-paren-mode)
-    ;; 変更履歴の保存
-    (emacs-startup-hook . savehist-mode)
     ;; 3日変更の無かった buffer を自動的に閉じる
     (emacs-startup-hook . midnight-mode)
-    ;; 前回の修正位置の保存
-    (emacs-startup-hook . save-place-mode)
     ;; server 起動
     (emacs-startup-hook . (lambda ()
                             (unless (server-running-p)
                               (server-start))))
     ;; ファイルが変更されたら再読み込み
-    (find-file-hook . global-auto-revert-mode)
-    ;; timestamp の更新
-    (before-save-hook . time-stamp)
+    (find-file-hook     . global-auto-revert-mode)
     ;; tramp の一時ファイルは削除
-    (kill-emacs-hook . (lambda ()
-                         (if (file-exists-p tramp-persistency-file-name)
-                             (delete-file tramp-persistency-file-name))))
+    (kill-emacs-hook    . (lambda ()
+                            (if (file-exists-p tramp-persistency-file-name)
+                                (delete-file tramp-persistency-file-name))))
     )
+  )
+   #+end_src
+** =time-stamp= 保存時に自動でタイムスタンプを更新
+   :PROPERTIES:
+   :CUSTOM_ID: orge3c80bea
+   :END:
+   #+begin_src emacs-lisp :tangle init.el
+(leaf time-stamp
   :config
-  (when (< emacs-major-version 28) ;; >
-    (fset 'yes-or-no-p 'y-or-n-p))
+  (setq time-stamp-active t
+        time-stamp-line-limit 10
+        time-stamp-start "$Lastupdate: "
+        time-stamp-end "\\$"
+        time-stamp-format "%Y-%02m-%02d %02H:%02M:%02S"
+        )
+  :hook
+  (before-save-hook   . time-stamp)
+  )
+   #+end_src
+** =savehist= minibuffer の履歴の保存
+   :PROPERTIES:
+   :CUSTOM_ID: org779d3217
+   :END:
+   #+begin_src emacs-lisp :tangle init.el
+(leaf savehist
+  :config
+  (setq savehist-file (expand-file-name "history" my:d:tmp))
+  :global-minor-mode t
+  )
+   #+end_src
+** =saveplace= 前回の修正位置の保存
+   :PROPERTIES:
+   :CUSTOM_ID: org77978fff
+   :END:
+   #+begin_src emacs-lisp :tangle init.el
+(leaf saveplace
+  :config
+  (setq save-place-file (expand-file-name "emacs-places"  my:d:tmp)
+        save-place-limit nil
+        save-place-ignore-files-regexp
+        "\\(\\(?:COMMIT_EDITMSG\\|hg-editor-[[:alnum:]]+\\.txt\\|svn-commit\\.tmp\\|bzr_log\\.[[:alnum:]]+\\)$\\)\\|\\(\\`/[^/:]+:[^/:]*:\\)"
+        )
+  :hook
+  (emacs-startup-hook . save-place-mode)
+  )
+   #+end_src
+** =uniquify= ファイル位置の表示項目を増やす
+   :PROPERTIES:
+   :CUSTOM_ID: org3b23e2db
+   :END:
+   #+begin_src emacs-lisp :tangle init.el
+(leaf uniquify
+  :config
+  (setq uniquify-buffer-name-style 'post-forward-angle-brackets
+        uniquify-min-dir-content 1
+        )
+  )
+   #+end_src
+** =tramp= リモートファイルの編集
+   :PROPERTIES:
+   :CUSTOM_ID: orgfb6d5852
+   :END:
+   もっぱら root@localhost に繋いでの sudo 代わりだけど.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf tramp
+  :init
+  (setq tramp-persistency-file-name (expand-file-name "tramp" my:d:tmp)
+        tramp-completion-reread-directory-timeout nil
+        remote-file-name-inhibit-cache nil
+        vc-ignore-dir-regexp (format "\\(%s\\)\\|\\(%s\\)"
+                                     locate-dominating-stop-dir-regexp
+                                     tramp-file-name-regexp)
+        )
   )
    #+end_src
 ** =browse-url=
@@ -948,6 +966,7 @@ Emacs.reverseVideo: true
    :END:
    #+begin_src emacs-lisp :tangle init.el
 (leaf browse-url
+  :bind* ("C-c C-j" . browse-url-at-point)
   :config
   (cond ((getenv "WSL_DISTRO_NAME")
          (defun my:browse-url-wsl-host-browser (url &rest _args)
@@ -998,34 +1017,56 @@ Emacs.reverseVideo: true
    背景も変えようかなぁ...
    #+begin_src emacs-lisp :tangle init.el
 (leaf whitespace
+  :preface
+  ;; 除外リストの定義
+  (defvar my:delete-trailing-whitespace-exclude-suffix
+    (list "\\.rd$" "\\.md$" "\\.rbt$" "\\.rab$"))
+  ;; 除外リスト以外の trailing whitespace を削除
+  (defun my:configure-whitespace-for-buffer ()
+    "Locally disable trailing whitespace cleanup if the file matches the exclude list."
+    (when (buffer-file-name)
+      (let ((patterns my:delete-trailing-whitespace-exclude-suffix)
+            (found nil)
+            (file (buffer-file-name)))
+        (while (and patterns (not found))
+          (when (string-match (car patterns) file)
+            (setq found t))
+          (setq patterns (cdr patterns)))
+        (when found
+          (make-local-variable 'whitespace-style)
+          (setq whitespace-style (delete 'trailing (append whitespace-style nil)))
+          ))))
   :init
   (setq whitespace-line-column 72
         whitespace-style '(face        ; faceを使う. *-mark に必要
                            trailing    ; 行末の空白を対象.
                            tabs        ; tab
                            spaces      ; space
-                           ;; empty       ; 前後の空行
+                           ;; empty      ; 前後の空行
                            space-mark  ; 可視化の際の置き換えを有効化
                            tab-mark    ; 可視化の際の置き換えを有効化
                            )
+        whitespace-action '(auto-cleanup)
         whitespace-display-mappings '(;; (space-mark ?\u3000 [?\□])
                                       (tab-mark ?\t [?\u00BB ?\t] [?\\ ?\t]))
         whitespace-space-regexp "\\(\u3000+\\)"
         whitespace-trailing-regexp  "\\([ \u00A0]+\\)$"
         whitespace-global-modes '(not eww-mode
-                                      term-mode
-                                      eshell-mode
-                                      org-agenda-mode
-                                      calendar-mode))
-  :hook (emacs-startup-hook . global-whitespace-mode)
+                                     term-mode
+                                     eshell-mode
+                                     org-agenda-mode
+                                     calendar-mode))
+  :hook ((find-file-hook . my:configure-whitespace-for-buffer)
+         (after-change-major-mode-hook . my:configure-whitespace-for-buffer)
+         (emacs-startup-hook . global-whitespace-mode)
+         )
   )
    #+end_src
-** TODO buffer の印刷
+** TODO buffer の印刷 [0/1]
    :PROPERTIES:
    :CUSTOM_ID: orgdd48e2df
    :END:
-   - [ ] 任意のフォントにできんのか?
-
+   - [ ] フォントの指定を上手くできんかなぁ...
    #+begin_src emacs-lisp :tangle init.el
 (leaf ps-mule
   :if (executable-find "lpr")
@@ -1726,17 +1767,14 @@ Emacs*useXIM: false
 ;;   (setq mime-view-text/html-previewer 'shr)
 ;;   )
      #+end_src
-     どのアプリケーションで開くか → =xdg-open= に丸投げ．
+     どのアプリケーションで開くか?
+     以前はOSに合わせて =open= か =xdg-open= に分岐していたが,
+     Debian 12 あたりから
+     =/usr/bin/open= → =/etc/alternatives/open= → =xdg-open= となったので,
+     特に分岐は不要になった.
      #+begin_src emacs-lisp :tangle init-wl.el
-(defvar my:mime-preview-play-current-entity-appname "xdg-open"
-  "meadow なら fiber, mac なら open, linux なら xdg-open")
-(cond
- ((string-match "apple-darwin" system-configuration)
-  (setq my:mime-preview-play-current-entity-appname "open")
-  )
- ((string-match "linux" system-configuration)
-  (setq my:mime-preview-play-current-entity-appname "xdg-open")
-  ))
+(defvar my:mime-preview-play-current-entity-appname "open"
+  "WSL なら wslview あたりなのかな. macOS と Linux なら open で良い筈")
 (unless (functionp #'mime-preview-play-current-entity-orig)
   (fset #'mime-preview-play-current-entity-orig
         (symbol-function #'mime-preview-play-current-entity)))
@@ -1746,10 +1784,17 @@ Emacs*useXIM: false
       (mime-preview-play-current-entity-orig ignore-examples mode)
     (let* ((entity (get-text-property (point) 'mime-view-entity))
            (name (mime-entity-safe-filename entity))
+           ;; WinApps の Word や Excel で開くには $HOME 以下にファイルが無いと駄目なので
            (filename (expand-file-name (if (and name (not (string= name "")))
                                            name
-                                         (make-temp-name "EMI"))
-                                       (make-temp-file "EMI" 'directory))))
+                                         "~/Downloads/")
+                                       "~/Downloads/"))
+           ;; 以下, 古い設定: /tmp/EMIXXXX/ 以下にファイルを保存し open で開く場合
+           ;; (filename (expand-file-name (if (and name (not (string= name "")))
+           ;;                                 name
+           ;;                               (make-temp-name "EMI"))
+           ;;                             (make-temp-file "EMI" 'directory)))
+           )
       (mime-write-entity-content entity filename)
       (message "External method is starting...")
       (let* ((process-name
@@ -3342,6 +3387,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
          ("C-c C-p" . flymake-goto-prev-error)
          ("C-c C-n" . flymake-goto-next-error)
          )
+  :config (require 'flymake-proc nil 'noerror)
   )
 (leaf flymake-diagnostic-at-point
   :ensure t
@@ -3457,6 +3503,24 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   ;; (defun my:org-archive-done-tasks ()
   ;;   (interactive)
   ;;   (org-map-entries 'org-archive-subtree "/DONE" 'file))
+;;;###autoload
+(defun my:org-compat-adjust-tab-width-in-buffer (old-width)
+  "公式提供: Adjust visual indentation from `tab-width' equal OLD-WIDTH to 8."
+  (interactive "nOld `tab-width': ")
+  (cl-assert (derived-mode-p 'org-mode))
+  (unless (= old-width 8)
+    (org-with-wide-buffer
+     (goto-char (point-min))
+     (let (bound
+           (repl (if (< old-width 8) ;; >
+                     (make-string old-width ?\s)
+                   (concat "\t" (make-string (- old-width 8) ?\s)))))
+       (while (re-search-forward "^ *\t" nil t)
+         (skip-chars-forward " \t")
+         (setq bound (point-marker))
+         (forward-line 0)
+         (while (search-forward "\t" bound t)
+       (replace-match repl)))))))
   :hook
   `((org-mode-hook . (lambda ()
                        (my:org-timestamp-hook)
@@ -3663,39 +3727,6 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   (global-set-key (kbd "C-c C-j") 'browse-url-at-point) ;; 🤔？
   )
    #+end_src
-** TODO Org-roam: リンク付きメモ [0/2]
-   :PROPERTIES:
-   :CUSTOM_ID: orgbbaf7c91
-   :END:
-   まだ今一使い熟せていない
-   - [ ] メモ取りの時にイチイチタイトル打つの面倒じゃね?
-   - [ ] メモが分散すると Agenda View で困りそうなんだけれど
-   どうするのが良いかなぁ.
-
-   現状は org-gcal 用の template を追加してある(org-captureを使うのを止めた).
-   #+begin_src emacs-lisp
-(leaf org-roam
-  :if (and (file-directory-p my:d:org)
-           (executable-find "rg")
-           (executable-find "sqlite3"))
-  :ensure t
-  :commands (org-roam-db-query)
-  :init
-  (setq org-roam-v2-ack t
-        org-roam-db-location (expand-file-name "org-roam.db" my:d:tmp)
-        org-roam-directory   (expand-file-name "roam" my:d:org))
-  ;;
-  :bind
-  (("C-c n a" . org-roam-alias-add)
-   ("C-c n f" . org-roam-node-find)
-   ("C-c n i" . org-roam-node-insert)
-   ("C-c n t" . org-roam-tag-add)
-   ("C-c n l" . org-roam-buffer-toggle)
-   )
-  :defer-config
-  (org-roam-db-autosync-enable)
-  )
-   #+end_src
 ** Org-capture: メモ取り
    :PROPERTIES:
    :CUSTOM_ID: orgbe835a6b
@@ -3894,21 +3925,21 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
                                       )
         )
   :defer-config
-  (setq org-agenda-files (list (concat my:d:org "/journal")))
+  (setq org-agenda-files
+        (directory-files-recursively (concat my:d:org "/journal/") "\\.org$"))
   (dolist (file
            '(;; Archive.org   ← 🤔
-             ;;; Calendar
+             ;; Calendar
+             "Anniversary.org"
              "DebianJP.org"
              "GFD.org"
              "Holidays.org"
              "Schedule.org"
              "Univ.org"
-             ;;; Project
+             ;; Project
              "redmine_GFD.org"
              "redmine_SSKLAB.org"
-             ;; "redmine_FluidSoc.org"
-             ;;; misc
-             "Anniversary.org"
+             ;; misc
              ;; "twitter.org"
              ))
     (add-to-list 'org-agenda-files (expand-file-name file my:d:org)))
@@ -3970,7 +4001,7 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   (setq org-gcal-dir (expand-file-name "org-gcal" my:d:tmp)
         org-gcal-token-file (expand-file-name "org-gcal/org-gcal-token" my:d:tmp)
         org-gcal-down-days 180  ;; 未来 180 日
-        org-gcal-up-days 30  ;; 過去 30 日
+        org-gcal-up-days 60  ;; 過去 30 日
         org-gcal-auto-archive t
         org-gcal-notify-p nil
         org-gcal-remove-api-cancelled-evetnts t
@@ -4475,7 +4506,7 @@ pdflang={%l}}
   :CUSTOM_ID: orgc6b67eb9
   :END:
   まあ, ほとんど Git 関連な訳ですが．
-** =project.el=
+** TODO =project.el= [0/1]
    :PROPERTIES:
    :CUSTOM_ID: org76c99d7f
    :END:
@@ -4490,7 +4521,7 @@ pdflang={%l}}
   )
    #+end_src
    - [ ] ghq の list を追加できないかな?
-     できれば =--full-path= じゃない表示にしたい(my:shorten-file-path を噛ませたい).
+     できれば =--full-path= じゃない表示にしたい(=my:shorten-file-path= を噛ませたい).
 ** =consult-ghq=: ghq を consult で.
    :PROPERTIES:
    :CUSTOM_ID: org90f5d475
@@ -4531,19 +4562,13 @@ pdflang={%l}}
         )
   )
    #+end_src
-* Ruby
-  :PROPERTIES:
-  :CUSTOM_ID: org74c8f39c
-  :END:
-  #+begin_src emacs-lisp :tangle init.el
-(leaf ruby-mode :ensure t)
-  #+end_src
 * その他のモード設定
   :PROPERTIES:
   :CUSTOM_ID: orga28ad005
   :END:
   ほぼ読み込むだけの mode の設定. 設定が増えたら別途まとめる。
   #+begin_src emacs-lisp :tangle init.el
+(leaf ruby-mode :ensure t)
 (leaf lua-mode :ensure t)
 (leaf ssh-config-mode :ensure t)
 (leaf fish-mode :ensure t :mode "\\.fish\\'")
@@ -4614,7 +4639,7 @@ pdflang={%l}}
   :ensure t
   :bind ("<f5>" . modus-themes-toggle)
   :commands (modus-themes-load-theme
-	     modus-themes-with-colors)
+             modus-themes-with-colors)
   :hook
   `(
     (emacs-startup-hook . (lambda()
@@ -4646,6 +4671,7 @@ pdflang={%l}}
           (bg-main 'unspecified)
           (comment fg-dim)
           ;; (bg-hl-line "#556b2f")
+          (bg-hl-line "DarkSlateBlue")
           ;;
           ;; Code remapping
           ;;
@@ -5329,7 +5355,7 @@ pdflang={%l}}
    :END:
    必要に応じて
   #+begin_src emacs-lisp :tangle init.el
-(setq debug-on-error nil)
+(setq debug-on-error t)
 ;; (profiler-report)
 ;; (profiler-stop)
   #+end_src

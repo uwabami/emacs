@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2026-01-06 14:01:27
+#+date: 2026-01-24 01:04:36
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -618,7 +618,8 @@ endif
 
    拙作の修正ロケールはこちら: [[https://github.com/uwabami/locale-eaw-emoji]]
    → 最近は foot を使っているので, 全て halfwidth にしました.
-   (環境が, いわゆる set-language-environment "Japanese" と判定されると, EAW は 2文字幅に設定されてしまいます).
+   なお, 環境変数でいわゆる set-language-environment "Japanese" と判定されると, EAW は 2文字幅に設定されてしまいます.
+   これを強制的に 1 に戻す必要があります.
    #+begin_src emacs-lisp :tangle init.el
 ;; (leaf locale-eaw-emoji
 ;;   :vc (:url "https://github.com/uwabami/locale-eaw-emoji")
@@ -631,9 +632,9 @@ endif
 ;;   ;; :init (setq glyphless-char-display 'zero-width)
 ;;   :hook (emacs-startup-hook . glyphless-display-mode)
 ;;   )
-(leaf eaw-console
+(leaf eaw-single
   :commands eaw-init
-  :vc (:url "https://github.com/hamano/locale-eaw" :lisp-dir "dist")
+  :vc (:url "https://github.com/uwabami/locale-eaw" :lisp-dir "dist")
   :hook (emacs-startup-hook . (lambda ()
                                 ;; (load-library "eaw-console")
                                 ;; (load "eaw-console" nil t)
@@ -3490,6 +3491,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
          ("C-x n w" . widen)
          ("C-c a"   . org-agenda)
          ("C-x m"   . org-capture)
+         ("C-c $"   . org-archive-subtree-default)
          )
   :preface
 ;;;###autoload
@@ -3498,11 +3500,12 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (set (make-local-variable 'time-stamp-start) "#\\+date: ")
   (set (make-local-variable 'time-stamp-end)   "\$")
   )
-  ;; GTD: TODO→...→DONE としたエントリを =Arhive.org= に移動
-  ;; - 一旦保留
-  ;; (defun my:org-archive-done-tasks ()
-  ;;   (interactive)
-  ;;   (org-map-entries 'org-archive-subtree "/DONE" 'file))
+;;;###autoload
+(defun my:org-archive-with-tag ()
+  "現在のエントリに ARCHIVE タグを付けてから、標準のアーカイブを実行する"
+  (interactive)
+  (org-toggle-tag "ARCHIVE" 'on)
+  (call-interactively 'org-archive-subtree))
 ;;;###autoload
 (defun my:org-compat-adjust-tab-width-in-buffer (old-width)
   "公式提供: Adjust visual indentation from `tab-width' equal OLD-WIDTH to 8."
@@ -3526,8 +3529,6 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                        (my:org-timestamp-hook)
                        (org-tempo-setup)))
     (org-tab-before-tab-emulation-hook . org-tempo-complete-tag)
-    ;; (org-todo-statistics-hook       . my:org-archive-done-tasks)
-    ;; (org-todo-after-statistics-hook . my:org-archive-done-tasks)
     )
   :init
   (leaf org-tempo :commands (org-tempo-setup org-tempo-complete-tag))
@@ -3579,6 +3580,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                                      )
         ;; Archive.org の位置指定
         org-archive-location       (expand-file-name "Archive.org::" my:d:org)
+        ;; Archive コマンドの指定
+        org-archive-default-command #'my:org-archive-with-tag
         ;; modules → とりあえずクリアしておく
         org-modules  '()
         ;; element-cache は使わない...うまく使えると良いんだけれど.
@@ -3812,7 +3815,7 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
 (leaf org-agenda
   :if (file-directory-p my:d:org)
   :preface
-  ;; face は theme にまわすべき, かな？
+  ;; org-agenda での色付け設定
   (defface my:org-agenda-date-saturday '((t (:foreground "#7FBFFF" :bold t )))
     "Agenda 表示中の土曜日用のface"
     :group 'org-agenda )
@@ -3829,40 +3832,37 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   (defface my:org-agenda-calendar-DebianJP '((t (:foreground "#BF7FFF")))
     "Agenda 表示中, DebianJP.org の表示 face"
     :group 'org-agenda )
-  ;; (defface my:org-agenda-calendar-SNS '((t (:foreground "#CCCCCC")))
-  ;;   "Agenda 表示中, Mastodon log の表示 face"
-  ;;   :group 'org-agenda )
+  ;; mastodon の ログファイルの表示
+  (defface my:org-agenda-calendar-SNS '((t (:foreground "#CCCCCC")))
+    "Agenda 表示中, Mastodon log の表示 face"
+    :group 'org-agenda )
 
-  ;; font-lock の適用. loop減らせないかなぁ….
+  ;; (正規表現 . Face名)のペアを作成しておく
+  (defvar my:org-agenda-highlight-rules
+    '(("Univ:" . my:org-agenda-calendar-Univ)
+      ("Schedule:" . my:org-agenda-calendar-Schedule)
+      ("DebianJP:" . my:org-agenda-calendar-DebianJP)
+      ("GFD:" . my:org-agenda-calendar-GFD)
+      ("祝日\\|休日\\|Holidays\\|誕生日" . org-agenda-date-weekend)
+      ;; 土曜日の設定例 (必要ならコメントアウトを外してください)
+      ("(土)\\|(Sat)" . my:org-agenda-date-saturday)
+      ("mstdn-\*" . my:org-agenda-calendar-SNS)
+      ))
+
+  ;; font-lock の適用
 ;;;###autoload
   (defun my:org-agenda-finalize-font-lock ()
-    "Custom: apply custom font-lock"
+    "Apply custom font-lock based my:org-agenda-hilighlight-rules"
     (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward "Univ:" nil t)
-        (add-text-properties (match-beginning 0) (line-end-position)
-                             '(face my:org-agenda-calendar-Univ)))
-      (goto-char (point-min))
-      (while (re-search-forward "Schedule:" nil t)
-        (add-text-properties (match-beginning 0) (line-end-position)
-                             '(face my:org-agenda-calendar-Schedule)))
-      (goto-char (point-min))
-      (while (re-search-forward "DebianJP:" nil t)
-        (add-text-properties (match-beginning 0) (line-end-position)
-                             '(face my:org-agenda-calendar-DebianJP)))
-      (goto-char (point-min))
-      (while (re-search-forward "GFD:" nil t)
-        (add-text-properties (match-beginning 0) (line-end-position)
-                             '(face my:org-agenda-calendar-GFD)))
-      ;;    (goto-char (point-min))
-      ;;    (while (re-search-forward "twitter:" nil t)
-      ;;      (add-text-properties (match-beginning 0) (line-end-position)
-      ;;                           '(face my:org-agenda-calendar-twitter)))
-      (goto-char (point-min))
-      (while (re-search-forward "祝日\\|休日\\|Holidays\\|誕生日" nil t)
-        (add-text-properties (match-beginning 0) (line-end-position)
-                             '(face org-agenda-date-weekend)))
-      ))
+      (let ((inhibit-read-only t)) ;; AgendaバッファがRead onlyの場合の対策
+      (dolist (rule my:org-agenda-highlight-rules)
+        (let ((regex (car rule))
+              (face  (cdr rule)))
+          (goto-char (point-min))
+          (while (re-search-forward regex nil t)
+            (add-text-properties (match-beginning 0)
+                                 (line-end-position)
+                                 `(face ,face))))))))
   :hook (org-agenda-finalize-hook . (lambda ()
                                       (my:org-agenda-finalize-font-lock)
                                       ;; カーソルを先頭行に
@@ -3924,25 +3924,72 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
                                       ("w" todo "TODO")
                                       )
         )
-  :defer-config
-  (setq org-agenda-files
-        (directory-files-recursively (concat my:d:org "/journal/") "\\.org$"))
-  (dolist (file
-           '(;; Archive.org   ← 🤔
-             ;; Calendar
-             "Anniversary.org"
-             "DebianJP.org"
-             "GFD.org"
-             "Holidays.org"
-             "Schedule.org"
-             "Univ.org"
-             ;; Project
-             "redmine_GFD.org"
-             "redmine_SSKLAB.org"
-             ;; misc
-             ;; "twitter.org"
-             ))
-    (add-to-list 'org-agenda-files (expand-file-name file my:d:org)))
+  ;; ディレクトリ構成に基づいて org-agenda-files と search-extra-files を構築
+  (let* ((base-dir (expand-file-name my:d:org))
+         (current-year (format-time-string "%Y"))
+         ;; --- ディレクトリ定義 ---
+         (journal-dir (expand-file-name "journal/" base-dir))
+         (mstdn-dir   (expand-file-name "mstdn/" base-dir))
+         (twitter-dir (expand-file-name "twitter/" base-dir))
+         (redmine-arch-dir (expand-file-name "redmine_archive/" base-dir))
+         ;; --- 1. ファイルリストの取得 ---
+         ;; Root: 全ての .org ファイル (Gcal, Redmine現行, Archiveなど)
+         ;; NOTE: ディレクトリ自身 (. や ..) は除外される
+         (root-files (directory-files base-dir t "\\.org$"))
+         ;; Journal: 今年と全ファイル(分ける必要は無いかも)
+         (journal-current (expand-file-name (format "%s.org" current-year) journal-dir))
+         (journal-all     (and (file-directory-p journal-dir)
+                               (directory-files journal-dir t "^[0-9]+\\.org$")))
+         ;; Mastodon: 今年と全ファイル
+         (mstdn-current   (expand-file-name (format "mstdn-%s.org" current-year) mstdn-dir))
+         (mstdn-all       (and (file-directory-p mstdn-dir)
+                               (directory-files mstdn-dir t "^mstdn-.*\\.org$")))
+         ;; Twitter: 全過去ログ (検索のみ)
+         (twitter-all     (and (file-directory-p twitter-dir)
+                               (directory-files twitter-dir t "\\.org$")))
+         ;; Redmine Archive: 全過去ログ (検索のみ)
+         (redmine-archives (and (file-directory-p redmine-arch-dir)
+                                (directory-files redmine-arch-dir t "\\.org$")))
+         ;; 除外対象: ルートにある Archive.org
+         (archive-file (expand-file-name "Archive.org" base-dir))
+         ;; 作業用リスト
+         my-agenda-list
+         my-search-list)
+    ;; ==========================================================
+    ;; A. org-agenda-files (アジェンダ用: 現在・未来・TODO)
+    ;; ==========================================================
+    ;; 1. ルートのファイルをベースにする (ここには Gcal, Redmine現行が含まれる)
+    (setq my-agenda-list root-files)
+    ;; 2. Archive.org をリストから削除 (破壊的操作だがローカル変数なのでOK)
+    (setq my-agenda-list (delete archive-file my-agenda-list))
+    ;; 3. 全ての Journal を追加 (ファイルが存在する場合のみ)
+    ;; (when (file-exists-p journal-current)
+    ;;   (add-to-list 'my-agenda-list journal-current))
+    (when journal-all
+      (setq my-agenda-list (append my-agenda-list journal-all)))
+    ;; 4. 今年の Mastodon を追加 (ファイルが存在する場合のみ)
+    (when (file-exists-p mstdn-current)
+      (add-to-list 'my-agenda-list mstdn-current))
+    ;; グローバル変数へ適用
+    (setq org-agenda-files my-agenda-list)
+    ;; ==========================================================
+    ;; B. org-agenda-text-search-extra-files (検索用: 過去ログ・アーカイブ)
+    ;; ==========================================================
+    (setq my-search-list
+          (append
+           ;; 1. Archive.org
+           (list archive-file)
+           ;; 2. Twitter ログ全て
+           twitter-all
+           ;; 3. Redmine Archives 全て
+           redmine-archives
+           ;; 4. 過去の Journal (全リストから今年を除去)
+           (remove journal-current journal-all)
+           ;; 5. 過去の Mastodon (全リストから今年を除去)
+           (remove mstdn-current mstdn-all)))
+    ;; グローバル変数へ適用 (実在するファイルのみフィルタリング)
+    (setq org-agenda-text-search-extra-files
+          (seq-filter 'file-exists-p my-search-list)))
   )
    #+end_src
 ** OrgとGoogle カレンダーの連携: =org-gcal=

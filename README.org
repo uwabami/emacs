@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2026-01-24 01:04:36
+#+date: 2026-02-03 12:31:55
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -194,10 +194,12 @@ endif
    :ID:       351f7fc8-be80-46b3-86ac-d9bae80d3445
    :END:
    #+begin_src emacs-lisp :tangle (if (boundp 'early-init-file) "early-init.el" "init.el")
-(when (or (featurep 'esup-child)
-          (fboundp 'profile-dotemacs)
-          noninteractive)
-  (setq package-enable-at-startup nil))
+(setq package-archives '(("gnu"    . "https://elpa.gnu.org/packages/")
+                         ("melpa"  . "https://melpa.org/packages/")
+                         ("nongnu" . "https://elpa.nongnu.org/nongnu/")
+                         )
+      package-gnupghome-dir (expand-file-name ".gnupg" "~/")
+      package-enable-at-startup nil)
     #+end_src
 ** GC の設定
    :PROPERTIES:
@@ -229,14 +231,16 @@ endif
     :PROPERTIES:
     :CUSTOM_ID: org9584246f
     :END:
+    以前は以下を設定していたが, 最近は =gcmh= に任せる事にした.
+    → [[id:cca3e8df-79f9-4c60-a803-07ff641b0ef7][=gcmh=: 賢い garbage-collection]]
     #+begin_src emacs-lisp :tangle init.el
-(setq garbage-collection-messages nil)
-;; Run GC every 60 seconds if emacs is idle.
-(run-with-idle-timer 60.0 t #'garbage-collect)
-;; 起動後に初期値に戻す.
-(add-hook 'emacs-startup-hook
-          (lambda ()
-            (setq gc-cons-threshold 800000)))
+;; (setq garbage-collection-messages nil)
+;; ;; Run GC every 60 seconds if emacs is idle.
+;; (run-with-idle-timer 60.0 t #'garbage-collect)
+;; ;; 起動後に初期値に戻す.
+;; (add-hook 'emacs-startup-hook
+;;           (lambda ()
+;;             (setq gc-cons-threshold 800000)))
     #+end_src
 ** Magic File Name を一時的に無効化
    :PROPERTIES:
@@ -264,8 +268,8 @@ endif
      #+begin_src emacs-lisp :tangle init.el
 (add-hook 'emacs-startup-hook
           (lambda ()
-            (setq file-name-handler-alist
-                  (append file-name-handler-alist my:saved-file-name-handler-alist))))
+            (dolist (handler my:saved-file-name-handler-alist)
+              (add-to-list 'file-name-handler-alist handler))))
     #+end_src
 ** =early-init.el=
    :PROPERTIES:
@@ -280,15 +284,20 @@ endif
 
    見た目: tabbar, toolbar, menubar などの非表示, beep の無効化など
    #+begin_src emacs-lisp :tangle (if (boundp 'early-init-file) "early-init.el" "init.el")
-;; (advice-add 'x-apply-session-resources :override 'ignore)
-;; (setq inhibit-x-resources t)
-(push '(fullscreen . maximized) default-frame-alist)
-(push '(menu-bar-lines       . nil) default-frame-alist)
-(push '(tool-bar-lines       . nil) default-frame-alist)
-(push '(vertical-scroll-bars . nil) default-frame-alist)
-(push '(scroll-bar-mode      . nil) default-frame-alist)
-(push '(blink-cursor-mode    . nil) default-frame-alist)
-(push '(column-number-mode   . nil) default-frame-alist)
+(setq inhibit-x-resources t)
+(advice-add 'x-apply-session-resources :override 'ignore)
+(setq inhibit-compacting-font-caches t)
+(setq default-frame-alist
+      '((fullscreen . maximized)
+        ;; (alpha . 95)  ;; もの凄く遅くなるので止めた方が良い.
+        (reverse . t)
+        (menu-bar-lines . 0)
+        (tool-bar-lines . 0)
+        (vertical-scroll-bars . nil)
+        (horizontal-scroll-bars . nil)
+        (blink-cursor-mode . nil)
+        (column-number-name . nil)))
+(setq frame-inhibit-implied-resize t)
 (setq ring-bell-function 'ignore)
 (setq use-file-dialog nil)
 (setq use-short-answers t)
@@ -299,7 +308,6 @@ endif
    alias: =inhibit-startup-message= → =inhibit-startup-screen=
    #+begin_src emacs-lisp :tangle (if (boundp 'early-init-file) "early-init.el" "init.el")
 (setq inhibit-startup-screen t)
-(setq frame-inhibit-implied-resize t)
    #+end_src
    起動時の自動生成ファイルを無効化
    #+begin_src emacs-lisp :tangle (if (boundp 'early-init-file) "early-init.el" "init.el")
@@ -331,22 +339,28 @@ endif
    :END:
    [[https://zenn.dev/takeokunn/articles/56010618502ccc][Emacsを世界最速級で起動する方法]] より
    #+begin_src emacs-lisp :tangle init.el
-(defconst my:before-load-init-time (current-time))
-
 ;;;###autoload
-(defun my:load-init-time ()
-  "Loading time of user init files including time for `after-init-hook'."
-  (let ((time1 (float-time
-                (time-subtract after-init-time my:before-load-init-time)))
-        (time2 (float-time
-                (time-subtract (current-time) my:before-load-init-time))))
-    (message (concat "Loading init files: %.0f [msec], "
-                     "of which %.f [msec] for `after-init-hook'.")
-             (* 1000 time1) (* 1000 (- time2 time1)))))
-(add-hook 'after-init-hook #'my:load-init-time t)
-
-(defvar my:tick-previous-time my:before-load-init-time)
-
+(defun my:inhibit-startup-echo-area-message-advice ()
+  "Do nothing to inhibit the startup echo area message."
+  nil)
+;; 起動時の案内を表示する関数を「何もしない関数」に差し替える
+(advice-add 'display-startup-echo-area-message
+            :override #'my:inhibit-startup-echo-area-message-advice)
+(defconst my:before-load-init-time (current-time))
+(defun my:display-boot-summary ()
+  "Assemble and display a single boot summary message in the echo area."
+  (let* (;; Emacs 本体の起動時間 (before-init-time から after-init-time)
+         (total-emacs-time (* 1000 (float-time (time-subtract after-init-time before-init-time))))
+         ;; init.el のロード開始から after-init-hook までの時間
+         (init-load-time (* 1000 (float-time (time-subtract after-init-time my:before-load-init-time))))
+         ;; after-init-hook 自体の実行にかかった時間
+         (after-init-hook-time (* 1000 (float-time (time-subtract (current-time) after-init-time)))))
+    (message "Boot Summary: Total %.0fms [Emacs: %.0fms, Init: %.0fms, Hooks: %.0fms]"
+             (+ total-emacs-time after-init-hook-time) ; およその全体感
+             total-emacs-time
+             init-load-time
+             after-init-hook-time)))
+(add-hook 'after-init-hook #'my:display-boot-summary t)
 ;;;###autoload
 (defun my:tick-init-time (msg)
   "Tick boot sequence at loading MSG."
@@ -357,17 +371,6 @@ endif
                         (time-subtract ctime my:tick-previous-time)))
                msg)
       (setq my:tick-previous-time ctime))))
-
-(defun my:emacs-init-time ()
-  "Emacs booting time in msec."
-  (interactive)
-  (message "Emacs booting time: %.0f [msec] = `emacs-init-time'."
-           (* 1000
-              (float-time (time-subtract
-                           after-init-time
-                           before-init-time)))))
-
-(add-hook 'after-init-hook #'my:emacs-init-time)
    #+end_src
 * Package 関連: [[https://emacs-jp.github.io/packages/package-management/package-el][package.el]], [[https://github.com/conao3/leaf.el][leaf.el]]
   :PROPERTIES:
@@ -381,24 +384,14 @@ endif
    :END:
    パッケージは基本的に =package.el= で導入するので, 先ずはその設定.
    #+begin_src emacs-lisp :tangle init.el
-(setq package-archives '(("gnu"    . "https://elpa.gnu.org/packages/")
-                         ("melpa"  . "https://melpa.org/packages/")
-                         ("org"    . "https://orgmode.org/elpa/")
-                         ("nongnu" . "https://elpa.nongnu.org/nongnu/")
-                         )
-      package-gnupghome-dir (expand-file-name ".gnupg" (getenv "HOME"))
-      )
-(eval-when-compile
-  (when noninteractive
-    (progn
-      (package-initialize)
-      (unless (package-installed-p 'leaf)
-        (package-refresh-contents)
-        (package-install 'leaf t)
-        )
-      )
-    )
-  )
+(eval-and-compile
+  (unless (package-installed-p 'leaf)
+    (package-initialize)
+    (when (and noninteractive
+               (not (package-installed-p 'leaf)))
+      (package-refresh-contents)
+      (package-install 'leaf t)))
+  (package-activate-all))
    #+end_src
 ** [[https://github.com/conao3/leaf.el][leaf.el]]
    :PROPERTIES:
@@ -418,6 +411,22 @@ endif
 (leaf leaf-convert :ensure t)
    #+end_src
    - [ ] =package-vc-install= でインストールした諸々って, package-upgrade 後に delete 対象になる?
+* =gcmh=: 賢い garbage-collection
+  :PROPERTIES:
+  :ID:       cca3e8df-79f9-4c60-a803-07ff641b0ef7
+  :CUSTOM_ID: org414ff0d8
+  :END:
+  #+begin_src emacs-lisp :tangle init.el
+(leaf gcmh
+  :ensure t
+  :blackout t
+  :init
+  (setq gcmh-idle-delay 'auto  ; アイドル判定を自動調整
+        gcmh-auto-idle-delay-factor 10
+        gcmh-high-cons-threshold (* 128 1024 1024)) ; 入力中は 128MB まで許容
+  :hook (emacs-startup-hook . gcmh-mode)
+  )
+  #+end_src
 * 独自関数
   :PROPERTIES:
   :CUSTOM_ID: org34ff2306
@@ -636,11 +645,10 @@ endif
   :commands eaw-init
   :vc (:url "https://github.com/uwabami/locale-eaw" :lisp-dir "dist")
   :hook (emacs-startup-hook . (lambda ()
-                                ;; (load-library "eaw-console")
-                                ;; (load "eaw-console" nil t)
-                                (eaw-init)
-                                (global-auto-composition-mode 0)
-                                ))
+                                (let ((load-file-message nil))
+                                  ;; (load "eaw-console" nil t)
+                                  (eaw-init)
+                                  (global-auto-composition-mode 0))))
   )
    #+end_src
    - [ ] リテラシーの低い人からのメールで丸囲み数字が良く表われてシンドい(見切れる).
@@ -651,7 +659,7 @@ endif
   :CUSTOM_ID: org356b9857
   :END:
   試行錯誤中. とはいえ, GUIで使う事は滅多に無いのでなかなか弄る機会が無い.
-*** TODO Xresouces の設定
+*** Xresouces の設定 [1/1]
    :PROPERTIES:
    :CUSTOM_ID: org100ad374
    :END:
@@ -664,7 +672,7 @@ Emacs.FontBackend: xft
 ! revese video
 Emacs.reverseVideo: true
    #+end_src
-   - [ ] Wayland になったらどうなるだろうか?
+   - [X] Wayland になったらどうなるだろうか? → 効かない模様.
 *** フォント設定
     :PROPERTIES:
     :CUSTOM_ID: orgce6102b3
@@ -676,20 +684,42 @@ Emacs.reverseVideo: true
  #+begin_src emacs-lisp :tangle init.el
 (leaf *gui
   :if window-system
+  :preface
+  (setq face-font-rescale-alist
+        '(("Noto Color Emoji" . 0.85)
+          ("PlemolJP Console NF" . 1.0)
+          ("EAW CONSOLE" . 1.0)))
+;;;###autoload
+  (defun my:apply-font-eaw-console ()
+    "EAW CONSOLE を適用する"
+    (interactive)
+    (set-face-attribute 'default nil :family "EAW CONSOLE" :height 135)
+    )
+;;;###autoload
+  (defun my:apply-font-eaw-console-with-emoji ()
+    "EAW CONSOLE と Noto Color Emoji を適用する"
+    (interactive)
+    (set-face-attribute 'default nil :family "EAW CONSOLE" :height 135)
+    (let ((color-font (font-spec :family "Noto Color Emoji")))
+      (set-fontset-font nil 'emoji color-font nil 'append)
+      (set-fontset-font nil '(#x1F004 . #x1FFFD) color-font nil 'append))
+    )
+;;;###autoload
+  (defun my:apply-font-plemol-jp ()
+    "PlemolJP とカラー絵文字を適用する"
+    (interactive)
+    (set-face-attribute 'default nil :family "PlemolJP Console NF" :height 125)
+    (let ((emoji-font (font-spec :family "Noto Color Emoji")))
+      (set-fontset-font nil 'emoji emoji-font)
+      (set-fontset-font nil '(#x1F004 . #x1FFFD) emoji-font nil 'append))
+    )
   :config
   (setq scalable-fonts-allowed nil
         buffer-face-mode-face 'fixed-pitch
-        use-default-font-for-symbols t)
-  (add-to-list 'default-frame-alist '(reverse . t))
-  (set-frame-parameter nil 'alpha 95)
-  (set-face-attribute 'default nil
-                      :family "EAW CONSOLE"
-                      :height 135)
-  ;; 高さは合わないが幅はなんとなる揃う様になった, 様な？
-  ;; - GUI ではフォントの高さか幅を指定した方が幸せになれそう. 文字毎にサイズが違うのが問題かも.
-  ;; (set-fontset-font nil '(#x1F004 . #x1FFFD) (font-spec :family "Noto Color Emoji" :height 130))
-  (set-fontset-font nil '(#x1F004 . #x1FFFD) (font-spec :family "EAW CONSOLE" :height 130))
-)
+        use-default-font-for-symbols nil)
+  :hook
+  (window-setup-hook . my:apply-font-eaw-console-with-emoji)
+  )
  #+end_src
  表示のテスト
  #+BEGIN_EXAMPLE
@@ -724,7 +754,9 @@ Emacs.reverseVideo: true
   :ensure t
   :defvar nerd-icons-mode-icon-alist
   :commands (nerd-icons-codicon nerd-icons-faicon)
-  (setq nerd-icons-family "EAW CONSOLE")
+  ;; (setq nerd-icons-family "EAW CONSOLE")
+  :config
+  (setq nerd-icons-font-family "EAW CONSOLE")
   :defer-config
   (add-to-list 'nerd-icons-mode-icon-alist
                '(wl-folder-mode nerd-icons-mdicon "nf-md-folder" ))
@@ -791,8 +823,6 @@ Emacs.reverseVideo: true
    user-mail-address (concat (getenv "DEBEMAIL"))
    ;; el と elc は新しい方を読み込む
    load-prefer-newer t
-   ;; y-or-n-p と同じじゃないの?
-   use-short-answers t
    ;; local network は常に信頼
    nsm-trust-local-network t
    ;; ファイル保存先を ~/.emacs.d 以下にブチ撒ける諸々の整理
@@ -802,10 +832,10 @@ Emacs.reverseVideo: true
    ;; 表示関連 -------------------------------------------------------------
    ;; scratch buffer は空っぽで
    initial-scratch-message nil
-   ;; minibuffer も静かに
-   inhibit-startup-echo-area-message t
+  ;; minibuffer も静かに: これは t だと shutup できない, という罠
+   inhibit-startup-echo-area-message user-login-name
    ;; 対応する括弧を強調表示: 不等号でも反応しちゃうのが玉に瑕
-   show-paren-style 'mixed
+   ;; show-paren-style 'mixed
    ;; modeline に行番号は表示しない
    line-number-mode nil
    ;; minibuffer は case insensitive
@@ -881,11 +911,31 @@ Emacs.reverseVideo: true
                               (server-start))))
     ;; ファイルが変更されたら再読み込み
     (find-file-hook     . global-auto-revert-mode)
-    ;; tramp の一時ファイルは削除
-    (kill-emacs-hook    . (lambda ()
-                            (if (file-exists-p tramp-persistency-file-name)
-                                (delete-file tramp-persistency-file-name))))
     )
+  )
+   #+end_src
+** =paren=: 対応する括弧の設定
+   :PROPERTIES:
+   :CUSTOM_ID: orgdaed9c9c
+   :END:
+   コメント内の不等号 < > にも反応するので, これの抑制を試みてみる
+   #+begin_src emacs-lisp :tangle init.el
+(leaf paren
+  :tag "builtin"
+  :custom ((show-paren-style . 'mixed)
+           (show-paren-delay . 0.5))
+  :global-minor-mode show-paren-mode
+  :preface
+;;;###autoload
+  (defun my:show-paren-inhibit-p ()
+    "Return non-nil if point is inside a comment or a string."
+    (let ((face (get-text-property (point) 'face)))
+      (if (listp face)
+          (or (memq 'font-lock-comment-face face)
+              (memq 'font-lock-string-face face))
+        (memq face '(font-lock-comment-face font-lock-string-face)))))
+  :advice (:around show-paren--default-data
+                   my:show-paren-inhibit-p)
   )
    #+end_src
 ** =time-stamp= 保存時に自動でタイムスタンプを更新
@@ -894,6 +944,7 @@ Emacs.reverseVideo: true
    :END:
    #+begin_src emacs-lisp :tangle init.el
 (leaf time-stamp
+  :tag "builtin"
   :config
   (setq time-stamp-active t
         time-stamp-line-limit 10
@@ -951,14 +1002,19 @@ Emacs.reverseVideo: true
    もっぱら root@localhost に繋いでの sudo 代わりだけど.
    #+begin_src emacs-lisp :tangle init.el
 (leaf tramp
+  :tag "builtin"
   :init
   (setq tramp-persistency-file-name (expand-file-name "tramp" my:d:tmp)
         tramp-completion-reread-directory-timeout nil
         remote-file-name-inhibit-cache nil
         vc-ignore-dir-regexp (format "\\(%s\\)\\|\\(%s\\)"
                                      locate-dominating-stop-dir-regexp
-                                     tramp-file-name-regexp)
+                                     "\\`/[^/|:]+:")
         )
+  :hook
+  (kill-emacs-hook . (lambda ()
+                       (if (file-exists-p tramp-persistency-file-name)
+                           (delete-file tramp-persistency-file-name))))
   )
    #+end_src
 ** =browse-url=
@@ -1349,20 +1405,45 @@ Emacs*useXIM: false
   結局履歴を貯める設定をしている事になっている.
   ディレクトリの履歴も取れるので recentf-ext を入れておく
   #+begin_src emacs-lisp :tangle init.el
-(leaf recentf
-  :defun
-  (recentf-save-list recentf-cleanup)
+(leaf switch-buffer-functions
+  :doc "バッファ切り替え時の hook を提供する拡張"
+  :ensure t
   :preface
   (defun my:recentf-track-visited-file (_prev _curr)
-    (and buffer-file-name
-         (recentf-add-file buffer-file-name)))
+    "バッファ切り替え時に、必要なら recentf を起動してリストを更新する。"
+    (when buffer-file-name
+      (unless recentf-mode
+        (recentf-mode 1))
+      (recentf-add-file buffer-file-name)))
+  :hook
+  (switch-buffer-functions . my:recentf-track-visited-file)
+  )
+(leaf recentf
+  :defun
+  (recentf-save-list recentf-cleanup recentf-add-file)
+  :preface
+  (defun my:recentf-cleanup-shutup (orig-fun &rest args)
+    "Run `recentf-cleanup' silently."
+    (let ((inhibit-message t)) ; メッセージ出力を一時的に無効化
+      (apply orig-fun args)))
+  :advice (:around recentf-cleanup
+                   my:recentf-cleanup-shutup)
+  :hook ((find-file-hook . recentf-mode)
+         (after-save-hook . (lambda ()
+                              (recentf-mode 1)
+                              (recentf-add-file (buffer-file-name))))
+         )
   :init
   (leaf recentf-ext :ensure t)
   :config
   (setq recentf-save-file       (expand-file-name "recentf" my:d:tmp)
-        recentf-max-saved-items 500
-        recentf-auto-cleanup    'mode
-        recentf-exclude         '(".recentf"
+        recentf-max-saved-items 1000
+        recentf-auto-cleanup    "04:00am"
+        recentf-exclude         `(;; TRAMP は無視
+                                  ,(if (boundp 'tramp-file-name-regexp)
+                                       tramp-file-name-regexp
+                                     "\\`/[^/|:]+:")
+                                  ".recentf"
                                   "^/tmp\\.*"
                                   "^/private\\.*"
                                   "^/var/folders\\.*"
@@ -1375,20 +1456,6 @@ Emacs*useXIM: false
                                   "\\.*COMMIT_EDITMSG$"
                                   )
         )
-  )
-;; テスト中
-(leaf switch-buffer-functions
-  :ensure t
-  :after recent
-  :preface
-  (defun my:recentf-track-visited-file (_prev _curr)
-    (and buffer-file-name
-         (recentf-add-file buffer-file-name)))
-  ;; :init
-  ;; (add-hook 'switch-buffer-functions
-  ;;           #'my:recentf-track-visited-file)
-  :hook
-  (switch-buffer-functions . my:recentf-track-visited-file)
   )
   #+end_src
 * カレンダー設定
@@ -3396,6 +3463,433 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :hook (flymake-mode-hook . flymake-diagnostic-at-point-mode)
   )
    #+end_src
+** tree-sitter
+   :PROPERTIES:
+   :CUSTOM_ID: org80208e5d
+   :END:
+   #+begin_src emacs-lisp :tangle init.el
+(leaf treesit
+  :if (executable-find "tree-sitter")
+  :defvar treesit-language-source-alist
+  :config
+  (setq treesit-language-source-alist
+        '(;;
+          ;; (bash "https://github.com/tree-sitter/tree-sitter-bash")
+          ;; (clojure "https://github.com/sogaiu/tree-sitter-clojure")
+          ;; (cmake "https://github.com/uyha/tree-sitter-cmake")
+          ;; (css "https://github.com/tree-sitter/tree-sitter-css")
+          ;; (dockerfile "https://github.com/camdencheek/tree-sitter-dockerfile")
+          (elisp "https://github.com/Wilfred/tree-sitter-elisp")
+          ;; (latex "https://github.com/latex-lsp/tree-sitter-latex")
+          ;; (go "https://github.com/tree-sitter/tree-sitter-go")
+          ;; (html "https://github.com/tree-sitter/tree-sitter-html")
+          ;; (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+          ;; (json "https://github.com/tree-sitter/tree-sitter-json")
+          ;; (make "https://github.com/alemuller/tree-sitter-make")
+          ;; (markdown "https://github.com/ikatyang/tree-sitter-markdown")
+          ;; (nix "https://github.com/nix-community/tree-sitter-nix")
+          ;; (python "https://github.com/tree-sitter/tree-sitter-python")
+          ;; (rust "https://github.com/tree-sitter/tree-sitter-rust")
+          ;; (toml "https://github.com/tree-sitter/tree-sitter-toml")
+          ;; (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
+          ;; (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
+          ;; (yaml "https://github.com/ikatyang/tree-sitter-yaml")
+          )
+        )
+  ;;
+  (defun my:treesit-install-grammar-all ()
+    "install all tree-sitter-grammer's"
+    (interactive)
+    (mapc
+     (lambda (lang)
+       (unless (treesit-language-available-p lang nil)
+         (treesit-install-language-grammar lang)))
+     (mapcar #'car treesit-language-source-alist)))
+  )
+   #+end_src
+** カラーコードに色付け: =rainbow-mode=
+   :PROPERTIES:
+   :CUSTOM_ID: org1f0e431b
+   :END:
+   =#RRGGBB= のカラーコードに勝手に色が付く．CSS の編集中なんかで地味に便利．
+   #+begin_src emacs-lisp :tangle init.el
+(leaf rainbow-mode :ensure t :hook (emacs-startup-hook . rainbow-mode))
+   #+end_src
+** =rainbow-delimiters=: 対応する括弧を色付け
+   :PROPERTIES:
+   :CUSTOM_ID: org11b26f5a
+   :END:
+   #+begin_src emacs-lisp :tangle init.el
+(leaf rainbow-delimiters
+  :ensure t
+  :hook (prog-mode-hook . rainbow-delimiters-mode)
+  )
+   #+end_src
+** =treesit-fold=: コードの「折り畳み」
+   :PROPERTIES:
+   :CUSTOM_ID: org43e560a9
+   :END:
+   じたばたしながら fortran-parser を追加してみたり.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf treesit-fold
+  :if (executable-find "tree-sitter")
+  :ensure t
+  :bind (("C-c f" . treesit-fold-toggle)
+         ("C-c F" . my:treesit-fold-toggle-all)
+         )
+  :preface
+  (defun my:treesit-fold-toggle-all ()
+    "Toggle between `treesit-fold-open-all' and `treesit-fold-close-all'."
+    (interactive)
+    (let ((found-folded nil))
+      (save-excursion
+        (dolist (ov (overlays-in (point-min) (point-max)))
+          ;; 実測値に基づき、invisibleプロパティが 'treesit-fold であるかを確認
+          (when (eq (overlay-get ov 'invisible) 'treesit-fold)
+            (setq found-folded t))))
+      (if found-folded
+          (progn
+            (treesit-fold-open-all)
+            (message "All nodes opened"))
+        (progn
+          (treesit-fold-close-all)
+          (message "All nodes closed")))))
+  ;;
+  (defun my:treesit-fold-toggle-override (&rest _args)
+    "Toggle fold at point. If opening, open recursively."
+    (interactive)
+    (if-let* ((node (treesit-fold--foldable-node-at-pos))
+              (ov (treesit-fold-overlay-at node)))
+        (treesit-fold-open-recursively)
+      (treesit-fold-close)))
+  ;;;
+;;;###autoload
+  (defun my:treesit-fold-toggle-override (&rest _args)
+    "Toggle fold at point. If opening, open recursively."
+    (interactive)
+    (if-let* ((node (treesit-fold--foldable-node-at-pos))
+              (ov (treesit-fold-overlay-at node)))
+        (treesit-fold-open-recursively)
+      (treesit-fold-close)))
+  :advice
+  (:override treesit-fold-toggle my:treesit-fold-toggle-override)
+  :hook ((treesit-fold-mode-hook . treesit-fold-line-comment-mode)
+         (emacs-lisp-mode-hook . (lambda () (treesit-parser-create 'elisp)))
+         )
+  :config
+  ;; ---------------------------------------------------------------------------
+  ;; Fortran Support Implementation
+  ;; ---------------------------------------------------------------------------
+  ;; Constants of fold target
+  (defconst treesit-fold-fortran-declaration-nodes
+    '("use_statement" "implicit_statement" "import_statement" "include_statement"
+      "private_statement" "public_statement" "save_statement" "parameter_statement"
+      "data_statement" "variable_declaration" "namelist_statement" "common_statement"
+      "equivalence_statement" "entry_statement" "format_statement")
+    "List of declaration node types in Fortran to be folded as a group.")
+  ;;
+  (defun treesit-fold-range-fortran--sibling (node next)
+    "Find the nearest sibling of NODE.
+If NEXT is non-nil, search forwards; otherwise, search backwards.
+Skips comments, newlines, and end-of-statement markers."
+    (let ((iter (if next (treesit-node-next-sibling node)
+                  (treesit-node-prev-sibling node))))
+      (while (and iter
+                  (let ((type (treesit-node-type iter)))
+                    (or (string-equal type "comment")
+                        (string-equal type "\n")
+                        (string-prefix-p "_end_of_" type)
+                        (string-match-p "\\`\\s-*\\'" type))))
+        (setq iter (if next (treesit-node-next-sibling iter)
+                     (treesit-node-prev-sibling iter))))
+      iter))
+  ;; Range Parsers
+  (defun treesit-fold-range-fortran-declarations (node offset)
+    "Calculate the fold range for consecutive declaration blocks.
+Merges adjacent declaration nodes into a single fold."
+    (let ((type (treesit-node-type node)))
+      (when (member type treesit-fold-fortran-declaration-nodes)
+        (let ((prev (treesit-fold-range-fortran--sibling node nil))
+              (next (treesit-fold-range-fortran--sibling node t)))
+          ;; Only fold from the first node in a sequence of declarations.
+          (unless (and prev (member (treesit-node-type prev) treesit-fold-fortran-declaration-nodes))
+            (when (and next (member (treesit-node-type next) treesit-fold-fortran-declaration-nodes))
+              (let ((last-node next)
+                    (iter-node next))
+                (while (let ((cand (treesit-fold-range-fortran--sibling iter-node t)))
+                         (and cand
+                              (member (treesit-node-type cand) treesit-fold-fortran-declaration-nodes)))
+                  (setq iter-node (treesit-fold-range-fortran--sibling iter-node t))
+                  (setq last-node iter-node))
+                (treesit-fold--cons-add (cons (treesit-node-start node)
+                                              (treesit-node-end last-node))
+                                        offset))))))))
+  ;; Comment block
+  (defun treesit-fold-range-fortran-comment (node offset)
+    "Calculate the fold range for consecutive comment blocks.
+Skips empty lines and non-comment whitespace between comments."
+    (when (string-equal (treesit-node-type node) "comment")
+      (let ((prev (treesit-node-prev-sibling node))
+            (is-continuation nil))
+        ;; Check if this node is a continuation of a previous comment block.
+        (while (and prev
+                    (or (string-equal (treesit-node-type prev) "comment")
+                        (string-match-p "\\`\\s-*\\'" (treesit-node-type prev))))
+          (when (string-equal (treesit-node-type prev) "comment")
+            (setq is-continuation t))
+          (setq prev (treesit-node-prev-sibling prev)))
+        ;; Only fold if this is the start of the block.
+        (unless is-continuation
+          (let ((next (treesit-node-next-sibling node))
+                (last-comment node))
+            ;; Find the end of the comment block.
+            (while next
+              (let ((type (treesit-node-type next)))
+                (cond
+                 ((string-equal type "comment")
+                  (setq last-comment next)
+                  (setq next (treesit-node-next-sibling next)))
+                 ((string-match-p "\\`\\s-*\\'" type)
+                  (setq next (treesit-node-next-sibling next)))
+                 (t
+                  (setq next nil)))))
+            (when (not (eq last-comment node))
+              (treesit-fold--cons-add (cons (treesit-node-start node)
+                                            (treesit-node-end last-comment))
+                                      offset)))))))
+  ;; Normal fold blocks
+  (defun treesit-fold-range-fortran-blocks (node offset)
+    "Calculate the fold range for generic blocks (e.g., subroutines, loops).
+Folds the content between the header (first child) and the footer (last child)."
+    (let ((header (treesit-node-child node 0 t))
+          (footer (treesit-node-child node -1 t)))
+      (when (and header footer (not (eq header footer)))
+        (treesit-fold--cons-add (cons (treesit-node-end header)
+                                      (treesit-node-start footer))
+                                offset))))
+  ;; Summary Parser
+  (defun treesit-fold-summary-fortran-doc (doc-str)
+    "Extract summary from Fortran comments.
+Handles Doxygen style (!>) and ignores code blocks or separator lines."
+    (when (string-match-p "\\`\\s-*!" doc-str)
+      ;; Ensure the content is strictly a comment block (no code lines).
+      (unless (string-match-p "\n[ \t]*[^! \t\n]" doc-str)
+        (let ((lines (split-string doc-str "\n"))
+              (summary nil))
+          (dolist (line lines)
+            (unless summary
+              ;; Remove '!', '!>', or whitespace.
+              (let ((content (replace-regexp-in-string "\\`\\s-*!+>?\\s-*" "" line)))
+                (cond
+                 ((string-empty-p content) nil)
+                 ((string-match-p "-[*]-" line) nil) ; Ignore mode lines
+                 ((not (string-match-p "[[:alnum:]]" content)) nil) ; Ignore separators
+                 (t (setq summary content))))))
+          summary))))
+  ;; Definition of Rules
+  (defun treesit-fold-parsers-fortran ()
+    "Return the folding rules for f90-ts-mode."
+    `((subroutine                 . treesit-fold-range-fortran-blocks)
+      (function                   . treesit-fold-range-fortran-blocks)
+      (interface                  . treesit-fold-range-fortran-blocks)
+      (derived_type_definition    . treesit-fold-range-fortran-blocks)
+      (do_loop                    . treesit-fold-range-fortran-blocks)
+      (if_statement               . treesit-fold-range-fortran-blocks)
+      (select_case_statement      . treesit-fold-range-fortran-blocks)
+      (select_type_statement      . treesit-fold-range-fortran-blocks)
+      (block_construct            . treesit-fold-range-fortran-blocks)
+      (associate_statement        . treesit-fold-range-fortran-blocks)
+      (coarray_critical_statement . treesit-fold-range-fortran-blocks)
+      (forall_statement           . treesit-fold-range-fortran-blocks)
+      (where_statement            . treesit-fold-range-fortran-blocks)
+      (module                     . treesit-fold-range-fortran-blocks)
+      (program                    . treesit-fold-range-fortran-blocks)
+      (submodule                  . treesit-fold-range-fortran-blocks)
+      ,@(mapcar (lambda (type) (cons (intern type) 'treesit-fold-range-fortran-declarations))
+                treesit-fold-fortran-declaration-nodes)
+      (comment                    . treesit-fold-range-fortran-comment)))
+  ;; Register summary parser for f90-ts-mode.
+  (add-to-list 'treesit-fold-summary-parsers-alist
+               '(f90-ts-mode . treesit-fold-summary-fortran-doc))
+  ;; 以下は私の好み.
+  ;; module や program が fold されると全部 fold されるので構造がわかりにくい.
+  (add-to-list 'treesit-fold-range-alist
+               (cons 'f90-ts-mode
+                     (seq-remove (lambda (x)
+                                   (memq (car x) '(module program submodule)))
+                                 (treesit-fold-parsers-fortran))))
+  )
+   #+end_src
+** =f90-ts-mode=: fortan
+   :PROPERTIES:
+   :CUSTOM_ID: org49a03d08
+   :END:
+   #+begin_src emacs-lisp :tangle init.el
+(leaf f90-ts-mode
+  :vc (:url "git@github.com:mscfd/emacs-f90-ts-mode.git")
+  :mode ("\\.f90\\'" "\\.F90\\'" "\\.f95\\'" "\\.F95\\'" "\\.F\\'")
+  :defvar treesit-language-source-alist
+  :preface
+;;;###autoload
+  (defun my:install-fortran-grammar-with-generate ()
+    "install 時に tree-sitter generateを実行してから install"
+    (interactive)
+    (let* ((lang 'fortran)
+           (url "https://github.com/mscfd/tree-sitter-fortran")
+           (revision "master")
+           (tmp-dir (expand-file-name "tree-sitter-fortran-tmp" temporary-file-directory)))
+      (when (file-exists-p tmp-dir)
+        (delete-directory tmp-dir t))
+      (message "Cloning %s..." url)
+      (call-process "git" nil nil nil "clone" "-b" revision "--depth" "1" url tmp-dir)
+      (message "Running tree-sitter generate...")
+      (let ((default-directory tmp-dir))
+        (call-process-shell-command "tree-sitter generate" nil nil nil))
+      (let ((treesit-language-source-alist `((,lang ,tmp-dir nil "src"))))
+        (treesit-install-language-grammar lang))
+      (message "Fortran grammar installed successfully from generated source!")))
+;;;###autoload
+  (defun my:f90-ts-toggle-mode ()
+    "Toggle between `f90-mode' (legacy) and `f90-ts-mode'."
+    (interactive)
+    (if (eq major-mode 'f90-ts-mode)
+        (if (fboundp 'f90-mode)
+            (f90-mode)
+          (message "Legacy `f90-mode' not available"))
+      (f90-ts-mode)))
+;; function 関連の色付けルールがまだ熟れていないので, ちょっと修正する
+(defvar my:f90-keywords
+  '("allocated" "associated" "present" "allocate" "deallocate" "nullify"))
+(defvar my:f90-builtins
+  '("min" "max" "abs" "mod" "sqrt" "sum"
+    "size" "shape" "len" "trim" "adjustl" "adjustr"
+    "real" "int" "dble" "cmplx" "count" "any" "all"))
+;;;###autoload
+(defun my:f90-make-regex (word-list)
+  (let ((patterns (mapcar (lambda (word)
+                            (mapconcat (lambda (c)
+                                         (format "[%c%c]" (upcase c) (downcase c)))
+                                       word ""))
+                          word-list)))
+    (format "^\\(%s\\)$" (mapconcat #'identity patterns "\\|"))))
+;;;###autoload
+(defun my:fixed-f90-ts-rules-function ()
+  "Fixed font-lock rules for functions and subroutines."
+  (let ((regex-kw (my:f90-make-regex my:f90-keywords))
+        (regex-bi (my:f90-make-regex my:f90-builtins)))
+    (treesit-font-lock-rules
+     :language 'fortran
+     :feature 'function
+     `((subroutine_statement
+        name: (name)                  @font-lock-function-name-face)
+       (function_statement
+        name: (name)                  @font-lock-function-name-face)
+       (function_result
+        (identifier)                  @default)
+       (subroutine_call
+        subroutine: (identifier)      @font-lock-function-name-face)
+       ;; --- 削除箇所 ---
+       ;; (call_expression (identifier) @font-lock-function-name-face)
+       ((call_expression (identifier) @font-lock-keyword-face)
+        (:match ,regex-kw             @font-lock-keyword-face))
+       ((call_expression (identifier) @font-lock-builtin-face)
+        (:match ,regex-bi             @font-lock-builtin-face))
+       ;; within derived type declarations
+       (variable_declaration
+        type: (procedure
+               "procedure"
+               (procedure_interface)        @font-lock-function-name-face)
+        ;; is this always a pointer to a procedure?
+        declarator: (identifier)            @font-lock-function-name-face)
+       (procedure_statement
+        declarator: [
+                     ((method_name)         @font-lock-function-name-face)
+                     ((binding
+                       (binding_name
+                        [
+                         ((identifier)      @font-lock-function-name-face)
+                         ((operator
+                           (operator_name)  @f90-ts-font-lock-operator-face))
+                         ((assignment "="   @f90-ts-font-lock-operator-face))
+                         ])
+                       (method_name)        @font-lock-function-name-face))
+                     ])
+       (generic_statement
+        declarator: (binding_list
+                     (binding_name
+                      [
+                       ((identifier)       @font-lock-function-name-face)
+                       ((operator
+                         (operator_name)   @f90-ts-font-lock-operator-face))
+                       ((assignment "="    @f90-ts-font-lock-operator-face))
+                       ])
+                     (method_name)         @font-lock-function-name-face))
+       (final_statement
+        declarator: (method_name)           @font-lock-function-name-face)
+       ))))
+;;;###autoload
+  (defun my:fixed-f90-ts-rules-variable ()
+    "Fixed font-lock rules for variables, declarations, and module control."
+    (treesit-font-lock-rules
+     :language 'fortran
+     :feature 'variable
+     '(
+       ;; 1. 変数宣言 (integer :: nm, real :: x=1.0)
+       (variable_declaration (init_declarator left: (identifier) @font-lock-variable-name-face))
+       (variable_declaration (identifier) @font-lock-variable-name-face)
+       (variable_declaration (sized_declarator (identifier) @font-lock-variable-name-face))
+       ;; 2. SAVE
+       (save_statement (identifier) @font-lock-variable-name-face)
+       ;; 3. モジュール制御 (use, only, private, public)
+       (use_statement (module_name) @font-lock-constant-face)
+       (included_items (identifier) @font-lock-variable-name-face) ;; use ..., only: DP
+       (public_statement (identifier) @font-lock-function-name-face)
+       (private_statement (identifier) @font-lock-function-name-face)
+       ;; 4. プログラム単位の名前
+       (module_statement (name) @font-lock-function-name-face)
+       (program_statement (name) @font-lock-function-name-face)
+       ;; 5. 元のルール (self)
+       ((identifier) @f90-ts-font-lock-special-var-face
+        (:pred f90-ts-special-var-p @f90-ts-font-lock-special-var-face))
+       )))
+  ;;
+  (add-to-list 'major-mode-remap-alist '(f90-mode . f90-ts-mode))
+  :advice
+  ((:override f90-ts--font-lock-rules-function my:fixed-f90-ts-rules-function)
+   (:override f90-ts--font-lock-rules-variable my:fixed-f90-ts-rules-variable)
+   )
+  :custom-face
+  (f90-ts-font-lock-intrinsic-face       . '((t :inherit font-lock-builtin-face)))
+  (f90-ts-font-lock-delimiter-face       . '((t :inherit font-lock-delimiter-face)))
+  (f90-ts-font-lock-operator-face        . '((t :inherit font-lock-operator-face)))
+  (f90-ts-font-lock-openmp-face          . '((t :inherit font-lock-preprocessor-face)))
+  (f90-ts-font-lock-bracket-face         . '((t :inherit font-lock-bracket-face)))
+  (f90-ts-font-lock-special-var-face     . '((t :inherit font-lock-constant-face)))
+  (f90-ts-font-lock-special-comment-face . '((t :inherit font-lock-doc-face)))
+  :init
+  (setq f90-ts-indent-block 2)
+  (setq f90-ts-indent-rules-openmp
+        `(
+          ((f90-ts--openmp-comment-is) prev-sibling 0)
+          ((f90-ts--openmp-comment-is) parent-bol f90-ts-indent-block)))
+  :config
+  (setq ;; f90-ts-indent-block 2
+        f90-ts-indent-contain 2
+        f90-ts-indent-continued 2
+        f90-ts-indent-toplevel 2
+        f90-ts-indent-lists-region 'continued-line
+        f90-ts-indent-lists-line   'continued-line
+        )
+  :hook
+  (f90-ts-mode-hook
+   . (lambda ()
+       (setq-local treesit-font-lock-level 5)
+       (treesit-font-lock-recompute-features)
+       (treesit-fold-mode)
+       )
+   )
+  )
+   #+end_src
 * TeX: =AUCTeX=
   :PROPERTIES:
   :CUSTOM_ID: org88a3cb1b
@@ -3491,7 +3985,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
          ("C-x n w" . widen)
          ("C-c a"   . org-agenda)
          ("C-x m"   . org-capture)
-         ("C-c $"   . org-archive-subtree-default)
+         ("C-c $"   . my:org-archive-with-tag)
          )
   :preface
 ;;;###autoload
@@ -3581,7 +4075,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         ;; Archive.org の位置指定
         org-archive-location       (expand-file-name "Archive.org::" my:d:org)
         ;; Archive コマンドの指定
-        org-archive-default-command #'my:org-archive-with-tag
+        ;; org-archive-default-command #'my:org-archive-with-tag
         ;; modules → とりあえずクリアしておく
         org-modules  '()
         ;; element-cache は使わない...うまく使えると良いんだけれど.
@@ -4004,23 +4498,36 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   :if (and my:d:password-store
            (and (file-directory-p my:d:org)
                 (executable-find "curl")))
-  :pl-setq
-  (org-gcal-client-id
-   org-gcal-client-secret
-   org-gcal-file-alist)
+  :pl-setq (org-gcal-client-id
+            org-gcal-client-secret
+            org-gcal-file-alist)
   :ensure t
-  :commands (org-gcal-fetch
-             org-gcal-sync
-             org-gcal-post-at-point
-             org-gcal-reload-client-id-secret)
+  :commands (org-gcal-reload-client-id-secret)
+  ;; (org-gcal-fetch
+  ;;  org-gcal-sync
+  ;;  org-gcal-post-at-point
+  ;;  org-gcal-reload-client-id-secret)
+;;  :advice ((:before org-gcal-fetch my:setup-org-gcal-secrets-lazy)
+;;           (:before org-gcal-sync my:setup-org-gcal-secrets-lazy)
+;;           (:before org-gcal-post-at-point my:setup-org-gcal-secrets-lazy))
   :preface
   (setq org-gcal-dir (expand-file-name "org-gcal" my:d:tmp))
   (unless (file-directory-p org-gcal-dir)
     (make-directory org-gcal-dir))
+;; ;;;###autoload
+;; (defun my:setup-org-gcal-secrets-lazy (&rest _args)
+;;   "org-gcal 関連の変数をループ処理で plstore から読み込む"
+;;   (interactive)
+;;   (unless (and (boundp 'org-gcal-client-id)
+;;                org-gcal-client-id)
+;;     (dolist (var '(org-gcal-client-id
+;;                    org-gcal-client-secret
+;;                    org-gcal-file-alist))
+;;       (set var (eval `(leaf-handler-auth org-gcal ,var leaf-default-plstore))))))
   :init
   (leaf oauth2-auto
     ;; 🤔
-    :config
+    :init
     (setq oauth2-auto-plstore (expand-file-name "oauth2-auto.plist" my:d:tmp))
     )
   (leaf org-generic-id
@@ -4044,8 +4551,11 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     (unless (file-directory-p persist--directory-location)
       (make-directory persist--directory-location))
     )
-  ;;
-  (setq org-gcal-dir (expand-file-name "org-gcal" my:d:tmp)
+  ;; suppress warning
+  (setq org-gcal-client-id "temp"
+        org-gcal-client-secret "temp")
+  :config
+  (setq org-gcal-dir (expand-file-name "org-gcal" my:d:tmp) ;; preface で設定済?
         org-gcal-token-file (expand-file-name "org-gcal/org-gcal-token" my:d:tmp)
         org-gcal-down-days 180  ;; 未来 180 日
         org-gcal-up-days 60  ;; 過去 30 日
@@ -4057,6 +4567,14 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
         alert-log-messages t
         alert-default-style 'libnotify
         )
+    ;; (dolist (var '(org-gcal-client-id
+    ;;              org-gcal-client-secret
+    ;;              org-gcal-file-alist))
+    ;; (set var (eval `(leaf-handler-auth org-gcal ,var leaf-default-plstore))))
+    (setq oauth2-auto-additional-providers-alist
+          (assq-delete-all 'org-gcal oauth2-auto-additional-providers-alist))
+    (org-gcal-reload-client-id-secret)
+    (message "org-gcal: Secrets configured.")
   )
    #+end_src
 ** OrgとRedmine の連携: =orgmine=
@@ -4615,6 +5133,71 @@ pdflang={%l}}
   :END:
   ほぼ読み込むだけの mode の設定. 設定が増えたら別途まとめる。
   #+begin_src emacs-lisp :tangle init.el
+;;;
+;; (leaf hideshow
+;;   :bind (:f90-mode-map
+;;          ("TAB" . my:f90-hs-smart-tab)
+;;          )
+;;   :hook (f90-mode-hook . hs-minor-mode)
+;;   :preface
+;; ;;;###autoload
+;; (defun my:f90-hs-smart-tab ()
+;;   "インデントを行い、変化がなければ hideshow のトグルを試みる。"
+;;   (interactive)
+;;   (let ((prev-indent (current-indentation)))
+;;     ;; まずは標準のインデントを実行
+;;     (indent-for-tab-command)
+;;     ;; インデント幅が変わっていない（既に整形済み）場合のみトグルを試行
+;;     (when (= prev-indent (current-indentation))
+;;       ;; カーソル位置にブロックがなくてもエラーにしない (ignore-errors)
+;;       (ignore-errors
+;;         (hs-toggle-hiding)))))
+;;   :config
+;;   ;;  F90モード用のブロック定義
+;;   ;;  対象: program, module, submodule, subroutine, function
+;;   ;; (add-to-list 'hs-special-modes-alist
+;;   ;;              '(f90-mode
+;;   ;;                "\\_<\\(program\\|module\\|submodule\\|subroutine\\|function\\|interface\\)\\_>"
+;;   ;;                "\\_<end\\_>"
+;;   ;;                "!"
+;;   ;;                f90-end-block
+;;   ;;                nil))
+;;   )
+;; (leaf origami
+;;   :ensure t
+;;   :hook (f90-mode-hook . origami-mode)
+;;   :bind
+;;   (:origami-mode-map
+;;    ("TAB"  . my:origami-toggle-or-indent)
+;;    ("C-c f f" . origami-toggle-node)
+;;    ("C-c @ C-c" . origami-toggle-node)
+;;    ("C-c f a" . origami-toggle-all-nodes)
+;;    ("C-c a C-a" . origami-toggle-all-nodes)
+;;    )
+;;   :preface
+;; ;;;###autoload
+;; (defun my:origami-toggle-or-indent ()
+;;   "Indent line, or toggle folding if already indented."
+;;   (interactive)
+;;   (let ((prev-indent (current-indentation))
+;;         (prev-point  (point)))
+;;     (indent-for-tab-command)
+;;     (when (and (= prev-indent (current-indentation)) ;; <
+;;                (>= (current-indentation) (current-column)))
+;;       ;; origami のトグルを実行
+;;       (origami-toggle-node (current-buffer) (point)))))
+;;   :config
+;;   (add-to-list 'origami-parser-alist
+;;                '(f90-mode . origami-indent-parser)) ;; インデントパーサを使用
+;;   )
+;;
+;;
+;; (leaf hideshow-org :ensure t)
+;; (leaf treesit
+;;   :init
+;;   :config
+;;   (setq treesit-font-lock-level 4)
+;;   )
 (leaf ruby-mode :ensure t)
 (leaf lua-mode :ensure t)
 (leaf ssh-config-mode :ensure t)
@@ -4664,14 +5247,7 @@ pdflang={%l}}
 ;;     (Info-selection #'info-colors-fontify-node))
 ;;   )
   #+end_src
-* カラーコードに色付け: =rainbow-mode=
-  :PROPERTIES:
-  :CUSTOM_ID: org1f0e431b
-  :END:
-  =#RRGGBB= のカラーコードに勝手に色が付く．CSS の編集中なんかで地味に便利．
-  #+begin_src emacs-lisp :tangle init.el
-(leaf rainbow-mode :ensure t :hook (emacs-startup-hook . rainbow-mode))
-  #+end_src
+
 * テーマとモードライン
   :PROPERTIES:
   :CUSTOM_ID: orgbf458527
@@ -4705,7 +5281,7 @@ pdflang={%l}}
         modus-themes-headings '((t . (bold)))
         modus-themes-variable-pitch-ui nil
         modus-vivendi-palette-overrides
-        '(;;
+        `(;;
           ;; Basic color override
           (green-cooler "#bfff7f")
           (green-intense "#4ceea5")
@@ -4715,7 +5291,9 @@ pdflang={%l}}
           ;;
           ;; (bg-yellow-intense "#556b2f")
           ;;
-          (bg-main 'unspecified)
+          (bg-main ,(if (display-graphic-p)
+                        "#000000"     ; GUIなら背景色
+                      'unspecified))  ; ターミナルなら色は指定しない
           (comment fg-dim)
           ;; (bg-hl-line "#556b2f")
           (bg-hl-line "DarkSlateBlue")
@@ -4724,6 +5302,7 @@ pdflang={%l}}
           ;;
           (builtin blue-warmer)
           (constant yellow-warmer)
+          (delimiter red-warmer)
           (docstring green-intense)
           (docmarkup green-intense)
           (fnname magenta-cooler)
@@ -4927,14 +5506,14 @@ pdflang={%l}}
   :CUSTOM_ID: orgd89ceb4b
   :END:
   #+begin_src emacs-lisp :tangle init.el
-(leaf copilot
-  :vc (:url "https://github.com/copilot-emacs/copilot.el" :rev :newest :branch "main")
-  :init
-  (leaf editorconfig :ensure t)
-  (leaf s :ensure t)
-  (leaf dash :ensure t)
-  )
-(leaf copilot-chat :ensure t)
+;; (leaf copilot
+;;   :vc (:url "https://github.com/copilot-emacs/copilot.el" :rev :newest :branch "main")
+;;   :init
+;;   (leaf editorconfig :ensure t)
+;;   (leaf s :ensure t)
+;;   (leaf dash :ensure t)
+;;   )
+;; (leaf copilot-chat :ensure t)
 (leaf apparmor-mode :ensure t)
 (leaf chezmoi
   :ensure t
@@ -4942,361 +5521,360 @@ pdflang={%l}}
   :bind (("C-c C f" . chezmoi-find)
          ("C-c C s" . chezmoi-write))
   )
-(leaf treesit
-  :config
-  (setq treesit-font-lock-level 4)
-  )
-(leaf treesit-auto
-  :disabled t
-  :ensure t
-  :init
-  (setq treesit-auto-install 'prompt)
-  :config
-  (treesit-auto-add-to-auto-mode-alist 'all)
-  (setq treesit-auto-recipe-list
-        `(;;
-          ,(make-treesit-auto-recipe
-            :lang 'html
-            :ts-mode 'html-ts-mode
-            :remap '(mhtml-mode sgml-mode)
-            :url "https://github.com/tree-sitter/tree-sitter-html"
-            :revision "v0.20.1"
-            :ext "\\.html\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'bash
-            :ts-mode 'bash-ts-mode
-            :remap 'sh-mode
-            :url "https://github.com/tree-sitter/tree-sitter-bash"
-            :revision "v0.20.5"
-            :ext "\\.sh\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'css
-            :ts-mode 'css-ts-mode
-            :remap 'css-mode
-            :url "https://github.com/tree-sitter/tree-sitter-css"
-            :ext "\\.css\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'javascript
-            :ts-mode 'js-ts-mode
-            :remap '(js-mode javascript-mode js2-mode)
-            :url "https://github.com/tree-sitter/tree-sitter-javascript"
-            :revision "master"
-            :source-dir "src"
-            :ext "\\.js\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'json
-            :ts-mode 'json-ts-mode
-            :remap 'js-json-mode
-            :url "https://github.com/tree-sitter/tree-sitter-json"
-            :ext "\\.json\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'toml
-            :ts-mode 'toml-ts-mode
-            :remap '(conf-toml-mode toml-mode)
-            :url "https://github.com/tree-sitter/tree-sitter-toml"
-            :ext "\\.toml\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'yaml
-            :ts-mode 'yaml-ts-mode
-            :remap 'yaml-mode
-            :url "https://github.com/tree-sitter-grammars/tree-sitter-yaml"
-            :ext "\\.ya?ml\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'ruby
-            :ts-mode 'ruby-ts-mode
-            :remap 'ruby-mode
-            :url "https://github.com/tree-sitter/tree-sitter-ruby"
-            :revision "v0.20.1"
-            :ext "\\(?:\\.\\(?:rbw?\\|ru\\|rake\\|thor\\|jbuilder\\|rabl\\|gemspec\\|podspec\\)\\|/\\(?:Gem\\|Rake\\|Cap\\|Thor\\|Puppet\\|Berks\\|Brew\\|Vagrant\\|Guard\\|Pod\\)file\\)\\'")
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-          ,(make-treesit-auto-recipe
-            :lang 'awk
-            :ts-mode 'awk-ts-mode
-            :remap 'awk-mode
-            :url "https://github.com/Beaglefoot/tree-sitter-awk"
-            :ext "\\.awk\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'bibtex
-            :ts-mode 'bibtex-ts-mode
-            :remap 'bibtex-mode
-            :url "https://github.com/latex-lsp/tree-sitter-bibtex"
-            :ext "\\.bib\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'blueprint
-            :ts-mode 'blueprint-ts-mode
-            :remap 'blueprint-mode
-            :url "https://github.com/huanie/tree-sitter-blueprint"
-            :ext "\\.blp\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'c
-            :ts-mode 'c-ts-mode
-            :remap 'c-mode
-            :url "https://github.com/tree-sitter/tree-sitter-c"
-            :ext "\\.c\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'c-sharp
-            :ts-mode 'csharp-ts-mode
-            :remap 'csharp-mode
-            :url "https://github.com/tree-sitter/tree-sitter-c-sharp"
-            :ext "\\.cs\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'clojure
-            :ts-mode 'clojure-ts-mode
-            :remap '(clojure-mode clojurescript-mode clojurec-mode)
-            :url "https://github.com/sogaiu/tree-sitter-clojure"
-            :ext "\\.cljc?s?d?\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'cmake
-            :ts-mode 'cmake-ts-mode
-            :remap 'cmake-mode
-            :url "https://github.com/uyha/tree-sitter-cmake"
-            :ext "\\.cmake\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'commonlisp
-            :ts-mode 'commonlisp-ts-mode
-            :remap 'common-lisp-mode
-            :url "https://github.com/tree-sitter-grammars/tree-sitter-commonlisp"
-            :ext "\\.cl\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'cpp
-            :ts-mode 'c++-ts-mode
-            :remap 'c++-mode
-            :url "https://github.com/tree-sitter/tree-sitter-cpp"
-            :ext "\\.cpp\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'dart
-            :ts-mode 'dart-ts-mode
-            :remap 'dart-mode
-            :url "https://github.com/ast-grep/tree-sitter-dart"
-            :ext "\\.dart\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'dockerfile
-            :ts-mode 'dockerfile-ts-mode
-            :remap 'dockerfile-mode
-            :url "https://github.com/camdencheek/tree-sitter-dockerfile"
-            :ext "[/\\]\\(?:Containerfile\\|Dockerfile\\)\\(?:\\.[^/\\]*\\)?\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'elixir
-            :ts-mode 'elixir-ts-mode
-            :remap 'elixir-mode
-            :requires 'heex
-            :url "https://github.com/elixir-lang/tree-sitter-elixir"
-            :ext "\\.ex\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'glsl
-            :ts-mode 'glsl-ts-mode
-            :remap 'glsl-mode
-            :url "https://github.com/tree-sitter-grammars/tree-sitter-glsl")
-          ,(make-treesit-auto-recipe
-            :lang 'go
-            :ts-mode 'go-ts-mode
-            :remap 'go-mode
-            :requires 'gomod
-            :url "https://github.com/tree-sitter/tree-sitter-go"
-            :ext "\\.go\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'gomod
-            :ts-mode 'go-mod-ts-mode
-            :remap 'go-mod-mode
-            :requires 'go
-            :url "https://github.com/camdencheek/tree-sitter-go-mod"
-            :ext "go\\.mod\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'heex
-            :ts-mode 'heex-ts-mode
-            :remap 'heex-mode
-            :url "https://github.com/phoenixframework/tree-sitter-heex"
-            :ext "\\.heex\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'janet
-            :ts-mode 'janet-ts-mode
-            :remap 'janet-mode
-            :url "https://github.com/sogaiu/tree-sitter-janet-simple"
-            :ext "\\.janet\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'java
-            :ts-mode 'java-ts-mode
-            :remap 'java-mode
-            :url "https://github.com/tree-sitter/tree-sitter-java"
-            :ext "\\.java\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'julia
-            :ts-mode 'julia-ts-mode
-            :remap 'julia-mode
-            :url "https://github.com/tree-sitter/tree-sitter-julia"
-            :ext "\\.jl\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'kotlin
-            :ts-mode 'kotlin-ts-mode
-            :remap 'kotlin-mode
-            :url "https://github.com/fwcd/tree-sitter-kotlin"
-            :ext "\\.kts?\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'latex
-            :ts-mode 'latex-ts-mode
-            :remap 'latex-mode
-            :url "https://github.com/latex-lsp/tree-sitter-latex"
-            :ext "\\.tex\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'lua
-            :ts-mode 'lua-ts-mode
-            :remap 'lua-mode
-            :url "https://github.com/tree-sitter-grammars/tree-sitter-lua"
-            :revision "v0.2.0"
-            :ext "\\.lua\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'magik
-            :ts-mode 'magik-ts-mode
-            :remap 'magik-mode
-            :url "https://github.com/krn-robin/tree-sitter-magik"
-            :ext "\\.magik\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'make
-            :ts-mode 'makefile-ts-mode
-            :remap 'makefile-mode
-            :url "https://github.com/tree-sitter-grammars/tree-sitter-make"
-            :ext "\\([Mm]akefile\\|.*\\.\\(mk\\|make\\)\\)\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'markdown
-            :ts-mode 'markdown-ts-mode
-            :remap '(poly-markdown-mode markdown-mode)
-            :url "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
-            :ext "\\.md\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'nix
-            :ts-mode 'nix-ts-mode
-            :remap 'nix-mode
-            :url "https://github.com/nix-community/tree-sitter-nix"
-            :ext "\\.nix\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'nu
-            :ts-mode 'nushell-ts-mode
-            :remap 'nushell-mode
-            :url "https://github.com/nushell/tree-sitter-nu"
-            :ext "\\.nu\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'org
-            :ts-mode 'org-ts-mode
-            :remap 'org-mode
-            :url "https://github.com/milisims/tree-sitter-org"
-            :ext "\\.org\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'perl
-            :ts-mode 'perl-ts-mode
-            :remap 'perl-mode
-            :url "https://github.com/ganezdragon/tree-sitter-perl"
-            :ext "\\.pl\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'proto
-            :ts-mode 'protobuf-ts-mode
-            :remap 'protobuf-mode
-            :url "https://github.com/mitchellh/tree-sitter-proto"
-            :ext "\\.proto\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'python
-            :ts-mode 'python-ts-mode
-            :remap 'python-mode
-            :url "https://github.com/tree-sitter/tree-sitter-python"
-            :ext "\\.py[iw]?\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'r
-            :ts-mode 'r-ts-mode
-            :remap 'ess-mode
-            :url "https://github.com/r-lib/tree-sitter-r"
-            :ext "\\.r\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'rust
-            :ts-mode 'rust-ts-mode
-            :remap 'rust-mode
-            :url "https://github.com/tree-sitter/tree-sitter-rust"
-            :ext "\\.rs\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'scala
-            :ts-mode 'scala-ts-mode
-            :remap 'scala-mode
-            :url "https://github.com/tree-sitter/tree-sitter-scala"
-            :ext "\\.\\(scala\\|sbt\\)\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'sql
-            :ts-mode 'sql-ts-mode
-            :remap 'sql-mode
-            :revision "gh-pages"
-            :url "https://github.com/DerekStride/tree-sitter-sql"
-            :ext "\\.sql\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'surface
-            :ts-mode 'surface-ts-mode
-            :remap 'surface-mode
-            :url "https://github.com/connorlay/tree-sitter-surface")
-          ,(make-treesit-auto-recipe
-            :lang 'tsx
-            :ts-mode 'tsx-ts-mode
-            :remap '(typescript-tsx-mode)
-            :requires 'typescript
-            :url "https://github.com/tree-sitter/tree-sitter-typescript"
-            :revision "master"
-            :source-dir "tsx/src"
-            :ext "\\.tsx\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'typescript
-            :ts-mode 'typescript-ts-mode
-            :remap 'typescript-mode
-            :requires 'tsx
-            :url "https://github.com/tree-sitter/tree-sitter-typescript"
-            :revision "master"
-            :source-dir "typescript/src"
-            :ext "\\.ts\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'typst
-            :ts-mode 'typst-ts-mode
-            :remap 'typst-mode
-            :url "https://github.com/uben0/tree-sitter-typst"
-            :revision "master"
-            :source-dir "src"
-            :ext "\\.typ\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'verilog
-            :ts-mode 'verilog-ts-mode
-            :remap 'verilog-mode
-            :url "https://github.com/gmlarumbe/tree-sitter-verilog"
-            :ext "\\.s?vh?\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'vhdl
-            :ts-mode 'vhdl-ts-mode
-            :remap 'vhdl-mode
-            :url "https://github.com/alemuller/tree-sitter-vhdl"
-            :ext "\\.vhdl?\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'vue
-            :ts-mode 'vue-ts-mode
-            :remap 'vue-mode
-            :url "https://github.com/tree-sitter-grammars/tree-sitter-vue"
-            :ext "\\.vue\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'wast
-            :ts-mode 'wat-ts-wast-mode
-            :remap 'wat-mode
-            :url "https://github.com/wasm-lsp/tree-sitter-wasm"
-            :source-dir "wast/src"
-            :ext "\\.wast\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'wat
-            :ts-mode 'wat-ts-mode
-            :remap 'wat-mode
-            :url "https://github.com/wasm-lsp/tree-sitter-wasm"
-            :source-dir "wat/src"
-            :ext "\\.wat\\'")
-          ,(make-treesit-auto-recipe
-            :lang 'wgsl
-            :ts-mode 'wgsl-ts-mode
-            :remap 'wgsl-mode
-            :url "https://github.com/mehmetoguzderin/tree-sitter-wgsl"
-            :ext "\\.wgsl\\'")
-          )
-        )
-  :hook
-  (emacs-startup-hook . global-treesit-auto-mode)
-  )
+
+;; (leaf tree-sitter-langs
+;;   :ensure t)
+;; (leaf treesit-auto
+;;   :disabled t
+;;   :ensure t
+;;   :init
+;;   (setq treesit-auto-install 'prompt)
+;;   :config
+;;   (treesit-auto-add-to-auto-mode-alist 'all)
+;;   (setq treesit-auto-recipe-list
+;;         `(;;
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'html
+;;             :ts-mode 'html-ts-mode
+;;             :remap '(mhtml-mode sgml-mode)
+;;             :url "https://github.com/tree-sitter/tree-sitter-html"
+;;             :revision "v0.20.1"
+;;             :ext "\\.html\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'bash
+;;             :ts-mode 'bash-ts-mode
+;;             :remap 'sh-mode
+;;             :url "https://github.com/tree-sitter/tree-sitter-bash"
+;;             :revision "v0.20.5"
+;;             :ext "\\.sh\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'css
+;;             :ts-mode 'css-ts-mode
+;;             :remap 'css-mode
+;;             :url "https://github.com/tree-sitter/tree-sitter-css"
+;;             :ext "\\.css\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'javascript
+;;             :ts-mode 'js-ts-mode
+;;             :remap '(js-mode javascript-mode js2-mode)
+;;             :url "https://github.com/tree-sitter/tree-sitter-javascript"
+;;             :revision "master"
+;;             :source-dir "src"
+;;             :ext "\\.js\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'json
+;;             :ts-mode 'json-ts-mode
+;;             :remap 'js-json-mode
+;;             :url "https://github.com/tree-sitter/tree-sitter-json"
+;;             :ext "\\.json\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'toml
+;;             :ts-mode 'toml-ts-mode
+;;             :remap '(conf-toml-mode toml-mode)
+;;             :url "https://github.com/tree-sitter/tree-sitter-toml"
+;;             :ext "\\.toml\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'yaml
+;;             :ts-mode 'yaml-ts-mode
+;;             :remap 'yaml-mode
+;;             :url "https://github.com/tree-sitter-grammars/tree-sitter-yaml"
+;;             :ext "\\.ya?ml\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'ruby
+;;             :ts-mode 'ruby-ts-mode
+;;             :remap 'ruby-mode
+;;             :url "https://github.com/tree-sitter/tree-sitter-ruby"
+;;             :revision "v0.20.1"
+;;             :ext "\\(?:\\.\\(?:rbw?\\|ru\\|rake\\|thor\\|jbuilder\\|rabl\\|gemspec\\|podspec\\)\\|/\\(?:Gem\\|Rake\\|Cap\\|Thor\\|Puppet\\|Berks\\|Brew\\|Vagrant\\|Guard\\|Pod\\)file\\)\\'")
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'awk
+;;             :ts-mode 'awk-ts-mode
+;;             :remap 'awk-mode
+;;             :url "https://github.com/Beaglefoot/tree-sitter-awk"
+;;             :ext "\\.awk\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'bibtex
+;;             :ts-mode 'bibtex-ts-mode
+;;             :remap 'bibtex-mode
+;;             :url "https://github.com/latex-lsp/tree-sitter-bibtex"
+;;             :ext "\\.bib\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'blueprint
+;;             :ts-mode 'blueprint-ts-mode
+;;             :remap 'blueprint-mode
+;;             :url "https://github.com/huanie/tree-sitter-blueprint"
+;;             :ext "\\.blp\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'c
+;;             :ts-mode 'c-ts-mode
+;;             :remap 'c-mode
+;;             :url "https://github.com/tree-sitter/tree-sitter-c"
+;;             :ext "\\.c\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'c-sharp
+;;             :ts-mode 'csharp-ts-mode
+;;             :remap 'csharp-mode
+;;             :url "https://github.com/tree-sitter/tree-sitter-c-sharp"
+;;             :ext "\\.cs\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'clojure
+;;             :ts-mode 'clojure-ts-mode
+;;             :remap '(clojure-mode clojurescript-mode clojurec-mode)
+;;             :url "https://github.com/sogaiu/tree-sitter-clojure"
+;;             :ext "\\.cljc?s?d?\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'cmake
+;;             :ts-mode 'cmake-ts-mode
+;;             :remap 'cmake-mode
+;;             :url "https://github.com/uyha/tree-sitter-cmake"
+;;             :ext "\\.cmake\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'commonlisp
+;;             :ts-mode 'commonlisp-ts-mode
+;;             :remap 'common-lisp-mode
+;;             :url "https://github.com/tree-sitter-grammars/tree-sitter-commonlisp"
+;;             :ext "\\.cl\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'cpp
+;;             :ts-mode 'c++-ts-mode
+;;             :remap 'c++-mode
+;;             :url "https://github.com/tree-sitter/tree-sitter-cpp"
+;;             :ext "\\.cpp\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'dart
+;;             :ts-mode 'dart-ts-mode
+;;             :remap 'dart-mode
+;;             :url "https://github.com/ast-grep/tree-sitter-dart"
+;;             :ext "\\.dart\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'dockerfile
+;;             :ts-mode 'dockerfile-ts-mode
+;;             :remap 'dockerfile-mode
+;;             :url "https://github.com/camdencheek/tree-sitter-dockerfile"
+;;             :ext "[/\\]\\(?:Containerfile\\|Dockerfile\\)\\(?:\\.[^/\\]*\\)?\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'elixir
+;;             :ts-mode 'elixir-ts-mode
+;;             :remap 'elixir-mode
+;;             :requires 'heex
+;;             :url "https://github.com/elixir-lang/tree-sitter-elixir"
+;;             :ext "\\.ex\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'glsl
+;;             :ts-mode 'glsl-ts-mode
+;;             :remap 'glsl-mode
+;;             :url "https://github.com/tree-sitter-grammars/tree-sitter-glsl")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'go
+;;             :ts-mode 'go-ts-mode
+;;             :remap 'go-mode
+;;             :requires 'gomod
+;;             :url "https://github.com/tree-sitter/tree-sitter-go"
+;;             :ext "\\.go\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'gomod
+;;             :ts-mode 'go-mod-ts-mode
+;;             :remap 'go-mod-mode
+;;             :requires 'go
+;;             :url "https://github.com/camdencheek/tree-sitter-go-mod"
+;;             :ext "go\\.mod\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'heex
+;;             :ts-mode 'heex-ts-mode
+;;             :remap 'heex-mode
+;;             :url "https://github.com/phoenixframework/tree-sitter-heex"
+;;             :ext "\\.heex\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'janet
+;;             :ts-mode 'janet-ts-mode
+;;             :remap 'janet-mode
+;;             :url "https://github.com/sogaiu/tree-sitter-janet-simple"
+;;             :ext "\\.janet\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'java
+;;             :ts-mode 'java-ts-mode
+;;             :remap 'java-mode
+;;             :url "https://github.com/tree-sitter/tree-sitter-java"
+;;             :ext "\\.java\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'julia
+;;             :ts-mode 'julia-ts-mode
+;;             :remap 'julia-mode
+;;             :url "https://github.com/tree-sitter/tree-sitter-julia"
+;;             :ext "\\.jl\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'kotlin
+;;             :ts-mode 'kotlin-ts-mode
+;;             :remap 'kotlin-mode
+;;             :url "https://github.com/fwcd/tree-sitter-kotlin"
+;;             :ext "\\.kts?\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'latex
+;;             :ts-mode 'latex-ts-mode
+;;             :remap 'latex-mode
+;;             :url "https://github.com/latex-lsp/tree-sitter-latex"
+;;             :ext "\\.tex\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'lua
+;;             :ts-mode 'lua-ts-mode
+;;             :remap 'lua-mode
+;;             :url "https://github.com/tree-sitter-grammars/tree-sitter-lua"
+;;             :revision "v0.2.0"
+;;             :ext "\\.lua\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'magik
+;;             :ts-mode 'magik-ts-mode
+;;             :remap 'magik-mode
+;;             :url "https://github.com/krn-robin/tree-sitter-magik"
+;;             :ext "\\.magik\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'make
+;;             :ts-mode 'makefile-ts-mode
+;;             :remap 'makefile-mode
+;;             :url "https://github.com/tree-sitter-grammars/tree-sitter-make"
+;;             :ext "\\([Mm]akefile\\|.*\\.\\(mk\\|make\\)\\)\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'markdown
+;;             :ts-mode 'markdown-ts-mode
+;;             :remap '(poly-markdown-mode markdown-mode)
+;;             :url "https://github.com/tree-sitter-grammars/tree-sitter-markdown"
+;;             :ext "\\.md\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'nix
+;;             :ts-mode 'nix-ts-mode
+;;             :remap 'nix-mode
+;;             :url "https://github.com/nix-community/tree-sitter-nix"
+;;             :ext "\\.nix\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'nu
+;;             :ts-mode 'nushell-ts-mode
+;;             :remap 'nushell-mode
+;;             :url "https://github.com/nushell/tree-sitter-nu"
+;;             :ext "\\.nu\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'org
+;;             :ts-mode 'org-ts-mode
+;;             :remap 'org-mode
+;;             :url "https://github.com/milisims/tree-sitter-org"
+;;             :ext "\\.org\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'perl
+;;             :ts-mode 'perl-ts-mode
+;;             :remap 'perl-mode
+;;             :url "https://github.com/ganezdragon/tree-sitter-perl"
+;;             :ext "\\.pl\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'proto
+;;             :ts-mode 'protobuf-ts-mode
+;;             :remap 'protobuf-mode
+;;             :url "https://github.com/mitchellh/tree-sitter-proto"
+;;             :ext "\\.proto\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'python
+;;             :ts-mode 'python-ts-mode
+;;             :remap 'python-mode
+;;             :url "https://github.com/tree-sitter/tree-sitter-python"
+;;             :ext "\\.py[iw]?\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'r
+;;             :ts-mode 'r-ts-mode
+;;             :remap 'ess-mode
+;;             :url "https://github.com/r-lib/tree-sitter-r"
+;;             :ext "\\.r\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'rust
+;;             :ts-mode 'rust-ts-mode
+;;             :remap 'rust-mode
+;;             :url "https://github.com/tree-sitter/tree-sitter-rust"
+;;             :ext "\\.rs\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'scala
+;;             :ts-mode 'scala-ts-mode
+;;             :remap 'scala-mode
+;;             :url "https://github.com/tree-sitter/tree-sitter-scala"
+;;             :ext "\\.\\(scala\\|sbt\\)\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'sql
+;;             :ts-mode 'sql-ts-mode
+;;             :remap 'sql-mode
+;;             :revision "gh-pages"
+;;             :url "https://github.com/DerekStride/tree-sitter-sql"
+;;             :ext "\\.sql\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'surface
+;;             :ts-mode 'surface-ts-mode
+;;             :remap 'surface-mode
+;;             :url "https://github.com/connorlay/tree-sitter-surface")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'tsx
+;;             :ts-mode 'tsx-ts-mode
+;;             :remap '(typescript-tsx-mode)
+;;             :requires 'typescript
+;;             :url "https://github.com/tree-sitter/tree-sitter-typescript"
+;;             :revision "master"
+;;             :source-dir "tsx/src"
+;;             :ext "\\.tsx\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'typescript
+;;             :ts-mode 'typescript-ts-mode
+;;             :remap 'typescript-mode
+;;             :requires 'tsx
+;;             :url "https://github.com/tree-sitter/tree-sitter-typescript"
+;;             :revision "master"
+;;             :source-dir "typescript/src"
+;;             :ext "\\.ts\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'typst
+;;             :ts-mode 'typst-ts-mode
+;;             :remap 'typst-mode
+;;             :url "https://github.com/uben0/tree-sitter-typst"
+;;             :revision "master"
+;;             :source-dir "src"
+;;             :ext "\\.typ\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'verilog
+;;             :ts-mode 'verilog-ts-mode
+;;             :remap 'verilog-mode
+;;             :url "https://github.com/gmlarumbe/tree-sitter-verilog"
+;;             :ext "\\.s?vh?\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'vhdl
+;;             :ts-mode 'vhdl-ts-mode
+;;             :remap 'vhdl-mode
+;;             :url "https://github.com/alemuller/tree-sitter-vhdl"
+;;             :ext "\\.vhdl?\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'vue
+;;             :ts-mode 'vue-ts-mode
+;;             :remap 'vue-mode
+;;             :url "https://github.com/tree-sitter-grammars/tree-sitter-vue"
+;;             :ext "\\.vue\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'wast
+;;             :ts-mode 'wat-ts-wast-mode
+;;             :remap 'wat-mode
+;;             :url "https://github.com/wasm-lsp/tree-sitter-wasm"
+;;             :source-dir "wast/src"
+;;             :ext "\\.wast\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'wat
+;;             :ts-mode 'wat-ts-mode
+;;             :remap 'wat-mode
+;;             :url "https://github.com/wasm-lsp/tree-sitter-wasm"
+;;             :source-dir "wat/src"
+;;             :ext "\\.wat\\'")
+;;           ,(make-treesit-auto-recipe
+;;             :lang 'wgsl
+;;             :ts-mode 'wgsl-ts-mode
+;;             :remap 'wgsl-mode
+;;             :url "https://github.com/mehmetoguzderin/tree-sitter-wgsl"
+;;             :ext "\\.wgsl\\'")
+;;           )
+;;         )
+;;   :hook
+;;   (emacs-startup-hook . global-treesit-auto-mode)
+;;   )
 (leaf enh-ruby-mode
   ;; :ensure t
   :disabled t

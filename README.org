@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2026-02-03 12:31:55
+#+date: 2026-02-04 13:14:43
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -289,8 +289,6 @@ endif
 (setq inhibit-compacting-font-caches t)
 (setq default-frame-alist
       '((fullscreen . maximized)
-        ;; (alpha . 95)  ;; もの凄く遅くなるので止めた方が良い.
-        (reverse . t)
         (menu-bar-lines . 0)
         (tool-bar-lines . 0)
         (vertical-scroll-bars . nil)
@@ -372,61 +370,6 @@ endif
                msg)
       (setq my:tick-previous-time ctime))))
    #+end_src
-* Package 関連: [[https://emacs-jp.github.io/packages/package-management/package-el][package.el]], [[https://github.com/conao3/leaf.el][leaf.el]]
-  :PROPERTIES:
-  :CUSTOM_ID: orgcf4176e7
-  :END:
-  [[https://github.com/conao3/leaf.el][leaf.el]]のおかげで,
-  無いと途方に暮れるパッケージ以外のインストールは無視できるようになります.
-** [[https://emacs-jp.github.io/packages/package-management/package-el][package.el]]
-   :PROPERTIES:
-   :CUSTOM_ID: orgc51eb87d
-   :END:
-   パッケージは基本的に =package.el= で導入するので, 先ずはその設定.
-   #+begin_src emacs-lisp :tangle init.el
-(eval-and-compile
-  (unless (package-installed-p 'leaf)
-    (package-initialize)
-    (when (and noninteractive
-               (not (package-installed-p 'leaf)))
-      (package-refresh-contents)
-      (package-install 'leaf t)))
-  (package-activate-all))
-   #+end_src
-** [[https://github.com/conao3/leaf.el][leaf.el]]
-   :PROPERTIES:
-   :CUSTOM_ID: orgc2ededbf
-   :END:
-   個々のパッケージの設定には[[https://github.com/conao3/leaf.el][leaf.el]]を利用します.
-   以前は el-get も利用していましたが,
-   =:vc= キーワードで =package-vc-install= を呼び出せるので, こっちを使うようになりました.
-   #+begin_src emacs-lisp :tangle init.el
-(leaf leaf-keywords
-  :ensure t
-  :init
-  (leaf blackout :ensure t)
-  :config
-  (leaf-keywords-init)
-  )
-(leaf leaf-convert :ensure t)
-   #+end_src
-   - [ ] =package-vc-install= でインストールした諸々って, package-upgrade 後に delete 対象になる?
-* =gcmh=: 賢い garbage-collection
-  :PROPERTIES:
-  :ID:       cca3e8df-79f9-4c60-a803-07ff641b0ef7
-  :CUSTOM_ID: org414ff0d8
-  :END:
-  #+begin_src emacs-lisp :tangle init.el
-(leaf gcmh
-  :ensure t
-  :blackout t
-  :init
-  (setq gcmh-idle-delay 'auto  ; アイドル判定を自動調整
-        gcmh-auto-idle-delay-factor 10
-        gcmh-high-cons-threshold (* 128 1024 1024)) ; 入力中は 128MB まで許容
-  :hook (emacs-startup-hook . gcmh-mode)
-  )
-  #+end_src
 * 独自関数
   :PROPERTIES:
   :CUSTOM_ID: org34ff2306
@@ -539,7 +482,98 @@ endif
   (interactive)
   (message "%s" (get-char-property (point) 'face)))
    #+END_SRC
-* =exec-path-from-shell=: 環境変数の読み込み
+** 行末からfill-columnの値まで線を引く
+   :PROPERTIES:
+   :CUSTOM_ID: org31cde696
+   :END:
+   地味に便利
+   #+begin_src emacs-lisp :tangle init.el
+;;;###autoload
+(defun my:fill-line-with-char (&optional char)
+  "行末から fill-column まで文字 (デフォルトは -) で埋めるコマンド.
+行末が空白でない場合は, 自動的にスペースを 1 つ挿入してから線を引く.
+C-u を付けて実行すると, 埋める文字を指定可能(例: = や * など). "
+  (interactive "P")
+  (let ((target-char (if char
+                         (read-char "Fill character: ")
+                       ?-))) ;; デフォルトはハイフン
+    (save-excursion
+      (end-of-line)
+      (let ((current (current-column))
+            (limit fill-column))
+        ;; 既に fill-column を超えている、または到達している場合は何もしない
+        (when (< current limit)
+          ;; 行末が空白でなく、かつ行頭でもない場合はスペースを1つ入れる
+          ;;    (例: "!" -> "! " にしてから線を引くため)
+          (unless (or (bolp) (memq (char-before) '(?\s ?\t)))
+            (insert " ")
+            (setq current (1+ current)))
+          ;; 3. 残りの幅を計算して文字を挿入
+          (let ((len (- limit current)))
+            (when (> len 0)
+              (insert-char target-char len))))))))
+;; -------------------------------------------------------------------
+;; とりあえず C-c l に割り当ててみる.
+;; 何か意味のあるキーが良いのだけれどなぁ
+(global-set-key (kbd "C-c l") #'my:fill-line-with-char)
+   #+end_src
+* Package 関連: [[https://emacs-jp.github.io/packages/package-management/package-el][package.el]], [[https://github.com/conao3/leaf.el][leaf.el]]
+  :PROPERTIES:
+  :CUSTOM_ID: orgcf4176e7
+  :END:
+  [[https://github.com/conao3/leaf.el][leaf.el]]のおかげで,
+  無いと途方に暮れるパッケージ以外のインストールは無視できるようになります.
+** [[https://emacs-jp.github.io/packages/package-management/package-el][package.el]]
+   :PROPERTIES:
+   :CUSTOM_ID: orgc51eb87d
+   :END:
+   パッケージは基本的に =package.el= で導入するので, 先ずはその設定.
+   #+begin_src emacs-lisp :tangle init.el
+(eval-and-compile
+  (unless (package-installed-p 'leaf)
+    (package-initialize)
+    (when (and noninteractive
+               (not (package-installed-p 'leaf)))
+      (package-refresh-contents)
+      (package-install 'leaf t)))
+  (package-activate-all))
+   #+end_src
+** [[https://github.com/conao3/leaf.el][leaf.el]]
+   :PROPERTIES:
+   :CUSTOM_ID: orgc2ededbf
+   :END:
+   個々のパッケージの設定には[[https://github.com/conao3/leaf.el][leaf.el]]を利用します.
+   以前は el-get も利用していましたが,
+   =:vc= キーワードで =package-vc-install= を呼び出せるので, こっちを使うようになりました.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf leaf-keywords
+  :ensure t
+  :init
+  (leaf blackout :ensure t)
+  :config
+  (leaf-keywords-init)
+  )
+(leaf leaf-convert :ensure t)
+   #+end_src
+   - [ ] =package-vc-install= でインストールした諸々って, package-upgrade 後に delete 対象になる?
+* =gcmh=: 賢い garbage-collection
+  :PROPERTIES:
+  :ID:       cca3e8df-79f9-4c60-a803-07ff641b0ef7
+  :CUSTOM_ID: org414ff0d8
+  :END:
+  割と速い段階で設定しておきたくてここに.
+  #+begin_src emacs-lisp :tangle init.el
+(leaf gcmh
+  :ensure t
+  :blackout t
+  :init
+  (setq gcmh-idle-delay 'auto  ; アイドル判定を自動調整
+        gcmh-auto-idle-delay-factor 10
+        gcmh-high-cons-threshold (* 128 1024 1024)) ; 入力中は 128MB まで許容
+  :hook (emacs-startup-hook . gcmh-mode)
+  )
+  #+end_src
+* =exec-path-from-shell=: GUI起動時の環境変数の読み込み
   :PROPERTIES:
   :CUSTOM_ID: org9abae8f2
   :END:
@@ -674,13 +708,11 @@ Emacs.reverseVideo: true
    #+end_src
    - [X] Wayland になったらどうなるだろうか? → 効かない模様.
 *** フォント設定
-    :PROPERTIES:
-    :CUSTOM_ID: orgce6102b3
-    :END:
-   なかなかうまくいかないなぁ….
    :PROPERTIES:
    :CUSTOM_ID: org199c5479
    :END:
+   GUIで, 絵文字と1:2のサイズ調整を行なうのってのは,
+   なかなかうまくいかないなぁ
  #+begin_src emacs-lisp :tangle init.el
 (leaf *gui
   :if window-system
@@ -689,6 +721,14 @@ Emacs.reverseVideo: true
         '(("Noto Color Emoji" . 0.85)
           ("PlemolJP Console NF" . 1.0)
           ("EAW CONSOLE" . 1.0)))
+;;;###autoload
+  (defun my:setup-gui-frame (&optional frame)
+    "GUI環境のみ reverse と alpha を適用する"
+    (let ((f (or frame (selected-frame))))
+        (set-frame-parameter f 'reverse t)
+        ;; もの凄く重くなるので, 一旦保留. 透明度, 不透明度の順
+        ;; (set-frame-parameter f 'alpha '(95 . 90))
+        ))
 ;;;###autoload
   (defun my:apply-font-eaw-console ()
     "EAW CONSOLE を適用する"
@@ -718,7 +758,14 @@ Emacs.reverseVideo: true
         buffer-face-mode-face 'fixed-pitch
         use-default-font-for-symbols nil)
   :hook
-  (window-setup-hook . my:apply-font-eaw-console-with-emoji)
+  (window-setup-hook
+   . (lambda ()
+       (my:setup-gui-frame)
+       (my:apply-font-eaw-console-with-emoji)))
+  (after-make-frame-functions
+   . (lambda ()
+       (my:setup-gui-frame)
+       (my:apply-font-eaw-console-with-emoji)))
   )
  #+end_src
  表示のテスト
@@ -754,7 +801,6 @@ Emacs.reverseVideo: true
   :ensure t
   :defvar nerd-icons-mode-icon-alist
   :commands (nerd-icons-codicon nerd-icons-faicon)
-  ;; (setq nerd-icons-family "EAW CONSOLE")
   :config
   (setq nerd-icons-font-family "EAW CONSOLE")
   :defer-config
@@ -1458,68 +1504,47 @@ Emacs*useXIM: false
         )
   )
   #+end_src
-* カレンダー設定
+* Copy & Paste:
   :PROPERTIES:
-  :CUSTOM_ID: org7d9d4027
+  :CUSTOM_ID: org12fd2b4e
   :END:
-   表示の更新と =japanese-holidays= による日本の休日の追加
-** カレンダー本体の設定
+** Linux と macOS では =xclip.el= を利用
    :PROPERTIES:
-   :CUSTOM_ID: org6ac86c8d
+   :CUSTOM_ID: org1689d1f5
    :END:
-    #+begin_src emacs-lisp :tangle init.el
-(leaf calendar
-  :defvar calendar-holidays japanese-holidays
-  :init
-  (setq
-   ;; 月と曜日の表示調整
-   calendar-month-name-array   ["01" "02" "03" "04" "05" "06"
-                                "07" "08" "09" "10" "11" "12" ]
-   calendar-day-name-array     ["日" "月" "火" "水" "木" "金" "土"]
-   calendar-day-header-array   ["日" "月" "火" "水" "木" "金" "土"]
-   ;; 日曜開始
-   calendar-week-start-day     0
-   ;; 祝日をカレンダーに表示
-   calendar-mark-holidays-flag t
-   )
-  :config
-  (with-eval-after-load 'japanese-holidays
-    (setq calendar-holidays (append japanese-holidays holiday-local-holidays)))
+   気がついたら, Wayland(wl-copy/wl-paste) でも macOS (pbcopy/pbpaste) でもこれで OK っぽい.
+   WSLでは =powershell/clip.exe= を使う様になっているけど, *遅い* ので =w32yank.exe= を使うことにしている.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf xclip
+  :if (and (eq system-type 'gnu/linux)
+           (not (file-directory-p "/mnt/c"))
+           )
+  :ensure t
+  :hook (emacs-startup-hook
+         . (lambda () (xclip-mode +1)))
   )
-    #+end_src
-** 日本の休日の追加: =japanese-holidays=
+   #+end_src
+** WSLでは =win32yank.exe= を利用
    :PROPERTIES:
-   :CUSTOM_ID: org60295429
+   :CUSTOM_ID: orgb182b45f
    :END:
    #+begin_src emacs-lisp :tangle init.el
-(leaf japanese-holidays
-  :ensure t
-  :after calendar
-  :require t
+(leaf *win32yank
+  :if (and (file-directory-p "/mnt/c")
+           (executable-find "win32yank.exe"))
   :init
-  (setq japanese-holiday-weekend        '(0 6)
-        japanese-holiday-weekend-marker '(holiday  ;; 日
-                                          nil      ;; 月
-                                          nil      ;; 火
-                                          nil      ;; 水
-                                          nil      ;; 木
-                                          nil      ;; 金
-                                          japanese-holiday-saturday)
-        )
-  :config
 ;;;###autoload
-  (defun my:japanese-holiday-show (&rest _args)
-    (let* ((date (calendar-cursor-to-date t))
-           ;; (calendar-date-display-form '((format "%s年 %s月 %s日（%s）" year month day dayname)))
-           (date-string (calendar-date-string date))
-           (holiday-list (calendar-check-holidays date)))
-      (when holiday-list
-        (message "%s: %s" date-string (mapconcat #'identity holiday-list "; ")))))
-  :hook
-  ((calendar-move-hook            . my:japanese-holiday-show)
-   (calendar-today-visible-hook   . japanese-holiday-mark-weekend)
-   (calendar-today-invisible-hook . japanese-holiday-mark-weekend)
-   (calendar-today-visible-hook   . calendar-mark-today))
+  (defun my:win32yank-copy (text)
+    (interactive "r")
+    (with-temp-buffer
+      (insert text)
+      (shell-command-on-region (point-min) (point-max) "win32yank.exe -i" t)))
+;;;###autoload
+  (defun my:win32yank-paste ()
+    (shell-command-to-string "win32yank.exe -o --lf"))
+
+  (setq interprogram-cut-function 'my:win32yank-copy)
+  (setq interprogram-paste-function 'my:win32yank-paste)
   )
    #+end_src
 * キーバインドの設定
@@ -1641,49 +1666,1235 @@ Emacs*useXIM: false
          )
   )
   #+end_src
-* Copy & Paste:
+* 補完: =vertico=, =marginalia=, =consult=, =corfu=
   :PROPERTIES:
-  :CUSTOM_ID: org12fd2b4e
+  :CUSTOM_ID: org5fd7347f
   :END:
-** Linux と macOS では =xclip.el= を利用
+  最近話題になりだしたので, ちょっと使い始めてみたら,
+  無いと割と途方に暮れる様になってしまった.
+  ...でも重い(?)ので、また =ido-vertical= に戻るかも.
+** helm, ivy の無効化
    :PROPERTIES:
-   :CUSTOM_ID: org1689d1f5
+   :CUSTOM_ID: orgff7e02fd
    :END:
-   気がついたら, Wayland(wl-copy/wl-paste) でも macOS (pbcopy/pbpaste) でもこれで OK っぽい.
-   WSLでは =powershell/clip.exe= を使う様になっているけど, *遅い* ので =w32yank.exe= を使うことにしている.
-   #+begin_src emacs-lisp :tangle init.el
-(leaf xclip
-  :if (and (eq system-type 'gnu/linux)
-           (not (file-directory-p "/mnt/c"))
-           )
-  :ensure t
-  :hook (emacs-startup-hook
-         . (lambda () (xclip-mode +1)))
-  )
+   依存する拡張がまだまだ多いので, 一度インストールして邪魔しないようにしておくことに.
+   #+begin_src emacs-lisp
+(leaf helm :defer-config (helm-mode -1))
+(leaf ivy :defer-config (ivy-mode -1))
    #+end_src
-** WSLでは =win32yank.exe= を利用
+** 無視する拡張子の追加設定
    :PROPERTIES:
-   :CUSTOM_ID: orgb182b45f
+   :CUSTOM_ID: orgbf52614c
    :END:
-   #+begin_src emacs-lisp :tangle init.el
-(leaf *win32yank
-  :if (and (file-directory-p "/mnt/c")
-           (executable-find "win32yank.exe"))
+  とりあえず, 無視するファイルの拡張子を指定しておく.
+  #+begin_src emacs-lisp :tangle init.el
+(leaf *completion
   :init
-;;;###autoload
-  (defun my:win32yank-copy (text)
-    (interactive "r")
-    (with-temp-buffer
-      (insert text)
-      (shell-command-on-region (point-min) (point-max) "win32yank.exe -i" t)))
-;;;###autoload
-  (defun my:win32yank-paste ()
-    (shell-command-to-string "win32yank.exe -o --lf"))
+  ;; 補完で無視する拡張子の追加．そのうち増える．
+  (cl-loop for ext in
+           '(;; TeX
+             ".dvi"
+             ".fdb_latexmk"
+             ".fls"
+             ".ilg"
+             ".jqz"
+             ".nav"
+             ".out"
+             ".snm"
+             ".synctex\\.gz"
+             ".vrb"
+             ;; fortran >= 90
+             ".mod"
+             ;; zsh
+             ".zwc"
+             ;; libtool
+             ".in"
+             ".libs/"
+             ;; fxxkin Apple
+             ".DS_Store"
+             "._DS_Store"
+             ;; "org-id-locations"
+             )
+           do (add-to-list 'completion-ignored-extensions ext))
+  )
+  #+end_src
+** =vertico=: 本体
+   :PROPERTIES:
+   :CUSTOM_ID: org8362fd9f
+   :END:
+   [[https://scrapbox.io/emacs/find-file%E3%81%A7Helm%E3%81%BF%E3%81%9F%E3%81%84%E3%81%ABC-l%E3%81%A7%E3%83%87%E3%82%A3%E3%83%AC%E3%82%AF%E3%83%88%E3%83%AA%E3%82%92%E9%81%A1%E3%82%8B][find-fileでHelmみたいにC-lでディレクトリを遡る - emacs]]
+   より, =C-l= で一つ上の階層へ上がれる様にしたり.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf vertico
+  :ensure t
+  :preface
+  (defun my:disable-selection ()
+    (when (eq minibuffer-completion-table #'org-tags-completion-function)
+      (setq-local vertico-map minibuffer-local-completion-map
+                  completion-cycle-threshold nil
+                  completion-styles '(basic))))
+  ;;
+  ;; @see https://misohena.jp/blog/2022-08-15-transition-ivy-to-vertico.html
+  ;; 候補更新時に最初の候補を選択しない -> (vertico-preselect . 'prompt)
 
-  (setq interprogram-cut-function 'my:win32yank-copy)
-  (setq interprogram-paste-function 'my:win32yank-paste)
+  ;; ただし require-matchがt(やそれに類するもの)で入力が空ではなくマッチする候
+  ;; 補がある場合は、その候補の先頭を選択する。
+  (defun my:vertico--recompute (orig-fun pt content &rest args)
+    (let ((result (apply orig-fun pt content args)))
+      (if (and (not (equal content ""))
+               ;; 入力が空の時は(require-matchであっても)defaultまたはnilを返
+               ;; すことになっている。
+               (> (alist-get 'vertico--total result) 0) ;; < for syntax
+               ;; completing-readの説明によれば
+               ;; nil,confirm,confirm-after-completion以外はtのように
+               ;; 振る舞うべき。
+               (not (memq minibuffer--require-match
+                          '(nil confirm confirm-after-completion))))
+          (setf (alist-get 'vertico--index result) 0))
+      result))
+  ;;
+  ;;
+  (defun my:filename-upto-parent ()
+    "Move to parent directory like \"cd ..\" in find-file."
+    (interactive)
+    (let ((sep (eval-when-compile (regexp-opt '("/" "\\")))))
+      (save-excursion
+        (left-char 1)
+        (when (looking-at-p sep)
+          (delete-char 1)))
+      (save-match-data
+        (when (search-backward-regexp sep nil t)
+          (right-char 1)
+          (filter-buffer-substring (point)
+                                   (save-excursion (end-of-line) (point))
+                                   #'delete)))))
+  :advice
+  ((:before vertico--setup
+            my:disable-selection)
+   (:around vertico--recompute-candidates
+            my:vertico--recompute)
+   )
+  :bind
+  (:vertico-map (("C-l" . my:filename-upto-parent)))
+;;  :custom-face
+;;  `((vertico-current
+;;     . '((t (:inherit hl-line :background unspecified)))))
+  :init
+  (setq vertico-count 8
+        vertico-cycle t
+        vertico-preselect 'prompt
+        vertico-multiline '(("↓" 0 1 (face vertico-multiline))
+                            ("…" 0 1 (face vertico-multiline)))
+        )
+  ;; :config
+  :hook (emacs-startup-hook . vertico-mode)
+  )
+  #+end_src
+** =marginalia=: リッチな注釈(Enable richer annotations)
+   :PROPERTIES:
+   :CUSTOM_ID: orge9265e4d
+   :END:
+   行揃えが微妙. あと, ファイル名を省略表示できないのかな?
+   ⇒ [[https://github.com/minad/marginalia/issues/70][Better truncation method for file names #70]]
+   #+begin_src emacs-lisp :tangle init.el
+(leaf marginalia
+  :ensure t
+  :init
+  ;; 補完でも icon 表示
+  (leaf nerd-icons-completion
+   :ensure t
+   :hook
+   (emacs-startup-hook . nerd-icons-completion-mode)
+   )
+  :bind (("M-A" . marginalia-cycle)
+         (:minibuffer-local-map
+          ("M-A" . marginalia-cycle)
+          ))
+  :init
+  (setq marginalia-annotators    '(marginalia-annotators-light
+                                   marginalia-annotators-heavy
+                                   nil)
+        marginalia-align         'right
+        marginalia-align-offset  -2 ;; icon 分引いておく
+        )
+  :hook
+  ((emacs-startup-hook . marginalia-mode)
+   (marginalia-mode-hook . nerd-icons-completion-marginalia-setup)
+   )
   )
    #+end_src
+** =consult=: 便利コマンド集
+   :PROPERTIES:
+   :CUSTOM_ID: orged5e5627
+   :END:
+   とりあえず recetnf が使えないと途方に暮れるので
+   =consult-recent-file= のカスタマイズのみ.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf consult
+  :ensure t
+  :bind (("C-x C-r" . my:consult-recent-file))
+  ;; :defvar recentf-list
+  :init
+  (setq consult-narrow-key          "<"
+        consult-async-refresh-delay 0.2
+        consult-preview-key         nil
+        ;; 増やさないと preview 時に theme がロードされない模様.
+        ;; とりあえず default の 10 倍にしている. 1 MB かな?
+        consult-preview-raw-size 1024000
+        )
+  :config
+  (defun my:consult-recent-file ()
+    "Find recent using `completing-read' with shorten filename"
+    (interactive)
+    (eval-when-compile (require 'recentf))
+    (recentf-mode +1)
+    (let ((files (mapcar (lambda (f)
+                           (cons (my:shorten-file-path f (- (window-width) 2)) f))
+                         recentf-list)))
+      (let ((selected
+             (consult--read (mapcar #'car files)
+                            :prompt "Find recent file: "
+                            :sort nil
+                            :require-match t
+                            :category 'file
+                            :state (consult--file-preview)
+                            :history 'file-name-history)))
+        (find-file (assoc-default selected files)))))
+  )
+   #+end_src
+** =cape=: 補完 backend
+   :PROPERTIES:
+   :CUSTOM_ID: org3b1ea0b6
+   :END:
+   #+begin_src emacs-lisp :tangle init.el
+(leaf cape
+  :disabled t
+  :ensure t
+  :config
+  (setq cape-dabbrev-check-other-buffers nil)
+  (add-to-list 'completion-at-point-functions 'cape-keyword)
+  (add-to-list 'completion-at-point-functions 'cape-dabbrev)
+  (add-to-list 'completion-at-point-functions 'cape-file)
+  (add-to-list 'completion-at-point-functions 'cape-tex)
+  (add-to-list 'completion-at-point-functions 'cape-emoji)
+  )
+   #+end_src
+** =orderless=: 補完候補の選択
+   :PROPERTIES:
+   :CUSTOM_ID: orgc12df551
+   :END:
+   イロイロと凝れそうだけど, とりあえずはデフォルトのままで.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf orderless
+  :ensure t
+  :init
+  (setq completion-styles '(orderless)
+        orderless-matching-styles '(orderless-prefixes
+                                    orderless-flex
+                                    orderless-regexp
+                                    orderless-initialism
+                                    orderless-literal)
+        )
+  )
+   #+end_src
+** =kind-icon=: corfu で補完候補にアイコン表示
+   :PROPERTIES:
+   :CUSTOM_ID: org80404324
+   :END:
+   svg-lib でのアイコン表示ではなく nerd-icons を利用するように.
+   #+begin_src emacs-lisp
+(leaf kind-icon
+  :ensure t
+  :after corfu-terminal
+  :init
+  (setq kind-icon-default-face 'corfu-default
+        kind-icon-use-icons    nil
+        kind-icon-mapping      `(
+                                 (array          ,(nerd-icons-codicon "nf-cod-symbol_array")       :face font-lock-type-face)
+                                 (boolean        ,(nerd-icons-codicon "nf-cod-symbol_boolean")     :face font-lock-builtin-face)
+                                 (class          ,(nerd-icons-codicon "nf-cod-symbol_class")       :face font-lock-type-face)
+                                 (color          ,(nerd-icons-codicon "nf-cod-symbol_color")       :face success)
+                                 (command        ,(nerd-icons-codicon "nf-cod-terminal")           :face default)
+                                 (constant       ,(nerd-icons-codicon "nf-cod-symbol_constant")    :face font-lock-constant-face)
+                                 (constructor    ,(nerd-icons-codicon "nf-cod-triangle_right")     :face font-lock-function-name-face)
+                                 (enummember     ,(nerd-icons-codicon "nf-cod-symbol_enum_member") :face font-lock-builtin-face)
+                                 (enum-member    ,(nerd-icons-codicon "nf-cod-symbol_enum_member") :face font-lock-builtin-face)
+                                 (enum           ,(nerd-icons-codicon "nf-cod-symbol_enum")        :face font-lock-builtin-face)
+                                 (event          ,(nerd-icons-codicon "nf-cod-symbol_event")       :face font-lock-warning-face)
+                                 (field          ,(nerd-icons-codicon "nf-cod-symbol_field")       :face font-lock-variable-name-face)
+                                 (file           ,(nerd-icons-codicon "nf-cod-symbol_file")        :face font-lock-string-face)
+                                 (folder         ,(nerd-icons-codicon "nf-cod-folder")             :face font-lock-doc-face)
+                                 (interface      ,(nerd-icons-codicon "nf-cod-symbol_interface")   :face font-lock-type-face)
+                                 (keyword        ,(nerd-icons-codicon "nf-cod-symbol_keyword")     :face font-lock-keyword-face)
+                                 (macro          ,(nerd-icons-codicon "nf-cod-symbol_misc")        :face font-lock-keyword-face)
+                                 (magic          ,(nerd-icons-codicon "nf-cod-wand")               :face font-lock-builtin-face)
+                                 (method         ,(nerd-icons-codicon "nf-cod-symbol_method")      :face font-lock-function-name-face)
+                                 (function       ,(nerd-icons-codicon "nf-cod-symbol_method")      :face font-lock-function-name-face)
+                                 (module         ,(nerd-icons-codicon "nf-cod-file_submodule")     :face font-lock-preprocessor-face)
+                                 (numeric        ,(nerd-icons-codicon "nf-cod-symbol_numeric")     :face font-lock-builtin-face)
+                                 (operator       ,(nerd-icons-codicon "nf-cod-symbol_operator")    :face font-lock-comment-delimiter-face)
+                                 (param          ,(nerd-icons-codicon "nf-cod-symbol_parameter")   :face default)
+                                 (property       ,(nerd-icons-codicon "nf-cod-symbol_property")    :face font-lock-variable-name-face)
+                                 (reference      ,(nerd-icons-codicon "nf-cod-references")         :face font-lock-variable-name-face)
+                                 (snippet        ,(nerd-icons-codicon "nf-cod-symbol_snippet")     :face font-lock-string-face)
+                                 (string         ,(nerd-icons-codicon "nf-cod-symbol_string")      :face font-lock-string-face)
+                                 (struct         ,(nerd-icons-codicon "nf-cod-symbol_structure")   :face font-lock-variable-name-face)
+                                 (text           ,(nerd-icons-codicon "nf-cod-text_size")          :face font-lock-doc-face)
+                                 (typeparameter  ,(nerd-icons-codicon "nf-cod-list_unordered")     :face font-lock-type-face)
+                                 (type-parameter ,(nerd-icons-codicon "nf-cod-list_unordered")     :face font-lock-type-face)
+                                 (unit           ,(nerd-icons-codicon "nf-cod-symbol_ruler")       :face font-lock-constant-face)
+                                 (value          ,(nerd-icons-codicon "nf-cod-symbol_field")       :face font-lock-builtin-face)
+                                 (variable       ,(nerd-icons-codicon "nf-cod-symbol_variable")    :face font-lock-variable-name-face)
+                                 (t              ,(nerd-icons-codicon "nf-cod-code")               :face font-lock-warning-face))
+        )
+  :config
+  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
+  )
+   #+end_src
+** =corfu=: on the fly completions
+   :PROPERTIES:
+   :CUSTOM_ID: org37d21658
+   :END:
+   =company= より使い勝手が良い, 気がする.
+   :PROPERTIES:
+   :CUSTOM_ID: orgb72396fd
+   :END:
+   [[https://misohena.jp/blog/2024-02-15-separate-notification-and-selection-with-corfu-auto.html][Corfuの自動補完で候補の存在を伝える事と候補を選べるようにする事を分離する]] を参考に.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf corfu
+  :disabled t
+  :ensure t
+  :preface
+  (defvar-keymap my:corfu-auto-map
+    :doc "Keymap used when popup is shown automatically."
+    "C-g" #'corfu-quit
+    )
+  (defvar my:corfu-in-auto-complete nil)
+;;;###autoload
+(defun my:corfu--auto-complete-deferred:around (oldfun &rest args)
+  ;; 自動補完時に呼び出される
+  (let ((my:corfu-in-auto-complete t))
+    ;; 元の関数を呼び出す. 補完候補があるなら setup が呼ばれる
+    (apply oldfun args)))
+;;;###autoload
+(defun my:corfu--setup:around (oldfun &rest args)
+  (if my:corfu-in-auto-complete
+      ;; 自動補完の時
+      (progn
+        (setf ;; (alist-get 'alpha corfu--frame-parameters) 90
+              (alist-get 'tab-line-format corfu--buffer-parameters) "   C-M-i:補完"
+              ;; 最初の候補を選ばない
+              corfu-preselect 'prompt)
+        (let (;; キー割り当てを極力無くす
+              (corfu-map my:corfu-auto-map))
+          (apply oldfun args)))
+    ;; 手動補完の時
+    (setf ;; (alist-get 'alpha corfu--frame-parameters) 100
+          (alist-get 'tab-line-format corfu--buffer-parameters) nil
+          ;; 最初の候補を選ぶ
+          corfu-preselect 'first)
+    (apply oldfun args)))
+  :advice ((:around corfu--auto-complete-deferred
+                    my:corfu--auto-complete-deferred:around)
+           (:around corfu--setup
+                    my:corfu--setup:around)
+           )
+  :init
+  (leaf corfu-terminal
+    :ensure t
+    :config
+    (setq corfu-terminal-disable-on-gui nil)
+    )
+  :bind
+  (:corfu-map
+   ("TAB"       . corfu-next)
+   ("<tab>"     . corfu-next)
+   ("S-TAB"     . corfu-previous)
+   ("<backtab>" . corfu-previous)
+   ("C-j"       . corfu-next)
+   ("C-n"       . corfu-next)
+   ("C-p"       . corfu-previous)
+   ("C-k"       . corfu-previous)
+   ("C-g"       . corfu-quit)
+   )
+  :hook (emacs-startup-hook . (lambda ()
+                                (corfu-terminal-mode +1)
+                                (global-corfu-mode)))
+  :config
+  (setq completion-cycle-threshold 4
+        tab-always-indent          'complete
+        corfu-cycle                t
+        corfu-auto                 t
+        corfu-preselect            'prompt
+    )
+  )
+   #+end_src
+* VCSなど, ソースコード管理関係
+  :PROPERTIES:
+  :CUSTOM_ID: orgc6b67eb9
+  :END:
+  まあ, ほとんど Git 関連な訳ですが．
+** TODO =project.el= [0/1]
+   :PROPERTIES:
+   :CUSTOM_ID: org76c99d7f
+   :END:
+   Emacs 27.1 から built-in となった.
+   =eglot= でも使われているので, 設定しておく.
+   #+begin_src emacs-lisp
+(leaf project
+  :tag "builtin"
+  :init
+  (setq project-list-file (expand-file-name "projects" my:d:tmp)
+        project-switch-use-entire-map t)
+  )
+   #+end_src
+   - [ ] ghq の list を追加できないかな?
+     できれば =--full-path= じゃない表示にしたい(=my:shorten-file-path= を噛ませたい).
+** =consult-ghq=: ghq を consult で.
+   :PROPERTIES:
+   :CUSTOM_ID: org90f5d475
+   :END:
+   =project.el= で ghq を使うようになったら不要かもしれないけど, とりあえず.
+   #+begin_src emacs-lisp
+(leaf consult-ghq
+  :vc (:url "https://github.com/uwabami/consult-ghq")
+  :bind (("C-x f" . consult-ghq-open))
+  :init
+  (setq consult-ghq-short-list t)
+  )
+   #+end_src
+** =magit=: Emacs の Git Frontend
+   :PROPERTIES:
+   :CUSTOM_ID: org59371622
+   :END:
+   magit は Emacs の Git Frontend.
+   結局の所 CUI でコマンド叩く事も多いけれど, これはこれで重宝している．
+   #+begin_src emacs-lisp :tangle init.el
+(leaf magit
+  :bind (("C-x g" . magit-status))
+  :ensure t
+  :init
+  (leaf transient
+    :init
+    (setq transient-history-file (expand-file-name "transient-history.el" my:d:tmp)
+          transient-levels-file (expand-file-name "transient-levels.el" my:d:tmp)
+          transient-values-file (expand-file-name "transient-values.el" my:d:tmp)
+          transient-force-fixed-pitch t
+          )
+    )
+  ;;
+  (setq magit-completing-read-function 'magit-builtin-completing-read
+        magit-refs-show-commit-count   'all
+        magit-log-buffer-file-locked   t
+        magit-revision-show-gravatars  nil
+        )
+  )
+   #+end_src
+* 言語毎のモードの設定など
+  :PROPERTIES:
+  :CUSTOM_ID: org31fb6f15
+  :END:
+** =rainbow-delimiters=: 対応する括弧を色付け
+   :PROPERTIES:
+   :CUSTOM_ID: org11b26f5a
+   :END:
+   #+begin_src emacs-lisp :tangle init.el
+(leaf rainbow-delimiters
+  :ensure t
+  :hook (prog-mode-hook . rainbow-delimiters-mode)
+  )
+   #+end_src
+** =rainbow-mode=: カラーコードに色付け
+   :PROPERTIES:
+   :CUSTOM_ID: org1f0e431b
+   :END:
+   =#RRGGBB= のカラーコードに勝手に色が付く．CSS の編集中なんかで地味に便利．
+   #+begin_src emacs-lisp :tangle init.el
+(leaf rainbow-mode :ensure t :hook (emacs-startup-hook . rainbow-mode))
+   #+end_src
+** =markdown-mode=: Markdown 関連
+   :PROPERTIES:
+   :CUSTOM_ID: orgc773dfbe
+   :END:
+   色々な所で使われているので, とりあえずここで設定
+   #+begin_src emacs-lisp :tangle init.el
+(leaf markdown-mode
+  :ensure t
+  :mode ("\\.md\\'" "\\.markdown\\'")
+  :config
+  (setq markdown-command "pandoc") ;; プレビュー等で利用するコマンド
+  )
+   #+end_src
+** =tree-sitter=: 賢いシンタックスハイライト
+   :PROPERTIES:
+   :CUSTOM_ID: org80208e5d
+   :END:
+   #+begin_src emacs-lisp :tangle init.el
+(leaf treesit
+  :if (executable-find "tree-sitter")
+  :defvar treesit-language-source-alist
+  :config
+  (setq treesit-language-source-alist
+        '(;;
+          ;; (bash "https://github.com/tree-sitter/tree-sitter-bash")
+          ;; (clojure "https://github.com/sogaiu/tree-sitter-clojure")
+          ;; (cmake "https://github.com/uyha/tree-sitter-cmake")
+          ;; (css "https://github.com/tree-sitter/tree-sitter-css")
+          ;; (dockerfile "https://github.com/camdencheek/tree-sitter-dockerfile")
+          (elisp "https://github.com/Wilfred/tree-sitter-elisp")
+          ;; (latex "https://github.com/latex-lsp/tree-sitter-latex")
+          ;; (go "https://github.com/tree-sitter/tree-sitter-go")
+          ;; (html "https://github.com/tree-sitter/tree-sitter-html")
+          ;; (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+          ;; (json "https://github.com/tree-sitter/tree-sitter-json")
+          ;; (make "https://github.com/alemuller/tree-sitter-make")
+          (markdown "https://github.com/ikatyang/tree-sitter-markdown")
+          ;; (nix "https://github.com/nix-community/tree-sitter-nix")
+          ;; (python "https://github.com/tree-sitter/tree-sitter-python")
+          ;; (rust "https://github.com/tree-sitter/tree-sitter-rust")
+          ;; (toml "https://github.com/tree-sitter/tree-sitter-toml")
+          ;; (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
+          ;; (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
+          ;; (yaml "https://github.com/ikatyang/tree-sitter-yaml")
+          )
+        )
+  ;;
+  (defun my:treesit-install-grammar-all ()
+    "install all tree-sitter-grammer's"
+    (interactive)
+    (mapc
+     (lambda (lang)
+       (unless (treesit-language-available-p lang nil)
+         (treesit-install-language-grammar lang)))
+     (mapcar #'car treesit-language-source-alist)))
+  )
+   #+end_src
+** =f90-ts-mode=: fortan
+   :PROPERTIES:
+   :CUSTOM_ID: org49a03d08
+   :END:
+   あまり好みでないので, 諸々じたばた...
+   #+begin_src emacs-lisp :tangle init.el
+(leaf f90-ts-mode
+  :vc (:url "git@github.com:mscfd/emacs-f90-ts-mode.git")
+  :mode ("\\.f90\\'" "\\.F90\\'" "\\.f95\\'" "\\.F95\\'" "\\.F\\'")
+  :defvar treesit-language-source-alist
+  :bind (:f90-ts-mode-map
+         ("C-c '" . separedit))
+  :preface
+;;;###autoload
+  (defun my:install-fortran-grammar-with-generate ()
+    "install 時に tree-sitter generateを実行してから install"
+    (interactive)
+    (let* ((lang 'fortran)
+           (url "https://github.com/mscfd/tree-sitter-fortran")
+           (revision "master")
+           (tmp-dir (expand-file-name "tree-sitter-fortran-tmp" temporary-file-directory)))
+      (when (file-exists-p tmp-dir)
+        (delete-directory tmp-dir t))
+      (message "Cloning %s..." url)
+      (call-process "git" nil nil nil "clone" "-b" revision "--depth" "1" url tmp-dir)
+      (message "Running tree-sitter generate...")
+      (let ((default-directory tmp-dir))
+        (call-process-shell-command "tree-sitter generate" nil nil nil))
+      (let ((treesit-language-source-alist `((,lang ,tmp-dir nil "src"))))
+        (treesit-install-language-grammar lang))
+      (message "Fortran grammar installed successfully from generated source!")))
+;;;###autoload
+  (defun my:f90-ts-toggle-mode ()
+    "Toggle between `f90-mode' (legacy) and `f90-ts-mode'."
+    (interactive)
+    (if (eq major-mode 'f90-ts-mode)
+        (if (fboundp 'f90-mode)
+            (f90-mode)
+          (message "Legacy `f90-mode' not available"))
+      (f90-ts-mode)))
+;; function 関連の色付けルールがまだ熟れていないので, ちょっと修正する
+(defvar my:f90-keywords
+  '("allocated" "associated" "present" "allocate" "deallocate" "nullify"))
+(defvar my:f90-builtins
+  '("min" "max" "abs" "mod" "sqrt" "sum"
+    "size" "shape" "len" "trim" "adjustl" "adjustr"
+    "real" "int" "dble" "cmplx" "count" "any" "all"))
+;;;###autoload
+(defun my:f90-make-regex (word-list)
+  (let ((patterns (mapcar (lambda (word)
+                            (mapconcat (lambda (c)
+                                         (format "[%c%c]" (upcase c) (downcase c)))
+                                       word ""))
+                          word-list)))
+    (format "^\\(%s\\)$" (mapconcat #'identity patterns "\\|"))))
+;;;###autoload
+(defun my:fixed-f90-ts-rules-function ()
+  "Fixed font-lock rules for functions and subroutines."
+  (let ((regex-kw (my:f90-make-regex my:f90-keywords))
+        (regex-bi (my:f90-make-regex my:f90-builtins)))
+    (treesit-font-lock-rules
+     :language 'fortran
+     :feature 'function
+     `((subroutine_statement
+        name: (name)                  @font-lock-function-name-face)
+       (function_statement
+        name: (name)                  @font-lock-function-name-face)
+       (function_result
+        (identifier)                  @default)
+       (subroutine_call
+        subroutine: (identifier)      @font-lock-function-name-face)
+       ;; --- 削除箇所 ---
+       ;; (call_expression (identifier) @font-lock-function-name-face)
+       ((call_expression (identifier) @font-lock-keyword-face)
+        (:match ,regex-kw             @font-lock-keyword-face))
+       ((call_expression (identifier) @font-lock-builtin-face)
+        (:match ,regex-bi             @font-lock-builtin-face))
+       ;; within derived type declarations
+       (variable_declaration
+        type: (procedure
+               "procedure"
+               (procedure_interface)        @font-lock-function-name-face)
+        ;; is this always a pointer to a procedure?
+        declarator: (identifier)            @font-lock-function-name-face)
+       (procedure_statement
+        declarator: [
+                     ((method_name)         @font-lock-function-name-face)
+                     ((binding
+                       (binding_name
+                        [
+                         ((identifier)      @font-lock-function-name-face)
+                         ((operator
+                           (operator_name)  @f90-ts-font-lock-operator-face))
+                         ((assignment "="   @f90-ts-font-lock-operator-face))
+                         ])
+                       (method_name)        @font-lock-function-name-face))
+                     ])
+       (generic_statement
+        declarator: (binding_list
+                     (binding_name
+                      [
+                       ((identifier)       @font-lock-function-name-face)
+                       ((operator
+                         (operator_name)   @f90-ts-font-lock-operator-face))
+                       ((assignment "="    @f90-ts-font-lock-operator-face))
+                       ])
+                     (method_name)         @font-lock-function-name-face))
+       (final_statement
+        declarator: (method_name)           @font-lock-function-name-face)
+       ))))
+;;;###autoload
+  (defun my:fixed-f90-ts-rules-variable ()
+    "Fixed font-lock rules for variables, declarations, and module control."
+    (treesit-font-lock-rules
+     :language 'fortran
+     :feature 'variable
+     '(
+       ;; 1. 変数宣言 (integer :: nm, real :: x=1.0)
+       (variable_declaration (init_declarator left: (identifier) @font-lock-variable-name-face))
+       (variable_declaration (identifier) @font-lock-variable-name-face)
+       (variable_declaration (sized_declarator (identifier) @font-lock-variable-name-face))
+       ;; 2. SAVE
+       (save_statement (identifier) @font-lock-variable-name-face)
+       ;; 3. モジュール制御 (use, only, private, public)
+       (use_statement (module_name) @font-lock-constant-face)
+       (included_items (identifier) @font-lock-variable-name-face) ;; use ..., only: DP
+       (public_statement (identifier) @font-lock-function-name-face)
+       (private_statement (identifier) @font-lock-function-name-face)
+       ;; 4. プログラム単位の名前
+       (module_statement (name) @font-lock-function-name-face)
+       (program_statement (name) @font-lock-function-name-face)
+       ;; 5. 元のルール (self)
+       ((identifier) @f90-ts-font-lock-special-var-face
+        (:pred f90-ts-special-var-p @f90-ts-font-lock-special-var-face))
+       )))
+  ;;
+  (add-to-list 'major-mode-remap-alist '(f90-mode . f90-ts-mode))
+  :advice
+  ((:override f90-ts--font-lock-rules-function my:fixed-f90-ts-rules-function)
+   (:override f90-ts--font-lock-rules-variable my:fixed-f90-ts-rules-variable)
+   )
+  :custom-face
+  (f90-ts-font-lock-intrinsic-face       . '((t :inherit font-lock-builtin-face)))
+  (f90-ts-font-lock-delimiter-face       . '((t :inherit font-lock-delimiter-face)))
+  (f90-ts-font-lock-operator-face        . '((t :inherit font-lock-operator-face)))
+  (f90-ts-font-lock-openmp-face          . '((t :inherit font-lock-preprocessor-face)))
+  (f90-ts-font-lock-bracket-face         . '((t :inherit font-lock-bracket-face)))
+  (f90-ts-font-lock-special-var-face     . '((t :inherit font-lock-constant-face)))
+  (f90-ts-font-lock-special-comment-face . '((t :inherit font-lock-doc-face)))
+  :init
+  (setq f90-ts-indent-block 2
+        f90-ts-indent-contain 2
+        f90-ts-indent-continued 2
+        f90-ts-indent-toplevel 2
+        f90-ts-indent-lists-region 'continued-line
+        f90-ts-indent-lists-line   'continued-line
+        )
+  (setq f90-ts-indent-rules-openmp
+        `(
+          ((f90-ts--openmp-comment-is) prev-sibling 0)
+          ((f90-ts--openmp-comment-is) parent-bol f90-ts-indent-block)))
+  ;; :config
+  :hook
+  (f90-ts-mode-hook
+   . (lambda ()
+       (setq-local comment-start "!")
+       (setq-local comment-start-skip "\\(!>\\|!+\\)[ \t]*")
+       (font-lock-add-keywords
+        nil
+        '(("!>.*\\(\\*\\*\\(.*?\\)\\*\\*\\)" (1 'font-lock-bold-face prepend))
+          ("!>.*\\(`\\(.*?\\)`\\)" (1 'font-lock-constant-face prepend))
+          ("!>\\([ \t]*-[ \t]+\\)" (1 'font-lock-keyword-face prepend))
+          ("!>\\([ \t]*#+ .*\\)$" (1 'font-lock-builtin-face prepend)))
+        'append)
+       (setq-local treesit-font-lock-level 5)
+       (treesit-font-lock-recompute-features)
+       (treesit-fold-mode)
+       )
+   )
+  )
+   #+end_src
+** =treesit-fold=: コードの「折り畳み」
+   :PROPERTIES:
+   :CUSTOM_ID: org43e560a9
+   :END:
+   fortran-parser を追加するためにじたばた...
+   #+begin_src emacs-lisp :tangle init.el
+(leaf treesit-fold
+  :if (executable-find "tree-sitter")
+  :ensure t
+  :bind (("C-c f" . treesit-fold-toggle)
+         ("C-c F" . my:treesit-fold-toggle-all)
+         )
+  :preface
+;;;###autoload
+  (defun my:treesit-fold-toggle-all ()
+    "Toggle between `treesit-fold-open-all' and `treesit-fold-close-all'."
+    (interactive)
+    (let ((found-folded nil))
+      (save-excursion
+        (dolist (ov (overlays-in (point-min) (point-max)))
+          (when (eq (overlay-get ov 'invisible) 'treesit-fold)
+            (setq found-folded t))))
+      (if found-folded
+          (progn
+            (treesit-fold-open-all)
+            (message "All nodes opened"))
+        (progn
+          (treesit-fold-close-all)
+          (message "All nodes closed")))))
+;;;###autoload
+  (defun my:treesit-fold-toggle-override (&rest _args)
+    "Toggle fold at point. If opening, open recursively."
+    (interactive)
+    (if-let* ((node (treesit-fold--foldable-node-at-pos))
+              (ov (treesit-fold-overlay-at node)))
+        (treesit-fold-open-recursively)
+      (treesit-fold-close)))
+  :advice
+  (:override treesit-fold-toggle my:treesit-fold-toggle-override)
+  :hook ((treesit-fold-mode-hook . treesit-fold-line-comment-mode)
+         (emacs-lisp-mode-hook . (lambda () (treesit-parser-create 'elisp)))
+         )
+  :config
+  ;; ---------------------------------------------------------------------------
+  ;; Fortran Support Implementation
+  ;; ---------------------------------------------------------------------------
+  ;; Constants of fold target
+  (defconst treesit-fold-fortran-declaration-nodes
+    '("use_statement" "implicit_statement" "import_statement" "include_statement"
+      "private_statement" "public_statement" "save_statement" "parameter_statement"
+      "data_statement" "variable_declaration" "namelist_statement" "common_statement"
+      "equivalence_statement" "entry_statement" "format_statement")
+    "List of declaration node types in Fortran to be folded as a group.")
+  ;; Check Sibling Node
+  (defun treesit-fold-range-fortran--sibling (node next)
+    "Find the nearest sibling of NODE.
+If NEXT is non-nil, search forwards; otherwise, search backwards.
+Skips comments, newlines, and end-of-statement markers."
+    (let ((iter (if next (treesit-node-next-sibling node)
+                  (treesit-node-prev-sibling node))))
+      (while (and iter
+                  (let ((type (treesit-node-type iter)))
+                    (or (string-equal type "comment")
+                        (string-equal type "\n")
+                        (string-prefix-p "_end_of_" type)
+                        (string-match-p "\\`\\s-*\\'" type))))
+        (setq iter (if next (treesit-node-next-sibling iter)
+                     (treesit-node-prev-sibling iter))))
+      iter))
+  ;; Range Parsers
+  (defun treesit-fold-range-fortran-declarations (node offset)
+    "Calculate the fold range for consecutive declaration blocks.
+Merges adjacent declaration nodes into a single fold.
+Also includes trailing comments (e.g. !$omp or normal comments) in the block."
+    (let ((type (treesit-node-type node)))
+      (when (member type treesit-fold-fortran-declaration-nodes)
+        (let ((prev (treesit-fold-range-fortran--sibling node nil))
+              (next (treesit-fold-range-fortran--sibling node t)))
+          ;; Only fold from the first node in a sequence of declarations.
+          (unless (and prev (member (treesit-node-type prev) treesit-fold-fortran-declaration-nodes))
+            ;; 1. Determine the end of the strict declaration block
+            (let ((last-node node)
+                  (iter-node next))
+              (while (and iter-node
+                          (member (treesit-node-type iter-node) treesit-fold-fortran-declaration-nodes))
+                (setq last-node iter-node)
+                (setq iter-node (treesit-fold-range-fortran--sibling iter-node t)))
+              ;; 2. 通常の sibling 取得関数はコメントを飛ばしてしまうため,
+              ;;    ここでは生の next-sibling を取得し, コメントか改行なら範囲を拡張する
+              (let ((scan-node (treesit-node-next-sibling last-node)))
+                (while (and scan-node
+                            (let ((t-type (treesit-node-type scan-node)))
+                              (or (string-equal t-type "comment")
+                                  (string-equal t-type "\n")
+                                  (string-match-p "\\`\\s-*\\'" t-type))))
+                  ;; コメントノードが見つかったら、そこをブロックの末尾とする
+                  (when (string-equal (treesit-node-type scan-node) "comment")
+                    (setq last-node scan-node))
+                  (setq scan-node (treesit-node-next-sibling scan-node))))
+              ;; 3. Create fold if range is valid
+              (when (not (eq node last-node))
+                (treesit-fold--cons-add (cons (treesit-node-start node)
+                                              (treesit-node-end last-node))
+                                        offset))))))))
+  ;; Comment block
+  (defun treesit-fold-range-fortran-comment (node offset)
+    "Calculate the fold range for consecutive comment blocks.
+Skips empty lines and non-comment whitespace between comments."
+    (when (string-equal (treesit-node-type node) "comment")
+      (let ((prev (treesit-node-prev-sibling node))
+            (is-continuation nil))
+        ;; Check if this node is a continuation of a previous comment block.
+        (while (and prev
+                    (or (string-equal (treesit-node-type prev) "comment")
+                        (string-match-p "\\`\\s-*\\'" (treesit-node-type prev))))
+          (when (string-equal (treesit-node-type prev) "comment")
+            (setq is-continuation t))
+          (setq prev (treesit-node-prev-sibling prev)))
+        ;; Only fold if this is the start of the block.
+        (unless is-continuation
+          (let ((next (treesit-node-next-sibling node))
+                (last-comment node))
+            ;; Find the end of the comment block.
+            (while next
+              (let ((type (treesit-node-type next)))
+                (cond
+                 ((string-equal type "comment")
+                  (setq last-comment next)
+                  (setq next (treesit-node-next-sibling next)))
+                 ((string-match-p "\\`\\s-*\\'" type)
+                  (setq next (treesit-node-next-sibling next)))
+                 (t
+                  (setq next nil)))))
+            (when (not (eq last-comment node))
+              (treesit-fold--cons-add (cons (treesit-node-start node)
+                                            (treesit-node-end last-comment))
+                                      offset)))))))
+  ;; Normal fold blocks
+  (defun treesit-fold-range-fortran-blocks (node offset)
+    "Calculate the fold range for generic blocks (e.g., subroutines, loops).
+Folds the content between the header (first child) and the footer (last child)."
+    (let ((header (treesit-node-child node 0 t))
+          (footer (treesit-node-child node -1 t)))
+      (when (and header footer (not (eq header footer)))
+        (treesit-fold--cons-add (cons (treesit-node-end header)
+                                      (treesit-node-start footer))
+                                offset))))
+  ;; Summary Parser
+  (defun treesit-fold-summary-fortran-doc (doc-str)
+    "Extract summary from Fortran comments.
+Handles Doxygen style (!>) and ignores code blocks or separator lines."
+    (when (string-match-p "\\`\\s-*!" doc-str)
+      ;; Ensure the content is strictly a comment block (no code lines).
+      (unless (string-match-p "\n[ \t]*[^! \t\n]" doc-str)
+        (let ((lines (split-string doc-str "\n"))
+              (summary nil))
+          (dolist (line lines)
+            (unless summary
+              ;; Remove '!', '!>', or whitespace.
+              (let ((content (replace-regexp-in-string "\\`\\s-*!+>?\\s-*" "" line)))
+                (cond
+                 ((string-empty-p content) nil)
+                 ((string-match-p "-[*]-" line) nil) ; Ignore mode lines
+                 ((not (string-match-p "[[:alnum:]]" content)) nil) ; Ignore separators
+                 (t (setq summary content))))))
+          summary))))
+  ;; Definition of Rules
+  (defun treesit-fold-parsers-fortran ()
+    "Return the folding rules for f90-ts-mode."
+    `((subroutine                 . treesit-fold-range-fortran-blocks)
+      (function                   . treesit-fold-range-fortran-blocks)
+      (interface                  . treesit-fold-range-fortran-blocks)
+      (derived_type_definition    . treesit-fold-range-fortran-blocks)
+      (do_loop                    . treesit-fold-range-fortran-blocks)
+      (if_statement               . treesit-fold-range-fortran-blocks)
+      (select_case_statement      . treesit-fold-range-fortran-blocks)
+      (select_type_statement      . treesit-fold-range-fortran-blocks)
+      (block_construct            . treesit-fold-range-fortran-blocks)
+      (associate_statement        . treesit-fold-range-fortran-blocks)
+      (coarray_critical_statement . treesit-fold-range-fortran-blocks)
+      (forall_statement           . treesit-fold-range-fortran-blocks)
+      (where_statement            . treesit-fold-range-fortran-blocks)
+      (module                     . treesit-fold-range-fortran-blocks)
+      (program                    . treesit-fold-range-fortran-blocks)
+      (submodule                  . treesit-fold-range-fortran-blocks)
+      ,@(mapcar (lambda (type) (cons (intern type) 'treesit-fold-range-fortran-declarations))
+                treesit-fold-fortran-declaration-nodes)
+      (comment                    . treesit-fold-range-fortran-comment)))
+  ;; Register summary parser for f90-ts-mode.
+  (add-to-list 'treesit-fold-summary-parsers-alist
+               '(f90-ts-mode . treesit-fold-summary-fortran-doc))
+  ;; 以下は私の好み.
+  ;; module や program が fold されると全部 fold されるので構造がわかりにくい.
+  (add-to-list 'treesit-fold-range-alist
+               (cons 'f90-ts-mode
+                     (seq-remove (lambda (x)
+                                   (memq (car x) '(module program submodule)))
+                                 (treesit-fold-parsers-fortran))))
+  )
+   #+end_src
+** =separedit=: コード内の特定の部分を別バッファ・別モードで編集
+   :PROPERTIES:
+   :CUSTOM_ID: org2fd5bd6c
+   :END:
+   #+begin_src emacs-lisp :tangle init.el
+(leaf separedit
+  :ensure t
+  :init
+  (setq separedit-default-mode 'markdown-mode
+        separedit-remove-trailing-spaces-in-comment t
+        separedit-preserve-string-indentation t
+        separedit-continue-fill-column t)
+  :defer-config
+  (push '(("!>" "!") . f90-ts-mode) separedit-comment-delimiter-alist)
+  :advice (:around separedit my:speparedit-doxygen-fortran)
+  :preface
+;;;###autoload
+(defun my:speparedit-doxygen-fortran (orig-fun &rest args)
+  "Forran で Doxygen (!>) と 通常コメント (!) を分離して編集する補助関数"
+  (if (derived-mode-p 'f90-ts-mode)
+      (cond
+       ;; -------------------------------------------------------------------
+       ;; パターンA: Doxygen (!>) 行の場合
+       ;; -------------------------------------------------------------------
+       ((save-excursion (beginning-of-line) (looking-at-p "^[ \t]*!>"))
+        (let ((beg (save-excursion
+                     (beginning-of-line)
+                     (while (and (not (bobp))
+                                 (save-excursion
+                                   (forward-line -1)
+                                   (beginning-of-line)
+                                   (looking-at-p "^[ \t]*!>")))
+                       (forward-line -1))
+                     (point)))
+              (end (save-excursion
+                     (end-of-line)
+                     (while (and (not (eobp))
+                                 (save-excursion
+                                   (forward-line 1)
+                                   (beginning-of-line)
+                                   (looking-at-p "^[ \t]*!>")))
+                       (forward-line 1))
+                     (end-of-line)
+                     (point))))
+          ;; 明示的に !> デリミタを指定して起動
+          (funcall orig-fun (list :beginning beg
+                                  :end end
+                                  :lang-mode 'markdown-mode
+                                  :comment-delimiter "^[ \t]*!>[ \t]*"))))
+
+       ;; -------------------------------------------------------------------
+       ;; パターンB: 通常コメント (!) 行の場合
+       ;; ※ !> ではないが、! で始まっている行
+       ;; -------------------------------------------------------------------
+       ((save-excursion (beginning-of-line) (looking-at-p "^[ \t]*![^>]"))
+        ;; 注意: "^[ \t]*!" だけだと !> にもマッチするので、! の後ろが > じゃないことを確認
+        ;; または、既に上の条件で !> は弾いているので、単純に ! 開始でも良いが、念のため。
+
+        (let ((beg (save-excursion
+                     (beginning-of-line)
+                     ;; 上へ遡る (! のみ。!> が来たら止まる)
+                     (while (and (not (bobp))
+                                 (save-excursion
+                                   (forward-line -1)
+                                   (beginning-of-line)
+                                   (and (looking-at-p "^[ \t]*!")
+                                        (not (looking-at-p "^[ \t]*!>")))))
+                       (forward-line -1))
+                     (point)))
+              (end (save-excursion
+                     (end-of-line)
+                     ;; 下へ進む (! のみ。!> が来たら止まる)
+                     (while (and (not (eobp))
+                                 (save-excursion
+                                   (forward-line 1)
+                                   (beginning-of-line)
+                                   (and (looking-at-p "^[ \t]*!")
+                                        (not (looking-at-p "^[ \t]*!>")))))
+                       (forward-line 1))
+                     (end-of-line)
+                     (point))))
+
+          ;; 明示的に ! デリミタを指定して起動
+          ;; これにより、下に !> があっても巻き込まず、書き戻しも ! になる
+          (funcall orig-fun (list :beginning beg
+                                  :end end
+                                  :lang-mode 'markdown-mode ;; あるいは nil (自動判定)
+                                  :comment-delimiter "^[ \t]*![ \t]*"))))
+
+       ;; -------------------------------------------------------------------
+       ;; パターンC: その他
+       ;; -------------------------------------------------------------------
+       (t (apply orig-fun args)))
+
+    ;; f90-ts-mode 以外
+    (apply orig-fun args)))
+)
+   #+end_src
+** =eglot=: Language Server による補完
+   :PROPERTIES:
+   :CUSTOM_ID: org1d7a5ece
+   :END:
+   Emacs 29から 本体に同梱されることになったので =eglot= を利用することに.
+   サーバの呼び出し自体は言語毎に hook で設定する.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf eglot
+  :ensure t
+  :bind (("M-t" . xref-find-definitions)
+         ("M-r" . xref-find-references))
+;;  :init
+;;;###autoload
+;; (defun my:eglot-capf()
+;;   (setq-local completion-at-point-functions
+;;               (list (cape-super-capf
+;;                      #'eglot-completion-at-point)
+;;                     #'cape-keyword
+;;                     #'cape-dabbrev
+;;                     #'cape-file)
+;;               ))
+;;  :hook
+;;  ((eglot-managed-mode-hook . my:eglot-capf))
+  :config
+  ;; digestif は日本語TeXとイマイチ相性が悪い(上手く使い熟せていない...).
+  (delete (assoc '(tex-mode context-mode texinfo-mode bibtex-mode)
+                 eglot-server-programs)
+          eglot-server-programs)
+;;   (add-to-list 'eglot-server-programs
+;;              '((latex-mode tex-mode context-mode texinfo-mode bibtex-mode) . ("texlab")))
+  (add-to-list 'eglot-server-programs
+             '((latex-mode tex-mode texinfo-mode bibtex-mode) . ("texlab")))
+  )
+   #+end_src
+** =flaymake=: on-the-fly syntax checker
+   :PROPERTIES:
+   :CUSTOM_ID: org82f6778a
+   :END:
+   =eglot= と同時に利用されるので、一応設定しておく.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf flymake
+  :ensure t
+  :bind (:flymake-mode-map
+         ("C-c C-p" . flymake-goto-prev-error)
+         ("C-c C-n" . flymake-goto-next-error)
+         )
+  :config (require 'flymake-proc nil 'noerror)
+  )
+(leaf flymake-diagnostic-at-point
+  :ensure t
+  :after flymake
+  :hook (flymake-mode-hook . flymake-diagnostic-at-point-mode)
+  )
+   #+end_src
+** TeX: =AUCTeX=
+   :PROPERTIES:
+   :CUSTOM_ID: org88a3cb1b
+   :END:
+   やっている事は
+   - japanese-latex-mode において, 幾つかのコマンドが追加/上書きされているものの,
+     あまり使うことの無いコマンドが表示されるのが嫌なのでそれらを削除．
+   - コンパイルには[[http://personal.psu.edu/jcc8/software/latexmk/][Latexmk]]を使う
+   と言った所.
+   …ただ, Beamerのクラスなんかだと勝手にdefault コマンドが LaTeX に変更されたりするので挙動がイマイチ良くわからん.
+   async で =latexmk -pvc= を走らせておいた方が気持が良い, 気がしている.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf tex-site
+  :if (and (executable-find "uplatex")
+           (executable-find "latexmk"))
+  :preface
+  (unless (file-directory-p (expand-file-name "auctex/auto" my:d:tmp))
+    (progn
+      (make-directory (expand-file-name "auctex/auto" my:d:tmp) t)
+      (make-directory (expand-file-name "auctex/style" my:d:tmp) t)))
+  :mode ("\\.tex\\'" . japanese-latex-mode)
+  :hook (;;
+         (LaTeX-mode-hook . (lambda ()
+                              (turn-on-reftex)
+                              (TeX-source-correlate-mode)
+                              (TeX-PDF-mode)
+                              (LaTeX-math-mode)
+                              (outline-minor-mode)
+                              (setq TeX-command-default "LatexMk"
+                                    japanese-LaTeX-command-default "LatexMk")
+                              (eglot-ensure)
+                              (add-to-list 'TeX-command-list
+                                           '("upLaTeXmk"
+                                             "latexmk -e '$latex=q/uplatex %%O -kanji=utf8 -no-guess-input-enc %(file-line-error) %(extraopts) %S %(mode) %%S/' -e '$bibtex=q/bibtexu %%O %%B/' -e '$biber=q/biber %%O --bblencoding=utf8 -u -U --output_safechars %%B/' -e '$makeindex=q/upmendex %%O -o %%D %%S/' -e '$dvipdf=q/dvipdfmx %%O -o %%D %%S/' -norc -gg -pdfdvi %t"
+                                             TeX-run-TeX nil (latex-mode) :help "Run upLaTeXmk"))
+                              ))
+         )
+  :config
+  (with-eval-after-load 'tex-jp
+    (dolist (command '("pTeX" "pLaTeX" "pBibTeX" "jTeX" "jLaTeX" "jBibTeX" "Mendex"))
+      (delq (assoc command TeX-command-list) TeX-command-list)))
+  ;; reftex
+  (setq reftex-plug-into-AUCTeX t
+        reftex-cite-prompt-optional-args t
+        )
+  ;; tex-site
+  (setq TeX-auto-local (expand-file-name "auctex/auto" my:d:tmp)
+        TeX-style-local (expand-file-name "auctex/style" my:d:tmp)
+        TeX-auto-untabify t
+        japanese-TeX-engine-default 'uptex
+        japanese-LaTeX-default-style "jsarticle" ;; bxjsarticle? jlreq?
+        TeX-engine 'luatex
+        TeX-view-program-selection  '((output-dvi "xdvi")
+                                      (output-pdf "Okular")
+                                      ;; (output-pdf "Atril")
+                                      ;; (output-pdf "Fwdevince")
+                                      (output-html "xdg-open")
+                                      )
+        TeX-source-correlate-method 'synctex
+        TeX-source-correlate-start-server t
+        TeX-source-correlate-mode t
+        LaTeX-math-mode t
+        TeX-command-default "upLaTeXmk"
+        TeX-ispell-extend-skip-list t
+        TeX-command-output-list '(("upLatexMk" ("pdf")))
+        TeX-electric-sub-and-superscript t
+        )
+  (setq LaTeX-figure-label "fig:"
+        LaTeX-table-label "tab:"
+        LaTeX-section-label "sec:")
+  (setq font-latex-fontify-script nil
+        font-latex-script-display nil
+        font-latex-fontify-sectioning  1.0
+        )
+  )
+   #+end_src
+* 翻訳
+  :PROPERTIES:
+  :CUSTOM_ID: org779f9ba7
+  :END:
+** DeepL 翻訳
+   :PROPERTIES:
+   :CUSTOM_ID: orga528b584
+   :END:
+   ブラウザ呼び出し
+   #+begin_src emacs-lisp
+(leaf *deepl-translate
+  :commands my:deepl-translate
+  :bind (("C-x T" . my:deepl-translate))
+  :preface
+  (require 'url-util)
+  (defun my:deepl-translate (&optional string)
+    (interactive)
+    (setq string
+          (cond ((stringp string) string)
+                ((use-region-p)
+                 (buffer-substring (region-beginning) (region-end)))
+                (t
+                 (save-excursion
+                   (let (s)
+                     (forward-char 1)
+                     (backward-sentence)
+                     (setq s (point))
+                     (forward-sentence)
+                     (buffer-substring s (point)))))))
+    (run-at-time 0.1 nil 'deactivate-mark)
+    (browse-url
+     (concat
+      "https://www.deepl.com/translator#en/ja/"
+      (url-hexify-string string)
+      )))
+  )
+   #+end_src
+** Google 翻訳
+   :PROPERTIES:
+   :CUSTOM_ID: org48ef2f56
+   :END:
+   #+begin_src emacs-lisp
+(leaf google-translate
+  :ensure t
+  :defvar google-translate-backend-method
+  :init
+  (defvar google-translate-translation-directions-alist '(("en" . "ja") ("ja" . "en")))
+  (leaf popup :ensure t)
+  (defun my:google-translate--search-tkk ()
+    "Search TKK. @see https://github.com/atykhonov/google-translate/issues/52"
+    (list 430675 2721866130))
+  :bind
+  ("C-x t" . google-translate-smooth-translate)
+  :advice (:override google-translate--search-tkk
+                     my:google-translate--search-tkk)
+  :config
+  (setq google-translate-translation-directions-alist '(("en" . "ja") ("ja" . "en"))
+        google-translate-backend-method 'curl)
+  )
+   #+end_src
+* 校正, 辞書等
+  :PROPERTIES:
+  :CUSTOM_ID: org15a06190
+  :END:
+** =ispell=,=flyspell=: spell checker, on-the-fly spell checker
+   :PROPERTIES:
+   :CUSTOM_ID: org3737a28e
+   :END:
+   ispell はコマンドとして =aspell= を利用する.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf flyspell
+  :if (executable-find "aspell")
+  :init
+  (setq ispell-program-name   "aspell"
+        ispell-check-comments nil
+        ispell-skip-html      t
+        ispell-silently-savep t
+        )
+  :bind (:flyspell-mode-map
+         ("C-." . nil)
+         ("C-," . nil))
+  :defer-config
+  (add-to-list 'ispell-skip-region-alist '("[^\000-\377]+"))
+  )
+   #+end_src
+** =lookup=: 電子辞書の検索
+   :PROPERTIES:
+   :CUSTOM_ID: org3002f57f
+   :END:
+   EPWING化した辞書群を検索するために =lookup-el= ver. 1.4 系列を利用
+   #+begin_src emacs-lisp :tangle init.el
+(leaf lookup
+  :if (and (file-exists-p "/etc/emacs/site-start.d/50lookup-el.el")
+           (file-exists-p "/usr/local/share/dict/lookup-enabled"))
+  :commands (lookup lookup-region lookup-pattern)
+  :bind (("C-c w" . lookup-pattern)
+         ("C-c W" . lookup-word))
+  :init
+  (setq lookup-search-agents '((ndeb "/usr/local/share/dict/eijiro" :alias "英辞郎")
+                               (ndeb "/usr/local/share/dict/waeijiro" :alias "和英辞郎")
+                               (ndeb "/usr/local/share/dict/rikagaku5" :alias "理化学辞典 第5版")
+                               (ndeb "/usr/local/share/dict/koujien4" :alias "広辞苑 第4版")
+                               (ndeb "/usr/local/share/dict/wadai5" :alias "研究社 和英大辞典 第5版")
+                               ;; (ndeb "/usr/local/share/dict/eidai6" :alias "研究社 英和大辞典 第6版")
+                               ;; (ndeb "/usr/local/share/dict/colloc" :alias "研究社 英和活用大辞典 ")
+                               )
+        )
+  )
+   #+end_src
+** =text-adjust=: 全角文字の撲滅
+   :PROPERTIES:
+   :CUSTOM_ID: org501da28b
+   :END:
+   #+begin_src emacs-lisp
+(leaf text-adjust :vc (:url "https://github.com/uwabami/text-adjust.el"))
+   #+end_src
+
 * MUA の設定: =wanderulst=
   :PROPERTIES:
   :CUSTOM_ID: org2c2abb9b
@@ -2928,1044 +4139,70 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   :ensure t
   )
    #+end_src
-* 補完: =vertico=, =marginalia=, =consult=, =corfu=
+* カレンダー設定
   :PROPERTIES:
-  :CUSTOM_ID: org5fd7347f
+  :CUSTOM_ID: org7d9d4027
   :END:
-  最近話題になりだしたので, ちょっと使い始めてみた.
-** helm, ivy の無効化
+   表示の更新と =japanese-holidays= による日本の休日の追加
+** カレンダー本体の設定
    :PROPERTIES:
-   :CUSTOM_ID: orgff7e02fd
+   :CUSTOM_ID: org6ac86c8d
    :END:
-   依存する拡張がまだまだ多いので, 一度インストールして邪魔しないようにしておくことに.
-   #+begin_src emacs-lisp
-(leaf helm :defer-config (helm-mode -1))
-(leaf ivy :defer-config (ivy-mode -1))
-   #+end_src
-** 無視する拡張子の追加設定
-   :PROPERTIES:
-   :CUSTOM_ID: orgbf52614c
-   :END:
-  とりあえず, 無視するファイルの拡張子を指定しておく.
-  #+begin_src emacs-lisp :tangle init.el
-(leaf *completion
+    #+begin_src emacs-lisp :tangle init.el
+(leaf calendar
+  :defvar calendar-holidays japanese-holidays
   :init
-  ;; 補完で無視する拡張子の追加．そのうち増える．
-  (cl-loop for ext in
-           '(;; TeX
-             ".dvi"
-             ".fdb_latexmk"
-             ".fls"
-             ".ilg"
-             ".jqz"
-             ".nav"
-             ".out"
-             ".snm"
-             ".synctex\\.gz"
-             ".vrb"
-             ;; fortran >= 90
-             ".mod"
-             ;; zsh
-             ".zwc"
-             ;; libtool
-             ".in"
-             ".libs/"
-             ;; fxxkin Apple
-             ".DS_Store"
-             "._DS_Store"
-             ;; "org-id-locations"
-             )
-           do (add-to-list 'completion-ignored-extensions ext))
-  )
-  #+end_src
-** =vertico=: 本体
-   :PROPERTIES:
-   :CUSTOM_ID: org8362fd9f
-   :END:
-   [[https://scrapbox.io/emacs/find-file%E3%81%A7Helm%E3%81%BF%E3%81%9F%E3%81%84%E3%81%ABC-l%E3%81%A7%E3%83%87%E3%82%A3%E3%83%AC%E3%82%AF%E3%83%88%E3%83%AA%E3%82%92%E9%81%A1%E3%82%8B][find-fileでHelmみたいにC-lでディレクトリを遡る - emacs]]
-   より, =C-l= で一つ上の階層へ上がれる様にしたり.
-   #+begin_src emacs-lisp :tangle init.el
-(leaf vertico
-  :ensure t
-  :preface
-  (defun my:disable-selection ()
-    (when (eq minibuffer-completion-table #'org-tags-completion-function)
-      (setq-local vertico-map minibuffer-local-completion-map
-                  completion-cycle-threshold nil
-                  completion-styles '(basic))))
-  ;;
-  ;; @see https://misohena.jp/blog/2022-08-15-transition-ivy-to-vertico.html
-  ;; 候補更新時に最初の候補を選択しない -> (vertico-preselect . 'prompt)
-
-  ;; ただし require-matchがt(やそれに類するもの)で入力が空ではなくマッチする候
-  ;; 補がある場合は、その候補の先頭を選択する。
-  (defun my:vertico--recompute (orig-fun pt content &rest args)
-    (let ((result (apply orig-fun pt content args)))
-      (if (and (not (equal content ""))
-               ;; 入力が空の時は(require-matchであっても)defaultまたはnilを返
-               ;; すことになっている。
-               (> (alist-get 'vertico--total result) 0) ;; < for syntax
-               ;; completing-readの説明によれば
-               ;; nil,confirm,confirm-after-completion以外はtのように
-               ;; 振る舞うべき。
-               (not (memq minibuffer--require-match
-                          '(nil confirm confirm-after-completion))))
-          (setf (alist-get 'vertico--index result) 0))
-      result))
-  ;;
-  ;;
-  (defun my:filename-upto-parent ()
-    "Move to parent directory like \"cd ..\" in find-file."
-    (interactive)
-    (let ((sep (eval-when-compile (regexp-opt '("/" "\\")))))
-      (save-excursion
-        (left-char 1)
-        (when (looking-at-p sep)
-          (delete-char 1)))
-      (save-match-data
-        (when (search-backward-regexp sep nil t)
-          (right-char 1)
-          (filter-buffer-substring (point)
-                                   (save-excursion (end-of-line) (point))
-                                   #'delete)))))
-  :advice
-  ((:before vertico--setup
-            my:disable-selection)
-   (:around vertico--recompute-candidates
-            my:vertico--recompute)
+  (setq
+   ;; 月と曜日の表示調整
+   calendar-month-name-array   ["01" "02" "03" "04" "05" "06"
+                                "07" "08" "09" "10" "11" "12" ]
+   calendar-day-name-array     ["日" "月" "火" "水" "木" "金" "土"]
+   calendar-day-header-array   ["日" "月" "火" "水" "木" "金" "土"]
+   ;; 日曜開始
+   calendar-week-start-day     0
+   ;; 祝日をカレンダーに表示
+   calendar-mark-holidays-flag t
    )
-  :bind
-  (:vertico-map (("C-l" . my:filename-upto-parent)))
-;;  :custom-face
-;;  `((vertico-current
-;;     . '((t (:inherit hl-line :background unspecified)))))
-  :init
-  (setq vertico-count 8
-        vertico-cycle t
-        vertico-preselect 'prompt
-        vertico-multiline '(("↓" 0 1 (face vertico-multiline))
-                            ("…" 0 1 (face vertico-multiline)))
-        )
-  ;; :config
-  :hook (emacs-startup-hook . vertico-mode)
+  :config
+  (with-eval-after-load 'japanese-holidays
+    (setq calendar-holidays (append japanese-holidays holiday-local-holidays)))
   )
-  #+end_src
-** =marginalia=: リッチな注釈(Enable richer annotations)
+    #+end_src
+** 日本の休日の追加: =japanese-holidays=
    :PROPERTIES:
-   :CUSTOM_ID: orge9265e4d
+   :CUSTOM_ID: org60295429
    :END:
-   行揃えが微妙. あと, ファイル名を省略表示できないのかな?
-   ⇒ [[https://github.com/minad/marginalia/issues/70][Better truncation method for file names #70]]
    #+begin_src emacs-lisp :tangle init.el
-(leaf marginalia
+(leaf japanese-holidays
   :ensure t
+  :after calendar
+  :require t
   :init
-  ;; 補完でも icon 表示
-  (leaf nerd-icons-completion
-   :ensure t
-   :hook
-   (emacs-startup-hook . nerd-icons-completion-mode)
-   )
-  :bind (("M-A" . marginalia-cycle)
-         (:minibuffer-local-map
-          ("M-A" . marginalia-cycle)
-          ))
-  :init
-  (setq marginalia-annotators    '(marginalia-annotators-light
-                                   marginalia-annotators-heavy
-                                   nil)
-        marginalia-align         'right
-        marginalia-align-offset  -2 ;; icon 分引いておく
+  (setq japanese-holiday-weekend        '(0 6)
+        japanese-holiday-weekend-marker '(holiday  ;; 日
+                                          nil      ;; 月
+                                          nil      ;; 火
+                                          nil      ;; 水
+                                          nil      ;; 木
+                                          nil      ;; 金
+                                          japanese-holiday-saturday)
         )
+  :config
+;;;###autoload
+  (defun my:japanese-holiday-show (&rest _args)
+    (let* ((date (calendar-cursor-to-date t))
+           ;; (calendar-date-display-form '((format "%s年 %s月 %s日（%s）" year month day dayname)))
+           (date-string (calendar-date-string date))
+           (holiday-list (calendar-check-holidays date)))
+      (when holiday-list
+        (message "%s: %s" date-string (mapconcat #'identity holiday-list "; ")))))
   :hook
-  ((emacs-startup-hook . marginalia-mode)
-   (marginalia-mode-hook . nerd-icons-completion-marginalia-setup)
-   )
+  ((calendar-move-hook            . my:japanese-holiday-show)
+   (calendar-today-visible-hook   . japanese-holiday-mark-weekend)
+   (calendar-today-invisible-hook . japanese-holiday-mark-weekend)
+   (calendar-today-visible-hook   . calendar-mark-today))
   )
    #+end_src
-** =consult=: 便利コマンド集
-   :PROPERTIES:
-   :CUSTOM_ID: orged5e5627
-   :END:
-   とりあえず recetnf が使えないと途方に暮れるので
-   =consult-recent-file= のカスタマイズのみ.
-   #+begin_src emacs-lisp :tangle init.el
-(leaf consult
-  :ensure t
-  :bind (("C-x C-r" . my:consult-recent-file))
-  ;; :defvar recentf-list
-  :init
-  (setq consult-narrow-key          "<"
-        consult-async-refresh-delay 0.2
-        consult-preview-key         nil
-        ;; 増やさないと preview 時に theme がロードされない模様.
-        ;; とりあえず default の 10 倍にしている. 1 MB かな?
-        consult-preview-raw-size 1024000
-        )
-  :config
-  (defun my:consult-recent-file ()
-    "Find recent using `completing-read' with shorten filename"
-    (interactive)
-    (eval-when-compile (require 'recentf))
-    (recentf-mode +1)
-    (let ((files (mapcar (lambda (f)
-                           (cons (my:shorten-file-path f (- (window-width) 2)) f))
-                         recentf-list)))
-      (let ((selected
-             (consult--read (mapcar #'car files)
-                            :prompt "Find recent file: "
-                            :sort nil
-                            :require-match t
-                            :category 'file
-                            :state (consult--file-preview)
-                            :history 'file-name-history)))
-        (find-file (assoc-default selected files)))))
-  )
-   #+end_src
-** =cape=: 補完 backend
-   :PROPERTIES:
-   :CUSTOM_ID: org3b1ea0b6
-   :END:
-   #+begin_src emacs-lisp :tangle init.el
-(leaf cape
-  :disabled t
-  :ensure t
-  :config
-  (setq cape-dabbrev-check-other-buffers nil)
-  (add-to-list 'completion-at-point-functions 'cape-keyword)
-  (add-to-list 'completion-at-point-functions 'cape-dabbrev)
-  (add-to-list 'completion-at-point-functions 'cape-file)
-  (add-to-list 'completion-at-point-functions 'cape-tex)
-  (add-to-list 'completion-at-point-functions 'cape-emoji)
-  )
-   #+end_src
-** =orderless=: 補完候補の選択
-   :PROPERTIES:
-   :CUSTOM_ID: orgc12df551
-   :END:
-   イロイロと凝れそうだけど, とりあえずはデフォルトのままで.
-   #+begin_src emacs-lisp :tangle init.el
-(leaf orderless
-  :ensure t
-  :init
-  (setq completion-styles '(orderless)
-        orderless-matching-styles '(orderless-prefixes
-                                    orderless-flex
-                                    orderless-regexp
-                                    orderless-initialism
-                                    orderless-literal)
-        )
-  )
-   #+end_src
-** =kind-icon=: corfu で補完候補にアイコン表示
-   :PROPERTIES:
-   :CUSTOM_ID: org80404324
-   :END:
-   svg-lib でのアイコン表示ではなく nerd-icons を利用するように.
-   #+begin_src emacs-lisp
-(leaf kind-icon
-  :ensure t
-  :after corfu-terminal
-  :init
-  (setq kind-icon-default-face 'corfu-default
-        kind-icon-use-icons    nil
-        kind-icon-mapping      `(
-                                 (array          ,(nerd-icons-codicon "nf-cod-symbol_array")       :face font-lock-type-face)
-                                 (boolean        ,(nerd-icons-codicon "nf-cod-symbol_boolean")     :face font-lock-builtin-face)
-                                 (class          ,(nerd-icons-codicon "nf-cod-symbol_class")       :face font-lock-type-face)
-                                 (color          ,(nerd-icons-codicon "nf-cod-symbol_color")       :face success)
-                                 (command        ,(nerd-icons-codicon "nf-cod-terminal")           :face default)
-                                 (constant       ,(nerd-icons-codicon "nf-cod-symbol_constant")    :face font-lock-constant-face)
-                                 (constructor    ,(nerd-icons-codicon "nf-cod-triangle_right")     :face font-lock-function-name-face)
-                                 (enummember     ,(nerd-icons-codicon "nf-cod-symbol_enum_member") :face font-lock-builtin-face)
-                                 (enum-member    ,(nerd-icons-codicon "nf-cod-symbol_enum_member") :face font-lock-builtin-face)
-                                 (enum           ,(nerd-icons-codicon "nf-cod-symbol_enum")        :face font-lock-builtin-face)
-                                 (event          ,(nerd-icons-codicon "nf-cod-symbol_event")       :face font-lock-warning-face)
-                                 (field          ,(nerd-icons-codicon "nf-cod-symbol_field")       :face font-lock-variable-name-face)
-                                 (file           ,(nerd-icons-codicon "nf-cod-symbol_file")        :face font-lock-string-face)
-                                 (folder         ,(nerd-icons-codicon "nf-cod-folder")             :face font-lock-doc-face)
-                                 (interface      ,(nerd-icons-codicon "nf-cod-symbol_interface")   :face font-lock-type-face)
-                                 (keyword        ,(nerd-icons-codicon "nf-cod-symbol_keyword")     :face font-lock-keyword-face)
-                                 (macro          ,(nerd-icons-codicon "nf-cod-symbol_misc")        :face font-lock-keyword-face)
-                                 (magic          ,(nerd-icons-codicon "nf-cod-wand")               :face font-lock-builtin-face)
-                                 (method         ,(nerd-icons-codicon "nf-cod-symbol_method")      :face font-lock-function-name-face)
-                                 (function       ,(nerd-icons-codicon "nf-cod-symbol_method")      :face font-lock-function-name-face)
-                                 (module         ,(nerd-icons-codicon "nf-cod-file_submodule")     :face font-lock-preprocessor-face)
-                                 (numeric        ,(nerd-icons-codicon "nf-cod-symbol_numeric")     :face font-lock-builtin-face)
-                                 (operator       ,(nerd-icons-codicon "nf-cod-symbol_operator")    :face font-lock-comment-delimiter-face)
-                                 (param          ,(nerd-icons-codicon "nf-cod-symbol_parameter")   :face default)
-                                 (property       ,(nerd-icons-codicon "nf-cod-symbol_property")    :face font-lock-variable-name-face)
-                                 (reference      ,(nerd-icons-codicon "nf-cod-references")         :face font-lock-variable-name-face)
-                                 (snippet        ,(nerd-icons-codicon "nf-cod-symbol_snippet")     :face font-lock-string-face)
-                                 (string         ,(nerd-icons-codicon "nf-cod-symbol_string")      :face font-lock-string-face)
-                                 (struct         ,(nerd-icons-codicon "nf-cod-symbol_structure")   :face font-lock-variable-name-face)
-                                 (text           ,(nerd-icons-codicon "nf-cod-text_size")          :face font-lock-doc-face)
-                                 (typeparameter  ,(nerd-icons-codicon "nf-cod-list_unordered")     :face font-lock-type-face)
-                                 (type-parameter ,(nerd-icons-codicon "nf-cod-list_unordered")     :face font-lock-type-face)
-                                 (unit           ,(nerd-icons-codicon "nf-cod-symbol_ruler")       :face font-lock-constant-face)
-                                 (value          ,(nerd-icons-codicon "nf-cod-symbol_field")       :face font-lock-builtin-face)
-                                 (variable       ,(nerd-icons-codicon "nf-cod-symbol_variable")    :face font-lock-variable-name-face)
-                                 (t              ,(nerd-icons-codicon "nf-cod-code")               :face font-lock-warning-face))
-        )
-  :config
-  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
-  )
-   #+end_src
-** =corfu=: on the fly completions
-   :PROPERTIES:
-   :CUSTOM_ID: org37d21658
-   :END:
-   =company= より使い勝手が良い, 気がする.
-   :PROPERTIES:
-   :CUSTOM_ID: orgb72396fd
-   :END:
-   [[https://misohena.jp/blog/2024-02-15-separate-notification-and-selection-with-corfu-auto.html][Corfuの自動補完で候補の存在を伝える事と候補を選べるようにする事を分離する]] を参考に.
-   #+begin_src emacs-lisp :tangle init.el
-(leaf corfu
-  :disabled t
-  :ensure t
-  :preface
-  (defvar-keymap my:corfu-auto-map
-    :doc "Keymap used when popup is shown automatically."
-    "C-g" #'corfu-quit
-    )
-  (defvar my:corfu-in-auto-complete nil)
-;;;###autoload
-(defun my:corfu--auto-complete-deferred:around (oldfun &rest args)
-  ;; 自動補完時に呼び出される
-  (let ((my:corfu-in-auto-complete t))
-    ;; 元の関数を呼び出す. 補完候補があるなら setup が呼ばれる
-    (apply oldfun args)))
-;;;###autoload
-(defun my:corfu--setup:around (oldfun &rest args)
-  (if my:corfu-in-auto-complete
-      ;; 自動補完の時
-      (progn
-        (setf ;; (alist-get 'alpha corfu--frame-parameters) 90
-              (alist-get 'tab-line-format corfu--buffer-parameters) "   C-M-i:補完"
-              ;; 最初の候補を選ばない
-              corfu-preselect 'prompt)
-        (let (;; キー割り当てを極力無くす
-              (corfu-map my:corfu-auto-map))
-          (apply oldfun args)))
-    ;; 手動補完の時
-    (setf ;; (alist-get 'alpha corfu--frame-parameters) 100
-          (alist-get 'tab-line-format corfu--buffer-parameters) nil
-          ;; 最初の候補を選ぶ
-          corfu-preselect 'first)
-    (apply oldfun args)))
-  :advice ((:around corfu--auto-complete-deferred
-                    my:corfu--auto-complete-deferred:around)
-           (:around corfu--setup
-                    my:corfu--setup:around)
-           )
-  :init
-  (leaf corfu-terminal
-    :ensure t
-    :config
-    (setq corfu-terminal-disable-on-gui nil)
-    )
-  :bind
-  (:corfu-map
-   ("TAB"       . corfu-next)
-   ("<tab>"     . corfu-next)
-   ("S-TAB"     . corfu-previous)
-   ("<backtab>" . corfu-previous)
-   ("C-j"       . corfu-next)
-   ("C-n"       . corfu-next)
-   ("C-p"       . corfu-previous)
-   ("C-k"       . corfu-previous)
-   ("C-g"       . corfu-quit)
-   )
-  :hook (emacs-startup-hook . (lambda ()
-                                (corfu-terminal-mode +1)
-                                (global-corfu-mode)))
-  :config
-  (setq completion-cycle-threshold 4
-        tab-always-indent          'complete
-        corfu-cycle                t
-        corfu-auto                 t
-        corfu-preselect            'prompt
-    )
-  )
-   #+end_src
-* 翻訳
-  :PROPERTIES:
-  :CUSTOM_ID: org779f9ba7
-  :END:
-** DeepL 翻訳
-   :PROPERTIES:
-   :CUSTOM_ID: orga528b584
-   :END:
-   ブラウザ呼び出し
-   #+begin_src emacs-lisp
-(leaf *deepl-translate
-  :commands my:deepl-translate
-  :bind (("C-x T" . my:deepl-translate))
-  :preface
-  (require 'url-util)
-  (defun my:deepl-translate (&optional string)
-    (interactive)
-    (setq string
-          (cond ((stringp string) string)
-                ((use-region-p)
-                 (buffer-substring (region-beginning) (region-end)))
-                (t
-                 (save-excursion
-                   (let (s)
-                     (forward-char 1)
-                     (backward-sentence)
-                     (setq s (point))
-                     (forward-sentence)
-                     (buffer-substring s (point)))))))
-    (run-at-time 0.1 nil 'deactivate-mark)
-    (browse-url
-     (concat
-      "https://www.deepl.com/translator#en/ja/"
-      (url-hexify-string string)
-      )))
-  )
-   #+end_src
-** Google 翻訳
-   :PROPERTIES:
-   :CUSTOM_ID: org48ef2f56
-   :END:
-   #+begin_src emacs-lisp
-(leaf google-translate
-  :ensure t
-  :defvar google-translate-backend-method
-  :init
-  (defvar google-translate-translation-directions-alist '(("en" . "ja") ("ja" . "en")))
-  (leaf popup :ensure t)
-  (defun my:google-translate--search-tkk ()
-    "Search TKK. @see https://github.com/atykhonov/google-translate/issues/52"
-    (list 430675 2721866130))
-  :bind
-  ("C-x t" . google-translate-smooth-translate)
-  :advice (:override google-translate--search-tkk
-                     my:google-translate--search-tkk)
-  :config
-  (setq google-translate-translation-directions-alist '(("en" . "ja") ("ja" . "en"))
-        google-translate-backend-method 'curl)
-  )
-   #+end_src
-* 校正, 辞書等
-  :PROPERTIES:
-  :CUSTOM_ID: org15a06190
-  :END:
-** =ispell=,=flyspell=: spell checker, on-the-fly spell checker
-   :PROPERTIES:
-   :CUSTOM_ID: org3737a28e
-   :END:
-   ispell はコマンドとして =aspell= を利用する.
-   #+begin_src emacs-lisp :tangle init.el
-(leaf flyspell
-  :if (executable-find "aspell")
-  :init
-  (setq ispell-program-name   "aspell"
-        ispell-check-comments nil
-        ispell-skip-html      t
-        ispell-silently-savep t
-        )
-  :bind (:flyspell-mode-map
-         ("C-." . nil)
-         ("C-," . nil))
-  :defer-config
-  (add-to-list 'ispell-skip-region-alist '("[^\000-\377]+"))
-  )
-   #+end_src
-** =lookup=: 電子辞書の検索
-   :PROPERTIES:
-   :CUSTOM_ID: org3002f57f
-   :END:
-   EPWING化した辞書群を検索するために =lookup-el= ver. 1.4 系列を利用
-   #+begin_src emacs-lisp :tangle init.el
-(leaf lookup
-  :if (and (file-exists-p "/etc/emacs/site-start.d/50lookup-el.el")
-           (file-exists-p "/usr/local/share/dict/lookup-enabled"))
-  :commands (lookup lookup-region lookup-pattern)
-  :bind (("C-c w" . lookup-pattern)
-         ("C-c W" . lookup-word))
-  :init
-  (setq lookup-search-agents '((ndeb "/usr/local/share/dict/eijiro" :alias "英辞郎")
-                               (ndeb "/usr/local/share/dict/waeijiro" :alias "和英辞郎")
-                               (ndeb "/usr/local/share/dict/rikagaku5" :alias "理化学辞典 第5版")
-                               (ndeb "/usr/local/share/dict/koujien4" :alias "広辞苑 第4版")
-                               (ndeb "/usr/local/share/dict/wadai5" :alias "研究社 和英大辞典 第5版")
-                               ;; (ndeb "/usr/local/share/dict/eidai6" :alias "研究社 英和大辞典 第6版")
-                               ;; (ndeb "/usr/local/share/dict/colloc" :alias "研究社 英和活用大辞典 ")
-                               )
-        )
-  )
-   #+end_src
-** =text-adjust=: 全角文字の撲滅
-   :PROPERTIES:
-   :CUSTOM_ID: org501da28b
-   :END:
-   #+begin_src emacs-lisp
-(leaf text-adjust :vc (:url "https://github.com/uwabami/text-adjust.el"))
-   #+end_src
-
-* プログラミング関連
-  :PROPERTIES:
-  :CUSTOM_ID: org31fb6f15
-  :END:
-** Language Server による補完: =eglot=
-   :PROPERTIES:
-   :CUSTOM_ID: org1d7a5ece
-   :END:
-   Emacs 29から 本体に同梱されることになったので =eglot= を利用することに.
-   サーバの呼び出し自体は言語毎に hook で設定する.
-   #+begin_src emacs-lisp :tangle init.el
-(leaf eglot
-  :ensure t
-  :bind (("M-t" . xref-find-definitions)
-         ("M-r" . xref-find-references))
-;;  :init
-;;;###autoload
-;; (defun my:eglot-capf()
-;;   (setq-local completion-at-point-functions
-;;               (list (cape-super-capf
-;;                      #'eglot-completion-at-point)
-;;                     #'cape-keyword
-;;                     #'cape-dabbrev
-;;                     #'cape-file)
-;;               ))
-;;  :hook
-;;  ((eglot-managed-mode-hook . my:eglot-capf))
-  :config
-  ;; digestif は日本語TeXとイマイチ相性が悪い(上手く使い熟せていない...).
-  (delete (assoc '(tex-mode context-mode texinfo-mode bibtex-mode)
-                 eglot-server-programs)
-          eglot-server-programs)
-;;   (add-to-list 'eglot-server-programs
-;;              '((latex-mode tex-mode context-mode texinfo-mode bibtex-mode) . ("texlab")))
-  (add-to-list 'eglot-server-programs
-             '((latex-mode tex-mode texinfo-mode bibtex-mode) . ("texlab")))
-  )
-   #+end_src
-** flaymake
-   :PROPERTIES:
-   :CUSTOM_ID: org82f6778a
-   :END:
-   #+begin_src emacs-lisp :tangle init.el
-(leaf flymake
-  :ensure t
-  :bind (:flymake-mode-map
-         ("C-c C-p" . flymake-goto-prev-error)
-         ("C-c C-n" . flymake-goto-next-error)
-         )
-  :config (require 'flymake-proc nil 'noerror)
-  )
-(leaf flymake-diagnostic-at-point
-  :ensure t
-  :after flymake
-  :hook (flymake-mode-hook . flymake-diagnostic-at-point-mode)
-  )
-   #+end_src
-** tree-sitter
-   :PROPERTIES:
-   :CUSTOM_ID: org80208e5d
-   :END:
-   #+begin_src emacs-lisp :tangle init.el
-(leaf treesit
-  :if (executable-find "tree-sitter")
-  :defvar treesit-language-source-alist
-  :config
-  (setq treesit-language-source-alist
-        '(;;
-          ;; (bash "https://github.com/tree-sitter/tree-sitter-bash")
-          ;; (clojure "https://github.com/sogaiu/tree-sitter-clojure")
-          ;; (cmake "https://github.com/uyha/tree-sitter-cmake")
-          ;; (css "https://github.com/tree-sitter/tree-sitter-css")
-          ;; (dockerfile "https://github.com/camdencheek/tree-sitter-dockerfile")
-          (elisp "https://github.com/Wilfred/tree-sitter-elisp")
-          ;; (latex "https://github.com/latex-lsp/tree-sitter-latex")
-          ;; (go "https://github.com/tree-sitter/tree-sitter-go")
-          ;; (html "https://github.com/tree-sitter/tree-sitter-html")
-          ;; (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
-          ;; (json "https://github.com/tree-sitter/tree-sitter-json")
-          ;; (make "https://github.com/alemuller/tree-sitter-make")
-          ;; (markdown "https://github.com/ikatyang/tree-sitter-markdown")
-          ;; (nix "https://github.com/nix-community/tree-sitter-nix")
-          ;; (python "https://github.com/tree-sitter/tree-sitter-python")
-          ;; (rust "https://github.com/tree-sitter/tree-sitter-rust")
-          ;; (toml "https://github.com/tree-sitter/tree-sitter-toml")
-          ;; (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
-          ;; (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
-          ;; (yaml "https://github.com/ikatyang/tree-sitter-yaml")
-          )
-        )
-  ;;
-  (defun my:treesit-install-grammar-all ()
-    "install all tree-sitter-grammer's"
-    (interactive)
-    (mapc
-     (lambda (lang)
-       (unless (treesit-language-available-p lang nil)
-         (treesit-install-language-grammar lang)))
-     (mapcar #'car treesit-language-source-alist)))
-  )
-   #+end_src
-** カラーコードに色付け: =rainbow-mode=
-   :PROPERTIES:
-   :CUSTOM_ID: org1f0e431b
-   :END:
-   =#RRGGBB= のカラーコードに勝手に色が付く．CSS の編集中なんかで地味に便利．
-   #+begin_src emacs-lisp :tangle init.el
-(leaf rainbow-mode :ensure t :hook (emacs-startup-hook . rainbow-mode))
-   #+end_src
-** =rainbow-delimiters=: 対応する括弧を色付け
-   :PROPERTIES:
-   :CUSTOM_ID: org11b26f5a
-   :END:
-   #+begin_src emacs-lisp :tangle init.el
-(leaf rainbow-delimiters
-  :ensure t
-  :hook (prog-mode-hook . rainbow-delimiters-mode)
-  )
-   #+end_src
-** =treesit-fold=: コードの「折り畳み」
-   :PROPERTIES:
-   :CUSTOM_ID: org43e560a9
-   :END:
-   じたばたしながら fortran-parser を追加してみたり.
-   #+begin_src emacs-lisp :tangle init.el
-(leaf treesit-fold
-  :if (executable-find "tree-sitter")
-  :ensure t
-  :bind (("C-c f" . treesit-fold-toggle)
-         ("C-c F" . my:treesit-fold-toggle-all)
-         )
-  :preface
-  (defun my:treesit-fold-toggle-all ()
-    "Toggle between `treesit-fold-open-all' and `treesit-fold-close-all'."
-    (interactive)
-    (let ((found-folded nil))
-      (save-excursion
-        (dolist (ov (overlays-in (point-min) (point-max)))
-          ;; 実測値に基づき、invisibleプロパティが 'treesit-fold であるかを確認
-          (when (eq (overlay-get ov 'invisible) 'treesit-fold)
-            (setq found-folded t))))
-      (if found-folded
-          (progn
-            (treesit-fold-open-all)
-            (message "All nodes opened"))
-        (progn
-          (treesit-fold-close-all)
-          (message "All nodes closed")))))
-  ;;
-  (defun my:treesit-fold-toggle-override (&rest _args)
-    "Toggle fold at point. If opening, open recursively."
-    (interactive)
-    (if-let* ((node (treesit-fold--foldable-node-at-pos))
-              (ov (treesit-fold-overlay-at node)))
-        (treesit-fold-open-recursively)
-      (treesit-fold-close)))
-  ;;;
-;;;###autoload
-  (defun my:treesit-fold-toggle-override (&rest _args)
-    "Toggle fold at point. If opening, open recursively."
-    (interactive)
-    (if-let* ((node (treesit-fold--foldable-node-at-pos))
-              (ov (treesit-fold-overlay-at node)))
-        (treesit-fold-open-recursively)
-      (treesit-fold-close)))
-  :advice
-  (:override treesit-fold-toggle my:treesit-fold-toggle-override)
-  :hook ((treesit-fold-mode-hook . treesit-fold-line-comment-mode)
-         (emacs-lisp-mode-hook . (lambda () (treesit-parser-create 'elisp)))
-         )
-  :config
-  ;; ---------------------------------------------------------------------------
-  ;; Fortran Support Implementation
-  ;; ---------------------------------------------------------------------------
-  ;; Constants of fold target
-  (defconst treesit-fold-fortran-declaration-nodes
-    '("use_statement" "implicit_statement" "import_statement" "include_statement"
-      "private_statement" "public_statement" "save_statement" "parameter_statement"
-      "data_statement" "variable_declaration" "namelist_statement" "common_statement"
-      "equivalence_statement" "entry_statement" "format_statement")
-    "List of declaration node types in Fortran to be folded as a group.")
-  ;;
-  (defun treesit-fold-range-fortran--sibling (node next)
-    "Find the nearest sibling of NODE.
-If NEXT is non-nil, search forwards; otherwise, search backwards.
-Skips comments, newlines, and end-of-statement markers."
-    (let ((iter (if next (treesit-node-next-sibling node)
-                  (treesit-node-prev-sibling node))))
-      (while (and iter
-                  (let ((type (treesit-node-type iter)))
-                    (or (string-equal type "comment")
-                        (string-equal type "\n")
-                        (string-prefix-p "_end_of_" type)
-                        (string-match-p "\\`\\s-*\\'" type))))
-        (setq iter (if next (treesit-node-next-sibling iter)
-                     (treesit-node-prev-sibling iter))))
-      iter))
-  ;; Range Parsers
-  (defun treesit-fold-range-fortran-declarations (node offset)
-    "Calculate the fold range for consecutive declaration blocks.
-Merges adjacent declaration nodes into a single fold."
-    (let ((type (treesit-node-type node)))
-      (when (member type treesit-fold-fortran-declaration-nodes)
-        (let ((prev (treesit-fold-range-fortran--sibling node nil))
-              (next (treesit-fold-range-fortran--sibling node t)))
-          ;; Only fold from the first node in a sequence of declarations.
-          (unless (and prev (member (treesit-node-type prev) treesit-fold-fortran-declaration-nodes))
-            (when (and next (member (treesit-node-type next) treesit-fold-fortran-declaration-nodes))
-              (let ((last-node next)
-                    (iter-node next))
-                (while (let ((cand (treesit-fold-range-fortran--sibling iter-node t)))
-                         (and cand
-                              (member (treesit-node-type cand) treesit-fold-fortran-declaration-nodes)))
-                  (setq iter-node (treesit-fold-range-fortran--sibling iter-node t))
-                  (setq last-node iter-node))
-                (treesit-fold--cons-add (cons (treesit-node-start node)
-                                              (treesit-node-end last-node))
-                                        offset))))))))
-  ;; Comment block
-  (defun treesit-fold-range-fortran-comment (node offset)
-    "Calculate the fold range for consecutive comment blocks.
-Skips empty lines and non-comment whitespace between comments."
-    (when (string-equal (treesit-node-type node) "comment")
-      (let ((prev (treesit-node-prev-sibling node))
-            (is-continuation nil))
-        ;; Check if this node is a continuation of a previous comment block.
-        (while (and prev
-                    (or (string-equal (treesit-node-type prev) "comment")
-                        (string-match-p "\\`\\s-*\\'" (treesit-node-type prev))))
-          (when (string-equal (treesit-node-type prev) "comment")
-            (setq is-continuation t))
-          (setq prev (treesit-node-prev-sibling prev)))
-        ;; Only fold if this is the start of the block.
-        (unless is-continuation
-          (let ((next (treesit-node-next-sibling node))
-                (last-comment node))
-            ;; Find the end of the comment block.
-            (while next
-              (let ((type (treesit-node-type next)))
-                (cond
-                 ((string-equal type "comment")
-                  (setq last-comment next)
-                  (setq next (treesit-node-next-sibling next)))
-                 ((string-match-p "\\`\\s-*\\'" type)
-                  (setq next (treesit-node-next-sibling next)))
-                 (t
-                  (setq next nil)))))
-            (when (not (eq last-comment node))
-              (treesit-fold--cons-add (cons (treesit-node-start node)
-                                            (treesit-node-end last-comment))
-                                      offset)))))))
-  ;; Normal fold blocks
-  (defun treesit-fold-range-fortran-blocks (node offset)
-    "Calculate the fold range for generic blocks (e.g., subroutines, loops).
-Folds the content between the header (first child) and the footer (last child)."
-    (let ((header (treesit-node-child node 0 t))
-          (footer (treesit-node-child node -1 t)))
-      (when (and header footer (not (eq header footer)))
-        (treesit-fold--cons-add (cons (treesit-node-end header)
-                                      (treesit-node-start footer))
-                                offset))))
-  ;; Summary Parser
-  (defun treesit-fold-summary-fortran-doc (doc-str)
-    "Extract summary from Fortran comments.
-Handles Doxygen style (!>) and ignores code blocks or separator lines."
-    (when (string-match-p "\\`\\s-*!" doc-str)
-      ;; Ensure the content is strictly a comment block (no code lines).
-      (unless (string-match-p "\n[ \t]*[^! \t\n]" doc-str)
-        (let ((lines (split-string doc-str "\n"))
-              (summary nil))
-          (dolist (line lines)
-            (unless summary
-              ;; Remove '!', '!>', or whitespace.
-              (let ((content (replace-regexp-in-string "\\`\\s-*!+>?\\s-*" "" line)))
-                (cond
-                 ((string-empty-p content) nil)
-                 ((string-match-p "-[*]-" line) nil) ; Ignore mode lines
-                 ((not (string-match-p "[[:alnum:]]" content)) nil) ; Ignore separators
-                 (t (setq summary content))))))
-          summary))))
-  ;; Definition of Rules
-  (defun treesit-fold-parsers-fortran ()
-    "Return the folding rules for f90-ts-mode."
-    `((subroutine                 . treesit-fold-range-fortran-blocks)
-      (function                   . treesit-fold-range-fortran-blocks)
-      (interface                  . treesit-fold-range-fortran-blocks)
-      (derived_type_definition    . treesit-fold-range-fortran-blocks)
-      (do_loop                    . treesit-fold-range-fortran-blocks)
-      (if_statement               . treesit-fold-range-fortran-blocks)
-      (select_case_statement      . treesit-fold-range-fortran-blocks)
-      (select_type_statement      . treesit-fold-range-fortran-blocks)
-      (block_construct            . treesit-fold-range-fortran-blocks)
-      (associate_statement        . treesit-fold-range-fortran-blocks)
-      (coarray_critical_statement . treesit-fold-range-fortran-blocks)
-      (forall_statement           . treesit-fold-range-fortran-blocks)
-      (where_statement            . treesit-fold-range-fortran-blocks)
-      (module                     . treesit-fold-range-fortran-blocks)
-      (program                    . treesit-fold-range-fortran-blocks)
-      (submodule                  . treesit-fold-range-fortran-blocks)
-      ,@(mapcar (lambda (type) (cons (intern type) 'treesit-fold-range-fortran-declarations))
-                treesit-fold-fortran-declaration-nodes)
-      (comment                    . treesit-fold-range-fortran-comment)))
-  ;; Register summary parser for f90-ts-mode.
-  (add-to-list 'treesit-fold-summary-parsers-alist
-               '(f90-ts-mode . treesit-fold-summary-fortran-doc))
-  ;; 以下は私の好み.
-  ;; module や program が fold されると全部 fold されるので構造がわかりにくい.
-  (add-to-list 'treesit-fold-range-alist
-               (cons 'f90-ts-mode
-                     (seq-remove (lambda (x)
-                                   (memq (car x) '(module program submodule)))
-                                 (treesit-fold-parsers-fortran))))
-  )
-   #+end_src
-** =f90-ts-mode=: fortan
-   :PROPERTIES:
-   :CUSTOM_ID: org49a03d08
-   :END:
-   #+begin_src emacs-lisp :tangle init.el
-(leaf f90-ts-mode
-  :vc (:url "git@github.com:mscfd/emacs-f90-ts-mode.git")
-  :mode ("\\.f90\\'" "\\.F90\\'" "\\.f95\\'" "\\.F95\\'" "\\.F\\'")
-  :defvar treesit-language-source-alist
-  :preface
-;;;###autoload
-  (defun my:install-fortran-grammar-with-generate ()
-    "install 時に tree-sitter generateを実行してから install"
-    (interactive)
-    (let* ((lang 'fortran)
-           (url "https://github.com/mscfd/tree-sitter-fortran")
-           (revision "master")
-           (tmp-dir (expand-file-name "tree-sitter-fortran-tmp" temporary-file-directory)))
-      (when (file-exists-p tmp-dir)
-        (delete-directory tmp-dir t))
-      (message "Cloning %s..." url)
-      (call-process "git" nil nil nil "clone" "-b" revision "--depth" "1" url tmp-dir)
-      (message "Running tree-sitter generate...")
-      (let ((default-directory tmp-dir))
-        (call-process-shell-command "tree-sitter generate" nil nil nil))
-      (let ((treesit-language-source-alist `((,lang ,tmp-dir nil "src"))))
-        (treesit-install-language-grammar lang))
-      (message "Fortran grammar installed successfully from generated source!")))
-;;;###autoload
-  (defun my:f90-ts-toggle-mode ()
-    "Toggle between `f90-mode' (legacy) and `f90-ts-mode'."
-    (interactive)
-    (if (eq major-mode 'f90-ts-mode)
-        (if (fboundp 'f90-mode)
-            (f90-mode)
-          (message "Legacy `f90-mode' not available"))
-      (f90-ts-mode)))
-;; function 関連の色付けルールがまだ熟れていないので, ちょっと修正する
-(defvar my:f90-keywords
-  '("allocated" "associated" "present" "allocate" "deallocate" "nullify"))
-(defvar my:f90-builtins
-  '("min" "max" "abs" "mod" "sqrt" "sum"
-    "size" "shape" "len" "trim" "adjustl" "adjustr"
-    "real" "int" "dble" "cmplx" "count" "any" "all"))
-;;;###autoload
-(defun my:f90-make-regex (word-list)
-  (let ((patterns (mapcar (lambda (word)
-                            (mapconcat (lambda (c)
-                                         (format "[%c%c]" (upcase c) (downcase c)))
-                                       word ""))
-                          word-list)))
-    (format "^\\(%s\\)$" (mapconcat #'identity patterns "\\|"))))
-;;;###autoload
-(defun my:fixed-f90-ts-rules-function ()
-  "Fixed font-lock rules for functions and subroutines."
-  (let ((regex-kw (my:f90-make-regex my:f90-keywords))
-        (regex-bi (my:f90-make-regex my:f90-builtins)))
-    (treesit-font-lock-rules
-     :language 'fortran
-     :feature 'function
-     `((subroutine_statement
-        name: (name)                  @font-lock-function-name-face)
-       (function_statement
-        name: (name)                  @font-lock-function-name-face)
-       (function_result
-        (identifier)                  @default)
-       (subroutine_call
-        subroutine: (identifier)      @font-lock-function-name-face)
-       ;; --- 削除箇所 ---
-       ;; (call_expression (identifier) @font-lock-function-name-face)
-       ((call_expression (identifier) @font-lock-keyword-face)
-        (:match ,regex-kw             @font-lock-keyword-face))
-       ((call_expression (identifier) @font-lock-builtin-face)
-        (:match ,regex-bi             @font-lock-builtin-face))
-       ;; within derived type declarations
-       (variable_declaration
-        type: (procedure
-               "procedure"
-               (procedure_interface)        @font-lock-function-name-face)
-        ;; is this always a pointer to a procedure?
-        declarator: (identifier)            @font-lock-function-name-face)
-       (procedure_statement
-        declarator: [
-                     ((method_name)         @font-lock-function-name-face)
-                     ((binding
-                       (binding_name
-                        [
-                         ((identifier)      @font-lock-function-name-face)
-                         ((operator
-                           (operator_name)  @f90-ts-font-lock-operator-face))
-                         ((assignment "="   @f90-ts-font-lock-operator-face))
-                         ])
-                       (method_name)        @font-lock-function-name-face))
-                     ])
-       (generic_statement
-        declarator: (binding_list
-                     (binding_name
-                      [
-                       ((identifier)       @font-lock-function-name-face)
-                       ((operator
-                         (operator_name)   @f90-ts-font-lock-operator-face))
-                       ((assignment "="    @f90-ts-font-lock-operator-face))
-                       ])
-                     (method_name)         @font-lock-function-name-face))
-       (final_statement
-        declarator: (method_name)           @font-lock-function-name-face)
-       ))))
-;;;###autoload
-  (defun my:fixed-f90-ts-rules-variable ()
-    "Fixed font-lock rules for variables, declarations, and module control."
-    (treesit-font-lock-rules
-     :language 'fortran
-     :feature 'variable
-     '(
-       ;; 1. 変数宣言 (integer :: nm, real :: x=1.0)
-       (variable_declaration (init_declarator left: (identifier) @font-lock-variable-name-face))
-       (variable_declaration (identifier) @font-lock-variable-name-face)
-       (variable_declaration (sized_declarator (identifier) @font-lock-variable-name-face))
-       ;; 2. SAVE
-       (save_statement (identifier) @font-lock-variable-name-face)
-       ;; 3. モジュール制御 (use, only, private, public)
-       (use_statement (module_name) @font-lock-constant-face)
-       (included_items (identifier) @font-lock-variable-name-face) ;; use ..., only: DP
-       (public_statement (identifier) @font-lock-function-name-face)
-       (private_statement (identifier) @font-lock-function-name-face)
-       ;; 4. プログラム単位の名前
-       (module_statement (name) @font-lock-function-name-face)
-       (program_statement (name) @font-lock-function-name-face)
-       ;; 5. 元のルール (self)
-       ((identifier) @f90-ts-font-lock-special-var-face
-        (:pred f90-ts-special-var-p @f90-ts-font-lock-special-var-face))
-       )))
-  ;;
-  (add-to-list 'major-mode-remap-alist '(f90-mode . f90-ts-mode))
-  :advice
-  ((:override f90-ts--font-lock-rules-function my:fixed-f90-ts-rules-function)
-   (:override f90-ts--font-lock-rules-variable my:fixed-f90-ts-rules-variable)
-   )
-  :custom-face
-  (f90-ts-font-lock-intrinsic-face       . '((t :inherit font-lock-builtin-face)))
-  (f90-ts-font-lock-delimiter-face       . '((t :inherit font-lock-delimiter-face)))
-  (f90-ts-font-lock-operator-face        . '((t :inherit font-lock-operator-face)))
-  (f90-ts-font-lock-openmp-face          . '((t :inherit font-lock-preprocessor-face)))
-  (f90-ts-font-lock-bracket-face         . '((t :inherit font-lock-bracket-face)))
-  (f90-ts-font-lock-special-var-face     . '((t :inherit font-lock-constant-face)))
-  (f90-ts-font-lock-special-comment-face . '((t :inherit font-lock-doc-face)))
-  :init
-  (setq f90-ts-indent-block 2)
-  (setq f90-ts-indent-rules-openmp
-        `(
-          ((f90-ts--openmp-comment-is) prev-sibling 0)
-          ((f90-ts--openmp-comment-is) parent-bol f90-ts-indent-block)))
-  :config
-  (setq ;; f90-ts-indent-block 2
-        f90-ts-indent-contain 2
-        f90-ts-indent-continued 2
-        f90-ts-indent-toplevel 2
-        f90-ts-indent-lists-region 'continued-line
-        f90-ts-indent-lists-line   'continued-line
-        )
-  :hook
-  (f90-ts-mode-hook
-   . (lambda ()
-       (setq-local treesit-font-lock-level 5)
-       (treesit-font-lock-recompute-features)
-       (treesit-fold-mode)
-       )
-   )
-  )
-   #+end_src
-* TeX: =AUCTeX=
-  :PROPERTIES:
-  :CUSTOM_ID: org88a3cb1b
-  :END:
-  やっている事は
-  - japanese-latex-mode において, 幾つかのコマンドが追加/上書きされているものの,
-    あまり使うことの無いコマンドが表示されるのが嫌なのでそれらを削除．
-  - コンパイルには[[http://personal.psu.edu/jcc8/software/latexmk/][Latexmk]]を使う
-  と言った所.
-  …ただ, Beamerのクラスなんかだと勝手にdefault コマンドが LaTeX に変更されたりするので挙動がイマイチ良くわからん.
-  async で =latexmk -pvc= を走らせておいた方が気持が良い, 気がしている.
-  #+begin_src emacs-lisp :tangle init.el
-(leaf tex-site
-  :if (and (executable-find "uplatex")
-           (executable-find "latexmk"))
-  :preface
-  (unless (file-directory-p (expand-file-name "auctex/auto" my:d:tmp))
-    (progn
-      (make-directory (expand-file-name "auctex/auto" my:d:tmp) t)
-      (make-directory (expand-file-name "auctex/style" my:d:tmp) t)))
-  :mode ("\\.tex\\'" . japanese-latex-mode)
-  :hook (;;
-         (LaTeX-mode-hook . (lambda ()
-                              (turn-on-reftex)
-                              (TeX-source-correlate-mode)
-                              (TeX-PDF-mode)
-                              (LaTeX-math-mode)
-                              (outline-minor-mode)
-                              (setq TeX-command-default "LatexMk"
-                                    japanese-LaTeX-command-default "LatexMk")
-                              (eglot-ensure)
-                              (add-to-list 'TeX-command-list
-                                           '("upLaTeXmk"
-                                             "latexmk -e '$latex=q/uplatex %%O -kanji=utf8 -no-guess-input-enc %(file-line-error) %(extraopts) %S %(mode) %%S/' -e '$bibtex=q/bibtexu %%O %%B/' -e '$biber=q/biber %%O --bblencoding=utf8 -u -U --output_safechars %%B/' -e '$makeindex=q/upmendex %%O -o %%D %%S/' -e '$dvipdf=q/dvipdfmx %%O -o %%D %%S/' -norc -gg -pdfdvi %t"
-                                             TeX-run-TeX nil (latex-mode) :help "Run upLaTeXmk"))
-                              ))
-         )
-  :config
-  (with-eval-after-load 'tex-jp
-    (dolist (command '("pTeX" "pLaTeX" "pBibTeX" "jTeX" "jLaTeX" "jBibTeX" "Mendex"))
-      (delq (assoc command TeX-command-list) TeX-command-list)))
-  ;; reftex
-  (setq reftex-plug-into-AUCTeX t
-        reftex-cite-prompt-optional-args t
-        )
-  ;; tex-site
-  (setq TeX-auto-local (expand-file-name "auctex/auto" my:d:tmp)
-        TeX-style-local (expand-file-name "auctex/style" my:d:tmp)
-        TeX-auto-untabify t
-        japanese-TeX-engine-default 'uptex
-        japanese-LaTeX-default-style "jsarticle" ;; bxjsarticle? jlreq?
-        TeX-engine 'luatex
-        TeX-view-program-selection  '((output-dvi "xdvi")
-                                      (output-pdf "Okular")
-                                      ;; (output-pdf "Atril")
-                                      ;; (output-pdf "Fwdevince")
-                                      (output-html "xdg-open")
-                                      )
-        TeX-source-correlate-method 'synctex
-        TeX-source-correlate-start-server t
-        TeX-source-correlate-mode t
-        LaTeX-math-mode t
-        TeX-command-default "upLaTeXmk"
-        TeX-ispell-extend-skip-list t
-        TeX-command-output-list '(("upLatexMk" ("pdf")))
-        TeX-electric-sub-and-superscript t
-        )
-  (setq LaTeX-figure-label "fig:"
-        LaTeX-table-label "tab:"
-        LaTeX-section-label "sec:")
-  (setq font-latex-fontify-script nil
-        font-latex-script-display nil
-        font-latex-fontify-sectioning  1.0
-        )
-  )
-  #+end_src
 * Org-mode
   :PROPERTIES:
   :CUSTOM_ID: org7b7eccc9
@@ -5066,67 +5303,6 @@ pdflang={%l}}
   )
   #+end_src
 
-* VCSなど, ソースコード管理関係
-  :PROPERTIES:
-  :CUSTOM_ID: orgc6b67eb9
-  :END:
-  まあ, ほとんど Git 関連な訳ですが．
-** TODO =project.el= [0/1]
-   :PROPERTIES:
-   :CUSTOM_ID: org76c99d7f
-   :END:
-   Emacs 27.1 から built-in となった.
-   eglot でも使われているので, 設定しておく.
-   #+begin_src emacs-lisp
-(leaf project
-  :ensure t
-  :init
-  (setq project-list-file (expand-file-name "projects" my:d:tmp)
-        project-switch-use-entire-map t)
-  )
-   #+end_src
-   - [ ] ghq の list を追加できないかな?
-     できれば =--full-path= じゃない表示にしたい(=my:shorten-file-path= を噛ませたい).
-** =consult-ghq=: ghq を consult で.
-   :PROPERTIES:
-   :CUSTOM_ID: org90f5d475
-   :END:
-   =project.el= で ghq を使うようになったら不要かもしれないけど, とりあえず.
-   #+begin_src emacs-lisp
-(leaf consult-ghq
-  :vc (:url "https://github.com/uwabami/consult-ghq")
-  :bind (("C-x f" . consult-ghq-open))
-  :init
-  (setq consult-ghq-short-list t)
-  )
-   #+end_src
-** magit:
-   :PROPERTIES:
-   :CUSTOM_ID: org59371622
-   :END:
-   magit は Emacs の Git Frontend.
-   結局の所 CUI でコマンド叩く事も多いけれど, これはこれで重宝している．
-   #+begin_src emacs-lisp :tangle init.el
-(leaf magit
-  :bind (("C-x g" . magit-status))
-  :ensure t
-  :init
-  (leaf transient
-    :init
-    (setq transient-history-file (expand-file-name "transient-history.el" my:d:tmp)
-          transient-levels-file (expand-file-name "transient-levels.el" my:d:tmp)
-          transient-values-file (expand-file-name "transient-values.el" my:d:tmp)
-          transient-force-fixed-pitch t
-          )
-    )
-  ;;
-  (setq magit-completing-read-function 'magit-builtin-completing-read
-        magit-refs-show-commit-count   'all
-        magit-log-buffer-file-locked   t
-        magit-revision-show-gravatars  nil
-        )
-  )
-   #+end_src
 * その他のモード設定
   :PROPERTIES:
   :CUSTOM_ID: orga28ad005
@@ -5261,14 +5437,15 @@ pdflang={%l}}
 (leaf modus-themes
   :ensure t
   :bind ("<f5>" . modus-themes-toggle)
+  ;; autoload が無いので発火点を作成しておく
   :commands (modus-themes-load-theme
              modus-themes-with-colors)
   :hook
-  `(
-    (emacs-startup-hook . (lambda()
-                            (modus-themes-load-theme 'modus-vivendi)))
-    (modus-themes-after-load-theme-hook . my:modus-themes-custom-faces)
-    )
+  ((emacs-startup-hook . (lambda()
+                           (modus-themes-load-theme 'modus-vivendi)
+                           (load-theme 'modus-vivendi :no-confirm)))
+   (modus-themes-after-load-theme-hook . my:modus-themes-custom-faces)
+   )
   :init
   (setq modus-themes-custom-auto-reload t
         modus-themes-disable-other-themes t
@@ -5282,6 +5459,9 @@ pdflang={%l}}
         modus-themes-variable-pitch-ui nil
         modus-vivendi-palette-overrides
         `(;;
+          (bg-main ,(if (display-graphic-p)
+                        "#000000"     ; GUIなら背景色
+                      'unspecified))  ; ターミナルなら色は指定しない
           ;; Basic color override
           (green-cooler "#bfff7f")
           (green-intense "#4ceea5")
@@ -5291,9 +5471,6 @@ pdflang={%l}}
           ;;
           ;; (bg-yellow-intense "#556b2f")
           ;;
-          (bg-main ,(if (display-graphic-p)
-                        "#000000"     ; GUIなら背景色
-                      'unspecified))  ; ターミナルなら色は指定しない
           (comment fg-dim)
           ;; (bg-hl-line "#556b2f")
           (bg-hl-line "DarkSlateBlue")
@@ -5342,57 +5519,58 @@ pdflang={%l}}
           )
         )
   :config
-  (defun my:modus-themes-custom-faces (&rest _)
+  (defun my:modus-themes-custom-faces (&rest _args)
     (modus-themes-with-colors
       (custom-set-faces
        ;; vertico
-       `(vertico-current                                  ((,c :inherit hl-line :background unspecified )))
+       `(vertico-current                                  ((t :inherit hl-line :background unspecified )))
        ;; wanderlust
-       `(wl-highlight-folder-closed-face                  ((,c :foreground ,green-cooler )))
-       `(wl-highlight-folder-few-face                     ((,c :foreground ,red-cooler )))
-       `(wl-highlight-folder-killed-face                  ((,c :foreground ,fg-alt )))
-       `(wl-highlight-folder-many-face                    ((,c :foreground ,magenta )))
-       `(wl-highlight-folder-opened-face                  ((,c :foreground ,cyan-cooler )))
-       `(wl-highlight-folder-unknown-face                 ((,c :foreground ,cyan-warmer )))
-       `(wl-highlight-folder-unread-face                  ((,c :foreground ,blue-warmer )))
-       `(wl-highlight-folder-zero-face                    ((,c :foreground ,fg-main )))
-       `(wl-highlight-message-citation-header             ((,c :foreground ,green-warmer )))
-       `(wl-highlight-message-cited-text-1                ((,c :foreground ,green-intense )))
-       `(wl-highlight-message-cited-text-2                ((,c :foreground ,yellow-intense )))
-       `(wl-highlight-message-cited-text-3                ((,c :foreground ,blue-intense )))
-       `(wl-highlight-message-cited-text-4                ((,c :foreground ,cyan-intense )))
-       `(wl-highlight-message-cited-text-5                ((,c :foreground ,magenta-cooler )))
-       `(wl-highlight-message-cited-text-6                ((,c :foreground ,red-intense )))
-       `(wl-highlight-message-cited-text-7                ((,c :foreground ,green-intense )))
-       `(wl-highlight-message-cited-text-8                ((,c :foreground ,yellow-intense )))
-       `(wl-highlight-message-cited-text-9                ((,c :foreground ,blue-intense )))
-       `(wl-highlight-message-cited-text-10               ((,c :foreground ,cyan-intense )))
-       `(wl-highlight-message-header-contents             ((,c :foreground ,magenta-cooler )))
-       `(wl-highlight-message-headers                     ((,c :foreground ,cyan-intense )))
-       `(wl-highlight-message-important-header-contents2  ((,c :foreground ,magenta-intense )))
-       `(wl-highlight-message-signature                   ((,c :foreground ,fg-dim )))
-       `(wl-highlight-summary-answered-face               ((,c :foreground ,green-intense )))
-       `(wl-highlight-summary-deleted-face                ((,c :foreground ,blue-intense )))
-       `(wl-highlight-summary-disposed-face               ((,c :foreground ,fg-dim )))
-       `(wl-highlight-summary-flagged-face                ((,c :foreground ,yellow-intense )))
-       `(wl-highlight-summary-high-unread-face            ((,c :foreground ,red-intense )))
-       `(wl-highlight-summary-low-unread-face             ((,c :foreground ,red-intense )))
-       `(wl-highlight-summary-normal-face                 ((,c :foreground ,fg-main )))
-       `(wl-highlight-summary-refiled-face                ((,c :foreground ,blue-warmer )))
-       `(wl-highlight-summary-spam-face                   ((,c :foreground ,magenta-intense )))
-       `(wl-highlight-summary-thread-top-face             ((,c :foreground ,fg-main )))
-       `(wl-highlight-summary-unread-face                 ((,c :foreground ,fg-main )))
-       `(wl-highlight-summary-new-face                    ((,c :foreground ,red-intense )))
-       `(wl-highlight-summary-displaying-face             ((,c :underline t :bold t)))
-       `(wl-highlight-folder-path-face                    ((,c :underline t :bold t)))
+       `(wl-highlight-folder-closed-face                  ((t :foreground ,green-cooler )))
+       `(wl-highlight-folder-few-face                     ((t :foreground ,red-cooler )))
+       `(wl-highlight-folder-killed-face                  ((t :foreground ,fg-alt )))
+       `(wl-highlight-folder-many-face                    ((t :foreground ,magenta )))
+       `(wl-highlight-folder-opened-face                  ((t :foreground ,cyan-cooler )))
+       `(wl-highlight-folder-unknown-face                 ((t :foreground ,cyan-warmer )))
+       `(wl-highlight-folder-unread-face                  ((t :foreground ,blue-warmer )))
+       `(wl-highlight-folder-zero-face                    ((t :foreground ,fg-main )))
+       `(wl-highlight-message-citation-header             ((t :foreground ,green-warmer )))
+       `(wl-highlight-message-cited-text-1                ((t :foreground ,green-intense )))
+       `(wl-highlight-message-cited-text-2                ((t :foreground ,yellow-intense )))
+       `(wl-highlight-message-cited-text-3                ((t :foreground ,blue-intense )))
+       `(wl-highlight-message-cited-text-4                ((t :foreground ,cyan-intense )))
+       `(wl-highlight-message-cited-text-5                ((t :foreground ,magenta-cooler )))
+       `(wl-highlight-message-cited-text-6                ((t :foreground ,red-intense )))
+       `(wl-highlight-message-cited-text-7                ((t :foreground ,green-intense )))
+       `(wl-highlight-message-cited-text-8                ((t :foreground ,yellow-intense )))
+       `(wl-highlight-message-cited-text-9                ((t :foreground ,blue-intense )))
+       `(wl-highlight-message-cited-text-10               ((t :foreground ,cyan-intense )))
+       `(wl-highlight-message-header-contents             ((t :foreground ,magenta-cooler )))
+       `(wl-highlight-message-headers                     ((t :foreground ,cyan-intense )))
+       `(wl-highlight-message-important-header-contents2  ((t :foreground ,magenta-intense )))
+       `(wl-highlight-message-signature                   ((t :foreground ,fg-dim )))
+       `(wl-highlight-summary-answered-face               ((t :foreground ,green-intense )))
+       `(wl-highlight-summary-deleted-face                ((t :foreground ,blue-intense )))
+       `(wl-highlight-summary-disposed-face               ((t :foreground ,fg-dim )))
+       `(wl-highlight-summary-flagged-face                ((t :foreground ,yellow-intense )))
+       `(wl-highlight-summary-high-unread-face            ((t :foreground ,red-intense )))
+       `(wl-highlight-summary-low-unread-face             ((t :foreground ,red-intense )))
+       `(wl-highlight-summary-normal-face                 ((t :foreground ,fg-main )))
+       `(wl-highlight-summary-refiled-face                ((t :foreground ,blue-warmer )))
+       `(wl-highlight-summary-spam-face                   ((t :foreground ,magenta-intense )))
+       `(wl-highlight-summary-thread-top-face             ((t :foreground ,fg-main )))
+       `(wl-highlight-summary-unread-face                 ((t :foreground ,fg-main )))
+       `(wl-highlight-summary-new-face                    ((t :foreground ,red-intense )))
+       `(wl-highlight-summary-displaying-face             ((t :underline t :bold t)))
+       `(wl-highlight-folder-path-face                    ((t :underline t :bold t)))
        ;; whitespace-mode
-       `(whitespace-trailing                              ((,c :foreground ,magenta-intense )))
-       `(whitespace-tab                                   ((,c :foreground ,blue-intense :underline t)))
-       `(whitespace-space                                 ((,c :foreground ,green-intense :bold t)))
-       `(whitespace-empty                                 ((,c :background ,red-intense )))
-       )))
+       `(whitespace-trailing                              ((t :foreground ,magenta-intense )))
+       `(whitespace-tab                                   ((t :foreground ,blue-intense :underline t)))
+       `(whitespace-space                                 ((t :foreground ,green-intense :bold t)))
+       `(whitespace-empty                                 ((t :background ,red-intense )))
+       ))
+    )
   )
-   #+end_src
+  #+end_src
 ** modeline: =powerline=
    :PROPERTIES:
    :CUSTOM_ID: orgf37b53c3

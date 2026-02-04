@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2026-02-04 13:14:43
+#+date: 2026-02-04 17:59:30
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -553,9 +553,47 @@ C-u を付けて実行すると, 埋める文字を指定可能(例: = や * な
   :config
   (leaf-keywords-init)
   )
-(leaf leaf-convert :ensure t)
    #+end_src
    - [ ] =package-vc-install= でインストールした諸々って, package-upgrade 後に delete 対象になる?
+** =package-vc-install= の調整
+   :PROPERTIES:
+   :CUSTOM_ID: org9c1823a4
+   :END:
+   package-vc-install を直接叩く事は無くて,
+   leaf の =:vc= キーワードでインストールします.
+
+   ただ, リポジトリによっては
+   make などを叩く必要があったりするのでその調整を
+   =:advice= で追加しておきます.
+
+   make を叩く必要があるパッケージは
+   個別に =:preface= キーワードで
+   #+begin_src emacs-lisp :tangle no
+(add-to-list 'package-vc-allow-build-commands 'hogehero)
+   #+end_src
+   と指定する様にしました.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf package-vc
+  :doc "Extend package-vc to support post-make autoload generation"
+  :tag "builtin"
+  ;; 呼び出されるまで変数が見えないので custom に移動していくことに
+  :custom (package-vc-allow-build-commands . nil)
+  :preface
+;;;###autoload
+  (defun my:package-vc-regenerate-autoloads-after-make (pkg-spec pkg-desc)
+    "Regenerate autoloads after `package-vc--make' if new .el files were generated."
+    (let* ((pkg-dir (package-desc-dir pkg-desc))
+           (name (package-desc-name pkg-desc))
+           (lisp-dir (plist-get pkg-spec :lisp-dir))
+           (lisp-path (file-name-concat pkg-dir lisp-dir)))
+      (when (file-directory-p lisp-path)
+        (message "Regenerating autoloads for %s in %s..." name lisp-path)
+        (package-generate-autoloads name lisp-path))))
+  :advice
+  (:after package-vc--make
+          my:package-vc-regenerate-autoloads-after-make)
+  )
+   #+end_src
 * =gcmh=: 賢い garbage-collection
   :PROPERTIES:
   :ID:       cca3e8df-79f9-4c60-a803-07ff641b0ef7
@@ -659,35 +697,35 @@ C-u を付けて実行すると, 埋める文字を指定可能(例: = や * な
    :END:
    [[https://khiker.hatenablog.jp/entry/20110327/emacs_cjkamb][Emacs23(以降) と 曖昧幅文字(East asian ambiguous)]] あたりも参考に.
 
-   拙作の修正ロケールはこちら: [[https://github.com/uwabami/locale-eaw-emoji]]
-   → 最近は foot を使っているので, 全て halfwidth にしました.
-   なお, 環境変数でいわゆる set-language-environment "Japanese" と判定されると, EAW は 2文字幅に設定されてしまいます.
-   これを強制的に 1 に戻す必要があります.
+   環境変数でいわゆる set-language-environment "Japanese" と判定されると,
+   EAW は 2文字幅に設定されてしまいます.
+   この強制を自分好みに調整する必要があります.
+   この調整には
+   - [[https://github.com/hamano/locale-eaw][hamano/locale-eaw: East Asian Ambiguous Width問題のための修正ロケール]]
+   を利用します.
    #+begin_src emacs-lisp :tangle init.el
-;; (leaf locale-eaw-emoji
-;;   :vc (:url "https://github.com/uwabami/locale-eaw-emoji")
-;;   :hook (emacs-startup-hook . (lambda ()
-;;                                 (eaw-halfwidth)
-;;                                 (global-auto-composition-mode 0)
-;;                                 ))
-;;   )
-;; (leaf glyphless-display-mode
-;;   ;; :init (setq glyphless-char-display 'zero-width)
-;;   :hook (emacs-startup-hook . glyphless-display-mode)
-;;   )
-(leaf eaw-single
+(leaf eaw-halfwidth
   :commands eaw-init
-  :vc (:url "https://github.com/uwabami/locale-eaw" :lisp-dir "dist")
+  :vc (:url "https://github.com/uwabami/locale-eaw"
+            :make "all"
+            :lisp-dir "dist"
+            )
+  :preface
+  (add-to-list 'package-vc-allow-build-commands 'eaw-halfwidth)
   :hook (emacs-startup-hook . (lambda ()
                                 (let ((load-file-message nil))
-                                  ;; (load "eaw-console" nil t)
                                   (eaw-init)
                                   (global-auto-composition-mode 0))))
   )
    #+end_src
+   とりあえず祟りが少ないので EAW は 1 文字幅にしているが,
+   多くの日本語フォントがそうなっていないので, 割と辛い.
+   今のところ IBM Plex Mono をベースにした
+   - [[https://github.com/yuru7/PlemolJP][yuru7/PlemolJP: IBM Plex Mono と IBM Plex Sans JP を合成したプログラミングフォント PlemolJP (プレモル ジェイピー)]]
+   で提供されている PlemolJP Console NF あたりは記号類も1文字幅となっている.
+   見易いかどうかは別として.
    - [ ] リテラシーの低い人からのメールで丸囲み数字が良く表われてシンドい(見切れる).
-     - 適宜マッピングする?
-     - もしくは1文字幅でも見易いフォントを使う. 現状は IBM Plex 関連?
+     - 文字そのものの表示を別のモンにマッピングして表示する, という処理は可能だろうか?
 ** フォント
   :PROPERTIES:
   :CUSTOM_ID: org356b9857

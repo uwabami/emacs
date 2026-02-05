@@ -2,7 +2,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2026-02-04 22:25:20
+#+date: 2026-02-05 13:24:51
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -183,24 +183,21 @@ endif
   ;; (native-compile-async "~/.emacs.d/share/elisp/" 'recursively)
   (native-compile-async "~/.emacs.d/elpa" 'recursively))
   #+end_src
-* 起動の高速化
+* =early-init.el=: 起動の高速化
   :PROPERTIES:
   :CUSTOM_ID: orgae182d4d
   :END:
   この辺は [[https://emacs-jp.github.io/tips/startup-optimization][Emacs の起動時間を"詰める"]] を参考に.
-** Package初期化処理
-   :PROPERTIES:
-   :CUSTOM_ID: orgd896c3a2
-   :ID:       351f7fc8-be80-46b3-86ac-d9bae80d3445
-   :END:
-   #+begin_src emacs-lisp :tangle (if (boundp 'early-init-file) "early-init.el" "init.el")
-(setq package-archives '(("gnu"    . "https://elpa.gnu.org/packages/")
-                         ("melpa"  . "https://melpa.org/packages/")
-                         ("nongnu" . "https://elpa.nongnu.org/nongnu/")
-                         )
-      package-gnupghome-dir (expand-file-name ".gnupg" "~/")
-      package-enable-at-startup nil)
-    #+end_src
+
+  =early-intt.el= は
+  Emacs ≧ 27 からの機能なので
+  org-tangle から init.el を生成する際には
+
+  =#+begin_src emacs-lisp :tangle (if (boundp 'early-init-file) "early-init.el" "init.el")=
+
+  としておく.
+
+  他にも設定しておいた方が良い事はあるかな?
 ** GC の設定
    :PROPERTIES:
    :CUSTOM_ID: org77e2f299
@@ -227,6 +224,12 @@ endif
 (setq gc-cons-threshold most-positive-fixnum
       garbage-collection-messages nil)
     #+end_src
+    [[#org0bd0c625][=esup=]] がまだ =early-init.el= を読まないので,
+    init.el でも gc-cons-threshold を設定しておく.
+    #+begin_src emacs-lisp :tangle init.el
+(setq gc-cons-threshold most-positive-fixnum)
+    #+end_src
+    - [[https://github.com/jschaf/esup/issues/93][early-init.el is not included in profiling · Issue #93 · jschaf/esup]]
 *** 起動後に GC Threshold を既定値に戻す
     :PROPERTIES:
     :CUSTOM_ID: org9584246f
@@ -241,6 +244,20 @@ endif
 ;; (add-hook 'emacs-startup-hook
 ;;           (lambda ()
 ;;             (setq gc-cons-threshold 800000)))
+    #+end_src
+** Package初期化処理
+   :PROPERTIES:
+   :CUSTOM_ID: orgd896c3a2
+   :ID:       351f7fc8-be80-46b3-86ac-d9bae80d3445
+   :END:
+   本体でやっても良いけど, ここに持ってきても良いらしい.
+   #+begin_src emacs-lisp :tangle (if (boundp 'early-init-file) "early-init.el" "init.el")
+(setq package-archives '(("gnu"    . "https://elpa.gnu.org/packages/")
+                         ("melpa"  . "https://melpa.org/packages/")
+                         ("nongnu" . "https://elpa.nongnu.org/nongnu/")
+                         )
+      package-gnupghome-dir (expand-file-name ".gnupg" "~/")
+      package-enable-at-startup nil)
     #+end_src
 ** Magic File Name を一時的に無効化
    :PROPERTIES:
@@ -271,17 +288,11 @@ endif
             (dolist (handler my:saved-file-name-handler-alist)
               (add-to-list 'file-name-handler-alist handler))))
     #+end_src
-** =early-init.el=
+** その他, 雑多な GUI 関連の設定
    :PROPERTIES:
    :CUSTOM_ID: orgcb2bfa7b
    :ID:       d5e8fa0e-8fd3-4db0-bc20-f6a8c83d191b
    :END:
-   Emacs >= 27 からの機能. 他にも設定しておいた方が良い事はあるかな?
-
-   - =package.el= の初期化処理: [[id:351f7fc8-be80-46b3-86ac-d9bae80d3445][Package初期化処理]]
-   - GC の調整: [[id:9bb833b8-16ba-493a-8616-7da7a810bee4][GC threshold の最大化]]
-   - Magic File Name に関して: [[id:da35a6a1-6164-410a-976a-e9335dd4444c][Magic File Name を無効化]]
-
    見た目: tabbar, toolbar, menubar などの非表示, beep の無効化など
    #+begin_src emacs-lisp :tangle (if (boundp 'early-init-file) "early-init.el" "init.el")
 (setq inhibit-x-resources t)
@@ -302,8 +313,8 @@ endif
    #+end_src
    スタートアップメッセージの抑制
    昔設定していたアレコレは以下の様にマトめられていた
-   alias: =inhibit-splash-screen= → =inhibit-startup-screen=
-   alias: =inhibit-startup-message= → =inhibit-startup-screen=
+   - alias: =inhibit-splash-screen= → =inhibit-startup-screen=
+   - alias: =inhibit-startup-message= → =inhibit-startup-screen=
    #+begin_src emacs-lisp :tangle (if (boundp 'early-init-file) "early-init.el" "init.el")
 (setq inhibit-startup-screen t)
    #+end_src
@@ -316,7 +327,7 @@ endif
 (setq auto-save-default nil)
 (setq auto-save-list-file-prefix nil)
    #+end_src
-   Native Compile に関連する設定(Emacs 29 以降)
+   Native Compile に関連する設定(Emacs ≧ 29)
    #+begin_src emacs-lisp :tangle (when (fboundp 'native-compile-async) "early-init.el")
 (setq package-native-compile t
       native-compile-target-directory (expand-file-name "eln-cache" user-emacs-directory)
@@ -324,8 +335,9 @@ endif
    #+end_src
    以下はここで設定するのが良いのかいまいちわかっていないあれこれ.
    #+begin_src emacs-lisp :tangle (if (boundp 'early-init-file) "early-init.el" "init.el")
-(setq history-delete-duplicates t)
+(setq-default vc-handled-backends nil)
 (setq vc-follow-symlinks t)
+(setq history-delete-duplicates t)
 (setq load-prefer-newer noninteractive)
 (setq site-run-file nil)
 (provide 'early-init)
@@ -344,6 +356,7 @@ endif
 ;; 起動時の案内を表示する関数を「何もしない関数」に差し替える
 (advice-add 'display-startup-echo-area-message
             :override #'my:inhibit-startup-echo-area-message-advice)
+;; 起動時間の計測
 (defconst my:before-load-init-time (current-time))
 (defun my:display-boot-summary ()
   "Assemble and display a single boot summary message in the echo area."
@@ -420,6 +433,7 @@ endif
    :END:
    ...元ネタがどこだったのか忘れてしまった...
    #+begin_src emacs-lisp :tangle init.el
+;; -------------------------------------------------------------------
 ;;;###autoload
 (defun my:make-scratch (&optional arg)
   " *scratch* を作成して buffer-list に放り込む."
@@ -436,11 +450,12 @@ endif
           (switch-to-buffer "*scratch*")))
     (cond ((= arg 0) (message "*scratch* is cleared up."))
           ((= arg 1) (message "another *scratch* is created")))))
+;; -------------------------------------------------------------------
 ;;;###autoload
 (defun my:buffer-name-list ()
   "buffer 一覧の取得"
   (mapcar (function buffer-name) (buffer-list)))
-;;
+;; -------------------------------------------------------------------
 (add-hook 'kill-buffer-query-functions
           (lambda ()
             (if (string= "*scratch*" (buffer-name))
@@ -461,6 +476,7 @@ endif
 
    代わりに =C-x @= を =C-M-= に解釈させるように設定しておく.
    #+begin_src emacs-lisp :tangle init.el
+;; -------------------------------------------------------------------
 ;;;###autoload
 ; cargo cult adaptation of event-apply-control-modifier
 (defun my:event-apply-control-meta-modifiers (ignore-prompt)
@@ -469,6 +485,7 @@ endif
    (event-apply-modifier (event-apply-modifier (read-event)
                                                'control 26 "C-")
                          'meta 27 "M-")))
+;; -------------------------------------------------------------------
 (define-key function-key-map (kbd "C-x @") 'my:event-apply-control-meta-modifiers)
    #+end_src
 ** カーソルのある位置の face を調べる関数
@@ -477,6 +494,7 @@ endif
    :END:
    わりと良く使う. 地味に便利
    #+BEGIN_SRC emacs-lisp
+;; -------------------------------------------------------------------
 ;;;###autoload
 (defun my:describe-face-at-point ()
   (interactive)
@@ -488,6 +506,7 @@ endif
    :END:
    地味に便利
    #+begin_src emacs-lisp :tangle init.el
+;; -------------------------------------------------------------------
 ;;;###autoload
 (defun my:fill-line-with-char (&optional char)
   "行末から fill-column まで文字 (デフォルトは -) で埋めるコマンド.
@@ -616,7 +635,8 @@ C-u を付けて実行すると, 埋める文字を指定可能(例: = や * な
   :ID:       cca3e8df-79f9-4c60-a803-07ff641b0ef7
   :CUSTOM_ID: org414ff0d8
   :END:
-  割と速い段階で設定しておきたくてここに.
+  割と速い段階で設定しておきたくてここに書いたけれど,
+  実際には =emacs-startup-hook= で起動するので, 最後辺りで有効になる.
   #+begin_src emacs-lisp :tangle init.el
 (leaf gcmh
   :ensure t
@@ -736,7 +756,7 @@ C-u を付けて実行すると, 埋める文字を指定可能(例: = や * な
                                   (global-auto-composition-mode 0))))
   )
    #+end_src
-   とりあえず祟りが少ないので EAW は 1 文字幅にしているが,
+   とりあえず祟りが少ないので EAW は 1 文字幅+調整済の =eaw-console= を利用しているが,
    多くの日本語フォントがそうなっていないので, 割と辛い.
    今のところ IBM Plex Mono をベースにした
    - [[https://github.com/yuru7/PlemolJP][yuru7/PlemolJP: IBM Plex Mono と IBM Plex Sans JP を合成したプログラミングフォント PlemolJP (プレモル ジェイピー)]]
@@ -814,14 +834,15 @@ Emacs.reverseVideo: true
         buffer-face-mode-face 'fixed-pitch
         use-default-font-for-symbols nil)
   :hook
-  (window-setup-hook
-   . (lambda ()
-       (my:setup-gui-frame)
-       (my:apply-font-eaw-console-with-emoji)))
-  (after-make-frame-functions
-   . (lambda ()
-       (my:setup-gui-frame)
-       (my:apply-font-eaw-console-with-emoji)))
+  ((window-setup-hook
+    . (lambda ()
+        (my:setup-gui-frame)
+        (my:apply-font-eaw-console-with-emoji)))
+   (after-make-frame-functions
+    . (lambda ()
+        (my:setup-gui-frame)
+        (my:apply-font-eaw-console-with-emoji)))
+   )
   )
  #+end_src
  表示のテスト
@@ -917,87 +938,87 @@ Emacs.reverseVideo: true
   (if (file-directory-p "~/Sources/Git/salsa.debian.org/rlb/deb-emacs/src")
       (setq find-function-C-source-directory
               "~/Sources/Git/salsa.debian.org/rlb/deb-emacs/src"))
-
-  (setq ;; setq か customize-set-variable か setop か, という話はあるものの.
-   ;; 環境変数的なあれこれ -------------------------------------------------
-   ;; 名前とメールアドレス
-   user-full-name (concat (getenv "DEBFULLNAME"))
-   user-mail-address (concat (getenv "DEBEMAIL"))
-   ;; el と elc は新しい方を読み込む
-   load-prefer-newer t
-   ;; local network は常に信頼
-   nsm-trust-local-network t
-   ;; ファイル保存先を ~/.emacs.d 以下にブチ撒ける諸々の整理
-   url-configuration-directory (expand-file-name "url" my:d:tmp)
-   bookmark-default-file (expand-file-name "bookmarks" my:d:tmp)
-   eshell-directory-name (expand-file-name "eshell" my:d:tmp)
-   ;; 表示関連 -------------------------------------------------------------
-   ;; scratch buffer は空っぽで
-   initial-scratch-message nil
-  ;; minibuffer も静かに: これは t だと shutup できない, という罠
-   inhibit-startup-echo-area-message user-login-name
-   ;; 対応する括弧を強調表示: 不等号でも反応しちゃうのが玉に瑕
-   ;; show-paren-style 'mixed
-   ;; modeline に行番号は表示しない
-   line-number-mode nil
-   ;; minibuffer は case insensitive
-   read-file-name-completion-ignore-case t
-   ;; 編集関連 -------------------------------------------------------------
-   ;; バッファ終端で newline を入れない
-   next-line-add-newlines nil
-   ;; tab 幅 8 ← org-element が tab幅 8 に強制してくる
-   tab-width  8
-   ;; RFC5322 風味
-   fill-column  78
-   ;; 折り返し無し
-   truncate-lines  nil
-   truncate-partial-width-windows nil
-   ;; SVG を編集可能にする: Custom で可能?
-   auto-mode-alist (delete
-                    '("\\.svgz?\\'" . image-mode) auto-mode-alist)
-   ;; org-mode で有効にするローカル変数の追加 ← org-mode でやるべきでは?
-   safe-local-variable-values '((org-link-file-path-type . absolute))
-   ;; 保存, 履歴関連 -------------------------------------------------------
-   ;; バックアップファイル(foo.txt~など)は生成しない
-   ;; (setq make-backup-files nil) ;; → early-init で設定済
-   ;; 排他制御ロックファイル(.#foo.txtなど)は生成しない
-   ;; (setq create-lockfiles nil) ;; → early-init で設定済
-   ;; 履歴: 無制限(の筈)
-   history-length t
-   ;; ファイルが変更されたら再読み込み
-   auto-revert-interval  0.1
-   ;; 一次保存の無効化(default は60秒毎に一時保存)
-   ;; auto-save-default nil ;; → early-init で設定済
-   ;; auto-save-list-file-prefix nil ;; → early-init で設定済
-   auto-save-interval 0
-   delete-auto-save-files t
-   ;; 自動保存の無効化
-   ;; auto-save-file-name-transforms `((".*" ,my:d:tmp  t))
-   ;; ;; backup で symlink は使わない
-   ;; backup-by-copying t
-   ;; backup ファイルの保存先
-   ;; backup-directory-alist  `((".*" . ,my:d:tmp))
-   ;; ;; backup ファイルの世代管理
-   ;; version-control t
-   ;; kept-new-versions 5
-   ;; kept-old-versions 5
-   ;; delete-old-versions t
-   ;; auto-save-visited-interval 30
-   ;;
-   ;; 略語は静かに保存
-   save-abbrevs 'silently
-   )
+  ;; -------------------------------------------------------------------------
+  ;; デフォルト値を変更した方が良い変数など.
+  (setq-default fill-column 78  ;; 70 → 78 RFC5322 風味
+                ;; org-element が tab 幅 8 に強制してくるので
+                tab-width 8
+                ;; デフォルトは折り返しなし.
+                truncate-lines  nil
+                ;; tab ではインデントしない
+                indent-tabs-mode nil
+                )
+  ;; -------------------------------------------------------------------------
+  ;; setq か customize-set-variable か setop か, という話はあるものの.
+  (setq user-full-name (concat (getenv "DEBFULLNAME")) ;; 名前
+        user-mail-address (concat (getenv "DEBEMAIL")) ;; メールアドレス
+        ;; el と elc は新しい方を読み込む
+        load-prefer-newer t
+        ;; local network は常に信頼
+        nsm-trust-local-network t
+        ;; ファイル保存先を ~/.emacs.d 以下にブチ撒ける諸々の整理
+        url-configuration-directory (expand-file-name "url" my:d:tmp)
+        bookmark-default-file (expand-file-name "bookmarks" my:d:tmp)
+        eshell-directory-name (expand-file-name "eshell" my:d:tmp)
+        ;; 表示関連 ----------------------------------------------------------
+        ;; scratch buffer は空っぽで
+        initial-scratch-message nil
+        ;; minibuffer も静かに: これは t だと shutup できない, という罠
+        inhibit-startup-echo-area-message user-login-name
+        ;; 対応する括弧を強調表示: 不等号でも反応しちゃうのが玉に瑕
+        ;; show-paren-style 'mixed
+        ;; modeline に行番号は表示しない
+        line-number-mode nil
+        ;; minibuffer は case insensitive
+        read-file-name-completion-ignore-case t
+        ;; 編集関連 ----------------------------------------------------------
+        ;; バッファ終端で newline を入れない
+        next-line-add-newlines nil
+        ;; 折り返し無し
+        truncate-partial-width-windows nil
+        ;; SVG を編集可能にする: Custom で可能?
+        auto-mode-alist (delete
+                         '("\\.svgz?\\'" . image-mode) auto-mode-alist)
+        ;; org-mode で有効にするローカル変数の追加 ← org-mode でやるべきでは?
+        safe-local-variable-values '((org-link-file-path-type . absolute))
+        ;; 保存, 履歴関連 ----------------------------------------------------
+        ;; バックアップファイル(foo.txt~など)は生成しない
+        ;; (setq make-backup-files nil) ;; → early-init で設定済
+        ;; 排他制御ロックファイル(.#foo.txtなど)は生成しない
+        ;; (setq create-lockfiles nil) ;; → early-init で設定済
+        ;; 履歴: 無制限(の筈)
+        history-length t
+        ;; ファイルが変更されたら再読み込み
+        auto-revert-interval  0.1
+        ;; 一次保存の無効化(default は60秒毎に一時保存)
+        ;; auto-save-default nil ;; → early-init で設定済
+        ;; auto-save-list-file-prefix nil ;; → early-init で設定済
+        auto-save-interval 0
+        delete-auto-save-files t
+        ;; 自動保存の無効化
+        ;; auto-save-file-name-transforms `((".*" ,my:d:tmp  t))
+        ;; ;; backup で symlink は使わない
+        ;; backup-by-copying t
+        ;; backup ファイルの保存先
+        ;; backup-directory-alist  `((".*" . ,my:d:tmp))
+        ;; ;; backup ファイルの世代管理
+        ;; version-control t
+        ;; kept-new-versions 5
+        ;; kept-old-versions 5
+        ;; delete-old-versions t
+        ;; auto-save-visited-interval 30
+        ;;
+        ;; 略語は静かに保存
+        save-abbrevs 'silently
+        )
   :config
   ;; use-short-answers t で良いのでは?
   (defalias 'yes-or-no-p 'y-or-n-p)
   :hook
   `(;; hl-line: 現在行のハイライト
     (emacs-startup-hook . global-hl-line-mode)
-    ;; simple:
     (emacs-startup-hook . (lambda ()
-                            ;; tab ではインデントしない
-                            (setq-default indent-tabs-mode nil
-                                          auto-fill-mode nil)))
+                            (auto-fill-mode nil)))
     ;; SVG を表示ではなく XML 編集するために.
     (emacs-startup-hook . (lambda ()
                             (auto-image-file-mode 0)))
@@ -2836,7 +2857,7 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
         magit-refs-show-commit-count   'all
         magit-log-buffer-file-locked   t
         magit-revision-show-gravatars  nil
-        git-commit-major-mode 'git-commit-ts-mode
+        ;; git-commit-major-mode 'git-commit-ts-mode
         )
   )
    #+end_src
@@ -2847,8 +2868,8 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
    #+begin_src emacs-lisp :tangle init.el
 (leaf git-commit-ts-mode
   :vc (:url "https://github.com/danilshvalov/git-commit-ts-mode")
-  :preface
-  (add-to-list 'major-mode-remap-alist '(f90-mode . f90-ts-mode))
+  ;; :preface
+  ;; (add-to-list 'major-mode-remap-alist '(f90-mode . f90-ts-mode))
   :mode "\\COMMIT_EDITMSG\\'"
   )
    #+end_src
@@ -3110,7 +3131,7 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
      #+begin_src emacs-lisp :tangle init-wl.el
 (eval-and-compile
   (require 'mime-w3m))
-(setq w3m-fill-column 72)
+(setq w3m-fill-column 78)
      #+end_src
      HTML メールを表示するために eww を使う.
      mime-setup がロードされる前に記述する必要あり.
@@ -4814,27 +4835,10 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
             org-gcal-file-alist)
   :ensure t
   :commands (org-gcal-reload-client-id-secret)
-  ;; (org-gcal-fetch
-  ;;  org-gcal-sync
-  ;;  org-gcal-post-at-point
-  ;;  org-gcal-reload-client-id-secret)
-;;  :advice ((:before org-gcal-fetch my:setup-org-gcal-secrets-lazy)
-;;           (:before org-gcal-sync my:setup-org-gcal-secrets-lazy)
-;;           (:before org-gcal-post-at-point my:setup-org-gcal-secrets-lazy))
   :preface
   (setq org-gcal-dir (expand-file-name "org-gcal" my:d:tmp))
   (unless (file-directory-p org-gcal-dir)
     (make-directory org-gcal-dir))
-;; ;;;###autoload
-;; (defun my:setup-org-gcal-secrets-lazy (&rest _args)
-;;   "org-gcal 関連の変数をループ処理で plstore から読み込む"
-;;   (interactive)
-;;   (unless (and (boundp 'org-gcal-client-id)
-;;                org-gcal-client-id)
-;;     (dolist (var '(org-gcal-client-id
-;;                    org-gcal-client-secret
-;;                    org-gcal-file-alist))
-;;       (set var (eval `(leaf-handler-auth org-gcal ,var leaf-default-plstore))))))
   :init
   (leaf oauth2-auto
     ;; 🤔
@@ -4878,14 +4882,9 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
         alert-log-messages t
         alert-default-style 'libnotify
         )
-    ;; (dolist (var '(org-gcal-client-id
-    ;;              org-gcal-client-secret
-    ;;              org-gcal-file-alist))
-    ;; (set var (eval `(leaf-handler-auth org-gcal ,var leaf-default-plstore))))
     (setq oauth2-auto-additional-providers-alist
           (assq-delete-all 'org-gcal oauth2-auto-additional-providers-alist))
     (org-gcal-reload-client-id-secret)
-    (message "org-gcal: Secrets configured.")
   )
    #+end_src
 ** OrgとRedmine の連携: =orgmine=
@@ -5850,13 +5849,6 @@ pdflang={%l}}
 (leaf apache-mode :ensure t)
 (leaf keg :ensure t)
 (leaf keg-mode :ensure t)
-(leaf esup
-  :ensure t
-  :init
-  (setq esup-insignificant-time 0.01
-        esup-depth 0 ;; 🤔
-        )
-  )
 (leaf atomic-chrome
   :ensure t
   :hook (emacs-startup-hook . atomic-chrome-start-server)
@@ -5871,6 +5863,20 @@ pdflang={%l}}
   :PROPERTIES:
   :CUSTOM_ID: orgf87c4e84
   :END:
+** =esup=: 起動時間を調べる
+   :PROPERTIES:
+   :CUSTOM_ID: org0bd0c625
+   :END:
+   本気でやるなら profiler なんだろうけれど.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf esup
+  :ensure t
+  :init
+  (setq esup-insignificant-time 0.0001
+        esup-depth 0 ;; 🤔
+        )
+  )
+   #+end_src
 ** profiler report
    :PROPERTIES:
    :CUSTOM_ID: org8d339cf7
@@ -5885,17 +5891,19 @@ pdflang={%l}}
    :PROPERTIES:
    :CUSTOM_ID: org4c97a1e0
    :END:
-  #+begin_src emacs-lisp :tangle init.el
+   #+begin_src emacs-lisp :tangle init.el
 (provide 'init)
+   #+end_src
+   #+begin_src emacs-lisp :tangle no
 ;; Local Variables:
 ;; byte-compile-warnings: (not cl-functions free-vars docstrings unresolved)
 ;; End:
-  #+end_src
-  #+begin_src emacs-lisp :tangle init-wl.el
+   #+end_src
+   #+begin_src emacs-lisp :tangle no
 ;; Local Variables:
 ;; byte-compile-warnings: (not cl-functions free-vars docstrings unresolved)
 ;; End:
-  #+end_src
+   #+end_src
 ** LICENSE
    :PROPERTIES:
    :CUSTOM_ID: orge8960401

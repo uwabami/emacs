@@ -10,7 +10,6 @@ jobs:
         emacs_version:
           - '30.1'
           - '30.2'
-          - 'snapshot'
     steps:
       - uses: actions/checkout@v1
       - uses: purcell/setup-emacs@master

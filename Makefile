@@ -1,65 +1,86 @@
 # -*- mode: makefile -*-
+# ----------------------------------------------------------------------------
 EMACS		?= emacs
 EMACS_VER	?= $(shell emacs --version | head -1 | cut -f 3 --d \ )
 EARLY_INIT	?= $(shell if [ `echo "$(EMACS_VER) >= 27" | bc` -eq 1 ] ; then echo yes; fi)
 NATIVE_COMP	?= $(shell if [ `echo "$(EMACS_VER) >= 28.1" | bc` -eq 1 ] ; then echo yes; fi)
+TREESIT	?= $(shell if [ `echo "$(EMACS_VER) >= 29" | bc` -eq 1 ]  ;then echo yes; fi)
+NATIVE_COMP_DIR ?= $(shell if [ `echo "$(EMACS_VER) >= 30" | bc` -eq 1 ] ; then echo yes; fi)
 EL		=
 
+# ----------------------------------------------------------------------------
+# check: early-init
 ifeq ($(EARLY_INIT),yes)
 EL		+= early-init.el
 LOAD		?= -l early-init.el -l init.el
 else
 LOAD		?= -l init.el
 endif
-
+# ----------------------------------------------------------------------------
+# check: Wanderlust Debian package
 ifneq (,$(wildcard /etc/emacs/site-start.d/65wl-beta.el))
 EL		+= init-wl.el
 endif
-
+# ----------------------------------------------------------------------------
+# check: native compile or byte compile
 ifeq ($(NATIVE_COMP),yes)
 all: $(EL)
 else
 ELC		= $(EL:%.el=%.elc)
 all: $(ELC) init.elc
+%.elc: %.el
+	$(EMACS) $(LOAD) -batch -f batch-byte-compile $<
 endif
-
+# ----------------------------------------------------------------------------
+# main part
 $(EL): init.el
 init.el: README.org
-	@mkdir -p ~/.cache/emacs
-	@if [ ! -d ~/.cache/emacs/eln-cache ]; then \
-		echo ";; mkdir ~/.cache/emacs/eln-cache"; mkdir ~/.cache/emacs/eln-cache ;\
+	@mkdir -p elpa
+	$(EMACS) --batch --eval \
+	   "(progn \
+		  (require 'ob-tangle) \
+		  (org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\"))"
+	@if [ x"$(TREESIT)" = x"yes" -a ! -f tree-sitter/libtree-sitter-elisp.so ] ; then \
+		$(EMACS) --batch --eval \
+		  "(progn \
+			(setq treesit-language-source-alist \
+			  '((elisp \"https://github.com/Wilfred/tree-sitter-elisp\"))) \
+			(treesit-install-language-grammar 'elisp)))" ;\
 	fi
-	@if [ ! -L eln-cache ]; then \
-		echo ";; ln -sf ~/.cache/emacs/eln-cache . "; ln -sf ~/.cache/emacs/eln-cache . ;\
-	fi
+	$(EMACS) $(LOAD) --batch --eval '(kill-emacs)'
+# ----------------------------------------------------------------------------
+# create subdirectory symlink
+ifeq ($(NATIVE_COMP_DIR),yes)
+README.org: tree-sitter
+else
+README.org: eln-cache tree-sitter
+endif
+tree-sitter:
 	@if [ ! -d ~/.cache/emacs/tree-sitter ]; then \
 		echo ";; mkdir ~/.cache/emacs/tree-sitter"; mkdir ~/.cache/emacs/tree-sitter ;\
 	fi
 	@if [ ! -L tree-sitter ]; then \
 		echo ";; ln -sf ~/.cache/emacs/tree-sitter . "; ln -sf ~/.cache/emacs/tree-sitter . ;\
 	fi
-	@mkdir -p elpa
-	$(EMACS) --batch --eval \
-	   "(progn \
-		  (require 'ob-tangle) \
-		  (org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\"))"
-	$(EMACS) $(LOAD) --batch --eval '(kill-emacs)'
-
-ifneq ($(NATIVE_COMP),yes)
-%.elc: %.el
-	$(EMACS) $(LOAD) -batch -f batch-byte-compile $<
-endif
-
+eln-cache:
+	@mkdir -p ~/.cache/emacs
+	@if [ ! -d ~/.cache/emacs/eln-cache ]; then \
+		echo ";; mkdir ~/.cache/emacs/eln-cache"; mkdir ~/.cache/emacs/eln-cache ;\
+	fi
+	@if [ ! -L $@ ]; then \
+		echo ";; ln -sf ~/.cache/emacs/eln-cache . "; ln -sf ~/.cache/emacs/eln-cache . ;\
+	fi
+# ----------------------------------------------------------------------------
 clean:
-	rm -fr auto-save-list *.el *.elc *~ 
-
+	rm -fr auto-save-list *.el *.elc *~
 distclean: clean
 	rm -fr elpa
 	rm -fr eln-cache/*
 	rm -f eln-cache
 	rm -fr tree-sitter/*
 	rm -f tree-sitter
-
+	rm -f ~/.cache/emacs/package-quickstart.*
+# ----------------------------------------------------------------------------
 skk-jisyo:
 	mkdir -p ~/.cache/emacs/skk-jisyo
 	wget "https://raw.githubusercontent.com/uasi/skk-emoji-jisyo/master/SKK-JISYO.emoji.utf8" \

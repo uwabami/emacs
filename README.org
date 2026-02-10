@@ -1,8 +1,8 @@
-#+title: Emacs の設定
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
+#+title: Emacs の設定
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2026-02-05 13:24:51
+#+date: 2026-02-10 14:39:38
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -44,56 +44,88 @@
    本ファイル(=README.org=) から,
    Makefile 内の以下のスクリプトで =~/init.el= を生成し, byte-compile します.
    #+begin_src makefile-gmake :tangle no
+# -*- mode: makefile -*-
+# ----------------------------------------------------------------------------
 EMACS		?= emacs
-EMACS_VER	?= $(shell $(EMACS) --version | head -1 | cut -f 3 --d \ )
+EMACS_VER	?= $(shell emacs --version | head -1 | cut -f 3 --d \ )
 EARLY_INIT	?= $(shell if [ `echo "$(EMACS_VER) >= 27" | bc` -eq 1 ] ; then echo yes; fi)
-NATIVE_COMP	?= $(shell if [ `echo "$(EMACS_VER) >= 28.1" | bc` -eq 1 ] ; then echo yes ; fi)
+NATIVE_COMP	?= $(shell if [ `echo "$(EMACS_VER) >= 28.1" | bc` -eq 1 ] ; then echo yes; fi)
+TREESIT	?= $(shell if [ `echo "$(EMACS_VER) >= 29" | bc` -eq 1 ]  ;then echo yes; fi)
+NATIVE_COMP_DIR ?= $(shell if [ `echo "$(EMACS_VER) >= 30" | bc` -eq 1 ] ; then echo yes; fi)
 EL		=
+
+# ----------------------------------------------------------------------------
+# check: early-init
 ifeq ($(EARLY_INIT),yes)
 EL		+= early-init.el
 LOAD		?= -l early-init.el -l init.el
 else
 LOAD		?= -l init.el
 endif
-
-## check wl-beta debian package
+# ----------------------------------------------------------------------------
+# check: Wanderlust Debian package
 ifneq (,$(wildcard /etc/emacs/site-start.d/65wl-beta.el))
 EL		+= init-wl.el
 endif
-
+# ----------------------------------------------------------------------------
+# check: native compile or byte compile
 ifeq ($(NATIVE_COMP),yes)
 all: $(EL)
 else
 ELC		= $(EL:%.el=%.elc)
 all: $(ELC) init.elc
+%.elc: %.el
+	$(EMACS) $(LOAD) -batch -f batch-byte-compile $<
 endif
-
+# ----------------------------------------------------------------------------
+# main part
 $(EL): init.el
 init.el: README.org
-    @mkdir -p ~/.cache/emacs
-    @if [ ! -d ~/.cache/emacs/eln-cache ]; then \
-        echo ";; mkdir ~/.cache/emacs/eln-cache"; mkdir ~/.cache/emacs/eln-cache ;\
-    fi
-    @if [ ! -L eln-cache ]; then \
-        echo ";; ln -sf ~/.cache/emacs/eln-cache . "; ln -sf ~/.cache/emacs/eln-cache . ;\
-    fi
-    @if [ ! -d ~/.cache/emacs/tree-sitter ]; then \
-        echo ";; mkdir ~/.cache/emacs/tree-sitter"; mkdir ~/.cache/emacs/tree-sitter ;\
-    fi
-    @if [ ! -L tree-sitter ]; then \
-        echo ";; ln -sf ~/.cache/emacs/tree-sitter . "; ln -sf ~/.cache/emacs/tree-sitter . ;\
-    fi
-    @mkdir -p elpa
-    $(EMACS) --batch --eval \
-       "(progn \
-          (require 'ob-tangle) \
-          (org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\"))"
-    $(EMACS) -l init.el --batch --eval '(kill-emacs)'
-
-ifneq ($(NATIVE_COMP),yes)
-%.elc: %.el
-    $(EMACS) $(LOAD) -batch -f batch-byte-compile $<
+	@mkdir -p elpa
+	$(EMACS) --batch --eval \
+	   "(progn \
+		  (require 'ob-tangle) \
+		  (org-babel-tangle-file \"$<\" \"$@\" \"emacs-lisp\"))"
+	@if [ x"$(TREESIT)" = x"yes" -a ! -f tree-sitter/libtree-sitter-elisp.so ] ; then \
+		$(EMACS) --batch --eval \
+		  "(progn \
+			(setq treesit-language-source-alist \
+			  '((elisp \"https://github.com/Wilfred/tree-sitter-elisp\"))) \
+			(treesit-install-language-grammar 'elisp)))" ;\
+	fi
+	$(EMACS) $(LOAD) --batch --eval '(kill-emacs)'
+# ----------------------------------------------------------------------------
+# create subdirectory symlink
+ifeq ($(NATIVE_COMP_DIR),yes)
+README.org: tree-sitter
+else
+README.org: eln-cache tree-sitter
 endif
+tree-sitter:
+	@if [ ! -d ~/.cache/emacs/tree-sitter ]; then \
+		echo ";; mkdir ~/.cache/emacs/tree-sitter"; mkdir ~/.cache/emacs/tree-sitter ;\
+	fi
+	@if [ ! -L tree-sitter ]; then \
+		echo ";; ln -sf ~/.cache/emacs/tree-sitter . "; ln -sf ~/.cache/emacs/tree-sitter . ;\
+	fi
+eln-cache:
+	@mkdir -p ~/.cache/emacs
+	@if [ ! -d ~/.cache/emacs/eln-cache ]; then \
+		echo ";; mkdir ~/.cache/emacs/eln-cache"; mkdir ~/.cache/emacs/eln-cache ;\
+	fi
+	@if [ ! -L $@ ]; then \
+		echo ";; ln -sf ~/.cache/emacs/eln-cache . "; ln -sf ~/.cache/emacs/eln-cache . ;\
+	fi
+# ----------------------------------------------------------------------------
+clean:
+	rm -fr auto-save-list *.el *.elc *~
+distclean: clean
+	rm -fr elpa
+	rm -fr eln-cache/*
+	rm -f eln-cache
+	rm -fr tree-sitter/*
+	rm -f tree-sitter
+	rm -f ~/.cache/emacs/package-quickstart.*
    #+end_src
 * 設定ファイルのヘッダ
   :PROPERTIES:
@@ -108,29 +140,36 @@ endif
   #+end_src
   #+begin_src emacs-lisp :tangle (when (boundp 'early-init-file) "early-init.el")
 ;; -*- lexical-binding: t -*-
-  #+end_src
-* TODO ディレクトリ構成の修正 [0/1]
+#+end_src
+* TODO ディレクトリ構成の修正 [0/2]
   :PROPERTIES:
   :CUSTOM_ID: org60bad8a3
   :END:
   分割した設定ファイル群やパッケージでinstallしたパッケージ
   の置き場所は =user-emacs-directory= 以下にまとめられます.
   +パッケージによって置き方はかなり野放図ですよねぇ.+
-  - [ ] [[https://github.com/emacscollective/no-littering][no-littering]] あたりで整理した方が良いかなぁ.
-    - ~/.emacs.d/eln-cache を変更できないか?
-    - treesit のインストール先がハードコードされている. これを変えたいなぁ...
 
   ディレクトリ構成は以下のようにしました:
   #+begin_example
     ~/.emacs.d/
      |-- Makefile    ←  byte-compile 用の rule
      |-- README.org  ←  本ファイル．`org-babel-tangle' で init.el を生成
-     |-- eln-cache/  → ~/.cache/emacs/eln-cache への symlink: native compile 出力
      |-- elpa/       ←  package.el で導入したパッケージが置かれる場所
      |-- share/      ←  (基本的に)参照するだけの資源置き場所
          `-- tree-sitter ← ~/.cache/emacs/tree-sitter への symlink: treesit-auto のインストール先
     ~/.cache/emacs   ←  一次ファイルの置き場所
   #+end_example
+  - [ ] [[https://github.com/rsnodgrass/emacs-xdg][rsnodgrass/emacs-xdg: XDG Base Directory Specification for Emacs]] を使った方が良い?
+    - Emacs ≧ 29.4 でサポートしている模様
+    - =early-init.el= で, これ↑ 使えるかな?
+  - [ ] [[https://github.com/emacscollective/no-littering][no-littering]] あたりで整理した方が良いかなぁ.
+    - treesit のインストール先がハードコードされている. これを変えたい
+    - ~/.emacs.d/eln-cache を変更できないか? ← 少なくとも Emacs ≧ 29.1 ではできた.
+      #+begin_src emacs-lisp :tangle no
+  (startup-redirect-eln-cache
+   (expand-file-name "~/.local/share/emacs/eln-cache/"))
+      #+end_src
+      で OK.
 
   上記ディレクトリ構成を設定ファイルで使用するために
   ディレクトリ配置を宣言しておきます.
@@ -161,15 +200,14 @@ endif
 (eval-when-compile
   (require 'cl-lib nil t))
   #+end_src
-  また, Emacs 27 以降は cl が読み込まれていると
+  また, Emacs ≧ 27 は cl が読み込まれていると
   `Package cl is deprecated' が表示されるので, これを止めておきます.
   他にも幾つかの警告を無効化しておきます.
   特に, 意図的に =setq= を優先して使っているので,
   debug 時以外は =free-vars= と =unresolved= も無効化しておかないと騒々しいですよね.
   #+begin_src emacs-lisp :tangle init.el
 (eval-and-compile
-  (setq byte-compile-warnings t)
-  ;; (setq byte-compile-warnings '(not cl-functions free-vars docstrings unresolved))
+  (setq byte-compile-warnings '(not cl-functions free-vars docstrings unresolved))
   )
   #+end_src
   native compile: 気になった時に動かしています.
@@ -178,6 +216,7 @@ endif
 ;;;###autoload
 (defun my:native-compile-async-all ()
   (interactive)
+  (setq-local native-comp-async-jobs-number 8)
   (native-compile-async "~/.emacs.d/init.el")
   (native-compile-async "~/.emacs.d/early-init.el")
   ;; (native-compile-async "~/.emacs.d/share/elisp/" 'recursively)
@@ -230,21 +269,22 @@ endif
 (setq gc-cons-threshold most-positive-fixnum)
     #+end_src
     - [[https://github.com/jschaf/esup/issues/93][early-init.el is not included in profiling · Issue #93 · jschaf/esup]]
-*** 起動後に GC Threshold を既定値に戻す
+*** TODO 起動後に GC Threshold を既定値に戻す [/]
     :PROPERTIES:
     :CUSTOM_ID: org9584246f
     :END:
     以前は以下を設定していたが, 最近は =gcmh= に任せる事にした.
     → [[id:cca3e8df-79f9-4c60-a803-07ff641b0ef7][=gcmh=: 賢い garbage-collection]]
-    #+begin_src emacs-lisp :tangle init.el
-;; (setq garbage-collection-messages nil)
-;; ;; Run GC every 60 seconds if emacs is idle.
-;; (run-with-idle-timer 60.0 t #'garbage-collect)
-;; ;; 起動後に初期値に戻す.
-;; (add-hook 'emacs-startup-hook
-;;           (lambda ()
-;;             (setq gc-cons-threshold 800000)))
+    #+begin_src emacs-lisp :tangle no
+(setq garbage-collection-messages nil)
+;; Run GC every 60 seconds if emacs is idle.
+(run-with-idle-timer 60.0 t #'garbage-collect)
+;; 起動後に初期値に戻す.
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (setq gc-cons-threshold 800000)))
     #+end_src
+    - [ ] gcmh は無駄にタイマーを増やし過ぎて, 結果, 自分が増やしたタイマーで GC を走らせる, という指摘もある.
 ** Package初期化処理
    :PROPERTIES:
    :CUSTOM_ID: orgd896c3a2
@@ -252,13 +292,35 @@ endif
    :END:
    本体でやっても良いけど, ここに持ってきても良いらしい.
    #+begin_src emacs-lisp :tangle (if (boundp 'early-init-file) "early-init.el" "init.el")
-(setq package-archives '(("gnu"    . "https://elpa.gnu.org/packages/")
-                         ("melpa"  . "https://melpa.org/packages/")
-                         ("nongnu" . "https://elpa.nongnu.org/nongnu/")
-                         )
-      package-gnupghome-dir (expand-file-name ".gnupg" "~/")
-      package-enable-at-startup nil)
-    #+end_src
+(with-eval-after-load "package"
+  (setq package-archives '(("gnu"    . "https://elpa.gnu.org/packages/")
+                           ("melpa"  . "https://melpa.org/packages/")
+                           ("nongnu" . "https://elpa.nongnu.org/nongnu/")
+                           )
+        package-enable-at-startup nil
+        package-gnupghome-dir (expand-file-name ".gnupg" "~/")
+        package-quickstart t
+        package-quickstart-file "~/.cache/emacs/package-quickstart.el"
+        )
+  )
+   #+end_src
+** Native Compile の設定
+   :PROPERTIES:
+   :CUSTOM_ID: orgc5c74cbf
+   :END:
+   Native Compile に関連する設定(Emacs ≧ 29).
+   保存先の移動などなど.
+   #+begin_src emacs-lisp :tangle (if (boundp 'native-comp-eln-load-path) "early-init.el" "no")
+(startup-redirect-eln-cache
+ (expand-file-name "~/.cache/emacs/eln-cache/"))
+   #+end_src
+   どうにも org-element-* は native compile すると挙動不振だったので外している.
+   #+begin_src emacs-lisp :tangle (if (boundp 'native-comp-async-jobs-number) "early-init.el" "no")
+(with-eval-after-load "comp"
+  (setq native-comp-async-jobs-number 8
+        native-comp-jit-compilation-deny-list '("\\(.*org-element.*\\|.*-loaddefs\\|.*-autoloads\\)\\.\\(el\\.gz\\|el\\)"))
+  )
+   #+end_src
 ** Magic File Name を一時的に無効化
    :PROPERTIES:
    :CUSTOM_ID: orgb6dd6727
@@ -327,15 +389,9 @@ endif
 (setq auto-save-default nil)
 (setq auto-save-list-file-prefix nil)
    #+end_src
-   Native Compile に関連する設定(Emacs ≧ 29)
-   #+begin_src emacs-lisp :tangle (when (fboundp 'native-compile-async) "early-init.el")
-(setq package-native-compile t
-      native-compile-target-directory (expand-file-name "eln-cache" user-emacs-directory)
-      native-comp-jit-compilation-deny-list '("\\(.*org-element.*\\|.*-loaddefs\\|.*-autoloads\\)\\.\\(el\\.gz\\|el\\)"))
-   #+end_src
    以下はここで設定するのが良いのかいまいちわかっていないあれこれ.
    #+begin_src emacs-lisp :tangle (if (boundp 'early-init-file) "early-init.el" "init.el")
-(setq-default vc-handled-backends nil)
+(setq-default vc-handled-backends '(Git))
 (setq vc-follow-symlinks t)
 (setq history-delete-duplicates t)
 (setq load-prefer-newer noninteractive)
@@ -372,22 +428,135 @@ endif
              init-load-time
              after-init-hook-time)))
 (add-hook 'after-init-hook #'my:display-boot-summary t)
-;;;###autoload
-(defun my:tick-init-time (msg)
-  "Tick boot sequence at loading MSG."
-  (when my:loading-profile-p
-    (let ((ctime (current-time)))
-      (message "---- %5.2f[ms] %s"
-               (* 1000 (float-time
-                        (time-subtract ctime my:tick-previous-time)))
-               msg)
-      (setq my:tick-previous-time ctime))))
    #+end_src
-* 独自関数
+* Package 関連: [[https://emacs-jp.github.io/packages/package-management/package-el][package.el]], [[https://github.com/conao3/leaf.el][leaf.el]]
+  :PROPERTIES:
+  :CUSTOM_ID: orgcf4176e7
+  :END:
+  [[https://github.com/conao3/leaf.el][leaf.el]]のおかげで,
+  無いと途方に暮れるパッケージ以外のインストールは無視できるようになります.
+** TODO [[https://emacs-jp.github.io/packages/package-management/package-el][package.el]] の初期化処理 [/]
+   :PROPERTIES:
+   :CUSTOM_ID: org61dc7202
+   :END:
+   #+begin_src emacs-lisp :tangle init.el
+;; esup が early-init を呼ばない...
+(setq package-quickstart-file "~/.cache/emacs/package-quickstart.el"
+      package-quickstart t)
+;;;###autoload
+(defun my:package-quickstart-refresh-silently ()
+  "Compile-Log を表示せずに package-quickstart-refresh を実行するラッパー関数"
+  (interactive)
+  (let ((byte-compile-warnings nil)      ;; 警告を生成しない
+        (byte-compile-verbose nil)       ;; 詳細ログを出さない
+        (inhibit-message t)              ;; メッセージエリアの出力も抑制
+        ;; *Compile-Log* バッファが表示されようとしたら「何もしない」設定にする
+        (display-buffer-alist
+         '(("\\*Compile-Log\\*" display-buffer-no-window (allow-no-window . t)))))
+    (with-current-buffer (get-buffer-create "*Compile-Log*")
+      ;; 念のためログバッファを空にしておく（以前のログが残っているとポップアップの原因になることがあるため）
+      (let ((inhibit-read-only t))
+        (erase-buffer)))
+    ;; 実行
+    (package-quickstart-refresh)))
+;;
+(add-hook 'kill-emacs-hook #'my:package-quickstart-refresh-silently)
+   #+end_src
+   - [ ] 起動時にはここが一番時間がかかっている.
+** [[https://github.com/conao3/leaf.el][leaf.el]]
+   :PROPERTIES:
+   :CUSTOM_ID: orgc2ededbf
+   :END:
+   個々のパッケージの設定には[[https://github.com/conao3/leaf.el][leaf.el]]を利用します.
+   以前は el-get も利用していましたが,
+   =:vc= キーワードで =package-vc-install= を呼び出せるので, こっちを使うようになりました.
+   - [X] =package-vc-install= でインストールした諸々って, package-upgrade 後に delete 対象になる?
+     → send PR: [[https://github.com/conao3/leaf.el/pull/552][leaf-handler-vc: Add package to package-selected-packages by uwabami · Pull Request #552 · conao3/leaf.el]]
+   #+begin_src emacs-lisp :tangle init.el
+;; ---------------------------------------------------------------------------
+(eval-and-compile
+  (unless (featurep 'leaf)
+    (package-initialize)
+    (unless (package-installed-p 'leaf)
+      (package-refresh-contents)
+      (package-install 'leaf t))))
+;; ---------------------------------------------------------------------------
+(leaf leaf-keywords
+  :ensure t
+  :init
+  (leaf blackout :ensure t)
+  (leaf shut-up :ensure t)
+  :config
+  (leaf-keywords-init)
+  )
+   #+end_src
+** =package-vc-install= の調整
+   :PROPERTIES:
+   :CUSTOM_ID: org9c1823a4
+   :END:
+   package-vc-install を直接叩く事は無くて,
+   leaf の =:vc= キーワードでインストールします.
+   ただ, package-vc-install はリポジトリに既に .el が存在すること前提としていて
+   make によって .el が生成される場合にはちょっと不便だったりします.
+   よって, これを解決する =:advice= で追加しておきます.
+
+   make を叩く必要があるパッケージは
+   個別に =:preface= キーワードで
+   #+begin_src emacs-lisp :tangle no
+(add-to-list 'package-vc-allow-build-commands 'hogehero)
+   #+end_src
+   と指定する様にしました.
+
+   #+begin_src emacs-lisp :tangle init.el
+(leaf package-vc
+  :doc "Extend package-vc to support post-make autoload generation"
+  :tag "builtin"
+  ;; 呼び出されるまで変数が見えないので custom に移動していくことに
+  :custom (package-vc-allow-build-commands . nil)
+  :preface
+;;;###autoload
+  (defun my:package-vc-regenerate-autoloads-after-make (pkg-spec pkg-desc)
+    "Regenerate autoloads after `package-vc--make' if new .el files were generated."
+    (let* ((pkg-dir (package-desc-dir pkg-desc))
+           (name (package-desc-name pkg-desc))
+           (lisp-dir (plist-get pkg-spec :lisp-dir))
+           (lisp-path (file-name-concat pkg-dir lisp-dir)))
+      (when (file-directory-p lisp-path)
+        (message "Regenerating autoloads for %s in %s..." name lisp-path)
+        (package-generate-autoloads name lisp-path))))
+;;;###autoload
+  (defun my:package-vc-register-as-selected (pkg &rest _)
+    "Add PKG to `package-selected-packages' and save it to `custom-file'."
+    (let ((pkg-name (if (listp pkg) (car pkg) pkg)))
+      (when (package-installed-p pkg-name)
+        (unless (memq pkg-name package-selected-packages)
+          (customize-save-variable
+           'package-selected-packages
+           (add-to-list 'package-selected-packages pkg-name))
+          (message "package-vc: Registered %s as a selected package." pkg-name)))))
+  :advice
+  ((:after package-vc--make
+           my:package-vc-regenerate-autoloads-after-make)
+   (:after package-vc-install
+           my:package-vc-register-as-selected))
+  )
+   #+end_src
+* 独自関数など
   :PROPERTIES:
   :CUSTOM_ID: org34ff2306
   :END:
-  細かい独自関数, など．
+  自分のためのツールなど.
+** OS判定用の定数
+   :PROPERTIES:
+   :CUSTOM_ID: org1eb544d6
+   :END:
+   最近, あんまり環境で分岐していないので, 実は不要?
+   どちらかというと WSL 環境の判定が欲しい所.
+   #+begin_src emacs-lisp :tangle no
+(defconst is-mac (eq system-type 'darwin))
+(defconst is-linux (memq system-type '(gnu gnu/linux gnu/kfreebsd berkeley-unix)))
+(defconst is-windows (memq system-type '(cygwin windows-nt ms-dos)))
+   #+end_src
 ** ファイル名を minibuffer におさまる様に整形
    :PROPERTIES:
    :CUSTOM_ID: org452a76a8
@@ -498,7 +667,7 @@ endif
 ;;;###autoload
 (defun my:describe-face-at-point ()
   (interactive)
-  (message "%s" (get-char-property (point) 'face)))
+  (message "%s" (get-text-property (point) 'face)))
    #+END_SRC
 ** 行末からfill-columnの値まで線を引く
    :PROPERTIES:
@@ -536,100 +705,6 @@ C-u を付けて実行すると, 埋める文字を指定可能(例: = や * な
 ;; 何か意味のあるキーが良いのだけれどなぁ
 (global-set-key (kbd "C-c l") #'my:fill-line-with-char)
    #+end_src
-* Package 関連: [[https://emacs-jp.github.io/packages/package-management/package-el][package.el]], [[https://github.com/conao3/leaf.el][leaf.el]]
-  :PROPERTIES:
-  :CUSTOM_ID: orgcf4176e7
-  :END:
-  [[https://github.com/conao3/leaf.el][leaf.el]]のおかげで,
-  無いと途方に暮れるパッケージ以外のインストールは無視できるようになります.
-** [[https://emacs-jp.github.io/packages/package-management/package-el][package.el]]
-   :PROPERTIES:
-   :CUSTOM_ID: orgc51eb87d
-   :END:
-   パッケージは基本的に =package.el= で導入するので, 先ずはその設定.
-   #+begin_src emacs-lisp :tangle init.el
-(eval-and-compile
-  (unless (package-installed-p 'leaf)
-    (package-initialize)
-    (when (and noninteractive
-               (not (package-installed-p 'leaf)))
-      (package-refresh-contents)
-      (package-install 'leaf t)))
-  (package-activate-all))
-   #+end_src
-** TODO [[https://github.com/conao3/leaf.el][leaf.el]] [1/1]
-   :PROPERTIES:
-   :CUSTOM_ID: orgc2ededbf
-   :END:
-   個々のパッケージの設定には[[https://github.com/conao3/leaf.el][leaf.el]]を利用します.
-   以前は el-get も利用していましたが,
-   =:vc= キーワードで =package-vc-install= を呼び出せるので, こっちを使うようになりました.
-   #+begin_src emacs-lisp :tangle init.el
-(leaf leaf-keywords
-  :ensure t
-  :init
-  (leaf blackout :ensure t)
-  :config
-  (leaf-keywords-init)
-  )
-   #+end_src
-   - [X] =package-vc-install= でインストールした諸々って, package-upgrade 後に delete 対象になる?
-     → send PR: [[https://github.com/conao3/leaf.el/pull/552][leaf-handler-vc: Add package to package-selected-packages by uwabami · Pull Request #552 · conao3/leaf.el]]
-** =package-vc-install= の調整
-   :PROPERTIES:
-   :CUSTOM_ID: org9c1823a4
-   :END:
-   package-vc-install を直接叩く事は無くて,
-   leaf の =:vc= キーワードでインストールします.
-
-   ただ, リポジトリによっては
-   make などを叩く必要があったりするのでその調整を
-   =:advice= で追加しておきます.
-
-   make を叩く必要があるパッケージは
-   個別に =:preface= キーワードで
-   #+begin_src emacs-lisp :tangle no
-(add-to-list 'package-vc-allow-build-commands 'hogehero)
-   #+end_src
-   と指定する様にしました.
-
-   ついでに(どうやら?) =package-vc-install= で導入したパッケージは
-   =package-selected-package= に登録されず,
-   =package-auto-remove= を呼ぶと削除対象になる模様.
-   #+begin_src emacs-lisp :tangle init.el
-(leaf package-vc
-  :doc "Extend package-vc to support post-make autoload generation"
-  :tag "builtin"
-  ;; 呼び出されるまで変数が見えないので custom に移動していくことに
-  :custom (package-vc-allow-build-commands . nil)
-  :preface
-;;;###autoload
-  (defun my:package-vc-regenerate-autoloads-after-make (pkg-spec pkg-desc)
-    "Regenerate autoloads after `package-vc--make' if new .el files were generated."
-    (let* ((pkg-dir (package-desc-dir pkg-desc))
-           (name (package-desc-name pkg-desc))
-           (lisp-dir (plist-get pkg-spec :lisp-dir))
-           (lisp-path (file-name-concat pkg-dir lisp-dir)))
-      (when (file-directory-p lisp-path)
-        (message "Regenerating autoloads for %s in %s..." name lisp-path)
-        (package-generate-autoloads name lisp-path))))
-;;;###autoload
-  (defun my:package-vc-register-as-selected (pkg &rest _)
-    "Add PKG to `package-selected-packages' and save it to `custom-file'."
-    (let ((pkg-name (if (listp pkg) (car pkg) pkg)))
-      (when (package-installed-p pkg-name)
-        (unless (memq pkg-name package-selected-packages)
-          (customize-save-variable
-           'package-selected-packages
-           (add-to-list 'package-selected-packages pkg-name))
-          (message "package-vc: Registered %s as a selected package." pkg-name)))))
-  :advice
-  ((:after package-vc--make
-           my:package-vc-regenerate-autoloads-after-make)
-   (:after package-vc-install
-           my:package-vc-register-as-selected))
-  )
-   #+end_src
 * =gcmh=: 賢い garbage-collection
   :PROPERTIES:
   :ID:       cca3e8df-79f9-4c60-a803-07ff641b0ef7
@@ -637,6 +712,8 @@ C-u を付けて実行すると, 埋める文字を指定可能(例: = や * な
   :END:
   割と速い段階で設定しておきたくてここに書いたけれど,
   実際には =emacs-startup-hook= で起動するので, 最後辺りで有効になる.
+  → 「gcmh はタイマーを沢山増やすので, 結果として自分で GC をまわすことになるので有害」
+    という話もあって悩み所.
   #+begin_src emacs-lisp :tangle init.el
 (leaf gcmh
   :ensure t
@@ -675,16 +752,17 @@ C-u を付けて実行すると, 埋める文字を指定可能(例: = や * な
   :if window-system
   :ensure t
   :config
-  (setq exec-path-from-shell-variables '("DEBEMAIL"
-                                         "DEBFULLNAME"
-                                         "GPG_AGENT_INFO"
-                                         "GPG_KEY_ID"
-                                         "PASSWORD_STORE_DIR"
-                                         "PATH"
-                                         "SHELL"
-                                         "SKKSERVER"
-                                         "TEXMFHOME"
-                                         "WSL_DISTRO_NAME")
+  (setq exec-path-from-shell-variables
+        '("DEBEMAIL"
+          "DEBFULLNAME"
+          "GPG_AGENT_INFO"
+          "GPG_KEY_ID"
+          "PASSWORD_STORE_DIR"
+          "PATH"
+          "SHELL"
+          "SKKSERVER"
+          "TEXMFHOME"
+          "WSL_DISTRO_NAME")
         exec-path-from-shell-arguments nil)
   (exec-path-from-shell-initialize)
   )
@@ -751,9 +829,8 @@ C-u を付けて実行すると, 埋める文字を指定可能(例: = や * な
   :preface
   (add-to-list 'package-vc-allow-build-commands 'eaw-halfwidth)
   :hook (emacs-startup-hook . (lambda ()
-                                (let ((load-file-message nil))
-                                  (eaw-init)
-                                  (global-auto-composition-mode 0))))
+                                (eaw-init)
+                                (global-auto-composition-mode 0)))
   )
    #+end_src
    とりあえず祟りが少ないので EAW は 1 文字幅+調整済の =eaw-console= を利用しているが,
@@ -793,42 +870,69 @@ Emacs.reverseVideo: true
 (leaf *gui
   :if window-system
   :preface
-  (setq face-font-rescale-alist
-        '(("Noto Color Emoji" . 0.85)
-          ("PlemolJP Console NF" . 1.0)
-          ("EAW CONSOLE" . 1.0)))
+;;;###autoload
+  (defun my:setup-gui-fonts (default-font-name
+                             default-font-height
+                             cjk-font-name
+                             cjk-font-scale
+                             emoji-font-name
+                             emoji-font-scale)
+    ;; 欧文フォント
+    (when (member default-font-name (font-family-list))
+      (set-face-attribute 'default nil
+                          :family default-font-name
+                          :height default-font-height)
+      (set-frame-font default-font-name nil t))
+    ;; 日本語フォント
+    (when (member cjk-font-name (font-family-list))
+      (dolist (script (list 'han 'kana 'cjk-misc))
+        (set-fontset-font t script cjk-font-name)))
+    ;; 絵文字
+    (when (member emoji-font-name (font-family-list))
+      (set-fontset-font t 'emoji emoji-font-name))
+    ;; Rescale the CJK and emoji fonts.
+    (setq face-font-rescale-alist
+          `((,(format ".*%s.*" cjk-font-name) . ,cjk-font-scale)
+            (,(format ".*%s.*" emoji-font-name) . ,emoji-font-scale)))
+    )
+  ;; ;;;###autoload
+  ;;   (defun my:apply-font-Moralerspace-Argon ()
+  ;;     (interactive)
+  ;;     (my:setup-gui-fonts "Moralerspace Argon HW" 130
+  ;;                         "Moralerspace Argon HW" 1.0
+  ;;                         "Moto Color Emoji-Moralerspace Argon" 1
+  ;;                         ))
+  ;; ;;;###autoload
+  ;;   (defun my:apply-font-PlemolJP-Console ()
+  ;;     (interactive)
+  ;;     (my:setup-gui-fonts "PlemolJP Console NF" 135
+  ;;                         "PlemolJP Console NF" 1.0
+  ;;                         ;; "Moto Color Emoji for PlemolJP" 1.0
+  ;;                         "EAW CONSOLE" 1.0
+  ;;                          ))
+;; ;;;###autoload
+;;   (defun my:apply-font-Cica ()
+;;     (interactive)
+;;     (my:setup-gui-fonts "PlemolJP Console NF" 135
+;;                         "PlemolJP Console NF" 1.0
+;;                         "Cica" 1.0
+;;                          ))
+;;;###autoload
+  (defun my:apply-font-EAW-CONSOLE ()
+    (interactive)
+    (my:setup-gui-fonts "EAW CONSOLE" 135
+                        "EAW CONSOLE" 1.0
+                        "EAW CONSOLE" 1.0
+                        ))
 ;;;###autoload
   (defun my:setup-gui-frame (&optional frame)
     "GUI環境のみ reverse と alpha を適用する"
+    (interactive)
     (let ((f (or frame (selected-frame))))
-        (set-frame-parameter f 'reverse t)
+      (set-frame-parameter f 'reverse t)
         ;; もの凄く重くなるので, 一旦保留. 透明度, 不透明度の順
-        ;; (set-frame-parameter f 'alpha '(95 . 90))
-        ))
-;;;###autoload
-  (defun my:apply-font-eaw-console ()
-    "EAW CONSOLE を適用する"
-    (interactive)
-    (set-face-attribute 'default nil :family "EAW CONSOLE" :height 135)
-    )
-;;;###autoload
-  (defun my:apply-font-eaw-console-with-emoji ()
-    "EAW CONSOLE と Noto Color Emoji を適用する"
-    (interactive)
-    (set-face-attribute 'default nil :family "EAW CONSOLE" :height 135)
-    (let ((color-font (font-spec :family "Noto Color Emoji")))
-      (set-fontset-font nil 'emoji color-font nil 'append)
-      (set-fontset-font nil '(#x1F004 . #x1FFFD) color-font nil 'append))
-    )
-;;;###autoload
-  (defun my:apply-font-plemol-jp ()
-    "PlemolJP とカラー絵文字を適用する"
-    (interactive)
-    (set-face-attribute 'default nil :family "PlemolJP Console NF" :height 125)
-    (let ((emoji-font (font-spec :family "Noto Color Emoji")))
-      (set-fontset-font nil 'emoji emoji-font)
-      (set-fontset-font nil '(#x1F004 . #x1FFFD) emoji-font nil 'append))
-    )
+      (set-frame-parameter f 'alpha '(90 . 70))
+      ))
   :config
   (setq scalable-fonts-allowed nil
         buffer-face-mode-face 'fixed-pitch
@@ -837,11 +941,13 @@ Emacs.reverseVideo: true
   ((window-setup-hook
     . (lambda ()
         (my:setup-gui-frame)
-        (my:apply-font-eaw-console-with-emoji)))
+        (my:apply-font-EAW-CONSOLE))
+    )
    (after-make-frame-functions
     . (lambda ()
         (my:setup-gui-frame)
-        (my:apply-font-eaw-console-with-emoji)))
+        (my:apply-font-EAW-CONSOLE))
+    )
    )
   )
  #+end_src
@@ -860,10 +966,11 @@ Emacs.reverseVideo: true
 |アイウエオカ|
 |ｱｲｳｴｵｶｷｸｹｺｻｼ|
 
-| hoge                 | hogeghoe | age              |
-|----------------------+----------+------------------|
-| 今日もいい天気ですね | お、     | 等幅なった👍 🍺🤔|
-|----------------------+----------+------------------|
+| hoge                 | hogeghoe | age             |
+|----------------------+----------+-----------------|
+| 今日もいい天気ですね | お、     | 等幅なった    🤔|
+| 今日もいい天気ですね | お、     | 等幅なった👍🍺🤔|
+|----------------------+----------+-----------------|
  #+END_EXAMPLE
 *** アイコンフォント: =nerd-icons=
    :PROPERTIES:
@@ -917,24 +1024,18 @@ Emacs.reverseVideo: true
   )
    #+end_src
    - [ ] 終了時に =custom.el= の内容を確認する様にした方が良いかな?
-** customize で行なっている雑多な設定など
+** 雑多な設定など
    :PROPERTIES:
    :CUSTOM_ID: org2a427bfe
    :END:
    Emacs 本体に同梱されている関数などの雑多な設定.
-   - 大抵の場合ターミナル内で =-nw= として起動するし,
-     メニューは触ったことないので使わないので,
-     フレーム, ツールバー等を非表示にする．
-   - =.elc= と =.el= の timestamp を比較し, 新しい方を読み込む.
-   - yes or no を y or n に
-   他にもイロイロと. 設定が増えてきたり複雑になったら分ける(かも).
+   設定が増えてきたり複雑になったら分ける(かも).
    #+begin_src emacs-lisp :tangle init.el
 (leaf cus-start
   :tag "builtin"
   ;; < for show-paren syntax highlight
   :emacs> "28"
   :init
-  (leaf server :commands (server-running-p))
   (if (file-directory-p "~/Sources/Git/salsa.debian.org/rlb/deb-emacs/src")
       (setq find-function-C-source-directory
               "~/Sources/Git/salsa.debian.org/rlb/deb-emacs/src"))
@@ -965,12 +1066,12 @@ Emacs.reverseVideo: true
         initial-scratch-message nil
         ;; minibuffer も静かに: これは t だと shutup できない, という罠
         inhibit-startup-echo-area-message user-login-name
-        ;; 対応する括弧を強調表示: 不等号でも反応しちゃうのが玉に瑕
-        ;; show-paren-style 'mixed
         ;; modeline に行番号は表示しない
         line-number-mode nil
         ;; minibuffer は case insensitive
         read-file-name-completion-ignore-case t
+        ;; 起動時の表示の更新を遅延させる: 0.5 → 1 秒に
+        idle-update-delay 1.0
         ;; 編集関連 ----------------------------------------------------------
         ;; バッファ終端で newline を入れない
         next-line-add-newlines nil
@@ -1012,8 +1113,8 @@ Emacs.reverseVideo: true
         save-abbrevs 'silently
         )
   :config
-  ;; use-short-answers t で良いのでは?
-  (defalias 'yes-or-no-p 'y-or-n-p)
+  ;; (defalias 'yes-or-no-p 'y-or-n-p)
+  ;; → use-short-answers t で良い筈
   :hook
   `(;; hl-line: 現在行のハイライト
     (emacs-startup-hook . global-hl-line-mode)
@@ -1027,12 +1128,23 @@ Emacs.reverseVideo: true
     ;; 3日変更の無かった buffer を自動的に閉じる
     (emacs-startup-hook . midnight-mode)
     ;; server 起動
-    (emacs-startup-hook . (lambda ()
-                            (unless (server-running-p)
-                              (server-start))))
     ;; ファイルが変更されたら再読み込み
     (find-file-hook     . global-auto-revert-mode)
     )
+  )
+   #+end_src
+** =server=: Emacs server
+   :PROPERTIES:
+   :CUSTOM_ID: org6e795c21
+   :END:
+   #+begin_src emacs-lisp :tangle init.el
+(leaf server
+  :tag "builtin"
+  :commands (server-running-p)
+  :hook
+  (emacs-startup-hook . (lambda ()
+                          (unless (server-running-p)
+                            (server-start))))
   )
    #+end_src
 ** =paren=: 対応する括弧の設定
@@ -1084,13 +1196,13 @@ Emacs.reverseVideo: true
    :END:
    #+begin_src emacs-lisp :tangle init.el
 (leaf savehist
-  :config
+  :init
   (setq savehist-file (expand-file-name "history" my:d:tmp))
   :hook
   (emacs-startup-hook . savehist-mode)
   )
    #+end_src
-** =saveplace= 前回の修正位置の保存
+** TODO =saveplace= 前回の修正位置の保存 [0/1]
    :PROPERTIES:
    :CUSTOM_ID: org77978fff
    :END:
@@ -1106,6 +1218,7 @@ Emacs.reverseVideo: true
   (emacs-startup-hook . save-place-mode)
   )
    #+end_src
+   - [ ] org-mode で fold されている場所に対して利用できるのか?
 ** =uniquify= ファイル位置の表示項目を増やす
    :PROPERTIES:
    :CUSTOM_ID: org3b23e2db
@@ -1205,7 +1318,8 @@ Emacs.reverseVideo: true
     (list "\\.rd$" "\\.md$" "\\.rbt$" "\\.rab$"))
   ;; 除外リスト以外の trailing whitespace を削除
   (defun my:configure-whitespace-for-buffer ()
-    "Locally disable trailing whitespace cleanup if the file matches the exclude list."
+    "Locally disable trailing whitespace cleanup if the file matches the
+exclude list."
     (when (buffer-file-name)
       (let ((patterns my:delete-trailing-whitespace-exclude-suffix)
             (found nil)
@@ -1216,7 +1330,8 @@ Emacs.reverseVideo: true
           (setq patterns (cdr patterns)))
         (when found
           (make-local-variable 'whitespace-style)
-          (setq whitespace-style (delete 'trailing (append whitespace-style nil)))
+          (setq whitespace-style
+                (delete 'trailing (append whitespace-style nil)))
           ))))
   :init
   (setq whitespace-line-column 72
@@ -1234,10 +1349,10 @@ Emacs.reverseVideo: true
         whitespace-space-regexp "\\(\u3000+\\)"
         whitespace-trailing-regexp  "\\([ \u00A0]+\\)$"
         whitespace-global-modes '(not eww-mode
-                                     term-mode
-                                     eshell-mode
-                                     org-agenda-mode
-                                     calendar-mode))
+                                      term-mode
+                                      eshell-mode
+                                      org-agenda-mode
+                                      calendar-mode))
   :hook ((find-file-hook . my:configure-whitespace-for-buffer)
          (after-change-major-mode-hook . my:configure-whitespace-for-buffer)
          (emacs-startup-hook . global-whitespace-mode)
@@ -1368,22 +1483,25 @@ Emacs.reverseVideo: true
   - =auth-password-store= で auth-source として =password-store= を使う.
   といった事をしている.
   #+begin_src emacs-lisp :tangle init.el
-(leaf *authentication
-  :if (and (getenv "GPG_KEY_ID")
-           my:d:password-store)
+(when (and (getenv "GPG_KEY_ID")
+           (file-exists-p my:d:password-store))
   (leaf auth-source
-    :init
-    (setq auth-source-gpg-encrypt-to '(getenv "GPG_KEY_ID")))
+    :tag "builtin"
+    :leaf-defer t
+    :config
+    (setq auth-source-gpg-encrypt-to `(,(getenv "GPG_KEY_ID"))))
+  (leaf plstore
+    :tag "builtin"
+    :leaf-defer t
+    :config
+    (setq plstore-secret-keys 'silent
+          plstore-encrypt-to  `(,(getenv "GPG_KEY_ID")))
+    )
   (leaf password-store :ensure t)
   (leaf auth-source-pass :ensure t)
-  (leaf plstore
-    :init
-    (setq plstore-secret-keys 'silent
-          plstore-encrypt-to  (getenv "GPG_KEY_ID"))
-    )
-  :config
+  ;;
   (setq leaf-default-plstore
-     (plstore-open
+        (plstore-open
          (expand-file-name "plstore.plist" my:d:password-store)))
   (add-to-list 'vc-directory-exclusion-list
                (expand-file-name my:d:password-store))
@@ -1720,7 +1838,9 @@ Emacs*useXIM: false
   :PROPERTIES:
   :CUSTOM_ID: org5f756509
   :END:
-  buffer を眺めるのは ibuffer が好み
+  +buffer を眺めるのは ibuffer が好み+
+  → 最近は [[#orged5e5627][=consult=: 便利コマンド集]] の =consult-buffer= を使う様になってきた.
+  あまり呼び出さなくなったけど, 設定は残しておくことに.
   #+begin_src emacs-lisp :tangle init.el
 (leaf ibuffer
   :defun (ibuffer-current-buffer)
@@ -1736,10 +1856,7 @@ Emacs*useXIM: false
                     default-directory)
                 default-directory))))
       (find-file default-directory)))
-  ;;
-  :bind (("C-x C-b" . ibuffer-other-window)
-         ("C-x b"   . ibuffer-other-window)
-         ("C-x M-b" . ibuffer)
+  :bind (("C-x M-b" . ibuffer)
          (:ibuffer-mode-map
           ("C-x C-f" . my:ibuffer-find-file))
          )
@@ -1807,60 +1924,63 @@ Emacs*useXIM: false
 (leaf vertico
   :ensure t
   :preface
-  (defun my:disable-selection ()
-    (when (eq minibuffer-completion-table #'org-tags-completion-function)
-      (setq-local vertico-map minibuffer-local-completion-map
-                  completion-cycle-threshold nil
-                  completion-styles '(basic))))
+  ;; -------------------------------------------------------------------------
+  ;; (defun my:disable-selection ()
+  ;;   (when (eq minibuffer-completion-table #'org-tags-completion-function)
+  ;;     (setq-local vertico-map minibuffer-local-completion-map
+  ;;                 completion-cycle-threshold nil
+  ;;                 completion-styles '(basic))))
   ;;
   ;; @see https://misohena.jp/blog/2022-08-15-transition-ivy-to-vertico.html
   ;; 候補更新時に最初の候補を選択しない -> (vertico-preselect . 'prompt)
-
+  ;;
   ;; ただし require-matchがt(やそれに類するもの)で入力が空ではなくマッチする候
   ;; 補がある場合は、その候補の先頭を選択する。
-  (defun my:vertico--recompute (orig-fun pt content &rest args)
-    (let ((result (apply orig-fun pt content args)))
-      (if (and (not (equal content ""))
-               ;; 入力が空の時は(require-matchであっても)defaultまたはnilを返
-               ;; すことになっている。
-               (> (alist-get 'vertico--total result) 0) ;; < for syntax
-               ;; completing-readの説明によれば
-               ;; nil,confirm,confirm-after-completion以外はtのように
-               ;; 振る舞うべき。
-               (not (memq minibuffer--require-match
-                          '(nil confirm confirm-after-completion))))
-          (setf (alist-get 'vertico--index result) 0))
-      result))
+  ;; (defun my:vertico--recompute (orig-fun pt content &rest args)
+  ;;   (let ((result (apply orig-fun pt content args)))
+  ;;     (if (and (not (equal content ""))
+  ;;              ;; 入力が空の時は(require-matchであっても)defaultまたはnilを返
+  ;;              ;; すことになっている。
+  ;;              (> (alist-get 'vertico--total result) 0) ;; < for syntax
+  ;;              ;; completing-readの説明によれば
+  ;;              ;; nil,confirm,confirm-after-completion以外はtのように
+  ;;              ;; 振る舞うべき。
+  ;;              (not (memq minibuffer--require-match
+  ;;                         '(nil confirm confirm-after-completion))))
+  ;;         (setf (alist-get 'vertico--index result) 0))
+  ;;     result))
   ;;
   ;;
-  (defun my:filename-upto-parent ()
-    "Move to parent directory like \"cd ..\" in find-file."
-    (interactive)
-    (let ((sep (eval-when-compile (regexp-opt '("/" "\\")))))
-      (save-excursion
-        (left-char 1)
-        (when (looking-at-p sep)
-          (delete-char 1)))
-      (save-match-data
-        (when (search-backward-regexp sep nil t)
-          (right-char 1)
-          (filter-buffer-substring (point)
-                                   (save-excursion (end-of-line) (point))
-                                   #'delete)))))
-  :advice
-  ((:before vertico--setup
-            my:disable-selection)
-   (:around vertico--recompute-candidates
-            my:vertico--recompute)
-   )
+;; ;;;###autoload
+;;   (defun my:filename-upto-parent ()
+;;     "Move to parent directory like \"cd ..\" in find-file."
+;;     (interactive)
+;;     (let ((sep (eval-when-compile (regexp-opt '("/" "\\")))))
+;;       (save-excursion
+;;         (left-char 1)
+;;         (when (looking-at-p sep)
+;;           (delete-char 1)))
+;;       (save-match-data
+;;         (when (search-backward-regexp sep nil t)
+;;           (right-char 1)
+;;           (filter-buffer-substring (point)
+;;                                    (save-excursion (end-of-line) (point))
+;;                                    #'delete)))))
+;;   :advice
+;;   ((:before vertico--setup
+;;             my:disable-selection)
+;;    (:around vertico--recompute-candidates
+;;             my:vertico--recompute)
+;;    )
   :bind
-  (:vertico-map (("C-l" . my:filename-upto-parent)))
-;;  :custom-face
-;;  `((vertico-current
-;;     . '((t (:inherit hl-line :background unspecified)))))
+  (:vertico-map (("C-l" . vertico-directory-up)))
+;;   :custom-face
+;;   `((vertico-current
+;;      . '((t (:inherit hl-line :underline t )))))
   :init
-  (setq vertico-count 8
+  (setq vertico-count 15
         vertico-cycle t
+        vertico-resize nil
         vertico-preselect 'prompt
         vertico-multiline '(("↓" 0 1 (face vertico-multiline))
                             ("…" 0 1 (face vertico-multiline)))
@@ -1869,39 +1989,6 @@ Emacs*useXIM: false
   :hook (emacs-startup-hook . vertico-mode)
   )
   #+end_src
-** =marginalia=: リッチな注釈(Enable richer annotations)
-   :PROPERTIES:
-   :CUSTOM_ID: orge9265e4d
-   :END:
-   行揃えが微妙. あと, ファイル名を省略表示できないのかな?
-   ⇒ [[https://github.com/minad/marginalia/issues/70][Better truncation method for file names #70]]
-   #+begin_src emacs-lisp :tangle init.el
-(leaf marginalia
-  :ensure t
-  :init
-  ;; 補完でも icon 表示
-  (leaf nerd-icons-completion
-   :ensure t
-   :hook
-   (emacs-startup-hook . nerd-icons-completion-mode)
-   )
-  :bind (("M-A" . marginalia-cycle)
-         (:minibuffer-local-map
-          ("M-A" . marginalia-cycle)
-          ))
-  :init
-  (setq marginalia-annotators    '(marginalia-annotators-light
-                                   marginalia-annotators-heavy
-                                   nil)
-        marginalia-align         'right
-        marginalia-align-offset  -2 ;; icon 分引いておく
-        )
-  :hook
-  ((emacs-startup-hook . marginalia-mode)
-   (marginalia-mode-hook . nerd-icons-completion-marginalia-setup)
-   )
-  )
-   #+end_src
 ** =consult=: 便利コマンド集
    :PROPERTIES:
    :CUSTOM_ID: orged5e5627
@@ -1911,15 +1998,19 @@ Emacs*useXIM: false
    #+begin_src emacs-lisp :tangle init.el
 (leaf consult
   :ensure t
-  :bind (("C-x C-r" . my:consult-recent-file))
-  ;; :defvar recentf-list
+  :bind (("C-x C-r" . my:consult-recent-file)
+         ("C-x C-b" . consult-buffer)
+         ("C-x b"   . consult-buffer)
+         ("M-g o"   . consult-outline)
+         ;; ("C-f"     . consult-line) 候補選択が要調整
+         )
   :init
   (setq consult-narrow-key          "<"
         consult-async-refresh-delay 0.2
-        consult-preview-key         nil
+        ;; consult-preview-key         nil
         ;; 増やさないと preview 時に theme がロードされない模様.
         ;; とりあえず default の 10 倍にしている. 1 MB かな?
-        consult-preview-raw-size 1024000
+        ;; consult-preview-raw-size 1024000
         )
   :config
   (defun my:consult-recent-file ()
@@ -1941,33 +2032,35 @@ Emacs*useXIM: false
         (find-file (assoc-default selected files)))))
   )
    #+end_src
-** =cape=: 補完 backend
-   :PROPERTIES:
-   :CUSTOM_ID: org3b1ea0b6
-   :END:
-   #+begin_src emacs-lisp :tangle init.el
-(leaf cape
-  :disabled t
-  :ensure t
-  :config
-  (setq cape-dabbrev-check-other-buffers nil)
-  (add-to-list 'completion-at-point-functions 'cape-keyword)
-  (add-to-list 'completion-at-point-functions 'cape-dabbrev)
-  (add-to-list 'completion-at-point-functions 'cape-file)
-  (add-to-list 'completion-at-point-functions 'cape-tex)
-  (add-to-list 'completion-at-point-functions 'cape-emoji)
+*** TODO =consult-ghq=: ghq を consult で.
+    :PROPERTIES:
+    :CUSTOM_ID: org90f5d475
+    :END:
+    =project.el= で ghq を使うようになったら不要かもしれないけど, とりあえず.
+    #+begin_src emacs-lisp
+(leaf consult-ghq
+  :vc (:url "https://github.com/uwabami/consult-ghq")
+  :bind (("C-x f" . consult-ghq-open))
+  :init
+  (setq consult-ghq-short-list t)
   )
-   #+end_src
+    #+end_src
+    自分でエイヤっと作ったけど
+    [[https://github.com/tomoya/consult-ghq][tomoya/consult-ghq: Ghq interface using consult]]
+    の方が良さ気?
 ** =orderless=: 補完候補の選択
    :PROPERTIES:
    :CUSTOM_ID: orgc12df551
    :END:
-   イロイロと凝れそうだけど, とりあえずはデフォルトのままで.
+   便利ではある。
+
+   個人的には =flx-ido= の挙動が好みだったんだけれど、
+   いまいちちゃんと再現できない, 様な.
    #+begin_src emacs-lisp :tangle init.el
 (leaf orderless
   :ensure t
   :init
-  (setq completion-styles '(orderless)
+  (setq completion-styles '(orderless basic)
         orderless-matching-styles '(orderless-prefixes
                                     orderless-flex
                                     orderless-regexp
@@ -1976,13 +2069,128 @@ Emacs*useXIM: false
         )
   )
    #+end_src
-** =kind-icon=: corfu で補完候補にアイコン表示
+** =marginalia=: リッチな注釈(Enable richer annotations)
    :PROPERTIES:
-   :CUSTOM_ID: org80404324
+   :CUSTOM_ID: orge9265e4d
    :END:
-   svg-lib でのアイコン表示ではなく nerd-icons を利用するように.
-   #+begin_src emacs-lisp
+   #+begin_src emacs-lisp :tangle init.el
+(leaf marginalia
+  :ensure t
+  :init
+  ;; 補完でも icon 表示
+  (leaf nerd-icons-completion
+   :ensure t
+   :hook
+   (emacs-startup-hook . nerd-icons-completion-mode)
+   )
+  :bind (("M-A" . marginalia-cycle)
+         (:minibuffer-local-map
+          ("M-A" . marginalia-cycle)
+          ))
+  :init
+  (setq marginalia-align         'right
+        marginalia-align-offset  -2 ;; icon 分引いておく
+        )
+  :hook
+  ((emacs-startup-hook . marginalia-mode)
+   (marginalia-mode-hook . nerd-icons-completion-marginalia-setup)
+   )
+  )
+   #+end_src
+** =corfu=: on the fly completions
+   :PROPERTIES:
+   :CUSTOM_ID: org37d21658
+   :END:
+   =company= より使い勝手が良い, 気がする.
+   :PROPERTIES:
+   :CUSTOM_ID: orgb72396fd
+   :END:
+   [[https://misohena.jp/blog/2024-02-15-separate-notification-and-selection-with-corfu-auto.html][Corfuの自動補完で候補の存在を伝える事と候補を選べるようにする事を分離する]] を参考に.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf corfu
+  :ensure t
+  :preface
+  (defvar-keymap my:corfu-auto-map
+    :doc "Keymap used when popup is shown automatically."
+    "C-g" #'corfu-quit
+    )
+  (defvar my:corfu-in-auto-complete nil)
+;;;###autoload
+(defun my:corfu--auto-complete-deferred:around (oldfun &rest args)
+  ;; 自動補完時に呼び出される
+  (let ((my:corfu-in-auto-complete t))
+    ;; 元の関数を呼び出す. 補完候補があるなら setup が呼ばれる
+    (apply oldfun args)))
+;;;###autoload
+(defun my:corfu--setup:around (oldfun &rest args)
+  (if my:corfu-in-auto-complete
+      ;; 自動補完の時
+      (progn
+        (setf ;; (alist-get 'alpha corfu--frame-parameters) 90
+              (alist-get 'tab-line-format corfu--buffer-parameters) "   C-M-i:補完"
+              ;; 最初の候補を選ばない
+              corfu-preselect 'prompt)
+        (let (;; キー割り当てを極力無くす
+              (corfu-map my:corfu-auto-map))
+          (apply oldfun args)))
+    ;; 手動補完の時
+    (setf ;; (alist-get 'alpha corfu--frame-parameters) 100
+          (alist-get 'tab-line-format corfu--buffer-parameters) nil
+          ;; 最初の候補を選ぶ
+          corfu-preselect 'first)
+    (apply oldfun args)))
+  :advice ((:around corfu--auto-complete-deferred
+                    my:corfu--auto-complete-deferred:around)
+           (:around corfu--setup
+                    my:corfu--setup:around)
+           )
+  :init
+  (leaf nerd-icons-corfu :ensure t)
+  ;; -------------------------------------------------------------------------
+  (leaf corfu-terminal
+    :disabled t
+    ;; :ensure t
+    :config
+    (setq corfu-terminal-disable-on-gui nil)
+    )
+  ;; -------------------------------------------------------------------------
+  :bind
+  (:corfu-map
+   ("TAB"       . corfu-next)
+   ("<tab>"     . corfu-next)
+   ("S-TAB"     . corfu-previous)
+   ("<backtab>" . corfu-previous)
+   ("C-j"       . corfu-next)
+   ("C-n"       . corfu-next)
+   ("C-p"       . corfu-previous)
+   ("C-k"       . corfu-previous)
+   ("C-g"       . corfu-quit)
+   )
+  :hook (emacs-startup-hook . (global-corfu-mode)
+                            ;; (lambda ()
+                            ;;   (corfu-terminal-mode +1)
+                            ;;   (global-corfu-mode))
+                            )
+  :config
+  (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter)
+  (setq completion-cycle-threshold 4
+        tab-always-indent          'complete
+        corfu-cycle                t
+        corfu-auto                 t
+        corfu-preselect            'prompt
+        )
+  )
+   #+end_src
+*** =kind-icon=: corfu で補完候補にアイコン表示
+    :PROPERTIES:
+    :CUSTOM_ID: org80404324
+    :END:
+    svg-lib でのアイコン表示ではなく nerd-icons を利用するように.
+
+    → =corfu-nerd-icons= を利用することにしたので, 使わなくなった.
+    #+begin_src emacs-lisp
 (leaf kind-icon
+  :disabled t
   :ensure t
   :after corfu-terminal
   :init
@@ -2029,85 +2237,40 @@ Emacs*useXIM: false
   :config
   (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
   )
-   #+end_src
-** =corfu=: on the fly completions
+    #+end_src
+** =cape=: 補完 backend
    :PROPERTIES:
-   :CUSTOM_ID: org37d21658
+   :CUSTOM_ID: org3b1ea0b6
    :END:
-   =company= より使い勝手が良い, 気がする.
-   :PROPERTIES:
-   :CUSTOM_ID: orgb72396fd
-   :END:
-   [[https://misohena.jp/blog/2024-02-15-separate-notification-and-selection-with-corfu-auto.html][Corfuの自動補完で候補の存在を伝える事と候補を選べるようにする事を分離する]] を参考に.
    #+begin_src emacs-lisp :tangle init.el
-(leaf corfu
+(leaf cape
   :disabled t
   :ensure t
-  :preface
-  (defvar-keymap my:corfu-auto-map
-    :doc "Keymap used when popup is shown automatically."
-    "C-g" #'corfu-quit
-    )
-  (defvar my:corfu-in-auto-complete nil)
-;;;###autoload
-(defun my:corfu--auto-complete-deferred:around (oldfun &rest args)
-  ;; 自動補完時に呼び出される
-  (let ((my:corfu-in-auto-complete t))
-    ;; 元の関数を呼び出す. 補完候補があるなら setup が呼ばれる
-    (apply oldfun args)))
-;;;###autoload
-(defun my:corfu--setup:around (oldfun &rest args)
-  (if my:corfu-in-auto-complete
-      ;; 自動補完の時
-      (progn
-        (setf ;; (alist-get 'alpha corfu--frame-parameters) 90
-              (alist-get 'tab-line-format corfu--buffer-parameters) "   C-M-i:補完"
-              ;; 最初の候補を選ばない
-              corfu-preselect 'prompt)
-        (let (;; キー割り当てを極力無くす
-              (corfu-map my:corfu-auto-map))
-          (apply oldfun args)))
-    ;; 手動補完の時
-    (setf ;; (alist-get 'alpha corfu--frame-parameters) 100
-          (alist-get 'tab-line-format corfu--buffer-parameters) nil
-          ;; 最初の候補を選ぶ
-          corfu-preselect 'first)
-    (apply oldfun args)))
-  :advice ((:around corfu--auto-complete-deferred
-                    my:corfu--auto-complete-deferred:around)
-           (:around corfu--setup
-                    my:corfu--setup:around)
-           )
-  :init
-  (leaf corfu-terminal
-    :ensure t
-    :config
-    (setq corfu-terminal-disable-on-gui nil)
-    )
-  :bind
-  (:corfu-map
-   ("TAB"       . corfu-next)
-   ("<tab>"     . corfu-next)
-   ("S-TAB"     . corfu-previous)
-   ("<backtab>" . corfu-previous)
-   ("C-j"       . corfu-next)
-   ("C-n"       . corfu-next)
-   ("C-p"       . corfu-previous)
-   ("C-k"       . corfu-previous)
-   ("C-g"       . corfu-quit)
-   )
-  :hook (emacs-startup-hook . (lambda ()
-                                (corfu-terminal-mode +1)
-                                (global-corfu-mode)))
   :config
-  (setq completion-cycle-threshold 4
-        tab-always-indent          'complete
-        corfu-cycle                t
-        corfu-auto                 t
-        corfu-preselect            'prompt
-    )
+  (setq cape-dabbrev-check-other-buffers nil)
+  (add-to-list 'completion-at-point-functions 'cape-keyword)
+  (add-to-list 'completion-at-point-functions 'cape-dabbrev)
+  (add-to-list 'completion-at-point-functions 'cape-file)
+  (add-to-list 'completion-at-point-functions 'cape-tex)
+  (add-to-list 'completion-at-point-functions 'cape-emoji)
   )
    #+end_src
+* =chezmoi=: 設定ファイルの編集補助
+  :PROPERTIES:
+  :CUSTOM_ID: org21392594
+  :END:
+  設定ファイルの管理に [[https://www.chezmoi.io/][chezmoi]] を使うようになったので,
+  その編集補助に.
+
+  地味ながら, 非常に便利.
+  #+begin_src emacs-lisp :tangle init.el
+(leaf chezmoi
+  :ensure t
+  :if (executable-find "chezmoi")
+  :bind (("C-c C f" . chezmoi-find)
+         ("C-c C s" . chezmoi-write))
+  )
+  #+end_src
 * 言語毎のモードの設定など
   :PROPERTIES:
   :CUSTOM_ID: org31fb6f15
@@ -2150,14 +2313,23 @@ Emacs*useXIM: false
    Emacs 同梱の treesit を使う
    #+begin_src emacs-lisp :tangle init.el
 (leaf treesit
-  ;; :if (executable-find "tree-sitter")
+  :if (executable-find "tree-sitter")
   :tag "builtin"
-  :defvar treesit-language-source-alist
+  :preface
+;;;###autoload
+  (defun my:treesit-install-grammar-all ()
+    "install all tree-sitter-grammer's"
+    (interactive)
+    (mapc
+     (lambda (lang)
+       (unless (treesit-language-available-p lang nil)
+         (treesit-install-language-grammar lang)))
+     (mapcar #'car treesit-language-source-alist)))
   :config
   (setq treesit-language-source-alist
         '(;;
           (elisp "https://github.com/Wilfred/tree-sitter-elisp")
-          (markdown "https://github.com/ikatyang/tree-sitter-markdown")
+          ;; (markdown "https://github.com/ikatyang/tree-sitter-markdown")
           (gitcommit "https://github.com/gbprod/tree-sitter-gitcommit")
           ;; (bash "https://github.com/tree-sitter/tree-sitter-bash")
           ;; (clojure "https://github.com/sogaiu/tree-sitter-clojure")
@@ -2173,21 +2345,12 @@ Emacs*useXIM: false
           ;; (nix "https://github.com/nix-community/tree-sitter-nix")
           ;; (python "https://github.com/tree-sitter/tree-sitter-python")
           ;; (rust "https://github.com/tree-sitter/tree-sitter-rust")
-          ;; (toml "https://github.com/tree-sitter/tree-sitter-toml")
+          (toml "https://github.com/tree-sitter/tree-sitter-toml")
           ;; (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
           ;; (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
           ;; (yaml "https://github.com/ikatyang/tree-sitter-yaml")
           )
         )
-  ;;
-  (defun my:treesit-install-grammar-all ()
-    "install all tree-sitter-grammer's"
-    (interactive)
-    (mapc
-     (lambda (lang)
-       (unless (treesit-language-available-p lang nil)
-         (treesit-install-language-grammar lang)))
-     (mapcar #'car treesit-language-source-alist)))
   )
    #+end_src
 ** =f90-ts-mode=: fortran の色付けを tree-sitter で
@@ -2197,12 +2360,14 @@ Emacs*useXIM: false
    あまり好みでないので, 諸々じたばた...
    #+begin_src emacs-lisp :tangle init.el
 (leaf f90-ts-mode
-  :vc (:url "git@github.com:mscfd/emacs-f90-ts-mode.git")
+  :if (executable-find "tree-sitter")
+  :vc (:url "git@github.com:uwabami/emacs-f90-ts-mode.git")
   :mode ("\\.f90\\'" "\\.F90\\'" "\\.f95\\'" "\\.F95\\'" "\\.F\\'")
   :defvar treesit-language-source-alist
   :bind (:f90-ts-mode-map
          ("C-c '" . separedit))
   :preface
+  ;;  --------------------------------------------------- --------------------
 ;;;###autoload
   (defun my:install-fortran-grammar-with-generate ()
     "install 時に tree-sitter generateを実行してから install"
@@ -2221,6 +2386,7 @@ Emacs*useXIM: false
       (let ((treesit-language-source-alist `((,lang ,tmp-dir nil "src"))))
         (treesit-install-language-grammar lang))
       (message "Fortran grammar installed successfully from generated source!")))
+  ;; ------------------------------------------------------------------------
 ;;;###autoload
   (defun my:f90-ts-toggle-mode ()
     "Toggle between `f90-mode' (legacy) and `f90-ts-mode'."
@@ -2230,76 +2396,7 @@ Emacs*useXIM: false
             (f90-mode)
           (message "Legacy `f90-mode' not available"))
       (f90-ts-mode)))
-;; function 関連の色付けルールがまだ熟れていないので, ちょっと修正する
-(defvar my:f90-keywords
-  '("allocated" "associated" "present" "allocate" "deallocate" "nullify"))
-(defvar my:f90-builtins
-  '("min" "max" "abs" "mod" "sqrt" "sum"
-    "size" "shape" "len" "trim" "adjustl" "adjustr"
-    "real" "int" "dble" "cmplx" "count" "any" "all"))
-;;;###autoload
-(defun my:f90-make-regex (word-list)
-  (let ((patterns (mapcar (lambda (word)
-                            (mapconcat (lambda (c)
-                                         (format "[%c%c]" (upcase c) (downcase c)))
-                                       word ""))
-                          word-list)))
-    (format "^\\(%s\\)$" (mapconcat #'identity patterns "\\|"))))
-;;;###autoload
-(defun my:fixed-f90-ts-rules-function ()
-  "Fixed font-lock rules for functions and subroutines."
-  (let ((regex-kw (my:f90-make-regex my:f90-keywords))
-        (regex-bi (my:f90-make-regex my:f90-builtins)))
-    (treesit-font-lock-rules
-     :language 'fortran
-     :feature 'function
-     `((subroutine_statement
-        name: (name)                  @font-lock-function-name-face)
-       (function_statement
-        name: (name)                  @font-lock-function-name-face)
-       (function_result
-        (identifier)                  @default)
-       (subroutine_call
-        subroutine: (identifier)      @font-lock-function-name-face)
-       ;; --- 削除箇所 ---
-       ;; (call_expression (identifier) @font-lock-function-name-face)
-       ((call_expression (identifier) @font-lock-keyword-face)
-        (:match ,regex-kw             @font-lock-keyword-face))
-       ((call_expression (identifier) @font-lock-builtin-face)
-        (:match ,regex-bi             @font-lock-builtin-face))
-       ;; within derived type declarations
-       (variable_declaration
-        type: (procedure
-               "procedure"
-               (procedure_interface)        @font-lock-function-name-face)
-        ;; is this always a pointer to a procedure?
-        declarator: (identifier)            @font-lock-function-name-face)
-       (procedure_statement
-        declarator: [
-                     ((method_name)         @font-lock-function-name-face)
-                     ((binding
-                       (binding_name
-                        [
-                         ((identifier)      @font-lock-function-name-face)
-                         ((operator
-                           (operator_name)  @f90-ts-font-lock-operator-face))
-                         ((assignment "="   @f90-ts-font-lock-operator-face))
-                         ])
-                       (method_name)        @font-lock-function-name-face))
-                     ])
-       (generic_statement
-        declarator: (binding_list
-                     (binding_name
-                      [
-                       ((identifier)       @font-lock-function-name-face)
-                       ((operator
-                         (operator_name)   @f90-ts-font-lock-operator-face))
-                       ((assignment "="    @f90-ts-font-lock-operator-face))
-                       ])
-                     (method_name)         @font-lock-function-name-face))
-       (final_statement
-        declarator: (method_name)           @font-lock-function-name-face)
-       ))))
+  ;; -------------------------------------------------------------------------
 ;;;###autoload
   (defun my:fixed-f90-ts-rules-variable ()
     "Fixed font-lock rules for variables, declarations, and module control."
@@ -2315,7 +2412,7 @@ Emacs*useXIM: false
        (save_statement (identifier) @font-lock-variable-name-face)
        ;; 3. モジュール制御 (use, only, private, public)
        (use_statement (module_name) @font-lock-constant-face)
-       (included_items (identifier) @font-lock-variable-name-face) ;; use ..., only: DP
+       (included_items (identifier) @font-lock-variable-name-face)
        (public_statement (identifier) @font-lock-function-name-face)
        (private_statement (identifier) @font-lock-function-name-face)
        ;; 4. プログラム単位の名前
@@ -2325,12 +2422,14 @@ Emacs*useXIM: false
        ((identifier) @f90-ts-font-lock-special-var-face
         (:pred f90-ts-special-var-p @f90-ts-font-lock-special-var-face))
        )))
-  ;;
+  ;; -------------------------------------------------------------------------
   (add-to-list 'major-mode-remap-alist '(f90-mode . f90-ts-mode))
+  ;; -------------------------------------------------------------------------
   :advice
-  ((:override f90-ts--font-lock-rules-function my:fixed-f90-ts-rules-function)
+  (;; (:override f90-ts--font-lock-rules-function my:fixed-f90-ts-rules-function)
    (:override f90-ts--font-lock-rules-variable my:fixed-f90-ts-rules-variable)
    )
+  ;; -------------------------------------------------------------------------
   :custom-face
   (f90-ts-font-lock-intrinsic-face       . '((t :inherit font-lock-builtin-face)))
   (f90-ts-font-lock-delimiter-face       . '((t :inherit font-lock-delimiter-face)))
@@ -2339,19 +2438,24 @@ Emacs*useXIM: false
   (f90-ts-font-lock-bracket-face         . '((t :inherit font-lock-bracket-face)))
   (f90-ts-font-lock-special-var-face     . '((t :inherit font-lock-constant-face)))
   (f90-ts-font-lock-special-comment-face . '((t :inherit font-lock-doc-face)))
+  ;; -------------------------------------------------------------------------
   :init
-  (setq f90-ts-indent-block 2
+  (setq f90-ts-indent-toplevel 2
         f90-ts-indent-contain 2
+        f90-ts-indent-block 2
         f90-ts-indent-continued 2
-        f90-ts-indent-toplevel 2
+        f90-ts-indent-openmp-style 'context
         f90-ts-indent-lists-region 'continued-line
         f90-ts-indent-lists-line   'continued-line
+        f90-ts-smart-end 'no-blink
         )
   (setq f90-ts-indent-rules-openmp
         `(
+          ;; ,@(f90-ts-indent-rules-info "openmp")
           ((f90-ts--openmp-comment-is) prev-sibling 0)
-          ((f90-ts--openmp-comment-is) parent-bol f90-ts-indent-block)))
-  ;; :config
+          ((f90-ts--openmp-comment-is) parent-bol f90-ts-indent-block))
+        )
+  ;; -------------------------------------------------------------------------
   :hook
   (f90-ts-mode-hook
    . (lambda ()
@@ -2710,6 +2814,7 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
    =eglot= と同時に利用されるので、一応設定しておく.
    #+begin_src emacs-lisp :tangle init.el
 (leaf flymake
+  :disabled t
   :ensure t
   :bind (:flymake-mode-map
          ("C-c C-p" . flymake-goto-prev-error)
@@ -2718,6 +2823,7 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
   :config (require 'flymake-proc nil 'noerror)
   )
 (leaf flymake-diagnostic-at-point
+  :disabled t
   :ensure t
   :after flymake
   :hook (flymake-mode-hook . flymake-diagnostic-at-point-mode)
@@ -2804,7 +2910,7 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
   :CUSTOM_ID: orgc6b67eb9
   :END:
   まあ, ほとんど Git 関連な訳ですが．
-** TODO =project.el= [0/1]
+** TODO =project.el= [0/2]
    :PROPERTIES:
    :CUSTOM_ID: org76c99d7f
    :END:
@@ -2819,20 +2925,9 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
   )
    #+end_src
    - [ ] ghq の list を追加できないかな?
-     できれば =--full-path= じゃない表示にしたい(=my:shorten-file-path= を噛ませたい).
-** =consult-ghq=: ghq を consult で.
-   :PROPERTIES:
-   :CUSTOM_ID: org90f5d475
-   :END:
-   =project.el= で ghq を使うようになったら不要かもしれないけど, とりあえず.
-   #+begin_src emacs-lisp
-(leaf consult-ghq
-  :vc (:url "https://github.com/uwabami/consult-ghq")
-  :bind (("C-x f" . consult-ghq-open))
-  :init
-  (setq consult-ghq-short-list t)
-  )
-   #+end_src
+     - できれば =--full-path= じゃない表示にしたい(=my:shorten-file-path= を噛ませたい).
+   - [ ] 何故か↑の =project-list-file= が効かずに =~/.emacs.d/project= が生成される事が.
+     - これはなんだろうか?
 ** =magit=: Emacs の Git Frontend
    :PROPERTIES:
    :CUSTOM_ID: org59371622
@@ -2842,6 +2937,7 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
    #+begin_src emacs-lisp :tangle init.el
 (leaf magit
   :bind (("C-x g" . magit-status))
+  :commands git-commit-mode
   :ensure t
   :init
   (leaf transient
@@ -2857,7 +2953,6 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
         magit-refs-show-commit-count   'all
         magit-log-buffer-file-locked   t
         magit-revision-show-gravatars  nil
-        ;; git-commit-major-mode 'git-commit-ts-mode
         )
   )
    #+end_src
@@ -2868,8 +2963,6 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
    #+begin_src emacs-lisp :tangle init.el
 (leaf git-commit-ts-mode
   :vc (:url "https://github.com/danilshvalov/git-commit-ts-mode")
-  ;; :preface
-  ;; (add-to-list 'major-mode-remap-alist '(f90-mode . f90-ts-mode))
   :mode "\\COMMIT_EDITMSG\\'"
   )
    #+end_src
@@ -3014,7 +3107,8 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
   ;; :vc (:url "https://github.com/uwabami/rail")
   :init
   (setq rail-emulate-genjis t)
-  :require t
+  ;; :require t
+  :leaf-defer t
   )
    #+end_src
 ** Emacs 本体側の設定(wanderlust)
@@ -3096,6 +3190,7 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
     :CUSTOM_ID: orge2af69a1
     :END:
      #+begin_src emacs-lisp :tangle init-wl.el
+;; -*- lexical-binding: t -*-
 (eval-when-compile
   (require 'leaf-keywords)
   (require 'cp5022x)
@@ -4196,6 +4291,11 @@ fi
    Desktop の設定では
    #+begin_src sh :tangle no
 #!/bin/sh
+
+Tested-by: Youhei SASAKI <uwabami@gfd-dennou.org>
+Tested-by: Youhei SASAKI <uwabami@gfd-dennou.org>
+Tested-by: Youhei SASAKI <uwabami@gfd-dennou.org>
+
 # emacs-mailto-handler
 
 mailto=$1
@@ -4779,29 +4879,29 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
          ;; 除外対象: ルートにある Archive.org
          (archive-file (expand-file-name "Archive.org" base-dir))
          ;; 作業用リスト
-         my-agenda-list
-         my-search-list)
+         my:agenda-list
+         my:search-list)
     ;; ==========================================================
     ;; A. org-agenda-files (アジェンダ用: 現在・未来・TODO)
     ;; ==========================================================
     ;; 1. ルートのファイルをベースにする (ここには Gcal, Redmine現行が含まれる)
-    (setq my-agenda-list root-files)
+    (setq my:agenda-list root-files)
     ;; 2. Archive.org をリストから削除 (破壊的操作だがローカル変数なのでOK)
-    (setq my-agenda-list (delete archive-file my-agenda-list))
+    (setq my:agenda-list (delete archive-file my:agenda-list))
     ;; 3. 全ての Journal を追加 (ファイルが存在する場合のみ)
     ;; (when (file-exists-p journal-current)
-    ;;   (add-to-list 'my-agenda-list journal-current))
+    ;;   (add-to-list 'my:agenda-list journal-current))
     (when journal-all
-      (setq my-agenda-list (append my-agenda-list journal-all)))
+      (setq my:agenda-list (append my:agenda-list journal-all)))
     ;; 4. 今年の Mastodon を追加 (ファイルが存在する場合のみ)
     (when (file-exists-p mstdn-current)
-      (add-to-list 'my-agenda-list mstdn-current))
+      (push mstdn-current my:agenda-list))
     ;; グローバル変数へ適用
-    (setq org-agenda-files my-agenda-list)
+    (setq org-agenda-files my:agenda-list)
     ;; ==========================================================
     ;; B. org-agenda-text-search-extra-files (検索用: 過去ログ・アーカイブ)
     ;; ==========================================================
-    (setq my-search-list
+    (setq my:search-list
           (append
            ;; 1. Archive.org
            (list archive-file)
@@ -4815,7 +4915,7 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
            (remove mstdn-current mstdn-all)))
     ;; グローバル変数へ適用 (実在するファイルのみフィルタリング)
     (setq org-agenda-text-search-extra-files
-          (seq-filter 'file-exists-p my-search-list)))
+          (seq-filter 'file-exists-p my:search-list)))
   )
    #+end_src
 ** OrgとGoogle カレンダーの連携: =org-gcal=
@@ -5382,6 +5482,12 @@ pdflang={%l}}
   :END:
   ほぼ読み込むだけの mode の設定. 設定が増えたら別途まとめる。
   #+begin_src emacs-lisp :tangle init.el
+(leaf fill-column-indicator
+  :ensure t
+  :hook
+  ((git-commit-mode . fci-mode)
+   )
+  )
 ;;;
 ;; (leaf hideshow
 ;;   :bind (:f90-mode-map
@@ -5496,15 +5602,20 @@ pdflang={%l}}
 ;;     (Info-selection #'info-colors-fontify-node))
 ;;   )
   #+end_src
-
 * テーマとモードライン
   :PROPERTIES:
   :CUSTOM_ID: orgbf458527
   :END:
-** theme: =modus-theme=
+** =modus-theme=: 視認性の良いテーマ
    :PROPERTIES:
-   :CUSTOM_ID: orgce78777d
+   :CUSTOM_ID: orgbea9b769
    :END:
+   Emacs 本体に同梱されるし, 沢山のテーマに対応しているし,
+   ということで [[https://protesilaos.com/emacs/modus-themes][Modus Themes | Protesilaos Stavrou]] を利用することにした.
+
+   たた, 元々このテーマはアクセシビリティ対応のテーマでもあるので,
+   配色がちょっと好みではない.
+   というわけで, 幾つかの配色の palettte を上書きして
    デフォルトの font-lock を(好みに合わせて)入れ替えたり.
    #+begin_src emacs-lisp :tangle init.el
 (leaf modus-themes
@@ -5519,16 +5630,16 @@ pdflang={%l}}
                            (load-theme 'modus-vivendi :no-confirm)))
    (modus-themes-after-load-theme-hook . my:modus-themes-custom-faces)
    )
-  :init
+  :config
   (setq modus-themes-custom-auto-reload t
         modus-themes-disable-other-themes t
         modus-themes-bold-constructs nil
         modus-themes-italic-constructs nil
         modus-themes-mixed-fonts nil
-        modus-themes-prompts '(bold bold)
+        modus-themes-prompts     '(bold bold)
         modus-themes-completions '((matches   . (bold))
                                    (selection . (bold underline)))
-        modus-themes-headings '((t . (bold)))
+        modus-themes-headings    '((t . (bold)))
         modus-themes-variable-pitch-ui nil
         modus-vivendi-palette-overrides
         `(;;
@@ -5536,50 +5647,51 @@ pdflang={%l}}
                         "#000000"     ; GUIなら背景色
                       'unspecified))  ; ターミナルなら色は指定しない
           ;; Basic color override
-          (green-cooler "#bfff7f")
-          (green-intense "#4ceea5")
-          (yellow "#efef00")
-          (yellow-warmer "#ffb347")
+          (green-cooler   "#bfff7f")
+          (green-intense  "#4ceea5")
+          (yellow         "#efef00")
+          (yellow-warmer  "#ffb347")
           (yellow-intense "#ffff7f")
           ;;
-          ;; (bg-yellow-intense "#556b2f")
-          ;;
-          (comment fg-dim)
+          (orange         "#ff9040")
+          (purple         "#d57bff")
+          (teal           "#40e0d0")
+          (pink           "#ff88e0")
           ;; (bg-hl-line "#556b2f")
-          (bg-hl-line "DarkSlateBlue")
+          ;; (bg-hl-line "DarkSlateBlue")
           ;;
           ;; Code remapping
           ;;
           (builtin blue-warmer)
+          (comment fg-dim)
           (constant yellow-warmer)
           (delimiter red-warmer)
           (docstring green-intense)
-          (docmarkup green-intense)
+          (docmarkup teal)
           (fnname magenta-cooler)
+          (fnname-call pink)
+          (preprocessor magenta)
           (keyword red-faint)
           (preprocessor red-cooler)
+          (property cyan)
           (string cyan-cooler)
           (type yellow-intense)
           (variable blue)
+          (variable-use slate)
           ;;
           (rx-construct blue-faint)
           (rx-backslash green-cooler)
-          ;;
-          (fg-link cyan-warmer)
-          ;;
-          (err red-intense)
-          (warning magenta-intense)
-          (info cyan-intense)
           ;;
           ;; Org Agenda view
           ;; (date-common fg-alt)
           ;; (date-deadline red-faint)
           ;; (date-event fg-alt)
           ;;
+          ;; -----------------------------------------------------------------
           (date-common fg-alt)
           (date-weekday fg-main)
           (date-weekend red-faint)
-          ;; headline
+          ;; headline --------------------------------------------------------
           (fg-heading-0 cyan-intense)
           (fg-heading-1 magenta-cooler)
           (fg-heading-2 blue-cooler)
@@ -5588,15 +5700,25 @@ pdflang={%l}}
           (fg-heading-5 yellow-intense)
           (fg-heading-6 red-cooler)
           (fg-heading-7 magenta-warmer)
-          (fg-heading-8 fg-main)
+          (fg-heading-8 orange)
+          ;; rainbow ---------------------------------------------------------
+          (rainbow-0 cyan-intense)
+          (rainbow-1 magenta-cooler)
+          (rainbow-2 blue-cooler)
+          (rainbow-3 yellow-warmer)
+          (rainbow-4 green-faint)
+          (rainbow-5 yellow-intense)
+          (rainbow-6 red-cooler)
+          (rainbow-7 magenta-warmer)
+          (rainbow-8 orange)
           )
         )
-  :config
+  ;; -------------------------------------------------------------------------
   (defun my:modus-themes-custom-faces (&rest _args)
     (modus-themes-with-colors
       (custom-set-faces
        ;; vertico
-       `(vertico-current                                  ((t :inherit hl-line :background unspecified )))
+       `(vertico-current                                  ((t :inherit hl-line :underline t )))
        ;; wanderlust
        `(wl-highlight-folder-closed-face                  ((t :foreground ,green-cooler )))
        `(wl-highlight-folder-few-face                     ((t :foreground ,red-cooler )))
@@ -5640,8 +5762,11 @@ pdflang={%l}}
        `(whitespace-tab                                   ((t :foreground ,blue-intense :underline t)))
        `(whitespace-space                                 ((t :foreground ,green-intense :bold t)))
        `(whitespace-empty                                 ((t :background ,red-intense )))
-       ))
-    )
+       ;; org-block
+       `(org-block                                        ((t :background ,bg-main :extend t)))
+       `(org-block-begin-line                             ((t :background ,bg-main :foreground ,fg-prose-block-delimiter :extend t)))
+       `(org-block-end-line                               ((t :background ,bg-main :foreground ,fg-prose-block-delimiter :extend t)))
+       )))
   )
   #+end_src
 ** modeline: =powerline=
@@ -5757,6 +5882,29 @@ pdflang={%l}}
   :CUSTOM_ID: orgd89ceb4b
   :END:
   #+begin_src emacs-lisp :tangle init.el
+(leaf perfect-margin
+  :ensure t
+  :config
+  (setq perfect-margin-visible-width 128
+        perfect-margin-only-set-left-margin nil)
+  :hook
+  ;; (emacs-startup-hook . perfect-margin-mode)
+  )
+(leaf dimmer
+  :disabled t
+  :ensure t
+  :config
+  (setq dimmer-fraction 0.07 ;; 色の薄くなる比率
+        dimmer-adjustment-mode :both
+        dimmer-use-colorspace :rgb
+        dimmer-watch-frame-focus-events nil)
+  :hook
+  (emacs-startup-hook . dimmer-mode)
+)
+;; (leaf org-side-tree
+;;   :ensure t
+;;  )
+
 ;; (leaf copilot
 ;;   :vc (:url "https://github.com/copilot-emacs/copilot.el" :rev :newest :branch "main")
 ;;   :init
@@ -5766,12 +5914,6 @@ pdflang={%l}}
 ;;   )
 ;; (leaf copilot-chat :ensure t)
 (leaf apparmor-mode :ensure t)
-(leaf chezmoi
-  :ensure t
-  :if (executable-find "chezmoi")
-  :bind (("C-c C f" . chezmoi-find)
-         ("C-c C s" . chezmoi-write))
-  )
 
 (leaf enh-ruby-mode
   ;; :ensure t
@@ -5863,12 +6005,12 @@ pdflang={%l}}
   :PROPERTIES:
   :CUSTOM_ID: orgf87c4e84
   :END:
-** =esup=: 起動時間を調べる
+** TODO =esup=: 起動時間を調べる [/]
    :PROPERTIES:
    :CUSTOM_ID: org0bd0c625
    :END:
    本気でやるなら profiler なんだろうけれど.
-   #+begin_src emacs-lisp :tangle init.el
+   #+begin_src emacs-lisp :tangle no
 (leaf esup
   :ensure t
   :init
@@ -5877,6 +6019,11 @@ pdflang={%l}}
         )
   )
    #+end_src
+   - [ ] =early-init.el= を見ないので, 読み込まれない設定が多々.
+     - [[https://github.com/jschaf/esup/issues/93][early-init.el is not included in profiling · Issue #93 · jschaf/esup]]
+   - あと, leaf を利用していると,
+     殆どがマクロ展開で埋まるので,
+     速度計測の意味が無い...。
 ** profiler report
    :PROPERTIES:
    :CUSTOM_ID: org8d339cf7

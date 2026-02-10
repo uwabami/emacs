@@ -2,7 +2,7 @@
 #+title: Emacs の設定
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2026-02-10 15:02:47
+#+date: 2026-02-11 05:33:04
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -1665,6 +1665,16 @@ Emacs*useXIM: false
   :defun
   (recentf-save-list recentf-cleanup recentf-add-file)
   :preface
+;;;###autoload
+  (defun my:recentf-force-cleanup ()
+    "除外パターンが増えた時用. recentf-list から不要なファイルのリストを除外"
+    (interactive)
+    (eval-when-compile (require 'recentf nil 'noerr))
+    (let ((count (length recentf-list)))
+      (recentf-cleanup)
+      (recentf-save-list)
+      (message "Recentf cleaned: %d -> %d items" count (length recentf-list))))
+;;;###autoload
   (defun my:recentf-cleanup-shutup (orig-fun &rest args)
     "Run `recentf-cleanup' silently."
     (let ((inhibit-message t)) ; メッセージ出力を一時的に無効化
@@ -1682,23 +1692,44 @@ Emacs*useXIM: false
   (setq recentf-save-file       (expand-file-name "recentf" my:d:tmp)
         recentf-max-saved-items 1000
         recentf-auto-cleanup    "04:00am"
-        recentf-exclude         `(;; TRAMP は無視
-                                  ,(if (boundp 'tramp-file-name-regexp)
-                                       tramp-file-name-regexp
-                                     "\\`/[^/|:]+:")
-                                  ".recentf"
-                                  "^/tmp\\.*"
-                                  "^/private\\.*"
-                                  "^/var/folders\\.*"
-                                  "/TAGS$"
-                                  "\\.*草稿\\.*"
-                                  "^#\\.*"
-                                  "^/[^/:]+:"
-                                  "bookmarks"
-                                  "org-recent-headings.dat"
-                                  "\\.*COMMIT_EDITMSG$"
-                                  )
-        )
+        recentf-exclude
+        `(;; TRAMP は無視
+          ,(if (boundp 'tramp-file-name-regexp)
+               tramp-file-name-regexp
+             "\\`/[^/|:]+:")
+          ;; 特定のフォルダ以下を含めないルール
+          ;; 相対 PATH 指定と絶対 PATH 指定の正規表現を生成
+          ;; - ~/.cache 以下は含めない
+          ,(let ((home (expand-file-name "~")))
+             (format "^\\(?:%s\\|~\\)/\\.cache/" (regexp-quote home)))
+          ;; - org-directory 以下も含めない
+          ,(let ((home (expand-file-name "~"))
+                 (path (directory-file-name my:d:org)))
+             (format "^\\(?:%s\\|%s\\)"
+                     (regexp-quote path)
+                     (regexp-quote (abbreviate-file-name path))))
+          ;; システム固有のキャッシュファイル
+          "^/tmp/"
+          "^/var/tmp/"
+          "^/run/"
+          "^/private/"
+          "^/var/folders/"
+          "^/mnt/[a-zA-Z]/"
+          ".recentf"
+          ;; Emacs の生成するファイル
+          "/TAGS$"    ;; etags
+          "/#[^/]+#$" ;; emacs auto-save-file
+          "~$"        ;; emacs backup file
+          "/\\.#"     ;; emacs lock file
+          ;; その他, 無視するファイルのファイル名や拡張子など.
+          "bookmarks"
+          "org-recent-headings.dat"
+          "\\.*COMMIT_EDITMSG$"
+          ".*-autoloads.el$"
+          "草稿"
+          ;; completion-ignored-extensions を正規表現化して除外リストに追加
+          ,(format ".*%s\\'" (regexp-opt completion-ignored-extensions))
+          ))
   )
   #+end_src
 * Copy & Paste:
@@ -2109,50 +2140,8 @@ Emacs*useXIM: false
    #+begin_src emacs-lisp :tangle init.el
 (leaf corfu
   :ensure t
-  :preface
-  (defvar-keymap my:corfu-auto-map
-    :doc "Keymap used when popup is shown automatically."
-    "C-g" #'corfu-quit
-    )
-  (defvar my:corfu-in-auto-complete nil)
-;;;###autoload
-(defun my:corfu--auto-complete-deferred:around (oldfun &rest args)
-  ;; 自動補完時に呼び出される
-  (let ((my:corfu-in-auto-complete t))
-    ;; 元の関数を呼び出す. 補完候補があるなら setup が呼ばれる
-    (apply oldfun args)))
-;;;###autoload
-(defun my:corfu--setup:around (oldfun &rest args)
-  (if my:corfu-in-auto-complete
-      ;; 自動補完の時
-      (progn
-        (setf ;; (alist-get 'alpha corfu--frame-parameters) 90
-              (alist-get 'tab-line-format corfu--buffer-parameters) "   C-M-i:補完"
-              ;; 最初の候補を選ばない
-              corfu-preselect 'prompt)
-        (let (;; キー割り当てを極力無くす
-              (corfu-map my:corfu-auto-map))
-          (apply oldfun args)))
-    ;; 手動補完の時
-    (setf ;; (alist-get 'alpha corfu--frame-parameters) 100
-          (alist-get 'tab-line-format corfu--buffer-parameters) nil
-          ;; 最初の候補を選ぶ
-          corfu-preselect 'first)
-    (apply oldfun args)))
-  :advice ((:around corfu--auto-complete-deferred
-                    my:corfu--auto-complete-deferred:around)
-           (:around corfu--setup
-                    my:corfu--setup:around)
-           )
   :init
   (leaf nerd-icons-corfu :ensure t)
-  ;; -------------------------------------------------------------------------
-  (leaf corfu-terminal
-    :disabled t
-    ;; :ensure t
-    :config
-    (setq corfu-terminal-disable-on-gui nil)
-    )
   ;; -------------------------------------------------------------------------
   :bind
   (:corfu-map
@@ -2180,6 +2169,48 @@ Emacs*useXIM: false
         corfu-preselect            'prompt
         )
   )
+;;  :preface
+;;  (defvar-keymap my:corfu-auto-map
+;;    :doc "Keymap used when popup is shown automatically."
+;;    "C-g" #'corfu-quit
+;;    )
+;;   (defvar my:corfu-in-auto-complete nil)
+;; ;;;###autoload
+;; (defun my:corfu--auto-complete-deferred:around (oldfun &rest args)
+;;   ;; 自動補完時に呼び出される
+;;   (let ((my:corfu-in-auto-complete t))
+;;     ;; 元の関数を呼び出す. 補完候補があるなら setup が呼ばれる
+;;     (apply oldfun args)))
+;; ;;;###autoload
+;; (defun my:corfu--setup:around (oldfun &rest args)
+;;   (if my:corfu-in-auto-complete
+;;       ;; 自動補完の時
+;;       (progn
+;;         (setf ;; (alist-get 'alpha corfu--frame-parameters) 90
+;;               (alist-get 'tab-line-format corfu--buffer-parameters) "   C-M-i:補完"
+;;               ;; 最初の候補を選ばない
+;;               corfu-preselect 'prompt)
+;;         (let (;; キー割り当てを極力無くす
+;;               (corfu-map my:corfu-auto-map))
+;;           (apply oldfun args)))
+;;     ;; 手動補完の時
+;;     (setf ;; (alist-get 'alpha corfu--frame-parameters) 100
+;;           (alist-get 'tab-line-format corfu--buffer-parameters) nil
+;;           ;; 最初の候補を選ぶ
+;;           corfu-preselect 'first)
+;;     (apply oldfun args)))
+;;   :advice ((:around corfu--auto-complete-deferred
+;;                     my:corfu--auto-complete-deferred:around)
+;;            (:around corfu--setup
+;;                     my:corfu--setup:around)
+;;            )
+;; ---------------------------------------------------------------------------
+;;(leaf corfu-terminal
+;;  :disabled t
+;;  ;; :ensure t
+;;  :config
+;;  (setq corfu-terminal-disable-on-gui nil)
+;;  )
    #+end_src
 *** =kind-icon=: corfu で補完候補にアイコン表示
     :PROPERTIES:
@@ -2440,6 +2471,22 @@ Emacs*useXIM: false
   (f90-ts-font-lock-special-comment-face . '((t :inherit font-lock-doc-face)))
   ;; -------------------------------------------------------------------------
   :init
+  (leaf f90
+    :config
+    (setq f90-do-indent 2
+          f90-if-indent 2
+          f90-type-indent 2
+          f90-program-indent 2
+          f90-associate-indent 2
+          f90-critical-indent 2
+          f90-continuation-indent 2
+          f90-comment-region "! "
+          f90-indented-comment-re "!"
+          f90-beginning-ampersand t
+          f90-smart-end 'blink
+          f90-smart-end-names t
+          )
+    )
   (setq f90-ts-indent-toplevel 2
         f90-ts-indent-contain 2
         f90-ts-indent-block 2
@@ -4511,7 +4558,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         ;; modules → とりあえずクリアしておく
         org-modules  '()
         ;; element-cache は使わない...うまく使えると良いんだけれど.
-        org-element-use-cache nil
+        ;; org-element-use-cache nil
         ;; org-agenda で設定するべきかなぁ...
         org-agenda-inhibit-startup  t
         ;;
@@ -5646,17 +5693,17 @@ pdflang={%l}}
           (bg-main ,(if (display-graphic-p)
                         "#000000"     ; GUIなら背景色
                       'unspecified))  ; ターミナルなら色は指定しない
-          ;; Basic color override
-          (green-cooler   "#bfff7f")
-          (green-intense  "#4ceea5")
-          (yellow         "#efef00")
-          (yellow-warmer  "#ffb347")
-          (yellow-intense "#ffff7f")
-          ;;
-          (orange         "#ff9040")
-          (purple         "#d57bff")
-          (teal           "#40e0d0")
-          (pink           "#ff88e0")
+          ;; ;; Basic color override
+          ;; (green-cooler   "#bfff7f")
+          ;; (green-intense  "#4ceea5")
+          ;; (yellow         "#efef00")
+          ;; (yellow-warmer  "#ffb347")
+          ;; (yellow-intense "#ffff7f")
+          ;; ;;
+          ;; (orange         "#ff9040")
+          ;; (purple         "#d57bff")
+          ;; (teal           "#40e0d0")
+          ;; (pink           "#ff88e0")
           ;; (bg-hl-line "#556b2f")
           ;; (bg-hl-line "DarkSlateBlue")
           ;;
@@ -5681,6 +5728,8 @@ pdflang={%l}}
           ;;
           (rx-construct blue-faint)
           (rx-backslash green-cooler)
+          ;;
+          (fg-link cyan-warmer)
           ;;
           ;; Org Agenda view
           ;; (date-common fg-alt)

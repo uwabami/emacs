@@ -15,6 +15,6 @@ jobs:
       - uses: purcell/setup-emacs@master
         with:
           version: ${{ matrix.emacs_version }}
-      - run:
+      - run: |
           mkdir -p ~/.cache/emacs
           make

@@ -2,7 +2,7 @@
 #+title: Emacs の設定
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2026-02-10 14:39:38
+#+date: 2026-02-10 15:02:47
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -141,7 +141,7 @@ distclean: clean
   #+begin_src emacs-lisp :tangle (when (boundp 'early-init-file) "early-init.el")
 ;; -*- lexical-binding: t -*-
 #+end_src
-* TODO ディレクトリ構成の修正 [0/2]
+* TODO ディレクトリ構成の修正 [0/3]
   :PROPERTIES:
   :CUSTOM_ID: org60bad8a3
   :END:
@@ -164,12 +164,12 @@ distclean: clean
     - =early-init.el= で, これ↑ 使えるかな?
   - [ ] [[https://github.com/emacscollective/no-littering][no-littering]] あたりで整理した方が良いかなぁ.
     - treesit のインストール先がハードコードされている. これを変えたい
-    - ~/.emacs.d/eln-cache を変更できないか? ← 少なくとも Emacs ≧ 29.1 ではできた.
-      #+begin_src emacs-lisp :tangle no
-  (startup-redirect-eln-cache
-   (expand-file-name "~/.local/share/emacs/eln-cache/"))
-      #+end_src
-      で OK.
+  - [ ] ~/.emacs.d/eln-cache を変更できないか? ← 少なくとも Emacs ≧ 29.1 ではできた.
+    #+begin_src emacs-lisp :tangle no
+(startup-redirect-eln-cache
+ (expand-file-name "~/.local/share/emacs/eln-cache/"))
+    #+end_src
+    で OK.
 
   上記ディレクトリ構成を設定ファイルで使用するために
   ディレクトリ配置を宣言しておきます.
@@ -2937,7 +2937,6 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
    #+begin_src emacs-lisp :tangle init.el
 (leaf magit
   :bind (("C-x g" . magit-status))
-  :commands git-commit-mode
   :ensure t
   :init
   (leaf transient
@@ -2962,6 +2961,7 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
    :END:
    #+begin_src emacs-lisp :tangle init.el
 (leaf git-commit-ts-mode
+  :disabled t
   :vc (:url "https://github.com/danilshvalov/git-commit-ts-mode")
   :mode "\\COMMIT_EDITMSG\\'"
   )
@@ -4481,8 +4481,8 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                                      ("\\.x?html?\\'" . "xdg-open %s")
                                      ("\\.pdf\\'" . "xdg-open %s"))
         ;; GTD: 状態の追加
-        org-todo-keywords          '((sequence "TODO(t)" "WAIT(w)" "SOMEDAY(s)" "|" "DONE(d)" "CANCEL(c)")
-                                     (sequence "新規" "進行中" "解決" "フィードバック" "貸し出し可能" "貸し出し中" "|" "終了" "却下" "廃棄")
+        org-todo-keywords          '((sequence "TODO(t)" "WAIT(w)" "SOMEDAY(s)" "|" "DONE(d)" "CANCEL(c)" "OBSOLETE(o)")
+                                     (sequence "新規" "進行中" "解決" "フィードバック" "|" "終了" "却下")
                                      (type "ARTICLE(a)" "|" "DONE(d)")
                                      (type "MEMO(m)" "|" "DONE(d)"))
         org-todo-keyword-faces     '(("TODO"    . org-todo)

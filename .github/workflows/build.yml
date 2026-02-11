@@ -7,12 +7,12 @@ jobs:
       fail-fast: false
       matrix:
         emacs_version:
-          - '27.1'    # o-o-stable
-          - '28.2'    # oldstable
-          - '30.1'    # stable
-          - '30.2'    # unstable
+          - '27.1'
+          - '28.2'
+          - '30.1'
+          - '30.2'
           - 'snapshot'
-          include:
+        include:
           - emacs_version:
               - '27.1'
               - '28.2'
@@ -25,11 +25,11 @@ jobs:
           version: ${{ matrix.emacs_version }}
       - name: Run tests
         if: matrix.allow_failure != true
-      - run: |
+        run: |
           mkdir -p ~/.cache/emacs
           make
       - name: Run tests (allow failure)
         if: matrix.allow_failure == true
-      - run: |
+        run: |
           mkdir -p ~/.cache/emacs
           make || true

@@ -1,11 +1,11 @@
 # -*- mode: makefile -*-
 # ----------------------------------------------------------------------------
 EMACS		?= emacs
-EMACS_VER	?= $(shell emacs --version | head -1 | cut -f 3 --d \ )
-EARLY_INIT	?= $(shell if [ `echo "$(EMACS_VER) >= 27" | bc` -eq 1 ] ; then echo yes; fi)
-NATIVE_COMP	?= $(shell if [ `echo "$(EMACS_VER) >= 28.1" | bc` -eq 1 ] ; then echo yes; fi)
-TREESIT	?= $(shell if [ `echo "$(EMACS_VER) >= 29" | bc` -eq 1 ]  ;then echo yes; fi)
-NATIVE_COMP_DIR ?= $(shell if [ `echo "$(EMACS_VER) >= 30" | bc` -eq 1 ] ; then echo yes; fi)
+EMACS_VER 	?= $(shell $(EMACS) --version | head -1 | cut -d ' ' -f 3)
+EARLY_INIT      ?= $(shell echo "$(EMACS_VER)" | awk '$$0 >= 27 {print "yes"}')
+NATIVE_COMP     ?= $(shell echo "$(EMACS_VER)" | awk '$$0 >= 28.1 {print "yes"}')
+TREESIT         ?= $(shell echo "$(EMACS_VER)" | awk '$$0 >= 29 {print "yes"}')
+NATIVE_COMP_DIR ?= $(shell echo "$(EMACS_VER)" | awk '$$0 >= 30 {print "yes"}')
 EL		=
 
 # ----------------------------------------------------------------------------

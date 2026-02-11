@@ -2,7 +2,7 @@
 #+title: Emacs の設定
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2026-02-11 05:33:04
+#+date: 2026-02-11 14:21:42
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -44,14 +44,18 @@
    本ファイル(=README.org=) から,
    Makefile 内の以下のスクリプトで =~/init.el= を生成し, byte-compile します.
    #+begin_src makefile-gmake :tangle no
+
+Tested-by: Youhei SASAKI <uwabami@gfd-dennou.org>
+Tested-by: Youhei SASAKI <uwabami@gfd-dennou.org>
+
 # -*- mode: makefile -*-
 # ----------------------------------------------------------------------------
 EMACS		?= emacs
-EMACS_VER	?= $(shell emacs --version | head -1 | cut -f 3 --d \ )
-EARLY_INIT	?= $(shell if [ `echo "$(EMACS_VER) >= 27" | bc` -eq 1 ] ; then echo yes; fi)
-NATIVE_COMP	?= $(shell if [ `echo "$(EMACS_VER) >= 28.1" | bc` -eq 1 ] ; then echo yes; fi)
-TREESIT	?= $(shell if [ `echo "$(EMACS_VER) >= 29" | bc` -eq 1 ]  ;then echo yes; fi)
-NATIVE_COMP_DIR ?= $(shell if [ `echo "$(EMACS_VER) >= 30" | bc` -eq 1 ] ; then echo yes; fi)
+EMACS_VER 	?= $(shell $(EMACS) --version | head -1 | cut -d ' ' -f 3)
+EARLY_INIT      ?= $(shell echo "$(EMACS_VER)" | awk '$$0 >= 27 {print "yes"}')
+NATIVE_COMP     ?= $(shell echo "$(EMACS_VER)" | awk '$$0 >= 28.1 {print "yes"}')
+TREESIT         ?= $(shell echo "$(EMACS_VER)" | awk '$$0 >= 29 {print "yes"}')
+NATIVE_COMP_DIR ?= $(shell echo "$(EMACS_VER)" | awk '$$0 >= 30 {print "yes"}')
 EL		=
 
 # ----------------------------------------------------------------------------
@@ -1208,17 +1212,31 @@ Emacs.reverseVideo: true
    :END:
    #+begin_src emacs-lisp :tangle init.el
 (leaf saveplace
+  :tag "builtin"
   :config
   (setq save-place-file (expand-file-name "emacs-places"  my:d:tmp)
         save-place-limit nil
         save-place-ignore-files-regexp
-        "\\(\\(?:COMMIT_EDITMSG\\|hg-editor-[[:alnum:]]+\\.txt\\|svn-commit\\.tmp\\|bzr_log\\.[[:alnum:]]+\\)$\\)\\|\\(\\`/[^/:]+:[^/:]*:\\)"
+        (concat
+         ;; TRAMP
+         "\\`/[^/:]+:[^/:]*:"
+         "\\|" ; OR
+         ;; システムディレクトリ
+         "^/tmp/\\|^/var/folders/\\|^/private/"
+         "\\|" ; OR
+         ;; VCS 操作の中間ファイル
+         "\\(?:COMMIT_EDITMSG\\|MERGE_MSG\\|git-rebase-todo\\|hg-editor-[[:alnum:]]+\\.txt\\|svn-commit\\.tmp\\|bzr_log\\.[[:alnum:]]+\\)$"
+         "\\|" ; OR
+         ;; 覚えなくて良いファイルの拡張子
+         "\\(?:.*\\.gpg\\|.*\\.plist\\)$"
+         )
         )
   :hook
   (emacs-startup-hook . save-place-mode)
   )
    #+end_src
    - [ ] org-mode で fold されている場所に対して利用できるのか?
+   - [ ] 秘匿すべきファイルは追加した方が良いな.
 ** =uniquify= ファイル位置の表示項目を増やす
    :PROPERTIES:
    :CUSTOM_ID: org3b23e2db
@@ -2009,7 +2027,7 @@ Emacs*useXIM: false
 ;;   `((vertico-current
 ;;      . '((t (:inherit hl-line :underline t )))))
   :init
-  (setq vertico-count 15
+  (setq vertico-count 10
         vertico-cycle t
         vertico-resize nil
         vertico-preselect 'prompt
@@ -2035,6 +2053,7 @@ Emacs*useXIM: false
          ("M-g o"   . consult-outline)
          ;; ("C-f"     . consult-line) 候補選択が要調整
          )
+  ;; (global-set-key [remap goto-line] 'consult-goto-line)
   :init
   (setq consult-narrow-key          "<"
         consult-async-refresh-delay 0.2
@@ -2083,20 +2102,44 @@ Emacs*useXIM: false
    :PROPERTIES:
    :CUSTOM_ID: orgc12df551
    :END:
-   便利ではある。
-
-   個人的には =flx-ido= の挙動が好みだったんだけれど、
-   いまいちちゃんと再現できない, 様な.
+   便利ではあるのだろうけれど,
+   いまいちまだちゃんと自分好みにできていない.
    #+begin_src emacs-lisp :tangle init.el
 (leaf orderless
   :ensure t
   :init
+  ;; -------------------------------------------------------------------------
+;;;###autoload
+  (defun my:orderless-migemo (component)
+    "orderless で migemo の補完候補を使う"
+    (eval-when-compile (require 'migemo nil 'noerror))
+    (let ((pattern (migemo-get-pattern component)))
+      (condition-case nil
+          (progn (string-match-p pattern "") pattern)
+        (invalid-regexp nil))))
+  :config
+  (with-eval-after-load 'orderless
+    (orderless-define-completion-style orderless+migemo
+      (orderless-matching-styles
+       '(orderless-literal
+         orderless-regexp
+         orderless-initialism
+         my:orderless-migemo))))
   (setq completion-styles '(orderless basic)
-        orderless-matching-styles '(orderless-prefixes
-                                    orderless-flex
+        orderless-matching-styles '(orderless-flex
+                                    orderless-literal
                                     orderless-regexp
                                     orderless-initialism
-                                    orderless-literal)
+                                    )
+        completion-category-overrides
+        '((file (styles orderless+migemo partial-completion))
+          (buffer (styles orderless+migemo))
+          (unicode-name (styles orderless+migemo))
+          (kill-ring (styles orderless+migemo))
+          ;; consult with migemo
+          (consult-location (styles orderless+migemo)) ; consult-line
+          (consult-multi (styles orderless+migemo))    ; consult-buffer
+          )
         )
   )
    #+end_src
@@ -2141,27 +2184,80 @@ Emacs*useXIM: false
 (leaf corfu
   :ensure t
   :init
-  (leaf nerd-icons-corfu :ensure t)
   ;; -------------------------------------------------------------------------
-  :bind
-  (:corfu-map
-   ("TAB"       . corfu-next)
-   ("<tab>"     . corfu-next)
-   ("S-TAB"     . corfu-previous)
-   ("<backtab>" . corfu-previous)
-   ("C-j"       . corfu-next)
-   ("C-n"       . corfu-next)
-   ("C-p"       . corfu-previous)
-   ("C-k"       . corfu-previous)
-   ("C-g"       . corfu-quit)
-   )
-  :hook (emacs-startup-hook . (global-corfu-mode)
-                            ;; (lambda ()
-                            ;;   (corfu-terminal-mode +1)
-                            ;;   (global-corfu-mode))
+  (leaf corfu-terminal
+    :ensure t
+    :config
+    (setq corfu-terminal-disable-on-gui nil)
+    )
+  ;; -------------------------------------------------------------------------
+  (leaf kind-icon
+    :ensure t
+    :after corfu-terminal
+    :init
+    (setq kind-icon-default-face 'corfu-default
+          kind-icon-use-icons    nil
+          kind-icon-mapping
+          `(
+            (array          ,(nerd-icons-codicon "nf-cod-symbol_array")       :face font-lock-type-face)
+            (boolean        ,(nerd-icons-codicon "nf-cod-symbol_boolean")     :face font-lock-builtin-face)
+            (class          ,(nerd-icons-codicon "nf-cod-symbol_class")       :face font-lock-type-face)
+            (color          ,(nerd-icons-codicon "nf-cod-symbol_color")       :face success)
+            (command        ,(nerd-icons-codicon "nf-cod-terminal")           :face default)
+            (constant       ,(nerd-icons-codicon "nf-cod-symbol_constant")    :face font-lock-constant-face)
+            (constructor    ,(nerd-icons-codicon "nf-cod-triangle_right")     :face font-lock-function-name-face)
+            (enummember     ,(nerd-icons-codicon "nf-cod-symbol_enum_member") :face font-lock-builtin-face)
+            (enum-member    ,(nerd-icons-codicon "nf-cod-symbol_enum_member") :face font-lock-builtin-face)
+            (enum           ,(nerd-icons-codicon "nf-cod-symbol_enum")        :face font-lock-builtin-face)
+            (event          ,(nerd-icons-codicon "nf-cod-symbol_event")       :face font-lock-warning-face)
+            (field          ,(nerd-icons-codicon "nf-cod-symbol_field")       :face font-lock-variable-name-face)
+            (file           ,(nerd-icons-codicon "nf-cod-symbol_file")        :face font-lock-string-face)
+            (folder         ,(nerd-icons-codicon "nf-cod-folder")             :face font-lock-doc-face)
+            (interface      ,(nerd-icons-codicon "nf-cod-symbol_interface")   :face font-lock-type-face)
+            (keyword        ,(nerd-icons-codicon "nf-cod-symbol_keyword")     :face font-lock-keyword-face)
+            (macro          ,(nerd-icons-codicon "nf-cod-symbol_misc")        :face font-lock-keyword-face)
+            (magic          ,(nerd-icons-codicon "nf-cod-wand")               :face font-lock-builtin-face)
+            (method         ,(nerd-icons-codicon "nf-cod-symbol_method")      :face font-lock-function-name-face)
+            (function       ,(nerd-icons-codicon "nf-cod-symbol_method")      :face font-lock-function-name-face)
+            (module         ,(nerd-icons-codicon "nf-cod-file_submodule")     :face font-lock-preprocessor-face)
+            (numeric        ,(nerd-icons-codicon "nf-cod-symbol_numeric")     :face font-lock-builtin-face)
+            (operator       ,(nerd-icons-codicon "nf-cod-symbol_operator")    :face font-lock-comment-delimiter-face)
+            (param          ,(nerd-icons-codicon "nf-cod-symbol_parameter")   :face default)
+            (property       ,(nerd-icons-codicon "nf-cod-symbol_property")    :face font-lock-variable-name-face)
+            (reference      ,(nerd-icons-codicon "nf-cod-references")         :face font-lock-variable-name-face)
+            (snippet        ,(nerd-icons-codicon "nf-cod-symbol_snippet")     :face font-lock-string-face)
+            (string         ,(nerd-icons-codicon "nf-cod-symbol_string")      :face font-lock-string-face)
+            (struct         ,(nerd-icons-codicon "nf-cod-symbol_structure")   :face font-lock-variable-name-face)
+            (text           ,(nerd-icons-codicon "nf-cod-text_size")          :face font-lock-doc-face)
+            (typeparameter  ,(nerd-icons-codicon "nf-cod-list_unordered")     :face font-lock-type-face)
+            (type-parameter ,(nerd-icons-codicon "nf-cod-list_unordered")     :face font-lock-type-face)
+            (unit           ,(nerd-icons-codicon "nf-cod-symbol_ruler")       :face font-lock-constant-face)
+            (value          ,(nerd-icons-codicon "nf-cod-symbol_field")       :face font-lock-builtin-face)
+            (variable       ,(nerd-icons-codicon "nf-cod-symbol_variable")    :face font-lock-variable-name-face)
+            (t              ,(nerd-icons-codicon "nf-cod-code")               :face font-lock-warning-face))
+          )
+    :config
+    (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
+    )
+  ;; -------------------------------------------------------------------------
+  :bind (:corfu-map
+         ;; ("RET"       . nil)
+         ;; ("<return>"  . nil)
+         ;; ("TAB"       . corfu-next)
+         ;; ("<tab>"     . corfu-next)
+         ;; ("S-TAB"     . corfu-previous)
+         ;; ("<backtab>" . corfu-previous)
+         ;; ("C-j"       . corfu-next)
+         ;; ("C-n"       . corfu-next)
+         ;; ("C-p"       . corfu-previous)
+         ;; ("C-k"       . corfu-previous)
+         ("C-g"       . corfu-quit)
+         )
+  :hook (emacs-startup-hook . (lambda ()
+                                (corfu-terminal-mode +1)
+                                (global-corfu-mode))
                             )
   :config
-  (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter)
   (setq completion-cycle-threshold 4
         tab-always-indent          'complete
         corfu-cycle                t
@@ -2205,70 +2301,7 @@ Emacs*useXIM: false
 ;;                     my:corfu--setup:around)
 ;;            )
 ;; ---------------------------------------------------------------------------
-;;(leaf corfu-terminal
-;;  :disabled t
-;;  ;; :ensure t
-;;  :config
-;;  (setq corfu-terminal-disable-on-gui nil)
-;;  )
    #+end_src
-*** =kind-icon=: corfu で補完候補にアイコン表示
-    :PROPERTIES:
-    :CUSTOM_ID: org80404324
-    :END:
-    svg-lib でのアイコン表示ではなく nerd-icons を利用するように.
-
-    → =corfu-nerd-icons= を利用することにしたので, 使わなくなった.
-    #+begin_src emacs-lisp
-(leaf kind-icon
-  :disabled t
-  :ensure t
-  :after corfu-terminal
-  :init
-  (setq kind-icon-default-face 'corfu-default
-        kind-icon-use-icons    nil
-        kind-icon-mapping      `(
-                                 (array          ,(nerd-icons-codicon "nf-cod-symbol_array")       :face font-lock-type-face)
-                                 (boolean        ,(nerd-icons-codicon "nf-cod-symbol_boolean")     :face font-lock-builtin-face)
-                                 (class          ,(nerd-icons-codicon "nf-cod-symbol_class")       :face font-lock-type-face)
-                                 (color          ,(nerd-icons-codicon "nf-cod-symbol_color")       :face success)
-                                 (command        ,(nerd-icons-codicon "nf-cod-terminal")           :face default)
-                                 (constant       ,(nerd-icons-codicon "nf-cod-symbol_constant")    :face font-lock-constant-face)
-                                 (constructor    ,(nerd-icons-codicon "nf-cod-triangle_right")     :face font-lock-function-name-face)
-                                 (enummember     ,(nerd-icons-codicon "nf-cod-symbol_enum_member") :face font-lock-builtin-face)
-                                 (enum-member    ,(nerd-icons-codicon "nf-cod-symbol_enum_member") :face font-lock-builtin-face)
-                                 (enum           ,(nerd-icons-codicon "nf-cod-symbol_enum")        :face font-lock-builtin-face)
-                                 (event          ,(nerd-icons-codicon "nf-cod-symbol_event")       :face font-lock-warning-face)
-                                 (field          ,(nerd-icons-codicon "nf-cod-symbol_field")       :face font-lock-variable-name-face)
-                                 (file           ,(nerd-icons-codicon "nf-cod-symbol_file")        :face font-lock-string-face)
-                                 (folder         ,(nerd-icons-codicon "nf-cod-folder")             :face font-lock-doc-face)
-                                 (interface      ,(nerd-icons-codicon "nf-cod-symbol_interface")   :face font-lock-type-face)
-                                 (keyword        ,(nerd-icons-codicon "nf-cod-symbol_keyword")     :face font-lock-keyword-face)
-                                 (macro          ,(nerd-icons-codicon "nf-cod-symbol_misc")        :face font-lock-keyword-face)
-                                 (magic          ,(nerd-icons-codicon "nf-cod-wand")               :face font-lock-builtin-face)
-                                 (method         ,(nerd-icons-codicon "nf-cod-symbol_method")      :face font-lock-function-name-face)
-                                 (function       ,(nerd-icons-codicon "nf-cod-symbol_method")      :face font-lock-function-name-face)
-                                 (module         ,(nerd-icons-codicon "nf-cod-file_submodule")     :face font-lock-preprocessor-face)
-                                 (numeric        ,(nerd-icons-codicon "nf-cod-symbol_numeric")     :face font-lock-builtin-face)
-                                 (operator       ,(nerd-icons-codicon "nf-cod-symbol_operator")    :face font-lock-comment-delimiter-face)
-                                 (param          ,(nerd-icons-codicon "nf-cod-symbol_parameter")   :face default)
-                                 (property       ,(nerd-icons-codicon "nf-cod-symbol_property")    :face font-lock-variable-name-face)
-                                 (reference      ,(nerd-icons-codicon "nf-cod-references")         :face font-lock-variable-name-face)
-                                 (snippet        ,(nerd-icons-codicon "nf-cod-symbol_snippet")     :face font-lock-string-face)
-                                 (string         ,(nerd-icons-codicon "nf-cod-symbol_string")      :face font-lock-string-face)
-                                 (struct         ,(nerd-icons-codicon "nf-cod-symbol_structure")   :face font-lock-variable-name-face)
-                                 (text           ,(nerd-icons-codicon "nf-cod-text_size")          :face font-lock-doc-face)
-                                 (typeparameter  ,(nerd-icons-codicon "nf-cod-list_unordered")     :face font-lock-type-face)
-                                 (type-parameter ,(nerd-icons-codicon "nf-cod-list_unordered")     :face font-lock-type-face)
-                                 (unit           ,(nerd-icons-codicon "nf-cod-symbol_ruler")       :face font-lock-constant-face)
-                                 (value          ,(nerd-icons-codicon "nf-cod-symbol_field")       :face font-lock-builtin-face)
-                                 (variable       ,(nerd-icons-codicon "nf-cod-symbol_variable")    :face font-lock-variable-name-face)
-                                 (t              ,(nerd-icons-codicon "nf-cod-code")               :face font-lock-warning-face))
-        )
-  :config
-  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
-  )
-    #+end_src
 ** =cape=: 補完 backend
    :PROPERTIES:
    :CUSTOM_ID: org3b1ea0b6
@@ -2975,7 +3008,7 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
      - できれば =--full-path= じゃない表示にしたい(=my:shorten-file-path= を噛ませたい).
    - [ ] 何故か↑の =project-list-file= が効かずに =~/.emacs.d/project= が生成される事が.
      - これはなんだろうか?
-** =magit=: Emacs の Git Frontend
+** TODO =magit=: Emacs の Git Frontend [0/0]
    :PROPERTIES:
    :CUSTOM_ID: org59371622
    :END:
@@ -2983,6 +3016,7 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
    結局の所 CUI でコマンド叩く事も多いけれど, これはこれで重宝している．
    #+begin_src emacs-lisp :tangle init.el
 (leaf magit
+  :disabled t
   :bind (("C-x g" . magit-status))
   :ensure t
   :init
@@ -3002,13 +3036,14 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
         )
   )
    #+end_src
+   - [ ] =git-commit-mode= かな(?) を利用すると, その後で全てのキーバインドがグッチャグッチャになる様な? 一旦利用は保留.
+
 ** =git-commit-ts-mode=
    :PROPERTIES:
    :CUSTOM_ID: orgb6921ead
    :END:
    #+begin_src emacs-lisp :tangle init.el
 (leaf git-commit-ts-mode
-  :disabled t
   :vc (:url "https://github.com/danilshvalov/git-commit-ts-mode")
   :mode "\\COMMIT_EDITMSG\\'"
   )
@@ -3149,7 +3184,7 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
 
    - [ ] autoload を使う様に改善すること.
 
-   #+begin_src emacs-lisp :tangle init.el
+   #+begin_src emacs-lisp :tangle (if (file-exists-p "/etc/emacs/site-start.d/65wl-beta.el") "init.el" "no")
 (leaf rail
   ;; :vc (:url "https://github.com/uwabami/rail")
   :init
@@ -3164,7 +3199,7 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
    :END:
    Emacs 本体での設定は以下の通り. Wanderlust 自体の設定は別ファイルで行なわれる．
    ここでは =wl-init-file= を指定することで, 設定ファイルを明示している．
-   #+begin_src emacs-lisp :tangle init.el
+   #+begin_src emacs-lisp :tangle (if (file-exists-p "/etc/emacs/site-start.d/65wl-beta.el") "init.el" "no")
 (leaf wl
   :if (file-exists-p "/etc/emacs/site-start.d/65wl-beta.el")
   :commands (wl
@@ -4321,7 +4356,7 @@ fi
    :END:
    ついでに =mailto= のリンクを emacsclient で扱うために,
    以下の関数を定義しておく
-   #+begin_src emacs-lisp :tangle init.el
+   #+begin_src emacs-lisp :tangle (if (file-exists-p "/etc/emacs/site-start.d/65wl-beta.el") "init.el" "no")
 ;;;###autoload
 (defun my:mailto-compose-mail (mailto-url)
   "Custom: handling mailto: link"
@@ -4338,11 +4373,6 @@ fi
    Desktop の設定では
    #+begin_src sh :tangle no
 #!/bin/sh
-
-Tested-by: Youhei SASAKI <uwabami@gfd-dennou.org>
-Tested-by: Youhei SASAKI <uwabami@gfd-dennou.org>
-Tested-by: Youhei SASAKI <uwabami@gfd-dennou.org>
-
 # emacs-mailto-handler
 
 mailto=$1
@@ -5531,9 +5561,6 @@ pdflang={%l}}
   #+begin_src emacs-lisp :tangle init.el
 (leaf fill-column-indicator
   :ensure t
-  :hook
-  ((git-commit-mode . fci-mode)
-   )
   )
 ;;;
 ;; (leaf hideshow

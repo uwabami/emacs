@@ -2,7 +2,7 @@
 #+title: Emacs の設定
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2026-02-11 14:21:42
+#+date: 2026-02-11 14:43:40
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -2051,18 +2051,33 @@ Emacs*useXIM: false
          ("C-x C-b" . consult-buffer)
          ("C-x b"   . consult-buffer)
          ("M-g o"   . consult-outline)
+         (:vertico-map
+          ("C-v"    . consult-toggle-preview ))
          ;; ("C-f"     . consult-line) 候補選択が要調整
          )
+  ;;
   ;; (global-set-key [remap goto-line] 'consult-goto-line)
+  ;; -------------------------------------------------------------------------
   :init
   (setq consult-narrow-key          "<"
         consult-async-refresh-delay 0.2
         ;; consult-preview-key         nil
         ;; 増やさないと preview 時に theme がロードされない模様.
         ;; とりあえず default の 10 倍にしている. 1 MB かな?
-        ;; consult-preview-raw-size 1024000
+        consult-preview-raw-size 1024000
         )
   :config
+  ;; -------------------------------------------------------------------------
+  (defvar-local consult-toggle-preview-orig nil)
+  (defun consult-toggle-preview ()
+    "Command to enable/disable preview."
+    (interactive)
+    (if consult-toggle-preview-orig
+        (setq consult--preview-function consult-toggle-preview-orig
+              consult-toggle-preview-orig nil)
+      (setq consult-toggle-preview-orig consult--preview-function
+            consult--preview-function #'ignore)))
+  ;; -------------------------------------------------------------------------
   (defun my:consult-recent-file ()
     "Find recent using `completing-read' with shorten filename"
     (interactive)

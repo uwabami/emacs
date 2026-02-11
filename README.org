@@ -2107,40 +2107,40 @@ Emacs*useXIM: false
    #+begin_src emacs-lisp :tangle init.el
 (leaf orderless
   :ensure t
-  :init
-  ;; -------------------------------------------------------------------------
-;;;###autoload
-  (defun my:orderless-migemo (component)
-    "orderless で migemo の補完候補を使う"
-    (eval-when-compile (require 'migemo nil 'noerror))
-    (let ((pattern (migemo-get-pattern component)))
-      (condition-case nil
-          (progn (string-match-p pattern "") pattern)
-        (invalid-regexp nil))))
-  :config
-  (with-eval-after-load 'orderless
-    (orderless-define-completion-style orderless+migemo
-      (orderless-matching-styles
-       '(orderless-literal
-         orderless-regexp
-         orderless-initialism
-         my:orderless-migemo))))
-  (setq completion-styles '(orderless basic)
-        orderless-matching-styles '(orderless-flex
-                                    orderless-literal
-                                    orderless-regexp
-                                    orderless-initialism
-                                    )
-        completion-category-overrides
-        '((file (styles orderless+migemo partial-completion))
-          (buffer (styles orderless+migemo))
-          (unicode-name (styles orderless+migemo))
-          (kill-ring (styles orderless+migemo))
-          ;; consult with migemo
-          (consult-location (styles orderless+migemo)) ; consult-line
-          (consult-multi (styles orderless+migemo))    ; consult-buffer
-          )
-        )
+;;   :init
+;;   ;; -------------------------------------------------------------------------
+;; ;;;###autoload
+;;   (defun my:orderless-migemo (component)
+;;     "orderless で migemo の補完候補を使う"
+;;     (eval-when-compile (require 'migemo nil 'noerror))
+;;     (let ((pattern (migemo-get-pattern component)))
+;;       (condition-case nil
+;;           (progn (string-match-p pattern "") pattern)
+;;         (invalid-regexp nil))))
+;;   :config
+;;   (with-eval-after-load 'orderless
+;;     (orderless-define-completion-style orderless+migemo
+;;       (orderless-matching-styles
+;;        '(orderless-literal
+;;          orderless-regexp
+;;          orderless-initialism
+;;          my:orderless-migemo))))
+;;   (setq completion-styles '(orderless basic)
+;;         orderless-matching-styles '(orderless-flex
+;;                                     orderless-literal
+;;                                     orderless-regexp
+;;                                     orderless-initialism
+;;                                     )
+;;         completion-category-overrides
+;;         '((file (styles orderless+migemo partial-completion))
+;;           (buffer (styles orderless+migemo))
+;;           (unicode-name (styles orderless+migemo))
+;;           (kill-ring (styles orderless+migemo))
+;;           ;; consult with migemo
+;;           (consult-location (styles orderless+migemo)) ; consult-line
+;;           (consult-multi (styles orderless+migemo))    ; consult-buffer
+;;           )
+;;         )
   )
    #+end_src
 ** =marginalia=: リッチな注釈(Enable richer annotations)

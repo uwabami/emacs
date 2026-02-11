@@ -8,21 +8,17 @@ jobs:
       matrix:
         emacs_version:
           - '27.1'
+          - '28.2'
+          - '30.1'
           - '30.2'
           - 'snapshot'
         include:
-          - emacs_version: ['27.1', 'snapshot']
+          - emacs_version: '27.1'
             allow_failure: true
-
-        # emacs_version:
-        #   - '27.1'
-        #   - '28.2'
-        #   - '30.1'
-        #   - '30.2'
-        #   - 'snapshot'
-        # include:
-        #   - emacs_version: ['27.1', '28.2', 'snapshot']
-        #     allow_failure: true
+          - emacs_version: '28.2'
+            allow_failure: true
+          - emacs_version: 'snapshot'
+            allow_failure: true
     steps:
       - uses: actions/checkout@v1
       - uses: purcell/setup-emacs@master

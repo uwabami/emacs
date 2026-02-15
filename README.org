@@ -2,7 +2,7 @@
 #+title: Emacs の設定
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2026-02-16 00:13:27
+#+date: 2026-02-16 07:56:35
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -194,38 +194,75 @@ distclean: clean
 ;;       (add-to-list 'load-path default-directory)
 ;;       (normal-top-level-add-subdirs-to-load-path))))
   #+end_src
-* Byte-Compile 時の Common Lisp の読み込み
+* 後方互換性のためのアレコレ.
   :PROPERTIES:
-  :CUSTOM_ID: org87c9febb
+  :CUSTOM_ID: org26bc8cf3
   :END:
-  幾つかの関数で =Common-Lisp= 的挙動が期待されているので,
-  =cl-lib= を読み込んでおきます．
-  #+begin_src emacs-lisp :tangle init.el
+** Byte-Compile 時の Common Lisp の読み込み
+   :PROPERTIES:
+   :CUSTOM_ID: org87c9febb
+   :END:
+   幾つかの関数で =Common-Lisp= 的挙動が期待されているので,
+   =cl-lib= を読み込んでおきます．
+   #+begin_src emacs-lisp :tangle init.el
 (eval-when-compile
   (require 'cl-lib nil t))
-  #+end_src
-  また, Emacs ≧ 27 は cl が読み込まれていると
-  `Package cl is deprecated' が表示されるので, これを止めておきます.
-  他にも幾つかの警告を無効化しておきます.
-  特に, 意図的に =setq= を優先して使っているので,
-  debug 時以外は =free-vars= と =unresolved= も無効化しておかないと騒々しいですよね.
-  #+begin_src emacs-lisp :tangle init.el
+   #+end_src
+   また, Emacs ≧ 27 は cl が読み込まれていると
+   `Package cl is deprecated' が表示されるので, これを止めておきます.
+   他にも幾つかの警告を無効化しておきます.
+   特に, 意図的に =setq= を優先して使っているので,
+   debug 時以外は =free-vars= と =unresolved= も無効化しておかないと騒々しいですよね.
+   #+begin_src emacs-lisp :tangle init.el
 (eval-and-compile
   (setq byte-compile-warnings '(not cl-functions free-vars docstrings unresolved))
   )
-  #+end_src
-  native compile: 気になった時に動かしています.
-  Makefile から叩いて処理できると良いんですけどね…
-  #+begin_src emacs-lisp :tangle init.el
+   #+end_src
+** =setopt= の導入
+   :PROPERTIES:
+   :CUSTOM_ID: orgc9962cbc
+   :END:
+   Emacs ≧ 29.1 から使える =setopt= を
+   古い Emacs のために移植しておくことに.
+   #+begin_src emacs-lisp :tangle (if (version<= emacs-version "29.1") "init.el" "no") ;>
+;; ---------------------------------------------------------------------------
+;; From Emacs 30.1
+;; ---------------------------------------------------------------------------
 ;;;###autoload
-(defun my:native-compile-async-all ()
-  (interactive)
-  (setq-local native-comp-async-jobs-number 8)
-  (native-compile-async "~/.emacs.d/init.el")
-  (native-compile-async "~/.emacs.d/early-init.el")
-  ;; (native-compile-async "~/.emacs.d/share/elisp/" 'recursively)
-  (native-compile-async "~/.emacs.d/elpa" 'recursively))
-  #+end_src
+(defmacro setopt (&rest pairs)
+  "Set VARIABLE/VALUE pairs, and return the final VALUE.
+This is like `setq', but is meant for user options instead of
+plain variables.  This means that `setopt' will execute any
+`custom-set' form associated with VARIABLE.
+
+Note that `setopt' will emit a warning if the type of a VALUE
+does not match the type of the corresponding VARIABLE as
+declared by `defcustom'.  (VARIABLE will be assigned the value
+even if it doesn't match the type.)
+
+\(fn [VARIABLE VALUE]...)"
+  (declare (debug setq))
+  (unless (zerop (mod (length pairs) 2))
+    (error "PAIRS must have an even number of variable/value members"))
+  (let ((expr nil))
+    (while pairs
+      (unless (symbolp (car pairs))
+        (error "Attempting to set a non-symbol: %s" (car pairs)))
+      (push `(setopt--set ',(car pairs) ,(cadr pairs))
+            expr)
+      (setq pairs (cddr pairs)))
+    (macroexp-progn (nreverse expr))))
+
+;;;###autoload
+(defun setopt--set (variable value)
+  (custom-load-symbol variable)
+  ;; Check that the type is correct.
+  (when-let ((type (get variable 'custom-type)))
+    (unless (widget-apply (widget-convert type) :match value)
+      (warn "Value `%S' does not match type %s" value type)))
+  (put variable 'custom-check-value (list value))
+  (funcall (or (get variable 'custom-set) #'set-default) variable value))
+   #+end_src
 * =early-init.el=: 起動の高速化
   :PROPERTIES:
   :CUSTOM_ID: orgae182d4d
@@ -712,6 +749,22 @@ C-u を付けて実行すると, 埋める文字を指定可能(例: = や * な
 ;; 何か意味のあるキーが良いのだけれどなぁ
 (global-set-key (kbd "C-c l") #'my:fill-line-with-char)
    #+end_src
+** TODO native compile を手動で [0/1]
+   :PROPERTIES:
+   :CUSTOM_ID: org2af0ed6d
+   :END:
+    native compile: 気になった時に動かしています.
+    #+begin_src emacs-lisp :tangle init.el
+;;;###autoload
+(defun my:native-compile-async-all ()
+  (interactive)
+  (setq-local native-comp-async-jobs-number 8)
+  (native-compile-async "~/.emacs.d/init.el")
+  (native-compile-async "~/.emacs.d/early-init.el")
+  ;; (native-compile-async "~/.emacs.d/share/elisp/" 'recursively)
+  (native-compile-async "~/.emacs.d/elpa" 'recursively))
+    #+end_src
+    - [ ] batch で Makefile から叩けないかなぁ.
 * =gcmh=: 賢い garbage-collection
   :PROPERTIES:
   :ID:       cca3e8df-79f9-4c60-a803-07ff641b0ef7
@@ -2151,7 +2204,7 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
     自分でエイヤっと作ったけど
     [[https://github.com/tomoya/consult-ghq][tomoya/consult-ghq: Ghq interface using consult]]
     の方が良さ気?
-** =corfu=: on the fly completions
+** TODO =corfu=: on the fly completions [0/1]
    :PROPERTIES:
    :CUSTOM_ID: org37d21658
    :END:
@@ -2165,9 +2218,12 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
    2. その状態で明示的にC-M-iを押すと候補の選択が出来るようになる
       (同時に最初の候補が選択されるもしくは唯一ある候補が入力される)
    という動作はまさに理想的なので, そう振る舞う様に.
+   - [ ] 最近そうなってない気がする.
    #+begin_src emacs-lisp :tangle init.el
 (leaf corfu
   :ensure t
+  :preface
+  ;; -------------------------------------------------------------------------
   :init
   ;; -------------------------------------------------------------------------
   (leaf corfu-terminal
@@ -2228,8 +2284,8 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
     (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
     )
   ;; -------------------------------------------------------------------------
-  :bind (:corfu-map
-         ("M-SPC" . corfu-insert-separator))
+  ;; :bind (:corfu-map
+  ;;        ("M-SPC" . corfu-insert-separator))
   ;; -------------------------------------------------------------------------
   :hook (emacs-startup-hook . (lambda ()
                                 (corfu-terminal-mode +1)
@@ -2246,8 +2302,49 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
         corfu-auto                 t
         tab-always-indent          t  ;; 'complete だと TAB で補完暴発が...
         completion-cycle-threshold 4
+        curfu-preview-current      nil
         corfu-preselect            'prompt
         )
+  )
+   #+end_src
+** =cape=: Completion At Point Extensions … 補完 backend
+   :PROPERTIES:
+   :CUSTOM_ID: org3b1ea0b6
+   :END:
+   cape は capf を拡張するパッケージ
+   - =capf= = completion-at-point-function
+   - =cape= = completion-at-point-extension
+   [[https://github.com/minad/cape/blob/main/README.org][README]] によれば
+   - =cape-abbrev= : Complete abbreviation (add-global-abbrev, add-mode-abbrev).
+   - =cape-dabbrev= : Complete word from current buffers. See also dabbrev-capf.
+   - =cape-dict= : Complete word from dictionary file.
+   - =cape-elisp-block= : Complete Elisp in Org or Markdown code block.
+   - =cape-elisp-symbol= : Complete Elisp symbol.
+   - =cape-emoji= : Complete Emoji.
+   - =cape-file= : Complete file name.
+   - =cape-history= : Complete from Eshell, Comint or minibuffer history.
+   - =cape-keyword= : Complete programming language keyword.
+   - =cape-line= : Complete entire line from current buffer.
+   - =cape-rfc1345= : Complete Unicode char using RFC 1345 mnemonics.
+   - =cape-sgml= : Complete Unicode char from SGML entity, e.g., &alpha.
+   - =cape-tex= : Complete Unicode char from TeX command, e.g. \hbar.
+   などが使えるとのこと.
+
+   #+begin_src emacs-lisp :tangle init.el
+(leaf cape
+  :ensure t
+  :init
+  (add-hook 'completion-at-point-functions #'cape-dabbrev)
+  (add-hook 'completion-at-point-functions #'cape-file)
+  (add-hook 'completion-at-point-functions #'cape-keyword)
+  (add-hook 'completion-at-point-functions #'cape-elisp-block)
+  (add-hook 'completion-at-point-functions #'cape-elisp-symbol)
+  ;; (setq cape-dabbrev-check-other-buffers nil)
+  ;; (add-to-list 'completion-at-point-functions 'cape-keyword)
+  ;; (add-to-list 'completion-at-point-functions 'cape-dabbrev)
+  ;; (add-to-list 'completion-at-point-functions 'cape-file)
+  ;; (add-to-list 'completion-at-point-functions 'cape-tex)
+  ;; (add-to-list 'completion-at-point-functions 'cape-emoji)
   )
    #+end_src
 ** =marginalia=: リッチな注釈(Enable richer annotations)
@@ -2276,23 +2373,6 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
   ((emacs-startup-hook . marginalia-mode)
    (marginalia-mode-hook . nerd-icons-completion-marginalia-setup)
    )
-  )
-   #+end_src
-** =cape=: 補完 backend
-   :PROPERTIES:
-   :CUSTOM_ID: org3b1ea0b6
-   :END:
-   #+begin_src emacs-lisp :tangle init.el
-(leaf cape
-  :disabled t
-  :ensure t
-  :config
-  (setq cape-dabbrev-check-other-buffers nil)
-  (add-to-list 'completion-at-point-functions 'cape-keyword)
-  (add-to-list 'completion-at-point-functions 'cape-dabbrev)
-  (add-to-list 'completion-at-point-functions 'cape-file)
-  (add-to-list 'completion-at-point-functions 'cape-tex)
-  (add-to-list 'completion-at-point-functions 'cape-emoji)
   )
    #+end_src
 * =chezmoi=: 設定ファイルの編集補助
@@ -2976,7 +3056,8 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
   :tag "builtin"
   :init
   (setq project-list-file (expand-file-name "projects" my:d:tmp)
-        project-switch-use-entire-map t)
+        project-switch-use-entire-map t
+        project-vc-extra-root-markers '(".dir-locals.el" "package.json" "Gemfile"))
   )
    #+end_src
    - [ ] ghq の list を追加できないかな?
@@ -5659,9 +5740,10 @@ pdflang={%l}}
    ということで [[https://protesilaos.com/emacs/modus-themes][Modus Themes | Protesilaos Stavrou]] を利用することにした.
 
    たた, 元々このテーマはアクセシビリティ対応のテーマでもあるので,
-   配色がちょっと好みではない.
-   というわけで, 幾つかの配色の palettte を上書きして
-   デフォルトの font-lock を(好みに合わせて)入れ替えたり.
+   +配色がちょっと好みではない+
+   +というわけで, 幾つかの配色の palettte を上書きして+
+   デフォルトの font-lock を(好みに合わせて)入れ替えたり
+   (2026/02/16 色の上書きは止めた).
    #+begin_src emacs-lisp :tangle init.el
 (leaf modus-themes
   :ensure t

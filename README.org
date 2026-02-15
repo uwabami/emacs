@@ -2,7 +2,7 @@
 #+title: Emacs の設定
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2026-02-13 05:45:12
+#+date: 2026-02-16 00:13:27
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -297,7 +297,10 @@ distclean: clean
    本体でやっても良いけど, ここに持ってきても良いらしい.
    #+begin_src emacs-lisp :tangle (if (boundp 'early-init-file) "early-init.el" "init.el")
 (with-eval-after-load "package"
-  (setq package-archives '(("gnu"    . "https://elpa.gnu.org/packages/")
+  (setq ;; package-archive-priorities '(("gnu" . 10)
+        ;;                              ("melpa" . 5)
+        ;;                              ("nongnu" . 1))
+        package-archives '(("gnu"    . "https://elpa.gnu.org/packages/")
                            ("melpa"  . "https://melpa.org/packages/")
                            ("nongnu" . "https://elpa.nongnu.org/nongnu/")
                            )
@@ -490,13 +493,6 @@ distclean: clean
   :init
   (leaf blackout :ensure t)
   (leaf shut-up :ensure t)
-  (leaf el-get
-    :emacs< 29  ;; >
-    :ensure t
-    :init
-    (setq el-get-notify-type 'message
-          el-get-git-shallow-clone t)
-    )
   :config
   (leaf-keywords-init)
   )
@@ -1499,6 +1495,26 @@ exclude list."
   (setq vc-handled-backends '(Git))
   )
    #+end_src
+** キーバインドの設定
+   :PROPERTIES:
+   :CUSTOM_ID: org8aa6f45e
+   :END:
+   既に手癖になってしまっているアレコレ．
+   特に =[home]= と =[end]= は無いと途方に暮れます．
+   #+begin_src emacs-lisp :tangle init.el
+(leaf-keys (("C-h"     . backward-delete-char)
+            ("C-c M-a" . align-regexp)
+            ("C-c ;"   . comment-region)
+            ("C-c M-;" . uncomment-region)
+            ("C-/"     . undo)
+            ("C-c M-r" . replace-regexp)
+            ("C-c r"   . replace-string)
+            ("<home>"  . beginning-of-buffer)
+            ("<end>"   . end-of-buffer)
+            ("C-c M-l" . toggle-truncate-lines)
+            ("M-TAB"   . completion-at-point) ;; うーん...?
+            ))
+   #+end_src
 * 認証関連: =plstore=, =password-store= など
   :PROPERTIES:
   :CUSTOM_ID: org1a8b35da
@@ -1800,24 +1816,6 @@ Emacs*useXIM: false
   (setq interprogram-paste-function 'my:win32yank-paste)
   )
    #+end_src
-* キーバインドの設定
-  :PROPERTIES:
-  :CUSTOM_ID: org8aa6f45e
-  :END:
-  既に手癖になってしまっているアレコレ．
-  特に =[home]= と =[end]= は無いと途方に暮れます．
-  #+begin_src emacs-lisp :tangle init.el
-(leaf-keys (("C-h"     . backward-delete-char)
-            ("C-c M-a" . align-regexp)
-            ("C-c ;"   . comment-region)
-            ("C-c M-;" . uncomment-region)
-            ("C-/"     . undo)
-            ("C-c M-r" . replace-regexp)
-            ("C-c r"   . replace-string)
-            ("<home>"  . beginning-of-buffer)
-            ("<end>"   . end-of-buffer)
-            ("C-c M-l" . toggle-truncate-lines)))
-  #+end_src
 * =migemo=: インクリメンタル検索
   :PROPERTIES:
   :CUSTOM_ID: org5d9ade19
@@ -2153,34 +2151,6 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
     自分でエイヤっと作ったけど
     [[https://github.com/tomoya/consult-ghq][tomoya/consult-ghq: Ghq interface using consult]]
     の方が良さ気?
-** =marginalia=: リッチな注釈(Enable richer annotations)
-   :PROPERTIES:
-   :CUSTOM_ID: orge9265e4d
-   :END:
-   #+begin_src emacs-lisp :tangle init.el
-(leaf marginalia
-  :ensure t
-  :init
-  ;; 補完でも icon 表示
-  (leaf nerd-icons-completion
-   :ensure t
-   :hook
-   (emacs-startup-hook . nerd-icons-completion-mode)
-   )
-  :bind (("M-A" . marginalia-cycle)
-         (:minibuffer-local-map
-          ("M-A" . marginalia-cycle)
-          ))
-  :init
-  (setq marginalia-align         'right
-        marginalia-align-offset  -2 ;; icon 分引いておく
-        )
-  :hook
-  ((emacs-startup-hook . marginalia-mode)
-   (marginalia-mode-hook . nerd-icons-completion-marginalia-setup)
-   )
-  )
-   #+end_src
 ** =corfu=: on the fly completions
    :PROPERTIES:
    :CUSTOM_ID: org37d21658
@@ -2198,71 +2168,6 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
    #+begin_src emacs-lisp :tangle init.el
 (leaf corfu
   :ensure t
-  :preface
-  ;; -------------------------------------------------------------------------
-  (defvar-keymap my:corfu-auto-map
-    :doc "Keymap used when popup is shown automatically."
-    "C-g" #'corfu-quit)
-  (defvar my:corfu-in-auto-complete nil)
-  ;; -------------------------------------------------------------------------
-;;;###autoload
-  (defun my:corfu--auto-complete-deferred:around (oldfun &rest args)
-    ;; 自動補完時に呼び出される
-    (let ((my:corfu-in-auto-complete t))
-      ;; 元の関数を呼び出す. 補完候補があるなら setup が呼ばれる
-      (apply oldfun args)))
-  ;; ---------------------------------------------------------------------------
-;;;###autoload
-  (defun my:corfu--setup:around (oldfun &rest args)
-    (if my:corfu-in-auto-complete
-        ;; 自動補完の時
-        (progn
-          (setf (alist-get 'tab-line-format corfu--buffer-parameters) "   C-M-i:補完"
-                ;; 最初の候補を選ばない
-                corfu-preselect 'prompt)
-          (let (;; キー割り当てを極力無くす
-                (corfu-map my:corfu-auto-map))
-            (apply oldfun args)))
-      ;; 手動補完の時
-      (setf (alist-get 'tab-line-format corfu--buffer-parameters) nil
-            ;; 最初の候補を選ぶ
-            corfu-preselect 'first)
-      (apply oldfun args)))
-;;;###autoload
-  (defun my:corfu--make-frame:around (oldfun frame x y width height buffer)
-    (when (alist-get 'tab-line-format corfu--buffer-parameters)
-      (cl-incf height (window-tab-line-height (frame-root-window frame))))
-    (funcall oldfun frame x y width height buffer))
-  ;; ---------------------------------------------------------------------------
-  ;; corfu-で始まるかで動作が変わるところがある。
-  ;; - savex C-M-i RETと素早く押したときに、RETがcorfu-で始まるコマンドだと
-  ;;   updateが走り正常に動作するが、my-corfu-だとそうならない。
-;;;###autoload
-  (defun corfu-my:insert-RET ()
-    (interactive)
-    (corfu-insert)
-    (call-interactively 'newline)) ;; インタラクティブじゃないとインデントされなかったり
-  ;; ---------------------------------------------------------------------------
-;;;###autoload
-  (defun corfu-my:insert-self ()
-    (interactive)
-    (let ((ch last-command-event))
-      (when (characterp ch)
-        ;; (2024-03-03追記:その文字を含んだ候補があるなら補完を終了しないようにした)
-        (when (and (>= corfu--index 0)
-                   (not (seq-some (lambda (str) (seq-contains-p str ch))
-                                  corfu--candidates)))
-          (corfu-insert))
-        (insert-char ch))))
-;; ---------------------------------------------------------------------------
-  :advice ((:around corfu--auto-complete-deferred
-                    my:corfu--auto-complete-deferred:around)
-           (:around corfu--setup
-                    my:corfu--setup:around)
-           (:around corfu--make-frame
-                    my:corfu--make-frame:around)
-           )
-  ;; -------------------------------------------------------------------------
   :init
   ;; -------------------------------------------------------------------------
   (leaf corfu-terminal
@@ -2324,35 +2229,53 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
     )
   ;; -------------------------------------------------------------------------
   :bind (:corfu-map
-         ("RET"       . corfu-my:insert-RET)
-         (")"         . corfu-my:insert-RET)
-         ("}"         . corfu-my:insert-RET)
-         ("]"         . corfu-my:insert-RET)
-         ("M-TAB"     . corfu-complete)
-         ;; ("<return>"  . nil)
-         ;; ("TAB"       . corfu-next)
-         ;; ("<tab>"     . corfu-next)
-         ;; ("S-TAB"     . corfu-previous)
-         ;; ("<backtab>" . corfu-previous)
-         ;; ("C-j"       . corfu-next)
-         ;; ("C-n"       . corfu-next)
-         ;; ("C-p"       . corfu-previous)
-         ;; ("C-k"       . corfu-previous)
-         ("C-g"       . corfu-quit)
-         )
+         ("M-SPC" . corfu-insert-separator))
   ;; -------------------------------------------------------------------------
   :hook (emacs-startup-hook . (lambda ()
                                 (corfu-terminal-mode +1)
                                 (global-corfu-mode))
                             )
   ;; -------------------------------------------------------------------------
+  :custom (;; Emacs 30 and newer: Disable Ispell completion function.
+           ;; Try `cape-dict' as an alternative.
+           (text-mode-ispell-word-completion . nil)
+           )
+  ;; -------------------------------------------------------------------------
   :config
   (setq corfu-cycle                t
         corfu-auto                 t
-        tab-always-indent          'complete
+        tab-always-indent          t  ;; 'complete だと TAB で補完暴発が...
         completion-cycle-threshold 4
         corfu-preselect            'prompt
         )
+  )
+   #+end_src
+** =marginalia=: リッチな注釈(Enable richer annotations)
+   :PROPERTIES:
+   :CUSTOM_ID: orge9265e4d
+   :END:
+   #+begin_src emacs-lisp :tangle init.el
+(leaf marginalia
+  :ensure t
+  :init
+  ;; 補完でも icon 表示
+  (leaf nerd-icons-completion
+   :ensure t
+   :hook
+   (emacs-startup-hook . nerd-icons-completion-mode)
+   )
+  :bind (("M-A" . marginalia-cycle)
+         (:minibuffer-local-map
+          ("M-A" . marginalia-cycle)
+          ))
+  :init
+  (setq marginalia-align         'right
+        marginalia-align-offset  -2 ;; icon 分引いておく
+        )
+  :hook
+  ((emacs-startup-hook . marginalia-mode)
+   (marginalia-mode-hook . nerd-icons-completion-marginalia-setup)
+   )
   )
    #+end_src
 ** =cape=: 補完 backend
@@ -2947,7 +2870,6 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
    =eglot= と同時に利用されるので、一応設定しておく.
    #+begin_src emacs-lisp :tangle init.el
 (leaf flymake
-  :disabled t
   :ensure t
   :bind (:flymake-mode-map
          ("C-c C-p" . flymake-goto-prev-error)

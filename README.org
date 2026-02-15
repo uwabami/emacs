@@ -2029,6 +2029,7 @@ Emacs*useXIM: false
    より, =C-l= で一つ上の階層へ上がれる様にしたり.
    #+begin_src emacs-lisp :tangle init.el
 (leaf vertico
+  :emacs>= 29.1  ;; <
   :ensure t
   :preface
 ;;;###autoload
@@ -2092,6 +2093,7 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
    いまいちまだちゃんと自分好みにできていない.
    #+begin_src emacs-lisp :tangle init.el
 (leaf orderless
+  :emacs>= 29.1  ;; <
   :ensure t
   :config
   (setq completion-styles '(orderless basic)
@@ -2109,6 +2111,7 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
    =consult-recent-file= のカスタマイズのみ.
    #+begin_src emacs-lisp :tangle init.el
 (leaf consult
+  :emacs>= 29.1  ;; <
   :ensure t
   :bind (("C-x C-r" . my:consult-recent-file)
          ("C-x C-b" . consult-buffer)
@@ -2221,6 +2224,7 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
    - [ ] 最近そうなってない気がする.
    #+begin_src emacs-lisp :tangle init.el
 (leaf corfu
+  :emacs>= 29.1  ;; <
   :ensure t
   :preface
   ;; -------------------------------------------------------------------------
@@ -2332,6 +2336,7 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
 
    #+begin_src emacs-lisp :tangle init.el
 (leaf cape
+  :emacs>= 29.1  ;; <
   :ensure t
   :init
   (add-hook 'completion-at-point-functions #'cape-dabbrev)
@@ -2353,6 +2358,7 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
    :END:
    #+begin_src emacs-lisp :tangle init.el
 (leaf marginalia
+  :emacs>= 29.1  ;; <
   :ensure t
   :init
   ;; 補完でも icon 表示
@@ -5746,6 +5752,7 @@ pdflang={%l}}
    (2026/02/16 色の上書きは止めた).
    #+begin_src emacs-lisp :tangle init.el
 (leaf modus-themes
+  :emacs>= 28.1  ;; <
   :ensure t
   :bind ("<f5>" . modus-themes-toggle)
   ;; autoload が無いので発火点を作成しておく
@@ -5905,6 +5912,7 @@ pdflang={%l}}
   #+BEGIN_SRC emacs-lisp
 (leaf powerline
   :ensure t
+  :disabled t
   :defvar
   (skk-indicator-alist
    skk-hiragana-mode-string
@@ -6066,6 +6074,7 @@ pdflang={%l}}
   )
 (leaf rg
   :if (executable-find "rg")
+  :emacs>= 28.1 ;; <
   :ensure t
   )
 ;;

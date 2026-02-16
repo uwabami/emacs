@@ -2,7 +2,7 @@
 #+title: Emacs の設定
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2026-02-16 18:31:37
+#+date: 2026-02-16 20:54:48
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -244,8 +244,6 @@ distclean: clean
    起動時に結構 garbage-collect が走って遅くなるので,
    起動時には =most-positive-fixnum= にしておいて,
    起動後に =emacs-startup-hook= で default に戻すようにしてみた.
-
-   ついでに =idle-timer= で入力が無い時に GC を走らせることにする
 *** TODO 起動時の GC threshold の最大化 [/]
     :PROPERTIES:
     :CUSTOM_ID: org3977c5ee
@@ -257,22 +255,33 @@ distclean: clean
     #+end_src
     [[#org0bd0c625][esup]] がまだ =early-init.el= を読まないのが辛い.
     - [ ] [[https://github.com/jschaf/esup/issues/93][early-init.el is not included in profiling · Issue #93 · jschaf/esup]]
-*** TODO 起動後に GC Threshold を既定値に戻す [/]
+*** 起動後に GC Threshold を既定値に戻す
     :PROPERTIES:
     :CUSTOM_ID: org9584246f
     :END:
-    以前は以下を設定していたが, 最近は =gcmh= に任せる事にした.
+    +以前は以下を設定していたが, 最近は =gcmh= に任せる事にした.+
     → [[id:cca3e8df-79f9-4c60-a803-07ff641b0ef7][=gcmh=: 賢い garbage-collection]]
-    #+begin_src emacs-lisp :tangle no
-(setq garbage-collection-messages nil)
+
+    → 利用を止めました.
+    @see [[https://emacsconf.org/2023/talks/gc/][EmacsConf - 2023 - talks - emacs-gc-stats: Does garbage collection actually slow down Emacs?]]
+
+    上記プレゼンでの推奨値に設定するのと,
+    =idle-timer= で入力が無い時に GC を走らせることにする.
+    #+begin_src emacs-lisp :tangle init.el
+(setq garbage-collection-messages nil
+      gc-cons-percentage 0.2
+      )
 ;; Run GC every 60 seconds if emacs is idle.
 (run-with-idle-timer 60.0 t #'garbage-collect)
 ;; 起動後に初期値に戻す.
 (add-hook 'emacs-startup-hook
           (lambda ()
-            (setq gc-cons-threshold 800000)))
+            ;; (setq gc-cons-threshold 800000)
+            (setq gc-cons-threshold (* 128 1024 1024))
+            ))
     #+end_src
-    - [ ] gcmh は無駄にタイマーを増やし過ぎて, 自分が増やしたタイマーで GC を走らせている, という指摘もある.
+    …どうだろう? そんなに重い処理をするわけじゃないし,
+    初期値のままで, 小まめに gc 走らせた方が体感は速かったりしないかなぁ….
 ** Package初期化処理
    :PROPERTIES:
    :CUSTOM_ID: orgd896c3a2
@@ -529,7 +538,11 @@ distclean: clean
   :doc "Extend package-vc to support post-make autoload generation"
   :tag "builtin"
   ;; 呼び出されるまで変数が見えないので custom に移動していくことに
-  :custom `((package-vc-allow-build-commands . nil)
+  :custom `(;; 以下の advice で install 時に make が必要なパッケージを登録
+            (package-vc-allow-build-commands . nil)
+            ;; 本来は project.el の設定で行なうべきだが,
+            ;; bootstrap 時に package-vc-install が
+            ;; project 登録を呼び出すので, ここで設定しておく
             (project-list-file . ,(expand-file-name "projects" my:d:tmp))
             )
   :preface
@@ -740,26 +753,6 @@ C-u を付けて実行すると, 埋める文字を指定可能(例: = や * な
   (native-compile-async "~/.emacs.d/elpa" 'recursively))
     #+end_src
     - [ ] batch で Makefile から叩けないかなぁ.
-* =gcmh=: 賢い garbage-collection
-  :PROPERTIES:
-  :ID:       cca3e8df-79f9-4c60-a803-07ff641b0ef7
-  :CUSTOM_ID: org414ff0d8
-  :END:
-  割と速い段階で設定しておきたくてここに書いたけれど,
-  実際には =emacs-startup-hook= で起動するので, 最後辺りで有効になる.
-  → 「gcmh はタイマーを沢山増やすので, 結果として自分で GC をまわすことになるので有害」
-    という話もあって悩み所.
-  #+begin_src emacs-lisp :tangle init.el
-(leaf gcmh
-  :ensure t
-  :blackout t
-  :init
-  (setq gcmh-idle-delay 'auto  ; アイドル判定を自動調整
-        gcmh-auto-idle-delay-factor 10
-        gcmh-high-cons-threshold (* 128 1024 1024)) ; 入力中は 128MB まで許容
-  :hook (emacs-startup-hook . gcmh-mode)
-  )
-  #+end_src
 * =exec-path-from-shell=: GUI起動時の環境変数の読み込み
   :PROPERTIES:
   :CUSTOM_ID: org9abae8f2

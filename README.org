@@ -2,7 +2,7 @@
 #+title: Emacs の設定
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2026-02-16 07:56:35
+#+date: 2026-02-16 18:31:37
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -44,10 +44,6 @@
    本ファイル(=README.org=) から,
    Makefile 内の以下のスクリプトで =~/init.el= を生成し, byte-compile します.
    #+begin_src makefile-gmake :tangle no
-
-Tested-by: Youhei SASAKI <uwabami@gfd-dennou.org>
-Tested-by: Youhei SASAKI <uwabami@gfd-dennou.org>
-
 # -*- mode: makefile -*-
 # ----------------------------------------------------------------------------
 EMACS		?= emacs
@@ -218,51 +214,6 @@ distclean: clean
   (setq byte-compile-warnings '(not cl-functions free-vars docstrings unresolved))
   )
    #+end_src
-** =setopt= の導入
-   :PROPERTIES:
-   :CUSTOM_ID: orgc9962cbc
-   :END:
-   Emacs ≧ 29.1 から使える =setopt= を
-   古い Emacs のために移植しておくことに.
-   #+begin_src emacs-lisp :tangle (if (version<= emacs-version "29.1") "init.el" "no") ;>
-;; ---------------------------------------------------------------------------
-;; From Emacs 30.1
-;; ---------------------------------------------------------------------------
-;;;###autoload
-(defmacro setopt (&rest pairs)
-  "Set VARIABLE/VALUE pairs, and return the final VALUE.
-This is like `setq', but is meant for user options instead of
-plain variables.  This means that `setopt' will execute any
-`custom-set' form associated with VARIABLE.
-
-Note that `setopt' will emit a warning if the type of a VALUE
-does not match the type of the corresponding VARIABLE as
-declared by `defcustom'.  (VARIABLE will be assigned the value
-even if it doesn't match the type.)
-
-\(fn [VARIABLE VALUE]...)"
-  (declare (debug setq))
-  (unless (zerop (mod (length pairs) 2))
-    (error "PAIRS must have an even number of variable/value members"))
-  (let ((expr nil))
-    (while pairs
-      (unless (symbolp (car pairs))
-        (error "Attempting to set a non-symbol: %s" (car pairs)))
-      (push `(setopt--set ',(car pairs) ,(cadr pairs))
-            expr)
-      (setq pairs (cddr pairs)))
-    (macroexp-progn (nreverse expr))))
-
-;;;###autoload
-(defun setopt--set (variable value)
-  (custom-load-symbol variable)
-  ;; Check that the type is correct.
-  (when-let ((type (get variable 'custom-type)))
-    (unless (widget-apply (widget-convert type) :match value)
-      (warn "Value `%S' does not match type %s" value type)))
-  (put variable 'custom-check-value (list value))
-  (funcall (or (get variable 'custom-set) #'set-default) variable value))
-   #+end_src
 * =early-init.el=: 起動の高速化
   :PROPERTIES:
   :CUSTOM_ID: orgae182d4d
@@ -295,7 +246,7 @@ even if it doesn't match the type.)
    起動後に =emacs-startup-hook= で default に戻すようにしてみた.
 
    ついでに =idle-timer= で入力が無い時に GC を走らせることにする
-*** 起動時の GC threshold の最大化
+*** TODO 起動時の GC threshold の最大化 [/]
     :PROPERTIES:
     :CUSTOM_ID: org3977c5ee
     :ID:       9bb833b8-16ba-493a-8616-7da7a810bee4
@@ -304,12 +255,8 @@ even if it doesn't match the type.)
 (setq gc-cons-threshold most-positive-fixnum
       garbage-collection-messages nil)
     #+end_src
-    [[#org0bd0c625][=esup=]] がまだ =early-init.el= を読まないので,
-    init.el でも gc-cons-threshold を設定しておく.
-    #+begin_src emacs-lisp :tangle init.el
-(setq gc-cons-threshold most-positive-fixnum)
-    #+end_src
-    - [[https://github.com/jschaf/esup/issues/93][early-init.el is not included in profiling · Issue #93 · jschaf/esup]]
+    [[#org0bd0c625][esup]] がまだ =early-init.el= を読まないのが辛い.
+    - [ ] [[https://github.com/jschaf/esup/issues/93][early-init.el is not included in profiling · Issue #93 · jschaf/esup]]
 *** TODO 起動後に GC Threshold を既定値に戻す [/]
     :PROPERTIES:
     :CUSTOM_ID: org9584246f
@@ -325,7 +272,7 @@ even if it doesn't match the type.)
           (lambda ()
             (setq gc-cons-threshold 800000)))
     #+end_src
-    - [ ] gcmh は無駄にタイマーを増やし過ぎて, 結果, 自分が増やしたタイマーで GC を走らせる, という指摘もある.
+    - [ ] gcmh は無駄にタイマーを増やし過ぎて, 自分が増やしたタイマーで GC を走らせている, という指摘もある.
 ** Package初期化処理
    :PROPERTIES:
    :CUSTOM_ID: orgd896c3a2
@@ -479,41 +426,62 @@ even if it doesn't match the type.)
   :END:
   [[https://github.com/conao3/leaf.el][leaf.el]]のおかげで,
   無いと途方に暮れるパッケージ以外のインストールは無視できるようになります.
-** TODO [[https://emacs-jp.github.io/packages/package-management/package-el][package.el]] の初期化処理 [/]
+** TODO [[https://emacs-jp.github.io/packages/package-management/package-el][package.el]] の初期化処理 [0/1]
    :PROPERTIES:
    :CUSTOM_ID: org61dc7202
    :END:
+   Debian パッケージ由来の =external= をアップグレード対象から外すために
+   =package-menu--find-upgrades= を advice しておく.
+   - [ ] なんかの変数でなんとかならんのか?
+   元ネタ: [[https://emacs.stackexchange.com/questions/9331/mark-package-to-never-be-considered-for-upgrade][Mark package to never be considered for upgrade - Emacs Stack Exchange]]
    #+begin_src emacs-lisp :tangle init.el
-;; esup が early-init を呼ばない...
-(setq package-quickstart-file "~/.cache/emacs/package-quickstart.el"
-      package-quickstart t)
+;; ---------------------------------------------------------------------------
+(defvar my:package-menu-exclude-packages nil
+  "Specify packages not to be upgraded")
+;; ---------------------------------------------------------------------------
 ;;;###autoload
-(defun my:package-quickstart-refresh-silently ()
-  "Compile-Log を表示せずに package-quickstart-refresh を実行するラッパー関数"
-  (interactive)
-  (let ((byte-compile-warnings nil)      ;; 警告を生成しない
-        (byte-compile-verbose nil)       ;; 詳細ログを出さない
-        (inhibit-message t)              ;; メッセージエリアの出力も抑制
-        ;; *Compile-Log* バッファが表示されようとしたら「何もしない」設定にする
-        (display-buffer-alist
-         '(("\\*Compile-Log\\*" display-buffer-no-window (allow-no-window . t)))))
-    (with-current-buffer (get-buffer-create "*Compile-Log*")
-      ;; 念のためログバッファを空にしておく（以前のログが残っているとポップアップの原因になることがあるため）
-      (let ((inhibit-read-only t))
-        (erase-buffer)))
-    ;; 実行
-    (package-quickstart-refresh)))
-;;
-(add-hook 'kill-emacs-hook #'my:package-quickstart-refresh-silently)
+(defun my:package-menu--remove-excluded-packages (orig)
+  "Exclude specified packages from package-upgrade"
+  (eval-when-compile (require 'dash nil 'noerror))
+  (let ((included (-filter
+                   (lambda (entry)
+                     (let ((name (symbol-name (package-desc-name (car entry)))))
+                       (not (member name my:package-menu-exclude-packages))))
+                   tabulated-list-entries)))
+    (setq-local tabulated-list-entries included)
+    (funcall orig)))
+;; ---------------------------------------------------------------------------
+(advice-add 'package-menu--find-upgrades :around #'my:package-menu--remove-excluded-packages)
+;; ---------------------------------------------------------------------------
+   #+end_src
+   #+begin_src emacs-lisp :tangle init.el
+;; ;;;###autoload
+;; (defun my:package-quickstart-refresh-silently ()
+;;   "Compile-Log を表示せずに package-quickstart-refresh を実行するラッパー関数"
+;;   (interactive)
+;;   (let ((byte-compile-warnings nil)      ;; 警告を生成しない
+;;         (byte-compile-verbose nil)       ;; 詳細ログを出さない
+;;         (inhibit-message t)              ;; メッセージエリアの出力も抑制
+;;         ;; *Compile-Log* バッファが表示されようとしたら「何もしない」設定にする
+;;         (display-buffer-alist
+;;          '(("\\*Compile-Log\\*" display-buffer-no-window (allow-no-window . t)))))
+;;     (with-current-buffer (get-buffer-create "*Compile-Log*")
+;;       ;; 念のためログバッファを空にしておく（以前のログが残っているとポップアップの原因になることがあるため）
+;;       (let ((inhibit-read-only t))
+;;         (erase-buffer)))
+;;     ;; 実行
+;;     (package-quickstart-refresh)))
+;; ;;
+;; (add-hook 'kill-emacs-hook #'my:package-quickstart-refresh-silently)
+(add-hook 'kill-emacs-hook #'package-quickstart-refresh)
    #+end_src
    - [ ] 起動時にはここが一番時間がかかっている.
-** [[https://github.com/conao3/leaf.el][leaf.el]]
+** WAIT [[https://github.com/conao3/leaf.el][leaf.el]] [1/1]
    :PROPERTIES:
    :CUSTOM_ID: orgc2ededbf
    :END:
    個々のパッケージの設定には[[https://github.com/conao3/leaf.el][leaf.el]]を利用します.
-   以前は el-get も利用していましたが,
-   =:vc= キーワードで =package-vc-install= を呼び出せるので, こっちを使うようになりました.
+   以前は el-get も利用していましたが, =:vc= キーワードで =package-vc-install= を呼び出せるので, こっちを使うようになりました.
    - [X] =package-vc-install= でインストールした諸々って, package-upgrade 後に delete 対象になる?
      → send PR: [[https://github.com/conao3/leaf.el/pull/552][leaf-handler-vc: Add package to package-selected-packages by uwabami · Pull Request #552 · conao3/leaf.el]]
    #+begin_src emacs-lisp :tangle init.el
@@ -525,6 +493,11 @@ even if it doesn't match the type.)
       (package-refresh-contents)
       (package-install 'leaf t))))
 ;; ---------------------------------------------------------------------------
+;;;###autoload
+(defun my:register-vc-installed-package (pkgname)
+  ":vcキーワードでインストールしたパッケージを package-selected-package に登録"
+  (leaf-safe-push `,pkgname package-selected-packages 'no-dup))
+;; ---------------------------------------------------------------------------
 (leaf leaf-keywords
   :ensure t
   :init
@@ -534,7 +507,7 @@ even if it doesn't match the type.)
   (leaf-keywords-init)
   )
    #+end_src
-** =package-vc-install= の調整
+** WAIT =package-vc-install= の調整 [0/1]
    :PROPERTIES:
    :CUSTOM_ID: org9c1823a4
    :END:
@@ -550,13 +523,15 @@ even if it doesn't match the type.)
 (add-to-list 'package-vc-allow-build-commands 'hogehero)
    #+end_src
    と指定する様にしました.
-
+   - [ ] el-get が不要な環境だけになったら以下を有効に.
    #+begin_src emacs-lisp :tangle init.el
 (leaf package-vc
   :doc "Extend package-vc to support post-make autoload generation"
   :tag "builtin"
   ;; 呼び出されるまで変数が見えないので custom に移動していくことに
-  :custom (package-vc-allow-build-commands . nil)
+  :custom `((package-vc-allow-build-commands . nil)
+            (project-list-file . ,(expand-file-name "projects" my:d:tmp))
+            )
   :preface
 ;;;###autoload
   (defun my:package-vc-regenerate-autoloads-after-make (pkg-spec pkg-desc)
@@ -888,6 +863,8 @@ C-u を付けて実行すると, 埋める文字を指定可能(例: = や * な
             )
   :preface
   (add-to-list 'package-vc-allow-build-commands 'eaw-halfwidth)
+  :init
+  (my:register-vc-installed-package 'eaw-halfwidth)
   :hook (emacs-startup-hook . (lambda ()
                                 (eaw-init)
                                 (global-auto-composition-mode 0)))
@@ -1878,6 +1855,8 @@ Emacs*useXIM: false
 (leaf migemo
   :if (executable-find "cmigemo")
   :ensure t
+  :preface
+  (add-to-list 'my:package-menu-exclude-packages "migemo")
   :init
   (setq migemo-user-dictionary  nil
         migemo-regex-dictionary nil
@@ -2201,6 +2180,7 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
   :vc (:url "https://github.com/uwabami/consult-ghq")
   :bind (("C-x f" . consult-ghq-open))
   :init
+  (my:register-vc-installed-package 'consult-ghq)
   (setq consult-ghq-short-list t)
   )
     #+end_src
@@ -2223,23 +2203,18 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
    という動作はまさに理想的なので, そう振る舞う様に.
    - [ ] 最近そうなってない気がする.
    #+begin_src emacs-lisp :tangle init.el
-(leaf corfu
+(leaf corfu-terminal
   :emacs>= 29.1  ;; <
   :ensure t
-  :preface
-  ;; -------------------------------------------------------------------------
-  :init
-  ;; -------------------------------------------------------------------------
-  (leaf corfu-terminal
-    :ensure t
-    :config
-    (setq corfu-terminal-disable-on-gui nil
-          corfu-terminal-enable-on-minibuffer nil
-          corfu-terminal-resize-minibuffer nil
-          )
-    )
-  ;; -------------------------------------------------------------------------
+  :config
+  (setq corfu-terminal-disable-on-gui nil
+        corfu-terminal-enable-on-minibuffer nil
+        corfu-terminal-resize-minibuffer nil
+        )
+  )
+;; -------------------------------------------------------------------------
   (leaf kind-icon
+    :emacs>= 29.1  ;; <
     :ensure t
     :after corfu-terminal
     :init
@@ -2287,27 +2262,53 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
     :config
     (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
     )
+;; -------------------------------------------------------------------------
+(leaf corfu
+  :emacs>= 29.1  ;; <
+  :ensure t
+  :preface
   ;; -------------------------------------------------------------------------
-  ;; :bind (:corfu-map
-  ;;        ("M-SPC" . corfu-insert-separator))
+  (defvar corfu--index)
+  (defvar corfu-magic-insert-or-next-line
+    `(menu-item "" nil :filter ,(lambda (&optional _)
+                                  (when (>= corfu--index 0) ;; <
+                                    'corfu-insert)))
+    "If we made a selection during `corfu' completion, select it.")
+  (defvar corfu-magic-cancel-or-backspace
+    `(menu-item "" nil :filter ,(lambda (&optional _)
+                                  (when (>= corfu--index 0) ;; <
+                                    'corfu-reset)))
+    "If we made a selection during `corfu' completion, cancel it.")
+  ;; -------------------------------------------------------------------------
+  :bind (:corfu-map
+         ("M-SPC"      . corfu-insert-separator)
+         ("RET"        . corfu-magic-insert-or-next-line)
+         ("delete"     . corfu-magic-insert-or-next-line)
+         ("backspace"  . corfu-magic-insert-or-next-line)
+         )
   ;; -------------------------------------------------------------------------
   :hook (emacs-startup-hook . (lambda ()
                                 (corfu-terminal-mode +1)
-                                (global-corfu-mode))
+                                (global-corfu-mode)
+                                ;; (corfu-popupinfo-mode)
+                                )
                             )
   ;; -------------------------------------------------------------------------
-  :custom (;; Emacs 30 and newer: Disable Ispell completion function.
-           ;; Try `cape-dict' as an alternative.
-           (text-mode-ispell-word-completion . nil)
-           )
+  ;; :custom (;; Emacs 30 and newer: Disable Ispell completion function.
+  ;;          ;; Try `cape-dict' as an alternative.
+  ;;          (text-mode-ispell-word-completion . nil)
+  ;;          )
   ;; -------------------------------------------------------------------------
   :config
-  (setq corfu-cycle                t
-        corfu-auto                 t
-        tab-always-indent          t  ;; 'complete だと TAB で補完暴発が...
-        completion-cycle-threshold 4
-        curfu-preview-current      nil
-        corfu-preselect            'prompt
+  (setq text-mode-ispell-word-completion nil
+        corfu-cycle                      t
+        corfu-auto                       t
+        tab-always-indent                t  ;; 'complete だと TAB で補完暴発が...
+        completion-cycle-threshold       4
+        corfu-preview-current            nil
+        corfu-preselect                  'prompt
+        corfu-quit-no-match              t
+        ;; corfu-popupinfo-delay            0
         )
   )
    #+end_src
@@ -2318,32 +2319,19 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
    cape は capf を拡張するパッケージ
    - =capf= = completion-at-point-function
    - =cape= = completion-at-point-extension
-   [[https://github.com/minad/cape/blob/main/README.org][README]] によれば
-   - =cape-abbrev= : Complete abbreviation (add-global-abbrev, add-mode-abbrev).
-   - =cape-dabbrev= : Complete word from current buffers. See also dabbrev-capf.
-   - =cape-dict= : Complete word from dictionary file.
-   - =cape-elisp-block= : Complete Elisp in Org or Markdown code block.
-   - =cape-elisp-symbol= : Complete Elisp symbol.
-   - =cape-emoji= : Complete Emoji.
-   - =cape-file= : Complete file name.
-   - =cape-history= : Complete from Eshell, Comint or minibuffer history.
-   - =cape-keyword= : Complete programming language keyword.
-   - =cape-line= : Complete entire line from current buffer.
-   - =cape-rfc1345= : Complete Unicode char using RFC 1345 mnemonics.
-   - =cape-sgml= : Complete Unicode char from SGML entity, e.g., &alpha.
-   - =cape-tex= : Complete Unicode char from TeX command, e.g. \hbar.
-   などが使えるとのこと.
-
+   [[https://github.com/minad/cape/blob/main/README.org][README]] によれば沢山補完バックエンドがあるみたい.
+   ただ, 補完されるワードに装飾が付いてたりするので, ちょっと利用は保留
    #+begin_src emacs-lisp :tangle init.el
 (leaf cape
+  :disabled t
   :emacs>= 29.1  ;; <
   :ensure t
   :init
-  (add-hook 'completion-at-point-functions #'cape-dabbrev)
-  (add-hook 'completion-at-point-functions #'cape-file)
-  (add-hook 'completion-at-point-functions #'cape-keyword)
-  (add-hook 'completion-at-point-functions #'cape-elisp-block)
-  (add-hook 'completion-at-point-functions #'cape-elisp-symbol)
+  ;; (add-hook 'completion-at-point-functions #'cape-dabbrev)
+  ;; (add-hook 'completion-at-point-functions #'cape-file)
+  ;; (add-hook 'completion-at-point-functions #'cape-keyword)
+  ;; (add-hook 'completion-at-point-functions #'cape-elisp-block)
+  ;; (add-hook 'completion-at-point-functions #'cape-elisp-symbol)
   ;; (setq cape-dabbrev-check-other-buffers nil)
   ;; (add-to-list 'completion-at-point-functions 'cape-keyword)
   ;; (add-to-list 'completion-at-point-functions 'cape-dabbrev)
@@ -2566,6 +2554,7 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
   (f90-ts-font-lock-special-comment-face . '((t :inherit font-lock-doc-face)))
   ;; -------------------------------------------------------------------------
   :init
+  (my:register-vc-installed-package 'f90-ts-mode)
   (leaf f90
     :config
     (setq f90-do-indent 2
@@ -3106,8 +3095,11 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
    :END:
    #+begin_src emacs-lisp :tangle init.el
 (leaf git-commit-ts-mode
+  :if (executable-find "tree-sitter")
   :vc (:url "https://github.com/danilshvalov/git-commit-ts-mode")
   :mode "\\COMMIT_EDITMSG\\'"
+  :init
+  (my:register-vc-installed-package 'git-commit-ts-mode)
   )
    #+end_src
 * 翻訳
@@ -3224,7 +3216,11 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
    :CUSTOM_ID: org501da28b
    :END:
    #+begin_src emacs-lisp
-(leaf text-adjust :vc (:url "https://github.com/uwabami/text-adjust.el"))
+(leaf text-adjust
+  :vc (:url "https://github.com/uwabami/text-adjust.el")
+  :init
+  (my:register-vc-installed-package 'text-adjust)
+  )
    #+end_src
 
 * MUA の設定: =wanderulst=
@@ -3248,10 +3244,10 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
 
    #+begin_src emacs-lisp :tangle (if (file-exists-p "/etc/emacs/site-start.d/65wl-beta.el") "init.el" "no")
 (leaf rail
-  ;; :vc (:url "https://github.com/uwabami/rail")
+  :preface
+  (add-to-list 'my:package-menu-exclude-packages "migemo")
   :init
   (setq rail-emulate-genjis t)
-  ;; :require t
   :leaf-defer t
   )
    #+end_src
@@ -4331,6 +4327,8 @@ video/*; xdg-open %s;
      #+begin_src emacs-lisp  :tangle init-wl.el
 (leaf c-sig
   :commands insert-signature-eref
+  :preface
+  (add-to-list 'my:package-menu-exclude-packages "c-sig")
   :init
   (setq sig-alist-file (expand-file-name "signature.alist" my:d:share))
   :config
@@ -4596,6 +4594,11 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     (org-tab-before-tab-emulation-hook . org-tempo-complete-tag)
     )
   :init
+  (leaf howm
+    :ensure t
+    :preface
+    (add-to-list 'my:package-menu-exclude-packages "howm")
+    )
   (leaf org-tempo :commands (org-tempo-setup org-tempo-complete-tag))
   :config
   ;; Nextcloud に保存する
@@ -5151,6 +5154,7 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     :vc (:url "https://github.com/kametoku/orgmine" )
     :commands (orgmine-mode)
     :init
+    (my:register-vc-installed-package 'orgmine)
     ;; (defun my:orgmine-default-todo-keyword ()
     ;;   "Custom: use `org-file-properties' for backward compatibility."
     ;;   (or (cdr (assoc-string "om_default_todo" org-file-properties))
@@ -5196,6 +5200,7 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   :if (file-directory-p "~/Public/cc-env")
   :vc (:url "https://github.com/uwabami/org-wiki")
   :init
+  (my:register-vc-installed-package 'org-wiki)
   (setq org-wiki-location-alist     '("~/Public/cc-env")
         org-wiki-location           "~/Public/cc-env"
         org-wiki-publish-relative   t
@@ -5262,6 +5267,8 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
 (leaf ox-jekyll
   :if (file-directory-p "~/Public/cc-env")
   :vc (:url "https://github.com/uwabami/ox-jekyll")
+  :init
+  (my:register-vc-installed-package 'ox-jekyll)
   )
 (leaf ox-html
   :after ox
@@ -5601,6 +5608,8 @@ pdflang={%l}}
   :defvar (tdiary-csrf-key tdiary-passwd-file tdiary-passd-file)
   :pl-setq (tdiary-csrf-key tdiary-passwd-file)
   :vc (:url "https://github.com/uwabami/tdiary-mode")
+  :init
+  (my:register-vc-installed-package 'tdiary-mode)
   :config
   (setq tdiary-text-directory (concat (getenv "HOME") "/Nextcloud/tdiary/")
         tdiary-diary-list '(("log" "https://uwabami.junkhub.org/log/"))
@@ -5912,7 +5921,6 @@ pdflang={%l}}
   #+BEGIN_SRC emacs-lisp
 (leaf powerline
   :ensure t
-  :disabled t
   :defvar
   (skk-indicator-alist
    skk-hiragana-mode-string
@@ -5966,8 +5974,8 @@ pdflang={%l}}
         powerline-display-buffer-size   nil
         powerline-text-scale-factor      1
         powerline-default-separator     'utf-8
-        powerline-utf-8-separator-left  #xe0b0
-        powerline-utf-8-separator-right #xe0b2
+        ;; powerline-utf-8-separator-left  #xe0b0
+        ;; powerline-utf-8-separator-right #xe0b2
         )
   :hook (emacs-startup-hook . my:powerline-theme)
   :config

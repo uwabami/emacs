@@ -1,8 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+title: Emacs の設定
-#+startup: overview
 #+options: auto-id:t H:6
-#+date: 2026-02-17 16:52:13
+#+date: 2026-02-18 00:36:21
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -1109,7 +1108,7 @@ Emacs.reverseVideo: true
         auto-mode-alist (delete
                          '("\\.svgz?\\'" . image-mode) auto-mode-alist)
         ;; org-mode で有効にするローカル変数の追加 ← org-mode でやるべきでは?
-        safe-local-variable-values '((org-link-file-path-type . absolute))
+        ;; safe-local-variable-values '((org-link-file-path-type . absolute))
         ;; eglot など, 外部サーバとの I/O の最大値を増やしておく
         ;; defaul は 65536.
         read-process-output-max (* 1024 1024)
@@ -1860,6 +1859,7 @@ Emacs*useXIM: false
         migemo-dictionary       (or (if (file-exists-p "/usr/local/share/migemo/utf-8/migemo-dict")
                                         "/usr/local/share/migemo/utf-8/migemo-dict")
                                     "/usr/share/cmigemo/utf-8/migemo-dict")
+        migemo-isearch-enable-p t
         )
   :hook
   (emacs-startup-hook . migemo-init)
@@ -2058,6 +2058,143 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
   :hook (emacs-startup-hook . vertico-mode)
   )
   #+end_src
+** TODO =corfu=: on the fly completions [0/1]
+   :PROPERTIES:
+   :CUSTOM_ID: org37d21658
+   :END:
+   =company= より使い勝手が良い, 気がする.
+   :PROPERTIES:
+   :CUSTOM_ID: orgb72396fd
+   :END:
+   [[https://misohena.jp/blog/2024-02-15-separate-notification-and-selection-with-corfu-auto.html][Corfuの自動補完で候補の存在を伝える事と候補を選べるようにする事を分離する]] を参考に.
+   1. 補完候補を見つけたらそれを自動でポップアップ表示する
+      (しかし一切のキーを奪わず、候補の選択操作は出来ない)
+   2. その状態で明示的にC-M-iを押すと候補の選択が出来るようになる
+      (同時に最初の候補が選択されるもしくは唯一ある候補が入力される)
+   という動作はまさに理想的なので, そう振る舞う様に.
+   - [ ] 最近そうならなくなった. 困ったな...
+   #+begin_src emacs-lisp :tangle init.el
+(leaf corfu-terminal
+  :emacs>= 29.1  ;; <
+  :ensure t
+  :config
+  (setq corfu-terminal-disable-on-gui nil
+        corfu-terminal-enable-on-minibuffer nil
+        corfu-terminal-resize-minibuffer nil
+        )
+  )
+;; -------------------------------------------------------------------------
+  (leaf kind-icon
+    :emacs>= 29.1  ;; <
+    :ensure t
+    :after corfu-terminal
+    :init
+    (setq kind-icon-default-face 'corfu-default
+          kind-icon-use-icons    nil
+          kind-icon-mapping
+          `(
+            (array          ,(nerd-icons-codicon "nf-cod-symbol_array")       :face font-lock-type-face)
+            (boolean        ,(nerd-icons-codicon "nf-cod-symbol_boolean")     :face font-lock-builtin-face)
+            (class          ,(nerd-icons-codicon "nf-cod-symbol_class")       :face font-lock-type-face)
+            (color          ,(nerd-icons-codicon "nf-cod-symbol_color")       :face success)
+            (command        ,(nerd-icons-codicon "nf-cod-terminal")           :face default)
+            (constant       ,(nerd-icons-codicon "nf-cod-symbol_constant")    :face font-lock-constant-face)
+            (constructor    ,(nerd-icons-codicon "nf-cod-triangle_right")     :face font-lock-function-name-face)
+            (enummember     ,(nerd-icons-codicon "nf-cod-symbol_enum_member") :face font-lock-builtin-face)
+            (enum-member    ,(nerd-icons-codicon "nf-cod-symbol_enum_member") :face font-lock-builtin-face)
+            (enum           ,(nerd-icons-codicon "nf-cod-symbol_enum")        :face font-lock-builtin-face)
+            (event          ,(nerd-icons-codicon "nf-cod-symbol_event")       :face font-lock-warning-face)
+            (field          ,(nerd-icons-codicon "nf-cod-symbol_field")       :face font-lock-variable-name-face)
+            (file           ,(nerd-icons-codicon "nf-cod-symbol_file")        :face font-lock-string-face)
+            (folder         ,(nerd-icons-codicon "nf-cod-folder")             :face font-lock-doc-face)
+            (interface      ,(nerd-icons-codicon "nf-cod-symbol_interface")   :face font-lock-type-face)
+            (keyword        ,(nerd-icons-codicon "nf-cod-symbol_keyword")     :face font-lock-keyword-face)
+            (macro          ,(nerd-icons-codicon "nf-cod-symbol_misc")        :face font-lock-keyword-face)
+            (magic          ,(nerd-icons-codicon "nf-cod-wand")               :face font-lock-builtin-face)
+            (method         ,(nerd-icons-codicon "nf-cod-symbol_method")      :face font-lock-function-name-face)
+            (function       ,(nerd-icons-codicon "nf-cod-symbol_method")      :face font-lock-function-name-face)
+            (module         ,(nerd-icons-codicon "nf-cod-file_submodule")     :face font-lock-preprocessor-face)
+            (numeric        ,(nerd-icons-codicon "nf-cod-symbol_numeric")     :face font-lock-builtin-face)
+            (operator       ,(nerd-icons-codicon "nf-cod-symbol_operator")    :face font-lock-comment-delimiter-face)
+            (param          ,(nerd-icons-codicon "nf-cod-symbol_parameter")   :face default)
+            (property       ,(nerd-icons-codicon "nf-cod-symbol_property")    :face font-lock-variable-name-face)
+            (reference      ,(nerd-icons-codicon "nf-cod-references")         :face font-lock-variable-name-face)
+            (snippet        ,(nerd-icons-codicon "nf-cod-symbol_snippet")     :face font-lock-string-face)
+            (string         ,(nerd-icons-codicon "nf-cod-symbol_string")      :face font-lock-string-face)
+            (struct         ,(nerd-icons-codicon "nf-cod-symbol_structure")   :face font-lock-variable-name-face)
+            (text           ,(nerd-icons-codicon "nf-cod-text_size")          :face font-lock-doc-face)
+            (typeparameter  ,(nerd-icons-codicon "nf-cod-list_unordered")     :face font-lock-type-face)
+            (type-parameter ,(nerd-icons-codicon "nf-cod-list_unordered")     :face font-lock-type-face)
+            (unit           ,(nerd-icons-codicon "nf-cod-symbol_ruler")       :face font-lock-constant-face)
+            (value          ,(nerd-icons-codicon "nf-cod-symbol_field")       :face font-lock-builtin-face)
+            (variable       ,(nerd-icons-codicon "nf-cod-symbol_variable")    :face font-lock-variable-name-face)
+            (t              ,(nerd-icons-codicon "nf-cod-code")               :face font-lock-warning-face))
+          )
+    :config
+    (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
+    )
+;; -------------------------------------------------------------------------
+(leaf corfu
+  :emacs>= 29.1  ;; <
+  :ensure t
+  ;; -------------------------------------------------------------------------
+  :bind (:corfu-map
+         ("M-SPC"        . corfu-insert-separator)
+         )
+  ;; -------------------------------------------------------------------------
+  :hook (emacs-startup-hook . (lambda ()
+                                (corfu-terminal-mode +1)
+                                (global-corfu-mode)
+                                  )
+                            )
+  ;; -------------------------------------------------------------------------
+  :custom (;; Emacs 30 and newer: Disable Ispell completion function.
+           ;; Try `cape-dict' as an alternative.
+           (text-mode-ispell-word-completion . nil)
+           )
+  ;; -------------------------------------------------------------------------
+  :config
+  (setq text-mode-ispell-word-completion nil
+        corfu-cycle                      t
+        corfu-auto                       t
+        tab-always-indent                t  ;; 'complete だと TAB で補完暴発が...
+        completion-cycle-threshold       4
+        corfu-preview-current            nil
+        corfu-preselect                  'prompt
+        corfu-quit-no-match              t
+        )
+  )
+   #+end_src
+** =cape=: Completion At Point Extensions … 補完 backend
+   :PROPERTIES:
+   :CUSTOM_ID: org3b1ea0b6
+   :END:
+   cape は capf を拡張するパッケージ
+   - =capf= = completion-at-point-function
+   - =cape= = completion-at-point-extension
+   [[https://github.com/minad/cape/blob/main/README.org][README]] によれば沢山補完バックエンドがあるみたい.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf cape
+  :emacs>= 29.1  ;; <
+  :ensure t
+  :advice
+  (:around eglot-completion-at-point
+           cape-wrap-buster)
+  :init
+  :config
+  ;; (add-hook 'completion-at-point-functions #'cape-dabbrev)
+  ;; (add-hook 'completion-at-point-functions #'cape-file)
+  ;; (add-hook 'completion-at-point-functions #'cape-keyword)
+  ;; (add-hook 'completion-at-point-functions #'cape-elisp-block)
+  ;; (add-hook 'completion-at-point-functions #'cape-elisp-symbol)
+  ;; (setq cape-dabbrev-check-other-buffers nil)
+  ;; (add-to-list 'completion-at-point-functions 'cape-keyword)
+  ;; (add-to-list 'completion-at-point-functions 'cape-dabbrev)
+  ;; (add-to-list 'completion-at-point-functions 'cape-file)
+  ;; (add-to-list 'completion-at-point-functions 'cape-tex)
+  ;; (add-to-list 'completion-at-point-functions 'cape-emoji)
+  )
+   #+end_src
 ** =orderless=: 補完候補の選択
    :PROPERTIES:
    :CUSTOM_ID: orgc12df551
@@ -2069,9 +2206,12 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
   :emacs>= 29.1  ;; <
   :ensure t
   :config
+  (with-eval-after-load 'eglot
+    (setq completion-category-defaults nil))
   (setq completion-styles '(orderless basic)
-        completion-category-overrides '((file (styles partial-completion)))
-        ;; Emacs 31: partial-completion behaves like substring
+        completion-category-overrides '((file (styles partial-completion))
+                                        (eglot (styles orderless))
+                                        (eglot-capf (styles orderless)))
         completion-pcm-leading-wildcard  t
         )
   )
@@ -2180,157 +2320,6 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
     自分でエイヤっと作ったけど
     [[https://github.com/tomoya/consult-ghq][tomoya/consult-ghq: Ghq interface using consult]]
     の方が良さ気?
-** TODO =corfu=: on the fly completions [0/1]
-   :PROPERTIES:
-   :CUSTOM_ID: org37d21658
-   :END:
-   =company= より使い勝手が良い, 気がする.
-   :PROPERTIES:
-   :CUSTOM_ID: orgb72396fd
-   :END:
-   [[https://misohena.jp/blog/2024-02-15-separate-notification-and-selection-with-corfu-auto.html][Corfuの自動補完で候補の存在を伝える事と候補を選べるようにする事を分離する]] を参考に.
-   1. 補完候補を見つけたらそれを自動でポップアップ表示する
-      (しかし一切のキーを奪わず、候補の選択操作は出来ない)
-   2. その状態で明示的にC-M-iを押すと候補の選択が出来るようになる
-      (同時に最初の候補が選択されるもしくは唯一ある候補が入力される)
-   という動作はまさに理想的なので, そう振る舞う様に.
-   - [ ] 最近そうならなくなった. 困ったな...
-   #+begin_src emacs-lisp :tangle init.el
-(leaf corfu-terminal
-  :emacs>= 29.1  ;; <
-  :ensure t
-  :config
-  (setq corfu-terminal-disable-on-gui nil
-        corfu-terminal-enable-on-minibuffer nil
-        corfu-terminal-resize-minibuffer nil
-        )
-  )
-;; -------------------------------------------------------------------------
-  (leaf kind-icon
-    :emacs>= 29.1  ;; <
-    :ensure t
-    :after corfu-terminal
-    :init
-    (setq kind-icon-default-face 'corfu-default
-          kind-icon-use-icons    nil
-          kind-icon-mapping
-          `(
-            (array          ,(nerd-icons-codicon "nf-cod-symbol_array")       :face font-lock-type-face)
-            (boolean        ,(nerd-icons-codicon "nf-cod-symbol_boolean")     :face font-lock-builtin-face)
-            (class          ,(nerd-icons-codicon "nf-cod-symbol_class")       :face font-lock-type-face)
-            (color          ,(nerd-icons-codicon "nf-cod-symbol_color")       :face success)
-            (command        ,(nerd-icons-codicon "nf-cod-terminal")           :face default)
-            (constant       ,(nerd-icons-codicon "nf-cod-symbol_constant")    :face font-lock-constant-face)
-            (constructor    ,(nerd-icons-codicon "nf-cod-triangle_right")     :face font-lock-function-name-face)
-            (enummember     ,(nerd-icons-codicon "nf-cod-symbol_enum_member") :face font-lock-builtin-face)
-            (enum-member    ,(nerd-icons-codicon "nf-cod-symbol_enum_member") :face font-lock-builtin-face)
-            (enum           ,(nerd-icons-codicon "nf-cod-symbol_enum")        :face font-lock-builtin-face)
-            (event          ,(nerd-icons-codicon "nf-cod-symbol_event")       :face font-lock-warning-face)
-            (field          ,(nerd-icons-codicon "nf-cod-symbol_field")       :face font-lock-variable-name-face)
-            (file           ,(nerd-icons-codicon "nf-cod-symbol_file")        :face font-lock-string-face)
-            (folder         ,(nerd-icons-codicon "nf-cod-folder")             :face font-lock-doc-face)
-            (interface      ,(nerd-icons-codicon "nf-cod-symbol_interface")   :face font-lock-type-face)
-            (keyword        ,(nerd-icons-codicon "nf-cod-symbol_keyword")     :face font-lock-keyword-face)
-            (macro          ,(nerd-icons-codicon "nf-cod-symbol_misc")        :face font-lock-keyword-face)
-            (magic          ,(nerd-icons-codicon "nf-cod-wand")               :face font-lock-builtin-face)
-            (method         ,(nerd-icons-codicon "nf-cod-symbol_method")      :face font-lock-function-name-face)
-            (function       ,(nerd-icons-codicon "nf-cod-symbol_method")      :face font-lock-function-name-face)
-            (module         ,(nerd-icons-codicon "nf-cod-file_submodule")     :face font-lock-preprocessor-face)
-            (numeric        ,(nerd-icons-codicon "nf-cod-symbol_numeric")     :face font-lock-builtin-face)
-            (operator       ,(nerd-icons-codicon "nf-cod-symbol_operator")    :face font-lock-comment-delimiter-face)
-            (param          ,(nerd-icons-codicon "nf-cod-symbol_parameter")   :face default)
-            (property       ,(nerd-icons-codicon "nf-cod-symbol_property")    :face font-lock-variable-name-face)
-            (reference      ,(nerd-icons-codicon "nf-cod-references")         :face font-lock-variable-name-face)
-            (snippet        ,(nerd-icons-codicon "nf-cod-symbol_snippet")     :face font-lock-string-face)
-            (string         ,(nerd-icons-codicon "nf-cod-symbol_string")      :face font-lock-string-face)
-            (struct         ,(nerd-icons-codicon "nf-cod-symbol_structure")   :face font-lock-variable-name-face)
-            (text           ,(nerd-icons-codicon "nf-cod-text_size")          :face font-lock-doc-face)
-            (typeparameter  ,(nerd-icons-codicon "nf-cod-list_unordered")     :face font-lock-type-face)
-            (type-parameter ,(nerd-icons-codicon "nf-cod-list_unordered")     :face font-lock-type-face)
-            (unit           ,(nerd-icons-codicon "nf-cod-symbol_ruler")       :face font-lock-constant-face)
-            (value          ,(nerd-icons-codicon "nf-cod-symbol_field")       :face font-lock-builtin-face)
-            (variable       ,(nerd-icons-codicon "nf-cod-symbol_variable")    :face font-lock-variable-name-face)
-            (t              ,(nerd-icons-codicon "nf-cod-code")               :face font-lock-warning-face))
-          )
-    :config
-    (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
-    )
-;; -------------------------------------------------------------------------
-(leaf corfu
-  :emacs>= 29.1  ;; <
-  :ensure t
-  :preface
-  ;; -------------------------------------------------------------------------
-  (defvar corfu--index)
-  (defvar corfu-magic-insert-or-next-line
-    `(menu-item "" nil :filter ,(lambda (&optional _)
-                                  (when (>= corfu--index 0) ;; <
-                                    'corfu-insert)))
-    "If we made a selection during `corfu' completion, select it.")
-  (defvar corfu-magic-cancel-or-backspace
-    `(menu-item "" nil :filter ,(lambda (&optional _)
-                                  (when (>= corfu--index 0) ;; <
-                                    'corfu-reset)))
-    "If we made a selection during `corfu' completion, cancel it.")
-  ;; -------------------------------------------------------------------------
-  :bind (:corfu-map
-         ("M-SPC"      . corfu-insert-separator)
-         ("RET"        . corfu-magic-insert-or-next-line)
-         ("delete"     . corfu-magic-insert-or-next-line)
-         ("backspace"  . corfu-magic-insert-or-next-line)
-         )
-  ;; -------------------------------------------------------------------------
-  :hook (emacs-startup-hook . (lambda ()
-                                (corfu-terminal-mode +1)
-                                (global-corfu-mode)
-                                  )
-                            )
-  ;; -------------------------------------------------------------------------
-  :custom (;; Emacs 30 and newer: Disable Ispell completion function.
-           ;; Try `cape-dict' as an alternative.
-           (text-mode-ispell-word-completion . nil)
-           )
-  ;; -------------------------------------------------------------------------
-  :config
-  (setq text-mode-ispell-word-completion nil
-        corfu-cycle                      t
-        corfu-auto                       t
-        tab-always-indent                t  ;; 'complete だと TAB で補完暴発が...
-        completion-cycle-threshold       4
-        corfu-preview-current            nil
-        corfu-preselect                  'prompt
-        corfu-quit-no-match              t
-        )
-  )
-   #+end_src
-** =cape=: Completion At Point Extensions … 補完 backend
-   :PROPERTIES:
-   :CUSTOM_ID: org3b1ea0b6
-   :END:
-   cape は capf を拡張するパッケージ
-   - =capf= = completion-at-point-function
-   - =cape= = completion-at-point-extension
-   [[https://github.com/minad/cape/blob/main/README.org][README]] によれば沢山補完バックエンドがあるみたい.
-   ただ, 補完されるワードに装飾が付いてたりするので, ちょっと利用は保留
-   #+begin_src emacs-lisp :tangle init.el
-(leaf cape
-  :disabled t
-  :emacs>= 29.1  ;; <
-  :ensure t
-  :init
-  ;; (add-hook 'completion-at-point-functions #'cape-dabbrev)
-  ;; (add-hook 'completion-at-point-functions #'cape-file)
-  ;; (add-hook 'completion-at-point-functions #'cape-keyword)
-  ;; (add-hook 'completion-at-point-functions #'cape-elisp-block)
-  ;; (add-hook 'completion-at-point-functions #'cape-elisp-symbol)
-  ;; (setq cape-dabbrev-check-other-buffers nil)
-  ;; (add-to-list 'completion-at-point-functions 'cape-keyword)
-  ;; (add-to-list 'completion-at-point-functions 'cape-dabbrev)
-  ;; (add-to-list 'completion-at-point-functions 'cape-file)
-  ;; (add-to-list 'completion-at-point-functions 'cape-tex)
-  ;; (add-to-list 'completion-at-point-functions 'cape-emoji)
-  )
-   #+end_src
 ** =marginalia=: リッチな注釈(Enable richer annotations)
    :PROPERTIES:
    :CUSTOM_ID: orge9265e4d
@@ -2956,23 +2945,28 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
   :hook (flymake-mode-hook . flymake-diagnostic-at-point-mode)
   )
    #+end_src
-** =AUCTeX=: TeX 環境
+** TODO =AUCTeX=: TeX 環境 [/]
    :PROPERTIES:
    :CUSTOM_ID: org88a3cb1b
    :END:
-   やっている事は
-   - japanese-latex-mode において, 幾つかのコマンドが追加/上書きされているものの,
-     あまり使うことの無いコマンドが表示されるのが嫌なのでそれらを削除．
-   - コンパイルには[[http://personal.psu.edu/jcc8/software/latexmk/][Latexmk]]を使う
-   と言った所.
-   …ただ, Beamerのクラスなんかだと勝手にdefault コマンドが LaTeX に変更されたりするので挙動がイマイチ良くわからん.
-   async で =latexmk -pvc= を走らせておいた方が気持が良い, 気がしている.
+   ただ, AUCTeX のコマンド制御が良くわからず困っていたりする.
+   例えば
+   - [ ] latexmk で pdf を生成してみても, View で xdvi を呼ぼうとする.
+   - [ ] =file local variable= で TeX-engine を更新しようとしても,
+     常に default が呼ばれる
+   - [ ] Beamerのクラスなんかだと勝手に default コマンドが LaTeX に変更されたりする
+   などなど.
+
+   編集のためと割り切って利用するのが良いかも.
+   確認は裏で =latexmk -pvc= を走らせておいた方が気持が良い, 気がしている.
    #+begin_src emacs-lisp :tangle init.el
 (leaf auctex
   :if (and (executable-find "uplatex")
            (executable-find "latexmk"))
   :preface
   ;; -------------------------------------------------------------------------
+  ;; Debian パッケージを利用するための調整
+  (add-to-list 'my:package-menu-exclude-packages "auctex")
   (if (and (not (featurep 'text-site))
            (file-directory-p "/usr/share/auctex"))
       (progn
@@ -2988,52 +2982,43 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
   :hook
   ((emacs-startup-hook . (lambda ()
                            (load "auctex.el" nil t)
-                           (load "preview-latex.el" nil t)))
-   (LaTeX-mode-hook . (lambda ()
-                        (turn-on-reftex)
-                        (TeX-source-correlate-mode)
-                        (TeX-PDF-mode)
-                        (LaTeX-math-mode)
-                        (eglot-ensure)
-                        (add-to-list
-                         'TeX-command-list
-                         '("LuaLaTeXmk"
-                           "latexmk -e \"$lualatex=q/lualatex %%O %(file-line-error) %(extraopts) %S %(mode) %%S/\" -e \"$bibtex=q/bibtexu %%O %%B/\" -e \"$biber=q/biber %%O --bblencoding=utf8 -u -U --output_safechars %%B/\" -e \"$makeindex=q/upmendex %%O -o %%D %%S/\" -norc -gg -pdflua %t"
-                           TeX-run-TeX nil (latex-mode) :help "Run LuaLaTeXmk"))
-                        (add-to-list
-                         'TeX-command-list
-                         '("upLaTeXmk"
-                           "latexmk -e \"$latex=q/uplatex %%O -kanji=utf8 -no-guess-input-enc %(file-line-error) %(extraopts) %S %(mode) %%S/\" -e \"$bibtex=q/bibtexu %%O %%B/\" -e \"$biber=q/biber %%O --bblencoding=utf8 -u -U --output_safechars %%B/\" -e \"$makeindex=q/upmendex %%O -o %%D %%S/\" -e \"$dvipdf=q/dvipdfmx %%O -o %%D %%S/\" -norc -gg -pdfdvi %t"
-                           TeX-run-TeX nil (latex-mode) :help "Run upLaTeXmk"))
-                        ))
+                           ;; (load "preview-latex.el" nil t)
+                           ))
+   (LaTeX-mode-hook    . (lambda ()
+                           (add-to-list 'TeX-expand-list
+                                        '("%(-PDF)"
+                                          (lambda ()
+                                            (if TeX-PDF-mode
+                                                (cond
+                                                 ((eq TeX-engine 'default) "-pdf")
+                                                 ((eq TeX-engine 'uptex)   "-pdfdvi")
+                                                 ((eq TeX-engine 'ptex)    "-pdfdvi")
+                                                 ((eq TeX-engine 'xetex)   "-pdfxe")
+                                                 ((eq TeX-engine 'luatex)  "-pdflua")) ""))))
+                           (add-to-list 'TeX-command-list
+                                        '("LaTeXmk" "latexmk -pvc %(-PDF)  %(output-dir) %t"
+                                          TeX-run-format nil (latex-mode doctex-mode) :help "Run Latexmk"))
+                           (setq TeX-command-output-list
+                                 '(("LaTeXmk" ("pdf"))))
+                           (setq TeX-command-default "LaTeXmk")
+                           (eglot-ensure)
+                           (turn-on-reftex)
+                           (TeX-source-correlate-mode)
+                           (TeX-PDF-mode)
+                           (LaTeX-math-mode)
+                           ))
    )
-  ;; -------------------------------------------------------------------------
-  :config
-  ;; -- japanese-latex-mode --------------------------------------------------
-  ;; 直接呼ばない関数を削除
-  (with-eval-after-load 'tex-jp
-    (dolist (command '("pTeX" "pLaTeX" "pBibTeX" "jTeX" "jLaTeX" "jBibTeX" "Mendex"))
-      (delq (assoc command TeX-command-list) TeX-command-list)))
-  (setq japanese-TeX-engine-default 'uptex
-        japanese-LaTeX-default-style "jsarticle" ;; bxjsarticle? jlreq?
-        )
+  :init
   ;; -------------------------------------------------------------------------
   ;; 基本設定
   (setq TeX-auto-local (expand-file-name "auctex/auto" my:d:tmp)
         TeX-style-local (expand-file-name "auctex/style" my:d:tmp)
         TeX-auto-untabify t
-        TeX-engine 'luatex
-        TeX-view-program-selection  '((output-dvi "xdvi")
-                                      (output-pdf "Okular")
-                                      ;; (output-pdf "Atril")
-                                      ;; (output-pdf "Fwdevince")
-                                      (output-html "xdg-open")
-                                      )
+        TeX-engine 'uptex
         TeX-source-correlate-method 'synctex
         TeX-source-correlate-start-server t
         TeX-source-correlate-mode t
         TeX-ispell-extend-skip-list t
-        TeX-command-output-list '(("upLatexMk" ("pdf")))
         TeX-electric-sub-and-superscript t
         ;; -------------------------------------------------------------------
         LaTeX-math-mode t
@@ -3047,6 +3032,10 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
         font-latex-fontify-script nil
         font-latex-script-display nil
         font-latex-fontify-sectioning  1.0
+        ;; -------------------------------------------------------------------
+        ;; TeX-auto-save t
+        ;; TeX-parse-self t
+        ;; TeX-master nil
         )
   )
    #+end_src
@@ -5780,37 +5769,27 @@ pdflang={%l}}
    (modus-themes-after-load-theme-hook . my:modus-themes-custom-faces)
    )
   :config
-  (setq modus-themes-custom-auto-reload t
-        modus-themes-disable-other-themes t
-        modus-themes-bold-constructs nil
+  (setq modus-themes-disable-other-themes t
+        modus-themes-to-toggle '(modus-operandi modus-vivendi)
         modus-themes-italic-constructs nil
-        modus-themes-mixed-fonts nil
-        modus-themes-prompts     '(bold bold)
+        modus-themes-bold-constructs t
+        modus-themes-variable-pitch-ui nil
+        modus-themes-mixed-fonts t
+        modus-themes-headings    '((t . (bold)))
         modus-themes-completions '((matches   . (bold))
                                    (selection . (bold underline)))
-        modus-themes-headings    '((t . (bold)))
-        modus-themes-variable-pitch-ui nil
-        modus-vivendi-palette-overrides
-        `(;;
+        modus-themes-prompts     '(bold bold)
+        modus-themes-common-palette-user nil
+        modus-themes-common-palette-overrides nil)
+  (setq modus-vivendi-palette-overrides
+        `(;; -----------------------------------------------------------------
+          ;; 背景の上書き
           (bg-main ,(if (display-graphic-p)
-                        "#000000"     ; GUIなら背景色
+                        "#282a36"     ; GUIなら背景色
                       'unspecified))  ; ターミナルなら色は指定しない
-          ;; ;; Basic color override
-          ;; (green-cooler   "#bfff7f")
-          ;; (green-intense  "#4ceea5")
-          ;; (yellow         "#efef00")
-          ;; (yellow-warmer  "#ffb347")
-          ;; (yellow-intense "#ffff7f")
-          ;; ;;
-          ;; (orange         "#ff9040")
-          ;; (purple         "#d57bff")
-          ;; (teal           "#40e0d0")
-          ;; (pink           "#ff88e0")
-          ;; (bg-hl-line "#556b2f")
-          ;; (bg-hl-line "DarkSlateBlue")
-          ;;
-          ;; Code remapping
-          ;;
+          ;; ----------------------------------------------------------------
+          ;; 幾つかの色の入れ替え
+          ;; -----------------------------------------------------------------
           (builtin blue-warmer)
           (comment fg-dim)
           (constant yellow-warmer)
@@ -6153,6 +6132,14 @@ pdflang={%l}}
           ("ja.overleaf\\.com" . japanese-latex-mode)))
   )
   #+end_src
+** Debug on Error
+   :PROPERTIES:
+   :CUSTOM_ID: org886177b2
+   :END:
+   #+begin_src emacs-lisp :tangle init.el
+(setq debug-on-error t)
+(setq debug-on-message t)
+   #+end_src
 * 最後に
   :PROPERTIES:
   :CUSTOM_ID: orgf87c4e84
@@ -6182,7 +6169,6 @@ pdflang={%l}}
    :END:
    必要に応じて
   #+begin_src emacs-lisp :tangle init.el
-(setq debug-on-error t)
 ;; (profiler-report)
 ;; (profiler-stop)
   #+end_src

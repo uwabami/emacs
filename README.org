@@ -2,7 +2,7 @@
 #+title: Emacs の設定
 #+startup: overview
 #+options: auto-id:t H:6
-#+date: 2026-02-16 20:54:48
+#+date: 2026-02-17 16:52:13
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -501,11 +501,11 @@ distclean: clean
     (unless (package-installed-p 'leaf)
       (package-refresh-contents)
       (package-install 'leaf t))))
-;; ---------------------------------------------------------------------------
-;;;###autoload
-(defun my:register-vc-installed-package (pkgname)
-  ":vcキーワードでインストールしたパッケージを package-selected-package に登録"
-  (leaf-safe-push `,pkgname package-selected-packages 'no-dup))
+;; ;; ---------------------------------------------------------------------------
+;; ;;;###autoload
+;; (defun my:vc-installed-package (pkgname)
+;;   ":vcキーワードでインストールしたパッケージを package-selected-package に登録"
+;;   (leaf-safe-push `,pkgname package-selected-packages 'no-dup))
 ;; ---------------------------------------------------------------------------
 (leaf leaf-keywords
   :ensure t
@@ -532,7 +532,6 @@ distclean: clean
 (add-to-list 'package-vc-allow-build-commands 'hogehero)
    #+end_src
    と指定する様にしました.
-   - [ ] el-get が不要な環境だけになったら以下を有効に.
    #+begin_src emacs-lisp :tangle init.el
 (leaf package-vc
   :doc "Extend package-vc to support post-make autoload generation"
@@ -857,7 +856,6 @@ C-u を付けて実行すると, 埋める文字を指定可能(例: = や * な
   :preface
   (add-to-list 'package-vc-allow-build-commands 'eaw-halfwidth)
   :init
-  (my:register-vc-installed-package 'eaw-halfwidth)
   :hook (emacs-startup-hook . (lambda ()
                                 (eaw-init)
                                 (global-auto-composition-mode 0)))
@@ -1112,6 +1110,9 @@ Emacs.reverseVideo: true
                          '("\\.svgz?\\'" . image-mode) auto-mode-alist)
         ;; org-mode で有効にするローカル変数の追加 ← org-mode でやるべきでは?
         safe-local-variable-values '((org-link-file-path-type . absolute))
+        ;; eglot など, 外部サーバとの I/O の最大値を増やしておく
+        ;; defaul は 65536.
+        read-process-output-max (* 1024 1024)
         ;; 保存, 履歴関連 ----------------------------------------------------
         ;; バックアップファイル(foo.txt~など)は生成しない
         ;; (setq make-backup-files nil) ;; → early-init で設定済
@@ -2173,7 +2174,6 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
   :vc (:url "https://github.com/uwabami/consult-ghq")
   :bind (("C-x f" . consult-ghq-open))
   :init
-  (my:register-vc-installed-package 'consult-ghq)
   (setq consult-ghq-short-list t)
   )
     #+end_src
@@ -2194,7 +2194,7 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
    2. その状態で明示的にC-M-iを押すと候補の選択が出来るようになる
       (同時に最初の候補が選択されるもしくは唯一ある候補が入力される)
    という動作はまさに理想的なので, そう振る舞う様に.
-   - [ ] 最近そうなってない気がする.
+   - [ ] 最近そうならなくなった. 困ったな...
    #+begin_src emacs-lisp :tangle init.el
 (leaf corfu-terminal
   :emacs>= 29.1  ;; <
@@ -2283,14 +2283,13 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
   :hook (emacs-startup-hook . (lambda ()
                                 (corfu-terminal-mode +1)
                                 (global-corfu-mode)
-                                ;; (corfu-popupinfo-mode)
-                                )
+                                  )
                             )
   ;; -------------------------------------------------------------------------
-  ;; :custom (;; Emacs 30 and newer: Disable Ispell completion function.
-  ;;          ;; Try `cape-dict' as an alternative.
-  ;;          (text-mode-ispell-word-completion . nil)
-  ;;          )
+  :custom (;; Emacs 30 and newer: Disable Ispell completion function.
+           ;; Try `cape-dict' as an alternative.
+           (text-mode-ispell-word-completion . nil)
+           )
   ;; -------------------------------------------------------------------------
   :config
   (setq text-mode-ispell-word-completion nil
@@ -2301,7 +2300,6 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
         corfu-preview-current            nil
         corfu-preselect                  'prompt
         corfu-quit-no-match              t
-        ;; corfu-popupinfo-delay            0
         )
   )
    #+end_src
@@ -2547,7 +2545,6 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
   (f90-ts-font-lock-special-comment-face . '((t :inherit font-lock-doc-face)))
   ;; -------------------------------------------------------------------------
   :init
-  (my:register-vc-installed-package 'f90-ts-mode)
   (leaf f90
     :config
     (setq f90-do-indent 2
@@ -2925,10 +2922,17 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
   (delete (assoc '(tex-mode context-mode texinfo-mode bibtex-mode)
                  eglot-server-programs)
           eglot-server-programs)
-;;   (add-to-list 'eglot-server-programs
-;;              '((latex-mode tex-mode context-mode texinfo-mode bibtex-mode) . ("texlab")))
   (add-to-list 'eglot-server-programs
              '((latex-mode tex-mode texinfo-mode bibtex-mode) . ("texlab")))
+  )
+   #+end_src
+   eglot との通信を高速化す eglot-booster も入れておく
+   #+begin_src emacs-lisp :tangle init.el
+(leaf eglot-booster
+  :if (executable-find "emacs-lsp-booster")
+  :vc (:url "git@github.com:jdtsmith/eglot-booster.git")
+  :after eglot
+  :config (eglot-booster-mode)
   )
    #+end_src
 ** =flaymake=: on-the-fly syntax checker
@@ -2952,7 +2956,7 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
   :hook (flymake-mode-hook . flymake-diagnostic-at-point-mode)
   )
    #+end_src
-** TeX: =AUCTeX=
+** =AUCTeX=: TeX 環境
    :PROPERTIES:
    :CUSTOM_ID: org88a3cb1b
    :END:
@@ -2964,45 +2968,60 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
    …ただ, Beamerのクラスなんかだと勝手にdefault コマンドが LaTeX に変更されたりするので挙動がイマイチ良くわからん.
    async で =latexmk -pvc= を走らせておいた方が気持が良い, 気がしている.
    #+begin_src emacs-lisp :tangle init.el
-(leaf tex-site
+(leaf auctex
   :if (and (executable-find "uplatex")
            (executable-find "latexmk"))
   :preface
+  ;; -------------------------------------------------------------------------
+  (if (and (not (featurep 'text-site))
+           (file-directory-p "/usr/share/auctex"))
+      (progn
+        (add-to-list 'load-path "/usr/share/auctex")
+        (add-to-list 'load-path "/usr/share/emacs/site-lisp/auctex")))
+  ;; -------------------------------------------------------------------------
   (unless (file-directory-p (expand-file-name "auctex/auto" my:d:tmp))
-    (progn
-      (make-directory (expand-file-name "auctex/auto" my:d:tmp) t)
-      (make-directory (expand-file-name "auctex/style" my:d:tmp) t)))
-  :mode ("\\.tex\\'" . japanese-latex-mode)
-  :hook (;;
-         (LaTeX-mode-hook . (lambda ()
-                              (turn-on-reftex)
-                              (TeX-source-correlate-mode)
-                              (TeX-PDF-mode)
-                              (LaTeX-math-mode)
-                              (outline-minor-mode)
-                              (setq TeX-command-default "LatexMk"
-                                    japanese-LaTeX-command-default "LatexMk")
-                              (eglot-ensure)
-                              (add-to-list 'TeX-command-list
-                                           '("upLaTeXmk"
-                                             "latexmk -e '$latex=q/uplatex %%O -kanji=utf8 -no-guess-input-enc %(file-line-error) %(extraopts) %S %(mode) %%S/' -e '$bibtex=q/bibtexu %%O %%B/' -e '$biber=q/biber %%O --bblencoding=utf8 -u -U --output_safechars %%B/' -e '$makeindex=q/upmendex %%O -o %%D %%S/' -e '$dvipdf=q/dvipdfmx %%O -o %%D %%S/' -norc -gg -pdfdvi %t"
-                                             TeX-run-TeX nil (latex-mode) :help "Run upLaTeXmk"))
-                              ))
-         )
+    (make-directory (expand-file-name "auctex/auto" my:d:tmp) t)
+    (make-directory (expand-file-name "auctex/style" my:d:tmp) t))
+  ;; -------------------------------------------------------------------------
+  :mode  ("\\.tex\\'" . japanese-latex-mode)
+  ;; -------------------------------------------------------------------------
+  :hook
+  ((emacs-startup-hook . (lambda ()
+                           (load "auctex.el" nil t)
+                           (load "preview-latex.el" nil t)))
+   (LaTeX-mode-hook . (lambda ()
+                        (turn-on-reftex)
+                        (TeX-source-correlate-mode)
+                        (TeX-PDF-mode)
+                        (LaTeX-math-mode)
+                        (eglot-ensure)
+                        (add-to-list
+                         'TeX-command-list
+                         '("LuaLaTeXmk"
+                           "latexmk -e \"$lualatex=q/lualatex %%O %(file-line-error) %(extraopts) %S %(mode) %%S/\" -e \"$bibtex=q/bibtexu %%O %%B/\" -e \"$biber=q/biber %%O --bblencoding=utf8 -u -U --output_safechars %%B/\" -e \"$makeindex=q/upmendex %%O -o %%D %%S/\" -norc -gg -pdflua %t"
+                           TeX-run-TeX nil (latex-mode) :help "Run LuaLaTeXmk"))
+                        (add-to-list
+                         'TeX-command-list
+                         '("upLaTeXmk"
+                           "latexmk -e \"$latex=q/uplatex %%O -kanji=utf8 -no-guess-input-enc %(file-line-error) %(extraopts) %S %(mode) %%S/\" -e \"$bibtex=q/bibtexu %%O %%B/\" -e \"$biber=q/biber %%O --bblencoding=utf8 -u -U --output_safechars %%B/\" -e \"$makeindex=q/upmendex %%O -o %%D %%S/\" -e \"$dvipdf=q/dvipdfmx %%O -o %%D %%S/\" -norc -gg -pdfdvi %t"
+                           TeX-run-TeX nil (latex-mode) :help "Run upLaTeXmk"))
+                        ))
+   )
+  ;; -------------------------------------------------------------------------
   :config
+  ;; -- japanese-latex-mode --------------------------------------------------
+  ;; 直接呼ばない関数を削除
   (with-eval-after-load 'tex-jp
     (dolist (command '("pTeX" "pLaTeX" "pBibTeX" "jTeX" "jLaTeX" "jBibTeX" "Mendex"))
       (delq (assoc command TeX-command-list) TeX-command-list)))
-  ;; reftex
-  (setq reftex-plug-into-AUCTeX t
-        reftex-cite-prompt-optional-args t
+  (setq japanese-TeX-engine-default 'uptex
+        japanese-LaTeX-default-style "jsarticle" ;; bxjsarticle? jlreq?
         )
-  ;; tex-site
+  ;; -------------------------------------------------------------------------
+  ;; 基本設定
   (setq TeX-auto-local (expand-file-name "auctex/auto" my:d:tmp)
         TeX-style-local (expand-file-name "auctex/style" my:d:tmp)
         TeX-auto-untabify t
-        japanese-TeX-engine-default 'uptex
-        japanese-LaTeX-default-style "jsarticle" ;; bxjsarticle? jlreq?
         TeX-engine 'luatex
         TeX-view-program-selection  '((output-dvi "xdvi")
                                       (output-pdf "Okular")
@@ -3013,16 +3032,19 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
         TeX-source-correlate-method 'synctex
         TeX-source-correlate-start-server t
         TeX-source-correlate-mode t
-        LaTeX-math-mode t
-        TeX-command-default "upLaTeXmk"
         TeX-ispell-extend-skip-list t
         TeX-command-output-list '(("upLatexMk" ("pdf")))
         TeX-electric-sub-and-superscript t
-        )
-  (setq LaTeX-figure-label "fig:"
+        ;; -------------------------------------------------------------------
+        LaTeX-math-mode t
+        LaTeX-figure-label "fig:"
         LaTeX-table-label "tab:"
-        LaTeX-section-label "sec:")
-  (setq font-latex-fontify-script nil
+        LaTeX-section-label "sec:"
+        ;; -------------------------------------------------------------------
+        reftex-plug-into-AUCTeX t
+        reftex-cite-prompt-optional-args t
+        ;; -------------------------------------------------------------------
+        font-latex-fontify-script nil
         font-latex-script-display nil
         font-latex-fontify-sectioning  1.0
         )
@@ -3091,8 +3113,6 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
   :if (executable-find "tree-sitter")
   :vc (:url "https://github.com/danilshvalov/git-commit-ts-mode")
   :mode "\\COMMIT_EDITMSG\\'"
-  :init
-  (my:register-vc-installed-package 'git-commit-ts-mode)
   )
    #+end_src
 * 翻訳
@@ -3211,8 +3231,6 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
    #+begin_src emacs-lisp
 (leaf text-adjust
   :vc (:url "https://github.com/uwabami/text-adjust.el")
-  :init
-  (my:register-vc-installed-package 'text-adjust)
   )
    #+end_src
 
@@ -5147,7 +5165,6 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     :vc (:url "https://github.com/kametoku/orgmine" )
     :commands (orgmine-mode)
     :init
-    (my:register-vc-installed-package 'orgmine)
     ;; (defun my:orgmine-default-todo-keyword ()
     ;;   "Custom: use `org-file-properties' for backward compatibility."
     ;;   (or (cdr (assoc-string "om_default_todo" org-file-properties))
@@ -5193,7 +5210,7 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   :if (file-directory-p "~/Public/cc-env")
   :vc (:url "https://github.com/uwabami/org-wiki")
   :init
-  (my:register-vc-installed-package 'org-wiki)
+  ;; (my:vc-installed-package 'org-wiki)
   (setq org-wiki-location-alist     '("~/Public/cc-env")
         org-wiki-location           "~/Public/cc-env"
         org-wiki-publish-relative   t
@@ -5260,8 +5277,6 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
 (leaf ox-jekyll
   :if (file-directory-p "~/Public/cc-env")
   :vc (:url "https://github.com/uwabami/ox-jekyll")
-  :init
-  (my:register-vc-installed-package 'ox-jekyll)
   )
 (leaf ox-html
   :after ox
@@ -5601,8 +5616,6 @@ pdflang={%l}}
   :defvar (tdiary-csrf-key tdiary-passwd-file tdiary-passd-file)
   :pl-setq (tdiary-csrf-key tdiary-passwd-file)
   :vc (:url "https://github.com/uwabami/tdiary-mode")
-  :init
-  (my:register-vc-installed-package 'tdiary-mode)
   :config
   (setq tdiary-text-directory (concat (getenv "HOME") "/Nextcloud/tdiary/")
         tdiary-diary-list '(("log" "https://uwabami.junkhub.org/log/"))

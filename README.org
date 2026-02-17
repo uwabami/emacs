@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+title: Emacs の設定
 #+options: auto-id:t H:6
-#+date: 2026-02-18 00:36:21
+#+date: 2026-02-18 00:53:57
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -705,7 +705,7 @@ distclean: clean
    :END:
    地味に便利
    #+begin_src emacs-lisp :tangle init.el
-;; -------------------------------------------------------------------
+;; ---------------------------------------------------------------------------
 ;;;###autoload
 (defun my:fill-line-with-char (&optional char)
   "行末から fill-column まで文字 (デフォルトは -) で埋めるコマンド.
@@ -717,12 +717,16 @@ C-u を付けて実行すると, 埋める文字を指定可能(例: = や * な
                        ?-))) ;; デフォルトはハイフン
     (save-excursion
       (end-of-line)
+      ;; 行末から遡って target-char が連続している範囲をスキップ
+      (skip-chars-backward (char-to-string target-char))
+      ;; その範囲（古い線）を削除
+      (delete-region (point) (line-end-position))
       (let ((current (current-column))
             (limit fill-column))
         ;; 既に fill-column を超えている、または到達している場合は何もしない
         (when (< current limit)
           ;; 行末が空白でなく、かつ行頭でもない場合はスペースを1つ入れる
-          ;;    (例: "!" -> "! " にしてから線を引くため)
+          ;;    (例: "!" → "! " にしてから線を引くため)
           (unless (or (bolp) (memq (char-before) '(?\s ?\t)))
             (insert " ")
             (setq current (1+ current)))
@@ -730,7 +734,7 @@ C-u を付けて実行すると, 埋める文字を指定可能(例: = や * な
           (let ((len (- limit current)))
             (when (> len 0)
               (insert-char target-char len))))))))
-;; -------------------------------------------------------------------
+;; ---------------------------------------------------------------------------
 ;; とりあえず C-c l に割り当ててみる.
 ;; 何か意味のあるキーが良いのだけれどなぁ
 (global-set-key (kbd "C-c l") #'my:fill-line-with-char)

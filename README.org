@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+title: Emacs の設定
 #+options: auto-id:t H:6
-#+date: 2026-02-19 20:14:19
+#+date: 2026-02-21 02:00:03
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -258,12 +258,8 @@ distclean: clean
     :PROPERTIES:
     :CUSTOM_ID: org9584246f
     :END:
-    +以前は以下を設定していたが, 最近は =gcmh= に任せる事にした.+
-    → [[id:cca3e8df-79f9-4c60-a803-07ff641b0ef7][=gcmh=: 賢い garbage-collection]]
-
-    → 利用を止めました.
-    @see [[https://emacsconf.org/2023/talks/gc/][EmacsConf - 2023 - talks - emacs-gc-stats: Does garbage collection actually slow down Emacs?]]
-
+    以前は =gcmh= を利用していたけれど...
+    - @see [[https://emacsconf.org/2023/talks/gc/][EmacsConf - 2023 - talks - emacs-gc-stats: Does garbage collection actually slow down Emacs?]]
     上記プレゼンでの推奨値に設定するのと,
     =idle-timer= で入力が無い時に GC を走らせることにする.
     #+begin_src emacs-lisp :tangle init.el
@@ -500,11 +496,11 @@ distclean: clean
     (unless (package-installed-p 'leaf)
       (package-refresh-contents)
       (package-install 'leaf t))))
-;; ;; ---------------------------------------------------------------------------
-;; ;;;###autoload
-;; (defun my:vc-installed-package (pkgname)
-;;   ":vcキーワードでインストールしたパッケージを package-selected-package に登録"
-;;   (leaf-safe-push `,pkgname package-selected-packages 'no-dup))
+;; ---------------------------------------------------------------------------
+;;;###autoload
+(defun my:vc-installed-package (pkgname)
+  ":vcキーワードでインストールしたパッケージを package-selected-package に登録"
+  (leaf-safe-push `,pkgname package-selected-packages 'no-dup))
 ;; ---------------------------------------------------------------------------
 (leaf leaf-keywords
   :ensure t
@@ -859,6 +855,7 @@ C-u を付けて実行すると, 埋める文字を指定可能(例: = や * な
             )
   :preface
   (add-to-list 'package-vc-allow-build-commands 'eaw-console)
+  (my:vc-installed-package 'eaw-console)
   :init
   :hook (emacs-startup-hook . (lambda ()
                                 (eaw-init)
@@ -1927,9 +1924,10 @@ Emacs*useXIM: false
   あまり呼び出さなくなったけど, 設定は残しておくことに.
   #+begin_src emacs-lisp :tangle init.el
 (leaf ibuffer
-  :defun (ibuffer-current-buffer)
-  :defvar (ibuffer-formats)
+  :tag "builtin"
   :preface
+  ;; -------------------------------------------------------------------------
+;;;###autoload
   (defun my:ibuffer-find-file ()
     "Like `find-file', but default to the directory of the buffer at point."
     (interactive)
@@ -1940,6 +1938,24 @@ Emacs*useXIM: false
                     default-directory)
                 default-directory))))
       (find-file default-directory)))
+  ;; -------------------------------------------------------------------------
+  :init
+  (leaf nerd-icons-ibuffer
+    :ensure t
+    :custom
+    ((nerd-icons-ibuffer-formats
+      .
+      `((mark modified read-only ,(if (>= emacs-major-version 26) 'locked "")
+              " " (icon 2 2)
+              " " (name 17 17 :left :elide)
+              " " (size-h 9 -1 :right)
+              " " (mode+ 16 16 :left :elide)
+              " " filename-and-process+)
+        (mark " " (name 16 -1) " " filename))
+      )
+     )
+    )
+  :hook (ibuffer-mode . nerd-icons-ibuffer-mode)
   :bind (("C-x M-b" . ibuffer)
          (:ibuffer-mode-map
           ("C-x C-f" . my:ibuffer-find-file))
@@ -2316,6 +2332,7 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
     #+begin_src emacs-lisp
 (leaf consult-ghq
   :vc (:url "https://github.com/uwabami/consult-ghq")
+  :preface (my:vc-installed-package 'consult-ghq)
   :bind (("C-x f" . consult-ghq-open))
   :init
   (setq consult-ghq-short-list t)
@@ -2411,6 +2428,7 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
 (leaf eglot-booster
   :if (executable-find "emacs-lsp-booster")
   :vc (:url "git@github.com:jdtsmith/eglot-booster.git")
+  :preface (my:vc-installed-package 'eglot-booster)
   :after eglot
   :config (eglot-booster-mode)
   )
@@ -2523,6 +2541,7 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
 (leaf f90-ts-mode
   :if (executable-find "tree-sitter")
   :vc (:url "git@github.com:uwabami/emacs-f90-ts-mode.git")
+  :preface (my:vc-installed-package 'f90-ts-mode)
   :mode ("\\.f90\\'" "\\.F90\\'" "\\.f95\\'" "\\.F95\\'" "\\.F\\'")
   :defvar treesit-language-source-alist
   :bind (:f90-ts-mode-map
@@ -3118,6 +3137,7 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
 (leaf git-commit-ts-mode
   :if (executable-find "tree-sitter")
   :vc (:url "https://github.com/danilshvalov/git-commit-ts-mode")
+  :preface (my:vc-installed-package 'git-commit-ts-mode)
   :mode "\\COMMIT_EDITMSG\\'"
   )
    #+end_src
@@ -3237,6 +3257,7 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
    #+begin_src emacs-lisp
 (leaf text-adjust
   :vc (:url "https://github.com/uwabami/text-adjust.el")
+  :preface (my:vc-installed-package 'text-adjust)
   )
    #+end_src
 
@@ -5169,6 +5190,7 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   ;;             (if (assoc "om_server" org-file-properties) (orgmine-mode))))
   (leaf orgmine
     :vc (:url "https://github.com/kametoku/orgmine" )
+    :preface (my:vc-installed-package 'orgmine)
     :commands (orgmine-mode)
     :init
     ;; (defun my:orgmine-default-todo-keyword ()
@@ -5215,8 +5237,8 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
 (leaf org-wiki
   :if (file-directory-p "~/Public/cc-env")
   :vc (:url "https://github.com/uwabami/org-wiki")
+  :preface (my:vc-installed-package 'org-wiki)
   :init
-  ;; (my:vc-installed-package 'org-wiki)
   (setq org-wiki-location-alist     '("~/Public/cc-env")
         org-wiki-location           "~/Public/cc-env"
         org-wiki-publish-relative   t
@@ -5283,6 +5305,7 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
 (leaf ox-jekyll
   :if (file-directory-p "~/Public/cc-env")
   :vc (:url "https://github.com/uwabami/ox-jekyll")
+  :preface (my:vc-installed-package 'ox-jekyll)
   )
 (leaf ox-html
   :after ox
@@ -5622,6 +5645,7 @@ pdflang={%l}}
   :defvar (tdiary-csrf-key tdiary-passwd-file tdiary-passd-file)
   :pl-setq (tdiary-csrf-key tdiary-passwd-file)
   :vc (:url "https://github.com/uwabami/tdiary-mode")
+  :preface (my:vc-installed-package 'tdiary-mode)
   :config
   (setq tdiary-text-directory (concat (getenv "HOME") "/Nextcloud/tdiary/")
         tdiary-diary-list '(("log" "https://uwabami.junkhub.org/log/"))

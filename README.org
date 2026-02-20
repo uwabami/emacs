@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+title: Emacs の設定
 #+options: auto-id:t H:6
-#+date: 2026-02-18 00:53:57
+#+date: 2026-02-19 20:14:19
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -850,14 +850,15 @@ C-u を付けて実行すると, 埋める文字を指定可能(例: = や * な
    - [[https://github.com/hamano/locale-eaw][hamano/locale-eaw: East Asian Ambiguous Width問題のための修正ロケール]]
    を利用します.
    #+begin_src emacs-lisp :tangle init.el
-(leaf eaw-halfwidth
+(leaf eaw-console
   :commands eaw-init
-  :vc (:url "https://github.com/uwabami/locale-eaw"
+  :vc (:url "git@github.com:uwabami/locale-eaw"
+            :branch "custom"
             :make "all"
             :lisp-dir "dist"
             )
   :preface
-  (add-to-list 'package-vc-allow-build-commands 'eaw-halfwidth)
+  (add-to-list 'package-vc-allow-build-commands 'eaw-console)
   :init
   :hook (emacs-startup-hook . (lambda ()
                                 (eaw-init)
@@ -926,35 +927,34 @@ Emacs.reverseVideo: true
           `((,(format ".*%s.*" cjk-font-name) . ,cjk-font-scale)
             (,(format ".*%s.*" emoji-font-name) . ,emoji-font-scale)))
     )
-  ;; ;;;###autoload
-  ;;   (defun my:apply-font-Moralerspace-Argon ()
-  ;;     (interactive)
-  ;;     (my:setup-gui-fonts "Moralerspace Argon HW" 130
-  ;;                         "Moralerspace Argon HW" 1.0
-  ;;                         "Moto Color Emoji-Moralerspace Argon" 1
-  ;;                         ))
-  ;; ;;;###autoload
-  ;;   (defun my:apply-font-PlemolJP-Console ()
-  ;;     (interactive)
-  ;;     (my:setup-gui-fonts "PlemolJP Console NF" 135
-  ;;                         "PlemolJP Console NF" 1.0
-  ;;                         ;; "Moto Color Emoji for PlemolJP" 1.0
-  ;;                         "EAW CONSOLE" 1.0
-  ;;                          ))
-;; ;;;###autoload
-;;   (defun my:apply-font-Cica ()
-;;     (interactive)
-;;     (my:setup-gui-fonts "PlemolJP Console NF" 135
-;;                         "PlemolJP Console NF" 1.0
-;;                         "Cica" 1.0
-;;                          ))
 ;;;###autoload
-  (defun my:apply-font-EAW-CONSOLE ()
+  (defun my:apply-font-Moralerspace-Argon ()
     (interactive)
-    (my:setup-gui-fonts "EAW CONSOLE" 135
-                        "EAW CONSOLE" 1.0
-                        "EAW CONSOLE" 1.0
+    (my:setup-gui-fonts "Moralerspace Argon HW" 130
+                        "Moralerspace Argon HW" 1.0
+                        "Moto Color Emoji for PlemolJP" 1.0
                         ))
+;;;###autoload
+  (defun my:apply-font-PlemolJP-Console ()
+    (interactive)
+    (my:setup-gui-fonts "PlemolJP Console NF" 120
+                        "PlemolJP Console NF" 1.0
+                        "Moto Color Emoji for PlemolJP" 1.1
+                        ))
+;;;###autoload
+  (defun my:apply-font-custom ()
+    (interactive)
+    (my:setup-gui-fonts "Victor Mono" 135
+                        "PlemolJP Console NF" 1.0
+                        "Moto Color Emoji for PlemolJP" 1.0
+                         ))
+;; ;;;###autoload
+;;   (defun my:apply-font-EAW-CONSOLE ();
+;     (interactive)
+;;     (my:setup-gui-fonts "EAW CONSOLE" 135
+;;                         "EAW CONSOLE" 1.0
+;;                         "EAW CONSOLE" 1.0
+;;                         ))
 ;;;###autoload
   (defun my:setup-gui-frame (&optional frame)
     "GUI環境のみ reverse と alpha を適用する"
@@ -972,12 +972,12 @@ Emacs.reverseVideo: true
   ((window-setup-hook
     . (lambda ()
         (my:setup-gui-frame)
-        (my:apply-font-EAW-CONSOLE))
+        (my:apply-font-PlemolJP-Console))
     )
    (after-make-frame-functions
     . (lambda ()
         (my:setup-gui-frame)
-        (my:apply-font-EAW-CONSOLE))
+        (my:apply-font-PlemolJP-Console))
     )
    )
   )
@@ -2353,6 +2353,17 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
    )
   )
    #+end_src
+** =embark=: 補完候補から直接諸々を実行
+   :PROPERTIES:
+   :CUSTOM_ID: org147aaaa7
+   :END:
+   #+begin_src emacs-lisp :tangle init.el
+(leaf embark ;; <
+  :emacs>= 29.1
+  :ensure t
+  :disabled t
+  )
+   #+end_src
 * =chezmoi=: 設定ファイルの編集補助
   :PROPERTIES:
   :CUSTOM_ID: org21392594
@@ -2373,6 +2384,58 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
   :PROPERTIES:
   :CUSTOM_ID: org31fb6f15
   :END:
+** =eglot=: Language Server による補完
+   :PROPERTIES:
+   :CUSTOM_ID: org1d7a5ece
+   :END:
+   Emacs 29から 本体に同梱されることになったので =eglot= を利用することに.
+   サーバの呼び出し自体は言語毎に hook で設定する.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf eglot
+  :ensure t
+  :bind (("M-t" . xref-find-definitions)
+         ("M-r" . xref-find-references))
+  :config
+  ;; digestif は日本語TeXとイマイチ相性が悪い
+  (delete (assoc '(tex-mode context-mode texinfo-mode bibtex-mode)
+                 eglot-server-programs)
+          eglot-server-programs)
+  (add-to-list 'eglot-server-programs
+               '((latex-mode tex-mode texinfo-mode bibtex-mode) . ("texlab")))
+  (add-to-list 'eglot-server-programs
+               '((f90-mode f90-ts-mode) . ("fortls")))
+  )
+   #+end_src
+   eglot との通信を高速化す eglot-booster も入れておく
+   #+begin_src emacs-lisp :tangle init.el
+(leaf eglot-booster
+  :if (executable-find "emacs-lsp-booster")
+  :vc (:url "git@github.com:jdtsmith/eglot-booster.git")
+  :after eglot
+  :config (eglot-booster-mode)
+  )
+   #+end_src
+** =flaymake=: on-the-fly syntax checker
+   :PROPERTIES:
+   :CUSTOM_ID: org82f6778a
+   :END:
+   =eglot= と同時に利用されるので、一応設定しておく.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf flymake
+  :ensure t
+  :bind (:flymake-mode-map
+         ("C-c C-p" . flymake-goto-prev-error)
+         ("C-c C-n" . flymake-goto-next-error)
+         )
+  :config (require 'flymake-proc nil 'noerror)
+  )
+(leaf flymake-diagnostic-at-point
+  :disabled t
+  :ensure t
+  :after flymake
+  :hook (flymake-mode-hook . flymake-diagnostic-at-point-mode)
+  )
+   #+end_src
 ** =rainbow-delimiters=: 対応する括弧を色付け
    :PROPERTIES:
    :CUSTOM_ID: org11b26f5a
@@ -2437,8 +2500,8 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
           ;; (latex "https://github.com/latex-lsp/tree-sitter-latex")
           ;; (go "https://github.com/tree-sitter/tree-sitter-go")
           ;; (html "https://github.com/tree-sitter/tree-sitter-html")
-          ;; (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
-          ;; (json "https://github.com/tree-sitter/tree-sitter-json")
+          (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+          (json "https://github.com/tree-sitter/tree-sitter-json")
           ;; (make "https://github.com/alemuller/tree-sitter-make")
           ;; (nix "https://github.com/nix-community/tree-sitter-nix")
           ;; (python "https://github.com/tree-sitter/tree-sitter-python")
@@ -2529,13 +2592,13 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
    )
   ;; -------------------------------------------------------------------------
   :custom-face
-  (f90-ts-font-lock-intrinsic-face       . '((t :inherit font-lock-builtin-face)))
+  ;; (f90-ts-font-lock-intrinsic-face       . '((t :inherit font-lock-builtin-face)))
   (f90-ts-font-lock-delimiter-face       . '((t :inherit font-lock-delimiter-face)))
+  (f90-ts-font-lock-bracket-face         . '((t :inherit font-lock-bracket-face)))
   (f90-ts-font-lock-operator-face        . '((t :inherit font-lock-operator-face)))
   (f90-ts-font-lock-openmp-face          . '((t :inherit font-lock-preprocessor-face)))
-  (f90-ts-font-lock-bracket-face         . '((t :inherit font-lock-bracket-face)))
   (f90-ts-font-lock-special-var-face     . '((t :inherit font-lock-constant-face)))
-  (f90-ts-font-lock-special-comment-face . '((t :inherit font-lock-doc-face)))
+  (f90-ts-font-lock-separator-comment-face . '((t :inherit font-lock-doc-face)))
   ;; -------------------------------------------------------------------------
   :init
   (leaf f90
@@ -2558,10 +2621,11 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
         f90-ts-indent-contain 2
         f90-ts-indent-block 2
         f90-ts-indent-continued 2
-        f90-ts-indent-openmp-style 'context
+        ;; f90-ts-indent-openmp-style 'context
         f90-ts-indent-lists-region 'continued-line
         f90-ts-indent-lists-line   'continued-line
         f90-ts-smart-end 'no-blink
+        90-ts-beginning-ampersand t
         )
   (setq f90-ts-indent-rules-openmp
         `(
@@ -2573,6 +2637,7 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
   :hook
   (f90-ts-mode-hook
    . (lambda ()
+       (eglot-ensure)
        (setq-local comment-start "!")
        (setq-local comment-start-skip "\\(!>\\|!+\\)[ \t]*")
        (font-lock-add-keywords
@@ -2887,68 +2952,6 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
     (apply orig-fun args)))
 )
    #+end_src
-** =eglot=: Language Server による補完
-   :PROPERTIES:
-   :CUSTOM_ID: org1d7a5ece
-   :END:
-   Emacs 29から 本体に同梱されることになったので =eglot= を利用することに.
-   サーバの呼び出し自体は言語毎に hook で設定する.
-   #+begin_src emacs-lisp :tangle init.el
-(leaf eglot
-  :ensure t
-  :bind (("M-t" . xref-find-definitions)
-         ("M-r" . xref-find-references))
-;;  :init
-;;;###autoload
-;; (defun my:eglot-capf()
-;;   (setq-local completion-at-point-functions
-;;               (list (cape-super-capf
-;;                      #'eglot-completion-at-point)
-;;                     #'cape-keyword
-;;                     #'cape-dabbrev
-;;                     #'cape-file)
-;;               ))
-;;  :hook
-;;  ((eglot-managed-mode-hook . my:eglot-capf))
-  :config
-  ;; digestif は日本語TeXとイマイチ相性が悪い(上手く使い熟せていない...).
-  (delete (assoc '(tex-mode context-mode texinfo-mode bibtex-mode)
-                 eglot-server-programs)
-          eglot-server-programs)
-  (add-to-list 'eglot-server-programs
-             '((latex-mode tex-mode texinfo-mode bibtex-mode) . ("texlab")))
-  )
-   #+end_src
-   eglot との通信を高速化す eglot-booster も入れておく
-   #+begin_src emacs-lisp :tangle init.el
-(leaf eglot-booster
-  :if (executable-find "emacs-lsp-booster")
-  :vc (:url "git@github.com:jdtsmith/eglot-booster.git")
-  :after eglot
-  :config (eglot-booster-mode)
-  )
-   #+end_src
-** =flaymake=: on-the-fly syntax checker
-   :PROPERTIES:
-   :CUSTOM_ID: org82f6778a
-   :END:
-   =eglot= と同時に利用されるので、一応設定しておく.
-   #+begin_src emacs-lisp :tangle init.el
-(leaf flymake
-  :ensure t
-  :bind (:flymake-mode-map
-         ("C-c C-p" . flymake-goto-prev-error)
-         ("C-c C-n" . flymake-goto-next-error)
-         )
-  :config (require 'flymake-proc nil 'noerror)
-  )
-(leaf flymake-diagnostic-at-point
-  :disabled t
-  :ensure t
-  :after flymake
-  :hook (flymake-mode-hook . flymake-diagnostic-at-point-mode)
-  )
-   #+end_src
 ** TODO =AUCTeX=: TeX 環境 [/]
    :PROPERTIES:
    :CUSTOM_ID: org88a3cb1b
@@ -3041,6 +3044,16 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
         ;; TeX-parse-self t
         ;; TeX-master nil
         )
+  )
+   #+end_src
+** =php-mode=: PHP 環境
+   :PROPERTIES:
+   :CUSTOM_ID: orgd087a413
+   :END:
+   #+begin_src emacs-lisp :tangle init.el
+(leaf php-mode ;; <
+  :emacs>= 27.1
+  :ensure t
   )
    #+end_src
 * VCSなど, ソースコード管理関係

@@ -2113,6 +2113,7 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
    #+begin_src emacs-lisp :tangle init.el
 (leaf corfu-terminal
   :emacs>= 29.1  ;; <
+  :emacs<  31 ;; >
   :ensure t
   :config
   (setq corfu-terminal-disable-on-gui nil
@@ -2246,6 +2247,7 @@ changes to the prompt. Note this function can remove the separator character."
    #+begin_src emacs-lisp :tangle init.el
 (leaf cape ;; <
   :emacs>= 29.1
+  :if (executable-find "cmigemo")
   :ensure t
   :advice
   ((:around eglot-completion-at-point cape-wrap-buster)
@@ -2272,6 +2274,7 @@ changes to the prompt. Note this function can remove the separator character."
    #+begin_src emacs-lisp :tangle init.el
 (leaf orderless ;; <
   :emacs>= 29.1
+  :if (executable-find "cmigemo")
   :ensure t
   :defun (migemo-get-pattern . migemo)
   :custom

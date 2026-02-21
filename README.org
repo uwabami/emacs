@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+title: Emacs の設定
 #+options: auto-id:t H:6
-#+date: 2026-02-21 02:00:03
+#+date: 2026-02-21 12:57:13
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -440,7 +440,7 @@ distclean: clean
    元ネタ: [[https://emacs.stackexchange.com/questions/9331/mark-package-to-never-be-considered-for-upgrade][Mark package to never be considered for upgrade - Emacs Stack Exchange]]
    #+begin_src emacs-lisp :tangle init.el
 ;; ---------------------------------------------------------------------------
-(defvar my:package-menu-exclude-packages nil
+(defvar my:package-update-exclude nil
   "Specify packages not to be upgraded")
 ;; ---------------------------------------------------------------------------
 ;;;###autoload
@@ -450,7 +450,7 @@ distclean: clean
   (let ((included (-filter
                    (lambda (entry)
                      (let ((name (symbol-name (package-desc-name (car entry)))))
-                       (not (member name my:package-menu-exclude-packages))))
+                       (not (member name my:package-update-exclude))))
                    tabulated-list-entries)))
     (setq-local tabulated-list-entries included)
     (funcall orig)))
@@ -459,25 +459,24 @@ distclean: clean
 ;; ---------------------------------------------------------------------------
    #+end_src
    #+begin_src emacs-lisp :tangle init.el
-;; ;;;###autoload
-;; (defun my:package-quickstart-refresh-silently ()
-;;   "Compile-Log を表示せずに package-quickstart-refresh を実行するラッパー関数"
-;;   (interactive)
-;;   (let ((byte-compile-warnings nil)      ;; 警告を生成しない
-;;         (byte-compile-verbose nil)       ;; 詳細ログを出さない
-;;         (inhibit-message t)              ;; メッセージエリアの出力も抑制
-;;         ;; *Compile-Log* バッファが表示されようとしたら「何もしない」設定にする
-;;         (display-buffer-alist
-;;          '(("\\*Compile-Log\\*" display-buffer-no-window (allow-no-window . t)))))
-;;     (with-current-buffer (get-buffer-create "*Compile-Log*")
-;;       ;; 念のためログバッファを空にしておく（以前のログが残っているとポップアップの原因になることがあるため）
-;;       (let ((inhibit-read-only t))
-;;         (erase-buffer)))
-;;     ;; 実行
-;;     (package-quickstart-refresh)))
-;; ;;
-;; (add-hook 'kill-emacs-hook #'my:package-quickstart-refresh-silently)
-(add-hook 'kill-emacs-hook #'package-quickstart-refresh)
+;;;###autoload
+(defun my:package-quickstart-refresh-silently ()
+  "Compile-Log を表示せずに package-quickstart-refresh を実行するラッパー関数"
+  (interactive)
+  (let ((byte-compile-warnings nil)      ;; 警告を生成しない
+        (byte-compile-verbose nil)       ;; 詳細ログを出さない
+        (inhibit-message t)              ;; メッセージエリアの出力も抑制
+        ;; *Compile-Log* バッファが表示されようとしたら「何もしない」設定にする
+        (display-buffer-alist
+         '(("\\*Compile-Log\\*" display-buffer-no-window (allow-no-window . t)))))
+    (with-current-buffer (get-buffer-create "*Compile-Log*")
+      ;; 念のためログバッファを空にしておく（以前のログが残っているとポップアップの原因になることがあるため）
+      (let ((inhibit-read-only t))
+        (erase-buffer)))
+    ;; 実行
+    (package-quickstart-refresh)))
+;;
+(add-hook 'kill-emacs-hook #'my:package-quickstart-refresh-silently)
    #+end_src
    - [ ] 起動時にはここが一番時間がかかっている.
 ** WAIT [[https://github.com/conao3/leaf.el][leaf.el]] [1/1]
@@ -1850,18 +1849,36 @@ Emacs*useXIM: false
   :if (executable-find "cmigemo")
   :ensure t
   :preface
-  (add-to-list 'my:package-menu-exclude-packages "migemo")
+  (add-to-list 'my:package-update-exclude "migemo")
+  ;; -------------------------------------------------------------------------
+;;;###autoload
+  (defun my:migemo-toggle-isearch-enable ()
+    "migemo-toggle-isearch-enable のメッセージをちょっと改変.
+t と nil じゃちょっとわかんないよね..."
+    (interactive)
+    (setq migemo-isearch-enable-p (not migemo-isearch-enable-p))
+    (message (if migemo-isearch-enable-p
+                 "Migemo enabled."
+               "Migemo disabled.")))
+  ;; -------------------------------------------------------------------------
+  :advice((:override migemo-toggle-isearch-enable
+                     my:migemo-toggle-isearch-enable))
+  ;; -------------------------------------------------------------------------
+  :bind (:isearch-mode-map
+         ("C-e" . my:migemo-toggle-isearch-enable))
+  ;; -------------------------------------------------------------------------
   :init
-  (setq migemo-user-dictionary  nil
-        migemo-regex-dictionary nil
-        migemo-options          '("-q" "--emacs")
-        migemo-command          "cmigemo"
-        migemo-coding-system    'utf-8-unix
-        migemo-dictionary       (or (if (file-exists-p "/usr/local/share/migemo/utf-8/migemo-dict")
-                                        "/usr/local/share/migemo/utf-8/migemo-dict")
-                                    "/usr/share/cmigemo/utf-8/migemo-dict")
-        migemo-isearch-enable-p t
-        )
+  (setopt migemo-user-dictionary  nil
+          migemo-regex-dictionary nil
+          migemo-options          '("-q" "--emacs")
+          migemo-command          "cmigemo"
+          migemo-coding-system    'utf-8-unix
+          migemo-dictionary       `,(or (if (file-exists-p "/usr/local/share/migemo/utf-8/migemo-dict")
+                                           "/usr/local/share/migemo/utf-8/migemo-dict")
+                                       "/usr/share/cmigemo/utf-8/migemo-dict")
+          migemo-isearch-enable-p  nil
+          )
+  ;; -------------------------------------------------------------------------
   :hook
   (emacs-startup-hook . migemo-init)
   )
@@ -2153,13 +2170,40 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
     :config
     (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
     )
-;; -------------------------------------------------------------------------
-(leaf corfu
-  :emacs>= 29.1  ;; <
+   #+end_src
+   #+begin_src emacs-lisp :tangle init.el
+(leaf corfu ;; <
+  :emacs>= 29.1
   :ensure t
+  :preface
+  ;; ---------------------------------------------------------------------------
+  ;; @see https://github.com/minad/corfu/wiki#advanced-variants-for-separator-handling
+;;;###autoload
+  (defun corfu-insert-or-escape-separator ()
+    "Rotate prompt between inserting, escaping and removing the separator.
+An alternative to `corfu-insert-separator', useful in cases where including the
+separator in the query is important, and the user wants a single bind for
+everything. It can be called repeatedly, and will do, in order (starting from a
+prompt without any separators):
+
+1. Insert the separator character at prompt end.
+2. Insert a backslash character before the inserted separator, to treat it as
+   part of the prompt instead of as a split point for components.
+3. Remove the separator and backslash.
+
+The sequence will loop to 1 if called further, allowing to fix accidental
+changes to the prompt. Note this function can remove the separator character."
+    (interactive)
+    (if (char-equal (char-before) corfu-separator)
+        (if (char-equal (char-before (1- (point))) ?\\)
+            (save-excursion (delete-char -2))                   ;; Case 3
+          (save-excursion (backward-char 1) (insert-char ?\\))) ;; Case 2
+      (call-interactively #'corfu-insert-separator)))           ;; Case 1
   ;; -------------------------------------------------------------------------
   :bind (:corfu-map
-         ("M-SPC"        . corfu-insert-separator)
+         ("RET"      . nil)
+         ("<return>" . nil)
+         ("M-SPC"    . corfu-insert-or-escape-separator)
          )
   ;; -------------------------------------------------------------------------
   :hook (emacs-startup-hook . (lambda ()
@@ -2185,6 +2229,12 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
         )
   )
    #+end_src
+   #+begin_src emacs-lisp :tangle init.el
+(leaf corfu-popupinfo
+  :after corfu
+  :hook (corfu-mode . corfu-popupinfo-mode)
+  )
+   #+end_src
 ** =cape=: Completion At Point Extensions … 補完 backend
    :PROPERTIES:
    :CUSTOM_ID: org3b1ea0b6
@@ -2194,25 +2244,23 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
    - =cape= = completion-at-point-extension
    [[https://github.com/minad/cape/blob/main/README.org][README]] によれば沢山補完バックエンドがあるみたい.
    #+begin_src emacs-lisp :tangle init.el
-(leaf cape
-  :emacs>= 29.1  ;; <
+(leaf cape ;; <
+  :emacs>= 29.1
   :ensure t
   :advice
-  (:around eglot-completion-at-point
-           cape-wrap-buster)
+  ((:around eglot-completion-at-point cape-wrap-buster)
+   (:around eglot-completion-at-point cape-wrap-nonexclusive))
+  :hook
+  ((completion-at-point-functions . cape-dabbrev)
+   (completion-at-point-functions . cape-file)
+   (completion-at-point-functions . cape-keyword)
+   (completion-at-point-functions . cape-elisp-block)
+   (completion-at-point-functions . cape-tex)
+   )
   :init
-  :config
-  ;; (add-hook 'completion-at-point-functions #'cape-dabbrev)
-  ;; (add-hook 'completion-at-point-functions #'cape-file)
-  ;; (add-hook 'completion-at-point-functions #'cape-keyword)
-  ;; (add-hook 'completion-at-point-functions #'cape-elisp-block)
-  ;; (add-hook 'completion-at-point-functions #'cape-elisp-symbol)
-  ;; (setq cape-dabbrev-check-other-buffers nil)
-  ;; (add-to-list 'completion-at-point-functions 'cape-keyword)
-  ;; (add-to-list 'completion-at-point-functions 'cape-dabbrev)
-  ;; (add-to-list 'completion-at-point-functions 'cape-file)
-  ;; (add-to-list 'completion-at-point-functions 'cape-tex)
-  ;; (add-to-list 'completion-at-point-functions 'cape-emoji)
+  (setq cape-dabbrev-check-other-buffers nil
+        completion-category-overrides '((eglot (styles orderless))
+                                        (eglot-capf (styles orderless))))
   )
    #+end_src
 ** =orderless=: 補完候補の選択
@@ -2222,18 +2270,39 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
    便利ではあるのだろうけれど,
    いまいちまだちゃんと自分好みにできていない.
    #+begin_src emacs-lisp :tangle init.el
-(leaf orderless
-  :emacs>= 29.1  ;; <
+(leaf orderless ;; <
+  :emacs>= 29.1
   :ensure t
+  :defun (migemo-get-pattern . migemo)
+  :custom
+  ((completion-styles . '(orderless basic))
+   (completion-category-overrides
+    . '((file (styles orderless+migemo partial-completion))
+        (buffer (styles orderless+migemo))
+        (unicode-name (styles orderless+migemo))
+        (kill-ring (styles orderless+migemo))
+        (eglot (styles orderless))
+        (eglot-capf (styles orderless))
+        ;; consult with migemo
+        (consult-location (styles orderless+migemo)) ; consult-line
+        (consult-multi (styles orderless+migemo))    ; consult-buffer
+        ))
+   )
+  ;;  ------------------------------------------------------------------------
   :config
-  (with-eval-after-load 'eglot
-    (setq completion-category-defaults nil))
-  (setq completion-styles '(orderless basic)
-        completion-category-overrides '((file (styles partial-completion))
-                                        (eglot (styles orderless))
-                                        (eglot-capf (styles orderless)))
-        completion-pcm-leading-wildcard  t
-        )
+  (defun orderless-migemo (component)
+    "Orderless に migemo を追加"
+    (let ((pattern (migemo-get-pattern component)))
+      (condition-case nil
+          (progn (string-match-p pattern "") pattern)
+        (invalid-regexp nil))))
+  (eval-when-compile (require 'orderless))
+  (orderless-define-completion-style orderless+migemo
+    (orderless-matching-styles
+     '(orderless-literal
+       orderless-regexp
+       orderless-initialism
+       orderless-migemo)))
   )
    #+end_src
 ** =consult=: 便利コマンド集
@@ -2243,67 +2312,78 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
    とりあえず recetnf が使えないと途方に暮れるので
    =consult-recent-file= のカスタマイズのみ.
    #+begin_src emacs-lisp :tangle init.el
-(leaf consult
-  :emacs>= 29.1  ;; <
+(leaf consult ;; <
+  :emacs>= 29.1
   :ensure t
-  :bind (("C-x C-r" . my:consult-recent-file)
-         ("C-x C-b" . consult-buffer)
-         ("C-x b"   . consult-buffer)
-         ("M-g o"   . consult-outline)
-         (:vertico-map
-          ("C-v"    . consult-toggle-preview ))
-         ;; ("C-f"     . consult-line) 候補選択が要調整
-         )
-  ;;
-  ;; (global-set-key [remap goto-line] 'consult-goto-line)
+  :preface
   ;; -------------------------------------------------------------------------
-  :init
-  (setq ;;consult-async-refresh-delay 0.2
-        ;; consult-narrow-key          "<"
-        ;; consult-preview-key         nil
-        ;; 増やさないと preview 時に theme がロードされない模様.
-        ;; とりあえず default の 10 倍にしている. 1 MB かな?
-        consult-preview-raw-size 1024000
-        )
-  :config
-;;  (setq read-file-name-function #'my:consult-find-file-with-preview
-;;        consult-preview-excluded-buffers
-;;        consult--source-buffer
-;;        (plist-put consult--source-buffer :state #'my:consult-buffer-state-no-tramp))
-  ;; -------------------------------------------------------------------------
-;;  (defun my:consult-find-file-with-preview (prompt &optional dir default mustmatch initial pred)
-;;    (interactive)
-;;    (let ((default-directory (or dir default-directory))
-;;          (minibuffer-completing-file-name t))
-;;      (consult--read #'read-file-name-internal :state (consult--file-preview)
-;;                     :prompt prompt
-;;                     :initial initial
-;;                     :require-match mustmatch
-;;                     :predicate pred)))
-  ;; -------------------------------------------------------------------------
-  (defun my:consult-buffer-state-no-tramp ()
-    "Buffer state function that doesn't preview recentf and remote files"
-    (let ((orig-state (consult--buffer-state))
-          (filter (lambda (cand restore)
-                    (if (or (string-equal "return" cand)
-                            restore
-                            (let ((buffer (get-buffer cand)))
-                              (and buffer
-                                   (not (file-remote-p (buffer-local-value 'default-directory buffer))))))
-                        cand
-                      nil))))
-      (lambda (cand restore)
-        (funcall orig-state (funcall filter cand restore) restore))))
-  ;; -------------------------------------------------------------------------
+;;;###autoload
   (defvar-local consult-toggle-preview-orig nil)
   (defun consult-toggle-preview ()
-    "Command to enable/disable preview."
+    "Command to enable/disable preview.
+https://github.com/minad/consult/wiki#toggle-preview-during-active-completion-session"
     (interactive)
     (if consult-toggle-preview-orig
         (setq consult--preview-function consult-toggle-preview-orig
               consult-toggle-preview-orig nil)
       (setq consult-toggle-preview-orig consult--preview-function
             consult--preview-function #'ignore)))
+  ;; -------------------------------------------------------------------------
+;;;###autoload
+  (defun my:buffer-remote-p (buf)
+    "Return t when BUF is remote."
+    ;; (message "HERE [%s - %s]" buf (buffer-file-name buf))
+    (if-let ((fp (buffer-file-name buf)))
+        (file-remote-p fp)
+      nil))
+  ;; -------------------------------------------------------------------------
+  :bind (("C-x C-r" . my:consult-recent-file)
+         ("C-x C-b" . consult-buffer)
+         ("C-x b"   . consult-buffer)
+         ("M-g o"   . consult-outline)
+         ;; ordeless に migemo を追加できたので isearch から乗り換え
+         ("C-s" . consult-line)
+         ("C-r" . consult-line)
+         ;; goto-line での行番号表示
+         ([remap goto-line] . consult-goto-line)
+         ;; ("C-f"     . consult-line) 候補選択が要調整
+         (:vertico-map
+          ("C-v"  . consult-toggle-preview)
+          )
+         )
+  :init
+  (setopt xref-show-xref-funcion          #'consult-xref
+          xref-show-definitions-function  #'consult-xref
+          consult-preview-excluded-files '("\\`/[^/|:]+:" "\\.gpg\\'" "\\.plist\\'")
+          ;; consult-preview-key  "C-v"
+          ;; consult-async-refresh-delay 0.2
+          ;; consult-narrow-key  "<"
+          consult-preview-partial-size (* 5 1024 1024) ;; ← (* 1024 1024)
+          consult-preview-partial-chunk (* 50 1024)    ;; ← (* 10 1024)
+          consult-preview-exclude-buffers #'my:buffer-remote-p
+          ;;
+          project-read-file-name-function #'consult-project-find-file-with-preview
+          )
+  ;; -------------------------------------------------------------------------
+  :config
+  ;; -------------------------------------------------------------------------
+  (defun consult-project-find-file-with-preview (prompt all-files &optional pred hist _mb)
+    (let ((prompt (if (and all-files
+                           (file-name-absolute-p (car all-files)))
+                      prompt
+                    (concat prompt
+                            (format " in %s"
+                                    (consult--fast-abbreviate-file-name default-directory)))))
+          (minibuffer-completing-file-name t))
+      (consult--read (mapcar (lambda (file)
+                               (file-relative-name file))
+                             all-files)
+                     :state (consult--file-preview)
+                     :prompt (concat prompt ": ")
+                     :require-match t
+                     :history hist
+                     :category 'file
+                     :predicate pred)))
   ;; -------------------------------------------------------------------------
   (defun my:consult-recent-file ()
     "Find recent using `completing-read' with shorten filename"
@@ -2445,7 +2525,10 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
          ("C-c C-p" . flymake-goto-prev-error)
          ("C-c C-n" . flymake-goto-next-error)
          )
-  :config (require 'flymake-proc nil 'noerror)
+  :config
+  (require 'flymake-proc nil 'noerror)
+  (setq flymake-indicator-type nil
+        flyamke-show-diagnostic-at-end-of-line t)
   )
 (leaf flymake-diagnostic-at-point
   :disabled t
@@ -2992,7 +3075,7 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
   :preface
   ;; -------------------------------------------------------------------------
   ;; Debian パッケージを利用するための調整
-  (add-to-list 'my:package-menu-exclude-packages "auctex")
+  (add-to-list 'my:package-update-exclude "auctex")
   (if (and (not (featurep 'text-site))
            (file-directory-p "/usr/share/auctex"))
       (progn
@@ -3283,7 +3366,7 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
    #+begin_src emacs-lisp :tangle (if (file-exists-p "/etc/emacs/site-start.d/65wl-beta.el") "init.el" "no")
 (leaf rail
   :preface
-  (add-to-list 'my:package-menu-exclude-packages "migemo")
+  (add-to-list 'my:package-update-exclude "rail")
   :init
   (setq rail-emulate-genjis t)
   :leaf-defer t
@@ -4366,7 +4449,7 @@ video/*; xdg-open %s;
 (leaf c-sig
   :commands insert-signature-eref
   :preface
-  (add-to-list 'my:package-menu-exclude-packages "c-sig")
+  (add-to-list 'my:package-update-exclude "c-sig")
   :init
   (setq sig-alist-file (expand-file-name "signature.alist" my:d:share))
   :config
@@ -4635,7 +4718,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
   (leaf howm
     :ensure t
     :preface
-    (add-to-list 'my:package-menu-exclude-packages "howm")
+    (add-to-list 'my:package-update-exclude "howm")
     )
   (leaf org-tempo :commands (org-tempo-setup org-tempo-complete-tag))
   :config
@@ -5238,6 +5321,7 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   :if (file-directory-p "~/Public/cc-env")
   :vc (:url "https://github.com/uwabami/org-wiki")
   :preface (my:vc-installed-package 'org-wiki)
+  :commands org-wiki-make-org-publish-plist
   :init
   (setq org-wiki-location-alist     '("~/Public/cc-env")
         org-wiki-location           "~/Public/cc-env"
@@ -5621,15 +5705,17 @@ pdflang={%l}}
 (leaf ox-publish
   :if (file-directory-p "~/Public/cc-env")
   :after (ox-jekyll org-wiki)
-  :commands my:org-wiki-publish
-  :init
-  (setq org-publish-timestamp-directory (expand-file-name "org-timestamps/" my:d:tmp))
-  :config
+  :preface
+  ;; -------------------------------------------------------------------------
+;;;###autoload
   (defun my:org-wiki-publish ()
     (interactive)
     (org-publish (org-wiki-make-org-publish-plist
                   'org-jekyll-publish-to-html)
                  t))
+  ;;  ------------------------------------------------------------------------
+  :init
+  (setq org-publish-timestamp-directory (expand-file-name "org-timestamps/" my:d:tmp))
   )
     #+end_src
 * SOMEDAY 日記: =tDiary= [0/1]
@@ -5655,7 +5741,6 @@ pdflang={%l}}
   (tdiary-passwd-file-load)
   )
   #+end_src
-
 * その他のモード設定
   :PROPERTIES:
   :CUSTOM_ID: orga28ad005
@@ -5793,11 +5878,11 @@ pdflang={%l}}
    たた, 元々このテーマはアクセシビリティ対応のテーマでもあるので,
    +配色がちょっと好みではない+
    +というわけで, 幾つかの配色の palettte を上書きして+
-   デフォルトの font-lock を(好みに合わせて)入れ替えたり
-   (2026/02/16 色の上書きは止めた).
+   - デフォルトの font-lock を(好みに合わせて)入れ替えたり
+   - (2026/02/16 色の上書きは止めた).
    #+begin_src emacs-lisp :tangle init.el
-(leaf modus-themes
-  :emacs>= 28.1  ;; <
+(leaf modus-themes ;; <
+  :emacs>= 28.1
   :ensure t
   :bind ("<f5>" . modus-themes-toggle)
   ;; autoload が無いので発火点を作成しておく
@@ -5826,29 +5911,29 @@ pdflang={%l}}
         `(;; -----------------------------------------------------------------
           ;; 背景の上書き
           (bg-main ,(if (display-graphic-p)
-                        "#282a36"     ; GUIなら背景色
+                        "#282a36"     ; GUIなら背景色, dark mode かどうか判定できる?
                       'unspecified))  ; ターミナルなら色は指定しない
           ;; ----------------------------------------------------------------
           ;; 幾つかの色の入れ替え
           ;; -----------------------------------------------------------------
-          (builtin blue-warmer)
+          ;; 設定                     ;; Original
+          (builtin blue-warmer)       ;; <- magenta-warmer
           (comment fg-dim)
-          (constant yellow-warmer)
+          (constant yellow-warmer)    ;; <- blue-cooler
           (delimiter red-warmer)
-          (docstring green-intense)
+          (docstring green-intense)   ;; <- cyan-faint
           (docmarkup teal)
-          (fnname magenta-cooler)
-          (fnname-call pink)
-          (preprocessor magenta)
-          (keyword red-faint)
-          (preprocessor red-cooler)
+          (fnname magenta-cooler)     ;; <- magenta
+          (fnname-call pink)          ;; <- pink
+          (preprocessor magenta)      ;; <- red-cooler
+          (keyword red-cooler)        ;; <- magenta-cooler
           (property cyan)
-          (string cyan-cooler)
-          (type yellow-intense)
-          (variable blue)
+          (string cyan-cooler)        ;; <- blue-warmer
+          (type yellow-intense)       ;; <- cyan-cooler
+          (variable blue)             ;; <- cyan
           (variable-use slate)
           ;;
-          (rx-construct blue-faint)
+          (rx-construct blue-faint)   ;; <- magenta
           (rx-backslash green-cooler)
           ;;
           (fg-link cyan-warmer)

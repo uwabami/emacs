@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+title: Emacs の設定
 #+options: auto-id:t H:6
-#+date: 2026-02-21 22:49:23
+#+date: 2026-02-22 02:12:23
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -2721,16 +2721,17 @@ https://github.com/minad/consult/wiki#toggle-preview-during-active-completion-se
           f90-smart-end-names t
           )
     )
-  (setq f90-ts-indent-toplevel 2
-        f90-ts-indent-contain 2
-        f90-ts-indent-block 2
-        f90-ts-indent-continued 2
-        ;; f90-ts-indent-openmp-style 'context
-        f90-ts-indent-lists-region 'continued-line
-        f90-ts-indent-lists-line   'continued-line
-        f90-ts-smart-end 'no-blink
-        90-ts-beginning-ampersand t
-        )
+  (setopt f90-ts-indent-toplevel 2
+          f90-ts-indent-contain 2
+          f90-ts-indent-block 2
+          f90-ts-indent-continued 2
+          f90-ts-indent-list-options 'continued-line
+          f90-ts-indent-lists-region 'continued-line
+          f90-ts-indent-lists-line   'continued-line
+          f90-ts-indent-list-always-include-default t
+          f90-ts-smart-end 'no-blink
+          f90-ts-beginning-ampersand t
+          )
   (setq f90-ts-indent-rules-openmp
         `(
           ;; ,@(f90-ts-indent-rules-info "openmp")
@@ -3159,6 +3160,13 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
   :emacs>= 27.1
   :ensure t
   )
+   #+end_src
+** =toml-ts-mode=
+   :PROPERTIES:
+   :CUSTOM_ID: orgd86ee896
+   :END:
+   #+begin_src emacs-lisp :tangle init.el
+(leaf toml-ts-mode :ensure t)
    #+end_src
 * VCSなど, ソースコード管理関係
   :PROPERTIES:

@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+title: Emacs の設定
 #+options: auto-id:t H:6
-#+date: 2026-02-21 12:57:13
+#+date: 2026-02-21 22:49:23
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -2247,7 +2247,6 @@ changes to the prompt. Note this function can remove the separator character."
    #+begin_src emacs-lisp :tangle init.el
 (leaf cape ;; <
   :emacs>= 29.1
-  :if (executable-find "cmigemo")
   :ensure t
   :advice
   ((:around eglot-completion-at-point cape-wrap-buster)
@@ -2260,9 +2259,7 @@ changes to the prompt. Note this function can remove the separator character."
    (completion-at-point-functions . cape-tex)
    )
   :init
-  (setq cape-dabbrev-check-other-buffers nil
-        completion-category-overrides '((eglot (styles orderless))
-                                        (eglot-capf (styles orderless))))
+  (setq cape-dabbrev-check-other-buffers nil)
   )
    #+end_src
 ** =orderless=: 補完候補の選択
@@ -2290,6 +2287,9 @@ changes to the prompt. Note this function can remove the separator character."
         (consult-location (styles orderless+migemo)) ; consult-line
         (consult-multi (styles orderless+migemo))    ; consult-buffer
         ))
+   (completion-category-overrides
+    . '((eglot (styles orderless))
+        (eglot-capf (styles orderless))))
    )
   ;;  ------------------------------------------------------------------------
   :config
@@ -2299,7 +2299,7 @@ changes to the prompt. Note this function can remove the separator character."
       (condition-case nil
           (progn (string-match-p pattern "") pattern)
         (invalid-regexp nil))))
-  (eval-when-compile (require 'orderless))
+  (eval-when-compile (require 'orderless nil 'noerr))
   (orderless-define-completion-style orderless+migemo
     (orderless-matching-styles
      '(orderless-literal
@@ -2344,9 +2344,8 @@ https://github.com/minad/consult/wiki#toggle-preview-during-active-completion-se
          ("C-x C-b" . consult-buffer)
          ("C-x b"   . consult-buffer)
          ("M-g o"   . consult-outline)
-         ;; ordeless に migemo を追加できたので isearch から乗り換え
-         ("C-s" . consult-line)
-         ("C-r" . consult-line)
+         ;; ordeless に migemo を追加できたので isearch から乗り換える?
+         ("M-g s" . consult-line)
          ;; goto-line での行番号表示
          ([remap goto-line] . consult-goto-line)
          ;; ("C-f"     . consult-line) 候補選択が要調整

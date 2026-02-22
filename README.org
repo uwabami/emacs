@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+title: Emacs の設定
 #+options: auto-id:t H:6
-#+date: 2026-02-22 02:12:23
+#+date: 2026-02-23 01:44:02
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -310,11 +310,11 @@ distclean: clean
  (expand-file-name "~/.cache/emacs/eln-cache/"))
    #+end_src
    どうにも org-element-* は native compile すると挙動不振だったので外している.
-   #+begin_src emacs-lisp :tangle (if (boundp 'native-comp-async-jobs-number) "early-init.el" "no")
-(with-eval-after-load "comp"
-  (setq native-comp-async-jobs-number 8
+
+   *MEMO* これは =early-init.el= じゃ駄目っぽい.
+   #+begin_src emacs-lisp :tangle init.el
+(setopt native-comp-async-jobs-number 8
         native-comp-jit-compilation-deny-list '("\\(.*org-element.*\\|.*-loaddefs\\|.*-autoloads\\)\\.\\(el\\.gz\\|el\\)"))
-  )
    #+end_src
 ** Magic File Name を一時的に無効化
    :PROPERTIES:
@@ -893,93 +893,97 @@ Emacs.reverseVideo: true
    :CUSTOM_ID: org199c5479
    :END:
    GUIで, 絵文字と1:2のサイズ調整を行なうのってのは,
-   なかなかうまくいかないなぁ
+   なかなかうまくいかない(幅が揃っても高さが合わない).
+   難しいねぇ.
+
+   以下, [[https://qiita.com/jado4810/items/5dd9f1b41ea5d1a4ec74][Unicode時代のCJKT環境におけるEmacsのフォント設定 #Emacs - Qiita]] を参照のこと.
  #+begin_src emacs-lisp :tangle init.el
 (leaf *gui
   :if window-system
   :preface
+  ;;  ------------------------------------------------------------------------
 ;;;###autoload
-  (defun my:setup-gui-fonts (default-font-name
-                             default-font-height
-                             cjk-font-name
-                             cjk-font-scale
-                             emoji-font-name
-                             emoji-font-scale)
-    ;; 欧文フォント
-    (when (member default-font-name (font-family-list))
-      (set-face-attribute 'default nil
-                          :family default-font-name
-                          :height default-font-height)
-      (set-frame-font default-font-name nil t))
-    ;; 日本語フォント
-    (when (member cjk-font-name (font-family-list))
-      (dolist (script (list 'han 'kana 'cjk-misc))
-        (set-fontset-font t script cjk-font-name)))
-    ;; 絵文字
-    (when (member emoji-font-name (font-family-list))
-      (set-fontset-font t 'emoji emoji-font-name))
-    ;; Rescale the CJK and emoji fonts.
-    (setq face-font-rescale-alist
-          `((,(format ".*%s.*" cjk-font-name) . ,cjk-font-scale)
-            (,(format ".*%s.*" emoji-font-name) . ,emoji-font-scale)))
+  (defun my:setup-fontset ()
+    "フレームフォントの設定"
+    (interactive)
+    (eval-when-compile (require 'eaw-console nil :noerror))
+    ;; (set-face-font 'default "Victor Mono-14")
+    (set-face-attribute 'default nil :family "Victor Mono" :height 140)
+    (dolist (target '(katakana-jisx0201
+                      japanese-jisx0208
+                      japanese-jisx0212
+                      japanese-jisx0213-2
+                      japanese-jisx0213.2004-1
+                            ))
+      (set-fontset-font nil target (font-spec :family "Migu 1M") nil t))
+    (dolist (target '(unicode
+                      latin-iso8859-1
+                      latin-iso8859-2
+                      latin-iso8859-3
+                      latin-iso8859-4
+                      latin-iso8859-9
+                      latin-iso8859-10
+                      latin-iso8859-13
+                      latin-iso8859-14
+                      latin-iso8859-15
+                      latin-iso8859-16
+                      cyrillic-iso8859-5
+                      arabic-iso8859-6
+                      greek-iso8859-7
+                      hebrew-iso8859-8))
+      (set-fontset-font nil target (font-spec :family "Victor Mono") nil t))
+    (when (boundp 'code-half)
+      (dolist (target code-half)
+        (set-fontset-font nil target (font-spec :family "Victor Mono") nil t)
+        ))
+    (when (boundp 'code-wide)
+      (dolist (target code-wide)
+        (set-fontset-font nil target (font-spec :family "Migu 1M") nil t)
+        ))
     )
-;;;###autoload
-  (defun my:apply-font-Moralerspace-Argon ()
-    (interactive)
-    (my:setup-gui-fonts "Moralerspace Argon HW" 130
-                        "Moralerspace Argon HW" 1.0
-                        "Moto Color Emoji for PlemolJP" 1.0
-                        ))
-;;;###autoload
-  (defun my:apply-font-PlemolJP-Console ()
-    (interactive)
-    (my:setup-gui-fonts "PlemolJP Console NF" 120
-                        "PlemolJP Console NF" 1.0
-                        "Moto Color Emoji for PlemolJP" 1.1
-                        ))
-;;;###autoload
-  (defun my:apply-font-custom ()
-    (interactive)
-    (my:setup-gui-fonts "Victor Mono" 135
-                        "PlemolJP Console NF" 1.0
-                        "Moto Color Emoji for PlemolJP" 1.0
-                         ))
-;; ;;;###autoload
-;;   (defun my:apply-font-EAW-CONSOLE ();
-;     (interactive)
-;;     (my:setup-gui-fonts "EAW CONSOLE" 135
-;;                         "EAW CONSOLE" 1.0
-;;                         "EAW CONSOLE" 1.0
-;;                         ))
+  ;;  ------------------------------------------------------------------------
 ;;;###autoload
   (defun my:setup-gui-frame (&optional frame)
     "GUI環境のみ reverse と alpha を適用する"
     (interactive)
     (let ((f (or frame (selected-frame))))
       (set-frame-parameter f 'reverse t)
-        ;; もの凄く重くなるので, 一旦保留. 透明度, 不透明度の順
-      (set-frame-parameter f 'alpha '(90 . 70))
+      (set-frame-parameter f 'alpha '(95 . 70))
+      (set-frame-parameter f 'background-color "#282a36")
+      (set-frame-parameter f 'cursor-color "#ff88e0")
+      (setq-default line-spacing nil)
+      (setq default-text-properties '(line-spacing nil line-height 1))
       ))
-  :config
-  (setq scalable-fonts-allowed nil
-        buffer-face-mode-face 'fixed-pitch
-        use-default-font-for-symbols nil)
+  ;; -------------------------------------------------------------------------
+  :init
+  (setopt inhibit-compacting-font-caches t
+          scalable-fonts-allowed nil
+          buffer-face-mode-face 'fixed-pitch
+          use-default-font-for-symbols nil
+          ;;
+          default-font-size 15
+          fs:font-base "Victor Mono"
+
+          face-font-rescale-alist
+          '((".*Migu.*" . 1.1)
+            (".*Noto Sans.*" . 1.1)
+            (".*Nanum.*" . 1.28)
+            )
+          )
   :hook
-  ((window-setup-hook
-    . (lambda ()
-        (my:setup-gui-frame)
-        (my:apply-font-PlemolJP-Console))
-    )
-   (after-make-frame-functions
-    . (lambda ()
-        (my:setup-gui-frame)
-        (my:apply-font-PlemolJP-Console))
-    )
+  ((window-setup-hook . (lambda ()
+                          (my:setup-fontset)
+                          (my:setup-gui-frame)
+                          ))
+   (after-make-frame-functions . (lambda ()
+                                   (my:setup-fontset)
+                                   (my:setup-gui-frame)
+                                   ))
    )
   )
  #+end_src
- 表示のテスト
- #+BEGIN_EXAMPLE
+ 表示のテスト プログラミング
+ #+begin_src text
  幅の確認: 絵文字は全角, 他は半角で 2:1 になっているかの確認用.
 
 |abcdefghijkl|
@@ -990,15 +994,48 @@ Emacs.reverseVideo: true
 |ΑΒΓΔΕΖΗΘΙΚΛΜ|
 |日本語の美観|
 |あいうえおか|
+|㈱㈳㈠⑴㎢㎝|
 |アイウエオカ|
 |ｱｲｳｴｵｶｷｸｹｺｻｼ|
+|012345678912|
+|①②③④⑤⑳|
 
 | hoge                 | hogeghoe | age             |
 |----------------------+----------+-----------------|
 | 今日もいい天気ですね | お、     | 等幅なった    🤔|
 | 今日もいい天気ですね | お、     | 等幅なった👍🍺🤔|
 |----------------------+----------+-----------------|
- #+END_EXAMPLE
+
+数式記号
+
+ ∮ E⋅da = Q,  n → ∞, ∑ f(i) = ∏ g(i),      ⎧⎡⎛┌─────┐⎞⎤⎫
+                                           ⎪⎢⎜│a²+b³ ⎟⎥⎪
+ ∀x∈ℝ: ⌈x⌉ = −⌊−x⌋, α ∧ ¬β = ¬(¬α ∨ β),    ⎪⎢⎜│───── ⎟⎥⎪
+                                           ⎪⎢⎜⎷ c₈   ⎟⎥⎪
+ ℕ ⊆ ℕ₀ ⊂ ℤ ⊂ ℚ ⊂ ℝ ⊂ ℂ,                   ⎨⎢⎜       ⎟⎥⎬
+                                           ⎪⎢⎜ ∞     ⎟⎥⎪
+ ⊥ < a ≠ b ≡ c ≤ d ≪ ⊤ ⇒ (⟦A⟧ ⇔ ⟪B⟫),      ⎪⎢⎜ ⎲     ⎟⎥⎪
+                                           ⎪⎢⎜ ⎳aⁱ-bⁱ⎟⎥⎪
+ 2H₂ + O₂ ⇌ 2H₂O, R = 4.7 kΩ, ⌀ 200 mm     ⎩⎣⎝i=1    ⎠⎦⎭
+
+  ╔══════════════════════════════════════════╗
+  ║                                          ║
+  ║   • ‘single’ and “double” quotes         ║
+  ║                                          ║
+  ║   • Curly apostrophes: “We’ve been here” ║
+  ║                                          ║
+  ║   • Latin-1 apostrophe and accents: '´`  ║
+  ║                                          ║
+  ║   • ‚deutsche‘ „Anführungszeichen“       ║
+  ║                                          ║
+  ║   • †, ‡, ‰, •, 3–4, —, −5/+5, ™, …      ║
+  ║                                          ║
+  ║   • ASCII safety test: 1lI|, 0OD, 8B     ║
+  ║                      ╭─────────╮         ║
+  ║   • the euro symbol: │ 14.95 € │         ║
+  ║                      ╰─────────╯         ║
+  ╚══════════════════════════════════════════╝
+ #+end_src
 *** アイコンフォント: =nerd-icons=
    :PROPERTIES:
    :CUSTOM_ID: orgd903bf1d
@@ -1013,7 +1050,7 @@ Emacs.reverseVideo: true
   :defvar nerd-icons-mode-icon-alist
   :commands (nerd-icons-codicon nerd-icons-faicon)
   :config
-  (setq nerd-icons-font-family "EAW CONSOLE")
+  (setq nerd-icons-font-family "VictorMono NF")
   :defer-config
   (add-to-list 'nerd-icons-mode-icon-alist
                '(wl-folder-mode nerd-icons-mdicon "nf-md-folder" ))
@@ -1060,7 +1097,7 @@ Emacs.reverseVideo: true
    #+begin_src emacs-lisp :tangle init.el
 (leaf cus-start
   :tag "builtin"
-  ;; < for show-paren syntax highlight
+  ;; <
   :emacs> "28"
   :init
   (if (file-directory-p "~/Sources/Git/salsa.debian.org/rlb/deb-emacs/src")
@@ -1108,7 +1145,9 @@ Emacs.reverseVideo: true
         auto-mode-alist (delete
                          '("\\.svgz?\\'" . image-mode) auto-mode-alist)
         ;; org-mode で有効にするローカル変数の追加 ← org-mode でやるべきでは?
-        ;; safe-local-variable-values '((org-link-file-path-type . absolute))
+        safe-local-variable-values '((org-link-file-path-type . absolute))
+        ;;
+        enable-local-variables :safe
         ;; eglot など, 外部サーバとの I/O の最大値を増やしておく
         ;; defaul は 65536.
         read-process-output-max (* 1024 1024)
@@ -1812,6 +1851,7 @@ Emacs*useXIM: false
            (not (file-directory-p "/mnt/c"))
            )
   :ensure t
+  :init (setq xclip-method 'wl-copy)
   :hook (emacs-startup-hook
          . (lambda () (xclip-mode +1)))
   )
@@ -1825,18 +1865,20 @@ Emacs*useXIM: false
   :if (and (file-directory-p "/mnt/c")
            (executable-find "win32yank.exe"))
   :init
+  ;; -------------------------------------------------------------------------
 ;;;###autoload
   (defun my:win32yank-copy (text)
     (interactive "r")
     (with-temp-buffer
       (insert text)
       (shell-command-on-region (point-min) (point-max) "win32yank.exe -i" t)))
+  ;; -------------------------------------------------------------------------
 ;;;###autoload
   (defun my:win32yank-paste ()
     (shell-command-to-string "win32yank.exe -o --lf"))
-
-  (setq interprogram-cut-function 'my:win32yank-copy)
-  (setq interprogram-paste-function 'my:win32yank-paste)
+  ;; -------------------------------------------------------------------------
+  (setq interprogram-cut-function 'my:win32yank-copy
+        interprogram-paste-function 'my:win32yank-paste)
   )
    #+end_src
 * =migemo=: インクリメンタル検索
@@ -2116,7 +2158,7 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
   :emacs<  31 ;; >
   :ensure t
   :config
-  (setq corfu-terminal-disable-on-gui nil
+  (setq corfu-terminal-disable-on-gui t
         corfu-terminal-enable-on-minibuffer nil
         corfu-terminal-resize-minibuffer nil
         )
@@ -2204,6 +2246,12 @@ changes to the prompt. Note this function can remove the separator character."
   :bind (:corfu-map
          ("RET"      . nil)
          ("<return>" . nil)
+         ("<left>"   . nil)
+         ("<right>"  . nil)
+         ("<up>"     . nil)
+         ("<down>"   . nil)
+         ("C-a"      . nil)
+         ("C-e"      . nil)
          ("M-SPC"    . corfu-insert-or-escape-separator)
          )
   ;; -------------------------------------------------------------------------
@@ -2539,37 +2587,43 @@ https://github.com/minad/consult/wiki#toggle-preview-during-active-completion-se
   :hook (flymake-mode-hook . flymake-diagnostic-at-point-mode)
   )
    #+end_src
-** =rainbow-delimiters=: 対応する括弧を色付け
+** =reformatter=: 言語毎に整形(フォーマッタ)を登録して, 保存時に適用する
    :PROPERTIES:
-   :CUSTOM_ID: org11b26f5a
+   :CUSTOM_ID: orgf2cb2cb5
    :END:
    #+begin_src emacs-lisp :tangle init.el
-(leaf rainbow-delimiters
+(leaf reformatter
   :ensure t
-  :hook (prog-mode-hook . rainbow-delimiters-mode)
+;;  :config
   )
    #+end_src
-** =rainbow-mode=: カラーコードに色付け
-   :PROPERTIES:
-   :CUSTOM_ID: org1f0e431b
-   :END:
-   =#RRGGBB= のカラーコードに勝手に色が付く．CSS の編集中なんかで地味に便利．
-   #+begin_src emacs-lisp :tangle init.el
-(leaf rainbow-mode :ensure t :hook (emacs-startup-hook . rainbow-mode))
-   #+end_src
-** =markdown-mode=: Markdown 関連
-   :PROPERTIES:
-   :CUSTOM_ID: orgc773dfbe
-   :END:
-   色々な所で使われているので, とりあえずここで設定
-   #+begin_src emacs-lisp :tangle init.el
-(leaf markdown-mode
-  :ensure t
-  :mode ("\\.md\\'" "\\.markdown\\'")
+*** =f90format=: fortran >= 90 用
+    :PROPERTIES:
+    :CUSTOM_ID: orgebd00c46
+    :END:
+    #+begin_src emacs-lisp :tangle init.el
+(leaf f90format
+  :if (executable-find "fprettify")
+  :vc (:url "https://github.com/BlameTroi/f90format")
+  :preface
+  (my:vc-installed-package 'f90format)
   :config
-  (setq markdown-command "pandoc") ;; プレビュー等で利用するコマンド
+  (setopt f90format-command "fprettify"
+          f90format-args '("--indent" "2"
+                           "--whitespace" "2"
+                           "--whitespace-intrinsics" "true"
+                           "--whitespace-decl" "true"
+                           "--enable-decl"
+                           "--whitespace-plusminus" "true"
+                           "--whitespace-multdiv" "true"
+                           )
+          )
+  :hook
+  ((f90-ts-mode-hook . f90format-on-save-mode)
+   (f90-mode-hook . f90format-on-save-mode)
+   )
   )
-   #+end_src
+    #+end_src
 ** =treesit=: 賢いシンタックスハイライト
    :PROPERTIES:
    :CUSTOM_ID: org80208e5d
@@ -2601,6 +2655,7 @@ https://github.com/minad/consult/wiki#toggle-preview-during-active-completion-se
           ;; (css "https://github.com/tree-sitter/tree-sitter-css")
           ;; (dockerfile "https://github.com/camdencheek/tree-sitter-dockerfile")
           ;; (latex "https://github.com/latex-lsp/tree-sitter-latex")
+          (lua "https://github.com/MunifTanjim/tree-sitter-lua")
           ;; (go "https://github.com/tree-sitter/tree-sitter-go")
           ;; (html "https://github.com/tree-sitter/tree-sitter-html")
           (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
@@ -2615,148 +2670,6 @@ https://github.com/minad/consult/wiki#toggle-preview-during-active-completion-se
           ;; (yaml "https://github.com/ikatyang/tree-sitter-yaml")
           )
         )
-  )
-   #+end_src
-** =f90-ts-mode=: fortran の色付けを tree-sitter で
-   :PROPERTIES:
-   :CUSTOM_ID: org49a03d08
-   :END:
-   あまり好みでないので, 諸々じたばた...
-   #+begin_src emacs-lisp :tangle init.el
-(leaf f90-ts-mode
-  :if (executable-find "tree-sitter")
-  :vc (:url "git@github.com:uwabami/emacs-f90-ts-mode.git")
-  :preface (my:vc-installed-package 'f90-ts-mode)
-  :mode ("\\.f90\\'" "\\.F90\\'" "\\.f95\\'" "\\.F95\\'" "\\.F\\'")
-  :defvar treesit-language-source-alist
-  :bind (:f90-ts-mode-map
-         ("C-c '" . separedit))
-  :preface
-  ;;  --------------------------------------------------- --------------------
-;;;###autoload
-  (defun my:install-fortran-grammar-with-generate ()
-    "install 時に tree-sitter generateを実行してから install"
-    (interactive)
-    (let* ((lang 'fortran)
-           (url "https://github.com/mscfd/tree-sitter-fortran")
-           (revision "master")
-           (tmp-dir (expand-file-name "tree-sitter-fortran-tmp" temporary-file-directory)))
-      (when (file-exists-p tmp-dir)
-        (delete-directory tmp-dir t))
-      (message "Cloning %s..." url)
-      (call-process "git" nil nil nil "clone" "-b" revision "--depth" "1" url tmp-dir)
-      (message "Running tree-sitter generate...")
-      (let ((default-directory tmp-dir))
-        (call-process-shell-command "tree-sitter generate" nil nil nil))
-      (let ((treesit-language-source-alist `((,lang ,tmp-dir nil "src"))))
-        (treesit-install-language-grammar lang))
-      (message "Fortran grammar installed successfully from generated source!")))
-  ;; ------------------------------------------------------------------------
-;;;###autoload
-  (defun my:f90-ts-toggle-mode ()
-    "Toggle between `f90-mode' (legacy) and `f90-ts-mode'."
-    (interactive)
-    (if (eq major-mode 'f90-ts-mode)
-        (if (fboundp 'f90-mode)
-            (f90-mode)
-          (message "Legacy `f90-mode' not available"))
-      (f90-ts-mode)))
-  ;; -------------------------------------------------------------------------
-;;;###autoload
-  (defun my:fixed-f90-ts-rules-variable ()
-    "Fixed font-lock rules for variables, declarations, and module control."
-    (treesit-font-lock-rules
-     :language 'fortran
-     :feature 'variable
-     '(
-       ;; 1. 変数宣言 (integer :: nm, real :: x=1.0)
-       (variable_declaration (init_declarator left: (identifier) @font-lock-variable-name-face))
-       (variable_declaration (identifier) @font-lock-variable-name-face)
-       (variable_declaration (sized_declarator (identifier) @font-lock-variable-name-face))
-       ;; 2. SAVE
-       (save_statement (identifier) @font-lock-variable-name-face)
-       ;; 3. モジュール制御 (use, only, private, public)
-       (use_statement (module_name) @font-lock-constant-face)
-       (included_items (identifier) @font-lock-variable-name-face)
-       (public_statement (identifier) @font-lock-function-name-face)
-       (private_statement (identifier) @font-lock-function-name-face)
-       ;; 4. プログラム単位の名前
-       (module_statement (name) @font-lock-function-name-face)
-       (program_statement (name) @font-lock-function-name-face)
-       ;; 5. 元のルール (self)
-       ((identifier) @f90-ts-font-lock-special-var-face
-        (:pred f90-ts-special-var-p @f90-ts-font-lock-special-var-face))
-       )))
-  ;; -------------------------------------------------------------------------
-  (add-to-list 'major-mode-remap-alist '(f90-mode . f90-ts-mode))
-  ;; -------------------------------------------------------------------------
-  :advice
-  (;; (:override f90-ts--font-lock-rules-function my:fixed-f90-ts-rules-function)
-   (:override f90-ts--font-lock-rules-variable my:fixed-f90-ts-rules-variable)
-   )
-  ;; -------------------------------------------------------------------------
-  :custom-face
-  ;; (f90-ts-font-lock-intrinsic-face       . '((t :inherit font-lock-builtin-face)))
-  (f90-ts-font-lock-delimiter-face       . '((t :inherit font-lock-delimiter-face)))
-  (f90-ts-font-lock-bracket-face         . '((t :inherit font-lock-bracket-face)))
-  (f90-ts-font-lock-operator-face        . '((t :inherit font-lock-operator-face)))
-  (f90-ts-font-lock-openmp-face          . '((t :inherit font-lock-preprocessor-face)))
-  (f90-ts-font-lock-special-var-face     . '((t :inherit font-lock-constant-face)))
-  (f90-ts-font-lock-separator-comment-face . '((t :inherit font-lock-doc-face)))
-  ;; -------------------------------------------------------------------------
-  :init
-  (leaf f90
-    :config
-    (setq f90-do-indent 2
-          f90-if-indent 2
-          f90-type-indent 2
-          f90-program-indent 2
-          f90-associate-indent 2
-          f90-critical-indent 2
-          f90-continuation-indent 2
-          f90-comment-region "! "
-          f90-indented-comment-re "!"
-          f90-beginning-ampersand t
-          f90-smart-end 'blink
-          f90-smart-end-names t
-          )
-    )
-  (setopt f90-ts-indent-toplevel 2
-          f90-ts-indent-contain 2
-          f90-ts-indent-block 2
-          f90-ts-indent-continued 2
-          f90-ts-indent-list-options 'continued-line
-          f90-ts-indent-lists-region 'continued-line
-          f90-ts-indent-lists-line   'continued-line
-          f90-ts-indent-list-always-include-default t
-          f90-ts-smart-end 'no-blink
-          f90-ts-beginning-ampersand t
-          )
-  (setq f90-ts-indent-rules-openmp
-        `(
-          ;; ,@(f90-ts-indent-rules-info "openmp")
-          ((f90-ts--openmp-comment-is) prev-sibling 0)
-          ((f90-ts--openmp-comment-is) parent-bol f90-ts-indent-block))
-        )
-  ;; -------------------------------------------------------------------------
-  :hook
-  (f90-ts-mode-hook
-   . (lambda ()
-       (eglot-ensure)
-       (setq-local comment-start "!")
-       (setq-local comment-start-skip "\\(!>\\|!+\\)[ \t]*")
-       (font-lock-add-keywords
-        nil
-        '(("!>.*\\(\\*\\*\\(.*?\\)\\*\\*\\)" (1 'font-lock-bold-face prepend))
-          ("!>.*\\(`\\(.*?\\)`\\)" (1 'font-lock-constant-face prepend))
-          ("!>\\([ \t]*-[ \t]+\\)" (1 'font-lock-keyword-face prepend))
-          ("!>\\([ \t]*#+ .*\\)$" (1 'font-lock-builtin-face prepend)))
-        'append)
-       (setq-local treesit-font-lock-level 5)
-       (treesit-font-lock-recompute-features)
-       (treesit-fold-mode)
-       )
-   )
   )
    #+end_src
 ** =treesit-fold=: コードの「折り畳み」
@@ -3057,6 +2970,192 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
     (apply orig-fun args)))
 )
    #+end_src
+** =rainbow-delimiters=: 対応する括弧を色付け
+   :PROPERTIES:
+   :CUSTOM_ID: org11b26f5a
+   :END:
+   #+begin_src emacs-lisp :tangle init.el
+(leaf rainbow-delimiters
+  :ensure t
+  :hook (prog-mode-hook . rainbow-delimiters-mode)
+  )
+   #+end_src
+** =rainbow-mode=: カラーコードに色付け
+   :PROPERTIES:
+   :CUSTOM_ID: org1f0e431b
+   :END:
+   =#RRGGBB= のカラーコードに勝手に色が付く．CSS の編集中なんかで地味に便利．
+   #+begin_src emacs-lisp :tangle init.el
+(leaf rainbow-mode :ensure t :hook (emacs-startup-hook . rainbow-mode))
+   #+end_src
+** =markdown-mode=: Markdown 関連
+   :PROPERTIES:
+   :CUSTOM_ID: orgc773dfbe
+   :END:
+   色々な所で使われているので, とりあえずここで設定
+   #+begin_src emacs-lisp :tangle init.el
+(leaf markdown-mode
+  :ensure t
+  :mode ("\\.md\\'" "\\.markdown\\'")
+  :config
+  (setq markdown-command "pandoc") ;; プレビュー等で利用するコマンド
+  )
+   #+end_src
+** =fortran>=90=: Modern Fortran
+   :PROPERTIES:
+   :CUSTOM_ID: org88d0e343
+   :END:
+   どこからが「Modern」なのかはまあ置いておくとして.
+*** =f90-mode=: Emacs 同梱の Fortran モード
+    :PROPERTIES:
+    :CUSTOM_ID: org00f3d32f
+    :END:
+    最近は以下の [[#org49a03d08][=f90-ts-mode=]] を使っているので
+    あまり使わなくなったけれど, 一応設定しておく
+    #+begin_src emacs-lisp :tangle init.el
+(leaf f90
+  :tag "builtin"
+  :init
+  (setq f90-do-indent 2
+        f90-if-indent 2
+        f90-type-indent 2
+        f90-program-indent 2
+        f90-associate-indent 2
+        f90-critical-indent 2
+        f90-continuation-indent 2
+        f90-comment-region "! "
+        f90-indented-comment-re "!"
+        f90-beginning-ampersand t
+        f90-smart-end 'blink
+        f90-smart-end-names t
+        )
+  )
+    #+end_src
+*** =f90-ts-mode=: fortran の syntaxi highlight を tree-sitter で.
+    :PROPERTIES:
+    :CUSTOM_ID: org49a03d08
+    :END:
+    あまり好みでないので, 諸々じたばた...
+    #+begin_src emacs-lisp :tangle init.el
+(leaf f90-ts-mode
+  :if (executable-find "tree-sitter")
+  :vc (:url "git@github.com:uwabami/emacs-f90-ts-mode.git")
+  :preface (my:vc-installed-package 'f90-ts-mode)
+  :mode ("\\.f90\\'" "\\.F90\\'" "\\.f95\\'" "\\.F95\\'" "\\.F\\'")
+  :defvar treesit-language-source-alist
+  :bind (:f90-ts-mode-map
+         ("C-c '" . separedit))
+  :preface
+  ;;  --------------------------------------------------- --------------------
+;;;###autoload
+  (defun my:install-fortran-grammar-with-generate ()
+    "install 時に tree-sitter generateを実行してから install"
+    (interactive)
+    (let* ((lang 'fortran)
+           (url "https://github.com/mscfd/tree-sitter-fortran")
+           (revision "master")
+           (tmp-dir (expand-file-name "tree-sitter-fortran-tmp" temporary-file-directory)))
+      (when (file-exists-p tmp-dir)
+        (delete-directory tmp-dir t))
+      (message "Cloning %s..." url)
+      (call-process "git" nil nil nil "clone" "-b" revision "--depth" "1" url tmp-dir)
+      (message "Running tree-sitter generate...")
+      (let ((default-directory tmp-dir))
+        (call-process-shell-command "tree-sitter generate" nil nil nil))
+      (let ((treesit-language-source-alist `((,lang ,tmp-dir nil "src"))))
+        (treesit-install-language-grammar lang))
+      (message "Fortran grammar installed successfully from generated source!")))
+  ;; ------------------------------------------------------------------------
+;;;###autoload
+  (defun my:f90-ts-toggle-mode ()
+    "Toggle between `f90-mode' (legacy) and `f90-ts-mode'."
+    (interactive)
+    (if (eq major-mode 'f90-ts-mode)
+        (if (fboundp 'f90-mode)
+            (f90-mode)
+          (message "Legacy `f90-mode' not available"))
+      (f90-ts-mode)))
+  ;; -------------------------------------------------------------------------
+;;;###autoload
+  (defun my:fixed-f90-ts-rules-variable ()
+    "Fixed font-lock rules for variables, declarations, and module control."
+    (treesit-font-lock-rules
+     :language 'fortran
+     :feature 'variable
+     '(
+       ;; 1. 変数宣言 (integer :: nm, real :: x=1.0)
+       (variable_declaration (init_declarator left: (identifier) @font-lock-variable-name-face))
+       (variable_declaration (identifier) @font-lock-variable-name-face)
+       (variable_declaration (sized_declarator (identifier) @font-lock-variable-name-face))
+       ;; 2. SAVE
+       (save_statement (identifier) @font-lock-variable-name-face)
+       ;; 3. モジュール制御 (use, only, private, public)
+       (use_statement (module_name) @font-lock-constant-face)
+       (included_items (identifier) @font-lock-variable-name-face)
+       (public_statement (identifier) @font-lock-function-name-face)
+       (private_statement (identifier) @font-lock-function-name-face)
+       ;; 4. プログラム単位の名前
+       (module_statement (name) @font-lock-function-name-face)
+       (program_statement (name) @font-lock-function-name-face)
+       ;; 5. 元のルール (self)
+       ((identifier) @f90-ts-font-lock-special-var-face
+        (:pred f90-ts-special-var-p @f90-ts-font-lock-special-var-face))
+       )))
+  ;; -------------------------------------------------------------------------
+  (add-to-list 'major-mode-remap-alist '(f90-mode . f90-ts-mode))
+  ;; -------------------------------------------------------------------------
+  :advice
+  (;; (:override f90-ts--font-lock-rules-function my:fixed-f90-ts-rules-function)
+   (:override f90-ts--font-lock-rules-variable my:fixed-f90-ts-rules-variable)
+   )
+  ;; -------------------------------------------------------------------------
+  :custom-face
+  ;; (f90-ts-font-lock-intrinsic-face       . '((t :inherit font-lock-builtin-face)))
+  (f90-ts-font-lock-delimiter-face         . '((t :inherit font-lock-delimiter-face)))
+  (f90-ts-font-lock-bracket-face           . '((t :inherit font-lock-bracket-face)))
+  (f90-ts-font-lock-operator-face          . '((t :inherit font-lock-operator-face)))
+  (f90-ts-font-lock-openmp-face            . '((t :inherit font-lock-preprocessor-face)))
+  (f90-ts-font-lock-special-var-face       . '((t :inherit font-lock-constant-face)))
+  (f90-ts-font-lock-separator-comment-face . '((t :inherit font-lock-doc-face)))
+  ;; -------------------------------------------------------------------------
+  :init
+  (setq f90-ts-indent-toplevel 2
+        f90-ts-indent-contain 2
+        f90-ts-indent-block 2
+        f90-ts-indent-continued 2
+        f90-ts-indent-list-options 'continued-line
+        f90-ts-indent-lists-region 'continued-line
+        f90-ts-indent-lists-line   'continued-line
+        f90-ts-indent-list-always-include-default t
+        f90-ts-smart-end 'no-blink
+        f90-ts-beginning-ampersand t
+        f90-ts-indent-rules-openmp
+        `(
+          ;; ,@(f90-ts-indent-rules-info "openmp")
+          ((f90-ts--openmp-comment-is) prev-sibling 0)
+          ((f90-ts--openmp-comment-is) parent-bol f90-ts-indent-block))
+        )
+  ;; -------------------------------------------------------------------------
+  :hook
+  (f90-ts-mode-hook
+   . (lambda ()
+       (eglot-ensure)
+       (setq-local comment-start "!")
+       (setq-local comment-start-skip "\\(!>\\|!+\\)[ \t]*")
+       (font-lock-add-keywords
+        nil
+        '(("!>.*\\(\\*\\*\\(.*?\\)\\*\\*\\)" (1 'font-lock-bold-face prepend))
+          ("!>.*\\(`\\(.*?\\)`\\)" (1 'font-lock-constant-face prepend))
+          ("!>\\([ \t]*-[ \t]+\\)" (1 'font-lock-keyword-face prepend))
+          ("!>\\([ \t]*#+ .*\\)$" (1 'font-lock-builtin-face prepend)))
+        'append)
+       (setq-local treesit-font-lock-level 5)
+       (treesit-font-lock-recompute-features)
+       (treesit-fold-mode)
+       )
+   )
+  )
+    #+end_src
 ** TODO =AUCTeX=: TeX 環境 [/]
    :PROPERTIES:
    :CUSTOM_ID: org88a3cb1b
@@ -3151,22 +3250,29 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
         )
   )
    #+end_src
-** =php-mode=: PHP 環境
+** =lua-ts-mode=
    :PROPERTIES:
-   :CUSTOM_ID: orgd087a413
+   :CUSTOM_ID: org0ab77d1d
    :END:
    #+begin_src emacs-lisp :tangle init.el
-(leaf php-mode ;; <
-  :emacs>= 27.1
-  :ensure t
+(leaf lua-ts-mode ;;<
+  :if (executable-find "luacheck")
+  :emacs>= 29.1
+  :mode "\\.lua\\'"
+  :config
+  (setopt lua-ts-indent-offset 2
+          lua-ts-indent-continuation-lines t)
   )
    #+end_src
-** =toml-ts-mode=
+** 他, インストールしただけのアレコレ
    :PROPERTIES:
-   :CUSTOM_ID: orgd86ee896
+   :CUSTOM_ID: orgb39a8413
    :END:
+   フォントロックとインデントのためだけに入れたアレコレのモード
    #+begin_src emacs-lisp :tangle init.el
 (leaf toml-ts-mode :ensure t)
+(leaf php-mode :ensure t)
+(leaf tmux-mode :ensure t)
    #+end_src
 * VCSなど, ソースコード管理関係
   :PROPERTIES:
@@ -3200,28 +3306,22 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
    結局の所 CUI でコマンド叩く事も多いけれど, これはこれで重宝している．
    #+begin_src emacs-lisp :tangle init.el
 (leaf magit
-  :disabled t
   :bind (("C-x g" . magit-status))
   :ensure t
   :init
-  (leaf transient
-    :init
-    (setq transient-history-file (expand-file-name "transient-history.el" my:d:tmp)
-          transient-levels-file (expand-file-name "transient-levels.el" my:d:tmp)
-          transient-values-file (expand-file-name "transient-values.el" my:d:tmp)
-          transient-force-fixed-pitch t
-          )
-    )
-  ;;
-  (setq magit-completing-read-function 'magit-builtin-completing-read
+  (leaf transient :ensure t)
+  `(setq transient-history-file (expand-file-name "transient-history.el" my:d:tmp)
+        transient-levels-file (expand-file-name "transient-levels.el" my:d:tmp)
+        transient-values-file (expand-file-name "transient-values.el" my:d:tmp)
+        transient-force-fixed-pitch t
+        magit-openpgp-default-signing-key ,(getenv "GPG_KEY_ID")
+        magit-define-global-key-bindings nil
+        git-commit-major-mode 'ignore
         magit-refs-show-commit-count   'all
-        magit-log-buffer-file-locked   t
-        magit-revision-show-gravatars  nil
         )
   )
    #+end_src
    - [ ] =git-commit-mode= かな(?) を利用すると, その後で全てのキーバインドがグッチャグッチャになる様な? 一旦利用は保留.
-
 ** =git-commit-ts-mode=
    :PROPERTIES:
    :CUSTOM_ID: orgb6921ead
@@ -4783,8 +4883,9 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         ;; org-archive-default-command #'my:org-archive-with-tag
         ;; modules → とりあえずクリアしておく
         org-modules  '()
-        ;; element-cache は使わない...うまく使えると良いんだけれど.
-        ;; org-element-use-cache nil
+        ;; element-cache は使わない:
+        ;; うまく使えると良いんだけれど. orgmine が動かない...
+        org-element-use-cache nil
         ;; org-agenda で設定するべきかなぁ...
         org-agenda-inhibit-startup  t
         ;;
@@ -5267,59 +5368,21 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    素晴しい!!
    [[https://github.com/kametoku/orgmine][kametoku/orgmine: Emacs minor mode for org-mode with redmine integration]]
    #+begin_src emacs-lisp :tangle init.el
-(leaf *orgmine
+(leaf orgmine
   :if  (and my:d:password-store
             (file-directory-p my:d:org))
-  :hook
-  `(org-mode-hook
-    . (lambda ()
-        (if (assoc "om_server" org-keyword-properties)
-            (orgmine-mode))))
+  :vc (:url "git@github.com:uwabami/orgmine")
+  :preface (my:vc-installed-package 'orgmine)
+  :commands (orgmine-mode)
   :init
-  (setq enable-local-variables :safe)
   (leaf elmine :ensure t)
-  ;; (add-hook 'org-mode-hook
-  ;;           (lambda ()
-  ;;             (if (assoc "om_server" org-file-properties) (orgmine-mode))))
-  (leaf orgmine
-    :vc (:url "https://github.com/kametoku/orgmine" )
-    :preface (my:vc-installed-package 'orgmine)
-    :commands (orgmine-mode)
-    :init
-    ;; (defun my:orgmine-default-todo-keyword ()
-    ;;   "Custom: use `org-file-properties' for backward compatibility."
-    ;;   (or (cdr (assoc-string "om_default_todo" org-file-properties))
-    ;;       orgmine-default-todo-keyword
-    ;;       (nth 0 org-todo-keywords-1)
-    ;;       1))
-
-    ;; (defun my:orgmine-setup ()
-    ;;   "Custom: use `org-file-properties' for backward compatibility."
-    ;;   (let* ((server (cdr (assoc-string "om_server" org-file-properties t)))
-    ;;          (config (cdr (assoc-string server orgmine-servers t))))
-    ;;     (if config
-    ;;         (set (make-local-variable 'orgmine-server) server))
-    ;;     (mapc (lambda (elem)
-    ;;             (let* ((key (car elem))
-    ;;                 (symbol (intern (format "orgmine-%s" key)))
-    ;;                 (value (cdr elem)))
-    ;;               (if (memq key orgmine-valid-variables)
-    ;;                (progn
-    ;;                  (set (make-local-variable symbol) value)
-    ;;                  (if (eq key 'custom-fields)
-    ;;                      (orgmine-setup-custom-fields value)))
-    ;;              (message "orgmine-setup: %s: skipped - invalid name" key))))
-    ;;           config))
-    ;;   (orgmine-setup-tags)
-    ;;   (run-hooks 'orgmine-setup-hook))
-    ;; :advice
-    ;; '((:override orgmine-default-todo-keyword my:orgmine-default-todo-keyword)
-    ;;   (:override orgmine-setup my:orgmine-setup))
-    :pl-setq orgmine-servers
-    :config
-    (setq orgmine-note-block-begin "#+begin_src gfm"   ;; 要調整
+  :pl-setq orgmine-servers
+  :config
+  (setopt orgmine-note-block-begin "#+begin_src gfm"   ;; 要調整
           orgmine-note-block-end   "#+end_src\n")
-    )
+  :hook (org-mode-hook . (lambda ()
+                           (if (assoc "om_server" org-keyword-properties)
+                               (orgmine-mode))))
   )
    #+end_src
 ** Org-Wiki
@@ -5751,6 +5814,22 @@ pdflang={%l}}
   (tdiary-passwd-file-load)
   )
   #+end_src
+* =vterm=: Emacs 上で Terminal を使う
+  :PROPERTIES:
+  :CUSTOM_ID: org55b4a787
+  :END:
+  #+begin_src emacs-lisp :tangle init.el
+(leaf vterm ;; <
+  :emacs>=25.1
+  :ensure t
+  :init
+  (setopt vterm-always-compile-module t)
+  :hook
+  (vterm-mode-hook
+   . (lambda ()
+       (setq-local global-hl-line-mode nil)))
+  )
+  #+end_src
 * その他のモード設定
   :PROPERTIES:
   :CUSTOM_ID: orga28ad005
@@ -5910,7 +5989,7 @@ pdflang={%l}}
         modus-themes-italic-constructs nil
         modus-themes-bold-constructs t
         modus-themes-variable-pitch-ui nil
-        modus-themes-mixed-fonts t
+        modus-themes-mixed-fonts nil
         modus-themes-headings    '((t . (bold)))
         modus-themes-completions '((matches   . (bold))
                                    (selection . (bold underline)))
@@ -6246,14 +6325,6 @@ pdflang={%l}}
 ;;     )
 ;;   )
 ;;
-(leaf vterm
-  :ensure t
-  :init
-  (setq vterm-always-compile-module t)
-  :hook
-  (vterm-mode-hook
-   . (lambda () (setq-local global-hl-line-mode nil)))
-  )
 (leaf nginx-mode :ensure t)
 (leaf apache-mode :ensure t)
 (leaf keg :ensure t)

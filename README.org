@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+title: Emacs の設定
 #+options: auto-id:t H:6
-#+date: 2026-02-23 01:44:02
+#+date: 2026-02-23 17:24:38
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -313,8 +313,8 @@ distclean: clean
 
    *MEMO* これは =early-init.el= じゃ駄目っぽい.
    #+begin_src emacs-lisp :tangle init.el
-(setopt native-comp-async-jobs-number 8
-        native-comp-jit-compilation-deny-list '("\\(.*org-element.*\\|.*-loaddefs\\|.*-autoloads\\)\\.\\(el\\.gz\\|el\\)"))
+(setq native-comp-async-jobs-number 8
+      native-comp-jit-compilation-deny-list '("\\(.*org-element.*\\|.*-loaddefs\\|.*-autoloads\\)\\.\\(el\\.gz\\|el\\)"))
    #+end_src
 ** Magic File Name を一時的に無効化
    :PROPERTIES:
@@ -811,8 +811,6 @@ C-u を付けて実行すると, 埋める文字を指定可能(例: = や * な
 (set-terminal-coding-system 'utf-8)
 (set-default 'buffer-file-coding-system 'utf-8)
   #+end_src
-  なお, m17n.org の消滅によって上記設定に関する情報の参照元が消えた。
-  適切な参照元はどこだろう?
 ** cp5022x.el
    :PROPERTIES:
    :CUSTOM_ID: org58d8e6f8
@@ -895,101 +893,70 @@ Emacs.reverseVideo: true
    GUIで, 絵文字と1:2のサイズ調整を行なうのってのは,
    なかなかうまくいかない(幅が揃っても高さが合わない).
    難しいねぇ.
-
-   以下, [[https://qiita.com/jado4810/items/5dd9f1b41ea5d1a4ec74][Unicode時代のCJKT環境におけるEmacsのフォント設定 #Emacs - Qiita]] を参照のこと.
- #+begin_src emacs-lisp :tangle init.el
-(leaf *gui
-  :if window-system
-  :preface
-  ;;  ------------------------------------------------------------------------
+   #+begin_src emacs-lisp :tangle init.el
 ;;;###autoload
-  (defun my:setup-fontset ()
-    "フレームフォントの設定"
-    (interactive)
-    (eval-when-compile (require 'eaw-console nil :noerror))
-    ;; (set-face-font 'default "Victor Mono-14")
-    (set-face-attribute 'default nil :family "Victor Mono" :height 140)
-    (dolist (target '(katakana-jisx0201
-                      japanese-jisx0208
-                      japanese-jisx0212
-                      japanese-jisx0213-2
-                      japanese-jisx0213.2004-1
-                            ))
-      (set-fontset-font nil target (font-spec :family "Migu 1M") nil t))
-    (dolist (target '(unicode
-                      latin-iso8859-1
-                      latin-iso8859-2
-                      latin-iso8859-3
-                      latin-iso8859-4
-                      latin-iso8859-9
-                      latin-iso8859-10
-                      latin-iso8859-13
-                      latin-iso8859-14
-                      latin-iso8859-15
-                      latin-iso8859-16
-                      cyrillic-iso8859-5
-                      arabic-iso8859-6
-                      greek-iso8859-7
-                      hebrew-iso8859-8))
-      (set-fontset-font nil target (font-spec :family "Victor Mono") nil t))
-    (when (boundp 'code-half)
-      (dolist (target code-half)
-        (set-fontset-font nil target (font-spec :family "Victor Mono") nil t)
-        ))
-    (when (boundp 'code-wide)
-      (dolist (target code-wide)
-        (set-fontset-font nil target (font-spec :family "Migu 1M") nil t)
-        ))
-    )
-  ;;  ------------------------------------------------------------------------
-;;;###autoload
-  (defun my:setup-gui-frame (&optional frame)
-    "GUI環境のみ reverse と alpha を適用する"
-    (interactive)
-    (let ((f (or frame (selected-frame))))
+(defun my:setup-gui-frame (&optional frame)
+  "GUI環境のみ reverse と alpha を適用し, 初回のみフォントセットを構築する."
+  (interactive)
+  (let ((f (or frame (selected-frame))))
+    (when (display-graphic-p f)
+      ;; 1. フレームごとの見た目設定 (都度適用)
       (set-frame-parameter f 'reverse t)
       (set-frame-parameter f 'alpha '(95 . 70))
-      (set-frame-parameter f 'background-color "#282a36")
+      (when (eq (frame-parameter f 'background-mode) 'dark)
+        (set-frame-parameter f 'background-color "#282a36"))
       (set-frame-parameter f 'cursor-color "#ff88e0")
+      ;; 2. フォントとフォントセットのグローバル設定 (初回 GUI フレーム生成時のみ)
       (setq-default line-spacing nil)
       (setq default-text-properties '(line-spacing nil line-height 1))
+      ;; デフォルトフェイスの基本属性をグローバル (nil) に設定
+      (set-face-attribute 'default nil :family "Victor Mono" :weight 'medium :height 140)
+      ;; フォントセットの設定. 対象フレーム (第4引数) を指定せずグローバルに適用する.
+      (set-fontset-font nil 'unicode (font-spec :family "Victor Mono" :weight 'medium))
+      (dolist (code '(katakana-jisx0201
+                      japanese-jisx0208
+                      japanese-jisx0208-1978
+                      japanese-jisx0212
+                      japanese-jisx0213-1
+                      japanese-jisx0213-2
+                      japanese-jisx0213.2004-1))
+        (set-fontset-font nil code (font-spec :family "Migu 1M") nil 'append))
+      (eval-when-compile (require 'eaw-console nil :noerror))
+      (dolist (target code-wide)
+        (set-fontset-font nil target (font-spec :family "Migu 1M") nil 'append))
+      (dolist (target code-half)
+        (set-fontset-font nil target (font-spec :family "Victor Mono"))
+        (set-fontset-font nil target (font-spec :family "Noto Sans Symbol") nil 'append)
+        (set-fontset-font nil target (font-spec :family "Noto Sans Math") nil 'append)
+        (set-fontset-font nil target (font-spec :family "Noto Color Emoji") nil 'append))
       ))
-  ;; -------------------------------------------------------------------------
-  :init
-  (setopt inhibit-compacting-font-caches t
-          scalable-fonts-allowed nil
-          buffer-face-mode-face 'fixed-pitch
-          use-default-font-for-symbols nil
-          ;;
-          default-font-size 15
-          fs:font-base "Victor Mono"
-
-          face-font-rescale-alist
-          '((".*Migu.*" . 1.1)
-            (".*Noto Sans.*" . 1.1)
-            (".*Nanum.*" . 1.28)
-            )
-          )
-  :hook
-  ((window-setup-hook . (lambda ()
-                          (my:setup-fontset)
-                          (my:setup-gui-frame)
-                          ))
-   (after-make-frame-functions . (lambda ()
-                                   (my:setup-fontset)
-                                   (my:setup-gui-frame)
-                                   ))
-   )
   )
- #+end_src
- 表示のテスト プログラミング
+;; ---------------------------------------------------------------------------
+(setq scalable-fonts-allowed nil
+      inhibit-compacting-font-caches t ;; → early-init で設定済なので不要?
+      buffer-face-mode-face 'fixed-pitch
+      use-default-font-for-symbols nil
+      face-font-rescale-alist '((".*Migu.*" . 1.1)
+                                (".*Emoji.*" . 0.9)
+                                (".*Noto.*" . 1.1)
+                                )
+      )
+;; フレームの初期化が終わらないとフォント設定等が効かない
+;; とても嫌なアプローチだけど, しょうがないか...
+(add-hook 'window-setup-hook (lambda ()
+                               (run-with-idle-timer 0.1 nil #'my:setup-gui-frame)))
+;; 新規フレーム
+(add-hook 'after-make-frame-functions #'my:setup-gui-frame)
+(add-hook 'server-after-make-frame-hook #'my:setup-gui-frame)
+   #+end_src
+   表示のテスト プログラミング
  #+begin_src text
  幅の確認: 絵文字は全角, 他は半角で 2:1 になっているかの確認用.
 
 |abcdefghijkl|
 |ABCDEFGHIJKL|
 |'";:-+=/\~`?|
-|∞≤≥∏∑∫×±≒≡⊆⊇|
+|∞≤≥∏∑∫×≒±≡⊆⊇|
 |αβγδεζηθικλμ|
 |ΑΒΓΔΕΖΗΘΙΚΛΜ|
 |日本語の美観|
@@ -1910,16 +1877,16 @@ t と nil じゃちょっとわかんないよね..."
          ("C-e" . my:migemo-toggle-isearch-enable))
   ;; -------------------------------------------------------------------------
   :init
-  (setopt migemo-user-dictionary  nil
-          migemo-regex-dictionary nil
-          migemo-options          '("-q" "--emacs")
-          migemo-command          "cmigemo"
-          migemo-coding-system    'utf-8-unix
-          migemo-dictionary       `,(or (if (file-exists-p "/usr/local/share/migemo/utf-8/migemo-dict")
-                                           "/usr/local/share/migemo/utf-8/migemo-dict")
-                                       "/usr/share/cmigemo/utf-8/migemo-dict")
-          migemo-isearch-enable-p  nil
-          )
+  (setq migemo-user-dictionary  nil
+        migemo-regex-dictionary nil
+        migemo-options          '("-q" "--emacs")
+        migemo-command          "cmigemo"
+        migemo-coding-system    'utf-8-unix
+        migemo-dictionary       `,(or (if (file-exists-p "/usr/local/share/migemo/utf-8/migemo-dict")
+                                          "/usr/local/share/migemo/utf-8/migemo-dict")
+                                      "/usr/share/cmigemo/utf-8/migemo-dict")
+        migemo-isearch-enable-p  nil
+        )
   ;; -------------------------------------------------------------------------
   :hook
   (emacs-startup-hook . migemo-init)
@@ -2162,57 +2129,55 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
         corfu-terminal-enable-on-minibuffer nil
         corfu-terminal-resize-minibuffer nil
         )
+  :hook (tty-setup-hook . corfu-terminal-mode)
   )
 ;; -------------------------------------------------------------------------
-  (leaf kind-icon
-    :emacs>= 29.1  ;; <
-    :ensure t
-    :after corfu-terminal
-    :init
-    (setq kind-icon-default-face 'corfu-default
-          kind-icon-use-icons    nil
-          kind-icon-mapping
-          `(
-            (array          ,(nerd-icons-codicon "nf-cod-symbol_array")       :face font-lock-type-face)
-            (boolean        ,(nerd-icons-codicon "nf-cod-symbol_boolean")     :face font-lock-builtin-face)
-            (class          ,(nerd-icons-codicon "nf-cod-symbol_class")       :face font-lock-type-face)
-            (color          ,(nerd-icons-codicon "nf-cod-symbol_color")       :face success)
-            (command        ,(nerd-icons-codicon "nf-cod-terminal")           :face default)
-            (constant       ,(nerd-icons-codicon "nf-cod-symbol_constant")    :face font-lock-constant-face)
-            (constructor    ,(nerd-icons-codicon "nf-cod-triangle_right")     :face font-lock-function-name-face)
-            (enummember     ,(nerd-icons-codicon "nf-cod-symbol_enum_member") :face font-lock-builtin-face)
-            (enum-member    ,(nerd-icons-codicon "nf-cod-symbol_enum_member") :face font-lock-builtin-face)
-            (enum           ,(nerd-icons-codicon "nf-cod-symbol_enum")        :face font-lock-builtin-face)
-            (event          ,(nerd-icons-codicon "nf-cod-symbol_event")       :face font-lock-warning-face)
-            (field          ,(nerd-icons-codicon "nf-cod-symbol_field")       :face font-lock-variable-name-face)
-            (file           ,(nerd-icons-codicon "nf-cod-symbol_file")        :face font-lock-string-face)
-            (folder         ,(nerd-icons-codicon "nf-cod-folder")             :face font-lock-doc-face)
-            (interface      ,(nerd-icons-codicon "nf-cod-symbol_interface")   :face font-lock-type-face)
-            (keyword        ,(nerd-icons-codicon "nf-cod-symbol_keyword")     :face font-lock-keyword-face)
-            (macro          ,(nerd-icons-codicon "nf-cod-symbol_misc")        :face font-lock-keyword-face)
-            (magic          ,(nerd-icons-codicon "nf-cod-wand")               :face font-lock-builtin-face)
-            (method         ,(nerd-icons-codicon "nf-cod-symbol_method")      :face font-lock-function-name-face)
-            (function       ,(nerd-icons-codicon "nf-cod-symbol_method")      :face font-lock-function-name-face)
-            (module         ,(nerd-icons-codicon "nf-cod-file_submodule")     :face font-lock-preprocessor-face)
-            (numeric        ,(nerd-icons-codicon "nf-cod-symbol_numeric")     :face font-lock-builtin-face)
-            (operator       ,(nerd-icons-codicon "nf-cod-symbol_operator")    :face font-lock-comment-delimiter-face)
-            (param          ,(nerd-icons-codicon "nf-cod-symbol_parameter")   :face default)
-            (property       ,(nerd-icons-codicon "nf-cod-symbol_property")    :face font-lock-variable-name-face)
-            (reference      ,(nerd-icons-codicon "nf-cod-references")         :face font-lock-variable-name-face)
-            (snippet        ,(nerd-icons-codicon "nf-cod-symbol_snippet")     :face font-lock-string-face)
-            (string         ,(nerd-icons-codicon "nf-cod-symbol_string")      :face font-lock-string-face)
-            (struct         ,(nerd-icons-codicon "nf-cod-symbol_structure")   :face font-lock-variable-name-face)
-            (text           ,(nerd-icons-codicon "nf-cod-text_size")          :face font-lock-doc-face)
-            (typeparameter  ,(nerd-icons-codicon "nf-cod-list_unordered")     :face font-lock-type-face)
-            (type-parameter ,(nerd-icons-codicon "nf-cod-list_unordered")     :face font-lock-type-face)
-            (unit           ,(nerd-icons-codicon "nf-cod-symbol_ruler")       :face font-lock-constant-face)
-            (value          ,(nerd-icons-codicon "nf-cod-symbol_field")       :face font-lock-builtin-face)
-            (variable       ,(nerd-icons-codicon "nf-cod-symbol_variable")    :face font-lock-variable-name-face)
-            (t              ,(nerd-icons-codicon "nf-cod-code")               :face font-lock-warning-face))
-          )
-    :config
-    (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
-    )
+(leaf kind-icon
+  :emacs>= 29.1  ;; <
+  :ensure t
+  :init
+  (setq kind-icon-default-face 'corfu-default
+        kind-icon-use-icons    nil
+        kind-icon-mapping
+        `(
+          (array          ,(nerd-icons-codicon "nf-cod-symbol_array")       :face font-lock-type-face)
+          (boolean        ,(nerd-icons-codicon "nf-cod-symbol_boolean")     :face font-lock-builtin-face)
+          (class          ,(nerd-icons-codicon "nf-cod-symbol_class")       :face font-lock-type-face)
+          (color          ,(nerd-icons-codicon "nf-cod-symbol_color")       :face success)
+          (command        ,(nerd-icons-codicon "nf-cod-terminal")           :face default)
+          (constant       ,(nerd-icons-codicon "nf-cod-symbol_constant")    :face font-lock-constant-face)
+          (constructor    ,(nerd-icons-codicon "nf-cod-triangle_right")     :face font-lock-function-name-face)
+          (enummember     ,(nerd-icons-codicon "nf-cod-symbol_enum_member") :face font-lock-builtin-face)
+          (enum-member    ,(nerd-icons-codicon "nf-cod-symbol_enum_member") :face font-lock-builtin-face)
+          (enum           ,(nerd-icons-codicon "nf-cod-symbol_enum")        :face font-lock-builtin-face)
+          (event          ,(nerd-icons-codicon "nf-cod-symbol_event")       :face font-lock-warning-face)
+          (field          ,(nerd-icons-codicon "nf-cod-symbol_field")       :face font-lock-variable-name-face)
+          (file           ,(nerd-icons-codicon "nf-cod-symbol_file")        :face font-lock-string-face)
+          (folder         ,(nerd-icons-codicon "nf-cod-folder")             :face font-lock-doc-face)
+          (interface      ,(nerd-icons-codicon "nf-cod-symbol_interface")   :face font-lock-type-face)
+          (keyword        ,(nerd-icons-codicon "nf-cod-symbol_keyword")     :face font-lock-keyword-face)
+          (macro          ,(nerd-icons-codicon "nf-cod-symbol_misc")        :face font-lock-keyword-face)
+          (magic          ,(nerd-icons-codicon "nf-cod-wand")               :face font-lock-builtin-face)
+          (method         ,(nerd-icons-codicon "nf-cod-symbol_method")      :face font-lock-function-name-face)
+          (function       ,(nerd-icons-codicon "nf-cod-symbol_method")      :face font-lock-function-name-face)
+          (module         ,(nerd-icons-codicon "nf-cod-file_submodule")     :face font-lock-preprocessor-face)
+          (numeric        ,(nerd-icons-codicon "nf-cod-symbol_numeric")     :face font-lock-builtin-face)
+          (operator       ,(nerd-icons-codicon "nf-cod-symbol_operator")    :face font-lock-comment-delimiter-face)
+          (param          ,(nerd-icons-codicon "nf-cod-symbol_parameter")   :face default)
+          (property       ,(nerd-icons-codicon "nf-cod-symbol_property")    :face font-lock-variable-name-face)
+          (reference      ,(nerd-icons-codicon "nf-cod-references")         :face font-lock-variable-name-face)
+          (snippet        ,(nerd-icons-codicon "nf-cod-symbol_snippet")     :face font-lock-string-face)
+          (string         ,(nerd-icons-codicon "nf-cod-symbol_string")      :face font-lock-string-face)
+          (struct         ,(nerd-icons-codicon "nf-cod-symbol_structure")   :face font-lock-variable-name-face)
+          (text           ,(nerd-icons-codicon "nf-cod-text_size")          :face font-lock-doc-face)
+          (typeparameter  ,(nerd-icons-codicon "nf-cod-list_unordered")     :face font-lock-type-face)
+          (type-parameter ,(nerd-icons-codicon "nf-cod-list_unordered")     :face font-lock-type-face)
+          (unit           ,(nerd-icons-codicon "nf-cod-symbol_ruler")       :face font-lock-constant-face)
+          (value          ,(nerd-icons-codicon "nf-cod-symbol_field")       :face font-lock-builtin-face)
+          (variable       ,(nerd-icons-codicon "nf-cod-symbol_variable")    :face font-lock-variable-name-face)
+          (t              ,(nerd-icons-codicon "nf-cod-code")               :face font-lock-warning-face))
+        )
+  )
    #+end_src
    #+begin_src emacs-lisp :tangle init.el
 (leaf corfu ;; <
@@ -2255,11 +2220,7 @@ changes to the prompt. Note this function can remove the separator character."
          ("M-SPC"    . corfu-insert-or-escape-separator)
          )
   ;; -------------------------------------------------------------------------
-  :hook (emacs-startup-hook . (lambda ()
-                                (corfu-terminal-mode +1)
-                                (global-corfu-mode)
-                                  )
-                            )
+  :hook (emacs-startup-hook . global-corfu-mode)
   ;; -------------------------------------------------------------------------
   :custom (;; Emacs 30 and newer: Disable Ispell completion function.
            ;; Try `cape-dict' as an alternative.
@@ -2276,6 +2237,7 @@ changes to the prompt. Note this function can remove the separator character."
         corfu-preselect                  'prompt
         corfu-quit-no-match              t
         )
+  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter)
   )
    #+end_src
    #+begin_src emacs-lisp :tangle init.el
@@ -2402,18 +2364,18 @@ https://github.com/minad/consult/wiki#toggle-preview-during-active-completion-se
           )
          )
   :init
-  (setopt xref-show-xref-funcion          #'consult-xref
-          xref-show-definitions-function  #'consult-xref
-          consult-preview-excluded-files '("\\`/[^/|:]+:" "\\.gpg\\'" "\\.plist\\'")
-          ;; consult-preview-key  "C-v"
-          ;; consult-async-refresh-delay 0.2
-          ;; consult-narrow-key  "<"
-          consult-preview-partial-size (* 5 1024 1024) ;; ← (* 1024 1024)
-          consult-preview-partial-chunk (* 50 1024)    ;; ← (* 10 1024)
-          consult-preview-exclude-buffers #'my:buffer-remote-p
-          ;;
-          project-read-file-name-function #'consult-project-find-file-with-preview
-          )
+  (setq xref-show-xref-funcion          #'consult-xref
+        xref-show-definitions-function  #'consult-xref
+        consult-preview-excluded-files '("\\`/[^/|:]+:" "\\.gpg\\'" "\\.plist\\'")
+        ;; consult-preview-key  "C-v"
+        ;; consult-async-refresh-delay 0.2
+        ;; consult-narrow-key  "<"
+        consult-preview-partial-size (* 5 1024 1024) ;; ← (* 1024 1024)
+        consult-preview-partial-chunk (* 50 1024)    ;; ← (* 10 1024)
+        consult-preview-exclude-buffers #'my:buffer-remote-p
+        ;;
+        project-read-file-name-function #'consult-project-find-file-with-preview
+        )
   ;; -------------------------------------------------------------------------
   :config
   ;; -------------------------------------------------------------------------
@@ -2608,16 +2570,16 @@ https://github.com/minad/consult/wiki#toggle-preview-during-active-completion-se
   :preface
   (my:vc-installed-package 'f90format)
   :config
-  (setopt f90format-command "fprettify"
-          f90format-args '("--indent" "2"
-                           "--whitespace" "2"
-                           "--whitespace-intrinsics" "true"
-                           "--whitespace-decl" "true"
-                           "--enable-decl"
-                           "--whitespace-plusminus" "true"
-                           "--whitespace-multdiv" "true"
-                           )
-          )
+  (setq f90format-command "fprettify"
+        f90format-args '("--indent" "2"
+                         "--whitespace" "2"
+                         "--whitespace-intrinsics" "true"
+                         "--whitespace-decl" "true"
+                         "--enable-decl"
+                         "--whitespace-plusminus" "true"
+                         "--whitespace-multdiv" "true"
+                         )
+        )
   :hook
   ((f90-ts-mode-hook . f90format-on-save-mode)
    (f90-mode-hook . f90format-on-save-mode)
@@ -3260,8 +3222,8 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
   :emacs>= 29.1
   :mode "\\.lua\\'"
   :config
-  (setopt lua-ts-indent-offset 2
-          lua-ts-indent-continuation-lines t)
+  (setq lua-ts-indent-offset 2
+        lua-ts-indent-continuation-lines t)
   )
    #+end_src
 ** 他, インストールしただけのアレコレ
@@ -5378,8 +5340,8 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   (leaf elmine :ensure t)
   :pl-setq orgmine-servers
   :config
-  (setopt orgmine-note-block-begin "#+begin_src gfm"   ;; 要調整
-          orgmine-note-block-end   "#+end_src\n")
+  (setq orgmine-note-block-begin "#+begin_src gfm"   ;; 要調整
+        orgmine-note-block-end   "#+end_src\n")
   :hook (org-mode-hook . (lambda ()
                            (if (assoc "om_server" org-keyword-properties)
                                (orgmine-mode))))
@@ -5823,7 +5785,7 @@ pdflang={%l}}
   :emacs>=25.1
   :ensure t
   :init
-  (setopt vterm-always-compile-module t)
+  (setq vterm-always-compile-module t)
   :hook
   (vterm-mode-hook
    . (lambda ()
@@ -5981,7 +5943,9 @@ pdflang={%l}}
   ((emacs-startup-hook . (lambda()
                            (modus-themes-load-theme 'modus-vivendi)
                            (load-theme 'modus-vivendi :no-confirm)))
-   (modus-themes-after-load-theme-hook . my:modus-themes-custom-faces)
+   (modus-themes-after-load-theme-hook . (lambda ()
+                                           (my:modus-themes-custom-faces)
+                                           (my:setup-gui-frame)))
    )
   :config
   (setq modus-themes-disable-other-themes t
@@ -6062,8 +6026,34 @@ pdflang={%l}}
   (defun my:modus-themes-custom-faces (&rest _args)
     (modus-themes-with-colors
       (custom-set-faces
+       ;; force fixed-pitch, monospace
+       `(custom-visibility                                ((t nil :inherit link)))
+       `(fixed-pitch-serif                                ((t nil)))
+       `(glyphless-char                                   ((t nil)))
+       `(help-for-help-header                             ((t nil)))
+       `(variable-pitch                                   ((t nil)))
+       `(variable-pitch-text                              ((t nil)))
+       `(svg-lib-button-active-face                       ((t :foreground ,(face-foreground 'default)
+                                                              :background ,(face-background 'default)
+                                                              :weight regular
+                                                              :box (:line-width 1 :style nil))))
+       `(svg-lib-button-hover-face                        ((t :foreground ,(face-background 'font-lock-comment-face nil 'default)
+                                                              :background ,(face-foreground 'font-lock-comment-face nil 'default)
+                                                              :weight semibold
+                                                              :box nil)))
+       `(svg-lib-button-press-face                        ((t :foreground ,(face-background 'default)
+                                                              :background ,(face-foreground 'default)
+                                                              :weight semibold
+                                                              :box nil)))
+       `(skk-inline-show-vertically-cand-face             ((t :inherit skk-henkan-show-candidates-buffer-cand-face)))
+       `(skk-inline-show-vertically-anno-face             ((t :inherit skk-henkan-show-candidates-buffer-anno-face)))
+       `(skk-tooltip-show-at-point-cand-face              ((t :inherit skk-henkan-show-candidates-buffer-cand-face)))
+       `(skk-tooltip-show-at-point-anno-face              ((t :inherit skk-henkan-show-candidates-buffer-anno-face)))
+       `(skk-henkan-show-candidates-buffer-cand-face      ((t :foreground ,cyan :background ,bg-green-intense)))
+       `(skk-henkan-show-candidates-buffer-anno-face      ((t :foreground ,green-cooler)))
        ;; vertico
        `(vertico-current                                  ((t :inherit hl-line :underline t )))
+       `(vertico-group-title                              ((t :inherit modus-themes-slant :foreground ,name :height 1.0)))
        ;; wanderlust
        `(wl-highlight-folder-closed-face                  ((t :foreground ,green-cooler )))
        `(wl-highlight-folder-few-face                     ((t :foreground ,red-cooler )))
@@ -6111,6 +6101,8 @@ pdflang={%l}}
        `(org-block                                        ((t :background ,bg-main :extend t)))
        `(org-block-begin-line                             ((t :background ,bg-main :foreground ,fg-prose-block-delimiter :extend t)))
        `(org-block-end-line                               ((t :background ,bg-main :foreground ,fg-prose-block-delimiter :extend t)))
+       ;; completions
+       `(completions-group-title ((,c :inherit modus-themes-slant :foreground ,name :height 1)))
        )))
   )
   #+end_src

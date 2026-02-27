@@ -1,7 +1,7 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+title: Emacs の設定
 #+options: auto-id:t H:6
-#+date: 2026-02-23 22:46:56
+#+date: 2026-02-28 01:57:22
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -243,7 +243,7 @@ distclean: clean
    起動時に結構 garbage-collect が走って遅くなるので,
    起動時には =most-positive-fixnum= にしておいて,
    起動後に =emacs-startup-hook= で default に戻すようにしてみた.
-*** TODO 起動時の GC threshold の最大化 [/]
+*** TODO 起動時の GC threshold の最大化, 起動後に元に戻す様にする [0/1]
     :PROPERTIES:
     :CUSTOM_ID: org3977c5ee
     :ID:       9bb833b8-16ba-493a-8616-7da7a810bee4
@@ -251,9 +251,17 @@ distclean: clean
     #+begin_src emacs-lisp :tangle (if (boundp 'early-init-file) "early-init.el" "init.el")
 (setq gc-cons-threshold most-positive-fixnum
       garbage-collection-messages nil)
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (setq gc-cons-threshold 800000)
+            ;; (setq gc-cons-threshold (* 128 1024 1024))
+            ))
     #+end_src
     [[#org0bd0c625][esup]] がまだ =early-init.el= を読まないのが辛い.
     - [ ] [[https://github.com/jschaf/esup/issues/93][early-init.el is not included in profiling · Issue #93 · jschaf/esup]]
+    #+begin_src emacs-lisp :tangle init.el
+(setq gc-cons-threshold most-positive-fixnum)
+    #+end_src
 *** 起動後に GC Threshold を既定値に戻す
     :PROPERTIES:
     :CUSTOM_ID: org9584246f
@@ -263,17 +271,8 @@ distclean: clean
     上記プレゼンでの推奨値に設定するのと,
     =idle-timer= で入力が無い時に GC を走らせることにする.
     #+begin_src emacs-lisp :tangle init.el
-(setq garbage-collection-messages nil
-      gc-cons-percentage 0.2
-      )
 ;; Run GC every 60 seconds if emacs is idle.
 (run-with-idle-timer 60.0 t #'garbage-collect)
-;; 起動後に初期値に戻す.
-(add-hook 'emacs-startup-hook
-          (lambda ()
-            ;; (setq gc-cons-threshold 800000)
-            (setq gc-cons-threshold (* 128 1024 1024))
-            ))
     #+end_src
     …どうだろう? そんなに重い処理をするわけじゃないし,
     初期値のままで, 小まめに gc 走らせた方が体感は速かったりしないかなぁ….
@@ -430,7 +429,7 @@ distclean: clean
   :END:
   [[https://github.com/conao3/leaf.el][leaf.el]]のおかげで,
   無いと途方に暮れるパッケージ以外のインストールは無視できるようになります.
-** TODO [[https://emacs-jp.github.io/packages/package-management/package-el][package.el]] の初期化処理 [0/1]
+** [[https://emacs-jp.github.io/packages/package-management/package-el][package.el]] の初期化処理 [0/1]
    :PROPERTIES:
    :CUSTOM_ID: org61dc7202
    :END:
@@ -478,8 +477,7 @@ distclean: clean
 ;;
 (add-hook 'kill-emacs-hook #'my:package-quickstart-refresh-silently)
    #+end_src
-   - [ ] 起動時にはここが一番時間がかかっている.
-** WAIT [[https://github.com/conao3/leaf.el][leaf.el]] [1/1]
+** TODO [[https://github.com/conao3/leaf.el][leaf.el]] [1/2]
    :PROPERTIES:
    :CUSTOM_ID: orgc2ededbf
    :END:
@@ -495,6 +493,11 @@ distclean: clean
     (unless (package-installed-p 'leaf)
       (package-refresh-contents)
       (package-install 'leaf t))))
+   #+end_src
+   - [ ] 起動時にはここが一番時間がかかっている.
+     - 全体の 75% 0.284sec/0.376sec.
+       このぐらいは許容範囲と見るべきか, もっと減らせるのか.
+   #+begin_src emacs-lisp :tangle init.el
 ;; ---------------------------------------------------------------------------
 ;;;###autoload
 (defun my:vc-installed-package (pkgname)
@@ -830,7 +833,7 @@ C-u を付けて実行すると, 埋める文字を指定可能(例: = や * な
   (set-coding-system-priority 'utf-8 'euc-jp 'iso-2022-jp 'cp932)
   )
    #+end_src
-** TODO East Asian Ambiguos 対応 [0/1]
+** TODO East Asian Ambiguos 対応 [0/2]
    :PROPERTIES:
    :CUSTOM_ID: orgd3ca00ac
    :END:
@@ -843,16 +846,11 @@ C-u を付けて実行すると, 埋める文字を指定可能(例: = や * な
    - [[https://github.com/hamano/locale-eaw][hamano/locale-eaw: East Asian Ambiguous Width問題のための修正ロケール]]
    を利用します.
    #+begin_src emacs-lisp :tangle init.el
-(leaf eaw-console
-  :commands eaw-init
-  :vc (:url "git@github.com:uwabami/locale-eaw"
-            :branch "custom"
-            :make "all"
-            :lisp-dir "dist"
-            )
+(leaf eaw-custom
+  :vc (:url "git@github.com:uwabami/locale-eaw-from-fontset")
   :preface
-  (add-to-list 'package-vc-allow-build-commands 'eaw-console)
-  (my:vc-installed-package 'eaw-console)
+  (add-to-list 'package-vc-allow-build-commands 'eaw-custom)
+  (my:vc-installed-package 'eaw-custom)
   :init
   :hook (emacs-startup-hook . (lambda ()
                                 (eaw-init)
@@ -867,6 +865,9 @@ C-u を付けて実行すると, 埋める文字を指定可能(例: = や * な
    見易いかどうかは別として.
    - [ ] リテラシーの低い人からのメールで丸囲み数字が良く表われてシンドい(見切れる).
      - 文字そのものの表示を別のモンにマッピングして表示する, という処理は可能だろうか?
+   - [ ] package-vc-install は lisp-dir を指定すると例え main-file や ignored-files が指定されたとしても
+     これらを無視して, lisp-dir 以下を走査し, 全部入りの autoloads を生成する.
+     - なんでこういう作りになっているのだろうか?
 ** フォント
   :PROPERTIES:
   :CUSTOM_ID: org356b9857
@@ -910,7 +911,7 @@ Emacs.reverseVideo: true
       (setq-default line-spacing nil)
       (setq default-text-properties '(line-spacing nil line-height 1))
       ;; デフォルトフェイスの基本属性をグローバル (nil) に設定
-      (set-face-attribute 'default nil :family "Victor Mono" :weight 'medium :height 140)
+      (set-face-attribute 'default nil :family "Victor Mono" :weight 'medium :height 125)
       ;; フォントセットの設定. 対象フレーム (第4引数) を指定せずグローバルに適用する.
       (set-fontset-font nil 'unicode (font-spec :family "Victor Mono" :weight 'medium))
       (dolist (code '(katakana-jisx0201
@@ -920,10 +921,14 @@ Emacs.reverseVideo: true
                       japanese-jisx0213-1
                       japanese-jisx0213-2
                       japanese-jisx0213.2004-1))
-        (set-fontset-font nil code (font-spec :family "Migu 1M") nil 'append))
-      (eval-when-compile (require 'eaw-console nil :noerror))
+        (set-fontset-font nil code (font-spec :family "Migu 1M") nil 'append)
+        ;; (set-fontset-font nil code (font-spec :family "Rounded-X Mgen+ 1mn") nil 'append)
+        )
+      (eval-when-compile (require 'eaw-custom nil :noerror))
       (dolist (target code-wide)
-        (set-fontset-font nil target (font-spec :family "Migu 1M") nil 'append))
+        (set-fontset-font nil target (font-spec :family "Migu 1M") nil 'append)
+        ;; (set-fontset-font nil target (font-spec :family "Rounded-X Mgen+ 1mn") nil 'append)
+        (set-fontset-font nil target (font-spec :family "Symbols Nerd Font") nil 'append))
       (dolist (target code-half)
         (set-fontset-font nil target (font-spec :family "Victor Mono"))
         (set-fontset-font nil target (font-spec :family "Noto Sans Symbol") nil 'append)
@@ -937,8 +942,10 @@ Emacs.reverseVideo: true
       buffer-face-mode-face 'fixed-pitch
       use-default-font-for-symbols nil
       face-font-rescale-alist '((".*Migu.*" . 1.1)
+                                (".*Rounded.*" . 1.095)
+                                (".*Noto.*Symbol*" . 0.9)
+                                (".*Noto.*Math*" . 0.9)
                                 (".*Emoji.*" . 0.9)
-                                (".*Noto.*" . 1.1)
                                 )
       )
 ;; フレームの初期化が終わらないとフォント設定等が効かない
@@ -1017,7 +1024,7 @@ Emacs.reverseVideo: true
   :defvar nerd-icons-mode-icon-alist
   :commands (nerd-icons-codicon nerd-icons-faicon)
   :config
-  (setq nerd-icons-font-family "Symbols Nerd Font Mono")
+  (setq nerd-icons-font-family "VictorMono NF")
   :defer-config
   (add-to-list 'nerd-icons-mode-icon-alist
                '(wl-folder-mode nerd-icons-mdicon "nf-md-folder" ))
@@ -1153,7 +1160,7 @@ Emacs.reverseVideo: true
   ;; → use-short-answers t で良い筈
   :hook
   `(;; hl-line: 現在行のハイライト
-    (emacs-startup-hook . global-hl-line-mode)
+    ;; (emacs-startup-hook . global-hl-line-mode)
     (emacs-startup-hook . (lambda ()
                             (auto-fill-mode nil)))
     ;; SVG を表示ではなく XML 編集するために.
@@ -1191,9 +1198,8 @@ Emacs.reverseVideo: true
    #+begin_src emacs-lisp :tangle init.el
 (leaf paren
   :tag "builtin"
-  :custom ((show-paren-style . 'mixed)
-           (show-paren-delay . 0.5))
   :preface
+  ;; -------------------------------------------------------------------------
 ;;;###autoload
   (defun my:show-paren-inhibit-p ()
     "Return non-nil if point is inside a comment or a string."
@@ -1202,8 +1208,13 @@ Emacs.reverseVideo: true
           (or (memq 'font-lock-comment-face face)
               (memq 'font-lock-string-face face))
         (memq face '(font-lock-comment-face font-lock-string-face)))))
+  ;; -------------------------------------------------------------------------
   :advice (:around show-paren--default-data
                    my:show-paren-inhibit-p)
+  ;; -------------------------------------------------------------------------
+  :init
+  (setq show-paren-delay 0.1)
+  ;; -------------------------------------------------------------------------
   :hook
   (emacs-startup-hook . show-paren-mode)
   )
@@ -1981,7 +1992,7 @@ t と nil じゃちょっとわかんないよね..."
       )
      )
     )
-  :hook (ibuffer-mode . nerd-icons-ibuffer-mode)
+  :hook (ibuffer-mode-hook . nerd-icons-ibuffer-mode)
   :bind (("C-x M-b" . ibuffer)
          (:ibuffer-mode-map
           ("C-x C-f" . my:ibuffer-find-file))
@@ -1999,7 +2010,7 @@ t と nil じゃちょっとわかんないよね..."
    :PROPERTIES:
    :CUSTOM_ID: orgff7e02fd
    :END:
-   依存する拡張がまだまだ多いので, 一度インストールして邪魔しないようにしておくことに.
+   依存する拡張がまだまだ多いので, インストールされた時に邪魔しないようにしておくことに.
    #+begin_src emacs-lisp
 (leaf helm :defer-config (helm-mode -1))
 (leaf ivy :defer-config (ivy-mode -1))
@@ -2118,10 +2129,14 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
    2. その状態で明示的にC-M-iを押すと候補の選択が出来るようになる
       (同時に最初の候補が選択されるもしくは唯一ある候補が入力される)
    という動作はまさに理想的なので, そう振る舞う様に.
-   - [ ] 最近そうならなくなった. 困ったな...
-   #+begin_src emacs-lisp :tangle init.el
-(leaf corfu-terminal
-  :emacs>= 29.1  ;; <
+*** =corfu-terminal=: ターミナル上で利用可能に
+    :PROPERTIES:
+    :CUSTOM_ID: orgf33751c6
+    :END:
+    Emacs 31 からは不要となる, という話だがどうかな…?
+    #+begin_src emacs-lisp :tangle init.el
+(leaf corfu-terminal ;; <
+  :emacs>= 29.1
   :emacs<  31 ;; >
   :ensure t
   :config
@@ -2131,52 +2146,73 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
         )
   :hook (tty-setup-hook . corfu-terminal-mode)
   )
-;; -------------------------------------------------------------------------
-(leaf nerd-icons-corfu
-  :emacs>= 29.1  ;; <
+    #+end_src
+*** =nerd-icons-corfu=: 候補のアイコン表示
+    :PROPERTIES:
+    :CUSTOM_ID: org33c60dd3
+    :END:
+    以前は =kind-icon= を nerd-icon に remap して利用していたけれど
+    直接 nerd-icon を指定する様に.
+    #+begin_src emacs-lisp :tangle init.el
+(leaf nerd-icons-corfu ;; <
+  :emacs>= 29.1
   :ensure t
   )
-   #+end_src
-   #+begin_src emacs-lisp :tangle init.el
+    #+end_src
+*** =corfu= 本体の設定
+    :PROPERTIES:
+    :CUSTOM_ID: org09d27f19
+    :END:
+    #+begin_src emacs-lisp :tangle init.el
 (leaf corfu ;; <
   :emacs>= 29.1
   :ensure t
   :preface
-  ;; ---------------------------------------------------------------------------
-  ;; @see https://github.com/minad/corfu/wiki#advanced-variants-for-separator-handling
-;;;###autoload
-  (defun corfu-insert-or-escape-separator ()
-    "Rotate prompt between inserting, escaping and removing the separator.
-An alternative to `corfu-insert-separator', useful in cases where including the
-separator in the query is important, and the user wants a single bind for
-everything. It can be called repeatedly, and will do, in order (starting from a
-prompt without any separators):
-
-1. Insert the separator character at prompt end.
-2. Insert a backslash character before the inserted separator, to treat it as
-   part of the prompt instead of as a split point for components.
-3. Remove the separator and backslash.
-
-The sequence will loop to 1 if called further, allowing to fix accidental
-changes to the prompt. Note this function can remove the separator character."
-    (interactive)
-    (if (char-equal (char-before) corfu-separator)
-        (if (char-equal (char-before (1- (point))) ?\\)
-            (save-excursion (delete-char -2))                   ;; Case 3
-          (save-excursion (backward-char 1) (insert-char ?\\))) ;; Case 2
-      (call-interactively #'corfu-insert-separator)))           ;; Case 1
   ;; -------------------------------------------------------------------------
-  :bind (:corfu-map
-         ("RET"      . nil)
-         ("<return>" . nil)
-         ("<left>"   . nil)
-         ("<right>"  . nil)
-         ("<up>"     . nil)
-         ("<down>"   . nil)
-         ("C-a"      . nil)
-         ("C-e"      . nil)
-         ("M-SPC"    . corfu-insert-or-escape-separator)
-         )
+  (defvar-keymap my:corfu-auto-map
+    :doc "Keymap used when popup is shown automatically."
+    "C-g" #'corfu-quit)
+  ;; -------------------------------------------------------------------------
+  (defvar my:corfu-in-auto-complete nil)
+  ;; -------------------------------------------------------------------------
+  (defun my:corfu--auto-complete-deferred:around (oldfun &rest args)
+    ;; 自動補完を試みるときに呼び出される
+    (let ((my:corfu-in-auto-complete t))
+      ;; 元の関数を呼び出す
+      ;; 補完候補があるなら続けてsetup等が呼ばれる
+      (apply oldfun args)))
+  ;; -------------------------------------------------------------------------
+  (defun my:corfu--setup:around (oldfun &rest args)
+    (if my:corfu-in-auto-complete
+        ;; 自動補完の時
+        (progn
+          (setf
+           ;; 最初の候補を選ばない
+           corfu-preselect 'prompt)
+          (let (;; キー割り当てを極力無くす
+                (corfu-map my:corfu-auto-map))
+            (apply oldfun args)))
+      ;; 手動補完の時
+      (setf
+       ;; 最初の候補を選ぶ
+       corfu-preselect 'first)
+      (apply oldfun args)))
+  ;;  ------------------------------------------------------------------------
+  (advice-add 'corfu--auto-complete-deferred
+              :around #'my:corfu--auto-complete-deferred:around)
+;;; --------------------------------------------------------------------------
+  (advice-add 'corfu--setup :around #'my:corfu--setup:around)
+;;; --------------------------------------------------------------------------
+;;   :bind (:corfu-map
+;;          ("RET"      . nil)
+;;          ("<return>" . nil)
+;;          ("<left>"   . nil)
+;;          ("<right>"  . nil)
+;;          ("<up>"     . nil)
+;;          ("<down>"   . nil)
+;;          ("C-a"      . nil)
+;;          ("C-e"      . nil)
+;;          )
   ;; -------------------------------------------------------------------------
   :hook (emacs-startup-hook . global-corfu-mode)
   ;; -------------------------------------------------------------------------
@@ -2192,18 +2228,18 @@ changes to the prompt. Note this function can remove the separator character."
         tab-always-indent                t  ;; 'complete だと TAB で補完暴発が...
         completion-cycle-threshold       4
         corfu-preview-current            nil
-        corfu-preselect                  'prompt
+        ;; corfu-preselect                  'prompt
         corfu-quit-no-match              t
         )
   (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter)
   )
-   #+end_src
-   #+begin_src emacs-lisp :tangle init.el
+    #+end_src
+    #+begin_src emacs-lisp :tangle init.el
 (leaf corfu-popupinfo
   :after corfu
   :hook (corfu-mode . corfu-popupinfo-mode)
   )
-   #+end_src
+    #+end_src
 ** =cape=: Completion At Point Extensions … 補完 backend
    :PROPERTIES:
    :CUSTOM_ID: org3b1ea0b6
@@ -2219,15 +2255,13 @@ changes to the prompt. Note this function can remove the separator character."
   :advice
   ((:around eglot-completion-at-point cape-wrap-buster)
    (:around eglot-completion-at-point cape-wrap-nonexclusive))
-  :hook
-  ((completion-at-point-functions . cape-dabbrev)
-   (completion-at-point-functions . cape-file)
-   (completion-at-point-functions . cape-keyword)
-   (completion-at-point-functions . cape-elisp-block)
-   (completion-at-point-functions . cape-tex)
-   )
   :init
   (setq cape-dabbrev-check-other-buffers nil)
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  (add-to-list 'completion-at-point-functions #'cape-keyword)
+  (add-to-list 'completion-at-point-functions #'cape-elisp-block)
+  (add-to-list 'completion-at-point-functions #'cape-tex)
   )
    #+end_src
 ** =orderless=: 補完候補の選択
@@ -2396,15 +2430,15 @@ https://github.com/minad/consult/wiki#toggle-preview-during-active-completion-se
    :CUSTOM_ID: orge9265e4d
    :END:
    #+begin_src emacs-lisp :tangle init.el
-(leaf marginalia
-  :emacs>= 29.1  ;; <
+(leaf marginalia ;; <
+  :emacs>= 29.1
   :ensure t
   :init
   ;; 補完でも icon 表示
   (leaf nerd-icons-completion
    :ensure t
    :config
-   (setq nerd-icons-completion-icon-size 0.5)
+   (setq nerd-icons-completion-icon-size 1)
    :hook
    (emacs-startup-hook . nerd-icons-completion-mode)
    )
@@ -2422,33 +2456,24 @@ https://github.com/minad/consult/wiki#toggle-preview-during-active-completion-se
    )
   )
    #+end_src
-** =embark=: 補完候補から直接諸々を実行
+** SOMEDAY =embark=: 補完候補から直接諸々を実行
    :PROPERTIES:
    :CUSTOM_ID: org147aaaa7
    :END:
+   まだ設定できてない.
    #+begin_src emacs-lisp :tangle init.el
 (leaf embark ;; <
   :emacs>= 29.1
   :ensure t
-  :disabled t
+  :bind (("M-."   . embark-act)
+         ("C-c E" . embark-bindings))
   )
-   #+end_src
-* =chezmoi=: 設定ファイルの編集補助
-  :PROPERTIES:
-  :CUSTOM_ID: org21392594
-  :END:
-  設定ファイルの管理に [[https://www.chezmoi.io/][chezmoi]] を使うようになったので,
-  その編集補助に.
-
-  地味ながら, 非常に便利.
-  #+begin_src emacs-lisp :tangle init.el
-(leaf chezmoi
+(leaf embark-consult ;;<
+  :emacs>= 29.1
   :ensure t
-  :if (executable-find "chezmoi")
-  :bind (("C-c C f" . chezmoi-find)
-         ("C-c C s" . chezmoi-write))
-  )
-  #+end_src
+  :hook
+  (embark-collect-mode . consult-preview-at-point-mode))
+   #+end_src
 * 言語毎のモードの設定など
   :PROPERTIES:
   :CUSTOM_ID: org31fb6f15
@@ -2586,6 +2611,7 @@ https://github.com/minad/consult/wiki#toggle-preview-during-active-completion-se
           ;; (nix "https://github.com/nix-community/tree-sitter-nix")
           ;; (python "https://github.com/tree-sitter/tree-sitter-python")
           ;; (rust "https://github.com/tree-sitter/tree-sitter-rust")
+          (ruby "https://github.com/tree-sitter/tree-sitter-ruby" nil "src")
           (toml "https://github.com/tree-sitter/tree-sitter-toml")
           ;; (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
           ;; (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
@@ -2908,7 +2934,10 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
    :END:
    =#RRGGBB= のカラーコードに勝手に色が付く．CSS の編集中なんかで地味に便利．
    #+begin_src emacs-lisp :tangle init.el
-(leaf rainbow-mode :ensure t :hook (emacs-startup-hook . rainbow-mode))
+(leaf rainbow-mode
+  :ensure t
+  :hook (emacs-startup-hook . rainbow-mode)
+  )
    #+end_src
 ** =markdown-mode=: Markdown 関連
    :PROPERTIES:
@@ -2921,6 +2950,22 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
   :mode ("\\.md\\'" "\\.markdown\\'")
   :config
   (setq markdown-command "pandoc") ;; プレビュー等で利用するコマンド
+  )
+   #+end_src
+** =chezmoi=: 設定ファイルの編集補助
+   :PROPERTIES:
+   :CUSTOM_ID: org21392594
+   :END:
+   設定ファイルの管理に [[https://www.chezmoi.io/][chezmoi]] を使うようになったので,
+   その編集補助に.
+
+   地味ながら, 非常に便利.
+   #+begin_src emacs-lisp :tangle init.el
+(leaf chezmoi
+  :ensure t
+  :if (executable-find "chezmoi")
+  :bind (("C-c C f" . chezmoi-find)
+         ("C-c C s" . chezmoi-write))
   )
    #+end_src
 ** =fortran>=90=: Modern Fortran
@@ -3186,6 +3231,22 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
         lua-ts-indent-continuation-lines t)
   )
    #+end_src
+** Ruby 関連
+   :PROPERTIES:
+   :CUSTOM_ID: org3adf933f
+   :END:
+*** =ruby-ts-mode=
+    :PROPERTIES:
+    :CUSTOM_ID: orgc4632749
+    :END:
+    #+begin_src emacs-lisp :tangle init.el
+(leaf ruby-ts-mode
+  :ensure t
+  :mode ("\\.rb\\'")
+  :preface
+  (add-to-list 'major-mode-remap-alist '(f90-mode . f90-ts-mode))
+  )
+    #+end_src
 ** 他, インストールしただけのアレコレ
    :PROPERTIES:
    :CUSTOM_ID: orgb39a8413
@@ -3298,22 +3359,20 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
    :CUSTOM_ID: org48ef2f56
    :END:
    #+begin_src emacs-lisp
-(leaf google-translate
+(leaf gt
   :ensure t
-  :defvar google-translate-backend-method
-  :init
-  (defvar google-translate-translation-directions-alist '(("en" . "ja") ("ja" . "en")))
-  (leaf popup :ensure t)
-  (defun my:google-translate--search-tkk ()
-    "Search TKK. @see https://github.com/atykhonov/google-translate/issues/52"
-    (list 430675 2721866130))
-  :bind
-  ("C-x t" . google-translate-smooth-translate)
-  :advice (:override google-translate--search-tkk
-                     my:google-translate--search-tkk)
+  :bind ("C-x t" . gt-translate)
+  :preface
+  ;; -------------------------------------------------------------------------
   :config
-  (setq google-translate-translation-directions-alist '(("en" . "ja") ("ja" . "en"))
-        google-translate-backend-method 'curl)
+  (setq gt-langs '(ja en)
+        gt-default-translator
+        (gt-translator
+         :taker (gt-taker :text 'buffer :pick 'paragraph)
+         :engines (list (gt-google-engine)
+                        (gt-bing-engine)
+                        )
+         :render (gt-buffer-render)))
   )
    #+end_src
 * 校正, 辞書等
@@ -3582,11 +3641,15 @@ video/*; xdg-open %s;
 (setq mime-situation-examples-file
       (expand-file-name "mime-example" my:d:tmp))
      #+end_src
-     text/plain を html より優先.
+     +text/plain を html より優先+
+     →
+     イットな企業ほど
+     =text/plain= を考慮しないメールを送ってくる事が多くなったなぁ.
+     酷い話だ.
      #+begin_src emacs-lisp :tangle init-wl.el
 (setq mime-view-type-subtype-score-alist
-      '(((text . plain) . 1)
-        ((text . html)  . 0)
+      '(((text . plain) . 0)
+        ((text . html)  . 1)
         ))
      #+end_src
      音を鳴らすアレやコレの無効化
@@ -5718,20 +5781,22 @@ pdflang={%l}}
   :CUSTOM_ID: org9992a617
   :END:
   - [ ] org2blog で tDiary を更新できないか妄想している
+    - というより, org のメモもしくは journal のあるエントリの下をそのまま
+      =tdiary-new= に渡せれば良いんだよなあ...
   #+begin_src emacs-lisp :tangle init.el
 (leaf tdiary-mode
   :if (and my:d:password-store
            (file-directory-p (concat (getenv "HOME") "/Nextcloud/tdiary")))
-  :commands (tdiary-mode tdiary-replace tdiary-append tdiary-passwd-file-load)
-  :defvar (tdiary-csrf-key tdiary-passwd-file tdiary-passd-file)
+  :commands (tdiary-mode tdiary-passwd-file-load)
   :pl-setq (tdiary-csrf-key tdiary-passwd-file)
-  :vc (:url "https://github.com/uwabami/tdiary-mode")
+  :vc (:url "git@github.com:uwabami/tdiary-mode")
   :preface (my:vc-installed-package 'tdiary-mode)
   :config
   (setq tdiary-text-directory (concat (getenv "HOME") "/Nextcloud/tdiary/")
         tdiary-diary-list '(("log" "https://uwabami.junkhub.org/log/"))
         tdiary-style-mode 'org-mode
         tdiary-text-suffix ".org"
+        tdiary-text-save-p t
         tdiary-http-timeout 100)
   (tdiary-passwd-file-load)
   )
@@ -6296,19 +6361,31 @@ pdflang={%l}}
    :CUSTOM_ID: org886177b2
    :END:
    #+begin_src emacs-lisp :tangle init.el
-(setq debug-on-error t)
-(setq debug-on-message t)
+(setq debug-on-error nil)
+(setq debug-on-message nil)
    #+end_src
 * 最後に
   :PROPERTIES:
   :CUSTOM_ID: orgf87c4e84
   :END:
+** =benchmark-init=
+   :PROPERTIES:
+   :CUSTOM_ID: orga74f6cea
+   :END:
+   #+begin_src emacs-lisp :tangle no
+(leaf benchmark-init
+  :ensure t
+  :hook ((before-init-hook . benchmark-init/activate)
+         (emacs-startup-hook . benchmark-init/deactivate)
+         )
+  )
+   #+end_src
 ** TODO =esup=: 起動時間を調べる [/]
    :PROPERTIES:
    :CUSTOM_ID: org0bd0c625
    :END:
    本気でやるなら profiler なんだろうけれど.
-   #+begin_src emacs-lisp :tangle no
+   #+begin_src emacs-lisp :tangle init.el
 (leaf esup
   :ensure t
   :init
@@ -6316,12 +6393,14 @@ pdflang={%l}}
         esup-depth 0 ;; 🤔
         )
   )
+;; ---------------------------------------------------------------------------
+;; (esup "~/.emacs.d/early-init.el")
    #+end_src
    - [ ] =early-init.el= を見ないので, 読み込まれない設定が多々.
      - [[https://github.com/jschaf/esup/issues/93][early-init.el is not included in profiling · Issue #93 · jschaf/esup]]
    - あと, leaf を利用していると,
      殆どがマクロ展開で埋まるので,
-     速度計測の意味が無い...。
+     速度計測の意味が無い, 様な?
 ** profiler report
    :PROPERTIES:
    :CUSTOM_ID: org8d339cf7

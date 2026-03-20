@@ -15,8 +15,8 @@ jobs:
         include:
           - emacs_version: 'snapshot'
             allow_failure: true
-          # - emacs_version: '27.1'
-          #   allow_failure: true
+          - emacs_version: '27.1'
+            allow_failure: true
           # - emacs_version: '28.2'
           #   allow_failure: true
     steps:

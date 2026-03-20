@@ -1,0 +1,40 @@
+name: Fetch Badge
+
+on:
+  workflow_run:
+    workflows: ["build"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout gh-pages
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: gh-pages
+          fetch-depth: 0
+
+      - name: Download badge.svg
+        run: |
+          set -euxo pipefail
+          curl -L -o badge.svg \
+            "https://github.com/uwabami/emacs/actions/workflows/build.yml/badge.svg"
+
+      - name: Commit & push if changed
+        run: |
+          set -euxo pipefail
+          if git diff --quiet -- badge.svg; then
+            echo "No changes in badge."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add badge.svg
+          git commit -m "Mirror CI badge (Test)"
+          git push origin gh-pages

@@ -2,7 +2,7 @@
 #+title: Emacs の設定
 #+options: auto-id:t H:6
 #+startup: content
-#+date: 2026-03-20 13:40:17
+#+date: 2026-03-20 13:54:20
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -5127,7 +5127,9 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     :END:
     @see [[https://github.com/d12frosted/vulpea-ui][d12frosted/vulpea-ui]]
     #+begin_src emacs-lisp :tangle init.el
-(leaf vulpea-ui
+(leaf vulpea-ui ;; <
+  :emacs >= 29.1
+  :disabled t
   :ensure t
   :bind ("C-c v s" . vulpea-ui-sidebar-toggle)
   :init

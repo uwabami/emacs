@@ -1,18 +1,20 @@
 # -*- mode: org; coding: utf-8-unix; indent-tabs-mode: nil -*-
 #+title: Emacs の設定
 #+options: auto-id:t H:6
-#+date: 2026-03-02 17:46:32
+#+startup: content
+#+date: 2026-03-20 13:40:17
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
   :END:
-  ここでは私の Emacs の設定についてまとめています．
 
-  #+html: <span class="inline-block">
-  #+html: <img src="https://github.com/uwabami/emacs/actions/workflows/build.yml/badge.svg" width="104px" height="20px" class="github_badge"/>
-  #+html: <img src="https://img.shields.io/badge/License-GPLv3-blue.svg" width="92px" height="20px"/>
-  #+html: <a href="https://github.com/uwabami/emacs"><span class="icon-github"><svg id="SVGRoot" width="20px" height="20px" version="1.1" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="m5.4144 12.761c0 0.0645-0.0742 0.11613-0.16774 0.11613-0.10645 0.01-0.18064-0.0419-0.18064-0.11613 0-0.0645 0.0742-0.11613 0.16774-0.11613 0.0968-0.01 0.18064 0.0419 0.18064 0.11613zm-1.0032-0.14516c-0.0226 0.0645 0.0419 0.13871 0.13871 0.15806 0.0839 0.0323 0.18064 0 0.2-0.0645 0.0194-0.0645-0.0419-0.13871-0.13871-0.16775-0.0839-0.0226-0.17742 0.01-0.2 0.0742zm1.4258-0.0548c-0.0935 0.0226-0.15806 0.0839-0.14838 0.15806 0.01 0.0645 0.0935 0.10645 0.19032 0.0839 0.0936-0.0226 0.15806-0.0839 0.14839-0.14838-0.01-0.0613-0.0968-0.10323-0.19033-0.0935zm2.1226-12.361c-4.4742 0-7.8968 3.3968-7.8968 7.871 0 3.5774 2.2516 6.6387 5.4677 7.7161 0.41291 0.0742 0.55807-0.18064 0.55807-0.39032 0-0.2-0.01-1.3032-0.01-1.9806 0 0-2.2581 0.48387-2.7323-0.96129 0 0-0.36774-0.93871-0.89677-1.1806 0 0-0.73871-0.50645 0.0516-0.49677 0 0 0.80323 0.0645 1.2452 0.83226 0.70645 1.2452 1.8903 0.88709 2.3516 0.67419 0.0742-0.51613 0.28387-0.87419 0.51613-1.0871-1.8032-0.2-3.6226-0.46129-3.6226-3.5645 0-0.8871 0.24516-1.3323 0.76129-1.9-0.0839-0.20968-0.35806-1.0742 0.0839-2.1903 0.6742-0.20967 2.2258 0.87097 2.2258 0.87097 0.64516-0.18064 1.3387-0.27419 2.0258-0.27419 0.68709 0 1.3806 0.0936 2.0258 0.27419 0 0 1.5516-1.0839 2.2258-0.87097 0.44193 1.1194 0.16774 1.9806 0.0839 2.1903 0.51613 0.57096 0.83226 1.0161 0.83226 1.9 0 3.1129-1.9 3.3613-3.7032 3.5645 0.29678 0.25484 0.54839 0.73871 0.54839 1.4968 0 1.0871-0.01 2.4322-0.01 2.6968 0 0.20968 0.14839 0.46452 0.55807 0.39032 3.2258-1.071 5.4129-4.1322 5.4129-7.7097 0-4.4742-3.629-7.871-8.1032-7.871zm-4.7613 11.126c-0.0419 0.0323-0.0323 0.10646 0.0226 0.16775 0.0516 0.0516 0.12581 0.0742 0.16775 0.0323 0.0419-0.0323 0.0323-0.10645-0.0226-0.16774-0.0516-0.0516-0.12581-0.0742-0.16775-0.0323zm-0.34838-0.26129c-0.0226 0.0419 0.01 0.0935 0.0742 0.12581 0.0516 0.0323 0.11613 0.0226 0.13871-0.0226 0.0226-0.0419-0.01-0.0935-0.0742-0.12581-0.0645-0.0194-0.11613-0.01-0.13871 0.0226zm1.0452 1.1484c-0.0516 0.0419-0.0323 0.13871 0.0419 0.2 0.0742 0.0742 0.16775 0.0839 0.20968 0.0323 0.0419-0.0419 0.0226-0.13871-0.0419-0.2-0.071-0.0742-0.16775-0.0839-0.20968-0.0323zm-0.36774-0.47419c-0.0516 0.0323-0.0516 0.11613 0 0.19032 0.0516 0.0742 0.13871 0.10645 0.18064 0.0742 0.0516-0.0419 0.0516-0.1258 0-0.2-0.0452-0.0742-0.12903-0.10645-0.18064-0.0645z" fill="currentColor" stroke-width=".032258"/></svg></span></a>
-  #+html: </span>
+  #+html: <p>
+  #+html: <img src="https://github.com/uwabami/emacs/actions/workflows/build.yml/badge.svg" height="20">
+  #+html: <img src="https://img.shields.io/badge/License-GPLv3-blue.svg" width="92" height="20" loading="lazy">
+  #+html: <span class="icon-github"><a href="https://github.com/uwabami/emacs/"><svg height="20" class="octicon octicon-mark-github" viewbox="0 0 16 16" version="1.1" width="20" aria-hidden="true"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"></path></svg></a></span>
+  #+html: </p>
+
+  ここでは私の Emacs の設定についてまとめています．
 
 * 基本方針
   :PROPERTIES:
@@ -246,7 +248,6 @@ distclean: clean
 *** TODO 起動時の GC threshold の最大化, 起動後に元に戻す様にする [0/1]
     :PROPERTIES:
     :CUSTOM_ID: org3977c5ee
-    :ID:       9bb833b8-16ba-493a-8616-7da7a810bee4
     :END:
     #+begin_src emacs-lisp :tangle (if (boundp 'early-init-file) "early-init.el" "init.el")
 (setq gc-cons-threshold most-positive-fixnum
@@ -279,7 +280,6 @@ distclean: clean
 ** Package初期化処理
    :PROPERTIES:
    :CUSTOM_ID: orgd896c3a2
-   :ID:       351f7fc8-be80-46b3-86ac-d9bae80d3445
    :END:
    本体でやっても良いけど, ここに持ってきても良いらしい.
    #+begin_src emacs-lisp :tangle (if (boundp 'early-init-file) "early-init.el" "init.el")
@@ -326,7 +326,6 @@ distclean: clean
 *** Magic File Name を無効化
     :PROPERTIES:
     :CUSTOM_ID: org812e4b3a
-    :ID:       da35a6a1-6164-410a-976a-e9335dd4444c
     :END:
     #+begin_src emacs-lisp :tangle (if (boundp 'early-init-file) "early-init.el" "init.el")
 (defvar my:saved-file-name-handler-alist file-name-handler-alist)
@@ -335,7 +334,7 @@ distclean: clean
 *** 起動後の Magic File Name の復元
     :PROPERTIES:
      :CUSTOM_ID: org42900264
-     :END:
+      :END:
     起動後に =emacs-startup-hook= にて,
     パッケージの読み込みで追加された値と save しておいた値を合わせて復元
      #+begin_src emacs-lisp :tangle init.el
@@ -347,7 +346,6 @@ distclean: clean
 ** その他, 雑多な GUI 関連の設定
    :PROPERTIES:
    :CUSTOM_ID: orgcb2bfa7b
-   :ID:       d5e8fa0e-8fd3-4db0-bc20-f6a8c83d191b
    :END:
    見た目: tabbar, toolbar, menubar などの非表示, beep の無効化など
    #+begin_src emacs-lisp :tangle (if (boundp 'early-init-file) "early-init.el" "init.el")
@@ -484,8 +482,12 @@ distclean: clean
    個々のパッケージの設定には[[https://github.com/conao3/leaf.el][leaf.el]]を利用します.
    以前は el-get も利用していましたが, =:vc= キーワードで =package-vc-install= を呼び出せるので, こっちを使うようになりました.
    - [X] =package-vc-install= でインストールした諸々って, package-upgrade 後に delete 対象になる?
-     → send PR: [[https://github.com/conao3/leaf.el/pull/552][leaf-handler-vc: Add package to package-selected-packages by uwabami · Pull Request #552 · conao3/leaf.el]]
-   #+begin_src emacs-lisp :tangle init.el
+     - DONE: send PR: [[https://github.com/conao3/leaf.el/pull/552][leaf-handler-vc: Add package to package-selected-packages by uwabami · Pull Request #552 · conao3/leaf.el]]
+*** bootstrap
+    :PROPERTIES:
+    :CUSTOM_ID: org395875cd
+    :END:
+    #+begin_src emacs-lisp :tangle init.el
 ;; ---------------------------------------------------------------------------
 (eval-and-compile
   (unless (featurep 'leaf)
@@ -493,16 +495,15 @@ distclean: clean
     (unless (package-installed-p 'leaf)
       (package-refresh-contents)
       (package-install 'leaf t))))
-   #+end_src
-   - [ ] 起動時にはここが一番時間がかかっている.
-     - 全体の 75% 0.284sec/0.376sec.
-       このぐらいは許容範囲と見るべきか, もっと減らせるのか.
-   #+begin_src emacs-lisp :tangle init.el
-;; ---------------------------------------------------------------------------
-;;;###autoload
-(defun my:vc-installed-package (pkgname)
-  ":vcキーワードでインストールしたパッケージを package-selected-package に登録"
-  (leaf-safe-push `,pkgname package-selected-packages 'no-dup))
+    #+end_src
+    - [ ] 起動時にはここが一番時間がかかっている.
+      - 全体の 75% 0.284sec/0.376sec.
+        このぐらいは許容範囲と見るべきか, もっと減らせるのか.
+*** 初期化
+    :PROPERTIES:
+    :CUSTOM_ID: orgf799a3f3
+    :END:
+    #+begin_src emacs-lisp :tangle init.el
 ;; ---------------------------------------------------------------------------
 (leaf leaf-keywords
   :ensure t
@@ -512,11 +513,15 @@ distclean: clean
   :config
   (leaf-keywords-init)
   )
-   #+end_src
-** WAIT =package-vc-install= の調整 [0/1]
+    #+end_src
+** OBSOLETE =package-vc-install= の調整
    :PROPERTIES:
    :CUSTOM_ID: org9c1823a4
    :END:
+   (2026-03-07)
+   =vc= キーワードでのインストール時に =make= などでビルドする必要のあるパッケージを使わなくなったので,
+   以下の調整は obsolete です.
+
    package-vc-install を直接叩く事は無くて,
    leaf の =:vc= キーワードでインストールします.
    ただ, package-vc-install はリポジトリに既に .el が存在すること前提としていて
@@ -529,7 +534,7 @@ distclean: clean
 (add-to-list 'package-vc-allow-build-commands 'hogehero)
    #+end_src
    と指定する様にしました.
-   #+begin_src emacs-lisp :tangle init.el
+   #+begin_src emacs-lisp :tangle no
 (leaf package-vc
   :doc "Extend package-vc to support post-make autoload generation"
   :tag "builtin"
@@ -848,9 +853,6 @@ C-u を付けて実行すると, 埋める文字を指定可能(例: = や * な
    #+begin_src emacs-lisp :tangle init.el
 (leaf eaw-custom
   :vc (:url "git@github.com:uwabami/locale-eaw-from-fontset")
-  :preface
-  (add-to-list 'package-vc-allow-build-commands 'eaw-custom)
-  (my:vc-installed-package 'eaw-custom)
   :init
   :hook (emacs-startup-hook . (lambda ()
                                 (eaw-init)
@@ -926,14 +928,15 @@ Emacs.reverseVideo: true
         )
       (eval-when-compile (require 'eaw-custom nil :noerror))
       (dolist (target code-wide)
-        (set-fontset-font nil target (font-spec :family "Migu 1M") nil 'append)
-        ;; (set-fontset-font nil target (font-spec :family "Rounded-X Mgen+ 1mn") nil 'append)
-        (set-fontset-font nil target (font-spec :family "Symbols Nerd Font") nil 'append))
+        ;; (set-fontset-font nil target (font-spec :family "Migu 1M") nil 'append)
+        (set-fontset-font nil target (font-spec :family "Rounded-X Mgen+ 1mn") nil 'append)
+        (set-fontset-font nil target (font-spec :family "Symbols Nerd Font") nil 'append)
+        (set-fontset-font nil target (font-spec :family "Noto Color Emoji") nil 'append))
       (dolist (target code-half)
         (set-fontset-font nil target (font-spec :family "Victor Mono"))
-        (set-fontset-font nil target (font-spec :family "Noto Sans Symbol") nil 'append)
+        (set-fontset-font nil target (font-spec :family "Hack"))
         (set-fontset-font nil target (font-spec :family "Noto Sans Math") nil 'append)
-        (set-fontset-font nil target (font-spec :family "Noto Color Emoji") nil 'append))
+        (set-fontset-font nil target (font-spec :family "Noto Sans Symbol") nil 'append))
       ))
   )
 ;; ---------------------------------------------------------------------------
@@ -946,6 +949,7 @@ Emacs.reverseVideo: true
                                 (".*Noto.*Symbol*" . 0.9)
                                 (".*Noto.*Math*" . 0.9)
                                 (".*Emoji.*" . 0.9)
+                                (".*Hack.*" . 0.9)
                                 )
       )
 ;; フレームの初期化が終わらないとフォント設定等が効かない
@@ -1249,7 +1253,7 @@ Emacs.reverseVideo: true
   (emacs-startup-hook . savehist-mode)
   )
    #+end_src
-** TODO =saveplace= 前回の修正位置の保存 [0/1]
+** TODO =saveplace= 前回の修正位置の保存 [1/2]
    :PROPERTIES:
    :CUSTOM_ID: org77978fff
    :END:
@@ -1278,8 +1282,9 @@ Emacs.reverseVideo: true
   (emacs-startup-hook . save-place-mode)
   )
    #+end_src
-   - [ ] org-mode で fold されている場所に対して利用できるのか?
-   - [ ] 秘匿すべきファイルは追加した方が良いな.
+   - [X] org-mode で fold されている場所に対して利用できるのか?
+     - → できない模様. 残念.
+   - [ ] 秘匿すべきファイルは追加した方が良いな. 今の所 =.gpg= と =.plist= を追加しているけど...
 ** =uniquify= ファイル位置の表示項目を増やす
    :PROPERTIES:
    :CUSTOM_ID: org3b23e2db
@@ -1821,7 +1826,7 @@ Emacs*useXIM: false
    :PROPERTIES:
    :CUSTOM_ID: org1689d1f5
    :END:
-   気がついたら, Wayland(wl-copy/wl-paste) でも macOS (pbcopy/pbpaste) でもこれで OK っぽい.
+   気がついたら, Wayland(wl-copy/wl-paste) でも macOS (pbcopy/pbpaste) でもこのパッケージで OK っぽい.
    WSLでは =powershell/clip.exe= を使う様になっているけど, *遅い* ので =w32yank.exe= を使うことにしている.
    #+begin_src emacs-lisp :tangle init.el
 (leaf xclip
@@ -1955,9 +1960,7 @@ t と nil じゃちょっとわかんないよね..."
   :PROPERTIES:
   :CUSTOM_ID: org5f756509
   :END:
-  +buffer を眺めるのは ibuffer が好み+
-  → 最近は [[#orged5e5627][=consult=: 便利コマンド集]] の =consult-buffer= を使う様になってきた.
-  あまり呼び出さなくなったけど, 設定は残しておくことに.
+  buffer を眺めるのは ibuffer が好み
   #+begin_src emacs-lisp :tangle init.el
 (leaf ibuffer
   :tag "builtin"
@@ -1993,6 +1996,7 @@ t と nil じゃちょっとわかんないよね..."
     )
   :hook (ibuffer-mode-hook . nerd-icons-ibuffer-mode)
   :bind (("C-x M-b" . ibuffer)
+         ("C-x C-b" . ibuffer)
          (:ibuffer-mode-map
           ("C-x C-f" . my:ibuffer-find-file))
          )
@@ -2338,8 +2342,8 @@ https://github.com/minad/consult/wiki#toggle-preview-during-active-completion-se
       nil))
   ;; -------------------------------------------------------------------------
   :bind (("C-x C-r" . my:consult-recent-file)
-         ("C-x C-b" . consult-buffer)
-         ("C-x b"   . consult-buffer)
+         ;; ("C-x C-b" . consult-buffer)
+         ("M-g b"   . consult-buffer)
          ("M-g o"   . consult-outline)
          ;; ordeless に migemo を追加できたので isearch から乗り換える?
          ("M-g s" . consult-line)
@@ -2411,7 +2415,6 @@ https://github.com/minad/consult/wiki#toggle-preview-during-active-completion-se
     #+begin_src emacs-lisp
 (leaf consult-ghq
   :vc (:url "https://github.com/uwabami/consult-ghq")
-  :preface (my:vc-installed-package 'consult-ghq)
   :bind (("C-x f" . consult-ghq-open))
   :init
   (setq consult-ghq-short-list t)
@@ -2500,7 +2503,6 @@ https://github.com/minad/consult/wiki#toggle-preview-during-active-completion-se
 (leaf eglot-booster
   :if (executable-find "emacs-lsp-booster")
   :vc (:url "git@github.com:jdtsmith/eglot-booster.git")
-  :preface (my:vc-installed-package 'eglot-booster)
   :after eglot
   :config (eglot-booster-mode)
   )
@@ -2547,8 +2549,6 @@ https://github.com/minad/consult/wiki#toggle-preview-during-active-completion-se
 (leaf f90format
   :if (executable-find "fprettify")
   :vc (:url "https://github.com/BlameTroi/f90format")
-  :preface
-  (my:vc-installed-package 'f90format)
   :config
   (setq f90format-command "fprettify"
         f90format-args '("--indent" "2"
@@ -2599,7 +2599,7 @@ https://github.com/minad/consult/wiki#toggle-preview-during-active-completion-se
           ;; (latex "https://github.com/latex-lsp/tree-sitter-latex")
           (lua "https://github.com/MunifTanjim/tree-sitter-lua")
           ;; (go "https://github.com/tree-sitter/tree-sitter-go")
-          ;; (html "https://github.com/tree-sitter/tree-sitter-html")
+          (html "https://github.com/tree-sitter/tree-sitter-html")
           (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
           (json "https://github.com/tree-sitter/tree-sitter-json")
           ;; (make "https://github.com/alemuller/tree-sitter-make")
@@ -3002,7 +3002,6 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
 (leaf f90-ts-mode
   :if (executable-find "tree-sitter")
   :vc (:url "git@github.com:uwabami/emacs-f90-ts-mode.git")
-  :preface (my:vc-installed-package 'f90-ts-mode)
   :mode ("\\.f90\\'" "\\.F90\\'" "\\.f95\\'" "\\.F95\\'" "\\.F\\'")
   :defvar treesit-language-source-alist
   :bind (:f90-ts-mode-map
@@ -3276,7 +3275,7 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
      - できれば =--full-path= じゃない表示にしたい(=my:shorten-file-path= を噛ませたい).
    - [ ] 何故か↑の =project-list-file= が効かずに =~/.emacs.d/project= が生成される事が.
      - これはなんだろうか?
-** TODO =magit=: Emacs の Git Frontend [0/0]
+** TODO =magit=: Emacs の Git Frontend [0/1]
    :PROPERTIES:
    :CUSTOM_ID: org59371622
    :END:
@@ -3308,7 +3307,6 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
 (leaf git-commit-ts-mode
   :if (executable-find "tree-sitter")
   :vc (:url "https://github.com/danilshvalov/git-commit-ts-mode")
-  :preface (my:vc-installed-package 'git-commit-ts-mode)
   :mode "\\COMMIT_EDITMSG\\'"
   )
    #+end_src
@@ -3426,10 +3424,8 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
    #+begin_src emacs-lisp
 (leaf text-adjust
   :vc (:url "https://github.com/uwabami/text-adjust.el")
-  :preface (my:vc-installed-package 'text-adjust)
   )
    #+end_src
-
 * MUA の設定: =wanderulst=
   :PROPERTIES:
   :CUSTOM_ID: org2c2abb9b
@@ -3451,9 +3447,9 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
 (leaf rail
   :preface
   (add-to-list 'my:package-update-exclude "rail")
+  :require t
   :init
   (setq rail-emulate-genjis t)
-  :leaf-defer t
   )
    #+end_src
 ** Emacs 本体側の設定(wanderlust)
@@ -3494,7 +3490,7 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
         elmo-localdir-folder-path (expand-file-name "local" my:d:wl-cache-directory)
         read-mail-command #'wl
         wl-init-file (expand-file-name "init-wl" user-emacs-directory)
-        wl-mime-charset 'iso-2022-jp
+        ;; wl-mime-charset 'iso-2022-jp
         wl-demo  nil)
   (define-mail-user-agent
     'wl-user-agent
@@ -3551,7 +3547,7 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
 **** cp5022x を使う
      :PROPERTIES:
      :CUSTOM_ID: orga4113e25
-     :END:
+      :END:
      ISO-2022-JP を CP50220 として扱う.
      [[http://d.hatena.ne.jp/kiwanami/20091103/1257243524][Wanderlustと文字コード]] も参照のこと.
      #+begin_src emacs-lisp :tangle init-wl.el
@@ -3567,7 +3563,7 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
 **** SEMI の追加設定
      :PROPERTIES:
      :CUSTOM_ID: orgc4ec7a62
-     :END:
+      :END:
      #+begin_src emacs-lisp :tangle init-wl.el
 (eval-and-compile
   (require 'mime-w3m))
@@ -3660,7 +3656,7 @@ video/*; xdg-open %s;
 **** 自身のメールアドレスと購読メーリングリストの設定
      :PROPERTIES:
      :CUSTOM_ID: org7f87384b
-     :END:
+      :END:
      #+begin_src emacs-lisp :tangle no
 ;; From: の設定
 (setq wl-from (concat user-full-name " <" user-mail-address ">"))
@@ -3684,7 +3680,7 @@ video/*; xdg-open %s;
 **** 送受信用サーバの設定
      :PROPERTIES:
      :CUSTOM_ID: orgba8bc2e7
-     :END:
+      :END:
      受信(IMAP)
      #+begin_src emacs-lisp :tangle no
 (setq elmo-imap4-default-server "your imap server")
@@ -3702,7 +3698,7 @@ video/*; xdg-open %s;
 **** From に応じて送信サーバをきりかえる.
      :PROPERTIES:
      :CUSTOM_ID: org9af3a565
-     :END:
+      :END:
      本来はメール作成時/返信時の template の切り替えなのだれど,
      送信時の SMTP の設定を from に合わせてきりかえるようにする.
      default に二重に指定しているのは,
@@ -3776,7 +3772,7 @@ video/*; xdg-open %s;
 **** imap 関連
      :PROPERTIES:
      :CUSTOM_ID: org69cc3854
-     :END:
+      :END:
      デフォルトの認証設定
      フォルダ名は UTF-7 でエンコードされているので,
      表示する際にこれをデコードする
@@ -3786,14 +3782,14 @@ video/*; xdg-open %s;
 **** 非同期チェック
      :PROPERTIES:
      :CUSTOM_ID: org2d8166ce
-     :END:
+      :END:
      #+begin_src emacs-lisp :tangle init-wl.el
 (setq wl-folder-check-async t)
      #+end_src
 **** フォルダの位置の default からの変更
      :PROPERTIES:
      :CUSTOM_ID: org6572a382
-     :END:
+      :END:
      =~/.cache/wl/= に集約している
      local の Mail folder(MH) の位置
      #+begin_src emacs-lisp :tangle init-wl.el
@@ -3837,14 +3833,14 @@ video/*; xdg-open %s;
 **** フォルダ編集時に backup を作成しない.
      :PROPERTIES:
      :CUSTOM_ID: org72bfee4a
-     :END:
+      :END:
      #+begin_src emacs-lisp :tangle init-wl.el
 (setq wl-fldmgr-make-backup nil)
      #+end_src
 **** FCC, BCC の設定
      :PROPERTIES:
      :CUSTOM_ID: org223d5fa2
-     :END:
+      :END:
      #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-fcc nil)
 ;; (setq wl-fcc "%Sent")
@@ -3860,14 +3856,14 @@ video/*; xdg-open %s;
 **** 起動時に =%INBOX= のみをチェック
      :PROPERTIES:
      :CUSTOM_ID: org4378f104
-     :END:
+      :END:
      #+begin_src emacs-lisp   :tangle init-wl.el
 (setq wl-auto-check-folder-name "%INBOX")
      #+end_src
 **** フォルダ選択時の初期設定
      :PROPERTIES:
      :CUSTOM_ID: org6efc7670
-     :END:
+      :END:
      imap の namespace を毎度入力するのが面倒なので, これを追加しておく.
      #+begin_src emacs-lisp   :tangle init-wl.el
 (setq wl-default-spec "%")
@@ -3875,7 +3871,7 @@ video/*; xdg-open %s;
 **** confirm 関連の設定
      :PROPERTIES:
      :CUSTOM_ID: orgb2cf2b53
-     :END:
+      :END:
      スキャン時の問い合わせの無効化.
      ちなみに confirm を nil にしても 問い合わせが無いだけで
      threshold は効くので, 明示的に nil に.
@@ -3898,7 +3894,7 @@ video/*; xdg-open %s;
 **** dispose, delete の設定
      :PROPERTIES:
      :CUSTOM_ID: org83490625
-     :END:
+      :END:
      Gmail用に%INBOXでは削除を =wl-trash-folder= への移動ではなく, 「delete」に．
      #+begin_src emacs-lisp   :tangle init-wl.el
 (add-to-list 'wl-dispose-folder-alist
@@ -3912,7 +3908,7 @@ video/*; xdg-open %s;
 **** 折り返しの設定
      :PROPERTIES:
      :CUSTOM_ID: orgd88be525
-     :END:
+      :END:
      message は折り返す.
      #+begin_src emacs-lisp   :tangle init-wl.el
 (setq wl-message-truncate-lines nil)
@@ -3924,7 +3920,7 @@ video/*; xdg-open %s;
 **** mode-line の設定
      :PROPERTIES:
      :CUSTOM_ID: orgb31f5f2c
-     :END:
+      :END:
      長いと嫌なのでイロイロ削る
      #+begin_src emacs-lisp   :tangle init-wl.el
 (setq wl-summary-mode-line-format "") ; "%f {%t}(%n/%u/%a)"
@@ -3933,7 +3929,7 @@ video/*; xdg-open %s;
 **** SOMEDAY misc.
      :PROPERTIES:
      :CUSTOM_ID: org14b77860
-     :END:
+      :END:
      大きいメッセージを送信時に分割しない
      #+begin_src emacs-lisp   :tangle init-wl.el
 (setq mime-edit-split-message nil)
@@ -4022,7 +4018,7 @@ video/*; xdg-open %s;
 **** 自分が差出人である mail は To:某 と表示
      :PROPERTIES:
      :CUSTOM_ID: org63a385a5
-     :END:
+      :END:
      #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-summary-showto-folder-regexp ".*")
 (setq wl-summary-from-function 'wl-summary-default-from)
@@ -4030,7 +4026,7 @@ video/*; xdg-open %s;
 **** サマリ行の表示関連
      :PROPERTIES:
      :CUSTOM_ID: org94145d9c
-     :END:
+      :END:
      サマリ行のフォーマット指定
      #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-summary-line-format
@@ -4056,7 +4052,7 @@ video/*; xdg-open %s;
 **** Gmail 風に, 自分宛のメールに ">" をつけて表示する
      :PROPERTIES:
      :CUSTOM_ID: orga083aeb5
-     :END:
+      :END:
      元ネタ [[http://d.hatena.ne.jp/khiker/20080206/wanderlust]]
      #+begin_src emacs-lisp  :tangle init-wl.el
 ;; 一覧表示での置き換え規則に追加
@@ -4082,7 +4078,7 @@ video/*; xdg-open %s;
 **** 添付ファイルがあったら, サマリ行に @ を付ける
      :PROPERTIES:
      :CUSTOM_ID: org04b0fd69
-     :END:
+      :END:
      #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-summary-line-format-spec-alist
       (append wl-summary-line-format-spec-alist
@@ -4091,7 +4087,7 @@ video/*; xdg-open %s;
 **** 日本語添付ファイルの処理
      :PROPERTIES:
      :CUSTOM_ID: orgb972bff6
-     :END:
+      :END:
      #+begin_src emacs-lisp  :tangle init-wl.el
 ;;; とりあえず, デコードする長さを default の 1000 から二桁増やしておく.
 (setq mime-field-decoding-max-size 100000)
@@ -4138,14 +4134,14 @@ video/*; xdg-open %s;
 **** Subject が変わってもスレッドを切らない
      :PROPERTIES:
      :CUSTOM_ID: org8e1a38e8
-     :END:
+      :END:
      #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-summary-divide-thread-when-subject-changed nil)
      #+end_src
 **** Subject での Tab や複数スペースを無視
      :PROPERTIES:
      :CUSTOM_ID: org4a68d8d4
-     :END:
+      :END:
      #+begin_src emacs-lisp  :tangle init-wl.el
 ;; (defadvice std11-unfold-string (after simply activate)
 ;;   (setq ad-return-value
@@ -4154,7 +4150,7 @@ video/*; xdg-open %s;
 **** 重複メッセージを非表示に
      :PROPERTIES:
      :CUSTOM_ID: org84fec166
-     :END:
+      :END:
      フォルダ内の Message-ID が同じメールを非表示にする
      #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-folder-process-duplicates-alist
@@ -4165,7 +4161,7 @@ video/*; xdg-open %s;
 **** sort 順: 返信が来た順
      :PROPERTIES:
      :CUSTOM_ID: orgc0e5bbcf
-     :END:
+      :END:
      元ネタは [[http://ikazuhiro.s206.xrea.com/article.php/20140920115345919][Re: wanderlust で GMail 風、新着レス順にソート]].
      #+begin_src emacs-lisp  :tangle init-wl.el
 (defun wl-summary-overview-entity-compare-by-reply-date (a b)
@@ -4239,7 +4235,7 @@ video/*; xdg-open %s;
 **** 振り分け判定に使用するヘッダ
      :PROPERTIES:
      :CUSTOM_ID: org1581be27
-     :END:
+      :END:
      添付の有無の表示にも使うので =Content-Type= も登録.
      あと =Delivered-To= はメールの検索の時に結構重宝している.
      #+begin_src emacs-lisp :tangle init-wl.el
@@ -4274,14 +4270,14 @@ video/*; xdg-open %s;
 **** いったん全て非表示に
      :PROPERTIES:
      :CUSTOM_ID: orgbdcad743
-     :END:
+      :END:
      #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-message-ignored-field-list '("^.*:"))
      #+end_src
 **** 見たいヘッダだけ表示
      :PROPERTIES:
      :CUSTOM_ID: org279f859d
-     :END:
+      :END:
      #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-message-visible-field-list
       '("^Subject:"
@@ -4295,7 +4291,7 @@ video/*; xdg-open %s;
 **** 表示順の変更
      :PROPERTIES:
      :CUSTOM_ID: org594e5622
-     :END:
+      :END:
      Mew 風...
      #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-message-sort-field-list
@@ -4310,7 +4306,7 @@ video/*; xdg-open %s;
 **** From, To を省略表示しない
      :PROPERTIES:
      :CUSTOM_ID: org452d7cdb
-     :END:
+      :END:
      To や From にアドレスが沢山指定されていると省略されるので, これを無効化
      #+begin_src emacs-lisp  :tangle init-wl.el
 (setq wl-message-use-header-narrowing nil)
@@ -4499,7 +4495,7 @@ video/*; xdg-open %s;
 **** ドラフトの自動保存の無効化
      :PROPERTIES:
      :CUSTOM_ID: orgc8e9533f
-     :END:
+      :END:
      偶に暴発している様な...? elscreen のせいかしら.
      #+begin_src emacs-lisp :tangle init-wl.el
 ;; (setq wl-auto-save-drafts-interval 300)
@@ -4508,7 +4504,7 @@ video/*; xdg-open %s;
 **** メール本文の文字コード
      :PROPERTIES:
      :CUSTOM_ID: orgccd69748
-     :END:
+      :END:
      丸囲み数字なんかが入ってしまうと
      勝手にエンコーディングが変わってしまって鬱陶しい. どうしたモンだろうかね.
      #+begin_src emacs-lisp :tangle no
@@ -4519,7 +4515,7 @@ video/*; xdg-open %s;
 **** draft mode で orgtbl を有効に
      :PROPERTIES:
      :CUSTOM_ID: org62a575b3
-     :END:
+      :END:
      #+begin_src emacs-lisp  :tangle init-wl.el
 (add-hook 'wl-draft-mode-hook
           (lambda ()
@@ -4530,7 +4526,7 @@ video/*; xdg-open %s;
 **** c-sig
      :PROPERTIES:
      :CUSTOM_ID: orgc1db3638
-     :END:
+      :END:
      署名の選択に c-sig を使用している.
      設定は以下の通り. Mew 風に =C-c <tab>= で signature を挿入するようにしている
      #+begin_src emacs-lisp  :tangle init-wl.el
@@ -4842,10 +4838,10 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
                                      ("MEMO"    . (:foreground "#7fbfff" :weight bold))
                                      ("SOMEDAY" . (:foreground "#7fff7f" :weight bold)))
         ;; GTD: タグの追加
-        org-tag-alist              '(("OFFICE"     . ?o)
-                                     ("HOME"       . ?h)
-                                     ("MAIL"       . ?m)
-                                     ("WORK"       . ?w)
+        org-tag-alist              '(("Office"     . ?o)
+                                     ("Home"       . ?h)
+                                     ("Mail"       . ?m)
+                                     ("Work"       . ?w)
                                      ("Debian"     . ?d)
                                      ("Computer"   . ?c)
                                      ("Book"       . ?b)
@@ -4863,7 +4859,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
         org-modules  '()
         ;; element-cache は使わない:
         ;; うまく使えると良いんだけれど. orgmine が動かない...
-        org-element-use-cache nil
+        ;; org-element-use-cache t
         ;; org-agenda で設定するべきかなぁ...
         org-agenda-inhibit-startup  t
         ;;
@@ -4922,14 +4918,14 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
 ;;;###autoload
 (defun my:org-id-get-custom-id ()
   "Return a part of UUID with an \"org\" prefix.
-g. \"org3ca6ef0c\"."
+e.g. \"org3ca6ef0c\"."
   (let* ((id (org-id-new "")))
     (when (org-uuidgen-p id)
       (downcase (concat "org"  (substring (org-id-new "") 0 8))))))
 ;;;###autoload
 (defun my:org-custom-id-get (&optional pom create)
   "Get the CUSTOM_ID property of the entry at point-or-marker POM.
-e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
+@see https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   (interactive)
   (eval-when-compile (require 'org-macs))
   (org-with-point-at pom
@@ -4951,6 +4947,13 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   (goto-char 1)
   (while (not (eq (point) (point-max)))
     (org-next-visible-heading 1)
+    (let ((id (org-entry-get (point) "CUSTOM_ID")))
+      (when id
+        (message "CUSTOM_ID: %s" id)
+        (org-delete-property "CUSTOM_ID"))))
+  (goto-char 1)
+  (while (not (eq (point) (point-max)))
+    (org-next-visible-heading 1)
     (let ((id (org-entry-get (point) "ID")))
       (when id
         (message "ID: %s" id)
@@ -4967,6 +4970,10 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     (when (re-search-forward "^#\\+options:.*auto-id:t" (point-max) t)
       (org-map-entries
        (lambda () (my:org-custom-id-get (point) 'create))))))
+  ;;(save-excursion
+  ;;  (goto-char (point-max))
+  ;;  (while (outline-previous-heading)
+  ;;    (org-id-get-create))))
   ;;
   :hook (before-save-hook . (lambda ()
                               (when (and (eq major-mode 'org-mode)
@@ -4981,15 +4988,33 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    :PROPERTIES:
    :CUSTOM_ID: org456c87fa
    :END:
-   orgで日記. org-roam のメモにする前のエントリもどんどん書き込んでいたり.
-   #+begin_src emacs-lisp :tangle init.el
+   orgで日記. roam カードに移動する前に, メモをどんどん書き込んだり.
+   #+begin_src emacs-lisp :tangle no
 (leaf org-journal
   :if (file-directory-p my:d:org)
   :commands org-journal-new-entry
   :ensure t
+  :preface
+;;;###autoload
+  (defun my:widen-journal-buffers-before-entry (&rest _)
+    "org-journal-new-entry の実行前に, ジャーナルディレクトリ内の全バッファを widen"
+    (dolist (buf (buffer-list))
+      (with-current-buffer buf
+        ;; バッファがファイルと紐付いており、かつジャーナルディレクトリ配下であるか判定
+        (when (and (buffer-file-name)
+                   (string-prefix-p (expand-file-name org-journal-dir)
+                                    (expand-file-name (buffer-file-name))))
+          ;; ナローイングされていれば解除する
+          (when (buffer-narrowed-p)
+            (widen))))))
+  ;; -------------------------------------------------------------------------
+  :advice (:before org-journal-new-entry
+                   my:widen-journal-buffers-before-entry)
   :hook
   ((org-journal-mode-hook . (lambda()
-                              (setq-local truncate-lines t))))
+                              (setq-local truncate-lines t)))
+   (org-journal-after-entry-create-hook . org-id-get-create)
+   )
   :init
   (setq org-journal-file-type                 'yearly
         org-journal-dir                       (expand-file-name "journal" my:d:org)
@@ -5008,6 +5033,110 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   (global-set-key (kbd "C-c C-j") 'browse-url-at-point) ;; 🤔？
   )
    #+end_src
+** =vulpea=: Database layer for org-mode notes
+   :PROPERTIES:
+   :CUSTOM_ID: org0a8a942e
+   :END:
+   まだ上手く使いこなせていないけれど….
+   #+begin_src emacs-lisp :tangle init.el
+(leaf vulpea ;; <
+  :emacs>= 27.2
+  ;; -------------------------------------------------------------------------
+  :if (and (file-directory-p my:d:org)
+         (and (executable-find "fdfind")
+              (executable-find "fswatch")))
+  ;; -------------------------------------------------------------------------
+  :ensure t
+  ;; -------------------------------------------------------------------------
+  :preface
+;;;###autoload
+  (defun my:silence-vulpea-async-messages (orig-fn format-string &rest args)
+    "Filter specific asynchronous messages from Vulpea to preserve boot summary."
+    (if (and (stringp format-string)
+             (string-match-p "Vulpea: \\(Started fswatch\\|fswatch process died\\)" format-string))
+        ;; 条件に合致する場合はメッセージを出力せず nil を返す.
+        nil
+      ;; それ以外の通常のメッセージは元の関数に渡す.
+      (apply orig-fn format-string args)))
+  ;; -------------------------------------------------------------------------
+;;;###autoload
+(defun my:org-narrow-to-subtree-after-jump (&rest _)
+  "ノートへのジャンプ直後に、カーソル位置のサブツリーにナローイングする."
+  (when (derived-mode-p 'org-mode)
+    (org-narrow-to-subtree)))
+  ;; -------------------------------------------------------------------------
+  :advice ((:around message
+                    my:silence-vulpea-async-messages)
+           (:after vulpea-find
+                   my:org-narrow-to-subtree-after-jump)
+           (:after org-id-goto
+                   my:org-narrow-to-subtree-after-jump)
+           )
+  ;; -------------------------------------------------------------------------
+  :init
+  (setq vulpea-db-sync-directories (list my:d:org)
+        vulpea-default-notes-directory (expand-file-name "journal" my:d:org)
+        vulpea-db-location (expand-file-name "vulpea.db" my:d:tmp)
+        vulpea-db-exclude-archived t
+        vulpea-db-sync-scan-on-enable nil)
+  ;; -------------------------------------------------------------------------
+  (setq vulpea-create-default-template
+        '(:file-name (format "%s.org"
+                             (format-time-string "%Y-%m-%d-%H%M"))
+                     :tags ("inbox")
+                     :head "#+created: %<[%Y-%m-%d]>")
+        )
+  ;; (vulpea-db-sync-full-scan)
+  ;; :config
+  :hook
+  (emacs-startup-hook . (lambda () (vulpea-db-autosync-mode +1)))
+  )
+   #+end_src
+*** =consult-vulpea=: vulpea のノートを consult で開く
+    :PROPERTIES:
+    :CUSTOM_ID: orgb8876928
+    :END:
+    #+begin_src emacs-lisp :tangle init.el
+(leaf consult-vulpea
+  :disabled t
+  :ensure t
+  :after vulpea
+  :config
+  (consult-vulpea-mode +1)
+  )
+    #+end_src
+*** =vulpea-journal=
+    :PROPERTIES:
+    :CUSTOM_ID: org657ac890
+    :END:
+    #+begin_src emacs-lisp :tangle init.el
+(leaf vulpea-journal
+  :disabled t
+  :if (and (file-directory-p my:d:org)
+           (and (executable-find "fdfind")
+                (executable-find "fswatch")))
+  :ensure t
+  :after (vulpea vulpea-ui)
+  :config
+  (vulpea-journal-setup)
+  )
+    #+end_src
+*** =vulpea-ui=: vulpea ノートを sidebar に表示
+    :PROPERTIES:
+    :CUSTOM_ID: org7f092f40
+    :END:
+    @see [[https://github.com/d12frosted/vulpea-ui][d12frosted/vulpea-ui]]
+    #+begin_src emacs-lisp :tangle init.el
+(leaf vulpea-ui
+  :ensure t
+  :bind ("C-c v s" . vulpea-ui-sidebar-toggle)
+  :init
+  (setq vulpea-ui-sidebar-postion 'right
+        vulpea-ui-sidebar-size 0.33
+        vulpea-ui-outline-max-depth nil ;; unlmited
+        )
+  )
+    #+end_src
 ** Org-capture: メモ取り
    :PROPERTIES:
    :CUSTOM_ID: orgbe835a6b
@@ -5020,60 +5149,53 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   :defvar (my:org:calendar1 my:org:calendar2 my:org:calendar3 my:org:calendar4)
   :pl-setq (my:org:calendar1 my:org:calendar2 my:org:calendar3 my:org:calendar4)
   :config
+;;;###autoload
   (defun my:org-journal-add-date-entry-capture ()
+    "org-journal を利用して対象の日付見出しを作成/検索し、末尾に移動する."
+    (setq org-journal-dir (expand-file-name "journal" my:d:org))
     (org-journal-new-entry t)
-    (goto-char (point-max))
-    )
-  (setq org-default-notes-file (expand-file-name "INBOX.org" my:d:org))
+    (goto-char (point-max)))
+;;  --------------------------------------------------------------------------
+  ;; (setq org-default-notes-file (expand-file-name "INBOX.org" my:d:org))
   (setq org-capture-templates
         `(
           ("t" "TODO" plain
            (function my:org-journal-add-date-entry-capture)
-           "** TODO %(format-time-string org-journal-time-format)%^{title} %^g\n  %?\n  %a"
+           "** TODO %(format-time-string org-journal-time-format)%^{title} %^g\n   :PROPERTIES:\n   :ID:       %(org-id-new)\n   :END:\n%?\n%a"
            :prepend nil
-           ;; :unnarrowed nil
-           :kill-buffer t
-           )
+           :kill-buffer t)
           ("m" "メモを追加" plain
            (function my:org-journal-add-date-entry-capture)
-           "** MEMO %(format-time-string org-journal-time-format)%?"
+           "** MEMO %(format-time-string org-journal-time-format)%?\n   :PROPERTIES:\n   :ID:       %(org-id-new)\n   :END:\n"
            :prepend nil
-           ;; :unnarrowed nil
-           :kill-buffer t
-           )
+           :kill-buffer t)
           ("a" "少し長めの記事を追加する" plain
            (function my:org-journal-add-date-entry-capture)
-           "** ARTICLE %(format-time-string org-journal-time-format)%? "
+           "** ARTICLE %(format-time-string org-journal-time-format)%?\n   :PROPERTIES:\n   :ID:       %(org-id-new)\n   :END:\n"
            :prepend nil
-           ;; :unnarrowed nil
-           :kill-buffer t
-           )
+           :kill-buffer t)
           ("s" "個人予定表スケジュールを追加" plain
            (file ,(expand-file-name "Schedule.org" my:d:org))
            "* %^{prompt}\n  :PROPERTIES:\n  :calendar-id: %(format \"%s\" my:org:calendar1)\n  :org-gcal-managed: org\n  :END:\n  :org-gcal:\n%?\n%i\n  :END:"
            :prepend nil
-           ;; :unnarrowed nil
            :kill-buffer t
            )
           ("u" "仕事予定表スケジュールを追加" plain
            (file ,(expand-file-name "Univ.org" my:d:org))
            "* %^{prompt}\n  :PROPERTIES:\n  :calendar-id: %(format \"%s\" my:org:calendar2)\n  :org-gcal-managed: org\n  :END:\n  :org-gcal:\n%?\n%i\n  :END:"
            :prepend nil
-           ;; :unnarrowed nil
            :kill-buffer t
            )
           ("g" "GFD 関連 スケジュールを追加" plain
            (file ,(expand-file-name "GFD.org" my:d:org))
            "* %^{prompt}\n  :PROPERTIES:\n  :calendar-id: %(format \"%s\" my:org:calendar3)\n  :org-gcal-managed: org\n  :END:\n  :org-gcal:\n%?\n%i\n  :END:"
            :prepend nil
-           ;; :unnarrowed nil
            :kill-buffer t
            )
           ("h" "有給休暇・特別休暇を追加" plain
            (file ,(expand-file-name "Holidays.org" my:d:org))
            "* %^{prompt}\n  :PROPERTIES:\n  :calendar-id: %(format \"%s\" my:org:calendar4)\n  :org-gcal-managed: org\n  :END:\n  :org-gcal:\n%?\n%i\n  :END:"
            :prepend nil
-           ;; :unnarrowed nil
            :kill-buffer t
            )
           )
@@ -5107,14 +5229,17 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   (defface my:org-agenda-calendar-GFD '((t (:foreground "#FFFF7F")))
     "Agenda 表示中, GFD.org の表示 face"
     :group 'org-agenda )
-  (defface my:org-agenda-calendar-DebianJP '((t (:foreground "#BF7FFF")))
+  (defface my:org-agenda-calendar-DebianJP '((t (:foreground "#D2A5FF")))
     "Agenda 表示中, DebianJP.org の表示 face"
     :group 'org-agenda )
   ;; mastodon の ログファイルの表示
-  (defface my:org-agenda-calendar-SNS '((t (:foreground "#CCCCCC")))
+  (defface my:org-agenda-calendar-mstdn '((t (:foreground "#D5BFD9")))
     "Agenda 表示中, Mastodon log の表示 face"
     :group 'org-agenda )
-
+  (defface my:org-agenda-calendar-blsky '((t (:foreground "#BFCCD9")))
+    "Agenda 表示中, Bluesky log の表示 face"
+    :group 'org-agenda )
+  ;; -------------------------------------------------------------------------
   ;; (正規表現 . Face名)のペアを作成しておく
   (defvar my:org-agenda-highlight-rules
     '(("Univ:" . my:org-agenda-calendar-Univ)
@@ -5124,9 +5249,10 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
       ("祝日\\|休日\\|Holidays\\|誕生日" . org-agenda-date-weekend)
       ;; 土曜日の設定例 (必要ならコメントアウトを外してください)
       ("(土)\\|(Sat)" . my:org-agenda-date-saturday)
-      ("mstdn-\*" . my:org-agenda-calendar-SNS)
+      ("mstdn-\*" . my:org-agenda-calendar-mstdn)
+      ("blsky-\*" . my:org-agenda-calendar-blsky)
       ))
-
+  ;; -------------------------------------------------------------------------
   ;; font-lock の適用
 ;;;###autoload
   (defun my:org-agenda-finalize-font-lock ()
@@ -5208,6 +5334,7 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
          ;; --- ディレクトリ定義 ---
          (journal-dir (expand-file-name "journal/" base-dir))
          (mstdn-dir   (expand-file-name "mstdn/" base-dir))
+         (blsky-dir   (expand-file-name "blsky/" base-dir))
          (twitter-dir (expand-file-name "twitter/" base-dir))
          (redmine-arch-dir (expand-file-name "redmine_archive/" base-dir))
          ;; --- 1. ファイルリストの取得 ---
@@ -5222,6 +5349,10 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
          (mstdn-current   (expand-file-name (format "mstdn-%s.org" current-year) mstdn-dir))
          (mstdn-all       (and (file-directory-p mstdn-dir)
                                (directory-files mstdn-dir t "^mstdn-.*\\.org$")))
+         ;; Bluesky: 今年と全ファイル
+         (blsky-current   (expand-file-name (format "blsky-%s.org" current-year) blsky-dir))
+         (blsky-all       (and (file-directory-p blsky-dir)
+                               (directory-files blsky-dir t "^blsky-.*\\.org$")))
          ;; Twitter: 全過去ログ (検索のみ)
          (twitter-all     (and (file-directory-p twitter-dir)
                                (directory-files twitter-dir t "\\.org$")))
@@ -5241,13 +5372,16 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     ;; 2. Archive.org をリストから削除 (破壊的操作だがローカル変数なのでOK)
     (setq my:agenda-list (delete archive-file my:agenda-list))
     ;; 3. 全ての Journal を追加 (ファイルが存在する場合のみ)
-    ;; (when (file-exists-p journal-current)
-    ;;   (add-to-list 'my:agenda-list journal-current))
-    (when journal-all
-      (setq my:agenda-list (append my:agenda-list journal-all)))
+    (when (file-exists-p journal-current)
+      (add-to-list 'my:agenda-list journal-current))
+    ;; (when journal-all
+    ;;   (setq my:agenda-list (append my:agenda-list journal-all)))
     ;; 4. 今年の Mastodon を追加 (ファイルが存在する場合のみ)
     (when (file-exists-p mstdn-current)
       (push mstdn-current my:agenda-list))
+    ;; 5. 今年の Bluesky を追加 (ファイルが存在する場合のみ)
+    (when (file-exists-p blsky-current)
+      (push blsky-current my:agenda-list))
     ;; グローバル変数へ適用
     (setq org-agenda-files my:agenda-list)
     ;; ==========================================================
@@ -5264,7 +5398,10 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
            ;; 4. 過去の Journal (全リストから今年を除去)
            (remove journal-current journal-all)
            ;; 5. 過去の Mastodon (全リストから今年を除去)
-           (remove mstdn-current mstdn-all)))
+           (remove mstdn-current mstdn-all)
+           ;; 6. 過去の Bluesky (全リストから今年を除去)
+           (remove blsky-current blsky-all)
+           ))
     ;; グローバル変数へ適用 (実在するファイルのみフィルタリング)
     (setq org-agenda-text-search-extra-files
           (seq-filter 'file-exists-p my:search-list)))
@@ -5349,11 +5486,8 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
 (leaf orgmine
   :if  (and my:d:password-store
             (file-directory-p my:d:org))
-  :vc (:url "git@github.com:uwabami/orgmine")
-  :preface (my:vc-installed-package 'orgmine)
+  :vc (:url "git@github.com:uwabami/orgmine" :branch "modernize")
   :commands (orgmine-mode)
-  :init
-  (leaf elmine :ensure t)
   :pl-setq orgmine-servers
   :config
   (setq orgmine-note-block-begin "#+begin_src gfm"   ;; 要調整
@@ -5371,7 +5505,6 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
 (leaf org-wiki
   :if (file-directory-p "~/Public/cc-env")
   :vc (:url "https://github.com/uwabami/org-wiki")
-  :preface (my:vc-installed-package 'org-wiki)
   :commands org-wiki-make-org-publish-plist
   :init
   (setq org-wiki-location-alist     '("~/Public/cc-env")
@@ -5440,7 +5573,6 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
 (leaf ox-jekyll
   :if (file-directory-p "~/Public/cc-env")
   :vc (:url "https://github.com/uwabami/ox-jekyll")
-  :preface (my:vc-installed-package 'ox-jekyll)
   )
 (leaf ox-html
   :after ox
@@ -5783,7 +5915,6 @@ pdflang={%l}}
   :commands (tdiary-mode tdiary-passwd-file-load)
   :pl-setq (tdiary-csrf-key tdiary-passwd-file)
   :vc (:url "git@github.com:uwabami/tdiary-mode")
-  :preface (my:vc-installed-package 'tdiary-mode)
   :config
   (setq tdiary-text-directory (concat (getenv "HOME") "/Nextcloud/tdiary/")
         tdiary-diary-list '(("log" "https://uwabami.junkhub.org/log/"))
@@ -6115,6 +6246,8 @@ pdflang={%l}}
        `(whitespace-tab                                   ((t :foreground ,blue-intense :underline t)))
        `(whitespace-space                                 ((t :foreground ,green-intense :bold t)))
        `(whitespace-empty                                 ((t :background ,red-intense )))
+       ;; org-agenda
+       `(org-agenda-calendar-event                        ((t :foreground "#E8F0FF" )))
        ;; org-block
        `(org-block                                        ((t :background ,bg-main :extend t)))
        `(org-block-begin-line                             ((t :background ,bg-main :foreground ,fg-prose-block-delimiter :extend t)))

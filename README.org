@@ -2,7 +2,7 @@
 #+title: Emacs の設定
 #+options: auto-id:t H:6
 #+startup: content
-#+date: 2026-03-20 14:00:05
+#+date: 2026-05-04 02:12:59
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -2256,7 +2256,7 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
    (:around eglot-completion-at-point cape-wrap-nonexclusive))
   :init
   (setq cape-dabbrev-check-other-buffers nil)
-  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  ;; (add-to-list 'completion-at-point-functions #'cape-dabbrev)
   (add-to-list 'completion-at-point-functions #'cape-file)
   (add-to-list 'completion-at-point-functions #'cape-keyword)
   (add-to-list 'completion-at-point-functions #'cape-elisp-block)
@@ -3248,7 +3248,7 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
    フォントロックとインデントのためだけに入れたアレコレのモード
    #+begin_src emacs-lisp :tangle init.el
 (leaf toml-ts-mode :ensure t)
-(leaf php-mode :ensure t)
+;; (leaf php-mode :ensure t)
 (leaf tmux-mode :ensure t)
    #+end_src
 * VCSなど, ソースコード管理関係
@@ -3406,8 +3406,8 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
   :bind (("C-c w" . lookup-pattern)
          ("C-c W" . lookup-word))
   :init
-  (setq lookup-search-agents '((ndeb "/usr/local/share/dict/eijiro" :alias "英辞郎")
-                               (ndeb "/usr/local/share/dict/waeijiro" :alias "和英辞郎")
+  (setq lookup-search-agents '((ndeb "/usr/local/share/dict/EIJIRO" :alias "英辞郎")
+                               ;; (ndeb "/usr/local/share/dict/waeijiro" :alias "和英辞郎")
                                (ndeb "/usr/local/share/dict/rikagaku5" :alias "理化学辞典 第5版")
                                (ndeb "/usr/local/share/dict/koujien4" :alias "広辞苑 第4版")
                                (ndeb "/usr/local/share/dict/wadai5" :alias "研究社 和英大辞典 第5版")
@@ -3472,19 +3472,34 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
           ("C-c C-n" . wl-template-select))
          )
   :preface
-  ;;
-  (defconst my:d:wl-cache-directory
-    (expand-file-name "~/.cache/wl"))
+  ;; ---------------------------------------------------------------------------
+  (autoload 'wl "wl" "Wanderlust" t)
+  (autoload 'wl-other-frame "wl" "Wanderlust on new frame." t)
+  (autoload 'wl-draft "wl-draft" "Write draft with Wanderlust." t)
+  (autoload 'wl-user-agent-compose "wl-draft" nil t)
+  (if (boundp 'mail-user-agent)
+      (setq mail-user-agent 'wl-user-agent))
+  (if (fboundp 'define-mail-user-agent)
+      (define-mail-user-agent
+        'wl-user-agent
+        'wl-user-agent-compose
+        'wl-draft-send
+        'wl-draft-kill
+        'mail-send-hook))
+  ;; ---------------------------------------------------------------------------
+  (defconst my:d:wl-cache-directory (expand-file-name "~/.cache/wl"))
   (unless (file-directory-p
            (expand-file-name "local/trash" my:d:wl-cache-directory))
     (make-directory
      (expand-file-name "local/trash" my:d:wl-cache-directory) t))
-  ;;
+  ;; -------------------------------------------------------------------------
   (defun my:wl-mode-line-buffer-identification (&optional id)
     "ignore `id'"
     (ignore id) (force-mode-line-update t))
+  ;; -------------------------------------------------------------------------
   :advice (:override wl-mode-line-buffer-identification
                      my:wl-mode-line-buffer-identification)
+  ;; -------------------------------------------------------------------------
   :init
   (setq elmo-msgdb-directory my:d:wl-cache-directory
         elmo-localdir-folder-path (expand-file-name "local" my:d:wl-cache-directory)
@@ -3492,12 +3507,6 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
         wl-init-file (expand-file-name "init-wl" user-emacs-directory)
         ;; wl-mime-charset 'iso-2022-jp
         wl-demo  nil)
-  (define-mail-user-agent
-    'wl-user-agent
-    'wl-user-agent-compose
-    'wl-draft-send
-    'wl-draft-kill
-    'mail-send-hook)
   :config
   (load wl-info-file)
   (remove-hook 'wl-draft-send-hook 'wl-draft-config-exec)
@@ -4535,7 +4544,7 @@ video/*; xdg-open %s;
   :preface
   (add-to-list 'my:package-update-exclude "c-sig")
   :init
-  (setq sig-alist-file (expand-file-name "signature.alist" my:d:share))
+  (setq sig-alist-file (expand-file-name "~/.signature.alist"))
   :config
   (eval-when-compile (require 'wl))
   (setq sig-insert-end t
@@ -4989,12 +4998,12 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
    :CUSTOM_ID: org456c87fa
    :END:
    orgで日記. roam カードに移動する前に, メモをどんどん書き込んだり.
-   #+begin_src emacs-lisp :tangle no
+   #+begin_src emacs-lisp :tangle init.el
 (leaf org-journal
   :if (file-directory-p my:d:org)
-  :commands org-journal-new-entry
   :ensure t
   :preface
+  ;; -------------------------------------------------------------------------
 ;;;###autoload
   (defun my:widen-journal-buffers-before-entry (&rest _)
     "org-journal-new-entry の実行前に, ジャーナルディレクトリ内の全バッファを widen"
@@ -5015,6 +5024,7 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
                               (setq-local truncate-lines t)))
    (org-journal-after-entry-create-hook . org-id-get-create)
    )
+  ;; -------------------------------------------------------------------------
   :init
   (setq org-journal-file-type                 'yearly
         org-journal-dir                       (expand-file-name "journal" my:d:org)
@@ -5029,116 +5039,11 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
         org-journal-carryover-delete-empty-journal 'always
         org-journal-start-on-weekday          0
         )
+  ;; -------------------------------------------------------------------------
   :config
   (global-set-key (kbd "C-c C-j") 'browse-url-at-point) ;; 🤔？
   )
    #+end_src
-** =vulpea=: Database layer for org-mode notes
-   :PROPERTIES:
-   :CUSTOM_ID: org0a8a942e
-   :END:
-   まだ上手く使いこなせていないけれど….
-   #+begin_src emacs-lisp :tangle init.el
-(leaf vulpea ;; <
-  :emacs>= 27.2
-  ;; -------------------------------------------------------------------------
-  :if (and (file-directory-p my:d:org)
-         (and (executable-find "fdfind")
-              (executable-find "fswatch")))
-  ;; -------------------------------------------------------------------------
-  :ensure t
-  ;; -------------------------------------------------------------------------
-  :preface
-;;;###autoload
-  (defun my:silence-vulpea-async-messages (orig-fn format-string &rest args)
-    "Filter specific asynchronous messages from Vulpea to preserve boot summary."
-    (if (and (stringp format-string)
-             (string-match-p "Vulpea: \\(Started fswatch\\|fswatch process died\\)" format-string))
-        ;; 条件に合致する場合はメッセージを出力せず nil を返す.
-        nil
-      ;; それ以外の通常のメッセージは元の関数に渡す.
-      (apply orig-fn format-string args)))
-  ;; -------------------------------------------------------------------------
-;;;###autoload
-(defun my:org-narrow-to-subtree-after-jump (&rest _)
-  "ノートへのジャンプ直後に、カーソル位置のサブツリーにナローイングする."
-  (when (derived-mode-p 'org-mode)
-    (org-narrow-to-subtree)))
-  ;; -------------------------------------------------------------------------
-  :advice ((:around message
-                    my:silence-vulpea-async-messages)
-           (:after vulpea-find
-                   my:org-narrow-to-subtree-after-jump)
-           (:after org-id-goto
-                   my:org-narrow-to-subtree-after-jump)
-           )
-  ;; -------------------------------------------------------------------------
-  :init
-  (setq vulpea-db-sync-directories (list my:d:org)
-        vulpea-default-notes-directory (expand-file-name "journal" my:d:org)
-        vulpea-db-location (expand-file-name "vulpea.db" my:d:tmp)
-        vulpea-db-exclude-archived t
-        vulpea-db-sync-scan-on-enable nil)
-  ;; -------------------------------------------------------------------------
-  (setq vulpea-create-default-template
-        '(:file-name (format "%s.org"
-                             (format-time-string "%Y-%m-%d-%H%M"))
-                     :tags ("inbox")
-                     :head "#+created: %<[%Y-%m-%d]>")
-        )
-  ;; (vulpea-db-sync-full-scan)
-  ;; :config
-  :hook
-  (emacs-startup-hook . (lambda () (vulpea-db-autosync-mode +1)))
-  )
-   #+end_src
-*** =consult-vulpea=: vulpea のノートを consult で開く
-    :PROPERTIES:
-    :CUSTOM_ID: orgb8876928
-    :END:
-    #+begin_src emacs-lisp :tangle init.el
-(leaf consult-vulpea
-  :disabled t
-  :ensure t
-  :after vulpea
-  :config
-  (consult-vulpea-mode +1)
-  )
-    #+end_src
-*** =vulpea-journal=
-    :PROPERTIES:
-    :CUSTOM_ID: org657ac890
-    :END:
-    #+begin_src emacs-lisp :tangle init.el
-(leaf vulpea-journal
-  :disabled t
-  :if (and (file-directory-p my:d:org)
-           (and (executable-find "fdfind")
-                (executable-find "fswatch")))
-  :ensure t
-  :after (vulpea vulpea-ui)
-  :config
-  (vulpea-journal-setup)
-  )
-    #+end_src
-*** =vulpea-ui=: vulpea ノートを sidebar に表示
-    :PROPERTIES:
-    :CUSTOM_ID: org7f092f40
-    :END:
-    @see [[https://github.com/d12frosted/vulpea-ui][d12frosted/vulpea-ui]]
-    #+begin_src emacs-lisp :tangle init.el
-(leaf vulpea-ui ;; <
-  :emacs>= 29.1
-  :disabled t
-  :ensure t
-  :bind ("C-c v s" . vulpea-ui-sidebar-toggle)
-  :init
-  (setq vulpea-ui-sidebar-postion 'right
-        vulpea-ui-sidebar-size 0.33
-        vulpea-ui-outline-max-depth nil ;; unlmited
-        )
-  )
-    #+end_src
 ** Org-capture: メモ取り
    :PROPERTIES:
    :CUSTOM_ID: orgbe835a6b
@@ -5151,10 +5056,8 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
   :defvar (my:org:calendar1 my:org:calendar2 my:org:calendar3 my:org:calendar4)
   :pl-setq (my:org:calendar1 my:org:calendar2 my:org:calendar3 my:org:calendar4)
   :config
-;;;###autoload
   (defun my:org-journal-add-date-entry-capture ()
     "org-journal を利用して対象の日付見出しを作成/検索し、末尾に移動する."
-    (setq org-journal-dir (expand-file-name "journal" my:d:org))
     (org-journal-new-entry t)
     (goto-char (point-max)))
 ;;  --------------------------------------------------------------------------

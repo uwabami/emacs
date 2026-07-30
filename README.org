@@ -2,7 +2,7 @@
 #+title: Emacs の設定
 #+options: auto-id:t H:6
 #+startup: content
-#+date: 2026-07-26 03:09:26
+#+date: 2026-07-30 16:18:53
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -4589,7 +4589,7 @@ video/*; xdg-open %s;
         sig-save-to-sig-name-alist nil
         message-signature-file nil)
   )
-;; bind で設定できないなぁ...
+(keymap-set wl-draft-mode-map "C-c C-i" 'insert-signature-eref)
 (keymap-set wl-draft-mode-map "C-c <tab>" 'insert-signature-eref)
      #+end_src
 *** GPG 署名

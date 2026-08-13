@@ -2,7 +2,7 @@
 #+title: Emacs の設定
 #+options: auto-id:t H:6
 #+startup: content
-#+date: 2026-07-30 16:18:53
+#+date: 2026-08-05 09:58:36
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -851,26 +851,24 @@ C-u を付けて実行すると, 埋める文字を指定可能(例: = や * な
    - [[https://github.com/hamano/locale-eaw][hamano/locale-eaw: East Asian Ambiguous Width問題のための修正ロケール]]
    を利用します.
    #+begin_src emacs-lisp :tangle init.el
+;;(leaf eaw-console
+;;  :vc (:url "git@github.com:hamano/locale-eaw" :lisp-dir "dist" :main-file "eaw-console.el")
+;;  :commands eaw-init
+;;  :init
+;;  :hook (emacs-startup-hook . (lambda ()
+;;                                (eaw-init)
+;;                                (global-auto-composition-mode 0)))
+;;  )
 (leaf eaw-custom
-  ;; :vc (:url "git@github.com:uwabami/locale-eaw-from-fontset" :branch "foot")
-  :vc (:url "git@github.com:uwabami/locale-eaw-from-fontset")
-  :init
-  :hook (emacs-startup-hook . (lambda ()
-                                (eaw-init)
-                                (global-auto-composition-mode 0)))
-  )
+ :vc (:url "git@github.com:uwabami/locale-eaw-from-fontset" :branch "foot")
+ :init
+ :hook (emacs-startup-hook . (lambda ()
+                               (eaw-init)
+                               (global-auto-composition-mode 0)))
+ )
    #+end_src
    とりあえず祟りが少ないので EAW は 1 文字幅+調整済の =eaw-console= を利用しているが,
    多くの日本語フォントがそうなっていないので, 割と辛い.
-   今のところ IBM Plex Mono をベースにした
-   - [[https://github.com/yuru7/PlemolJP][yuru7/PlemolJP: IBM Plex Mono と IBM Plex Sans JP を合成したプログラミングフォント PlemolJP (プレモル ジェイピー)]]
-   で提供されている PlemolJP Console NF あたりは記号類も1文字幅となっている.
-   見易いかどうかは別として.
-   - [ ] リテラシーの低い人からのメールで丸囲み数字が良く表われてシンドい(見切れる).
-     - 文字そのものの表示を別のモンにマッピングして表示する, という処理は可能だろうか?
-   - [ ] package-vc-install は lisp-dir を指定すると例え main-file や ignored-files が指定されたとしても
-     これらを無視して, lisp-dir 以下を走査し, 全部入りの autoloads を生成する.
-     - なんでこういう作りになっているのだろうか?
 ** フォント
   :PROPERTIES:
   :CUSTOM_ID: org356b9857
@@ -914,9 +912,11 @@ Emacs.reverseVideo: true
       (setq-default line-spacing nil)
       (setq default-text-properties '(line-spacing nil line-height 1))
       ;; デフォルトフェイスの基本属性をグローバル (nil) に設定
-      (set-face-attribute 'default nil :family "Victor Mono" :weight 'medium :height 125)
+      (set-face-attribute 'default nil :family "Victor Mono" :weight 'medium :height 120)
+      ;; (set-face-attribute 'default nil :family "EAW CONSOLE" :weight 'medium :height 120)
       ;; フォントセットの設定. 対象フレーム (第4引数) を指定せずグローバルに適用する.
       (set-fontset-font nil 'unicode (font-spec :family "Victor Mono" :weight 'medium))
+      ;; (set-fontset-font nil 'unicode (font-spec :family "EAW CONSOLE" :weight 'medium))
       (dolist (code '(katakana-jisx0201
                       japanese-jisx0208
                       japanese-jisx0208-1978
@@ -924,20 +924,28 @@ Emacs.reverseVideo: true
                       japanese-jisx0213-1
                       japanese-jisx0213-2
                       japanese-jisx0213.2004-1))
-        (set-fontset-font nil code (font-spec :family "Migu 1M") nil 'append)
+        ;; (set-fontset-font nil code (font-spec :family "EAW CONSOLE") nil 'append)
+        ;; (set-fontset-font nil code (font-spec :family "Migu 1M") nil 'append)
         ;; (set-fontset-font nil code (font-spec :family "Rounded-X Mgen+ 1mn") nil 'append)
+        (set-fontset-font nil code (font-spec :family "PlemolJP Console") nil 'append)
         )
       (eval-when-compile (require 'eaw-custom nil :noerror))
+      ;; (eval-when-compile (require 'eaw-console nil :noerror))
       (dolist (target code-wide)
         ;; (set-fontset-font nil target (font-spec :family "Migu 1M") nil 'append)
-        (set-fontset-font nil target (font-spec :family "Rounded-X Mgen+ 1mn") nil 'append)
-        (set-fontset-font nil target (font-spec :family "Symbols Nerd Font") nil 'append)
-        (set-fontset-font nil target (font-spec :family "Noto Color Emoji") nil 'append))
+        ;; (set-fontset-font nil target (font-spec :family "Rounded-X Mgen+ 1mn") nil 'append)
+        ;; (set-fontset-font nil target (font-spec :family "Symbols Nerd Font") nil 'append)
+        ;; (set-fontset-font nil target (font-spec :family "Noto Color Emoji") nil 'append)
+        ;; (set-fontset-font nil target (font-spec :family "EAW CONSOLE") nil 'append)
+        (set-fontset-font nil target (font-spec :family "PlemolJP Console") nil 'append)
+        )
       (dolist (target code-half)
         (set-fontset-font nil target (font-spec :family "Victor Mono"))
-        (set-fontset-font nil target (font-spec :family "Hack"))
+        ;; (set-fontset-font nil target (font-spec :family "Hack"))
         (set-fontset-font nil target (font-spec :family "Noto Sans Math") nil 'append)
-        (set-fontset-font nil target (font-spec :family "Noto Sans Symbol") nil 'append))
+        (set-fontset-font nil target (font-spec :family "Noto Sans Symbol") nil 'append)
+        ;; (set-fontset-font nil target (font-spec :family "EAW CONSOLE"))
+        )
       ))
   )
 ;; ---------------------------------------------------------------------------
@@ -947,6 +955,7 @@ Emacs.reverseVideo: true
       use-default-font-for-symbols nil
       face-font-rescale-alist '((".*Migu.*" . 1.1)
                                 (".*Rounded.*" . 1.095)
+                                (".*PlemolJP Console.*" . 1.02)
                                 (".*Noto.*Symbol*" . 0.9)
                                 (".*Noto.*Math*" . 0.9)
                                 (".*Emoji.*" . 0.9)
@@ -1029,7 +1038,8 @@ Emacs.reverseVideo: true
   :defvar nerd-icons-mode-icon-alist
   :commands (nerd-icons-codicon nerd-icons-faicon)
   :config
-  (setq nerd-icons-font-family "VictorMono NF")
+  ;; (setq nerd-icons-font-family "VictorMono NF")
+  (setq nerd-icons-font-family "EAW CONSOLE")
   :defer-config
   (add-to-list 'nerd-icons-mode-icon-alist
                '(wl-folder-mode nerd-icons-mdicon "nf-md-folder" ))
@@ -2344,7 +2354,7 @@ https://github.com/minad/consult/wiki#toggle-preview-during-active-completion-se
         (file-remote-p fp)
       nil))
   ;; -------------------------------------------------------------------------
-  :bind (("C-x C-r" . my:consult-recent-file)
+  :bind (("C-x C-r" . consult-recent-file)
          ;; ("C-x C-b" . consult-buffer)
          ("M-g b"   . consult-buffer)
          ("M-g o"   . consult-outline)
@@ -2391,23 +2401,23 @@ https://github.com/minad/consult/wiki#toggle-preview-during-active-completion-se
                      :category 'file
                      :predicate pred)))
   ;; -------------------------------------------------------------------------
-  (defun my:consult-recent-file ()
-    "Find recent using `completing-read' with shorten filename"
-    (interactive)
-    (eval-when-compile (require 'recentf))
-    (recentf-mode +1)
-    (let ((files (mapcar (lambda (f)
-                           (cons (my:shorten-file-path f (/ (window-width) 2)) f))
-                         recentf-list)))
-      (let ((selected
-             (consult--read (mapcar #'car files)
-                            :prompt "Find recent file: "
-                            :sort nil
-                            :require-match t
-                            :category 'file
-                            :state (consult--file-preview)
-                            :history 'file-name-history)))
-        (find-file (assoc-default selected files)))))
+  ;; (defun my:consult-recent-file ()
+  ;;   "Find recent using `completing-read' with shorten filename"
+  ;;   (interactive)
+  ;;   (eval-when-compile (require 'recentf))
+  ;;   (recentf-mode +1)
+  ;;   (let ((files (mapcar (lambda (f)
+  ;;                          (cons (my:shorten-file-path f (/ (window-width) 2)) f))
+  ;;                        recentf-list)))
+  ;;     (let ((selected
+  ;;            (consult--read (mapcar #'car files)
+  ;;                           :prompt "Find recent file: "
+  ;;                           :sort nil
+  ;;                           :require-match t
+  ;;                           :category 'file
+  ;;                           :state (consult--file-preview)
+  ;;                           :history 'file-name-history)))
+  ;;       (find-file (assoc-default selected files)))))
   )
    #+end_src
 *** TODO =consult-ghq=: ghq を consult で.
@@ -6505,8 +6515,8 @@ pdflang={%l}}
 ;; Local Variables:
 ;; byte-compile-warnings: (not cl-functions free-vars docstrings unresolved)
 ;; End:
-   #+end_src
-** LICENSE
+   #+end_src*
+* LICENSE
    :PROPERTIES:
    :CUSTOM_ID: orge8960401
    :END:

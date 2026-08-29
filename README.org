@@ -2,7 +2,7 @@
 #+title: Emacs の設定
 #+options: auto-id:t H:6
 #+startup: content
-#+date: 2026-08-05 09:58:36
+#+date: 2026-08-29 14:38:46
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -912,40 +912,27 @@ Emacs.reverseVideo: true
       (setq-default line-spacing nil)
       (setq default-text-properties '(line-spacing nil line-height 1))
       ;; デフォルトフェイスの基本属性をグローバル (nil) に設定
-      (set-face-attribute 'default nil :family "Victor Mono" :weight 'medium :height 120)
-      ;; (set-face-attribute 'default nil :family "EAW CONSOLE" :weight 'medium :height 120)
+      (set-face-attribute 'default nil :family "Sarasa Term J" :weight 'light :height 130)
       ;; フォントセットの設定. 対象フレーム (第4引数) を指定せずグローバルに適用する.
-      (set-fontset-font nil 'unicode (font-spec :family "Victor Mono" :weight 'medium))
-      ;; (set-fontset-font nil 'unicode (font-spec :family "EAW CONSOLE" :weight 'medium))
-      (dolist (code '(katakana-jisx0201
-                      japanese-jisx0208
-                      japanese-jisx0208-1978
-                      japanese-jisx0212
-                      japanese-jisx0213-1
-                      japanese-jisx0213-2
-                      japanese-jisx0213.2004-1))
-        ;; (set-fontset-font nil code (font-spec :family "EAW CONSOLE") nil 'append)
-        ;; (set-fontset-font nil code (font-spec :family "Migu 1M") nil 'append)
-        ;; (set-fontset-font nil code (font-spec :family "Rounded-X Mgen+ 1mn") nil 'append)
-        (set-fontset-font nil code (font-spec :family "PlemolJP Console") nil 'append)
-        )
-      (eval-when-compile (require 'eaw-custom nil :noerror))
-      ;; (eval-when-compile (require 'eaw-console nil :noerror))
-      (dolist (target code-wide)
-        ;; (set-fontset-font nil target (font-spec :family "Migu 1M") nil 'append)
-        ;; (set-fontset-font nil target (font-spec :family "Rounded-X Mgen+ 1mn") nil 'append)
-        ;; (set-fontset-font nil target (font-spec :family "Symbols Nerd Font") nil 'append)
-        ;; (set-fontset-font nil target (font-spec :family "Noto Color Emoji") nil 'append)
-        ;; (set-fontset-font nil target (font-spec :family "EAW CONSOLE") nil 'append)
-        (set-fontset-font nil target (font-spec :family "PlemolJP Console") nil 'append)
-        )
-      (dolist (target code-half)
-        (set-fontset-font nil target (font-spec :family "Victor Mono"))
-        ;; (set-fontset-font nil target (font-spec :family "Hack"))
-        (set-fontset-font nil target (font-spec :family "Noto Sans Math") nil 'append)
-        (set-fontset-font nil target (font-spec :family "Noto Sans Symbol") nil 'append)
-        ;; (set-fontset-font nil target (font-spec :family "EAW CONSOLE"))
-        )
+      (set-fontset-font nil 'unicode (font-spec :family "Sarasa Term J" :weight 'light))
+      ;; (dolist (code '(katakana-jisx0201
+      ;;                 japanese-jisx0208
+      ;;                 japanese-jisx0208-1978
+      ;;                 japanese-jisx0212
+      ;;                 japanese-jisx0213-1
+      ;;                 japanese-jisx0213-2
+      ;;                 japanese-jisx0213.2004-1))
+      ;;   (set-fontset-font nil code (font-spec :family "Rounded-X Mgen+ 2m") nil 'append)
+      ;;   )
+      ;; (eval-when-compile (require 'eaw-custom nil :noerror))
+      ;; (dolist (target code-wide)
+      ;;   (set-fontset-font nil target (font-spec :family "Rounded-X Mgen+ 2m") nil 'append)
+      ;;   )
+      ;; (dolist (target code-half)
+      ;;   (set-fontset-font nil target (font-spec :family "Iosevka Term"))
+      ;;   (set-fontset-font nil target (font-spec :family "Noto Sans Math") nil 'append)
+      ;;   (set-fontset-font nil target (font-spec :family "Noto Sans Symbol") nil 'append)
+      ;;   )
       ))
   )
 ;; ---------------------------------------------------------------------------
@@ -953,13 +940,11 @@ Emacs.reverseVideo: true
       inhibit-compacting-font-caches t ;; → early-init で設定済なので不要?
       buffer-face-mode-face 'fixed-pitch
       use-default-font-for-symbols nil
-      face-font-rescale-alist '((".*Migu.*" . 1.1)
-                                (".*Rounded.*" . 1.095)
-                                (".*PlemolJP Console.*" . 1.02)
-                                (".*Noto.*Symbol*" . 0.9)
-                                (".*Noto.*Math*" . 0.9)
-                                (".*Emoji.*" . 0.9)
-                                (".*Hack.*" . 0.9)
+      face-font-rescale-alist '(;; (".*Migu.*" . 1.1)
+                                ;; (".*Rounded.*" . 1.05)
+                                ;; (".*Noto.*Symbol*" . 0.9)
+                                ;; (".*Noto.*Math*" . 0.9)
+                                (".*Emoji.*" . 0.8)
                                 )
       )
 ;; フレームの初期化が終わらないとフォント設定等が効かない
@@ -982,11 +967,11 @@ Emacs.reverseVideo: true
 |ΑΒΓΔΕΖΗΘΙΚΛΜ|
 |日本語の美観|
 |あいうえおか|
-|㈱㈳㈠⑴㎢㎝|
+|㈱㈳㈠©™㎢㎝|
 |アイウエオカ|
 |ｱｲｳｴｵｶｷｸｹｺｻｼ|
 |012345678912|
-|①②③④⑤⑳|
+|①②③④⑤⑩⑪⑬⑮⑰⑲⑳|
 
 | hoge                 | hogeghoe | age             |
 |----------------------+----------+-----------------|
@@ -1039,7 +1024,8 @@ Emacs.reverseVideo: true
   :commands (nerd-icons-codicon nerd-icons-faicon)
   :config
   ;; (setq nerd-icons-font-family "VictorMono NF")
-  (setq nerd-icons-font-family "EAW CONSOLE")
+  ;; (setq nerd-icons-font-family "EAW CONSOLE")
+  (setq nerd-icons-font-family "Symbols Nerd Font Mono")
   :defer-config
   (add-to-list 'nerd-icons-mode-icon-alist
                '(wl-folder-mode nerd-icons-mdicon "nf-md-folder" ))

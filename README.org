@@ -2,7 +2,7 @@
 #+title: Emacs の設定
 #+options: auto-id:t H:6
 #+startup: content
-#+date: 2026-08-29 14:38:46
+#+date: 2026-09-03 01:57:19
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -851,7 +851,7 @@ C-u を付けて実行すると, 埋める文字を指定可能(例: = や * な
    - [[https://github.com/hamano/locale-eaw][hamano/locale-eaw: East Asian Ambiguous Width問題のための修正ロケール]]
    を利用します.
    #+begin_src emacs-lisp :tangle init.el
-;;(leaf eaw-console
+;; (leaf eaw-console
 ;;  :vc (:url "git@github.com:hamano/locale-eaw" :lisp-dir "dist" :main-file "eaw-console.el")
 ;;  :commands eaw-init
 ;;  :init
@@ -912,27 +912,27 @@ Emacs.reverseVideo: true
       (setq-default line-spacing nil)
       (setq default-text-properties '(line-spacing nil line-height 1))
       ;; デフォルトフェイスの基本属性をグローバル (nil) に設定
-      (set-face-attribute 'default nil :family "Sarasa Term J" :weight 'light :height 130)
+      (set-face-attribute 'default nil :family "Iosevka Term" :weight 'light :height 130)
       ;; フォントセットの設定. 対象フレーム (第4引数) を指定せずグローバルに適用する.
-      (set-fontset-font nil 'unicode (font-spec :family "Sarasa Term J" :weight 'light))
-      ;; (dolist (code '(katakana-jisx0201
-      ;;                 japanese-jisx0208
-      ;;                 japanese-jisx0208-1978
-      ;;                 japanese-jisx0212
-      ;;                 japanese-jisx0213-1
-      ;;                 japanese-jisx0213-2
-      ;;                 japanese-jisx0213.2004-1))
-      ;;   (set-fontset-font nil code (font-spec :family "Rounded-X Mgen+ 2m") nil 'append)
-      ;;   )
-      ;; (eval-when-compile (require 'eaw-custom nil :noerror))
-      ;; (dolist (target code-wide)
-      ;;   (set-fontset-font nil target (font-spec :family "Rounded-X Mgen+ 2m") nil 'append)
-      ;;   )
-      ;; (dolist (target code-half)
-      ;;   (set-fontset-font nil target (font-spec :family "Iosevka Term"))
-      ;;   (set-fontset-font nil target (font-spec :family "Noto Sans Math") nil 'append)
-      ;;   (set-fontset-font nil target (font-spec :family "Noto Sans Symbol") nil 'append)
-      ;;   )
+      (set-fontset-font nil 'unicode (font-spec :family "Iosevka Term" :weight 'light))
+      (dolist (code '(katakana-jisx0201
+                      japanese-jisx0208
+                      japanese-jisx0208-1978
+                      japanese-jisx0212
+                      japanese-jisx0213-1
+                      japanese-jisx0213-2
+                      japanese-jisx0213.2004-1))
+        (set-fontset-font nil code (font-spec :family "PlemolJP Console") nil 'append)
+        )
+      (eval-when-compile (require 'eaw-custom nil :noerror))
+      (dolist (target code-wide)
+        (set-fontset-font nil target (font-spec :family "PlemolJP Console") nil 'append)
+        )
+      (dolist (target code-half)
+        (set-fontset-font nil target (font-spec :family "Iosevka Term"))
+        (set-fontset-font nil target (font-spec :family "Noto Sans Math") nil 'append)
+        (set-fontset-font nil target (font-spec :family "Noto Sans Symbol") nil 'append)
+        )
       ))
   )
 ;; ---------------------------------------------------------------------------
@@ -944,6 +944,7 @@ Emacs.reverseVideo: true
                                 ;; (".*Rounded.*" . 1.05)
                                 ;; (".*Noto.*Symbol*" . 0.9)
                                 ;; (".*Noto.*Math*" . 0.9)
+                                (".*PlemolJP.*" . 0.98)
                                 (".*Emoji.*" . 0.8)
                                 )
       )
@@ -1231,13 +1232,13 @@ Emacs.reverseVideo: true
   :tag "builtin"
   :config
   (setq time-stamp-active t
-        time-stamp-line-limit 10
-        time-stamp-start "$Lastupdate: "
-        time-stamp-end "\\$"
+        time-stamp-line-limit 20
+        time-stamp-start "\\$Lastupdate:[ \t]*\"?"
+        time-stamp-end "\"?[ \t]*\\$?[ \t]*$"
         time-stamp-format "%Y-%02m-%02d %02H:%02M:%02S"
         )
   :hook
-  (before-save-hook   . time-stamp)
+  (before-save-hook . time-stamp)
   )
    #+end_src
 ** =savehist= minibuffer の履歴の保存

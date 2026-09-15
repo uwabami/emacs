@@ -2,7 +2,7 @@
 #+title: Emacs の設定
 #+options: auto-id:t H:6
 #+startup: content
-#+date: 2026-09-03 01:57:19
+#+date: 2026-09-12 22:12:18
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -1767,7 +1767,7 @@ Emacs*useXIM: false
       (apply orig-fun args)))
   :advice (:around recentf-cleanup
                    my:recentf-cleanup-shutup)
-  :hook ((find-file-hook . recentf-mode)
+  :hook ((emacs-startup-hook . recentf-mode)
          (after-save-hook . (lambda ()
                               (recentf-mode 1)
                               (recentf-add-file (buffer-file-name))))
@@ -3675,8 +3675,7 @@ video/*; xdg-open %s;
       (expand-file-name "mime-example" my:d:tmp))
      #+end_src
      +text/plain を html より優先+
-     →
-     イットな企業ほど
+     → イットな企業ほど
      =text/plain= を考慮しないメールを送ってくる事が多くなったなぁ.
      酷い話だ.
      #+begin_src emacs-lisp :tangle init-wl.el

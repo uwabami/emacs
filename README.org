@@ -2337,7 +2337,7 @@ https://github.com/minad/consult/wiki#toggle-preview-during-active-completion-se
   (defun my:buffer-remote-p (buf)
     "Return t when BUF is remote."
     ;; (message "HERE [%s - %s]" buf (buffer-file-name buf))
-    (if-let ((fp (buffer-file-name buf)))
+    (if-let* ((fp (buffer-file-name buf)))
         (file-remote-p fp)
       nil))
   ;; -------------------------------------------------------------------------

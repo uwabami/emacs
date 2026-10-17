@@ -2,7 +2,7 @@
 #+title: Emacs の設定
 #+options: auto-id:t H:6
 #+startup: content
-#+date: 2026-09-12 22:12:18
+#+date: 2026-10-06 13:35:10
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -415,7 +415,7 @@ distclean: clean
          ;; after-init-hook 自体の実行にかかった時間
          (after-init-hook-time (* 1000 (float-time (time-subtract (current-time) after-init-time)))))
     (message "Boot Summary: Total %.0fms [Emacs: %.0fms, Init: %.0fms, Hooks: %.0fms]"
-             (+ total-emacs-time after-init-hook-time) ; およその全体感
+             (+ total-emacs-time after-init-hook-time)
              total-emacs-time
              init-load-time
              after-init-hook-time)))
@@ -1742,14 +1742,17 @@ Emacs*useXIM: false
     "バッファ切り替え時に、必要なら recentf を起動してリストを更新する。"
     (when buffer-file-name
       (unless recentf-mode
-        (recentf-mode 1))
+        (let ((inhibit-message t))
+          (recentf-mode 1)))
       (recentf-add-file buffer-file-name)))
   :hook
   (switch-buffer-functions . my:recentf-track-visited-file)
   )
+;; ---------------------------------------------------------------------------
 (leaf recentf
   :defun
   (recentf-save-list recentf-cleanup recentf-add-file)
+  ;; -------------------------------------------------------------------------
   :preface
 ;;;###autoload
   (defun my:recentf-force-cleanup ()
@@ -1763,11 +1766,24 @@ Emacs*useXIM: false
 ;;;###autoload
   (defun my:recentf-cleanup-shutup (orig-fun &rest args)
     "Run `recentf-cleanup' silently."
-    (let ((inhibit-message t)) ; メッセージ出力を一時的に無効化
+    (let ((inhibit-message t)
+          (message-log-max nil))
       (apply orig-fun args)))
+;;;###autoload
+  (defun my:enable-recentf-on-first-file ()
+    "初めてファイルを開いた時に recentf をメッセージ無しで有効化,
+不要になったこのフックを削除"
+    (unless recentf-mode
+      (let ((inhibit-message t))
+        (recentf-mode 1)))
+    ;; 1回実行されれば recentf は有効になり続けるので,
+    ;; この関数自体をフックから取り除く
+    (remove-hook 'find-file-hook #'my:enable-recentf-on-first-file))
+  ;; -------------------------------------------------------------------------
   :advice (:around recentf-cleanup
                    my:recentf-cleanup-shutup)
-  :hook ((emacs-startup-hook . recentf-mode)
+  ;; -------------------------------------------------------------------------
+  :hook ((find-file-hook  . my:enable-recentf-on-first-file)
          (after-save-hook . (lambda ()
                               (recentf-mode 1)
                               (recentf-add-file (buffer-file-name))))
@@ -2314,7 +2330,7 @@ require-matchがt(やそれに類するもの)で入力が空ではなくマッ�
    :CUSTOM_ID: orged5e5627
    :END:
    とりあえず recetnf が使えないと途方に暮れるので
-   =consult-recent-file= のカスタマイズのみ.
+   =consult-recent-file= の advice を追加したり.
    #+begin_src emacs-lisp :tangle init.el
 (leaf consult ;; <
   :emacs>= 29.1
@@ -2340,13 +2356,25 @@ https://github.com/minad/consult/wiki#toggle-preview-during-active-completion-se
     (if-let* ((fp (buffer-file-name buf)))
         (file-remote-p fp)
       nil))
+;;;###autoload
+  (defun my:enable-recentf-lazy()
+    "recentf-mode が未起動なら有効にする"
+    (unless recentf-mode
+      (let ((inhibit-message t))
+        (recentf-mode 1))))
+  ;; -------------------------------------------------------------------------
+  :advice (:before consult-recent-file
+                   (lambda ()
+                     (unless recentf-mode
+                       (let ((inhibit-message t))
+                         (recentf-mode 1)))))
   ;; -------------------------------------------------------------------------
   :bind (("C-x C-r" . consult-recent-file)
          ;; ("C-x C-b" . consult-buffer)
          ("M-g b"   . consult-buffer)
          ("M-g o"   . consult-outline)
          ;; ordeless に migemo を追加できたので isearch から乗り換える?
-         ("M-g s" . consult-line)
+         ("M-g s"   . consult-line)
          ;; goto-line での行番号表示
          ([remap goto-line] . consult-goto-line)
          ;; ("C-f"     . consult-line) 候補選択が要調整
@@ -2354,6 +2382,7 @@ https://github.com/minad/consult/wiki#toggle-preview-during-active-completion-se
           ("C-v"  . consult-toggle-preview)
           )
          )
+  ;; -------------------------------------------------------------------------
   :init
   (setq xref-show-xref-funcion          #'consult-xref
         xref-show-definitions-function  #'consult-xref
@@ -2369,7 +2398,6 @@ https://github.com/minad/consult/wiki#toggle-preview-during-active-completion-se
         )
   ;; -------------------------------------------------------------------------
   :config
-  ;; -------------------------------------------------------------------------
   (defun consult-project-find-file-with-preview (prompt all-files &optional pred hist _mb)
     (let ((prompt (if (and all-files
                            (file-name-absolute-p (car all-files)))

@@ -2,7 +2,7 @@
 #+title: Emacs の設定
 #+options: auto-id:t H:6
 #+startup: content
-#+date: 2026-10-06 13:35:10
+#+date: 2026-10-26 03:26:46
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -3181,96 +3181,92 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
    :PROPERTIES:
    :CUSTOM_ID: org88a3cb1b
    :END:
-   ただ, AUCTeX のコマンド制御が良くわからず困っていたりする.
-   例えば
-   - [ ] latexmk で pdf を生成してみても, View で xdvi を呼ぼうとする.
-   - [ ] =file local variable= で TeX-engine を更新しようとしても,
-     常に default が呼ばれる
-   - [ ] Beamerのクラスなんかだと勝手に default コマンドが LaTeX に変更されたりする
-   などなど.
-
-   編集のためと割り切って利用するのが良いかも.
-   確認は裏で =latexmk -pvc= を走らせておいた方が気持が良い, 気がしている.
+   - [ ] Debian パッケージの更新が遅れている...
    #+begin_src emacs-lisp :tangle init.el
 (leaf auctex
   :if (and (executable-find "uplatex")
            (executable-find "latexmk"))
+  :ensure t
+  ;; -------------------------------------------------------------------------
   :preface
-  ;; -------------------------------------------------------------------------
-  ;; Debian パッケージを利用するための調整
-  (add-to-list 'my:package-update-exclude "auctex")
-  (if (and (not (featurep 'text-site))
-           (file-directory-p "/usr/share/auctex"))
-      (progn
-        (add-to-list 'load-path "/usr/share/auctex")
-        (add-to-list 'load-path "/usr/share/emacs/site-lisp/auctex")))
-  ;; -------------------------------------------------------------------------
   (unless (file-directory-p (expand-file-name "auctex/auto" my:d:tmp))
     (make-directory (expand-file-name "auctex/auto" my:d:tmp) t)
     (make-directory (expand-file-name "auctex/style" my:d:tmp) t))
   ;; -------------------------------------------------------------------------
-  :mode  ("\\.tex\\'" . japanese-latex-mode)
-  ;; -------------------------------------------------------------------------
   :hook
-  ((emacs-startup-hook . (lambda ()
-                           (load "auctex.el" nil t)
-                           ;; (load "preview-latex.el" nil t)
-                           ))
-   (LaTeX-mode-hook    . (lambda ()
-                           (add-to-list 'TeX-expand-list
-                                        '("%(-PDF)"
-                                          (lambda ()
-                                            (if TeX-PDF-mode
-                                                (cond
-                                                 ((eq TeX-engine 'default) "-pdf")
-                                                 ((eq TeX-engine 'uptex)   "-pdfdvi")
-                                                 ((eq TeX-engine 'ptex)    "-pdfdvi")
-                                                 ((eq TeX-engine 'xetex)   "-pdfxe")
-                                                 ((eq TeX-engine 'luatex)  "-pdflua")) ""))))
-                           (add-to-list 'TeX-command-list
-                                        '("LaTeXmk" "latexmk -pvc %(-PDF)  %(output-dir) %t"
-                                          TeX-run-format nil (latex-mode doctex-mode) :help "Run Latexmk"))
-                           (setq TeX-command-output-list
-                                 '(("LaTeXmk" ("pdf"))))
-                           (setq TeX-command-default "LaTeXmk")
-                           (eglot-ensure)
-                           (turn-on-reftex)
-                           (TeX-source-correlate-mode)
-                           (TeX-PDF-mode)
-                           (LaTeX-math-mode)
-                           ))
+  (LaTeX-mode-hook
+   . (lambda ()
+       (add-to-list 'TeX-expand-list
+                    '("%(-PDF)"
+                      (lambda ()
+                        (if TeX-PDF-mode
+                            (cond
+                             ((eq TeX-engine 'default) "-pdf")
+                             ((eq TeX-engine 'uptex)   "-pdfdvi")
+                             ((eq TeX-engine 'ptex)    "-pdfdvi")
+                             ((eq TeX-engine 'xetex)   "-pdfxe")
+                             ((eq TeX-engine 'luatex)  "-pdflua")) ""))))
+       (add-to-list 'TeX-command-list
+                    '("LaTeXmk" "latexmk %(-PDF) -pvc  %(output-dir) %t"
+                      TeX-run-format nil (latex-mode doctex-mode) :help "Run Latexmk"))
+       (add-to-list 'TeX-view-program-selection
+                    '(output-pdf "xdg-open"))
+       (setq TeX-command-output-list '(("LaTeXmk" ("pdf")))
+             TeX-command-default "LaTeXmk"
+             TeX-view-program-selection '((output-pdf "xdg-open")))
+       (eglot-ensure)
+       (turn-on-reftex)
+       (TeX-source-correlate-mode)
+       (TeX-PDF-mode)
+       (LaTeX-math-mode)
+       )
    )
-  :init
   ;; -------------------------------------------------------------------------
-  ;; 基本設定
-  (setq TeX-auto-local (expand-file-name "auctex/auto" my:d:tmp)
-        TeX-style-local (expand-file-name "auctex/style" my:d:tmp)
-        TeX-auto-untabify t
-        TeX-engine 'uptex
-        TeX-source-correlate-method 'synctex
-        TeX-source-correlate-start-server t
-        TeX-source-correlate-mode t
-        TeX-ispell-extend-skip-list t
-        TeX-electric-sub-and-superscript t
-        ;; -------------------------------------------------------------------
-        LaTeX-math-mode t
-        LaTeX-figure-label "fig:"
-        LaTeX-table-label "tab:"
-        LaTeX-section-label "sec:"
-        ;; -------------------------------------------------------------------
-        reftex-plug-into-AUCTeX t
-        reftex-cite-prompt-optional-args t
-        ;; -------------------------------------------------------------------
-        font-latex-fontify-script nil
-        font-latex-script-display nil
-        font-latex-fontify-sectioning  1.0
-        ;; -------------------------------------------------------------------
-        ;; TeX-auto-save t
-        ;; TeX-parse-self t
-        ;; TeX-master nil
-        )
-  )
+  :init
+ (setq TeX-auto-local (expand-file-name "auctex/auto" my:d:tmp)
+       TeX-style-local (expand-file-name "auctex/style" my:d:tmp)
+       TeX-auto-untabify t
+       TeX-engine 'luatex ;; これはファイル毎に指定した方が良いかなぁ...
+       ;; --------------------------------------------------------------------
+       ;; %%% Local Variables:
+       ;; %%% mode: japanese-LaTeX
+       ;; %%% TeX-engine: uptex
+       ;; %%% End:
+       ;; --------------------------------------------------------------------
+       TeX-source-correlate-method 'synctex
+       TeX-source-correlate-start-server t
+       TeX-source-correlate-mode t
+       TeX-ispell-extend-skip-list t
+       ;; -------------------------------------------------------------------
+       LaTeX-math-mode t
+       LaTeX-figure-label "fig:"
+       LaTeX-table-label "tab:"
+       LaTeX-section-label "sec:"
+       ;; -------------------------------------------------------------------
+       TeX-electric-sub-and-superscript t  ;;?
+       font-latex-fontify-script nil
+       font-latex-script-display nil
+       font-latex-fontify-sectioning  1.0
+       ;; -------------------------------------------------------------------
+       TeX-auto-save t
+       TeX-parse-self t
+       ;; TeX-master nil
+       )
+ )
    #+end_src
+*** RefTeX
+    :PROPERTIES:
+    :CUSTOM_ID: org929d9a7d
+    :END:
+    #+begin_src emacs-lisp :tangle init.el
+(leaf reftex
+  :tag "builtin"
+  :hook (LaTeX-mode . turn-on-reftex)
+  :config
+  (setq reftex-plug-into-AUCTeX t
+        reftex-cite-format 'natbib)
+  )
+    #+end_src
 ** =lua-ts-mode=
    :PROPERTIES:
    :CUSTOM_ID: org0ab77d1d
@@ -5643,18 +5639,19 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
         org-latex-compiler      "latexmk"
         org-latex-listings      'minted
         org-latex-minted-options nil
-        org-latex-default-packages-alist  '(("utf8" "inputenc" t nil)
+        org-latex-default-packages-alist  '(("utf8" "inputenc" nil nil)
                                             ;; ("prefernoncjk" "pxcjkcat" t nil)
                                             ("T1" "fontenc" t nil)
                                             ("" "graphicx" t nil)
                                             ("normalem" "ulem" t nil) ;; udline に変更すべきかな?
                                             ("" "amsmath" t nil)
-                                            ("" "amssymb" t nil)
+                                            ("" "amssymb" nil nil)
                                             ("" "physics" t nil)
                                             ;; ("" "siunitx" t nil)
                                             ("" "hyperref" t nil)
                                             ("" "multirow" t nil)
                                             ("" "ltablex" t nil)
+                                            ("" "booktabs" t nil)
                                             ("" "wrapfig" t nil)
                                             ("" "silence" t nil)
                                             ("" "arydshln" t nil)

@@ -2,7 +2,7 @@
 #+title: Emacs の設定
 #+options: auto-id:t H:6
 #+startup: content
-#+date: 2026-10-26 03:26:46
+#+date: 2026-10-31 16:48:06
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -838,37 +838,78 @@ C-u を付けて実行すると, 埋める文字を指定可能(例: = や * な
   (set-coding-system-priority 'utf-8 'euc-jp 'iso-2022-jp 'cp932)
   )
    #+end_src
-** TODO East Asian Ambiguos 対応 [0/2]
+** East Asian Ambiguos 対応
    :PROPERTIES:
    :CUSTOM_ID: orgd3ca00ac
    :END:
    [[https://khiker.hatenablog.jp/entry/20110327/emacs_cjkamb][Emacs23(以降) と 曖昧幅文字(East asian ambiguous)]] あたりも参考に.
 
    環境変数でいわゆる set-language-environment "Japanese" と判定されると,
-   EAW は 2文字幅に設定されてしまいます.
-   この強制を自分好みに調整する必要があります.
-   この調整には
-   - [[https://github.com/hamano/locale-eaw][hamano/locale-eaw: East Asian Ambiguous Width問題のための修正ロケール]]
-   を利用します.
+   East Asian char は 2文字幅に設定されてしまいます.
+   最近の Terminal では W=2 で A,N=1 を強制するのが主流になっているので
+   =(setopt cjk-ambiguous-chars-are-wide nil)= として, Eaws Asian Ambiguous Width の N,A を 1 に強制します.
+
+   また, 絵文字の Variation Selector (VS16) に対応するため
+   - =(global-auto-composition-mode 1)=
+   - =(aset char-width-table #xFE0F 1))=
+   で, 結合文字に幅を持たせて, VS16 のある絵文字を 2 文字幅にしています.
    #+begin_src emacs-lisp :tangle init.el
-;; (leaf eaw-console
-;;  :vc (:url "git@github.com:hamano/locale-eaw" :lisp-dir "dist" :main-file "eaw-console.el")
-;;  :commands eaw-init
-;;  :init
-;;  :hook (emacs-startup-hook . (lambda ()
-;;                                (eaw-init)
-;;                                (global-auto-composition-mode 0)))
-;;  )
-(leaf eaw-custom
- :vc (:url "git@github.com:uwabami/locale-eaw-from-fontset" :branch "foot")
- :init
- :hook (emacs-startup-hook . (lambda ()
-                               (eaw-init)
-                               (global-auto-composition-mode 0)))
- )
+(leaf *handle-eaw-char-width
+  :hook (emacs-startup-hook . (lambda ()
+                                (auto-composition-mode 1)
+                                (setopt cjk-ambiguous-chars-are-wide nil)
+                                (aset char-width-table #xFE0F 1))
+                            )
+  )
    #+end_src
-   とりあえず祟りが少ないので EAW は 1 文字幅+調整済の =eaw-console= を利用しているが,
-   多くの日本語フォントがそうなっていないので, 割と辛い.
+   以下は表示のテスト
+   #+begin_src emacs-lisp :tangle no
+;; ---------------------------------------------------------------------------
+(char-width ?α)  ; => 1 になれば OK（もし 2 なら Ambiguous が全角扱いになっている）
+(char-width ?😀) ; => 2 になれば OK
+;; ---------------------------------------------------------------------------
+(let ((lines
+       `(("0. 基準 (ASCII 20文字)" . "12345678901234567890")
+         ("1. Ambiguous (A×20)" . "αβγδεζηθικλμνξοπρστυ")
+         ("2. 標準絵文字 (W×10, VS16無)" . "😀🚀🎉👍🔥💡📅📝🔍📦")
+         ("3. N/A + VS16 (×10)" .
+          ,(apply #'concat (mapcar (lambda (c) (string c #xFE0F))
+                                   '(#x26A0 #x2139 #x260E #x2709 #x2714 #x2716 #x27A1 #x2764 #x263A #x2699))))
+         ("4. W + VS16無 (×10)" .
+          ,(apply #'concat (mapcar #'string
+                                   '(#x231A #x231B #x23E9 #x23EA #x23F0 #x23F3 #x2614 #x2615 #x26A1 #x26BD))))
+         ("5. W + VS16 (×10)" .
+          ,(apply #'concat (mapcar (lambda (c) (string c #xFE0F))
+                                   '(#x231A #x231B #x23E9 #x23EA #x23F0 #x23F3 #x2614 #x2615 #x26A1 #x26BD))))
+         ("6. W(記号) + VS16 (×10)" .
+          ,(apply #'concat (mapcar (lambda (c) (string c #xFE0F))
+                                   '(#x2705 #x2728 #x274C #x274E #x2753 #x2757 #x2795 #x2796 #x2797 #x2B50))))
+         ("7. SMP(EAW=N) + VS16無 (×20)" .
+          ,(apply #'concat (mapcar #'string
+                                   '(#x1F321 #x1F324 #x1F336 #x1F37D #x1F396 #x1F3CB #x1F3D4 #x1F43F #x1F441 #x1F4FD
+                                     #x1F549 #x1F56F #x1F573 #x1F576 #x1F587 #x1F58A #x1F590 #x1F5A5 #x1F5B1 #x1F5D1))))
+         ("8. SMP(EAW=N) + VS16 (×10)" .
+          ,(apply #'concat (mapcar (lambda (c) (string c #xFE0F))
+                                   '(#x1F321 #x1F324 #x1F336 #x1F37D #x1F396 #x1F3CB #x1F3D4 #x1F43F #x1F441 #x1F5A5))))
+         ("9. 囲み数字 Keycap (×10)" .
+          ,(apply #'concat (mapcar (lambda (c) (string c #xFE0F #x20E3))
+                                   "1234567890")))
+         ("10. 国旗 Regional (×10)" . "🇯🇵🇺🇸🇬🇧🇫🇷🇩🇪🇮🇹🇨🇦🇦🇺🇰🇷🇨🇳"))))
+  (insert "\n")
+  (dolist (item lines)
+    (insert (format "|%s| %s\n" (cdr item) (car item)))))
+|12345678901234567890| 0. 基準 (ASCII 20文字)
+|αβγδεζηθικλμνξοπρστυ| 1. Ambiguous (A×20)
+|😀🚀🎉👍🔥💡📅📝🔍📦| 2. 標準絵文字 (W×10, VS16無)
+|⚠️ℹ️☎️✉️✔️✖️➡️❤️☺️⚙️| 3. N/A + VS16 (×10)
+|⌚⌛⏩⏪⏰⏳☔☕⚡⚽| 4. W + VS16無 (×10)
+|⌚️⌛️⏩️⏪️⏰️⏳️☔️☕️⚡️⚽️| 5. W + VS16 (×10)
+|✅️✨️❌️❎️❓️❗️➕️➖️➗️⭐️| 6. W(記号) + VS16 (×10)
+|🌡🌤🌶🍽🎖🏋🏔🐿👁📽🕉🕯🕳🕶🖇🖊🖐🖥🖱🗑| 7. SMP(EAW=N) + VS16無 (×20)
+|🌡️🌤️🌶️🍽️🎖️🏋️🏔️🐿️👁️🖥️| 8. SMP(EAW=N) + VS16 (×10)
+|1️⃣2️⃣3️⃣4️⃣5️⃣6️⃣7️⃣8️⃣9️⃣0️⃣| 9. 囲み数字 Keycap (×10)
+|🇯🇵🇺🇸🇬🇧🇫🇷🇩🇪🇮🇹🇨🇦🇦🇺🇰🇷🇨🇳| 10. 国旗 Regional (×10)
+   #+end_src
 ** フォント
   :PROPERTIES:
   :CUSTOM_ID: org356b9857
@@ -911,28 +952,9 @@ Emacs.reverseVideo: true
       ;; 2. フォントとフォントセットのグローバル設定 (初回 GUI フレーム生成時のみ)
       (setq-default line-spacing nil)
       (setq default-text-properties '(line-spacing nil line-height 1))
-      ;; デフォルトフェイスの基本属性をグローバル (nil) に設定
-      (set-face-attribute 'default nil :family "Iosevka Term" :weight 'light :height 130)
+      ;; (set-face-attribute 'default nil :family "Sarasa Term J" :weight 'regular :height 135)
+      (set-face-attribute 'default nil :family "PlemolJP Console NF" :weight 'regular :height 135)
       ;; フォントセットの設定. 対象フレーム (第4引数) を指定せずグローバルに適用する.
-      (set-fontset-font nil 'unicode (font-spec :family "Iosevka Term" :weight 'light))
-      (dolist (code '(katakana-jisx0201
-                      japanese-jisx0208
-                      japanese-jisx0208-1978
-                      japanese-jisx0212
-                      japanese-jisx0213-1
-                      japanese-jisx0213-2
-                      japanese-jisx0213.2004-1))
-        (set-fontset-font nil code (font-spec :family "PlemolJP Console") nil 'append)
-        )
-      (eval-when-compile (require 'eaw-custom nil :noerror))
-      (dolist (target code-wide)
-        (set-fontset-font nil target (font-spec :family "PlemolJP Console") nil 'append)
-        )
-      (dolist (target code-half)
-        (set-fontset-font nil target (font-spec :family "Iosevka Term"))
-        (set-fontset-font nil target (font-spec :family "Noto Sans Math") nil 'append)
-        (set-fontset-font nil target (font-spec :family "Noto Sans Symbol") nil 'append)
-        )
       ))
   )
 ;; ---------------------------------------------------------------------------
@@ -940,13 +962,6 @@ Emacs.reverseVideo: true
       inhibit-compacting-font-caches t ;; → early-init で設定済なので不要?
       buffer-face-mode-face 'fixed-pitch
       use-default-font-for-symbols nil
-      face-font-rescale-alist '(;; (".*Migu.*" . 1.1)
-                                ;; (".*Rounded.*" . 1.05)
-                                ;; (".*Noto.*Symbol*" . 0.9)
-                                ;; (".*Noto.*Math*" . 0.9)
-                                (".*PlemolJP.*" . 0.98)
-                                (".*Emoji.*" . 0.8)
-                                )
       )
 ;; フレームの初期化が終わらないとフォント設定等が効かない
 ;; とても嫌なアプローチだけど, しょうがないか...
@@ -959,6 +974,7 @@ Emacs.reverseVideo: true
    表示のテスト プログラミング
  #+begin_src text
  幅の確認: 絵文字は全角, 他は半角で 2:1 になっているかの確認用.
+
 
 |abcdefghijkl|
 |ABCDEFGHIJKL|
@@ -976,6 +992,7 @@ Emacs.reverseVideo: true
 
 | hoge                 | hogeghoe | age             |
 |----------------------+----------+-----------------|
+| 12345678901234567890 | 12345678 | 123456789012345 |
 | 今日もいい天気ですね | お、     | 等幅なった    🤔|
 | 今日もいい天気ですね | お、     | 等幅なった👍🍺🤔|
 |----------------------+----------+-----------------|
@@ -2520,6 +2537,7 @@ https://github.com/minad/consult/wiki#toggle-preview-during-active-completion-se
   (delete (assoc '(tex-mode context-mode texinfo-mode bibtex-mode)
                  eglot-server-programs)
           eglot-server-programs)
+  ;; -------------------------------------------------------------------------
   (add-to-list 'eglot-server-programs
                '((latex-mode tex-mode texinfo-mode bibtex-mode) . ("texlab")))
   (add-to-list 'eglot-server-programs
@@ -2529,6 +2547,7 @@ https://github.com/minad/consult/wiki#toggle-preview-during-active-completion-se
    eglot との通信を高速化す eglot-booster も入れておく
    #+begin_src emacs-lisp :tangle init.el
 (leaf eglot-booster
+  :disabled t
   :if (executable-find "emacs-lsp-booster")
   :vc (:url "git@github.com:jdtsmith/eglot-booster.git")
   :after eglot
@@ -3214,11 +3233,14 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
        (setq TeX-command-output-list '(("LaTeXmk" ("pdf")))
              TeX-command-default "LaTeXmk"
              TeX-view-program-selection '((output-pdf "xdg-open")))
-       (eglot-ensure)
        (turn-on-reftex)
        (TeX-source-correlate-mode)
        (TeX-PDF-mode)
        (LaTeX-math-mode)
+       ;; eglot --------------------------------------------------------------
+       (setq-default eglot-workspace-configuration
+                   '(:texlab (:diagnostics (:ignoredPatterns ["Unused label"]))))
+       (eglot-ensure)
        )
    )
   ;; -------------------------------------------------------------------------
@@ -5635,26 +5657,32 @@ e https://writequit.org/articles/emacs-org-mode-generate-ids.html"
     (add-to-list 'org-babel-load-languages '(latex . t)))
   ;;
   (setq org-latex-default-class "my:uplatex"
-        org-latex-pdf-process   '("latexmk -r ~/.latexmkrc -pdfdvi -recorder -output-directory='%o' %f")
-        org-latex-compiler      "latexmk"
+        org-latex-pdf-process   '("latexmk -recorder -output-directory='%o' %f")
+        ;; org-latex-compiler      "latexmk"
         org-latex-listings      'minted
         org-latex-minted-options nil
-        org-latex-default-packages-alist  '(("utf8" "inputenc" nil nil)
-                                            ;; ("prefernoncjk" "pxcjkcat" t nil)
-                                            ("T1" "fontenc" t nil)
-                                            ("" "graphicx" t nil)
-                                            ("normalem" "ulem" t nil) ;; udline に変更すべきかな?
-                                            ("" "amsmath" t nil)
-                                            ("" "amssymb" nil nil)
-                                            ("" "physics" t nil)
-                                            ;; ("" "siunitx" t nil)
-                                            ("" "hyperref" t nil)
-                                            ("" "multirow" t nil)
-                                            ("" "ltablex" t nil)
-                                            ("" "booktabs" t nil)
-                                            ("" "wrapfig" t nil)
-                                            ("" "silence" t nil)
-                                            ("" "arydshln" t nil)
+        org-latex-default-packages-alist  '(("" "silence" nil)
+                                            ;; amsmath before fontspec for lualatex and xetex
+                                            (""         "amsmath"   t ("lualatex" "xetex"))
+                                            ;; fontspec ASAP for lualatex and xetex
+                                            ("no-math"  "fontspec"  t ("lualatex" "xetex"))
+                                            ;; inputenc and fontenc are for pdflatex only
+                                            ("AUTO"     "inputenc"  t ("pdflatex"))
+                                            ("T1"       "fontenc"   t ("pdflatex"))
+                                            ;; amsmath and amssymb after inputenc/fontenc for pdflatex
+                                            (""         "amsmath"   t ("pdflatex"))
+                                            (""         "amssymb"   t ("pdflatex"))
+                                            ;; -------------------------------
+                                            (""         "graphicx"  t)
+                                            (""         "longtable" nil)
+                                            (""         "wrapfig"   nil)
+                                            (""         "rotating"  nil)
+                                            ("normalem" "ulem"      t)
+                                            ;; misc
+                                            (""         "physics"   nil)
+                                            (""         "capt-of"   nil)
+                                            (""         "hyperref"  nil)
+                                            (""         "booktabs"  nil)
                                             )
         )
   ;;
@@ -5707,7 +5735,7 @@ pdflang={%l}}
                              ("\\subsection\{%s\}" . "%% %s")
                              ("\\subsubsection\{%s\}" .  "%% %s"))
                             ("my:lualatex:beamer"
-                             "\\documentclass[dvipdfmx,c,presentation,aspectratio=169]{beamer}
+                             "\\documentclass[uncicode,c,presentation,aspectratio=169]{beamer}
             [DEFAULT-PACKAGES] [NO-PACKAGES] [NO-EXTRA]"
                              ("\\section\{%s\}" . "%% %s")
                              ("\\subsection\{%s\}" . "%% %s")

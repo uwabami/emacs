@@ -2,7 +2,7 @@
 #+title: Emacs の設定
 #+options: auto-id:t H:6
 #+startup: content
-#+date: 2026-11-03 15:15:26
+#+date: 2026-11-03 22:37:51
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -942,14 +942,6 @@ Emacs.reverseVideo: true
    #+begin_src emacs-lisp :tangle init.el
 ;;; --------------------------------------------------------------------------
 ;;;###autoload
-(defun my:soften-bold-faces (&optional frame)
-  "太字属性を持つフェイスのウェイトを一括で medium に緩和する"
-  (interactive)
-  (dolist (face (face-list))
-    (when (memq (face-attribute face :weight frame) '(bold semi-bold extra-bold ultra-bold))
-      (set-face-attribute face frame :weight 'regular))))
-;;; --------------------------------------------------------------------------
-;;;###autoload
 (defun my:setup-gui-frame (&optional frame)
   "GUI環境のみ reverse と alpha を適用し, 初回のみフォントセットを構築する."
   (interactive)
@@ -983,12 +975,12 @@ Emacs.reverseVideo: true
       ;; global fallback -----------------------------------------------------
       (set-fontset-font t nil "Noto Sans Mono CJK JP" nil 'append)
       ;; ---------------------------------------------------------------------
-      (set-face-attribute 'bold nil :weight 'regular)
-      ;; ---------------------------------------------------------------------
+      ;; bold 以上を medium に
+      (set-face-attribute 'bold nil :weight 'medium)
+      (dolist (face (face-list))
+        (when (memq (face-attribute face :weight frame) '(bold semi-bold extra-bold ultra-bold))
+          (set-face-attribute face frame :weight 'medium)))
       ))
-  ;; -------------------------------------------------------------------------
-  ;; bold 以上を regular に
-  (my:soften-bold-faces)
   )
 ;; ---------------------------------------------------------------------------
 (setq scalable-fonts-allowed nil
@@ -1003,6 +995,7 @@ Emacs.reverseVideo: true
                                 (".*Emoji.*" . 0.8)
                                 )
       )
+;; ---------------------------------------------------------------------------
 ;; フレームの初期化が終わらないとフォント設定等が効かない
 ;; とても嫌なアプローチだけど, しょうがないか...
 (add-hook 'window-setup-hook (lambda ()

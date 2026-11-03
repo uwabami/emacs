@@ -2,7 +2,7 @@
 #+title: Emacs の設定
 #+options: auto-id:t H:6
 #+startup: content
-#+date: 2026-11-01 18:09:28
+#+date: 2026-11-03 14:57:49
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -969,7 +969,7 @@ Emacs.reverseVideo: true
                       japanese-jisx0213-1
                       japanese-jisx0213-2
                       japanese-jisx0213.2004-1))
-        (set-fontset-font nil code (font-spec :family "PlemolJP Console") nil 'append)
+        (set-fontset-font nil code (font-spec :family "Rounded\-X Mgen+ 1mn") nil 'append)
         )
       ;; global fallback -----------------------------------------------------
       (set-fontset-font t nil "Noto Sans Mono CJK JP" nil 'append)
@@ -982,7 +982,7 @@ Emacs.reverseVideo: true
       buffer-face-mode-face 'fixed-pitch
       use-default-font-for-symbols nil
       face-font-rescale-alist '(;; (".*Migu.*" . 1.1)
-                                ;; (".*Rounded.*" . 1.05)
+                                (".*Rounded.*" . 1.02)
                                 ;; (".*Noto.*Symbol*" . 0.9)
                                 ;; (".*Noto.*Math*" . 0.9)
                                 (".*PlemolJP.*" . 0.96)

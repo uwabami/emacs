@@ -2,7 +2,7 @@
 #+title: Emacs の設定
 #+options: auto-id:t H:6
 #+startup: content
-#+date: 2026-11-03 22:37:51
+#+date: 2026-11-07 00:12:50
 * はじめに
   :PROPERTIES:
   :CUSTOM_ID: org66fa74cd
@@ -182,7 +182,7 @@ distclean: clean
           (expand-file-name (file-name-directory load-file-name)))))
 (defconst my:d:share (expand-file-name "share/" user-emacs-directory))
 (defconst my:d:tmp (expand-file-name "~/.cache/emacs"))
-(defconst my:d:org (expand-file-name "~/Nextcloud/org"))
+(defconst my:d:org (expand-file-name "~/OpenCloud/Personal/org"))
 ;;
 ;; (dolist (dir (let ((dir (expand-file-name "elisp" my:d:share)))
 ;;                (list dir (format "%s%d" dir emacs-major-version))))
@@ -850,18 +850,27 @@ C-u を付けて実行すると, 埋める文字を指定可能(例: = や * な
    また, 絵文字の Variation Selector (VS16) に対応するため
    - =(global-auto-composition-mode 1)=
    - =(aset char-width-table #xFE0F 1))=
-   で結合文字に幅を持たせて, VS16 のある絵文字を 2 文字幅にしています.
+   で結合文字に幅を持たせて, VS16 のある絵文字を全角幅にしています.
    - [ ] East Asian Ambigous Width が N の range にある絵文字の扱い.
      - N + VS16 なら全角絵文字, N 単体なら半角なのだけれど,
        tmux は locale を参照するので常に 2文字幅だと勘定しちゃう...
+   - [ ] 偶に Emacs でだけ全角幅になっている文字列がある, ような?
+     - =#x25CB: WHITE CIRCLE=
    #+begin_src emacs-lisp :tangle init.el
 (leaf *handle-eaw-char-width
   :hook (emacs-startup-hook
          . (lambda ()
              (setopt cjk-ambiguous-chars-are-wide nil)
+             ;; Emacs だけ全角幅判定 -----------------------------------------
+             ;; ○ =#x25CB= WHITE CIRCLE=
+             (aset char-width-table #x25cb 1)
+             ;; --------------------------------------------------------------
+             ;; 結合文字に幅を持たせて絵文字の表示を全角に
              (aset char-width-table #xFE0F 1)
              ;; 肌色修飾子 (U+1F3FB〜U+1F3FF) の幅を 2 → 0 (結合文字扱い) に
              (set-char-table-range char-width-table '(#x1F3FB . #x1F3FF) 0)
+             ;; --------------------------------------------------------------
+             ;; 結合文字処理
              (auto-composition-mode 1)
              ))
   )
@@ -918,7 +927,7 @@ C-u を付けて実行すると, 埋める文字を指定可能(例: = や * な
   :CUSTOM_ID: org356b9857
   :END:
   試行錯誤中. とはいえ, GUIで使う事は滅多に無いのでなかなか弄る機会が無い.
-*** Xresouces の設定 [1/1]
+*** Xresouces の設定
    :PROPERTIES:
    :CUSTOM_ID: org100ad374
    :END:
@@ -931,7 +940,7 @@ Emacs.FontBackend: xft
 ! revese video
 Emacs.reverseVideo: true
    #+end_src
-   - [X] Wayland になったらどうなるだろうか? → 効かない模様.
+   もはや Wayland なんだけれど, こっちではどうするのかね.
 *** フォント設定
    :PROPERTIES:
    :CUSTOM_ID: org199c5479
@@ -955,8 +964,8 @@ Emacs.reverseVideo: true
       (set-frame-parameter f 'cursor-color "#ff88e0")
       ;; フォントとフォントセットのグローバル設定 (初回 GUI フレーム生成時のみ)
       (setq-default line-spacing nil)
-      (setq default-text-properties '(line-spacing nil line-height 1))
-      (set-face-attribute 'default nil :family "Iosevka Custom" :weight 'light :height 150)
+      (setq default-text-properties '(line-spacing nil line-height 1.0))
+      (set-face-attribute 'default nil :family "Iosevka Custom" :weight 'light :height 160)
       ;; フォントセットの設定. 対象フレーム (第4引数) を指定せずグローバルに適用する.
       (set-fontset-font nil 'unicode (font-spec :family "Iosevka Custom" :weight 'light))
       ;; ---------------------------------------------------------------------
@@ -971,6 +980,7 @@ Emacs.reverseVideo: true
                       japanese-jisx0213-2
                       japanese-jisx0213.2004-1))
         (set-fontset-font nil code (font-spec :family "PlemolJP Console") nil 'append)
+        ;; (set-fontset-font nil code (font-spec :family "Rounded-X Mgen+ 1mn") nil 'append)
         )
       ;; global fallback -----------------------------------------------------
       (set-fontset-font t nil "Noto Sans Mono CJK JP" nil 'append)
@@ -988,11 +998,11 @@ Emacs.reverseVideo: true
       buffer-face-mode-face 'fixed-pitch
       use-default-font-for-symbols nil
       face-font-rescale-alist '(;; (".*Migu.*" . 1.1)
-                                (".*Rounded.*" . 1.02)
+                                (".*Rounded.*" . 1.03)
                                 ;; (".*Noto.*Symbol*" . 0.9)
                                 ;; (".*Noto.*Math*" . 0.9)
-                                (".*PlemolJP.*" . 0.96)
-                                (".*Emoji.*" . 0.8)
+                                (".*PlemolJP.*" . 0.98)
+                                (".*Emoji.*" . 0.82)
                                 )
       )
 ;; ---------------------------------------------------------------------------
@@ -1007,7 +1017,6 @@ Emacs.reverseVideo: true
    表示のテスト プログラミング
  #+begin_src text
  幅の確認: 絵文字は全角, 他は半角で 2:1 になっているかの確認用.
-
 
 |abcdefghijkl|
 |ABCDEFGHIJKL|
@@ -3272,7 +3281,10 @@ Handles Doxygen style (!>) and ignores code blocks or separator lines."
        (LaTeX-math-mode)
        ;; eglot --------------------------------------------------------------
        (setq-default eglot-workspace-configuration
-                   '(:texlab (:diagnostics (:ignoredPatterns ["Unused label"]))))
+                     '(:texlab (:diagnostics (:ignoredPatterns
+                                              ["Unused label"
+                                               "^Overfull \\\\hbox"
+                                               "^Overfull \\\\vbox"]))))
        (eglot-ensure)
        )
    )
@@ -4928,7 +4940,7 @@ MimeType=application/mbox;message/rfc822;x-scheme-handler/mailto;
     )
   (leaf org-tempo :commands (org-tempo-setup org-tempo-complete-tag))
   :config
-  ;; Nextcloud に保存する
+  ;; OpenCloud に保存する
   (setq org-directory (expand-file-name my:d:org)
         ;; return でリンクを辿る
         org-return-follows-link    t
@@ -5945,12 +5957,12 @@ pdflang={%l}}
   #+begin_src emacs-lisp :tangle init.el
 (leaf tdiary-mode
   :if (and my:d:password-store
-           (file-directory-p (concat (getenv "HOME") "/Nextcloud/tdiary")))
+           (file-directory-p (concat (getenv "HOME") "/OpenCloud/Personal/tdiary")))
   :commands (tdiary-mode tdiary-passwd-file-load)
   :pl-setq (tdiary-csrf-key tdiary-passwd-file)
   :vc (:url "git@github.com:uwabami/tdiary-mode")
   :config
-  (setq tdiary-text-directory (concat (getenv "HOME") "/Nextcloud/tdiary/")
+  (setq tdiary-text-directory (concat (getenv "HOME") "/OpenCloud/Personal/tdiary/")
         tdiary-diary-list '(("log" "https://uwabami.junkhub.org/log/"))
         tdiary-style-mode 'org-mode
         tdiary-text-suffix ".org"
@@ -6151,6 +6163,7 @@ pdflang={%l}}
           (bg-main ,(if (display-graphic-p)
                         "#282a36"     ; GUIなら背景色, dark mode かどうか判定できる?
                       'unspecified))  ; ターミナルなら色は指定しない
+          (fg-main "#e8e8e2")
           ;; ----------------------------------------------------------------
           ;; 幾つかの色の入れ替え
           ;; -----------------------------------------------------------------
